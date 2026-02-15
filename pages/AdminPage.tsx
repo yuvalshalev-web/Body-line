@@ -574,6 +574,8 @@ Total News items: ${news.length}
                         <option value="Update">עדכון כללי</option>
                         <option value="Activity">פעילות שטח</option>
                         <option value="Announcement">הודעה חשובה</option>
+                        <option value="Personal">חוויה אישית</option>
+                        <option value="Share">רוצה לשתף</option>
                      </select>
                      <button type="submit" className="w-full py-6 bg-slate-950 text-white rounded-[1.5rem] font-black text-xl hover:bg-blue-600 shadow-2xl transition-all active:scale-95">פרסם כתבה חדשה</button>
                   </form>

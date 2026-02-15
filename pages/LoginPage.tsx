@@ -40,7 +40,23 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+
     try {
+      // Hard-coded admin for development usage
+      if (email.toLowerCase().trim() === 'yuval@shalev.org' && password === 'Yuval!1970') {
+        onLogin({
+          id: 'dev-admin-id',
+          name: 'יובל שלו (מנהל)',
+          email: 'yuval@shalev.org',
+          mobile: '050-0000000',
+          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
+          bio: 'מנהל מערכת - חשבון פיתוח ראשי.',
+          role: 'Admin',
+          joinedAt: new Date().toLocaleDateString('he-IL')
+        });
+        return;
+      }
+
       const membersRef = collection(db, 'members');
       const q = query(membersRef, where("email", "==", email.toLowerCase().trim()));
       const querySnapshot = await getDocs(q);

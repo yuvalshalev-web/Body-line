@@ -17,9 +17,9 @@ import {
   ShieldCheck,
   ChevronDown,
   Waves,
-  Send,
-  MessageSquare,
-  Share2
+  Share2,
+  Copy,
+  Check
 } from 'lucide-react';
 import { Member } from '../types';
 
@@ -46,6 +46,7 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const sortOptions = [
     { id: 'name-asc', label: 'שם (א-ת)', icon: SortAsc },
@@ -89,6 +90,12 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
     return `https://wa.me/${formattedNumber}`;
   };
 
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
   const SocialIconLink = ({ href, icon: Icon, brandColor, label }: { href?: string, icon: any, brandColor: string, label: string }) => {
     if (!href || !href.trim()) return null;
     return (
@@ -97,10 +104,10 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
         target="_blank" 
         rel="noopener noreferrer" 
         onClick={(e) => e.stopPropagation()}
-        className="w-14 h-14 flex items-center justify-center bg-white rounded-2xl shadow-sm border border-slate-100 transition-all hover:scale-110 active:scale-95 group/social hover:shadow-xl hover:-translate-y-1"
+        className="w-16 h-16 flex items-center justify-center bg-white rounded-2xl shadow-sm border border-slate-100 transition-all hover:scale-110 active:scale-95 group/social hover:shadow-xl hover:-translate-y-1"
         title={label}
       >
-        <Icon size={24} className={`${brandColor} transition-transform`} />
+        <Icon size={28} className={`${brandColor} transition-transform`} />
       </a>
     );
   };
@@ -163,7 +170,7 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
           </div>
         </div>
 
-        {/* Members Grid - Optimized for Mobile & Desktop */}
+        {/* Members Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 md:gap-10">
           {processedMembers.map((member) => (
             <div 
@@ -182,7 +189,6 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
                     מנהל
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </div>
               
               <div className="flex-1 flex flex-col">
@@ -221,10 +227,10 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
         )}
       </div>
 
-      {/* Member Profile Modal */}
+      {/* Member Profile Modal - ENHANCED */}
       {selectedMember && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-8 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-500">
-          <div className="bg-white w-full max-w-4xl rounded-[4rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-500 max-h-[95vh] overflow-y-auto border border-white/20">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-8 bg-slate-950/70 backdrop-blur-xl animate-in fade-in duration-500">
+          <div className="bg-white w-full max-w-5xl rounded-[4rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-500 max-h-[95vh] overflow-y-auto border border-white/20">
             
             <button 
               onClick={() => setSelectedMember(null)}
@@ -233,63 +239,62 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
               <X size={24} />
             </button>
             
-            <div className="h-56 md:h-72 bg-gradient-to-br from-slate-950 to-indigo-950 relative">
+            <div className="h-64 md:h-80 bg-gradient-to-br from-slate-950 to-indigo-950 relative">
                <div className="absolute inset-0 overflow-hidden">
-                  <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[120px] -mr-48 -mt-48"></div>
-                  <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/20 rounded-full blur-[100px] -ml-32 -mb-32"></div>
+                  <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500/30 rounded-full blur-[120px] -mr-48 -mt-48"></div>
+                  <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[100px] -ml-32 -mb-32"></div>
                   <div className="absolute inset-0 opacity-10 flex items-center justify-center pointer-events-none">
                      <Waves size={240} className="text-white animate-pulse" />
                   </div>
                </div>
             </div>
 
-            <div className="relative px-10 md:px-20 pb-20">
+            <div className="relative px-8 md:px-20 pb-20">
                {/* Hero Info */}
                <div className="flex flex-col md:flex-row items-end gap-10 -mt-24 md:-mt-32 mb-16">
-                  <div className="relative group/avatar">
-                    <div className="absolute -inset-2 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-[3.5rem] blur-xl opacity-20 group-hover/avatar:opacity-40 transition-opacity"></div>
+                  <div className="relative group/avatar mx-auto md:mx-0">
+                    <div className="absolute -inset-2 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-[3.5rem] blur-2xl opacity-30"></div>
                     <img 
                       src={selectedMember.avatar} 
                       className="relative w-48 h-48 md:w-64 md:h-64 rounded-[3rem] object-cover shadow-2xl border-8 border-white bg-white" 
                       alt={selectedMember.name} 
                     />
                   </div>
-                  <div className="flex-1 pb-4 text-right">
+                  <div className="flex-1 pb-4 text-center md:text-right">
                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-widest rounded-full mb-5 border border-indigo-100 shadow-sm">
                         {selectedMember.role === 'Admin' ? <ShieldCheck size={14} /> : <User size={14} />}
                         {selectedMember.role === 'Admin' ? 'מנהל מערכת' : 'חבר בקהילה'}
                      </div>
-                     <h3 className="text-5xl md:text-6xl font-black text-slate-950 tracking-tighter leading-none mb-3">{selectedMember.name}</h3>
-                     <p className="text-slate-400 font-bold text-sm uppercase tracking-[0.2em] flex items-center gap-3">
+                     <h3 className="text-5xl md:text-7xl font-black text-slate-950 tracking-tighter leading-none mb-3">{selectedMember.name}</h3>
+                     <p className="text-slate-400 font-bold text-sm uppercase tracking-[0.2em] flex items-center gap-3 justify-center md:justify-start">
                         <Calendar size={16} className="text-indigo-400" />
-                        הצטרף/ה ב-{selectedMember.joinedAt}
+                        חלק מהקהילה מ-{selectedMember.joinedAt}
                      </p>
                   </div>
                </div>
 
-               <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-                  {/* About Section */}
-                  <div className="lg:col-span-7 space-y-12">
+               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
+                  {/* About & Socials */}
+                  <div className="lg:col-span-7 space-y-16">
                      <div className="text-right">
-                        <div className="flex items-center gap-4 mb-6">
+                        <div className="flex items-center gap-4 mb-8">
                            <div className="h-px flex-1 bg-slate-100"></div>
-                           <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">ביוגרפיה אישית</h4>
+                           <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">סיפור אישי</h4>
                         </div>
                         <div className="bg-slate-50/50 p-10 rounded-[3rem] border border-slate-100 shadow-inner relative overflow-hidden">
                            <Sparkles size={40} className="absolute -bottom-4 -left-4 text-indigo-500/5 rotate-12" />
-                           <p className="text-slate-600 font-bold text-xl md:text-2xl leading-relaxed italic text-right relative z-10">
+                           <p className="text-slate-700 font-bold text-xl md:text-2xl leading-relaxed italic text-right relative z-10">
                               "{selectedMember.bio}"
                            </p>
                         </div>
                      </div>
 
-                     {/* Social Links Section in Modal */}
                      <div className="text-right">
-                        <div className="flex items-center gap-4 mb-8">
+                        <div className="flex items-center gap-4 mb-10">
                            <div className="h-px flex-1 bg-slate-100"></div>
                            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] flex items-center gap-2">
                              <Share2 size={14} className="text-indigo-500" />
-                             חיבורים חברתיים
+                             רשתות חברתיות
                            </h4>
                         </div>
                         <div className="flex flex-wrap items-center gap-6 justify-end">
@@ -298,50 +303,71 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
                            <SocialIconLink href={selectedMember.linkedinUrl} icon={Linkedin} brandColor="text-[#0A66C2]" label="LinkedIn" />
                            <SocialIconLink href={selectedMember.tiktokUrl} icon={Music} brandColor="text-slate-950" label="TikTok" />
                         </div>
+                        {(!selectedMember.facebookUrl && !selectedMember.instagramUrl && !selectedMember.linkedinUrl && !selectedMember.tiktokUrl) && (
+                          <p className="text-slate-300 font-bold text-sm italic">לא שותפו קישורים חברתיים.</p>
+                        )}
                      </div>
                   </div>
 
                   {/* Contact Sidebar */}
-                  <div className="lg:col-span-5 space-y-10">
+                  <div className="lg:col-span-5 space-y-12">
                      <div>
-                        <div className="flex items-center gap-4 mb-8">
+                        <div className="flex items-center gap-4 mb-10">
                            <div className="h-px flex-1 bg-slate-100"></div>
-                           <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">צרו קשר</h4>
+                           <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">פרטי התקשרות</h4>
                         </div>
-                        <div className="space-y-5">
-                           <div className="flex items-center gap-6 p-6 bg-white border border-slate-100 rounded-[2rem] shadow-sm group hover:border-indigo-100 transition-all hover:shadow-md">
-                              <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-110 transition-transform">
+                        <div className="space-y-6">
+                           <div className="flex items-center gap-6 p-6 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm group hover:border-indigo-100 transition-all hover:shadow-md relative overflow-hidden">
+                              <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                  <Mail size={28} />
                               </div>
                               <div className="min-w-0 flex-1 text-right">
                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">אימייל</p>
                                  <p className="text-slate-900 font-black text-lg truncate">{selectedMember.email}</p>
                               </div>
+                              <button 
+                                onClick={() => copyToClipboard(selectedMember.email, 'email')}
+                                className="p-3 text-slate-300 hover:text-indigo-600 transition-colors"
+                              >
+                                {copiedField === 'email' ? <Check size={20} className="text-emerald-500" /> : <Copy size={20} />}
+                              </button>
                            </div>
                            
-                           <div className="flex items-center gap-6 p-6 bg-white border border-slate-100 rounded-[2rem] shadow-sm group hover:border-emerald-100 transition-all hover:shadow-md">
-                              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0 group-hover:scale-110 transition-transform">
+                           <div className="flex items-center gap-6 p-6 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm group hover:border-emerald-100 transition-all hover:shadow-md relative overflow-hidden">
+                              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all">
                                  <Phone size={28} />
                               </div>
                               <div className="min-w-0 flex-1 text-right">
                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">טלפון</p>
                                  <p className="text-slate-900 font-black text-lg">{selectedMember.mobile}</p>
                               </div>
+                              <button 
+                                onClick={() => copyToClipboard(selectedMember.mobile, 'phone')}
+                                className="p-3 text-slate-300 hover:text-emerald-600 transition-colors"
+                              >
+                                {copiedField === 'phone' ? <Check size={20} className="text-emerald-500" /> : <Copy size={20} />}
+                              </button>
                            </div>
                         </div>
                      </div>
 
-                     <div className="pt-8">
+                     <div className="pt-4">
                         <a 
                           href={getWhatsAppLink(selectedMember.mobile)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full py-7 bg-[#25D366] text-white rounded-[2.5rem] font-black text-xl hover:bg-[#128C7E] transition-all shadow-2xl flex items-center justify-center gap-5 group active:scale-95 overflow-hidden relative"
+                          className="w-full py-8 bg-[#25D366] text-white rounded-[2.5rem] font-black text-2xl hover:bg-[#128C7E] transition-all shadow-2xl flex items-center justify-center gap-5 group active:scale-95 overflow-hidden relative"
                         >
                           <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 animate-pulse transition-opacity"></div>
                           <WhatsAppLogo />
-                          <span>שלח הודעת וואטסאפ</span>
+                          <span>וואטסאפ לזמינות מהירה</span>
                         </a>
+                     </div>
+                     
+                     <div className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100 text-center">
+                        <p className="text-slate-400 font-bold text-xs leading-relaxed italic">
+                          "הפרטים מוצגים עבור חברי הקהילה הרשומים בלבד. שמרו על פרטיות החברים."
+                        </p>
                      </div>
                   </div>
                </div>

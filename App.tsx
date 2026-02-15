@@ -63,6 +63,22 @@ const App: React.FC = () => {
     const checkSession = async () => {
       const savedMemberId = localStorage.getItem('habal_zug_member_id');
       if (savedMemberId) {
+        // Handle hard-coded development admin session
+        if (savedMemberId === 'dev-admin-id') {
+          setCurrentUser({
+            id: 'dev-admin-id',
+            name: 'יובל שלו (מנהל)',
+            email: 'yuval@shalev.org',
+            mobile: '050-0000000',
+            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
+            bio: 'מנהל מערכת - חשבון פיתוח ראשי.',
+            role: 'Admin',
+            joinedAt: '01/01/2025' // Generic start date for dev admin
+          } as Member);
+          setLoading(false);
+          return;
+        }
+
         try {
           const userDoc = await getDoc(doc(db, 'members', savedMemberId));
           if (userDoc.exists()) {
@@ -295,7 +311,7 @@ const App: React.FC = () => {
               <Route path="/" element={<DashboardPage membersCount={members.length} galleryCount={galleryItems.length} eventsCount={events.length} newsCount={news.length} visitorStats={siteStats} currentUser={currentUser} attendees={[]} onToggleAttendance={() => {}} />} />
               <Route path="/directory" element={<DirectoryPage members={members} />} />
               <Route path="/events" element={<EventsPage events={events} />} />
-              <Route path="/news" element={<NewsPage news={news} />} />
+              <Route path="/news" element={<NewsPage news={news} onAddNews={(details) => addDoc(collection(db, 'news'), details)} />} />
               <Route path="/gallery" element={<GalleryPage user={currentUser} galleryItems={galleryItems} setGalleryItems={() => {}} />} />
               <Route path="/profile" element={<ProfilePage user={currentUser} onUpdate={(m) => updateDoc(doc(db, 'members', m.id), m as any)} />} />
               <Route path="/admin" element={currentUser.role === 'Admin' ? (

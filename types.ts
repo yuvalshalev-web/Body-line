@@ -52,7 +52,7 @@ export interface NewsItem {
   content: string;
   date: string;
   imageUrl?: string;
-  category: 'Update' | 'Activity' | 'Announcement';
+  category: 'Update' | 'Activity' | 'Announcement' | 'Personal' | 'Share';
 }
 
 export interface AuthState {
