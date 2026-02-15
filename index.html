@@ -1,32 +1,33 @@
-
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>חבל זוג - הרצליה | ניהול קהילה</title>
-    <!-- Tailwind CSS for utility classes -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Custom CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
-    <script type="importmap">
+  <script type="importmap">
 {
   "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
     "react": "https://esm.sh/react@^19.2.4",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
-    "jszip": "https://esm.sh/jszip@3.10.1",
-    "firebase/": "https://esm.sh/firebase@^12.9.0/"
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
+    "firebase/": "https://esm.sh/firebase@^12.9.0/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.564.0",
+    "jszip": "https://esm.sh/jszip@^3.10.1",
+    "@firebase/firestore": "https://esm.sh/@firebase/firestore@^4.11.0",
+    "@firebase/storage": "https://esm.sh/@firebase/storage@^0.14.0",
+    "@firebase/app": "https://esm.sh/@firebase/app@^0.14.8",
+    "@firebase/analytics": "https://esm.sh/@firebase/analytics@^0.10.19"
   }
 }
 </script>
-  </head>
+</head>
   <body class="bg-slate-50 text-slate-900 antialiased">
     <div id="root"></div>
+    <script type="module" src="index.tsx"></script>
   </body>
 </html>

@@ -1,7 +1,7 @@
-
 import React, { useState, useRef } from 'react';
-import { collection, addDoc, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, serverTimestamp, deleteDoc, doc } from '@firebase/firestore';
+// Fix: Use scoped package name for modular Firebase storage exports to resolve missing member errors
+import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
 import { Plus, Sparkles, User, Loader2, Trash2, Image as ImageIcon } from 'lucide-react';
 import { db, storage } from '../services/firebase';
 import { GalleryItem, Member } from '../types';

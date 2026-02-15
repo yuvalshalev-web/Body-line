@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { 
   collection, 
   onSnapshot, 
@@ -9,7 +8,6 @@ import {
   doc, 
   getDoc, 
   updateDoc, 
-  setDoc,
   orderBy,
   limit
 } from 'firebase/firestore';
@@ -25,10 +23,11 @@ import {
   LayoutDashboard,
   X,
   Loader2,
-  Waves
+  Waves,
+  AlertCircle
 } from 'lucide-react';
 
-import { auth, db } from './services/firebase';
+import { db } from './services/firebase';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import DirectoryPage from './pages/DirectoryPage';
@@ -42,93 +41,116 @@ import { Member, GalleryItem, Event, NewsItem, JoinRequest } from './types';
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<Member | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [siteStats, setSiteStats] = useState({ daily: 0, weekly: 0, yearly: 0 });
+  const [siteAssets, setSiteAssets] = useState<any>({
+    logo: "https://i.postimg.cc/Mp1vktm0/org-Logo-bbd1959c-cef4-4677-8c9d-a5943034a63e.png",
+    heroBg: "https://images.unsplash.com/photo-1414490929659-9a12b7e31907?auto=format&fit=crop&q=80&w=2000"
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
-    // 1. Auth State Listener
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // Fetch extended profile from Firestore
-        const userDocRef = doc(db, 'members', firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (userDoc.exists()) {
-          setCurrentUser({ id: userDoc.id, uid: firebaseUser.uid, ...userDoc.data() } as Member);
-        } else {
-          // If auth exists but no firestore doc, create a basic one
-          const newMemberData = {
-            name: firebaseUser.displayName || 'חבר חדש',
-            email: firebaseUser.email || '',
-            mobile: '',
-            avatar: firebaseUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(firebaseUser.displayName || 'User')}&background=random`,
-            bio: 'ברוכים הבאים לקהילה!',
-            role: 'Member',
-            joinedAt: new Date().toLocaleDateString('he-IL')
-          };
-          await setDoc(userDocRef, newMemberData);
-          setCurrentUser({ id: firebaseUser.uid, uid: firebaseUser.uid, ...newMemberData } as Member);
+    // Session Management without Firebase Auth
+    const checkSession = async () => {
+      const savedMemberId = localStorage.getItem('habal_zug_member_id');
+      if (savedMemberId) {
+        try {
+          const userDoc = await getDoc(doc(db, 'members', savedMemberId));
+          if (userDoc.exists()) {
+            setCurrentUser({ id: userDoc.id, ...userDoc.data() } as Member);
+          } else {
+            localStorage.removeItem('habal_zug_member_id');
+            setCurrentUser(null);
+          }
+        } catch (err) {
+          console.error("Session check error:", err);
         }
-      } else {
-        setCurrentUser(null);
       }
       setLoading(false);
-    });
+    };
 
-    // 2. Real-time Firestore Listeners
-    const qMembers = query(collection(db, 'members'), orderBy('name', 'asc'));
-    const unsubscribeMembers = onSnapshot(qMembers, (snapshot) => {
-      setMembers(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member)));
-    });
+    checkSession();
 
-    const qGallery = query(collection(db, 'gallery'), orderBy('timestamp', 'desc'), limit(50));
-    const unsubscribeGallery = onSnapshot(qGallery, (snapshot) => {
-      setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
-    });
+    // Data Listeners
+    const handleError = (collectionName: string) => (err: any) => {
+      console.warn(`Firestore listener error for ${collectionName}:`, err.message);
+    };
 
-    const qEvents = query(collection(db, 'events'), orderBy('date', 'asc'));
-    const unsubscribeEvents = onSnapshot(qEvents, (snapshot) => {
-      setEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event)));
-    });
+    const unsubscribeMembers = onSnapshot(
+      query(collection(db, 'members'), orderBy('name', 'asc')),
+      (snapshot) => setMembers(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member))),
+      handleError('members')
+    );
 
-    const qNews = query(collection(db, 'news'), orderBy('date', 'desc'));
-    const unsubscribeNews = onSnapshot(qNews, (snapshot) => {
-      setNews(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as NewsItem)));
-    });
+    const unsubscribeGallery = onSnapshot(
+      query(collection(db, 'gallery'), orderBy('timestamp', 'desc'), limit(50)),
+      (snapshot) => setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem))),
+      handleError('gallery')
+    );
 
-    const qRequests = query(collection(db, 'joinRequests'), orderBy('requestedAt', 'desc'));
-    const unsubscribeRequests = onSnapshot(qRequests, (snapshot) => {
-      setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
-    });
+    const unsubscribeEvents = onSnapshot(
+      query(collection(db, 'events'), orderBy('date', 'asc')),
+      (snapshot) => setEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event))),
+      handleError('events')
+    );
 
-    // Site Stats Listener (from a dedicated 'config' or 'stats' collection)
+    const unsubscribeNews = onSnapshot(
+      query(collection(db, 'news'), orderBy('date', 'desc')),
+      (snapshot) => setNews(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as NewsItem))),
+      handleError('news')
+    );
+
+    const unsubscribeRequests = onSnapshot(
+      query(collection(db, 'joinRequests'), orderBy('requestedAt', 'desc')),
+      (snapshot) => setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest))),
+      handleError('joinRequests')
+    );
+
     const unsubscribeStats = onSnapshot(doc(db, 'site_data', 'counters'), (doc) => {
-      if (doc.exists()) {
-        setSiteStats(doc.data() as any);
-      }
-    });
+      if (doc.exists()) setSiteStats(doc.data() as any);
+    }, handleError('stats'));
+
+    const unsubscribeAssets = onSnapshot(doc(db, 'site_data', 'assets'), (doc) => {
+      if (doc.exists()) setSiteAssets(prev => ({ ...prev, ...doc.data() }));
+    }, handleError('assets'));
 
     return () => {
-      unsubscribeAuth();
       unsubscribeMembers();
       unsubscribeGallery();
       unsubscribeEvents();
       unsubscribeNews();
       unsubscribeRequests();
       unsubscribeStats();
+      unsubscribeAssets();
     };
   }, []);
 
-  const handleLogout = async () => {
-    await signOut(auth);
+  const handleLogout = () => {
+    localStorage.removeItem('habal_zug_member_id');
+    setCurrentUser(null);
     setIsSidebarOpen(false);
   };
+
+  const handleLogin = (member: Member) => {
+    localStorage.setItem('habal_zug_member_id', member.id);
+    setCurrentUser(member);
+  };
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6 text-center">
+        <AlertCircle className="text-red-500 mb-4" size={48} />
+        <h2 className="text-2xl font-black text-slate-900 mb-2">{error}</h2>
+        <button onClick={() => window.location.reload()} className="mt-4 px-8 py-3 bg-slate-950 text-white rounded-2xl font-black">טען מחדש</button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -139,14 +161,14 @@ const App: React.FC = () => {
         </div>
         <div className="text-center">
           <p className="font-black text-slate-900 uppercase tracking-[0.3em] text-sm mb-1">חבל זוג הרצליה</p>
-          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">מתחבר לענן הקהילתי...</p>
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">טוען נתונים מהענן...</p>
         </div>
       </div>
     );
   }
 
   if (!currentUser) {
-    return <LoginPage />;
+    return <LoginPage onLogin={handleLogin} />;
   }
 
   const navItems = [
@@ -162,16 +184,13 @@ const App: React.FC = () => {
     navItems.push({ path: '/admin', label: 'ניהול מערכת', icon: ShieldAlert });
   }
 
-  const GLOBAL_LOGO = "https://i.postimg.cc/Mp1vktm0/org-Logo-bbd1959c-cef4-4677-8c9d-a5943034a63e.png";
-
   return (
     <div className="min-h-screen bg-white flex flex-col md:flex-row text-right font-['Assistant']" dir="rtl">
-      {/* Sidebar Navigation */}
       <aside className={`fixed inset-y-0 right-0 z-50 w-72 bg-white border-l border-slate-100 transform transition-all duration-500 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : 'translate-x-full'}`}>
         <div className="h-full flex flex-col p-8">
           <div className="flex items-center justify-between mb-12">
             <div className="flex items-center gap-4">
-              <img src={GLOBAL_LOGO} alt="Logo" className="w-12 h-12 object-contain" />
+              <img src={siteAssets.logo} alt="Logo" className="w-12 h-12 object-contain" />
               <div className="leading-none">
                 <h1 className="font-black text-slate-950 text-xl tracking-tight">חבל זוג</h1>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">קהילת הרצליה</p>
@@ -214,11 +233,10 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto flex flex-col bg-white">
         <div className="md:hidden bg-white/90 backdrop-blur-md p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-3">
-            <img src={GLOBAL_LOGO} alt="Logo" className="w-9 h-9 object-contain" />
+            <img src={siteAssets.logo} alt="Logo" className="w-9 h-9 object-contain" />
             <h1 className="font-black text-slate-950 text-sm">חבל זוג הרצליה</h1>
           </div>
           <button onClick={() => setIsSidebarOpen(true)} className="p-2.5 bg-slate-950 text-white rounded-xl shadow-lg">
@@ -229,89 +247,51 @@ const App: React.FC = () => {
         <div className="flex-1">
           <div className="max-w-7xl mx-auto px-6 py-10 md:px-14 md:py-16">
             <Routes>
-              <Route path="/" element={
-                <DashboardPage 
-                  membersCount={members.length} 
-                  galleryCount={galleryItems.length} 
-                  eventsCount={events.length} 
-                  newsCount={news.length} 
-                  visitorStats={siteStats} 
-                  currentUser={currentUser} 
-                  attendees={[]} // Attendees logic could be added as a Firestore array
-                  onToggleAttendance={() => {}} 
-                />
-              } />
+              <Route path="/" element={<DashboardPage membersCount={members.length} galleryCount={galleryItems.length} eventsCount={events.length} newsCount={news.length} visitorStats={siteStats} currentUser={currentUser} attendees={[]} onToggleAttendance={() => {}} />} />
               <Route path="/directory" element={<DirectoryPage members={members} />} />
               <Route path="/events" element={<EventsPage events={events} />} />
               <Route path="/news" element={<NewsPage news={news} />} />
-              <Route path="/gallery" element={
-                <GalleryPage 
+              <Route path="/gallery" element={<GalleryPage user={currentUser} galleryItems={galleryItems} setGalleryItems={() => {}} />} />
+              <Route path="/profile" element={<ProfilePage user={currentUser} onUpdate={(m) => updateDoc(doc(db, 'members', m.id), m as any)} />} />
+              <Route path="/admin" element={currentUser.role === 'Admin' ? (
+                <AdminPage 
                   user={currentUser} 
-                  galleryItems={galleryItems} 
-                  setGalleryItems={() => {}} // Not needed as it's real-time from Firestore
+                  members={members}
+                  onDeleteMember={(id) => {}} 
+                  onResetPassword={(id) => {}}
+                  onToggleRole={(id) => {}}
+                  onUpdateMember={(m) => {}}
+                  joinRequests={joinRequests}
+                  onApproveRequest={(id) => null}
+                  onRejectRequest={(id) => {}}
+                  galleryItems={galleryItems}
+                  onAddGalleryItem={() => {}}
+                  onDeleteGalleryItems={() => {}}
+                  events={events}
+                  onAddEvent={() => {}}
+                  onDeleteEvent={() => {}}
+                  news={news}
+                  onAddNews={() => {}}
+                  onDeleteNews={() => {}}
                 />
-              } />
-              <Route path="/profile" element={
-                <ProfilePage 
-                  user={currentUser} 
-                  onUpdate={(m) => updateDoc(doc(db, 'members', m.id), m as any)} 
-                />
-              } />
-              <Route path="/admin" element={
-                currentUser.role === 'Admin' ? (
-                  <AdminPage 
-                    user={currentUser} 
-                    members={members}
-                    onDeleteMember={(id) => {}} // Implement with deleteDoc
-                    onResetPassword={(id) => {}}
-                    onToggleRole={(id) => {}}
-                    onUpdateMember={(m) => {}}
-                    joinRequests={joinRequests}
-                    onApproveRequest={(id) => null}
-                    onRejectRequest={(id) => {}}
-                    galleryItems={galleryItems}
-                    onAddGalleryItem={() => {}}
-                    onDeleteGalleryItems={() => {}}
-                    events={events}
-                    onAddEvent={() => {}}
-                    onDeleteEvent={() => {}}
-                    news={news}
-                    onAddNews={() => {}}
-                    onDeleteNews={() => {}}
-                  />
-                ) : <Navigate to="/" />
-              } />
+              ) : <Navigate to="/" />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </div>
         </div>
 
-        {/* Dynamic Footer with Site Graphics */}
         <footer className="w-full py-24 px-6 border-t border-slate-50 bg-white flex flex-col items-center gap-12">
           <div className="text-center space-y-4">
-             <img src={GLOBAL_LOGO} alt="חבל זוג" className="w-16 h-16 mx-auto object-contain grayscale opacity-20 mb-4" />
+             <img src={siteAssets.logo} alt="חבל זוג" className="w-16 h-16 mx-auto object-contain grayscale opacity-20 mb-4" />
             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] px-4 max-w-lg leading-relaxed">
               חבל זוג הרצליה • האנשים, הערכים, החברות והרוח מאחורי הגלים
             </h4>
           </div>
-          
-          {/* Site Graphics Icons / Partners (Stored in Firestore or constant) */}
-          <div className="flex justify-center items-center gap-12 md:gap-20">
-            <a href="https://reefseacenter.co.il/" target="_blank" rel="noopener noreferrer" className="h-16 flex items-center group opacity-30 hover:opacity-100 transition-all">
-              <img src="https://i.postimg.cc/5XNxLBGC/images-(3).jpg" className="max-h-full w-auto grayscale group-hover:grayscale-0 transition-all rounded-xl" alt="Reef" />
-            </a>
-            <div className="w-px h-10 bg-slate-100"></div>
-            <a href="https://atalef.com/" target="_blank" rel="noopener noreferrer" className="h-16 flex items-center group opacity-50 hover:opacity-100 transition-all">
-              <img src="https://i.postimg.cc/k2XnKQZK/lwgw-'mwtt-h'tlp.png" className="max-h-full w-auto grayscale group-hover:grayscale-0 transition-all" alt="Atalef" />
-            </a>
-          </div>
-
           <div className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.2em]">
             © {new Date().getFullYear()} חבל זוג הרצליה.
           </div>
         </footer>
       </main>
-      
       {isSidebarOpen && <div className="fixed inset-0 bg-slate-950/30 backdrop-blur-[2px] z-40 md:hidden" onClick={() => setIsSidebarOpen(false)} />}
     </div>
   );

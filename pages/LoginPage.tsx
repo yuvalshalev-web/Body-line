@@ -1,21 +1,28 @@
 
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import { 
-  User, 
-  Mail, 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  addDoc 
+} from 'firebase/firestore';
+import { 
   ArrowRight, 
   Loader2, 
-  Key, 
-  Phone, 
   Eye, 
   EyeOff, 
   AlertCircle,
   CheckCircle2
 } from 'lucide-react';
-import { auth } from '../services/firebase';
+import { db } from '../services/firebase';
+import { Member } from '../types';
 
-const LoginPage: React.FC = () => {
+interface LoginPageProps {
+  onLogin: (member: Member) => void;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [view, setView] = useState<'LOGIN' | 'JOIN'>('LOGIN');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,9 +40,31 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     setError('');
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // Manual verification via Firestore
+      const membersRef = collection(db, 'members');
+      const q = query(membersRef, where("email", "==", email.toLowerCase().trim()));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        setError('האימייל אינו רשום במערכת');
+        setIsLoading(false);
+        return;
+      }
+
+      const memberDoc = querySnapshot.docs[0];
+      const memberData = memberDoc.data() as Member;
+
+      // Mock password verification (in a production app, use bcrypt/hashes even in Firestore)
+      if (memberData.password && memberData.password !== password) {
+        setError('הסיסמה אינה נכונה');
+        setIsLoading(false);
+        return;
+      }
+
+      onLogin({ id: memberDoc.id, ...memberData });
     } catch (err: any) {
-      setError('פרטי הכניסה אינם נכונים או שהחשבון לא קיים');
+      console.error("Login error:", err);
+      setError('שגיאה בתהליך ההתחברות. נסה שנית.');
       setIsLoading(false);
     }
   };
@@ -43,11 +72,21 @@ const LoginPage: React.FC = () => {
   const handleJoinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // In a production app, we would add the request to a 'joinRequests' collection in Firestore
-    setTimeout(() => {
+    setError('');
+    try {
+      await addDoc(collection(db, 'joinRequests'), {
+        name,
+        email: email.toLowerCase().trim(),
+        mobile,
+        requestedAt: new Date().toLocaleDateString('he-IL')
+      });
       setSuccess('בקשתך התקבלה וממתינה לאישור מנהל. תקבל הודעה ברגע שהחשבון יופעל.');
       setIsLoading(false);
-    }, 1500);
+    } catch (err) {
+      console.error("Join request error:", err);
+      setError('שגיאה בשליחת הבקשה. נסה שנית מאוחר יותר.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -81,7 +120,7 @@ const LoginPage: React.FC = () => {
                   <CheckCircle2 size={48} />
                 </div>
                 <p className="text-2xl font-black text-slate-900 leading-tight">{success}</p>
-                <button onClick={() => setSuccess('')} className="text-indigo-600 font-bold underline">חזרה לכניסה</button>
+                <button onClick={() => { setSuccess(''); setView('LOGIN'); }} className="text-indigo-600 font-bold underline">חזרה לכניסה</button>
               </div>
             ) : (
               <form onSubmit={view === 'LOGIN' ? handleLoginSubmit : handleJoinSubmit} className="space-y-7">
