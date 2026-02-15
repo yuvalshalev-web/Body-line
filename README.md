@@ -1,11 +1,47 @@
-<div align="center">
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+# חבל זוג - הרצליה | Habal Zug Community App 🌊
 
-  <h1>Built with AI Studio</h2>
+מערכת ניהול קהילה מתקדמת לגולשי הרצליה, הכוללת ניהול חברים, גלריה מבוססת בינה מלאכותית ותחזית גלים בזמן אמת.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## תכונות עיקריות (Key Features)
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+- **לוח בקרה (Dashboard):** סטטיסטיקות קהילה, קישורים למצלמות חוף (BeachCam) ותחזיות גלים (GoSurf).
+- **נבחרת החברים (Directory):** ספר כתובות דיגיטלי עם חיפוש וסינון מתקדם של חברי הקהילה.
+- **גלריה חכמה (AI Gallery):** שיתוף תמונות עם ניתוח תוכן אוטומטי ויצירת כותרות פואטיות באמצעות **Gemini 3 Flash**.
+- **פרופיל אישי:** ניהול זהות דיגיטלית, עדכון פרטים אישיים ורשתות חברתיות.
+- **ניהול מערכת (Admin Panel):**
+  - אישור/דחיית בקשות הצטרפות.
+  - עריכת פרטי חברים ואיפוס סיסמאות.
+  - ניהול תוכן (אירועים, חדשות וגלריה).
+  - **מערכת גיבוי:** ייצוא וייבוא של כל נתוני הקהילה לקובץ JSON.
 
-</div>
+## טכנולוגיות (Tech Stack)
+
+- **Frontend:** React 19, TypeScript, Tailwind CSS.
+- **Icons:** Lucide React.
+- **AI:** Google Gemini API (@google/genai).
+- **Routing:** React Router 7.
+
+## התקנה והרצה (Setup)
+
+1. שכפל את המאגר:
+   ```bash
+   git clone https://github.com/your-username/habal-zug.git
+   ```
+2. התקן תלויות:
+   ```bash
+   npm install
+   ```
+3. הגדר משתנה סביבה ל-API Key של Gemini:
+   - צור קובץ `.env` והוסף: `API_KEY=your_gemini_api_key_here`
+4. הרץ את האפליקציה:
+   ```bash
+   npm start
+   ```
+
+## אבטחה (Security)
+
+הפרויקט מוגדר להשתמש ב-`process.env.API_KEY`. אין להעלות מפתחות API לקוד המקור. בשימוש ב-GitHub Actions או Vercel, יש להגדיר את המפתח תחת Environment Variables.
+
+---
+© 2025 חבל זוג - הרצליה. כל הזכויות שמורות.חבל זוג הרצליה • האנשים, הערכים, החברות והרוח מאחורי הגלים
