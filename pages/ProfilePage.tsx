@@ -22,6 +22,7 @@ import {
 import { Member } from '../types';
 import { generateBio } from '../services/geminiService';
 import { validatePassword, isPasswordValid } from '../utils/validation';
+import { hashPassword } from '../utils/crypto';
 
 interface ProfilePageProps {
   user: Member;
@@ -87,7 +88,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
   const [toastMsg, setToastMsg] = useState('');
   const [isPasswordSectionOpen, setIsPasswordSectionOpen] = useState(false);
 
-  // Sync state if user prop changes externally
   useEffect(() => {
     setFormData(user);
   }, [user]);
@@ -115,20 +115,26 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
     }, 1000);
   };
 
-  const handlePasswordUpdate = (e: React.FormEvent) => {
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isPwdValid || passwords.next !== passwords.confirm) return;
 
     setIsSaving(true);
-    setTimeout(() => {
-      onUpdate({ ...formData, password: passwords.next, isTempPassword: false });
+    try {
+      // Hash the new password before updating Firestore
+      const newPasswordHash = await hashPassword(passwords.next);
+      
+      onUpdate({ ...formData, password: newPasswordHash, isTempPassword: false });
       setPasswords({ current: '', next: '', confirm: '' });
       setIsSaving(false);
       setToastMsg('הסיסמה עודכנה בהצלחה.');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
       setIsPasswordSectionOpen(false);
-    }, 1000);
+    } catch (err) {
+      console.error("Password update error:", err);
+      setIsSaving(false);
+    }
   };
 
   const handleGenerateBio = async () => {
@@ -150,7 +156,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          // Resize image to max 512x512
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
@@ -173,7 +178,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
           const ctx = canvas.getContext('2d');
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
-            // Compress to JPEG for small footprint
             const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
             setFormData(prev => ({ ...prev, avatar: compressedBase64 }));
           }

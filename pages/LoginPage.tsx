@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { db } from '../services/firebase';
 import { Member } from '../types';
+import { hashPassword } from '../utils/crypto';
 
 interface LoginPageProps {
   onLogin: (member: Member) => void;
@@ -40,7 +41,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setIsLoading(true);
     setError('');
     try {
-      // Manual verification via Firestore
       const membersRef = collection(db, 'members');
       const q = query(membersRef, where("email", "==", email.toLowerCase().trim()));
       const querySnapshot = await getDocs(q);
@@ -54,8 +54,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       const memberDoc = querySnapshot.docs[0];
       const memberData = memberDoc.data() as Member;
 
-      // Mock password verification (in a production app, use bcrypt/hashes even in Firestore)
-      if (memberData.password && memberData.password !== password) {
+      // Hash the entered password to compare with the stored hash
+      const enteredPasswordHash = await hashPassword(password);
+
+      if (memberData.password && memberData.password !== enteredPasswordHash) {
         setError('הסיסמה אינה נכונה');
         setIsLoading(false);
         return;

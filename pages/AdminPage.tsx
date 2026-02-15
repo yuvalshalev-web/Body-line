@@ -53,7 +53,8 @@ interface AdminPageProps {
   onToggleRole: (id: string) => void;
   onUpdateMember: (member: Member) => void;
   joinRequests: JoinRequest[];
-  onApproveRequest: (id: string) => Member | null;
+  // Fix: onApproveRequest should return Promise<Member | null> to match async implementation in App.tsx
+  onApproveRequest: (id: string) => Promise<Member | null>;
   onRejectRequest: (id: string) => void;
   galleryItems: GalleryItem[];
   onAddGalleryItem: (item: Omit<GalleryItem, 'id'>) => void;
@@ -120,8 +121,9 @@ const AdminPage: React.FC<AdminPageProps> = ({
     m.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleApprove = (id: string) => {
-    const newMember = onApproveRequest(id);
+  // Fix: handleApprove must be async to await the result of onApproveRequest
+  const handleApprove = async (id: string) => {
+    const newMember = await onApproveRequest(id);
     if (newMember) {
       setApprovedMember(newMember);
       setShowEmailModal(true);

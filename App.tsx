@@ -9,7 +9,10 @@ import {
   getDoc, 
   updateDoc, 
   orderBy,
-  limit
+  limit,
+  addDoc,
+  deleteDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { 
   Users, 
@@ -37,6 +40,7 @@ import AdminPage from './pages/AdminPage';
 import EventsPage from './pages/EventsPage';
 import NewsPage from './pages/NewsPage';
 import { Member, GalleryItem, Event, NewsItem, JoinRequest } from './types';
+import { hashPassword } from './utils/crypto';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<Member | null>(null);
@@ -56,7 +60,6 @@ const App: React.FC = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // Session Management without Firebase Auth
     const checkSession = async () => {
       const savedMemberId = localStorage.getItem('habal_zug_member_id');
       if (savedMemberId) {
@@ -77,7 +80,6 @@ const App: React.FC = () => {
 
     checkSession();
 
-    // Data Listeners
     const handleError = (collectionName: string) => (err: any) => {
       console.warn(`Firestore listener error for ${collectionName}:`, err.message);
     };
@@ -140,6 +142,49 @@ const App: React.FC = () => {
   const handleLogin = (member: Member) => {
     localStorage.setItem('habal_zug_member_id', member.id);
     setCurrentUser(member);
+  };
+
+  const handleApproveRequest = async (id: string): Promise<Member | null> => {
+    const request = joinRequests.find(r => r.id === id);
+    if (!request) return null;
+
+    try {
+      const tempPassword = "temp";
+      const hashedPassword = await hashPassword(tempPassword);
+
+      const newMember: Omit<Member, 'id'> = {
+        name: request.name,
+        email: request.email,
+        mobile: request.mobile,
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200",
+        bio: "חבר חדש בקהילה.",
+        role: 'Member',
+        joinedAt: new Date().toLocaleDateString('he-IL'),
+        password: hashedPassword,
+        isTempPassword: true
+      };
+
+      const docRef = await addDoc(collection(db, 'members'), newMember);
+      await deleteDoc(doc(db, 'joinRequests', id));
+
+      return { id: docRef.id, ...newMember };
+    } catch (err) {
+      console.error("Approval error:", err);
+      return null;
+    }
+  };
+
+  const handleResetPassword = async (id: string) => {
+    try {
+      const hashedPassword = await hashPassword("temp");
+      await updateDoc(doc(db, 'members', id), {
+        password: hashedPassword,
+        isTempPassword: true
+      });
+      alert('הסיסמה אופסה ל-"temp" (בפורמט מוצפן)');
+    } catch (err) {
+      console.error("Reset error:", err);
+    }
   };
 
   if (error) {
@@ -257,22 +302,25 @@ const App: React.FC = () => {
                 <AdminPage 
                   user={currentUser} 
                   members={members}
-                  onDeleteMember={(id) => {}} 
-                  onResetPassword={(id) => {}}
-                  onToggleRole={(id) => {}}
-                  onUpdateMember={(m) => {}}
+                  onDeleteMember={(id) => deleteDoc(doc(db, 'members', id))} 
+                  onResetPassword={handleResetPassword}
+                  onToggleRole={(id) => {
+                    const m = members.find(mem => mem.id === id);
+                    if (m) updateDoc(doc(db, 'members', id), { role: m.role === 'Admin' ? 'Member' : 'Admin' });
+                  }}
+                  onUpdateMember={(m) => updateDoc(doc(db, 'members', m.id), m as any)}
                   joinRequests={joinRequests}
-                  onApproveRequest={(id) => null}
-                  onRejectRequest={(id) => {}}
+                  onApproveRequest={handleApproveRequest}
+                  onRejectRequest={(id) => deleteDoc(doc(db, 'joinRequests', id))}
                   galleryItems={galleryItems}
-                  onAddGalleryItem={() => {}}
-                  onDeleteGalleryItems={() => {}}
+                  onAddGalleryItem={(item) => addDoc(collection(db, 'gallery'), { ...item, timestamp: serverTimestamp() })}
+                  onDeleteGalleryItems={(ids) => ids.forEach(id => deleteDoc(doc(db, 'gallery', id)))}
                   events={events}
-                  onAddEvent={() => {}}
-                  onDeleteEvent={() => {}}
+                  onAddEvent={(details) => addDoc(collection(db, 'events'), details)}
+                  onDeleteEvent={(id) => deleteDoc(doc(db, 'events', id))}
                   news={news}
-                  onAddNews={() => {}}
-                  onDeleteNews={() => {}}
+                  onAddNews={(details) => addDoc(collection(db, 'news'), details)}
+                  onDeleteNews={(id) => deleteDoc(doc(db, 'news', id))}
                 />
               ) : <Navigate to="/" />} />
               <Route path="*" element={<Navigate to="/" />} />
