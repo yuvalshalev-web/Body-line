@@ -16,18 +16,23 @@ import {
   Heart, 
   MessageCircle,
   Send,
-  Waves
+  Waves,
+  Trash2,
+  User
 } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
 import { storage } from '../services/firebase';
-import { NewsItem } from '../types';
+import { NewsItem, Member } from '../types';
+import { optimizeImage } from '../utils/image';
 
 interface NewsPageProps {
   news: NewsItem[];
+  currentUser: Member;
   onAddNews: (details: Omit<NewsItem, 'id'>) => void;
+  onDeleteNews: (id: string) => void;
 }
 
-const NewsPage: React.FC<NewsPageProps> = ({ news, onAddNews }) => {
+const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDeleteNews }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   
@@ -35,17 +40,24 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, onAddNews }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState<NewsItem['category']>('Update');
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedImageBlob, setSelectedImageBlob] = useState<Blob | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedImage(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      try {
+        // Optimize image to Max 1200px before showing preview and saving to state
+        const optimized = await optimizeImage(file, 1200, 0.7);
+        setSelectedImageBlob(optimized);
+        const url = URL.createObjectURL(optimized);
+        setPreviewUrl(url);
+      } catch (err) {
+        console.error("Image optimization failed:", err);
+        alert("נכשלה אופטימיזציית התמונה. נסה קובץ אחר.");
+      }
     }
   };
 
@@ -57,27 +69,28 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, onAddNews }) => {
     try {
       let imageUrl = '';
       
-      // Upload image to Firebase Storage if selected
-      if (selectedImage) {
-        const storageRef = ref(storage, `news/${Date.now()}_${selectedImage.name}`);
-        const snapshot = await uploadBytes(storageRef, selectedImage);
+      // Upload optimized blob to Firebase Storage
+      if (selectedImageBlob) {
+        const storageRef = ref(storage, `news/${Date.now()}_image.jpg`);
+        const snapshot = await uploadBytes(storageRef, selectedImageBlob);
         imageUrl = await getDownloadURL(snapshot.ref);
       }
 
-      // Persist to database via parent handler
       onAddNews({
         title,
         content,
         category,
         date: new Date().toISOString().split('T')[0],
-        imageUrl: imageUrl || undefined
+        imageUrl: imageUrl || undefined,
+        authorId: currentUser.id,
+        authorName: currentUser.name
       });
 
       // Reset form
       setTitle('');
       setContent('');
       setCategory('Update');
-      setSelectedImage(null);
+      setSelectedImageBlob(null);
       setPreviewUrl(null);
       setShowCreateModal(false);
     } catch (err) {
@@ -85,6 +98,12 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, onAddNews }) => {
       alert("שגיאה בפרסום הכתבה. נסה שנית.");
     } finally {
       setIsPosting(false);
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('האם אתה בטוח שברצונך למחוק פוסט זה?')) {
+      onDeleteNews(id);
     }
   };
 
@@ -97,6 +116,10 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, onAddNews }) => {
       case 'Share': return { label: 'רוצה לשתף', icon: <MessageCircle size={12} /> };
       default: return { label: 'עדכון', icon: <Info size={12} /> };
     }
+  };
+
+  const canDelete = (item: NewsItem) => {
+    return currentUser.role === 'Admin' || item.authorId === currentUser.id;
   };
 
   return (
@@ -133,8 +156,18 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, onAddNews }) => {
             return (
               <article 
                 key={item.id} 
-                className="group flex flex-col lg:flex-row gap-10 bg-white p-4 rounded-[4rem] border border-slate-100 hover:shadow-[0_40px_100px_-20px_rgba(59,130,246,0.1)] transition-all duration-700 hover:-translate-y-1"
+                className="group flex flex-col lg:flex-row gap-10 bg-white p-4 rounded-[4rem] border border-slate-100 hover:shadow-[0_40px_100px_-20px_rgba(59,130,246,0.1)] transition-all duration-700 hover:-translate-y-1 relative"
               >
+                {canDelete(item) && (
+                  <button 
+                    onClick={() => handleDelete(item.id)}
+                    className="absolute top-8 left-8 p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm z-20 group-hover:scale-110 active:scale-90"
+                    title="מחק פוסט"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                )}
+
                 {item.imageUrl && (
                   <div className="lg:w-2/5 aspect-[16/10] lg:aspect-square rounded-[3rem] overflow-hidden relative shadow-2xl shadow-blue-100/20">
                     <img 
@@ -164,6 +197,12 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, onAddNews }) => {
                       <Calendar size={14} className="text-blue-500" />
                       {new Date(item.date).toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
+                    {item.authorName && (
+                      <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] border-r pr-4 border-slate-100">
+                        <User size={14} className="text-indigo-500" />
+                        {item.authorName}
+                      </span>
+                    )}
                   </div>
 
                   <h3 className="text-3xl sm:text-4xl font-black text-slate-950 mb-8 group-hover:text-blue-600 transition-colors tracking-tighter leading-tight">
@@ -252,9 +291,9 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, onAddNews }) => {
                 />
               </div>
 
-              {/* Image Upload Area */}
+              {/* Image Upload Area (Optional) */}
               <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">הוסף תמונה</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">הוסף תמונה (אופציונלי)</label>
                 <div 
                   onClick={() => fileInputRef.current?.click()}
                   className={`w-full aspect-video rounded-[2.5rem] border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative group ${previewUrl ? 'border-blue-400' : 'border-slate-100 bg-slate-50 hover:bg-slate-100'}`}
@@ -272,7 +311,7 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, onAddNews }) => {
                       <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-300 mx-auto shadow-sm">
                         <ImageIcon size={28} />
                       </div>
-                      <p className="text-slate-400 font-bold text-xs">לחץ להעלאת תמונה לכתבה</p>
+                      <p className="text-slate-400 font-bold text-xs">לחץ להעלאת תמונה (לא חובה)</p>
                     </div>
                   )}
                   <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageChange} />

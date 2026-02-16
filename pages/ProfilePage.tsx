@@ -19,10 +19,13 @@ import {
   ExternalLink,
   ChevronDown
 } from 'lucide-react';
+import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
+import { storage } from '../services/firebase';
 import { Member } from '../types';
 import { generateBio } from '../services/geminiService';
 import { validatePassword, isPasswordValid } from '../utils/validation';
 import { hashPassword } from '../utils/crypto';
+import { optimizeImage } from '../utils/image';
 
 interface ProfilePageProps {
   user: Member;
@@ -83,6 +86,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
   const [formData, setFormData] = useState<Member>(user);
   const [passwords, setPasswords] = useState({ current: '', next: '', confirm: '' });
   const [isSaving, setIsSaving] = useState(false);
+  const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
   const [isGeneratingBio, setIsGeneratingBio] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
@@ -121,9 +125,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
 
     setIsSaving(true);
     try {
-      // Hash the new password before updating Firestore
       const newPasswordHash = await hashPassword(passwords.next);
-      
       onUpdate({ ...formData, password: newPasswordHash, isTempPassword: false });
       setPasswords({ current: '', next: '', confirm: '' });
       setIsSaving(false);
@@ -149,42 +151,26 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
     }
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const maxDim = 512;
-
-          if (width > height) {
-            if (width > maxDim) {
-              height *= maxDim / width;
-              width = maxDim;
-            }
-          } else {
-            if (height > maxDim) {
-              width *= maxDim / height;
-              height = maxDim;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-            setFormData(prev => ({ ...prev, avatar: compressedBase64 }));
-          }
-        };
-        img.src = event.target?.result as string;
-      };
-      reader.readAsDataURL(file);
+      setIsUpdatingAvatar(true);
+      try {
+        const optimized = await optimizeImage(file, 512, 0.7);
+        const storageRef = ref(storage, `profiles/${user.id}_avatar.jpg`);
+        const snapshot = await uploadBytes(storageRef, optimized);
+        const downloadUrl = await getDownloadURL(snapshot.ref);
+        
+        setFormData(prev => ({ ...prev, avatar: downloadUrl }));
+        setToastMsg('תמונת הפרופיל הועלתה בהצלחה.');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
+      } catch (err) {
+        console.error("Avatar upload failed:", err);
+        alert("נכשלה העלאת התמונה. נסה שנית.");
+      } finally {
+        setIsUpdatingAvatar(false);
+      }
     }
   };
 
@@ -217,14 +203,21 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
             <div className="flex flex-col md:flex-row md:items-end gap-10 mb-14">
               <div className="relative group">
                 <div className="absolute -inset-2 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-[3.5rem] blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                <img 
-                  src={formData.avatar} 
-                  alt={formData.name} 
-                  className="relative w-48 h-48 rounded-[3rem] border-8 border-white object-cover shadow-2xl group-hover:scale-105 transition-transform duration-500 bg-white"
-                />
+                <div className="relative w-48 h-48 rounded-[3rem] border-8 border-white overflow-hidden shadow-2xl group-hover:scale-105 transition-transform duration-500 bg-white">
+                  {isUpdatingAvatar && (
+                    <div className="absolute inset-0 z-10 bg-black/40 flex items-center justify-center">
+                      <Loader2 className="animate-spin text-white" size={32} />
+                    </div>
+                  )}
+                  <img 
+                    src={formData.avatar} 
+                    alt={formData.name} 
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                  />
+                </div>
                 <label className="absolute bottom-2 left-2 p-4 bg-slate-950 text-white rounded-2xl shadow-2xl cursor-pointer hover:bg-indigo-600 transition-all border-4 border-white active:scale-90 group-hover:rotate-12">
                   <Camera size={26} />
-                  <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} />
+                  <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} disabled={isUpdatingAvatar} />
                 </label>
               </div>
               <div className="flex-1 mb-4">
@@ -237,6 +230,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              {/* Rest of the form is identical */}
               <div className="space-y-8">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="h-px flex-1 bg-slate-100"></div>

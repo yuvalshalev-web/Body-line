@@ -53,6 +53,8 @@ export interface NewsItem {
   date: string;
   imageUrl?: string;
   category: 'Update' | 'Activity' | 'Announcement' | 'Personal' | 'Share';
+  authorId?: string;
+  authorName?: string;
 }
 
 export interface AuthState {

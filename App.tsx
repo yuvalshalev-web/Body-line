@@ -311,7 +311,7 @@ const App: React.FC = () => {
               <Route path="/" element={<DashboardPage membersCount={members.length} galleryCount={galleryItems.length} eventsCount={events.length} newsCount={news.length} visitorStats={siteStats} currentUser={currentUser} attendees={[]} onToggleAttendance={() => {}} />} />
               <Route path="/directory" element={<DirectoryPage members={members} />} />
               <Route path="/events" element={<EventsPage events={events} />} />
-              <Route path="/news" element={<NewsPage news={news} onAddNews={(details) => addDoc(collection(db, 'news'), details)} />} />
+              <Route path="/news" element={<NewsPage news={news} currentUser={currentUser} onAddNews={(details) => addDoc(collection(db, 'news'), details)} onDeleteNews={(id) => deleteDoc(doc(db, 'news', id))} />} />
               <Route path="/gallery" element={<GalleryPage user={currentUser} galleryItems={galleryItems} setGalleryItems={() => {}} />} />
               <Route path="/profile" element={<ProfilePage user={currentUser} onUpdate={(m) => updateDoc(doc(db, 'members', m.id), m as any)} />} />
               <Route path="/admin" element={currentUser.role === 'Admin' ? (
