@@ -39,12 +39,16 @@ import {
   AlertTriangle,
   MessageSquare,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { doc, updateDoc, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../services/firebase';
 import { Member, JoinRequest, Event, NewsItem } from '../types';
+import { hashPassword } from '../utils/crypto';
 
 const XLogo = ({ size = 16 }: { size?: number }) => (
   <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -97,6 +101,8 @@ const AdminPage: React.FC<AdminPageProps> = ({
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [adminNewPassword, setAdminNewPassword] = useState('');
+  const [showAdminPass, setShowAdminPass] = useState(false);
   const [approvedResult, setApprovedResult] = useState<{ name: string; mobile: string; tempPassword: string } | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -137,8 +143,15 @@ const AdminPage: React.FC<AdminPageProps> = ({
     if (!editingMember) return;
     setIsProcessing('SAVE_EDIT');
     try {
-      await onUpdateMember(editingMember);
+      let finalMember = { ...editingMember };
+      if (adminNewPassword.trim()) {
+        const hashed = await hashPassword(adminNewPassword.trim());
+        finalMember.password = hashed;
+        finalMember.isTempPassword = false;
+      }
+      await onUpdateMember(finalMember);
       setEditingMember(null);
+      setAdminNewPassword('');
     } catch (err) {
       console.error(err);
       alert('שגיאה בשמירת הפרטים');
@@ -288,7 +301,10 @@ const AdminPage: React.FC<AdminPageProps> = ({
                         <td className="px-10 py-6">
                           <div className="flex items-center justify-end gap-3">
                             <button 
-                              onClick={() => setEditingMember(m)}
+                              onClick={() => {
+                                setEditingMember(m);
+                                setAdminNewPassword('');
+                              }}
                               className="p-3 text-slate-400 hover:text-indigo-600 bg-slate-50 rounded-xl hover:bg-indigo-50 transition-all"
                             >
                               <Edit2 size={18} />
@@ -539,14 +555,14 @@ const AdminPage: React.FC<AdminPageProps> = ({
       )}
 
       {editingMember && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in" onClick={() => setEditingMember(null)}>
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in" onClick={() => { setEditingMember(null); setAdminNewPassword(''); }}>
           <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
                <div className="flex items-center gap-4">
                   <UserCog className="text-indigo-600" size={24} />
                   <h3 className="text-2xl font-black text-slate-950">עריכת פרטי חבר</h3>
                </div>
-               <button onClick={() => setEditingMember(null)} className="p-2 bg-white rounded-xl shadow-sm text-slate-400 hover:text-slate-950 transition-colors"><X size={20} /></button>
+               <button onClick={() => { setEditingMember(null); setAdminNewPassword(''); }} className="p-2 bg-white rounded-xl shadow-sm text-slate-400 hover:text-slate-950 transition-colors"><X size={20} /></button>
             </div>
             
             <form onSubmit={handleEditSave} className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar">
@@ -575,6 +591,26 @@ const AdminPage: React.FC<AdminPageProps> = ({
                  <div className="space-y-1">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">תאריך יום הולדת</label>
                     <input type="date" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.birthday || ''} onChange={e => setEditingMember({...editingMember, birthday: e.target.value})} />
+                 </div>
+              </div>
+
+              <div className="space-y-1 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                 <div className="flex items-center gap-3 mb-4">
+                   <Lock size={18} className="text-indigo-600" />
+                   <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">שינוי סיסמה (עבור המשתמש)</h4>
+                 </div>
+                 <div className="relative">
+                   <input 
+                     type={showAdminPass ? "text" : "password"} 
+                     placeholder="הזן סיסמה חדשה..."
+                     className="w-full pr-14 pl-6 py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-900 shadow-sm"
+                     value={adminNewPassword}
+                     onChange={e => setAdminNewPassword(e.target.value)}
+                   />
+                   <button type="button" onClick={() => setShowAdminPass(!showAdminPass)} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
+                     {showAdminPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                   </button>
+                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2 mr-2">השאר ריק אם לא ברצונך לשנות את הסיסמה של החבר.</p>
                  </div>
               </div>
 

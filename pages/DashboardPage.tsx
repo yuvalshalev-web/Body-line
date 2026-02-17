@@ -95,7 +95,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   // Merge real news into headlines for the ticker
   const tickerItems = useMemo(() => {
     const realNewsTitles = news.map(n => n.title);
-    return realNewsTitles.length > 0 ? [...realNewsTitles, ...FALLBACK_HEADLINES] : FALLBACK_HEADLINES;
+    const combined = realNewsTitles.length > 0 ? [...realNewsTitles, ...FALLBACK_HEADLINES] : FALLBACK_HEADLINES;
+    // We need to duplicate items at least 3-4 times to ensure no gaps during animation on very wide screens
+    return [...combined, ...combined, ...combined, ...combined];
   }, [news]);
 
   const statsCards = [
@@ -119,7 +121,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   return (
     <div className="space-y-6 md:space-y-12 animate-in fade-in duration-700 max-w-5xl mx-auto pb-10" dir="rtl">
       
-      {/* News Ticker */}
+      {/* News Ticker - Enhanced for Stability */}
       <div className="w-full bg-white text-slate-900 py-3 md:py-4 rounded-[1.5rem] md:rounded-full overflow-hidden flex items-center relative border border-slate-200 shadow-md h-14 md:h-16 group">
         <div className="absolute right-0 top-0 bottom-0 px-4 md:px-6 bg-slate-50 z-20 flex items-center gap-2 border-l border-slate-200 rounded-r-[1.5rem] md:rounded-r-full shadow-sm">
            <Radio size={14} className="text-rose-500 animate-pulse" />
@@ -127,9 +129,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
         
         <div className="flex-1 overflow-hidden h-full flex items-center" dir="ltr">
-          <div className="ticker-scroll-container group-hover:[animation-play-state:paused]">
-            <div className="ticker-content-wrapper">
-              {[...tickerItems, ...tickerItems].map((text, i) => (
+          <div className="ticker-scroll-container">
+            <div className="ticker-content-wrapper group-hover:[animation-play-state:paused]">
+              {tickerItems.map((text, i) => (
                 <div key={i} className="ticker-item">
                   <span className="ticker-text" dir="rtl">{text}</span>
                   <div className="ticker-dot"></div>
@@ -258,7 +260,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                   <div className="hidden md:flex flex-col items-center gap-2">
                     <ArrowRight size={24} className="text-slate-200 group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all flex-shrink-0" />
                     <div className="flex gap-1">
-                      {news.map((_, i) => (
+                      {news.slice(0, 10).map((_, i) => (
                         <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentNewsIndex ? 'bg-indigo-500 w-4' : 'bg-slate-200'}`} />
                       ))}
                     </div>
