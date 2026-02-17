@@ -27,7 +27,8 @@ import {
   Waves,
   ShieldAlert,
   Newspaper,
-  Globe
+  Globe,
+  FileText
 } from 'lucide-react';
 import { db } from './services/firebase';
 import { Member, GalleryItem, Event, NewsItem, JoinRequest } from './types';
@@ -43,6 +44,7 @@ import NewsPage from './pages/NewsPage';
 import SurfingNewsPage from './pages/SurfingNewsPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+import AdminInfoPage from './pages/AdminInfoPage';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<Member | null>(null);
@@ -233,7 +235,10 @@ const App: React.FC = () => {
               { to: '/surfing-news', icon: Globe, label: 'חדשות גלישה' },
               { to: '/events', icon: Calendar, label: 'אירועים' },
               { to: '/profile', icon: User, label: 'הפרופיל שלי' },
-              ...(currentUser.role === 'Admin' ? [{ to: '/admin', icon: ShieldAlert, label: 'ניהול מערכת' }] : [])
+              ...(currentUser.role === 'Admin' ? [
+                { to: '/admin-info', icon: FileText, label: 'מידע למנהלים' },
+                { to: '/admin', icon: ShieldAlert, label: 'ניהול מערכת' }
+              ] : [])
             ].map(link => {
               const isActive = location.pathname === link.to;
               return (
@@ -313,50 +318,53 @@ const App: React.FC = () => {
             } />
             <Route path="/profile" element={<ProfilePage user={currentUser} onUpdate={updateProfile} />} />
             {currentUser.role === 'Admin' && (
-              <Route path="/admin" element={
-                <AdminPage 
-                  user={currentUser}
-                  members={members}
-                  onDeleteMember={async (id) => { await deleteDoc(doc(db, 'members', id)); }}
-                  onResetPassword={async (id) => { /* logic */ }}
-                  onToggleRole={async (id) => {
-                    const m = members.find(mem => mem.id === id);
-                    if (m) await updateDoc(doc(db, 'members', id), { role: m.role === 'Admin' ? 'Member' : 'Admin' });
-                  }}
-                  onUpdateMember={updateProfile}
-                  joinRequests={joinRequests}
-                  onApproveRequest={async (id) => {
-                    const req = joinRequests.find(r => r.id === id);
-                    if (req) {
-                      const tempPassword = Math.random().toString(36).slice(-8);
-                      const hashedPassword = await hashPassword(tempPassword);
-                      const { id: reqId, ...memberData } = req;
-                      
-                      const newMember = { 
-                        ...memberData, 
-                        password: hashedPassword,
-                        isTempPassword: true,
-                        role: 'Member' as const, 
-                        joinedAt: new Date().toLocaleDateString('he-IL'), 
-                        totalAttendance: 0,
-                        isActive: true
-                      };
-                      
-                      await addDoc(collection(db, 'members'), newMember);
-                      await deleteDoc(doc(db, 'joinRequests', id));
-                      
-                      return { name: req.name, mobile: req.mobile, tempPassword };
-                    }
-                    return null;
-                  }}
-                  onRejectRequest={async (id) => { await deleteDoc(doc(db, 'joinRequests', id)); }}
-                  siteAssets={siteAssets}
-                  events={events}
-                  news={news}
-                  onDeleteEvent={async (id) => { await deleteDoc(doc(db, 'events', id)); }}
-                  onDeleteNews={async (id) => { await deleteDoc(doc(db, 'news', id)); }}
-                />
-              } />
+              <>
+                <Route path="/admin" element={
+                  <AdminPage 
+                    user={currentUser}
+                    members={members}
+                    onDeleteMember={async (id) => { await deleteDoc(doc(db, 'members', id)); }}
+                    onResetPassword={async (id) => { /* logic */ }}
+                    onToggleRole={async (id) => {
+                      const m = members.find(mem => mem.id === id);
+                      if (m) await updateDoc(doc(db, 'members', id), { role: m.role === 'Admin' ? 'Member' : 'Admin' });
+                    }}
+                    onUpdateMember={updateProfile}
+                    joinRequests={joinRequests}
+                    onApproveRequest={async (id) => {
+                      const req = joinRequests.find(r => r.id === id);
+                      if (req) {
+                        const tempPassword = Math.random().toString(36).slice(-8);
+                        const hashedPassword = await hashPassword(tempPassword);
+                        const { id: reqId, ...memberData } = req;
+                        
+                        const newMember = { 
+                          ...memberData, 
+                          password: hashedPassword,
+                          isTempPassword: true,
+                          role: 'Member' as const, 
+                          joinedAt: new Date().toLocaleDateString('he-IL'), 
+                          totalAttendance: 0,
+                          isActive: true
+                        };
+                        
+                        await addDoc(collection(db, 'members'), newMember);
+                        await deleteDoc(doc(db, 'joinRequests', id));
+                        
+                        return { name: req.name, mobile: req.mobile, tempPassword };
+                      }
+                      return null;
+                    }}
+                    onRejectRequest={async (id) => { await deleteDoc(doc(db, 'joinRequests', id)); }}
+                    siteAssets={siteAssets}
+                    events={events}
+                    news={news}
+                    onDeleteEvent={async (id) => { await deleteDoc(doc(db, 'events', id)); }}
+                    onDeleteNews={async (id) => { await deleteDoc(doc(db, 'news', id)); }}
+                  />
+                } />
+                <Route path="/admin-info" element={<AdminInfoPage />} />
+              </>
             )}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
