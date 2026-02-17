@@ -160,10 +160,12 @@ const App: React.FC = () => {
 
   const updateProfile = async (data: Member) => {
     const { id, ...cleanData } = data;
+    // Filter out undefined values to avoid Firestore errors
     const sanitizedData = Object.entries(cleanData).reduce((acc, [key, value]) => {
-      if (value !== undefined) acc[key] = value;
+      acc[key] = value === undefined ? null : value;
       return acc;
     }, {} as any);
+    
     await updateDoc(doc(db, 'members', id), sanitizedData);
   };
 

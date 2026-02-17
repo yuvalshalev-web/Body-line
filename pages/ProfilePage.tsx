@@ -17,10 +17,15 @@ import {
   RefreshCw,
   MessageSquare,
   Mail,
-  Cake
+  Cake,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { Member } from '../types';
 import { generateBio } from '../services/geminiService';
+import { hashPassword } from '../utils/crypto';
+import { validatePassword, isPasswordValid } from '../utils/validation';
 
 const XLogo = ({ className, size = 16 }: { className?: string, size?: number }) => (
   <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -97,16 +102,22 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
   const [isGeneratingBio, setIsGeneratingBio] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
+
+  // Password change state
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+  const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false });
   
-  const lastUserRef = useRef<string>(JSON.stringify(initializeMember(user)));
+  const lastSyncedUserRef = useRef<string>(JSON.stringify(initializeMember(user)));
 
   useEffect(() => {
     const initializedUser = initializeMember(user);
     const userJson = JSON.stringify(initializedUser);
-    if (initializedUser.id !== formData.id || (!isDirty && userJson !== lastUserRef.current)) {
+    
+    if (initializedUser.id !== formData.id || (!isDirty && userJson !== lastSyncedUserRef.current)) {
        setFormData(initializedUser);
        setIsDirty(false);
-       lastUserRef.current = userJson;
+       lastSyncedUserRef.current = userJson;
     }
   }, [user]);
 
@@ -133,15 +144,44 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      await onUpdate(formData);
+      let finalData = { ...formData };
+
+      // Handle Password Change if requested
+      if (showPasswordForm && passwords.new) {
+        if (!passwords.current) {
+          throw new Error('יש להזין סיסמה נוכחית');
+        }
+        const currentHashed = await hashPassword(passwords.current);
+        if (currentHashed !== user.password) {
+          throw new Error('סיסמה נוכחית אינה נכונה');
+        }
+        if (passwords.new !== passwords.confirm) {
+          throw new Error('הסיסמאות החדשות אינן תואמות');
+        }
+        const requirements = validatePassword(passwords.new);
+        if (!isPasswordValid(requirements)) {
+          throw new Error('הסיסמה החדשה אינה עומדת בדרישות האבטחה');
+        }
+        
+        const newHashed = await hashPassword(passwords.new);
+        finalData.password = newHashed;
+        finalData.isTempPassword = false;
+      }
+
+      await onUpdate(finalData);
+      
+      lastSyncedUserRef.current = JSON.stringify(finalData);
+      
       setToastMsg('הפרופיל עודכן בהצלחה!');
       setShowToast(true);
       setIsDirty(false);
-      lastUserRef.current = JSON.stringify(formData);
+      setShowPasswordForm(false);
+      setPasswords({ current: '', new: '', confirm: '' });
+      
       setTimeout(() => setShowToast(false), 3000);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setToastMsg('שגיאה בעדכון.');
+      setToastMsg(err.message || 'שגיאה בעדכון.');
       setShowToast(true);
     } finally {
       setIsSaving(false);
@@ -247,6 +287,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
                   <label className="block text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 pr-3">רשתות חברתיות</label>
                   <div className="space-y-4">
                     <SocialInput label="Facebook" value={formData.facebookUrl || ''} onChange={(v) => handleFieldChange('facebookUrl', v)} icon={Facebook} placeholder="פייסבוק..." brandColor="#1877F2" ensureAbsoluteUrl={ensureAbsoluteUrl} />
+                    <SocialInput label="Linkedin" value={formData.linkedinUrl || ''} onChange={(v) => handleFieldChange('linkedinUrl', v)} icon={Linkedin} placeholder="לינקדין..." brandColor="#0A66C2" ensureAbsoluteUrl={ensureAbsoluteUrl} />
                     <SocialInput label="Instagram" value={formData.instagramUrl || ''} onChange={(v) => handleFieldChange('instagramUrl', v)} icon={Instagram} placeholder="אינסטגרם..." brandColor="#E4405F" ensureAbsoluteUrl={ensureAbsoluteUrl} />
                     <SocialInput label="X (Twitter)" value={formData.twitterUrl || ''} onChange={(v) => handleFieldChange('twitterUrl', v)} icon={XLogo} placeholder="X..." brandColor="#000000" ensureAbsoluteUrl={ensureAbsoluteUrl} />
                     <SocialInput label="TikTok" value={formData.tiktokUrl || ''} onChange={(v) => handleFieldChange('tiktokUrl', v)} icon={Music} placeholder="טיקטוק..." brandColor="#000000" ensureAbsoluteUrl={ensureAbsoluteUrl} />
@@ -267,6 +308,75 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
                   <textarea className="w-full p-6 md:p-8 bg-slate-50 border border-slate-100 rounded-[2rem] md:rounded-[2.5rem] font-bold text-slate-700 min-h-[250px] md:min-h-[400px] resize-none focus:bg-white outline-none transition-all shadow-inner leading-relaxed" value={formData.bio} onChange={(e) => handleFieldChange('bio', e.target.value)} />
                 </div>
               </div>
+            </div>
+
+            {/* Password Change Section - Restored to the bottom */}
+            <div className="mt-12 pt-12 border-t border-slate-100">
+               <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
+                       <Lock size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-black text-slate-900 tracking-tight">אבטחה וסיסמה</h4>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מומלץ להחליף סיסמה מעת לעת</p>
+                    </div>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPasswordForm(!showPasswordForm)}
+                    className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${showPasswordForm ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                  >
+                    {showPasswordForm ? 'ביטול' : 'שינוי סיסמה'}
+                  </button>
+               </div>
+
+               {showPasswordForm && (
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-4 duration-500 mb-12">
+                   <div className="space-y-1.5">
+                     <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה נוכחית</label>
+                     <div className="relative">
+                       <input 
+                         type={showPass.current ? "text" : "password"}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold"
+                         value={passwords.current}
+                         onChange={e => {setPasswords({...passwords, current: e.target.value}); setIsDirty(true);}}
+                       />
+                       <button type="button" onClick={() => setShowPass({...showPass, current: !showPass.current})} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
+                         {showPass.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                       </button>
+                     </div>
+                   </div>
+                   <div className="space-y-1.5">
+                     <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה חדשה</label>
+                     <div className="relative">
+                       <input 
+                         type={showPass.new ? "text" : "password"}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold"
+                         value={passwords.new}
+                         onChange={e => {setPasswords({...passwords, new: e.target.value}); setIsDirty(true);}}
+                       />
+                       <button type="button" onClick={() => setShowPass({...showPass, new: !showPass.new})} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
+                         {showPass.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                       </button>
+                     </div>
+                   </div>
+                   <div className="space-y-1.5">
+                     <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">אימות סיסמה</label>
+                     <div className="relative">
+                       <input 
+                         type={showPass.confirm ? "text" : "password"}
+                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold"
+                         value={passwords.confirm}
+                         onChange={e => {setPasswords({...passwords, confirm: e.target.value}); setIsDirty(true);}}
+                       />
+                       <button type="button" onClick={() => setShowPass({...showPass, confirm: !showPass.confirm})} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
+                         {showPass.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                       </button>
+                     </div>
+                   </div>
+                 </div>
+               )}
             </div>
 
             <div className="mt-12 md:mt-16 flex items-center justify-center">

@@ -51,13 +51,9 @@ const SURF_DICTIONARY = [
   { term: "סוול (Swell)", definition: "אנרגיית הגלים שנוצרה בלב ים ומגיעה אל החוף כסטים מסודרים." }
 ];
 
-const STREAMER_NEWS_HEADLINES = [
+const FALLBACK_HEADLINES = [
   "תחזית סוול: גל חדש בדרך לחופי המרכז ביום חמישי הקרוב",
-  "אליפות ישראל בגלישה: תוצאות מקצי המוקדמות בחוף המרינה",
   "מצב הים: טמפרטורת המים עולה ל-20 מעלות, רוח אופשור קלילה בבוקר",
-  "חדשות גלישה: גולש ישראלי העפיל לשלבים המכריעים בסבב האירופי",
-  "איכות הסביבה: מבצע ניקוי חופים קהילתי יתקיים ביום שישי הקרוב",
-  "ציוד גלישה: המלצות לשעווה מתאימה לעונת המעבר הנוכחית",
   "קהילה: מפגש גולשי חבל זוג המסורתי יתקיים השבוע במועדון ריף",
   "בטיחות בים: הנחיות חדשות לגלישה בקרבת שוברי הגלים במרינה",
   "ספורט: עלייה במספר הגולשים המקצועיים בנבחרת המייצגת של הרצליה"
@@ -65,25 +61,42 @@ const STREAMER_NEWS_HEADLINES = [
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ 
   membersCount, galleryCount, eventsCount, newsCount,
-  currentUser, attendees, onToggleAttendance, heroBg, activeSessionDate, news
+  currentUser, attendees, onToggleAttendance, heroBg, activeSessionDate, news, siteAssets
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAttendees, setShowAttendees] = useState(false);
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [dictionaryIndex, setDictionaryIndex] = useState(0);
+  const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
 
   useEffect(() => {
     setQuoteIndex(Math.floor(Math.random() * SURF_QUOTES.length));
     setDictionaryIndex(Math.floor(Math.random() * SURF_DICTIONARY.length));
   }, []);
 
+  // News Rotation logic (10 seconds)
+  useEffect(() => {
+    if (news.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentNewsIndex((prev) => (prev + 1) % news.length);
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [news.length]);
+
   const formattedDate = useMemo(() => {
     const d = new Date(activeSessionDate);
     return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'long' });
   }, [activeSessionDate]);
 
-  const latestNews = useMemo(() => news.slice(0, 4), [news]);
   const isUserAttending = attendees.some(a => a.id === currentUser.id);
+
+  // Merge real news into headlines for the ticker
+  const tickerItems = useMemo(() => {
+    const realNewsTitles = news.map(n => n.title);
+    return realNewsTitles.length > 0 ? [...realNewsTitles, ...FALLBACK_HEADLINES] : FALLBACK_HEADLINES;
+  }, [news]);
 
   const statsCards = [
     { label: 'חברים', value: membersCount, icon: Users, color: 'text-emerald-500', bgColor: 'bg-emerald-50', path: '/directory' },
@@ -101,27 +114,28 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     'Share': 'שיתוף'
   };
 
+  const activePost = news[currentNewsIndex];
+
   return (
     <div className="space-y-6 md:space-y-12 animate-in fade-in duration-700 max-w-5xl mx-auto pb-10" dir="rtl">
       
-      {/* Streamer News Ticker - Fixed for definite LTR movement */}
+      {/* News Ticker */}
       <div className="w-full bg-white text-slate-900 py-3 md:py-4 rounded-[1.5rem] md:rounded-full overflow-hidden flex items-center relative border border-slate-200 shadow-md h-14 md:h-16 group">
-        {/* Label always visible on the right */}
         <div className="absolute right-0 top-0 bottom-0 px-4 md:px-6 bg-slate-50 z-20 flex items-center gap-2 border-l border-slate-200 rounded-r-[1.5rem] md:rounded-r-full shadow-sm">
            <Radio size={14} className="text-rose-500 animate-pulse" />
            <span className="text-[10px] md:text-xs font-black uppercase tracking-widest whitespace-nowrap text-slate-500">עדכוני סטריימר</span>
         </div>
         
-        {/* Scrolling container - forced LTR for animation predictability */}
-        <div className="flex-1 h-full flex items-center overflow-hidden" dir="ltr">
-          <div className="flex whitespace-nowrap animate-ticker-ltr group-hover:[animation-play-state:paused] pointer-events-none">
-            {/* Multiplied for seamless infinite loop */}
-            {[...STREAMER_NEWS_HEADLINES, ...STREAMER_NEWS_HEADLINES, ...STREAMER_NEWS_HEADLINES].map((text, i) => (
-              <div key={i} className="flex items-center gap-10 mx-6">
-                <span className="text-[12px] md:text-sm font-bold text-slate-800 tracking-tight" dir="rtl">{text}</span>
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-200 flex-shrink-0"></div>
-              </div>
-            ))}
+        <div className="flex-1 overflow-hidden h-full flex items-center" dir="ltr">
+          <div className="ticker-scroll-container group-hover:[animation-play-state:paused]">
+            <div className="ticker-content-wrapper">
+              {[...tickerItems, ...tickerItems].map((text, i) => (
+                <div key={i} className="ticker-item">
+                  <span className="ticker-text" dir="rtl">{text}</span>
+                  <div className="ticker-dot"></div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -181,7 +195,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </section>
 
-      {/* Stats Grid - Updated to md:grid-cols-5 */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
         {statsCards.map((card, i) => (
           <Link 
@@ -202,35 +216,56 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         ))}
       </div>
 
-      {/* Main Content Area: Posts followed by Quote/Dictionary row */}
+      {/* News Section with Rotation */}
       <div className="space-y-8 md:space-y-12">
-        {/* Posts Section */}
         <div className="space-y-6">
            <div className="flex items-center justify-between px-2">
               <h3 className="text-2xl font-black text-slate-950 flex items-center gap-3">
                  <Newspaper className="text-indigo-500" size={24} />
                  פוסטים
+                 {news.length > 1 && (
+                   <span className="text-[10px] font-black bg-indigo-50 text-indigo-500 px-2 py-0.5 rounded-full border border-indigo-100 animate-pulse">
+                     רוטציה פעילה
+                   </span>
+                 )}
               </h3>
               <Link to="/news" className="text-xs font-black text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest">צפה בהכל</Link>
            </div>
            
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {latestNews.length > 0 ? latestNews.map((item) => (
-                <Link key={item.id} to="/news" className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group flex items-start gap-6">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0">
-                    {item.imageUrl ? <img src={item.imageUrl} className="w-full h-full object-cover rounded-2xl" alt="" /> : <Sparkles size={22} />}
+           <div className="relative min-h-[160px]">
+              {news.length > 0 && activePost ? (
+                <Link 
+                  key={activePost.id} 
+                  to="/news" 
+                  className="block p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group flex flex-col md:flex-row items-center gap-6 animate-in fade-in slide-in-from-left-6 duration-1000"
+                >
+                  <div className="w-full md:w-32 h-32 md:h-32 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0 overflow-hidden">
+                    {activePost.imageUrl ? (
+                      <img src={activePost.imageUrl} className="w-full h-full object-cover rounded-2xl" alt="" />
+                    ) : (
+                      <Sparkles size={32} />
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0 text-right">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{categoryTranslations[item.category] || item.category}</p>
-                    <h4 className="text-xl font-black text-slate-950 group-hover:text-indigo-600 transition-colors truncate mb-1">{item.title}</h4>
-                    <p className="text-xs font-bold text-slate-500 leading-relaxed line-clamp-2">
-                      {item.content}
+                  <div className="flex-1 min-w-0 text-center md:text-right">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                      {categoryTranslations[activePost.category] || activePost.category} • {new Date(activePost.date).toLocaleDateString('he-IL')}
+                    </p>
+                    <h4 className="text-xl md:text-2xl font-black text-slate-950 group-hover:text-indigo-600 transition-colors truncate mb-2">{activePost.title}</h4>
+                    <p className="text-sm md:text-base font-bold text-slate-500 leading-relaxed line-clamp-2 md:line-clamp-3">
+                      {activePost.content}
                     </p>
                   </div>
-                  <ArrowRight size={20} className="text-slate-200 group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all flex-shrink-0 self-center" />
+                  <div className="hidden md:flex flex-col items-center gap-2">
+                    <ArrowRight size={24} className="text-slate-200 group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all flex-shrink-0" />
+                    <div className="flex gap-1">
+                      {news.map((_, i) => (
+                        <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentNewsIndex ? 'bg-indigo-500 w-4' : 'bg-slate-200'}`} />
+                      ))}
+                    </div>
+                  </div>
                 </Link>
-              )) : (
-                <div className="col-span-full p-16 text-center bg-white border border-dashed border-slate-200 rounded-[3rem] flex flex-col items-center justify-center gap-4">
+              ) : (
+                <div className="p-16 text-center bg-white border border-dashed border-slate-200 rounded-[3rem] flex flex-col items-center justify-center gap-4">
                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
                       <Newspaper size={32} />
                    </div>
@@ -240,9 +275,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
            </div>
         </div>
 
-        {/* Surf Context Row: Quotes and Dictionary Side-by-Side */}
+        {/* Quotes and Dictionary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-           {/* Surf Quotes */}
            <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group">
               <div className="flex items-center gap-3 mb-6">
                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
@@ -260,7 +294,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
            </div>
 
-           {/* Surf Dictionary */}
            <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group">
               <div className="flex items-center gap-3 mb-6">
                  <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">

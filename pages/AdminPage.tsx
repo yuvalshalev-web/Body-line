@@ -317,7 +317,7 @@ const AdminPage: React.FC<AdminPageProps> = ({
                     <div className="flex items-center gap-6 mb-8">
                       <img src={req.avatar} className="w-20 h-20 rounded-[1.5rem] object-cover border-2 border-slate-50 shadow-sm" alt={req.name} />
                       <div>
-                        <h4 className="text-2xl font-black text-slate-950 tracking-tight">{req.name}</h4>
+                        <h4 className="text-2xl font-black text-slate-900 tracking-tight">{req.name}</h4>
                         <div className="flex flex-col gap-1 mt-1">
                           <p className="text-slate-400 text-xs font-black flex items-center gap-2"><Mail size={12} /> {req.email}</p>
                           <p className="text-slate-400 text-xs font-black flex items-center gap-2"><Phone size={12} /> {req.mobile || 'לא צוין'}</p>
@@ -591,12 +591,12 @@ const AdminPage: React.FC<AdminPageProps> = ({
                        <input type="url" placeholder="Facebook URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.facebookUrl || ''} onChange={e => setEditingMember({...editingMember, facebookUrl: e.target.value})} />
                     </div>
                     <div className="relative">
-                       <Instagram className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                       <input type="url" placeholder="Instagram URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.instagramUrl || ''} onChange={e => setEditingMember({...editingMember, instagramUrl: e.target.value})} />
-                    </div>
-                    <div className="relative">
                        <Linkedin className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
                        <input type="url" placeholder="Linkedin URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.linkedinUrl || ''} onChange={e => setEditingMember({...editingMember, linkedinUrl: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                       <Instagram className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                       <input type="url" placeholder="Instagram URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.instagramUrl || ''} onChange={e => setEditingMember({...editingMember, instagramUrl: e.target.value})} />
                     </div>
                     <div className="relative">
                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300"><XLogo size={16} /></div>
