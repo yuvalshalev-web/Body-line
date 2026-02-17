@@ -40,6 +40,7 @@ interface ProfilePageProps {
 
 const SocialInput = ({ 
   label, 
+  name,
   value, 
   onChange, 
   icon: Icon, 
@@ -48,6 +49,7 @@ const SocialInput = ({
   ensureAbsoluteUrl,
 }: { 
   label: string, 
+  name: string,
   value: string, 
   onChange: (val: string) => void, 
   icon: any, 
@@ -59,13 +61,15 @@ const SocialInput = ({
   
   return (
     <div className="group">
-      <label className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-[0.2em] pr-3">{label}</label>
+      <label htmlFor={name} className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-[0.2em] pr-3">{label}</label>
       <div className="relative">
         <div className={`absolute right-5 top-1/2 -translate-y-1/2 transition-all duration-500 ${hasValue ? 'scale-110' : 'text-slate-300 scale-100 opacity-40'}`} style={{ color: hasValue ? brandColor : '#94a3b8' }}>
           <Icon size={18} />
         </div>
         <input
           type="url"
+          id={name}
+          name={name}
           placeholder={placeholder}
           className="w-full pr-14 pl-14 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-[1.25rem] md:rounded-[1.5rem] focus:bg-white outline-none transition-all font-black text-slate-900 shadow-sm text-sm"
           value={value || ''}
@@ -108,18 +112,19 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false });
   
-  const lastSyncedUserRef = useRef<string>(JSON.stringify(initializeMember(user)));
+  // Track the last user prop value that was successfully synced to state
+  const lastSyncedUserPropRef = useRef<string>(JSON.stringify(initializeMember(user)));
 
   useEffect(() => {
     const initializedUser = initializeMember(user);
     const userJson = JSON.stringify(initializedUser);
     
-    if (initializedUser.id !== formData.id || (!isDirty && userJson !== lastSyncedUserRef.current)) {
+    // Sync state with props ONLY if user ID changed or if we aren't editing and the props are different
+    if (initializedUser.id !== formData.id || (!isDirty && userJson !== lastSyncedUserPropRef.current)) {
        setFormData(initializedUser);
-       setIsDirty(false);
-       lastSyncedUserRef.current = userJson;
+       lastSyncedUserPropRef.current = userJson;
     }
-  }, [user]);
+  }, [user, isDirty, formData.id]);
 
   const ensureAbsoluteUrl = (url?: string) => {
     if (!url) return '';
@@ -143,25 +148,21 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    
+    // Log the entire formData before processing to see what's collected
+    console.log("DEBUG [ProfilePage]: Final data being sent for update:", formData);
+    
     try {
       let finalData = { ...formData };
 
       // Handle Password Change if requested
       if (showPasswordForm && passwords.new) {
-        if (!passwords.current) {
-          throw new Error('יש להזין סיסמה נוכחית');
-        }
+        if (!passwords.current) throw new Error('יש להזין סיסמה נוכחית');
         const currentHashed = await hashPassword(passwords.current);
-        if (currentHashed !== user.password) {
-          throw new Error('סיסמה נוכחית אינה נכונה');
-        }
-        if (passwords.new !== passwords.confirm) {
-          throw new Error('הסיסמאות החדשות אינן תואמות');
-        }
+        if (currentHashed !== user.password) throw new Error('סיסמה נוכחית אינה נכונה');
+        if (passwords.new !== passwords.confirm) throw new Error('הסיסמאות החדשות אינן תואמות');
         const requirements = validatePassword(passwords.new);
-        if (!isPasswordValid(requirements)) {
-          throw new Error('הסיסמה החדשה אינה עומדת בדרישות האבטחה');
-        }
+        if (!isPasswordValid(requirements)) throw new Error('הסיסמה החדשה אינה עומדת בדרישות האבטחה');
         
         const newHashed = await hashPassword(passwords.new);
         finalData.password = newHashed;
@@ -170,7 +171,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
 
       await onUpdate(finalData);
       
-      lastSyncedUserRef.current = JSON.stringify(finalData);
+      // Update our sync ref immediately to prevent race conditions
+      lastSyncedUserPropRef.current = JSON.stringify(initializeMember(finalData));
       
       setToastMsg('הפרופיל עודכן בהצלחה!');
       setShowToast(true);
@@ -180,8 +182,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
       
       setTimeout(() => setShowToast(false), 3000);
     } catch (err: any) {
-      console.error(err);
-      setToastMsg(err.message || 'שגיאה בעדכון.');
+      console.error("ERROR [ProfilePage]: Update failed", err);
+      setToastMsg(err.message || 'שגיאה בעדכון הפרופיל.');
       setShowToast(true);
     } finally {
       setIsSaving(false);
@@ -243,24 +245,24 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-12">
               <div className="space-y-6 md:space-y-8">
                 <div>
-                  <label className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">שם מלא</label>
-                  <input type="text" className="w-full px-6 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all" value={formData.name} onChange={(e) => handleFieldChange('name', e.target.value)} />
+                  <label htmlFor="fullName" className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">שם מלא</label>
+                  <input id="fullName" name="fullName" type="text" className="w-full px-6 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all" value={formData.name} onChange={(e) => handleFieldChange('name', e.target.value)} />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
                   <div>
-                    <label className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">כתובת אימייל</label>
+                    <label htmlFor="email" className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">כתובת אימייל</label>
                     <div className="relative">
                       <Mail className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                      <input type="email" className="w-full pr-14 pl-6 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all" value={formData.email} onChange={(e) => handleFieldChange('email', e.target.value)} />
+                      <input id="email" name="email" type="email" className="w-full pr-14 pl-6 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all" value={formData.email} onChange={(e) => handleFieldChange('email', e.target.value)} />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">טלפון נייד</label>
+                    <label htmlFor="mobile" className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">טלפון נייד</label>
                     <div className="relative">
                       <Phone className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                      <input type="tel" className="w-full pr-14 pl-14 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all" value={formData.mobile} onChange={(e) => handleFieldChange('mobile', e.target.value)} />
+                      <input id="mobile" name="mobile" type="tel" className="w-full pr-14 pl-14 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all" value={formData.mobile} onChange={(e) => handleFieldChange('mobile', e.target.value)} />
                       {formData.mobile && (
                         <a href={getWhatsAppUrl(formData.mobile)} target="_blank" rel="noopener noreferrer" className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-emerald-500 text-white rounded-xl shadow-lg active:scale-90 transition-transform">
                           <MessageSquare size={14} />
@@ -271,27 +273,22 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
                 </div>
 
                 <div>
-                  <label className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">תאריך יום הולדת</label>
+                  <label htmlFor="birthday" className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">תאריך יום הולדת</label>
                   <div className="relative">
                     <Cake className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                    <input 
-                      type="date" 
-                      className="w-full pr-14 pl-8 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all cursor-pointer" 
-                      value={formData.birthday || ''} 
-                      onChange={(e) => handleFieldChange('birthday', e.target.value)} 
-                    />
+                    <input id="birthday" name="birthday" type="date" className="w-full pr-14 pl-8 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all cursor-pointer" value={formData.birthday || ''} onChange={(e) => handleFieldChange('birthday', e.target.value)} />
                   </div>
                 </div>
 
                 <div className="space-y-5 pt-4">
                   <label className="block text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 pr-3">רשתות חברתיות</label>
                   <div className="space-y-4">
-                    <SocialInput label="Facebook" value={formData.facebookUrl || ''} onChange={(v) => handleFieldChange('facebookUrl', v)} icon={Facebook} placeholder="פייסבוק..." brandColor="#1877F2" ensureAbsoluteUrl={ensureAbsoluteUrl} />
-                    <SocialInput label="Linkedin" value={formData.linkedinUrl || ''} onChange={(v) => handleFieldChange('linkedinUrl', v)} icon={Linkedin} placeholder="לינקדין..." brandColor="#0A66C2" ensureAbsoluteUrl={ensureAbsoluteUrl} />
-                    <SocialInput label="Instagram" value={formData.instagramUrl || ''} onChange={(v) => handleFieldChange('instagramUrl', v)} icon={Instagram} placeholder="אינסטגרם..." brandColor="#E4405F" ensureAbsoluteUrl={ensureAbsoluteUrl} />
-                    <SocialInput label="X (Twitter)" value={formData.twitterUrl || ''} onChange={(v) => handleFieldChange('twitterUrl', v)} icon={XLogo} placeholder="X..." brandColor="#000000" ensureAbsoluteUrl={ensureAbsoluteUrl} />
-                    <SocialInput label="TikTok" value={formData.tiktokUrl || ''} onChange={(v) => handleFieldChange('tiktokUrl', v)} icon={Music} placeholder="טיקטוק..." brandColor="#000000" ensureAbsoluteUrl={ensureAbsoluteUrl} />
-                    <SocialInput label="אתר אישי" value={formData.websiteUrl || ''} onChange={(v) => handleFieldChange('websiteUrl', v)} icon={Globe} placeholder="אתר..." brandColor="#4F46E5" ensureAbsoluteUrl={ensureAbsoluteUrl} />
+                    <SocialInput label="Facebook" name="facebookUrl" value={formData.facebookUrl || ''} onChange={(v) => handleFieldChange('facebookUrl', v)} icon={Facebook} placeholder="פייסבוק..." brandColor="#1877F2" ensureAbsoluteUrl={ensureAbsoluteUrl} />
+                    <SocialInput label="Linkedin" name="linkedinUrl" value={formData.linkedinUrl || ''} onChange={(v) => handleFieldChange('linkedinUrl', v)} icon={Linkedin} placeholder="לינקדין..." brandColor="#0A66C2" ensureAbsoluteUrl={ensureAbsoluteUrl} />
+                    <SocialInput label="Instagram" name="instagramUrl" value={formData.instagramUrl || ''} onChange={(v) => handleFieldChange('instagramUrl', v)} icon={Instagram} placeholder="אינסטגרם..." brandColor="#E4405F" ensureAbsoluteUrl={ensureAbsoluteUrl} />
+                    <SocialInput label="X (Twitter)" name="twitterUrl" value={formData.twitterUrl || ''} onChange={(v) => handleFieldChange('twitterUrl', v)} icon={XLogo} placeholder="X..." brandColor="#000000" ensureAbsoluteUrl={ensureAbsoluteUrl} />
+                    <SocialInput label="TikTok" name="tiktokUrl" value={formData.tiktokUrl || ''} onChange={(v) => handleFieldChange('tiktokUrl', v)} icon={Music} placeholder="טיקטוק..." brandColor="#000000" ensureAbsoluteUrl={ensureAbsoluteUrl} />
+                    <SocialInput label="אתר אישי" name="websiteUrl" value={formData.websiteUrl || ''} onChange={(v) => handleFieldChange('websiteUrl', v)} icon={Globe} placeholder="אתר..." brandColor="#4F46E5" ensureAbsoluteUrl={ensureAbsoluteUrl} />
                   </div>
                 </div>
               </div>
@@ -299,18 +296,17 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
               <div className="space-y-8">
                 <div>
                   <div className="flex items-center justify-between mb-3 px-2">
-                    <label className="block text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">קצת עלי</label>
+                    <label htmlFor="bio" className="block text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">קצת עלי</label>
                     <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl font-black text-[9px] md:text-[10px] hover:bg-indigo-100 active:scale-95 transition-all">
                       {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                       שיפור עם AI
                     </button>
                   </div>
-                  <textarea className="w-full p-6 md:p-8 bg-slate-50 border border-slate-100 rounded-[2rem] md:rounded-[2.5rem] font-bold text-slate-700 min-h-[250px] md:min-h-[400px] resize-none focus:bg-white outline-none transition-all shadow-inner leading-relaxed" value={formData.bio} onChange={(e) => handleFieldChange('bio', e.target.value)} />
+                  <textarea id="bio" name="bio" className="w-full p-6 md:p-8 bg-slate-50 border border-slate-100 rounded-[2rem] md:rounded-[2.5rem] font-bold text-slate-700 min-h-[300px] md:min-h-[450px] resize-none focus:bg-white outline-none transition-all shadow-inner leading-relaxed" value={formData.bio} onChange={(e) => handleFieldChange('bio', e.target.value)} />
                 </div>
               </div>
             </div>
 
-            {/* Password Change Section - Restored to the bottom */}
             <div className="mt-12 pt-12 border-t border-slate-100">
                <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-3">
@@ -322,11 +318,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מומלץ להחליף סיסמה מעת לעת</p>
                     </div>
                   </div>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPasswordForm(!showPasswordForm)}
-                    className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${showPasswordForm ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
-                  >
+                  <button type="button" onClick={() => setShowPasswordForm(!showPasswordForm)} className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${showPasswordForm ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
                     {showPasswordForm ? 'ביטול' : 'שינוי סיסמה'}
                   </button>
                </div>
@@ -336,12 +328,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
                    <div className="space-y-1.5">
                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה נוכחית</label>
                      <div className="relative">
-                       <input 
-                         type={showPass.current ? "text" : "password"}
-                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold"
-                         value={passwords.current}
-                         onChange={e => {setPasswords({...passwords, current: e.target.value}); setIsDirty(true);}}
-                       />
+                       <input type={showPass.current ? "text" : "password"} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={passwords.current} onChange={e => setPasswords({...passwords, current: e.target.value})} />
                        <button type="button" onClick={() => setShowPass({...showPass, current: !showPass.current})} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
                          {showPass.current ? <EyeOff size={16} /> : <Eye size={16} />}
                        </button>
@@ -350,12 +337,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
                    <div className="space-y-1.5">
                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה חדשה</label>
                      <div className="relative">
-                       <input 
-                         type={showPass.new ? "text" : "password"}
-                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold"
-                         value={passwords.new}
-                         onChange={e => {setPasswords({...passwords, new: e.target.value}); setIsDirty(true);}}
-                       />
+                       <input type={showPass.new ? "text" : "password"} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={passwords.new} onChange={e => setPasswords({...passwords, new: e.target.value})} />
                        <button type="button" onClick={() => setShowPass({...showPass, new: !showPass.new})} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
                          {showPass.new ? <EyeOff size={16} /> : <Eye size={16} />}
                        </button>
@@ -364,12 +346,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
                    <div className="space-y-1.5">
                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">אימות סיסמה</label>
                      <div className="relative">
-                       <input 
-                         type={showPass.confirm ? "text" : "password"}
-                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold"
-                         value={passwords.confirm}
-                         onChange={e => {setPasswords({...passwords, confirm: e.target.value}); setIsDirty(true);}}
-                       />
+                       <input type={showPass.confirm ? "text" : "password"} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={passwords.confirm} onChange={e => setPasswords({...passwords, confirm: e.target.value})} />
                        <button type="button" onClick={() => setShowPass({...showPass, confirm: !showPass.confirm})} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
                          {showPass.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
                        </button>
@@ -380,11 +357,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
             </div>
 
             <div className="mt-12 md:mt-16 flex items-center justify-center">
-              <button 
-                type="submit" 
-                disabled={isSaving || !isDirty} 
-                className="w-full max-w-md py-5 md:py-6 bg-slate-950 text-white rounded-[1.75rem] md:rounded-[2rem] font-black text-lg md:text-xl hover:bg-indigo-600 transition-all shadow-2xl flex items-center justify-center gap-4 disabled:opacity-50 active:scale-95"
-              >
+              <button type="submit" disabled={isSaving || !isDirty} className="w-full max-w-md py-5 md:py-6 bg-slate-950 text-white rounded-[1.75rem] md:rounded-[2rem] font-black text-lg md:text-xl hover:bg-indigo-600 transition-all shadow-2xl flex items-center justify-center gap-4 disabled:opacity-50 active:scale-95">
                 {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
                 שמירת פרופיל
               </button>

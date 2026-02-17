@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Users, 
@@ -16,9 +16,11 @@ import {
   RefreshCw,
   Video,
   Radio,
-  Star
+  Star,
+  AlertCircle
 } from 'lucide-react';
 import { Member, NewsItem } from '../types';
+import { GoogleGenAI } from "@google/genai";
 
 interface DashboardPageProps {
   membersCount: number;
@@ -34,7 +36,17 @@ interface DashboardPageProps {
   news: NewsItem[];
 }
 
-const SURF_QUOTES = [
+interface DictionaryTerm {
+  term: string;
+  definition: string;
+}
+
+interface QuoteItem {
+  text: string;
+  author: string;
+}
+
+const FALLBACK_QUOTES: QuoteItem[] = [
   { text: "אתה לא יכול לעצור את הגלים, אבל אתה יכול ללמוד לגלוש עליהם.", author: "ג'ון קבט-זין" },
   { text: "גלישה היא הדרך שלי להתחבר לכוח של הטבע ולמצוא שקט פנימי.", author: "ג'ון ג'ון פלורנס" },
   { text: "הים הוא המקום היחיד שבו אני מרגיש באמת חופשי.", author: "גולש חבל זוג" },
@@ -42,14 +54,15 @@ const SURF_QUOTES = [
   { text: "הגל הכי טוב בחיים שלך הוא הגל הבא שתתפוס.", author: "נבחרת חבל זוג" }
 ];
 
-const SURF_DICTIONARY = [
+const FALLBACK_DICTIONARY: DictionaryTerm[] = [
   { term: "אופשור (Offshore)", definition: "רוח הנושבת מהיבשה אל הים. הרוח ה'טובה' שמיישרת את הגלים ויוצרת צינורות." },
-  { term: "אונשור (Onshore)", definition: "רוח הנושבת מהים אל היבשה. יוצרת גלים מבולגנים וקשים לגלישה." },
   { term: "ליינאפ (Lineup)", definition: "האזור בים שבו הגולשים מחכים מעבר לקצף כדי לתפוס את הגלים." },
-  { term: "דאק דייב (Duck Dive)", definition: "צלילה מתחת לגל הנשבר עם הגלשן כדי לעבור אותו בקלות." },
-  { term: "פיק (Peak)", definition: "הנקודה הגבוהה ביותר בגל, המקום האידיאלי להתחיל בו את הגלישה." },
-  { term: "סוול (Swell)", definition: "אנרגיית הגלים שנוצרה בלב ים ומגיעה אל החוף כסטים מסודרים." }
+  { term: "דאק דייב (Duck Dive)", definition: "צלילה מתחת לגל הנשבר עם הגלשן כדי לעבור אותו בקלות." }
 ];
+
+const QUOTES_CACHE_KEY = 'habal_zug_quotes_cache';
+const DICT_CACHE_KEY = 'habal_zug_dict_cache';
+const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ 
   membersCount, galleryCount, eventsCount, newsCount,
@@ -57,23 +70,150 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAttendees, setShowAttendees] = useState(false);
+  
+  // Helper to shuffle array
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  // Quotes State - Initialize from Cache immediately
+  const [quotes, setQuotes] = useState<QuoteItem[]>(() => {
+    const cached = localStorage.getItem(QUOTES_CACHE_KEY);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        return shuffleArray(parsed.data);
+      } catch (e) { return FALLBACK_QUOTES; }
+    }
+    return FALLBACK_QUOTES;
+  });
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const [isQuotesLoading, setIsQuotesLoading] = useState(false);
+
+  // Dictionary State - Initialize from Cache immediately
+  const [dictionary, setDictionary] = useState<DictionaryTerm[]>(() => {
+    const cached = localStorage.getItem(DICT_CACHE_KEY);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        return shuffleArray(parsed.data);
+      } catch (e) { return FALLBACK_DICTIONARY; }
+    }
+    return FALLBACK_DICTIONARY;
+  });
   const [dictionaryIndex, setDictionaryIndex] = useState(0);
+  const [isDictLoading, setIsDictLoading] = useState(false);
+
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
 
-  useEffect(() => {
-    setQuoteIndex(Math.floor(Math.random() * SURF_QUOTES.length));
-    setDictionaryIndex(Math.floor(Math.random() * SURF_DICTIONARY.length));
+  // Fetch Quotes Data using Gemini from surfd.com
+  const fetchQuotesData = useCallback(async (force = false) => {
+    if (!force) {
+      const cached = localStorage.getItem(QUOTES_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.timestamp < CACHE_EXPIRY) return;
+      }
+    }
+
+    setIsQuotesLoading(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const prompt = `Extract ~50 surf quotes from https://surfd.com/2019/12/50-best-surf-quotes/. Translate to poetic Hebrew. Return ONLY JSON array of {text, author}.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt,
+      });
+
+      const text = response.text || "[]";
+      const cleanJson = text.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(cleanJson);
+      
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const shuffled = shuffleArray(parsed);
+        setQuotes(shuffled);
+        setQuoteIndex(0);
+        localStorage.setItem(QUOTES_CACHE_KEY, JSON.stringify({ data: parsed, timestamp: Date.now() }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch quotes:", err);
+    } finally {
+      setIsQuotesLoading(false);
+    }
   }, []);
 
-  // News Rotation logic (10 seconds)
+  // Fetch Dictionary Data
+  const fetchDictionaryData = useCallback(async (force = false) => {
+    if (!force) {
+      const cached = localStorage.getItem(DICT_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.timestamp < CACHE_EXPIRY) return;
+      }
+    }
+
+    setIsDictLoading(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const prompt = `Summarize glossary from https://wind.co.il/surfing-glossary-complete-guide/ (all ~85 terms). Return ONLY JSON array of {term, definition} in Hebrew.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt,
+      });
+
+      const text = response.text || "[]";
+      const cleanJson = text.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(cleanJson);
+      
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const shuffled = shuffleArray(parsed);
+        setDictionary(shuffled);
+        setDictionaryIndex(0);
+        localStorage.setItem(DICT_CACHE_KEY, JSON.stringify({ data: parsed, timestamp: Date.now() }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch dictionary:", err);
+    } finally {
+      setIsDictLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchQuotesData();
+    fetchDictionaryData();
+  }, [fetchQuotesData, fetchDictionaryData]);
+
+  // Quotes Rotation (60 seconds)
+  useEffect(() => {
+    if (quotes.length <= 1) return;
+    const interval = setInterval(() => {
+      setQuoteIndex((prev) => (prev + 1) % quotes.length);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [quotes]);
+
+  // Dictionary Rotation (60 seconds)
+  useEffect(() => {
+    if (dictionary.length <= 1) return;
+    const interval = setInterval(() => {
+      setDictionaryIndex((prev) => (prev + 1) % dictionary.length);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [dictionary]);
+
+  // News Rotation (10 seconds)
   useEffect(() => {
     if (news.length <= 1) return;
-
     const interval = setInterval(() => {
       setCurrentNewsIndex((prev) => (prev + 1) % news.length);
     }, 10000);
-
     return () => clearInterval(interval);
   }, [news.length]);
 
@@ -101,6 +241,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   const activePost = news[currentNewsIndex];
+  const activeTerm = dictionary[dictionaryIndex];
+  const activeQuote = quotes[quoteIndex];
 
   return (
     <div className="space-y-6 md:space-y-12 animate-in fade-in duration-700 max-w-5xl mx-auto pb-10" dir="rtl">
@@ -242,35 +384,99 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
         {/* Quotes and Dictionary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-           <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group">
+           <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
+              <button 
+                onClick={() => fetchQuotesData(true)}
+                disabled={isQuotesLoading}
+                className="absolute top-8 left-8 p-2 text-slate-300 hover:text-indigo-500 transition-colors z-20 disabled:opacity-50"
+                title="רענן ציטוטים"
+              >
+                 <RefreshCw size={18} className={isQuotesLoading ? 'animate-spin' : ''} />
+              </button>
+
               <div className="flex items-center gap-3 mb-6">
                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
                     <Quote size={20} />
                  </div>
                  <h4 className="font-black text-slate-950 text-sm uppercase tracking-widest">ציטוט הגולשים</h4>
               </div>
-              <div className="space-y-2 text-right">
-                 <p className="text-lg font-black text-indigo-500 tracking-tight leading-relaxed italic">
-                    "{SURF_QUOTES[quoteIndex].text}"
-                 </p>
-                 <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
-                    — {SURF_QUOTES[quoteIndex].author}
-                 </p>
+
+              <div className="relative min-h-[100px]">
+                {activeQuote ? (
+                  <div key={quoteIndex} className="space-y-3 text-right animate-in fade-in slide-in-from-left-4 duration-700">
+                     <p className="text-lg font-black text-indigo-500 tracking-tight leading-relaxed italic">
+                        "{activeQuote.text}"
+                     </p>
+                     <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
+                        — {activeQuote.author}
+                     </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center py-4 text-slate-300">
+                    <AlertCircle size={24} className="mb-2" />
+                    <p className="text-[10px] font-black uppercase">שגיאה בטעינת ציטוטים</p>
+                  </div>
+                )}
+                
+                {isQuotesLoading && (
+                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-2xl animate-in fade-in">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100 shadow-sm">
+                      <Loader2 className="animate-spin" size={12} />
+                      <span className="text-[9px] font-black uppercase tracking-widest">AI מעדכן ציטוטים...</span>
+                    </div>
+                  </div>
+                )}
               </div>
            </div>
 
-           <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group">
+           <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
+              <button 
+                onClick={() => fetchDictionaryData(true)}
+                disabled={isDictLoading}
+                className="absolute top-8 left-8 p-2 text-slate-300 hover:text-amber-500 transition-colors z-20 disabled:opacity-50"
+                title="רענן מונחים"
+              >
+                 <RefreshCw size={18} className={isDictLoading ? 'animate-spin' : ''} />
+              </button>
+
               <div className="flex items-center gap-3 mb-6">
                  <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">
                     <BookOpen size={20} />
                  </div>
                  <h4 className="font-black text-slate-950 text-sm uppercase tracking-widest">מילון הגולשים</h4>
               </div>
-              <div className="space-y-2 text-right">
-                 <p className="text-lg font-black text-amber-500 tracking-tight">{SURF_DICTIONARY[dictionaryIndex].term}</p>
-                 <p className="text-xs font-bold text-slate-500 leading-relaxed">
-                   {SURF_DICTIONARY[dictionaryIndex].definition}
-                 </p>
+
+              <div className="relative min-h-[120px]">
+                {activeTerm ? (
+                  <div key={activeTerm.term} className="space-y-2 text-right animate-in fade-in slide-in-from-left-4 duration-700">
+                     <p className="text-lg font-black text-amber-500 tracking-tight flex items-center gap-2">
+                       {activeTerm.term}
+                       <Sparkles size={14} className="opacity-40" />
+                     </p>
+                     <p className="text-xs font-bold text-slate-500 leading-relaxed">
+                       {activeTerm.definition}
+                     </p>
+                     <div className="pt-2">
+                        <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">
+                          מקור: wind.co.il • מתחלף כל דקה
+                        </p>
+                     </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center py-4 text-slate-300">
+                    <AlertCircle size={24} className="mb-2" />
+                    <p className="text-[10px] font-black uppercase">שגיאה בטעינת המילון</p>
+                  </div>
+                )}
+
+                {isDictLoading && (
+                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-2xl animate-in fade-in">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-full border border-amber-100 shadow-sm">
+                      <Loader2 className="animate-spin" size={12} />
+                      <span className="text-[9px] font-black uppercase tracking-widest">AI מעדכן מונחים...</span>
+                    </div>
+                  </div>
+                )}
               </div>
            </div>
         </div>

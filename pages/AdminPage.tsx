@@ -34,7 +34,10 @@ import {
   EyeOff,
   UserX,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  MapPin,
+  Clock,
+  Type
 } from 'lucide-react';
 import { doc, updateDoc, setDoc, arrayUnion, arrayRemove, addDoc, collection } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -94,12 +97,27 @@ const AdminPage: React.FC<AdminPageProps> = ({
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [adminNewPassword, setAdminNewPassword] = useState('');
   const [showAdminPass, setShowAdminPass] = useState(false);
   const [approvedResult, setApprovedResult] = useState<{ name: string; mobile: string; tempPassword: string } | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadType, setUploadType] = useState<'extraLogo' | 'extraHero' | 'memberAvatar' | null>(null);
+  const [uploadType, setUploadType] = useState<'extraLogo' | 'extraHero' | 'memberAvatar' | 'eventImage' | null>(null);
+
+  const initializeMember = (m: Member): Member => ({
+    ...m,
+    facebookUrl: m.facebookUrl || '',
+    instagramUrl: m.instagramUrl || '',
+    linkedinUrl: m.linkedinUrl || '',
+    tiktokUrl: m.tiktokUrl || '',
+    twitterUrl: m.twitterUrl || '',
+    websiteUrl: m.websiteUrl || '',
+    bio: m.bio || '',
+    mobile: m.mobile || '',
+    email: m.email || '',
+    birthday: m.birthday || ''
+  });
 
   const filteredMembers = members.filter(m => 
     m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -121,8 +139,6 @@ const AdminPage: React.FC<AdminPageProps> = ({
     setIsProcessing('SYNC_NEWS');
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      // We use Gemini to "fetch" news headlines by imagining/fetching based on general knowledge of the domain
-      // since direct fetch to HTTP site might be blocked by browser CORS.
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: "Generate 5 recent surfing news headlines and short 2-sentence summaries for the Israeli surfing community (in Hebrew). Format as a JSON array with 'title', 'content', and 'category' (Update/Activity/Announcement). Source context: http://streamer.co.il/news",
@@ -140,10 +156,10 @@ const AdminPage: React.FC<AdminPageProps> = ({
           imageUrl: "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=800"
         });
       }
-      alert('החדשות סונכרנו בהצלחה!');
+      alert('הפוסטים סונכרנו בהצלחה!');
     } catch (err) {
       console.error(err);
-      alert('שגיאה בסנכרון החדשות. נסה שוב מאוחר יותר.');
+      alert('שגיאה בסנכרון הפוסטים. נסה שוב מאוחר יותר.');
     } finally {
       setIsProcessing(null);
     }
@@ -174,12 +190,30 @@ const AdminPage: React.FC<AdminPageProps> = ({
         finalMember.password = hashed;
         finalMember.isTempPassword = false;
       }
+      console.log("DEBUG [AdminPage]: Admin saving member profile edits:", finalMember);
       await onUpdateMember(finalMember);
       setEditingMember(null);
       setAdminNewPassword('');
     } catch (err) {
-      console.error(err);
+      console.error("ERROR [AdminPage]: Save failed", err);
       alert('שגיאה בשמירת הפרטים');
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  const handleEventEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEvent) return;
+    setIsProcessing('SAVE_EVENT_EDIT');
+    try {
+      const { id, ...eventData } = editingEvent;
+      await updateDoc(doc(db, 'events', id), eventData);
+      setEditingEvent(null);
+      alert('האירוע עודכן בהצלחה!');
+    } catch (err) {
+      console.error(err);
+      alert('שגיאה בעדכון האירוע');
     } finally {
       setIsProcessing(null);
     }
@@ -197,6 +231,8 @@ const AdminPage: React.FC<AdminPageProps> = ({
 
       if (uploadType === 'memberAvatar' && editingMember) {
         setEditingMember({ ...editingMember, avatar: url });
+      } else if (uploadType === 'eventImage' && editingEvent) {
+        setEditingEvent({ ...editingEvent, imageUrl: url });
       } else {
         const assetsRef = doc(db, 'site_data', 'assets');
         if (uploadType === 'extraLogo') {
@@ -228,7 +264,7 @@ const AdminPage: React.FC<AdminPageProps> = ({
     alert('עודכן כראשי!');
   };
 
-  const triggerUpload = (type: 'extraLogo' | 'extraHero' | 'memberAvatar') => {
+  const triggerUpload = (type: 'extraLogo' | 'extraHero' | 'memberAvatar' | 'eventImage') => {
     setUploadType(type);
     fileInputRef.current?.click();
   };
@@ -256,7 +292,7 @@ const AdminPage: React.FC<AdminPageProps> = ({
               <ShieldAlert size={12} className="text-rose-400" />
               מרכז שליטה
             </div>
-            <h2 className="text-5xl font-black text-slate-950 tracking-tighter mb-3">ניהול קהילה</h2>
+            <h2 className="text-5xl font-black text-slate-950 tracking-tighter mb-3">ניהול המערכת</h2>
           </div>
           
           <div className="flex bg-slate-50 p-2 rounded-[2rem] border border-slate-100 flex-wrap gap-1">
@@ -264,7 +300,7 @@ const AdminPage: React.FC<AdminPageProps> = ({
               { id: 'MEMBERS', label: 'חברים', icon: Users },
               { id: 'REQUESTS', label: 'בקשות', icon: UserPlus },
               { id: 'EVENTS', label: 'אירועים', icon: Calendar },
-              { id: 'NEWS', label: 'חדשות', icon: Newspaper },
+              { id: 'NEWS', label: 'פוסטים', icon: Newspaper },
               { id: 'SITE', label: 'נכסים', icon: Palette }
             ].map((tab) => (
               <button 
@@ -334,7 +370,7 @@ const AdminPage: React.FC<AdminPageProps> = ({
                           <div className="flex items-center justify-end gap-3">
                             <button 
                               onClick={() => {
-                                setEditingMember(m);
+                                setEditingMember(initializeMember(m));
                                 setAdminNewPassword('');
                               }}
                               className="p-3 text-slate-400 hover:text-indigo-600 bg-slate-50 rounded-xl hover:bg-indigo-50 transition-all"
@@ -416,12 +452,20 @@ const AdminPage: React.FC<AdminPageProps> = ({
                          <p className="text-slate-400 text-xs font-bold">{event.date} | {event.location}</p>
                        </div>
                     </div>
-                    <button 
-                      onClick={() => onDeleteEvent(event.id)}
-                      className="p-3 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => setEditingEvent(event)}
+                        className="p-3 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button 
+                        onClick={() => onDeleteEvent(event.id)}
+                        className="p-3 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -431,14 +475,14 @@ const AdminPage: React.FC<AdminPageProps> = ({
           {activeTab === 'NEWS' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-2xl font-black text-slate-950">ניהול חדשות</h3>
+                <h3 className="text-2xl font-black text-slate-950">ניהול פוסטים</h3>
                 <button 
                   onClick={syncNewsFromStreamer}
                   disabled={isProcessing === 'SYNC_NEWS'}
                   className="px-6 py-2 bg-indigo-50 text-indigo-700 rounded-full font-black text-xs border border-indigo-100 flex items-center gap-2 hover:bg-indigo-100 transition-all shadow-sm"
                 >
                   {isProcessing === 'SYNC_NEWS' ? <Loader2 className="animate-spin" size={14} /> : <RefreshCw size={14} />}
-                  סנכרון חכם מ-Streamer
+                  סנכרון פוסטים מ-Streamer
                 </button>
               </div>
               <div className="space-y-4">
@@ -546,6 +590,203 @@ const AdminPage: React.FC<AdminPageProps> = ({
         </div>
       </div>
 
+      {/* Member Edit Modal */}
+      {editingMember && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in" onClick={() => { setEditingMember(null); setAdminNewPassword(''); }}>
+          <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+               <div className="flex items-center gap-4">
+                  <UserCog className="text-indigo-600" size={24} />
+                  <h3 className="text-2xl font-black text-slate-950">עריכת פרטי חבר</h3>
+               </div>
+               <button onClick={() => { setEditingMember(null); setAdminNewPassword(''); }} className="p-2 bg-white rounded-xl shadow-sm text-slate-400 hover:text-slate-950 transition-colors"><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleEditSave} className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar">
+              <div className="flex flex-col items-center gap-6 mb-4">
+                 <div className="relative group">
+                    <img src={editingMember.avatar} className={`w-28 h-28 rounded-3xl object-cover border-4 transition-all ${editingMember.isActive === false ? 'grayscale border-rose-200' : 'border-slate-100'}`} alt={editingMember.name} />
+                    <button type="button" onClick={() => triggerUpload('memberAvatar')} className="absolute -bottom-2 -left-2 p-2 bg-indigo-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
+                       <Camera size={14} />
+                    </button>
+                 </div>
+
+                 <div className="flex items-center gap-4 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100 group/status">
+                    <div className="flex flex-col text-right">
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סטטוס משתמש</span>
+                       <span className={`text-xs font-black uppercase ${editingMember.isActive === false ? 'text-rose-500' : 'text-emerald-500'}`}>
+                         {editingMember.isActive === false ? 'לא פעיל' : 'פעיל במערכת'}
+                       </span>
+                    </div>
+                    <button 
+                       type="button" 
+                       onClick={() => setEditingMember({...editingMember, isActive: editingMember.isActive === false ? true : false})}
+                       className={`p-1 rounded-full transition-all duration-300 flex items-center ${editingMember.isActive === false ? 'bg-slate-200 justify-start' : 'bg-emerald-500 justify-end'}`}
+                       style={{ width: '48px', height: '24px' }}
+                    >
+                       <div className="bg-white w-5 h-5 rounded-full shadow-sm"></div>
+                    </button>
+                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="space-y-1">
+                    <label htmlFor="adminEditName" className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">שם מלא</label>
+                    <input id="adminEditName" name="name" type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.name} onChange={e => setEditingMember({...editingMember, name: e.target.value})} />
+                 </div>
+                 <div className="space-y-1">
+                    <label htmlFor="adminEditEmail" className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">אימייל</label>
+                    <input id="adminEditEmail" name="email" type="email" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.email} onChange={e => setEditingMember({...editingMember, email: e.target.value})} />
+                 </div>
+                 <div className="space-y-1">
+                    <label htmlFor="adminEditMobile" className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">טלפון</label>
+                    <input id="adminEditMobile" name="mobile" type="tel" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.mobile} onChange={e => setEditingMember({...editingMember, mobile: e.target.value})} />
+                 </div>
+                 <div className="space-y-1">
+                    <label htmlFor="adminEditBirthday" className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">תאריך יום הולדת</label>
+                    <input id="adminEditBirthday" name="birthday" type="date" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.birthday || ''} onChange={e => setEditingMember({...editingMember, birthday: e.target.value})} />
+                 </div>
+              </div>
+
+              <div className="space-y-1 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                 <div className="flex items-center gap-3 mb-4">
+                   <Lock size={18} className="text-indigo-600" />
+                   <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">ניהול אבטחה וסיסמה</h4>
+                 </div>
+                 <div className="relative">
+                   <div className="flex items-center gap-2 mb-2">
+                     <span className="text-[10px] font-black text-slate-500">הקלד סיסמה חדשה למשתמש:</span>
+                   </div>
+                   <div className="relative">
+                     <input 
+                       type={showAdminPass ? "text" : "password"} 
+                       name="adminNewPassword"
+                       id="adminNewPassword"
+                       placeholder="הזן סיסמה חדשה (לפחות 6 תווים)..."
+                       className="w-full pr-14 pl-6 py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-900 shadow-sm"
+                       value={adminNewPassword}
+                       onChange={e => setAdminNewPassword(e.target.value)}
+                     />
+                     <button type="button" onClick={() => setShowAdminPass(!showAdminPass)} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
+                       {showAdminPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                     </button>
+                   </div>
+                 </div>
+              </div>
+
+              <div className="space-y-1">
+                 <label htmlFor="adminEditBio" className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">ביוגרפיה</label>
+                 <textarea id="adminEditBio" name="bio" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold min-h-[100px] resize-none" value={editingMember.bio} onChange={e => setEditingMember({...editingMember, bio: e.target.value})} />
+              </div>
+
+              <div className="space-y-4">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">רשתות חברתיות</label>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="relative">
+                       <Facebook className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                       <input id="adminEditFB" name="facebookUrl" type="url" placeholder="Facebook URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.facebookUrl || ''} onChange={e => setEditingMember({...editingMember, facebookUrl: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                       <Linkedin className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                       <input id="adminEditLI" name="linkedinUrl" type="url" placeholder="Linkedin URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.linkedinUrl || ''} onChange={e => setEditingMember({...editingMember, linkedinUrl: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                       <Instagram className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                       <input id="adminEditIG" name="instagramUrl" type="url" placeholder="Instagram URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.instagramUrl || ''} onChange={e => setEditingMember({...editingMember, instagramUrl: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300"><XLogo size={16} /></div>
+                       <input id="adminEditTW" name="twitterUrl" type="url" placeholder="X (Twitter) URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.twitterUrl || ''} onChange={e => setEditingMember({...editingMember, twitterUrl: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                       <Music className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                       <input id="adminEditTT" name="tiktokUrl" type="url" placeholder="TikTok URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.tiktokUrl || ''} onChange={e => setEditingMember({...editingMember, tiktokUrl: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                       <Globe className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                       <input id="adminEditWeb" name="websiteUrl" type="url" placeholder="Website URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.websiteUrl || ''} onChange={e => setEditingMember({...editingMember, websiteUrl: e.target.value})} />
+                    </div>
+                 </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-slate-50">
+                <button 
+                  type="submit" 
+                  disabled={isProcessing === 'SAVE_EDIT'}
+                  className="w-full py-5 bg-slate-950 text-white rounded-2xl font-black text-lg hover:bg-indigo-600 transition-all flex items-center justify-center gap-3"
+                >
+                  {isProcessing === 'SAVE_EDIT' ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                  <span>שמירת שינויים</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Event Edit Modal */}
+      {editingEvent && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in" onClick={() => setEditingEvent(null)}>
+          <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+               <div className="flex items-center gap-4">
+                  <Calendar className="text-rose-600" size={24} />
+                  <h3 className="text-2xl font-black text-slate-950">עריכת אירוע</h3>
+               </div>
+               <button onClick={() => setEditingEvent(null)} className="p-2 bg-white rounded-xl shadow-sm text-slate-400 hover:text-slate-950 transition-colors"><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleEventEditSave} className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar">
+              <div className="flex flex-col items-center gap-6 mb-4">
+                 <div className="relative group w-full">
+                    <img src={editingEvent.imageUrl} className="w-full aspect-video rounded-3xl object-cover border-4 border-slate-100" alt={editingEvent.title} />
+                    <button type="button" onClick={() => triggerUpload('eventImage')} className="absolute bottom-4 left-4 p-4 bg-rose-600 text-white rounded-2xl shadow-lg hover:scale-110 transition-transform">
+                       <Camera size={20} />
+                    </button>
+                 </div>
+              </div>
+
+              <div className="space-y-1">
+                 <label htmlFor="editEventTitle" className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">כותרת האירוע</label>
+                 <input id="editEventTitle" name="title" type="text" required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingEvent.title} onChange={e => setEditingEvent({...editingEvent, title: e.target.value})} />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="space-y-1">
+                    <label htmlFor="editEventDate" className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">תאריך</label>
+                    <input id="editEventDate" name="date" type="date" required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingEvent.date} onChange={e => setEditingEvent({...editingEvent, date: e.target.value})} />
+                 </div>
+                 <div className="space-y-1">
+                    <label htmlFor="editEventTime" className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">שעה</label>
+                    <input id="editEventTime" name="time" type="time" required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingEvent.time} onChange={e => setEditingEvent({...editingEvent, time: e.target.value})} />
+                 </div>
+              </div>
+
+              <div className="space-y-1">
+                 <label htmlFor="editEventLocation" className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">מיקום</label>
+                 <input id="editEventLocation" name="location" type="text" required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingEvent.location} onChange={e => setEditingEvent({...editingEvent, location: e.target.value})} />
+              </div>
+
+              <div className="space-y-1">
+                 <label htmlFor="editEventDesc" className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">תיאור האירוע</label>
+                 <textarea id="editEventDesc" name="description" required className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold min-h-[120px] resize-none" value={editingEvent.description} onChange={e => setEditingEvent({...editingEvent, description: e.target.value})} />
+              </div>
+
+              <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-slate-50">
+                <button 
+                  type="submit" 
+                  disabled={isProcessing === 'SAVE_EVENT_EDIT'}
+                  className="w-full py-5 bg-rose-600 text-white rounded-2xl font-black text-lg hover:bg-rose-700 transition-all flex items-center justify-center gap-3"
+                >
+                  {isProcessing === 'SAVE_EVENT_EDIT' ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                  <span>שמירת אירוע</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Approval Success Modal */}
       {approvedResult && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in">
@@ -592,140 +833,6 @@ const AdminPage: React.FC<AdminPageProps> = ({
                  סגור חלונית
                </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {editingMember && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in" onClick={() => { setEditingMember(null); setAdminNewPassword(''); }}>
-          <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-               <div className="flex items-center gap-4">
-                  <UserCog className="text-indigo-600" size={24} />
-                  <h3 className="text-2xl font-black text-slate-950">עריכת פרטי חבר</h3>
-               </div>
-               <button onClick={() => { setEditingMember(null); setAdminNewPassword(''); }} className="p-2 bg-white rounded-xl shadow-sm text-slate-400 hover:text-slate-950 transition-colors"><X size={20} /></button>
-            </div>
-            
-            <form onSubmit={handleEditSave} className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar">
-              <div className="flex flex-col items-center gap-6 mb-4">
-                 <div className="relative group">
-                    <img src={editingMember.avatar} className={`w-28 h-28 rounded-3xl object-cover border-4 transition-all ${editingMember.isActive === false ? 'grayscale border-rose-200' : 'border-slate-100'}`} alt={editingMember.name} />
-                    <button type="button" onClick={() => triggerUpload('memberAvatar')} className="absolute -bottom-2 -left-2 p-2 bg-indigo-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
-                       <Camera size={14} />
-                    </button>
-                 </div>
-
-                 <div className="flex items-center gap-4 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100 group/status">
-                    <div className="flex flex-col text-right">
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סטטוס משתמש</span>
-                       <span className={`text-xs font-black uppercase ${editingMember.isActive === false ? 'text-rose-500' : 'text-emerald-500'}`}>
-                         {editingMember.isActive === false ? 'לא פעיל' : 'פעיל במערכת'}
-                       </span>
-                    </div>
-                    <button 
-                       type="button" 
-                       onClick={() => setEditingMember({...editingMember, isActive: editingMember.isActive === false ? true : false})}
-                       className={`p-1 rounded-full transition-all duration-300 flex items-center ${editingMember.isActive === false ? 'bg-slate-200 justify-start' : 'bg-emerald-500 justify-end'}`}
-                       style={{ width: '48px', height: '24px' }}
-                    >
-                       <div className="bg-white w-5 h-5 rounded-full shadow-sm"></div>
-                    </button>
-                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">שם מלא</label>
-                    <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.name} onChange={e => setEditingMember({...editingMember, name: e.target.value})} />
-                 </div>
-                 <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">אימייל</label>
-                    <input type="email" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.email} onChange={e => setEditingMember({...editingMember, email: e.target.value})} />
-                 </div>
-                 <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">טלפון</label>
-                    <input type="tel" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.mobile} onChange={e => setEditingMember({...editingMember, mobile: e.target.value})} />
-                 </div>
-                 <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">תאריך יום הולדת</label>
-                    <input type="date" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.birthday || ''} onChange={e => setEditingMember({...editingMember, birthday: e.target.value})} />
-                 </div>
-              </div>
-
-              <div className="space-y-1 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                 <div className="flex items-center gap-3 mb-4">
-                   <Lock size={18} className="text-indigo-600" />
-                   <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">ניהול אבטחה וסיסמה</h4>
-                 </div>
-                 <div className="relative">
-                   <div className="flex items-center gap-2 mb-2">
-                     <span className="text-[10px] font-black text-slate-500">הקלד סיסמה חדשה למשתמש:</span>
-                   </div>
-                   <div className="relative">
-                     <input 
-                       type={showAdminPass ? "text" : "password"} 
-                       placeholder="הזן סיסמה חדשה (לפחות 6 תווים)..."
-                       className="w-full pr-14 pl-6 py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-900 shadow-sm"
-                       value={adminNewPassword}
-                       onChange={e => setAdminNewPassword(e.target.value)}
-                     />
-                     <button type="button" onClick={() => setShowAdminPass(!showAdminPass)} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
-                       {showAdminPass ? <EyeOff size={18} /> : <Eye size={18} />}
-                     </button>
-                   </div>
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2 mr-2">
-                     {adminNewPassword.length > 0 ? "הסיסמה תישמר עם הלחיצה על 'שמירת שינויים'" : "השאר ריק אם לא ברצונך לשנות את סיסמת החבר."}
-                   </p>
-                 </div>
-              </div>
-
-              <div className="space-y-1">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">ביוגרפיה</label>
-                 <textarea className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold min-h-[100px] resize-none" value={editingMember.bio} onChange={e => setEditingMember({...editingMember, bio: e.target.value})} />
-              </div>
-
-              <div className="space-y-4">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">רשתות חברתיות</label>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="relative">
-                       <Facebook className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                       <input type="url" placeholder="Facebook URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.facebookUrl || ''} onChange={e => setEditingMember({...editingMember, facebookUrl: e.target.value})} />
-                    </div>
-                    <div className="relative">
-                       <Linkedin className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                       <input type="url" placeholder="Linkedin URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.linkedinUrl || ''} onChange={e => setEditingMember({...editingMember, linkedinUrl: e.target.value})} />
-                    </div>
-                    <div className="relative">
-                       <Instagram className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                       <input type="url" placeholder="Instagram URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.instagramUrl || ''} onChange={e => setEditingMember({...editingMember, instagramUrl: e.target.value})} />
-                    </div>
-                    <div className="relative">
-                       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300"><XLogo size={16} /></div>
-                       <input type="url" placeholder="X (Twitter) URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.twitterUrl || ''} onChange={e => setEditingMember({...editingMember, twitterUrl: e.target.value})} />
-                    </div>
-                    <div className="relative">
-                       <Music className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                       <input type="url" placeholder="TikTok URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.tiktokUrl || ''} onChange={e => setEditingMember({...editingMember, tiktokUrl: e.target.value})} />
-                    </div>
-                    <div className="relative">
-                       <Globe className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                       <input type="url" placeholder="Website URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.websiteUrl || ''} onChange={e => setEditingMember({...editingMember, websiteUrl: e.target.value})} />
-                    </div>
-                 </div>
-              </div>
-
-              <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-slate-50">
-                <button 
-                  type="submit" 
-                  disabled={isProcessing === 'SAVE_EDIT'}
-                  className="w-full py-5 bg-slate-950 text-white rounded-2xl font-black text-lg hover:bg-indigo-600 transition-all flex items-center justify-center gap-3"
-                >
-                  {isProcessing === 'SAVE_EDIT' ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                  <span>שמירת שינויים</span>
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

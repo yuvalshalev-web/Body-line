@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, increment } from 'firebase/firestore';
 import { LogIn, Loader2, Waves, ArrowRight, Camera, Bird, Waves as ReefIcon, Eye, EyeOff, Phone, AlertCircle } from 'lucide-react';
 import { db } from '../services/firebase';
 import { Member } from '../types';
@@ -54,7 +54,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
           linkedinUrl: '',
           twitterUrl: '',
           websiteUrl: '',
-          totalAttendance: 0
+          totalAttendance: 0,
+          loginCount: 999
         });
         return;
       }
@@ -68,13 +69,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
         const userDoc = snapshot.docs[0];
         const memberData = userDoc.data() as Member;
         
-        // Check if member is active
         if (memberData.isActive === false) {
           setError('חשבונך אינו פעיל. פנה למנהל המערכת.');
           return;
         }
+
+        // Update login count for analytics
+        await updateDoc(doc(db, 'members', userDoc.id), {
+          loginCount: increment(1)
+        });
         
-        onLogin({ id: userDoc.id, ...memberData });
+        onLogin({ id: userDoc.id, ...memberData, loginCount: (memberData.loginCount || 0) + 1 });
       }
     } catch (err) { 
       console.error(err);
@@ -134,24 +139,26 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
 
       <div className="relative z-10 w-full max-w-lg animate-in fade-in zoom-in-95 duration-700">
         
-        {/* Branding Section */}
-        <div className="text-center mb-6 md:mb-10 p-8 flex flex-col items-center justify-center gap-3 md:gap-4">
-          <div className="w-full h-1 md:h-1.5 opacity-90 rounded-full" style={{ backgroundColor: buffColor }}></div>
+        {/* Branding Section - Significantly Updated Sizes */}
+        <div className="text-center mb-10 md:mb-14 p-4 flex flex-col items-center justify-center gap-6 md:gap-10">
+          <div className="w-full h-2 md:h-4 opacity-95 rounded-full shadow-lg" style={{ backgroundColor: buffColor }}></div>
+          
           <div className="py-2">
-            <h1 className="text-5xl sm:text-7xl md:text-9xl font-black inline-block whitespace-nowrap tracking-tighter leading-none drop-shadow-2xl" style={{ color: buffColor }}>
+            <h1 className="text-7xl sm:text-9xl md:text-[10.5rem] font-black inline-block whitespace-nowrap tracking-tighter leading-none drop-shadow-[0_15px_15px_rgba(0,0,0,0.6)]" style={{ color: buffColor }}>
               חבל זוג
             </h1>
-            <div className="w-full flex justify-center py-2">
-               <div className="w-4/5 h-px opacity-30" style={{ backgroundColor: buffColor }}></div>
+            <div className="w-full flex justify-center py-6">
+               <div className="w-4/5 h-px opacity-40" style={{ backgroundColor: buffColor }}></div>
             </div>
-            <p className="text-3xl sm:text-4xl md:text-5xl font-black inline-block tracking-tighter drop-shadow-2xl" style={{ color: buffColor }}>
+            <p className="text-5xl sm:text-7xl md:text-8xl font-black inline-block tracking-tighter drop-shadow-[0_8px_8px_rgba(0,0,0,0.5)]" style={{ color: buffColor }}>
               הרצליה
             </p>
           </div>
-          <div className="w-full h-1 md:h-1.5 opacity-90 rounded-full" style={{ backgroundColor: buffColor }}></div>
+          
+          <div className="w-full h-2 md:h-4 opacity-95 rounded-full shadow-lg" style={{ backgroundColor: buffColor }}></div>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] md:rounded-[3rem] shadow-2xl border border-slate-100 p-8 md:p-14 overflow-hidden relative">
+        <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl border border-slate-100 p-8 md:p-14 overflow-hidden relative">
           {mode === 'LOGIN' ? (
             <form onSubmit={handleLoginSubmit} className="space-y-6 md:space-y-8">
               <div className="space-y-1.5">
@@ -247,27 +254,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
               <p className="text-lg md:text-xl font-black text-slate-800 uppercase tracking-tighter big-wednesday-title">הרוח מאחורי הגלים שלנו</p>
               <div className="flex items-center gap-8 md:gap-12">
                  <a href="https://atalef.com/" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 group">
-                   {siteAssets.atalefLogo ? (
-                     <img src={siteAssets.atalefLogo} className="h-10 md:h-14 w-auto object-contain transition-transform group-hover:scale-110 active:scale-90" alt="Atalef" />
-                   ) : (
-                     <Bird size={24} className="text-slate-600" />
-                   )}
-                   <span className="text-[7px] md:text-[8px] font-black text-slate-700 uppercase tracking-widest">עמותת העטלף</span>
+                   <img src={siteAssets.atalefLogo || "https://atalef.com/wp-content/uploads/2021/05/logo.png"} className="h-10 md:h-12 w-auto grayscale group-hover:grayscale-0 transition-all opacity-60 group-hover:opacity-100" alt="Atalef" />
                  </a>
-                 <div className="h-8 md:h-10 w-px bg-slate-300"></div>
-                 <a href="https://reefseacenter.co.il/" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 group">
-                   {siteAssets.clubLogo ? (
-                     <img src={siteAssets.clubLogo} className="h-10 md:h-14 w-auto object-contain transition-transform group-hover:scale-110 active:scale-90" alt="Reef Club" />
-                   ) : (
-                     <ReefIcon size={24} className="text-slate-600" />
-                   )}
-                   <span className="text-[7px] md:text-[8px] font-black text-slate-700 uppercase tracking-widest">מועדון ריף</span>
-                 </a>
+                 <div className="w-px h-8 bg-slate-300/30"></div>
+                 <div className="flex flex-col items-center gap-1">
+                   <img src={siteAssets.habalZugLogo || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Flogo.png?alt=media"} className="h-12 md:h-16 w-auto drop-shadow-lg" alt="Habal Zug" />
+                 </div>
               </div>
-           </div>
-           <div className="flex flex-col items-center gap-2.5">
-             <Waves size={20} className="text-slate-400 animate-pulse" />
-             <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.5em]">EST. 2025 • HERZLIYA SPIRIT</p>
            </div>
         </div>
       </div>

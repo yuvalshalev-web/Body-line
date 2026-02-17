@@ -144,7 +144,7 @@ const App: React.FC = () => {
   };
 
   const handleToggleAttendance = async () => {
-    if (!currentUser) return;
+    if (!currentUser || currentUser.id === 'dev-admin-id') return;
     const today = new Date();
     const nextThursday = new Date(today);
     nextThursday.setDate(today.getDate() + (4 + 7 - today.getDay()) % 7);
@@ -163,13 +163,46 @@ const App: React.FC = () => {
   };
 
   const updateProfile = async (data: Member) => {
-    const { id, ...cleanData } = data;
-    const sanitizedData = Object.entries(cleanData).reduce((acc, [key, value]) => {
-      acc[key] = value === undefined ? null : value;
-      return acc;
-    }, {} as any);
+    if (data.id === 'dev-admin-id') {
+      console.log("Dev admin update simulated.");
+      return;
+    }
+
+    console.log("DEBUG: updateProfile flow started. Data received from form:", data);
+
+    const { id, password, ...cleanData } = data;
     
-    await updateDoc(doc(db, 'members', id), sanitizedData);
+    const allowedFields = [
+      'name', 'email', 'mobile', 'avatar', 'bio', 'role', 'isActive', 
+      'facebookUrl', 'instagramUrl', 'tiktokUrl', 'linkedinUrl', 
+      'twitterUrl', 'websiteUrl', 'birthday', 'totalAttendance', 'loginCount'
+    ];
+    
+    const sanitizedData: any = {};
+    allowedFields.forEach(field => {
+      const val = (cleanData as any)[field];
+      if (val !== undefined) {
+        // Ensure even empty strings are passed to overwrite existing data if needed
+        sanitizedData[field] = (val === null) ? '' : val;
+      }
+    });
+    
+    // Log sanitized data before firestore call
+    console.log("DEBUG: Sanitized data being sent to Firestore collection 'members' for doc ID:", id, sanitizedData);
+
+    if (password && password.trim() !== '') {
+      sanitizedData.password = password;
+      sanitizedData.isTempPassword = data.isTempPassword ?? false;
+    }
+    
+    try {
+      const memberRef = doc(db, 'members', id);
+      await updateDoc(memberRef, sanitizedData);
+      console.log("DEBUG: Firestore updateDoc successful for ID:", id);
+    } catch (err) {
+      console.error("CRITICAL ERROR updating profile in Firestore:", err);
+      throw err;
+    }
   };
 
   if (loading) return null;
@@ -236,7 +269,7 @@ const App: React.FC = () => {
               { to: '/events', icon: Calendar, label: 'אירועים' },
               { to: '/profile', icon: User, label: 'הפרופיל שלי' },
               ...(currentUser.role === 'Admin' ? [
-                { to: '/admin-info', icon: FileText, label: 'מידע למנהלים' },
+                { to: '/admin-info', icon: FileText, label: 'דאשבורד ניהול' },
                 { to: '/admin', icon: ShieldAlert, label: 'ניהול מערכת' }
               ] : [])
             ].map(link => {

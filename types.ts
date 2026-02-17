@@ -1,3 +1,4 @@
+
 export interface Member {
   id: string;
   uid?: string; // Firebase Auth UID
@@ -18,6 +19,7 @@ export interface Member {
   twitterUrl?: string; // Added for X support
   websiteUrl?: string;
   totalAttendance?: number; // Lifetime count of sessions attended
+  loginCount?: number; // Added for analytics
   birthday?: string; // YYYY-MM-DD
 }
 
