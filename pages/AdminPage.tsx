@@ -42,7 +42,9 @@ import {
   ExternalLink,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  UserX,
+  UserMinus
 } from 'lucide-react';
 import { doc, updateDoc, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -283,9 +285,16 @@ const AdminPage: React.FC<AdminPageProps> = ({
                       <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-10 py-6">
                           <div className="flex items-center gap-5">
-                            <img src={m.avatar} className="w-14 h-14 rounded-2xl object-cover" alt={m.name} />
+                            <div className="relative">
+                              <img src={m.avatar} className={`w-14 h-14 rounded-2xl object-cover border-2 transition-all ${m.isActive === false ? 'grayscale border-rose-200' : 'border-slate-50'}`} alt={m.name} />
+                              {m.isActive === false && (
+                                <div className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full p-0.5">
+                                  <UserX size={10} />
+                                </div>
+                              )}
+                            </div>
                             <div>
-                              <p className="font-black text-slate-950 text-lg leading-none mb-1">{m.name}</p>
+                              <p className={`font-black text-lg leading-none mb-1 ${m.isActive === false ? 'text-slate-400 line-through decoration-rose-400/30' : 'text-slate-950'}`}>{m.name}</p>
                               <p className="text-slate-400 font-bold text-xs">{m.email}</p>
                             </div>
                           </div>
@@ -566,11 +575,28 @@ const AdminPage: React.FC<AdminPageProps> = ({
             </div>
             
             <form onSubmit={handleEditSave} className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar">
-              <div className="flex flex-col items-center gap-4 mb-4">
+              <div className="flex flex-col items-center gap-6 mb-4">
                  <div className="relative group">
-                    <img src={editingMember.avatar} className="w-24 h-24 rounded-3xl object-cover border-4 border-slate-100" alt={editingMember.name} />
+                    <img src={editingMember.avatar} className={`w-28 h-28 rounded-3xl object-cover border-4 transition-all ${editingMember.isActive === false ? 'grayscale border-rose-200' : 'border-slate-100'}`} alt={editingMember.name} />
                     <button type="button" onClick={() => triggerUpload('memberAvatar')} className="absolute -bottom-2 -left-2 p-2 bg-indigo-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
                        <Camera size={14} />
+                    </button>
+                 </div>
+
+                 <div className="flex items-center gap-4 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100 group/status">
+                    <div className="flex flex-col text-right">
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סטטוס משתמש</span>
+                       <span className={`text-xs font-black uppercase ${editingMember.isActive === false ? 'text-rose-500' : 'text-emerald-500'}`}>
+                         {editingMember.isActive === false ? 'לא פעיל' : 'פעיל במערכת'}
+                       </span>
+                    </div>
+                    <button 
+                       type="button" 
+                       onClick={() => setEditingMember({...editingMember, isActive: editingMember.isActive === false ? true : false})}
+                       className={`p-1 rounded-full transition-all duration-300 flex items-center ${editingMember.isActive === false ? 'bg-slate-200 justify-start' : 'bg-emerald-500 justify-end'}`}
+                       style={{ width: '48px', height: '24px' }}
+                    >
+                       <div className="bg-white w-5 h-5 rounded-full shadow-sm"></div>
                     </button>
                  </div>
               </div>

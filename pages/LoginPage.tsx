@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
-import { LogIn, Loader2, Waves, ArrowRight, Camera, Bird, Waves as ReefIcon, Eye, EyeOff, Phone } from 'lucide-react';
+import { LogIn, Loader2, Waves, ArrowRight, Camera, Bird, Waves as ReefIcon, Eye, EyeOff, Phone, AlertCircle } from 'lucide-react';
 import { db } from '../services/firebase';
 import { Member } from '../types';
 import { hashPassword } from '../utils/crypto';
@@ -61,13 +61,27 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
       const hashedPassword = await hashPassword(password);
       const q = query(collection(db, 'members'), where('email', '==', email.toLowerCase().trim()), where('password', '==', hashedPassword));
       const snapshot = await getDocs(q);
+      
       if (snapshot.empty) {
         setError('פרטי הגישה אינם נכונים');
       } else {
         const userDoc = snapshot.docs[0];
-        onLogin({ id: userDoc.id, ...userDoc.data() as Member });
+        const memberData = userDoc.data() as Member;
+        
+        // Check if member is active
+        if (memberData.isActive === false) {
+          setError('חשבונך אינו פעיל. פנה למנהל המערכת.');
+          return;
+        }
+        
+        onLogin({ id: userDoc.id, ...memberData });
       }
-    } catch (err) { setError('שגיאת חיבור למערכת'); } finally { setIsLoading(false); }
+    } catch (err) { 
+      console.error(err);
+      setError('שגיאת חיבור למערכת'); 
+    } finally { 
+      setIsLoading(false); 
+    }
   };
 
   const handleJoinSubmit = async (e: React.FormEvent) => {
@@ -90,7 +104,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
         setJoinName('');
         setJoinEmail('');
         setJoinMobile('');
-      }, 5000); // Extended delay to allow reading the message
+      }, 5000); 
     } catch (err) { setError('שגיאה בשליחה'); } finally { setIsLoading(false); }
   };
 
@@ -168,7 +182,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
                   </button>
                 </div>
               </div>
-              {error && <p className="text-rose-500 text-xs font-black text-center">{error}</p>}
+              {error && (
+                <div className="flex items-center gap-2 bg-rose-50 p-4 rounded-xl border border-rose-100 animate-in shake duration-300">
+                  <AlertCircle size={16} className="text-rose-500 shrink-0" />
+                  <p className="text-rose-500 text-xs font-black">{error}</p>
+                </div>
+              )}
               <button 
                 disabled={isLoading} 
                 className="w-full py-5 md:py-6 bg-slate-950 text-white rounded-2xl font-black text-lg md:text-xl hover:bg-black transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95"
