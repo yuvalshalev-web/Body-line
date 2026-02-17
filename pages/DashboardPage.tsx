@@ -51,14 +51,6 @@ const SURF_DICTIONARY = [
   { term: "סוול (Swell)", definition: "אנרגיית הגלים שנוצרה בלב ים ומגיעה אל החוף כסטים מסודרים." }
 ];
 
-const FALLBACK_HEADLINES = [
-  "תחזית סוול: גל חדש בדרך לחופי המרכז ביום חמישי הקרוב",
-  "מצב הים: טמפרטורת המים עולה ל-20 מעלות, רוח אופשור קלילה בבוקר",
-  "קהילה: מפגש גולשי חבל זוג המסורתי יתקיים השבוע במועדון ריף",
-  "בטיחות בים: הנחיות חדשות לגלישה בקרבת שוברי הגלים במרינה",
-  "ספורט: עלייה במספר הגולשים המקצועיים בנבחרת המייצגת של הרצליה"
-];
-
 const DashboardPage: React.FC<DashboardPageProps> = ({ 
   membersCount, galleryCount, eventsCount, newsCount,
   currentUser, attendees, onToggleAttendance, heroBg, activeSessionDate, news, siteAssets
@@ -92,14 +84,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const isUserAttending = attendees.some(a => a.id === currentUser.id);
 
-  // Merge real news into headlines for the ticker
-  const tickerItems = useMemo(() => {
-    const realNewsTitles = news.map(n => n.title);
-    const combined = realNewsTitles.length > 0 ? [...realNewsTitles, ...FALLBACK_HEADLINES] : FALLBACK_HEADLINES;
-    // We need to duplicate items at least 3-4 times to ensure no gaps during animation on very wide screens
-    return [...combined, ...combined, ...combined, ...combined];
-  }, [news]);
-
   const statsCards = [
     { label: 'חברים', value: membersCount, icon: Users, color: 'text-emerald-500', bgColor: 'bg-emerald-50', path: '/directory' },
     { label: 'תמונות', value: galleryCount, icon: ImageIcon, color: 'text-rose-500', bgColor: 'bg-rose-50', path: '/gallery' },
@@ -121,27 +105,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   return (
     <div className="space-y-6 md:space-y-12 animate-in fade-in duration-700 max-w-5xl mx-auto pb-10" dir="rtl">
       
-      {/* News Ticker - Enhanced for Stability */}
-      <div className="w-full bg-white text-slate-900 py-3 md:py-4 rounded-[1.5rem] md:rounded-full overflow-hidden flex items-center relative border border-slate-200 shadow-md h-14 md:h-16 group">
-        <div className="absolute right-0 top-0 bottom-0 px-4 md:px-6 bg-slate-50 z-20 flex items-center gap-2 border-l border-slate-200 rounded-r-[1.5rem] md:rounded-r-full shadow-sm">
-           <Radio size={14} className="text-rose-500 animate-pulse" />
-           <span className="text-[10px] md:text-xs font-black uppercase tracking-widest whitespace-nowrap text-slate-500">עדכוני סטריימר</span>
-        </div>
-        
-        <div className="flex-1 overflow-hidden h-full flex items-center" dir="ltr">
-          <div className="ticker-scroll-container">
-            <div className="ticker-content-wrapper group-hover:[animation-play-state:paused]">
-              {tickerItems.map((text, i) => (
-                <div key={i} className="ticker-item">
-                  <span className="ticker-text" dir="rtl">{text}</span>
-                  <div className="ticker-dot"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Hero Section */}
       <section className="relative w-full aspect-square md:aspect-video lg:min-h-[500px] rounded-[2.5rem] md:rounded-[3.5rem] overflow-hidden shadow-2xl border border-slate-100 group">
         <img 
@@ -224,21 +187,21 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
            <div className="flex items-center justify-between px-2">
               <h3 className="text-2xl font-black text-slate-950 flex items-center gap-3">
                  <Newspaper className="text-indigo-500" size={24} />
-                 פוסטים
+                 פוסטים מהקהילה
                  {news.length > 1 && (
                    <span className="text-[10px] font-black bg-indigo-50 text-indigo-500 px-2 py-0.5 rounded-full border border-indigo-100 animate-pulse">
                      רוטציה פעילה
                    </span>
                  )}
               </h3>
-              <Link to="/news" className="text-xs font-black text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest">צפה בהכל</Link>
+              <Link to="/posts" className="text-xs font-black text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest">צפה בהכל</Link>
            </div>
            
            <div className="relative min-h-[160px]">
               {news.length > 0 && activePost ? (
                 <Link 
                   key={activePost.id} 
-                  to="/news" 
+                  to="/posts" 
                   className="block p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group flex flex-col md:flex-row items-center gap-6 animate-in fade-in slide-in-from-left-6 duration-1000"
                 >
                   <div className="w-full md:w-32 h-32 md:h-32 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0 overflow-hidden">

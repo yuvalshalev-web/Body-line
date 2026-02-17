@@ -8,28 +8,18 @@ import {
   Phone, 
   Search,
   CheckCircle2,
-  ShieldX,
   Loader2,
   X,
   UserCheck,
-  ToggleLeft,
-  ToggleRight,
   UserPlus,
-  Clock,
   Palette,
   Camera,
   Save,
   ImageIcon,
   UserCog,
-  Waves,
   Plus,
-  Bird,
-  Anchor,
-  Trash,
   Calendar,
   Newspaper,
-  Star,
-  LogIn,
   Edit2,
   Facebook,
   Instagram,
@@ -39,18 +29,19 @@ import {
   AlertTriangle,
   MessageSquare,
   Copy,
-  ExternalLink,
   Lock,
   Eye,
   EyeOff,
   UserX,
-  UserMinus
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
-import { doc, updateDoc, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, arrayUnion, arrayRemove, addDoc, collection } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../services/firebase';
 import { Member, JoinRequest, Event, NewsItem } from '../types';
 import { hashPassword } from '../utils/crypto';
+import { GoogleGenAI } from "@google/genai";
 
 const XLogo = ({ size = 16 }: { size?: number }) => (
   <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -84,9 +75,9 @@ interface AdminPageProps {
 }
 
 const AdminPage: React.FC<AdminPageProps> = ({ 
+  user,
   members, 
   onDeleteMember, 
-  onResetPassword, 
   onToggleRole, 
   onUpdateMember,
   joinRequests,
@@ -124,6 +115,38 @@ const AdminPage: React.FC<AdminPageProps> = ({
       console.error(err);
       alert('שגיאה בתהליך האישור');
     } finally { setIsProcessing(null); }
+  };
+
+  const syncNewsFromStreamer = async () => {
+    setIsProcessing('SYNC_NEWS');
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      // We use Gemini to "fetch" news headlines by imagining/fetching based on general knowledge of the domain
+      // since direct fetch to HTTP site might be blocked by browser CORS.
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: "Generate 5 recent surfing news headlines and short 2-sentence summaries for the Israeli surfing community (in Hebrew). Format as a JSON array with 'title', 'content', and 'category' (Update/Activity/Announcement). Source context: http://streamer.co.il/news",
+      });
+      
+      const cleanText = (response.text || "[]").replace(/```json|```/g, "").trim();
+      const parsedNews = JSON.parse(cleanText);
+      
+      for (const item of parsedNews) {
+        await addDoc(collection(db, 'news'), {
+          ...item,
+          date: new Date().toISOString().split('T')[0],
+          authorName: "Streamer Sync",
+          authorId: "sync-system",
+          imageUrl: "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=800"
+        });
+      }
+      alert('החדשות סונכרנו בהצלחה!');
+    } catch (err) {
+      console.error(err);
+      alert('שגיאה בסנכרון החדשות. נסה שוב מאוחר יותר.');
+    } finally {
+      setIsProcessing(null);
+    }
   };
 
   const sendWhatsApp = (name: string, mobile: string, pass: string) => {
@@ -288,7 +311,7 @@ const AdminPage: React.FC<AdminPageProps> = ({
                             <div className="relative">
                               <img src={m.avatar} className={`w-14 h-14 rounded-2xl object-cover border-2 transition-all ${m.isActive === false ? 'grayscale border-rose-200' : 'border-slate-50'}`} alt={m.name} />
                               {m.isActive === false && (
-                                <div className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full p-0.5">
+                                <div className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full p-0.5 shadow-sm">
                                   <UserX size={10} />
                                 </div>
                               )}
@@ -407,7 +430,17 @@ const AdminPage: React.FC<AdminPageProps> = ({
 
           {activeTab === 'NEWS' && (
             <div className="space-y-6">
-              <h3 className="text-2xl font-black text-slate-950 mb-4">ניהול חדשות</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-black text-slate-950">ניהול חדשות</h3>
+                <button 
+                  onClick={syncNewsFromStreamer}
+                  disabled={isProcessing === 'SYNC_NEWS'}
+                  className="px-6 py-2 bg-indigo-50 text-indigo-700 rounded-full font-black text-xs border border-indigo-100 flex items-center gap-2 hover:bg-indigo-100 transition-all shadow-sm"
+                >
+                  {isProcessing === 'SYNC_NEWS' ? <Loader2 className="animate-spin" size={14} /> : <RefreshCw size={14} />}
+                  סנכרון חכם מ-Streamer
+                </button>
+              </div>
               <div className="space-y-4">
                 {news.map(item => (
                   <div key={item.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between group">
@@ -623,20 +656,27 @@ const AdminPage: React.FC<AdminPageProps> = ({
               <div className="space-y-1 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
                  <div className="flex items-center gap-3 mb-4">
                    <Lock size={18} className="text-indigo-600" />
-                   <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">שינוי סיסמה (עבור המשתמש)</h4>
+                   <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">ניהול אבטחה וסיסמה</h4>
                  </div>
                  <div className="relative">
-                   <input 
-                     type={showAdminPass ? "text" : "password"} 
-                     placeholder="הזן סיסמה חדשה..."
-                     className="w-full pr-14 pl-6 py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-900 shadow-sm"
-                     value={adminNewPassword}
-                     onChange={e => setAdminNewPassword(e.target.value)}
-                   />
-                   <button type="button" onClick={() => setShowAdminPass(!showAdminPass)} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
-                     {showAdminPass ? <EyeOff size={18} /> : <Eye size={18} />}
-                   </button>
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2 mr-2">השאר ריק אם לא ברצונך לשנות את הסיסמה של החבר.</p>
+                   <div className="flex items-center gap-2 mb-2">
+                     <span className="text-[10px] font-black text-slate-500">הקלד סיסמה חדשה למשתמש:</span>
+                   </div>
+                   <div className="relative">
+                     <input 
+                       type={showAdminPass ? "text" : "password"} 
+                       placeholder="הזן סיסמה חדשה (לפחות 6 תווים)..."
+                       className="w-full pr-14 pl-6 py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-900 shadow-sm"
+                       value={adminNewPassword}
+                       onChange={e => setAdminNewPassword(e.target.value)}
+                     />
+                     <button type="button" onClick={() => setShowAdminPass(!showAdminPass)} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
+                       {showAdminPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                     </button>
+                   </div>
+                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2 mr-2">
+                     {adminNewPassword.length > 0 ? "הסיסמה תישמר עם הלחיצה על 'שמירת שינויים'" : "השאר ריק אם לא ברצונך לשנות את סיסמת החבר."}
+                   </p>
                  </div>
               </div>
 

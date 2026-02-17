@@ -1,11 +1,10 @@
+
 import React, { useState, useRef } from 'react';
 import { 
   Newspaper, 
   Calendar, 
-  ArrowLeft, 
   Plus, 
   X, 
-  Camera, 
   Loader2, 
   Image as ImageIcon, 
   Heart, 
@@ -65,24 +64,20 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDel
         imageUrl = await getDownloadURL(snapshot.ref);
       }
 
-      // Explicitly construct the payload to avoid passing 'undefined' to Firestore
       const newsData: Omit<NewsItem, 'id'> = {
         title: title.trim(),
         content: content.trim(),
         category,
         date: new Date().toISOString().split('T')[0],
-        imageUrl: imageUrl || "", // Firestore does not support undefined, empty string is safe
+        imageUrl: imageUrl || "", 
         authorId: currentUser.id,
         authorName: currentUser.name,
         authorAvatar: currentUser.avatar
       };
 
       await onAddNews(newsData);
-
-      // Show success message
       setShowSuccess(true);
       
-      // Reset and close after delay
       setTimeout(() => {
         setTitle('');
         setContent('');
@@ -95,7 +90,7 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDel
 
     } catch (err) {
       console.error("Posting news failed:", err);
-      alert("שגיאה בפרסום הכתבה. נסה שנית.");
+      alert("שגיאה בפרסום. נסה שנית.");
     } finally {
       setIsPosting(false);
     }
@@ -133,9 +128,9 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDel
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-black uppercase tracking-widest mb-3 border border-slate-200 shadow-sm">
               <Newspaper size={12} className="text-indigo-500" />
-              חדשות הקהילה
+              קהילה משתפת
             </div>
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none">מה חדש במים?</h2>
+            <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none">פוסטים מהנבחרת</h2>
             <p className="text-slate-500 mt-2 text-lg font-medium">עדכונים, סיפורים והודעות חשובות מחברי חבל זוג.</p>
           </div>
           
@@ -242,7 +237,7 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDel
                   <CheckCircle2 size={64} />
                 </div>
                 <h3 className="text-4xl font-black text-slate-950 mb-4 tracking-tight">פורסם בהצלחה!</h3>
-                <p className="text-slate-500 font-bold text-lg">הפוסט שלך התווסף ללוח החדשות.</p>
+                <p className="text-slate-500 font-bold text-lg">הפוסט שלך התווסף ללוח.</p>
               </div>
             ) : (
               <>

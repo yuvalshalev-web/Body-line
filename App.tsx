@@ -26,7 +26,8 @@ import {
   X,
   Waves,
   ShieldAlert,
-  Newspaper
+  Newspaper,
+  Globe
 } from 'lucide-react';
 import { db } from './services/firebase';
 import { Member, GalleryItem, Event, NewsItem, JoinRequest } from './types';
@@ -39,6 +40,7 @@ import DirectoryPage from './pages/DirectoryPage';
 import GalleryPage from './pages/GalleryPage';
 import EventsPage from './pages/EventsPage';
 import NewsPage from './pages/NewsPage';
+import SurfingNewsPage from './pages/SurfingNewsPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 
@@ -160,7 +162,6 @@ const App: React.FC = () => {
 
   const updateProfile = async (data: Member) => {
     const { id, ...cleanData } = data;
-    // Filter out undefined values to avoid Firestore errors
     const sanitizedData = Object.entries(cleanData).reduce((acc, [key, value]) => {
       acc[key] = value === undefined ? null : value;
       return acc;
@@ -228,7 +229,8 @@ const App: React.FC = () => {
               { to: '/', icon: Home, label: 'עמוד ראשי' },
               { to: '/directory', icon: Users, label: 'חברי קהילה' },
               { to: '/gallery', icon: ImageIcon, label: 'גלריית גלים' },
-              { to: '/news', icon: Newspaper, label: 'חדשות ופוסטים' },
+              { to: '/posts', icon: Newspaper, label: 'פוסטים מהקהילה' },
+              { to: '/surfing-news', icon: Globe, label: 'חדשות גלישה' },
               { to: '/events', icon: Calendar, label: 'אירועים' },
               { to: '/profile', icon: User, label: 'הפרופיל שלי' },
               ...(currentUser.role === 'Admin' ? [{ to: '/admin', icon: ShieldAlert, label: 'ניהול מערכת' }] : [])
@@ -283,7 +285,7 @@ const App: React.FC = () => {
             } />
             <Route path="/directory" element={<DirectoryPage members={members} />} />
             <Route path="/gallery" element={<GalleryPage user={currentUser} galleryItems={gallery} setGalleryItems={() => {}} />} />
-            <Route path="/news" element={
+            <Route path="/posts" element={
               <NewsPage 
                 news={news} 
                 currentUser={currentUser} 
@@ -291,6 +293,7 @@ const App: React.FC = () => {
                 onDeleteNews={async (id) => { await deleteDoc(doc(db, 'news', id)); }}
               />
             } />
+            <Route path="/surfing-news" element={<SurfingNewsPage />} />
             <Route path="/events" element={
               <EventsPage 
                 events={events} 
