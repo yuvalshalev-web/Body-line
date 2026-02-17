@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
-import { LogIn, Loader2, Waves, ArrowRight, Camera, Bird, Waves as ReefIcon, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Loader2, Waves, ArrowRight, Camera, Bird, Waves as ReefIcon, Eye, EyeOff, Phone } from 'lucide-react';
 import { db } from '../services/firebase';
 import { Member } from '../types';
 import { hashPassword } from '../utils/crypto';
@@ -23,6 +23,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
 
   const [joinName, setJoinName] = useState('');
   const [joinEmail, setJoinEmail] = useState('');
+  const [joinMobile, setJoinMobile] = useState('');
   const [joinAvatar, setJoinAvatar] = useState('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,15 +78,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
       await addDoc(collection(db, 'joinRequests'), {
         name: joinName,
         email: joinEmail.toLowerCase().trim(),
+        mobile: joinMobile,
         bio: '',
         avatar: joinAvatar,
         requestedAt: new Date().toISOString()
       });
       setSuccess(true);
       setTimeout(() => {
-        setMode('JOIN');
+        setMode('LOGIN');
         setSuccess(false);
-      }, 3000);
+        setJoinName('');
+        setJoinEmail('');
+        setJoinMobile('');
+      }, 5000); // Extended delay to allow reading the message
     } catch (err) { setError('שגיאה בשליחה'); } finally { setIsLoading(false); }
   };
 
@@ -115,39 +120,21 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
 
       <div className="relative z-10 w-full max-w-lg animate-in fade-in zoom-in-95 duration-700">
         
-        {/* Branding Section - Updated: Removed background, added lines */}
+        {/* Branding Section */}
         <div className="text-center mb-6 md:mb-10 p-8 flex flex-col items-center justify-center gap-3 md:gap-4">
-          
-          {/* Top Line */}
           <div className="w-full h-1 md:h-1.5 opacity-90 rounded-full" style={{ backgroundColor: buffColor }}></div>
-          
           <div className="py-2">
-            <h1 
-              className="text-5xl sm:text-7xl md:text-9xl font-black inline-block whitespace-nowrap tracking-tighter leading-none drop-shadow-2xl"
-              style={{ 
-                color: buffColor
-              }}
-            >
+            <h1 className="text-5xl sm:text-7xl md:text-9xl font-black inline-block whitespace-nowrap tracking-tighter leading-none drop-shadow-2xl" style={{ color: buffColor }}>
               חבל זוג
             </h1>
-            
             <div className="w-full flex justify-center py-2">
                <div className="w-4/5 h-px opacity-30" style={{ backgroundColor: buffColor }}></div>
             </div>
-            
-            <p 
-              className="text-3xl sm:text-4xl md:text-5xl font-black inline-block tracking-tighter drop-shadow-2xl"
-              style={{ 
-                color: buffColor
-              }}
-            >
+            <p className="text-3xl sm:text-4xl md:text-5xl font-black inline-block tracking-tighter drop-shadow-2xl" style={{ color: buffColor }}>
               הרצליה
             </p>
           </div>
-
-          {/* Bottom Line */}
           <div className="w-full h-1 md:h-1.5 opacity-90 rounded-full" style={{ backgroundColor: buffColor }}></div>
-          
         </div>
 
         <div className="bg-white rounded-[2.5rem] md:rounded-[3rem] shadow-2xl border border-slate-100 p-8 md:p-14 overflow-hidden relative">
@@ -194,8 +181,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
               </button>
             </form>
           ) : (
-            <form onSubmit={handleJoinSubmit} className="space-y-6">
-              <div className="flex flex-col items-center mb-4">
+            <form onSubmit={handleJoinSubmit} className="space-y-4 md:space-y-6">
+              <div className="flex flex-col items-center mb-2">
                 <div className="relative group">
                   <img src={joinAvatar} className="w-20 h-20 md:w-24 md:h-24 rounded-[1.5rem] md:rounded-3xl object-cover border-4 border-white shadow-xl" alt="Preview" />
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute -bottom-1.5 -left-1.5 p-2 bg-slate-950 text-white rounded-xl shadow-lg hover:scale-110 transition-all border-2 border-white active:scale-90">
@@ -207,18 +194,27 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
               </div>
               <input 
                 type="text" required value={joinName} onChange={e => setJoinName(e.target.value)} 
-                placeholder="שם מלא" className="w-full px-6 py-4.5 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 outline-none font-bold shadow-sm"
+                placeholder="שם מלא" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 outline-none font-bold shadow-sm"
               />
               <input 
                 type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} 
-                placeholder="אימייל" className="w-full px-6 py-4.5 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 outline-none font-bold shadow-sm"
+                placeholder="אימייל" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 outline-none font-bold shadow-sm"
               />
+              <div className="relative">
+                <Phone className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                <input 
+                  type="tel" required value={joinMobile} onChange={e => setJoinMobile(e.target.value)} 
+                  placeholder="טלפון נייד" className="w-full pr-14 pl-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 outline-none font-bold shadow-sm"
+                />
+              </div>
               {success ? (
-                <div className="bg-emerald-50 text-emerald-600 p-5 rounded-2xl text-center font-black text-xs border border-emerald-100">
-                  הבקשה נשלחה בהצלחה!
+                <div className="bg-emerald-50 text-emerald-600 p-6 rounded-2xl text-center font-black text-sm border border-emerald-100 leading-relaxed animate-in zoom-in-95">
+                  איזה כיף! סיסמא זמנית תשלח בוואטסאפ לנייד שלך
                 </div>
               ) : (
-                <button className="w-full py-5 md:py-6 bg-slate-950 text-white rounded-2xl font-black text-lg md:text-xl active:scale-95 transition-all">שלח בקשה</button>
+                <button disabled={isLoading} className="w-full py-5 md:py-6 bg-slate-950 text-white rounded-2xl font-black text-lg md:text-xl active:scale-95 transition-all">
+                  {isLoading ? <Loader2 className="animate-spin mx-auto" size={24} /> : 'שלח בקשה'}
+                </button>
               )}
               <button type="button" onClick={() => setMode('LOGIN')} className="w-full text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
                 <ArrowRight size={14} /> חזרה לכניסה
@@ -230,30 +226,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
         <div className="mt-10 md:mt-12 flex flex-col items-center gap-6 md:gap-8">
            <div className="flex flex-col items-center gap-3">
               <p className="text-lg md:text-xl font-black text-slate-800 uppercase tracking-tighter big-wednesday-title">הרוח מאחורי הגלים שלנו</p>
-              
               <div className="flex items-center gap-8 md:gap-12">
                  <a href="https://atalef.com/" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 group">
                    {siteAssets.atalefLogo ? (
-                     <img 
-                       src={siteAssets.atalefLogo} 
-                       className="h-10 md:h-14 w-auto object-contain transition-transform group-hover:scale-110 active:scale-90" 
-                       alt="Atalef" 
-                     />
+                     <img src={siteAssets.atalefLogo} className="h-10 md:h-14 w-auto object-contain transition-transform group-hover:scale-110 active:scale-90" alt="Atalef" />
                    ) : (
                      <Bird size={24} className="text-slate-600" />
                    )}
                    <span className="text-[7px] md:text-[8px] font-black text-slate-700 uppercase tracking-widest">עמותת העטלף</span>
                  </a>
-                 
                  <div className="h-8 md:h-10 w-px bg-slate-300"></div>
-                 
                  <a href="https://reefseacenter.co.il/" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 group">
                    {siteAssets.clubLogo ? (
-                     <img 
-                       src={siteAssets.clubLogo} 
-                       className="h-10 md:h-14 w-auto object-contain transition-transform group-hover:scale-110 active:scale-90" 
-                       alt="Reef Club" 
-                     />
+                     <img src={siteAssets.clubLogo} className="h-10 md:h-14 w-auto object-contain transition-transform group-hover:scale-110 active:scale-90" alt="Reef Club" />
                    ) : (
                      <ReefIcon size={24} className="text-slate-600" />
                    )}
@@ -261,7 +246,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
                  </a>
               </div>
            </div>
-
            <div className="flex flex-col items-center gap-2.5">
              <Waves size={20} className="text-slate-400 animate-pulse" />
              <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.5em]">EST. 2025 • HERZLIYA SPIRIT</p>

@@ -36,7 +36,10 @@ import {
   Linkedin,
   Globe,
   Music,
-  AlertTriangle
+  AlertTriangle,
+  MessageSquare,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 import { doc, updateDoc, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -57,7 +60,7 @@ interface AdminPageProps {
   onToggleRole: (id: string) => Promise<void>;
   onUpdateMember: (member: Member) => Promise<void>;
   joinRequests: JoinRequest[];
-  onApproveRequest: (id: string) => Promise<Member | null>;
+  onApproveRequest: (id: string) => Promise<{ name: string; mobile: string; tempPassword: string } | null>;
   onRejectRequest: (id: string) => Promise<void>;
   siteAssets: { 
     clubLogo?: string; 
@@ -94,25 +97,10 @@ const AdminPage: React.FC<AdminPageProps> = ({
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [approvedResult, setApprovedResult] = useState<{ name: string; mobile: string; tempPassword: string } | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadType, setUploadType] = useState<'extraLogo' | 'extraHero' | 'memberAvatar' | null>(null);
-
-  // Helper to ensure member object has all social fields correctly initialized
-  // Identical logic to ProfilePage to ensure cross-app consistency
-  const initializeMemberForEdit = (m: Member): Member => ({
-    ...m,
-    facebookUrl: m.facebookUrl || '',
-    instagramUrl: m.instagramUrl || '',
-    linkedinUrl: m.linkedinUrl || '',
-    tiktokUrl: m.tiktokUrl || '',
-    twitterUrl: m.twitterUrl || '',
-    websiteUrl: m.websiteUrl || '',
-    bio: m.bio || '',
-    mobile: m.mobile || '',
-    email: m.email || '',
-    birthday: m.birthday || ''
-  });
 
   const filteredMembers = members.filter(m => 
     m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -121,7 +109,20 @@ const AdminPage: React.FC<AdminPageProps> = ({
 
   const handleApprove = async (id: string) => {
     setIsProcessing(id);
-    try { await onApproveRequest(id); } finally { setIsProcessing(null); }
+    try { 
+      const result = await onApproveRequest(id); 
+      if (result) setApprovedResult(result);
+    } catch (err) {
+      console.error(err);
+      alert('שגיאה בתהליך האישור');
+    } finally { setIsProcessing(null); }
+  };
+
+  const sendWhatsApp = (name: string, mobile: string, pass: string) => {
+    const cleanedMobile = mobile.replace(/\D/g, '');
+    const mobileWithPrefix = cleanedMobile.startsWith('0') ? `972${cleanedMobile.substring(1)}` : cleanedMobile;
+    const message = encodeURIComponent(`שלום ${name}, ברוך הבא לקהילת חבל זוג! 🌊\n\nחשבונך אושר בהצלחה. סיסמת הגישה הזמנית שלך היא: ${pass}\n\nמומלץ להיכנס בהקדם ולשנות את הסיסמה בפרופיל האישי.\nנתראה במים! 🏄‍♂️`);
+    window.open(`https://wa.me/${mobileWithPrefix}?text=${message}`, '_blank');
   };
 
   const handleReject = async (id: string) => {
@@ -181,12 +182,6 @@ const AdminPage: React.FC<AdminPageProps> = ({
     const assetsRef = doc(db, 'site_data', 'assets');
     const field = type === 'extraLogo' ? 'extraLogos' : 'extraHeroImages';
     await updateDoc(assetsRef, { [field]: arrayRemove(url) });
-    
-    if (url === siteAssets.clubLogo) await updateDoc(assetsRef, { clubLogo: "" });
-    if (url === siteAssets.atalefLogo) await updateDoc(assetsRef, { atalefLogo: "" });
-    if (url === siteAssets.habalZugLogo) await updateDoc(assetsRef, { habalZugLogo: "" });
-    if (url === siteAssets.heroBg) await updateDoc(assetsRef, { heroBg: "" });
-    if (url === siteAssets.loginBg) await updateDoc(assetsRef, { loginBg: "" });
   };
 
   const setAsPrimary = async (type: 'clubLogo' | 'atalefLogo' | 'habalZugLogo' | 'heroBg' | 'loginBg', url: string) => {
@@ -293,7 +288,7 @@ const AdminPage: React.FC<AdminPageProps> = ({
                         <td className="px-10 py-6">
                           <div className="flex items-center justify-end gap-3">
                             <button 
-                              onClick={() => setEditingMember(initializeMemberForEdit(m))}
+                              onClick={() => setEditingMember(m)}
                               className="p-3 text-slate-400 hover:text-indigo-600 bg-slate-50 rounded-xl hover:bg-indigo-50 transition-all"
                             >
                               <Edit2 size={18} />
@@ -318,22 +313,44 @@ const AdminPage: React.FC<AdminPageProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {joinRequests.length > 0 ? (
                 joinRequests.map((req) => (
-                  <div key={req.id} className="bg-white rounded-[3rem] border border-slate-100 p-10 shadow-sm">
+                  <div key={req.id} className="bg-white rounded-[3.5rem] border border-slate-100 p-10 shadow-sm flex flex-col justify-between hover:shadow-xl transition-all duration-500">
                     <div className="flex items-center gap-6 mb-8">
-                      <img src={req.avatar} className="w-16 h-16 rounded-2xl object-cover" alt={req.name} />
+                      <img src={req.avatar} className="w-20 h-20 rounded-[1.5rem] object-cover border-2 border-slate-50 shadow-sm" alt={req.name} />
                       <div>
-                        <h4 className="text-2xl font-black text-slate-950">{req.name}</h4>
-                        <p className="text-slate-400 text-xs font-black">{req.email}</p>
+                        <h4 className="text-2xl font-black text-slate-950 tracking-tight">{req.name}</h4>
+                        <div className="flex flex-col gap-1 mt-1">
+                          <p className="text-slate-400 text-xs font-black flex items-center gap-2"><Mail size={12} /> {req.email}</p>
+                          <p className="text-slate-400 text-xs font-black flex items-center gap-2"><Phone size={12} /> {req.mobile || 'לא צוין'}</p>
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <button onClick={() => handleApprove(req.id)} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm">אישור</button>
-                      <button onClick={() => handleReject(req.id)} className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-2xl font-black text-sm">דחייה</button>
+                      <button 
+                        onClick={() => handleApprove(req.id)} 
+                        disabled={isProcessing === req.id}
+                        className="flex-1 py-5 bg-slate-950 text-white rounded-2xl font-black text-md hover:bg-indigo-600 transition-all shadow-xl flex items-center justify-center gap-3 disabled:opacity-50"
+                      >
+                        {isProcessing === req.id ? <Loader2 className="animate-spin" size={18} /> : <UserCheck size={18} />}
+                        אישור
+                      </button>
+                      <button 
+                        onClick={() => handleReject(req.id)} 
+                        disabled={isProcessing === req.id}
+                        className="flex-1 py-5 bg-slate-50 text-slate-400 rounded-2xl font-black text-md hover:bg-rose-50 hover:text-rose-500 transition-all"
+                      >
+                        דחייה
+                      </button>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="col-span-full py-20 text-center text-slate-300 font-black">אין בקשות ממתינות.</div>
+                <div className="col-span-full py-40 text-center flex flex-col items-center">
+                   <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-200">
+                      <UserPlus size={40} />
+                   </div>
+                   <h4 className="text-2xl font-black text-slate-900 tracking-tight">אין בקשות ממתינות</h4>
+                   <p className="text-slate-400 mt-2 font-bold">כשמישהו יבקש להצטרף לנבחרת, תראה אותו כאן.</p>
+                </div>
               )}
             </div>
           )}
@@ -470,6 +487,56 @@ const AdminPage: React.FC<AdminPageProps> = ({
           )}
         </div>
       </div>
+
+      {/* Approval Success Modal */}
+      {approvedResult && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in">
+          <div className="bg-white w-full max-w-lg rounded-[4rem] shadow-2xl p-14 relative animate-in zoom-in-95 text-center">
+            <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce">
+              <CheckCircle2 size={64} />
+            </div>
+            
+            <h3 className="text-4xl font-black text-slate-950 mb-4 tracking-tighter">המועמד אושר!</h3>
+            <p className="text-slate-500 font-bold text-lg mb-10 leading-relaxed">
+               חשבון נוצר עבור <span className="text-slate-900">{approvedResult.name}</span>.<br/>שלח לו את פרטי הגישה הזמניים עכשיו.
+            </p>
+
+            <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 mb-10 group relative overflow-hidden">
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">סיסמה זמנית למשלוח</p>
+               <div className="text-4xl font-black text-slate-900 tracking-widest select-all">
+                 {approvedResult.tempPassword}
+               </div>
+               <button 
+                 onClick={() => {
+                   navigator.clipboard.writeText(approvedResult.tempPassword);
+                   alert('הסיסמה הועתקה!');
+                 }}
+                 className="absolute top-4 left-4 p-2 text-slate-300 hover:text-indigo-600 transition-colors"
+                 title="העתק סיסמה"
+               >
+                 <Copy size={16} />
+               </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+               <button 
+                 onClick={() => sendWhatsApp(approvedResult.name, approvedResult.mobile, approvedResult.tempPassword)}
+                 className="w-full py-6 bg-emerald-500 text-white rounded-[2rem] font-black text-xl hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-200 flex items-center justify-center gap-4 active:scale-95"
+               >
+                 <MessageSquare size={24} />
+                 <span>שלח בוואטסאפ</span>
+               </button>
+               
+               <button 
+                 onClick={() => setApprovedResult(null)}
+                 className="w-full py-6 text-slate-400 font-black text-sm uppercase tracking-widest hover:text-slate-950 transition-all"
+               >
+                 סגור חלונית
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {editingMember && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in" onClick={() => setEditingMember(null)}>

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { 
   Newspaper, 
@@ -17,7 +16,8 @@ import {
   User,
   Info,
   Activity,
-  Zap
+  Zap,
+  CheckCircle2
 } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../services/firebase';
@@ -33,6 +33,7 @@ interface NewsPageProps {
 const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDeleteNews }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -53,7 +54,7 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDel
 
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) return;
+    if (!title.trim() || !content.trim() || isPosting) return;
 
     setIsPosting(true);
     try {
@@ -64,22 +65,34 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDel
         imageUrl = await getDownloadURL(snapshot.ref);
       }
 
-      await onAddNews({
+      // Explicitly construct the payload to avoid passing 'undefined' to Firestore
+      const newsData: Omit<NewsItem, 'id'> = {
         title: title.trim(),
         content: content.trim(),
         category,
         date: new Date().toISOString().split('T')[0],
-        imageUrl: imageUrl || undefined,
+        imageUrl: imageUrl || "", // Firestore does not support undefined, empty string is safe
         authorId: currentUser.id,
-        authorName: currentUser.name
-      });
+        authorName: currentUser.name,
+        authorAvatar: currentUser.avatar
+      };
 
-      setTitle('');
-      setContent('');
-      setCategory('Update');
-      setSelectedImage(null);
-      setPreviewUrl(null);
-      setShowCreateModal(false);
+      await onAddNews(newsData);
+
+      // Show success message
+      setShowSuccess(true);
+      
+      // Reset and close after delay
+      setTimeout(() => {
+        setTitle('');
+        setContent('');
+        setCategory('Update');
+        setSelectedImage(null);
+        setPreviewUrl(null);
+        setShowSuccess(false);
+        setShowCreateModal(false);
+      }, 2000);
+
     } catch (err) {
       console.error("Posting news failed:", err);
       alert("שגיאה בפרסום הכתבה. נסה שנית.");
@@ -127,7 +140,10 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDel
           </div>
           
           <button 
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              setShowSuccess(false);
+              setShowCreateModal(true);
+            }}
             className="flex items-center gap-4 px-10 py-5 bg-slate-950 text-white rounded-[2rem] font-black text-md hover:bg-black transition-all shadow-xl active:scale-95 group/mainbtn"
           >
             <Plus size={24} className="group-hover/mainbtn:rotate-90 transition-transform" />
@@ -183,8 +199,12 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDel
                     </p>
 
                     <div className="mt-auto flex items-center gap-3">
-                       <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                          <User size={14} />
+                       <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center text-slate-400 border border-slate-100">
+                          {item.authorAvatar ? (
+                            <img src={item.authorAvatar} className="w-full h-full object-cover" alt={item.authorName} />
+                          ) : (
+                            <User size={14} />
+                          )}
                        </div>
                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{item.authorName || 'חבר קהילה'}</span>
                     </div>
@@ -207,86 +227,100 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDel
       {showCreateModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden p-10 md:p-14 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
-            <button 
-              onClick={() => setShowCreateModal(false)}
-              className="absolute top-8 left-8 p-3 text-slate-400 hover:text-slate-950 transition-colors bg-slate-50 rounded-full"
-            >
-              <X size={24} />
-            </button>
-
-            <div className="flex items-center gap-4 mb-10">
-               <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
-                  <Waves size={28} />
-               </div>
-               <h3 className="text-3xl font-black text-slate-950 tracking-tight leading-none">שתפו משהו חדש</h3>
-            </div>
-            
-            <form onSubmit={handlePostSubmit} className="space-y-8">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">כותרת הפוסט</label>
-                <input 
-                  type="text" 
-                  required 
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  placeholder="על מה העדכון?"
-                  className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-2xl font-black outline-none focus:bg-white transition-all shadow-inner" 
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">קטגוריה</label>
-                <select 
-                  value={category}
-                  onChange={e => setCategory(e.target.value as any)}
-                  className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-2xl font-black outline-none focus:bg-white transition-all shadow-inner"
-                >
-                  <option value="Update">עדכון כללי</option>
-                  <option value="Activity">פעילות שטח</option>
-                  <option value="Announcement">הודעה חשובה</option>
-                  <option value="Personal">חוויה אישית</option>
-                  <option value="Share">רוצה לשתף</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">תוכן</label>
-                <textarea 
-                  required 
-                  value={content}
-                  onChange={e => setContent(e.target.value)}
-                  placeholder="פרטו כאן..."
-                  className="w-full px-8 py-6 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:bg-white transition-all shadow-inner min-h-[160px] resize-none leading-relaxed" 
-                />
-              </div>
-
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">תמונה (אופציונלי)</label>
-                <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`w-full aspect-video rounded-[2rem] border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative ${previewUrl ? 'border-indigo-400' : 'border-slate-100 bg-slate-50 hover:bg-slate-100'}`}
-                >
-                  {previewUrl ? (
-                    <img src={previewUrl} className="w-full h-full object-cover" alt="Preview" />
-                  ) : (
-                    <div className="text-center">
-                      <ImageIcon size={32} className="text-slate-300 mx-auto mb-2" />
-                      <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">לחץ להעלאה</p>
-                    </div>
-                  )}
-                  <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageChange} />
-                </div>
-              </div>
-
+            {!showSuccess && (
               <button 
-                type="submit" 
-                disabled={isPosting}
-                className="w-full py-6 bg-slate-950 text-white rounded-[2rem] font-black text-xl hover:bg-black transition-all shadow-xl flex items-center justify-center gap-6 disabled:opacity-50"
+                onClick={() => setShowCreateModal(false)}
+                className="absolute top-8 left-8 p-3 text-slate-400 hover:text-slate-950 transition-colors bg-slate-50 rounded-full"
               >
-                {isPosting ? <Loader2 className="animate-spin" size={24} /> : <Send size={24} />}
-                <span>{isPosting ? 'מפרסם...' : 'פרסם עכשיו'}</span>
+                <X size={24} />
               </button>
-            </form>
+            )}
+
+            {showSuccess ? (
+              <div className="py-20 flex flex-col items-center justify-center text-center animate-in zoom-in duration-500">
+                <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-8">
+                  <CheckCircle2 size={64} />
+                </div>
+                <h3 className="text-4xl font-black text-slate-950 mb-4 tracking-tight">פורסם בהצלחה!</h3>
+                <p className="text-slate-500 font-bold text-lg">הפוסט שלך התווסף ללוח החדשות.</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-4 mb-10">
+                   <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+                      <Waves size={28} />
+                   </div>
+                   <h3 className="text-3xl font-black text-slate-950 tracking-tight leading-none">שתפו משהו חדש</h3>
+                </div>
+                
+                <form onSubmit={handlePostSubmit} className="space-y-8">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">כותרת הפוסט</label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={title}
+                      onChange={e => setTitle(e.target.value)}
+                      placeholder="על מה העדכון?"
+                      className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-2xl font-black outline-none focus:bg-white transition-all shadow-inner" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">קטגוריה</label>
+                    <select 
+                      value={category}
+                      onChange={e => setCategory(e.target.value as any)}
+                      className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-2xl font-black outline-none focus:bg-white transition-all shadow-inner"
+                    >
+                      <option value="Update">עדכון כללי</option>
+                      <option value="Activity">פעילות שטח</option>
+                      <option value="Announcement">הודעה חשובה</option>
+                      <option value="Personal">חוויה אישית</option>
+                      <option value="Share">רוצה לשתף</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">תוכן</label>
+                    <textarea 
+                      required 
+                      value={content}
+                      onChange={e => setContent(e.target.value)}
+                      placeholder="פרטו כאן..."
+                      className="w-full px-8 py-6 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:bg-white transition-all shadow-inner min-h-[160px] resize-none leading-relaxed" 
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">תמונה (אופציונלי)</label>
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`w-full aspect-video rounded-[2rem] border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative ${previewUrl ? 'border-indigo-400' : 'border-slate-100 bg-slate-50 hover:bg-slate-100'}`}
+                    >
+                      {previewUrl ? (
+                        <img src={previewUrl} className="w-full h-full object-cover" alt="Preview" />
+                      ) : (
+                        <div className="text-center">
+                          <ImageIcon size={32} className="text-slate-300 mx-auto mb-2" />
+                          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">לחץ להעלאה</p>
+                        </div>
+                      )}
+                      <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageChange} />
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={isPosting}
+                    className="w-full py-6 bg-slate-950 text-white rounded-[2rem] font-black text-xl hover:bg-black transition-all shadow-xl flex items-center justify-center gap-6 disabled:opacity-50"
+                  >
+                    {isPosting ? <Loader2 className="animate-spin" size={24} /> : <Send size={24} />}
+                    <span>{isPosting ? 'מפרסם...' : 'פרסם עכשיו'}</span>
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -1,4 +1,3 @@
-
 :root {
   --primary-font: 'Assistant', sans-serif;
   --accent-blue: #2563eb;
@@ -68,4 +67,17 @@ body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #cbd5e1;
+}
+
+/* Standard Ticker Animation - Ensures constant motion */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-ticker-ltr {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 40s linear infinite;
+  will-change: transform;
 }

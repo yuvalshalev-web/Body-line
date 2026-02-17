@@ -14,7 +14,9 @@ import {
   Quote,
   BookOpen,
   RefreshCw,
-  Video
+  Video,
+  Radio,
+  Star
 } from 'lucide-react';
 import { Member, NewsItem } from '../types';
 
@@ -49,6 +51,18 @@ const SURF_DICTIONARY = [
   { term: "סוול (Swell)", definition: "אנרגיית הגלים שנוצרה בלב ים ומגיעה אל החוף כסטים מסודרים." }
 ];
 
+const STREAMER_NEWS_HEADLINES = [
+  "תחזית סוול: גל חדש בדרך לחופי המרכז ביום חמישי הקרוב",
+  "אליפות ישראל בגלישה: תוצאות מקצי המוקדמות בחוף המרינה",
+  "מצב הים: טמפרטורת המים עולה ל-20 מעלות, רוח אופשור קלילה בבוקר",
+  "חדשות גלישה: גולש ישראלי העפיל לשלבים המכריעים בסבב האירופי",
+  "איכות הסביבה: מבצע ניקוי חופים קהילתי יתקיים ביום שישי הקרוב",
+  "ציוד גלישה: המלצות לשעווה מתאימה לעונת המעבר הנוכחית",
+  "קהילה: מפגש גולשי חבל זוג המסורתי יתקיים השבוע במועדון ריף",
+  "בטיחות בים: הנחיות חדשות לגלישה בקרבת שוברי הגלים במרינה",
+  "ספורט: עלייה במספר הגולשים המקצועיים בנבחרת המייצגת של הרצליה"
+];
+
 const DashboardPage: React.FC<DashboardPageProps> = ({ 
   membersCount, galleryCount, eventsCount, newsCount,
   currentUser, attendees, onToggleAttendance, heroBg, activeSessionDate, news
@@ -75,7 +89,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     { label: 'חברים', value: membersCount, icon: Users, color: 'text-emerald-500', bgColor: 'bg-emerald-50', path: '/directory' },
     { label: 'תמונות', value: galleryCount, icon: ImageIcon, color: 'text-rose-500', bgColor: 'bg-rose-50', path: '/gallery' },
     { label: 'אירועים', value: eventsCount, icon: Calendar, color: 'text-indigo-500', bgColor: 'bg-indigo-50', path: '/events' },
-    { label: 'תחזית', value: 'GoSurf', icon: Waves, color: 'text-sky-500', bgColor: 'bg-sky-50', path: 'https://gosurf.co.il/forecast/herzliya-marina', external: true }
+    { label: 'תחזית', value: 'GoSurf', icon: Waves, color: 'text-sky-500', bgColor: 'bg-sky-50', path: 'https://gosurf.co.il/forecast/herzliya-marina', external: true },
+    { label: 'מצלמת חוף', value: 'Live', icon: Video, color: 'text-violet-500', bgColor: 'bg-violet-50', path: 'https://beachcam.co.il/marina.html', external: true }
   ];
 
   const categoryTranslations: Record<string, string> = {
@@ -87,8 +102,30 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   return (
-    <div className="space-y-10 md:space-y-16 animate-in fade-in duration-700 max-w-5xl mx-auto pb-10" dir="rtl">
+    <div className="space-y-6 md:space-y-12 animate-in fade-in duration-700 max-w-5xl mx-auto pb-10" dir="rtl">
       
+      {/* Streamer News Ticker - Fixed for definite LTR movement */}
+      <div className="w-full bg-white text-slate-900 py-3 md:py-4 rounded-[1.5rem] md:rounded-full overflow-hidden flex items-center relative border border-slate-200 shadow-md h-14 md:h-16 group">
+        {/* Label always visible on the right */}
+        <div className="absolute right-0 top-0 bottom-0 px-4 md:px-6 bg-slate-50 z-20 flex items-center gap-2 border-l border-slate-200 rounded-r-[1.5rem] md:rounded-r-full shadow-sm">
+           <Radio size={14} className="text-rose-500 animate-pulse" />
+           <span className="text-[10px] md:text-xs font-black uppercase tracking-widest whitespace-nowrap text-slate-500">עדכוני סטריימר</span>
+        </div>
+        
+        {/* Scrolling container - forced LTR for animation predictability */}
+        <div className="flex-1 h-full flex items-center overflow-hidden" dir="ltr">
+          <div className="flex whitespace-nowrap animate-ticker-ltr group-hover:[animation-play-state:paused] pointer-events-none">
+            {/* Multiplied for seamless infinite loop */}
+            {[...STREAMER_NEWS_HEADLINES, ...STREAMER_NEWS_HEADLINES, ...STREAMER_NEWS_HEADLINES].map((text, i) => (
+              <div key={i} className="flex items-center gap-10 mx-6">
+                <span className="text-[12px] md:text-sm font-bold text-slate-800 tracking-tight" dir="rtl">{text}</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-200 flex-shrink-0"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="relative w-full aspect-square md:aspect-video lg:min-h-[500px] rounded-[2.5rem] md:rounded-[3.5rem] overflow-hidden shadow-2xl border border-slate-100 group">
         <img 
@@ -99,8 +136,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent"></div>
         
         <div className="relative z-10 h-full w-full flex flex-col items-center justify-center py-10 px-6 text-center space-y-4 md:space-y-6">
-          {/* Subtle White Quote */}
-          <p className="text-white/80 font-medium text-sm md:text-xl italic max-w-xl tracking-wider animate-in fade-in slide-in-from-top-6 duration-1000 text-center -mt-10 md:-mt-24 mb-4 md:mb-6 px-4">
+          <p className="text-white/80 font-medium text-sm md:text-xl italic max-w-xl tracking-wider animate-in fade-in slide-in-from-top-6 duration-1000 text-center -mt-10 md:-mt-24 mb-4 md:mb-6 px-4 drop-shadow-lg">
             "A day will come that is like no other... and nothing that happens after will ever be the same."
           </p>
 
@@ -111,174 +147,160 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             >
               יום חמישי הגדול
             </h2>
-            <p className="text-white/90 font-black text-sm md:text-xl uppercase tracking-widest bg-white/10 backdrop-blur-sm inline-block px-4 md:px-6 py-2 rounded-full border border-white/10">
-              הסשן הקרוב • {formattedDate}
+            <p className="text-white/90 font-black text-sm md:text-xl uppercase tracking-widest bg-white/10 backdrop-blur-sm px-4 py-1 rounded-full border border-white/20">
+               {formattedDate}
             </p>
           </div>
 
-          <div className="w-full max-w-sm space-y-4 md:pt-4">
-            <button 
-              onClick={async () => { setIsProcessing(true); try { await onToggleAttendance(); } finally { setIsProcessing(false); } }}
-              disabled={isProcessing}
-              className={`w-full py-4.5 md:py-6 rounded-[1.5rem] md:rounded-[2rem] font-black text-lg md:text-2xl transition-all shadow-2xl flex items-center justify-center gap-3 md:gap-4 active:scale-95 ${isUserAttending ? 'bg-rose-600 text-white' : 'bg-white text-slate-950 hover:bg-slate-100'}`}
-            >
-              {isProcessing ? <Loader2 className="animate-spin" size={24} /> : (isUserAttending ? 'אופס... צריך לבטל' : 'אני מגיע!')}
-              {!isProcessing && <Sparkles size={20} className={isUserAttending ? 'text-white' : 'text-indigo-600'} />}
-            </button>
-            <button 
-              onClick={() => attendees.length > 0 && setShowAttendees(true)} 
-              className="text-white/60 font-black text-[10px] md:text-xs uppercase tracking-widest hover:text-white transition-colors bg-black/20 backdrop-blur-md px-5 py-2 rounded-full"
-            >
-              {attendees.length} חברים כבר נרשמו • מי בא?
-            </button>
+          <div className="pt-4">
+             <button 
+               onClick={async () => {
+                 setIsProcessing(true);
+                 try { await onToggleAttendance(); } finally { setIsProcessing(false); }
+               }}
+               disabled={isProcessing}
+               className={`px-12 py-5 rounded-full font-black text-xl transition-all shadow-2xl active:scale-95 flex items-center gap-3 ${isUserAttending ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-white text-slate-900 hover:bg-slate-100'}`}
+             >
+               {isProcessing ? <Loader2 className="animate-spin" size={24} /> : <Waves size={24} />}
+               <span>{isUserAttending ? 'בטל הגעה' : 'אני מגיע/ה'}</span>
+             </button>
+             
+             <button 
+               onClick={() => setShowAttendees(true)}
+               className="mt-6 text-white/70 hover:text-white font-black text-sm uppercase tracking-widest flex flex-col items-center gap-1 mx-auto transition-all group/stars active:scale-95"
+             >
+               <div className="flex items-center gap-2">
+                 <Star size={18} className="text-yellow-400 fill-yellow-400 group-hover:scale-125 transition-transform" />
+                 <span>{attendees.length} הכוכבים שאישרו הגעה</span>
+               </div>
+               <span className="text-[9px] text-white/40 group-hover:text-white/80 transition-colors bg-white/5 px-3 py-0.5 rounded-full border border-white/10 mt-1">
+                 (לחץ כאן לצפייה בנבחרת ➔)
+               </span>
+             </button>
           </div>
         </div>
       </section>
 
-      {/* Main Stats Hub */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-3 px-4">
-          <Sparkles className="text-slate-950" size={20} />
-          <h3 className="text-xl md:text-2xl font-black text-slate-950">סטטיסטיקה וגלים</h3>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {statsCards.map((card, idx) => {
-            const content = (
-              <div className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-50 shadow-sm flex flex-col items-center justify-center gap-4 hover:shadow-xl transition-all group h-full active:scale-95">
-                <div className={`w-14 h-14 md:w-16 md:h-16 ${card.bgColor} rounded-[1.25rem] flex items-center justify-center ${card.color} group-hover:scale-110 transition-transform shadow-sm border border-slate-100/50`}>
-                  <card.icon size={26} />
-                </div>
-                <div className="text-center space-y-1">
-                  <p className="text-slate-500 font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] mb-0.5">{card.label}</p>
-                  <h4 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter leading-none">{card.value}</h4>
-                </div>
-              </div>
-            );
-            return card.external ? <a key={idx} href={card.path} target="_blank" rel="noopener noreferrer" className="block">{content}</a> : <Link key={idx} to={card.path} className="block">{content}</Link>;
-          })}
-        </div>
-      </div>
-
-      {/* Latest Posts Thumbnails */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <Newspaper className="text-slate-950" size={20} />
-            <h3 className="text-xl md:text-2xl font-black text-slate-950">פוסטים אחרונים</h3>
-          </div>
-          <Link to="/news" className="text-[10px] md:text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform">
-            לכל הכתבות <ArrowRight size={14} />
+      {/* Stats Grid - Updated to md:grid-cols-5 */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
+        {statsCards.map((card, i) => (
+          <Link 
+            key={i} 
+            to={card.path} 
+            target={card.external ? "_blank" : undefined}
+            className={`p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 hover:border-indigo-100 shadow-sm hover:shadow-xl transition-all group ${card.bgColor}`}
+          >
+            <div className={`mb-4 flex items-center justify-between ${card.color}`}>
+               <card.icon size={28} className="group-hover:scale-110 transition-transform" />
+               <ArrowRight size={18} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+            </div>
+            <div className="space-y-1 text-right">
+              <p className="text-2xl md:text-3xl font-black text-slate-950 tracking-tighter">{card.value}</p>
+              <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest">{card.label}</p>
+            </div>
           </Link>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {latestNews.map((item) => (
-            <Link key={item.id} to="/news" className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-50 shadow-sm flex flex-col items-center justify-center gap-4 hover:shadow-xl transition-all group h-full active:scale-95 text-center">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-50 rounded-[1.25rem] flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform overflow-hidden relative shadow-sm border border-slate-100">
-                {item.imageUrl ? (
-                  <img src={item.imageUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" alt="" />
-                ) : (
-                  <Newspaper size={26} />
-                )}
-                <div className="absolute inset-0 bg-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-slate-500 font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] mb-0.5">{categoryTranslations[item.category] || item.category}</p>
-                <h4 className="text-sm md:text-lg font-black text-slate-900 line-clamp-2 px-1 leading-tight tracking-tight">{item.title}</h4>
-              </div>
-            </Link>
-          ))}
-          {latestNews.length < 4 && (
-            <a 
-              href="https://beachcam.co.il/marina.html" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-50 shadow-sm flex flex-col items-center justify-center gap-4 hover:shadow-xl transition-all group h-full active:scale-95 text-center"
-            >
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-rose-50 rounded-[1.25rem] flex items-center justify-center text-rose-600 group-hover:scale-110 transition-transform relative shadow-sm border border-slate-100">
-                <div className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse z-10"></div>
-                <Video size={26} />
-              </div>
-              <div className="space-y-1">
-                <p className="text-slate-500 font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] mb-0.5">מבט לים</p>
-                <h4 className="text-lg md:text-2xl font-black text-slate-900 px-1 leading-none tracking-tighter">Live</h4>
-              </div>
-            </a>
-          )}
-        </div>
+        ))}
       </div>
 
-      {/* Surf Dictionary/Quotes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
-        <section className="bg-slate-900 rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-slate-800 text-center group">
-           
-           {/* Interactive Quote Header Area */}
-           <div className="h-10 mb-6 flex items-center justify-center group/header">
-             <Quote className="text-indigo-400 opacity-50 group-hover/header:hidden block transition-all" size={40} />
-             <h3 className="hidden group-hover/header:block text-indigo-400 font-black text-xl md:text-2xl uppercase tracking-tighter animate-in fade-in zoom-in-95">
-                ציטוטי גולשים
-             </h3>
-           </div>
-
-           <div className="space-y-4">
-              <h3 className="text-lg md:text-2xl font-black italic leading-relaxed">
-                "{SURF_QUOTES[quoteIndex].text}"
+      {/* Main Content Area: Posts followed by Quote/Dictionary row */}
+      <div className="space-y-8 md:space-y-12">
+        {/* Posts Section */}
+        <div className="space-y-6">
+           <div className="flex items-center justify-between px-2">
+              <h3 className="text-2xl font-black text-slate-950 flex items-center gap-3">
+                 <Newspaper className="text-indigo-500" size={24} />
+                 פוסטים
               </h3>
-              <p className="text-indigo-400 font-black text-[10px] uppercase tracking-[0.3em]">
-                — {SURF_QUOTES[quoteIndex].author}
-              </p>
+              <Link to="/news" className="text-xs font-black text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest">צפה בהכל</Link>
            </div>
-           <button 
-             onClick={() => setQuoteIndex((prev) => (prev + 1) % SURF_QUOTES.length)}
-             className="mt-8 p-3 bg-white/5 hover:bg-white/10 rounded-full transition-colors active:scale-90"
-           >
-             <RefreshCw size={18} className="text-slate-400" />
-           </button>
-        </section>
-
-        <section className="bg-indigo-950 rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-indigo-900 text-center group">
            
-           {/* Interactive Dictionary Header Area */}
-           <div className="h-10 mb-6 flex items-center justify-center group/header">
-             <BookOpen className="text-indigo-400 opacity-50 group-hover/header:hidden block transition-all" size={32} />
-             <h3 className="hidden group-hover/header:block text-indigo-400 font-black text-xl md:text-2xl uppercase tracking-tighter animate-in fade-in zoom-in-95">
-                מילון גלישה
-             </h3>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {latestNews.length > 0 ? latestNews.map((item) => (
+                <Link key={item.id} to="/news" className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group flex items-start gap-6">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0">
+                    {item.imageUrl ? <img src={item.imageUrl} className="w-full h-full object-cover rounded-2xl" alt="" /> : <Sparkles size={22} />}
+                  </div>
+                  <div className="flex-1 min-w-0 text-right">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{categoryTranslations[item.category] || item.category}</p>
+                    <h4 className="text-xl font-black text-slate-950 group-hover:text-indigo-600 transition-colors truncate mb-1">{item.title}</h4>
+                    <p className="text-xs font-bold text-slate-500 leading-relaxed line-clamp-2">
+                      {item.content}
+                    </p>
+                  </div>
+                  <ArrowRight size={20} className="text-slate-200 group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all flex-shrink-0 self-center" />
+                </Link>
+              )) : (
+                <div className="col-span-full p-16 text-center bg-white border border-dashed border-slate-200 rounded-[3rem] flex flex-col items-center justify-center gap-4">
+                   <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
+                      <Newspaper size={32} />
+                   </div>
+                   <p className="text-slate-400 font-black text-lg">אין פוסטים חדשים כרגע.</p>
+                </div>
+              )}
            </div>
+        </div>
 
-           <div className="space-y-4">
-              <h3 className="text-xl md:text-2xl font-black italic">
-                {SURF_DICTIONARY[dictionaryIndex].term}
-              </h3>
-              <p className="text-slate-300 font-bold text-sm md:text-lg leading-relaxed max-w-lg mx-auto">
-                {SURF_DICTIONARY[dictionaryIndex].definition}
-              </p>
-           </div>
-           <button 
-             onClick={() => setDictionaryIndex((prev) => (prev + 1) % SURF_DICTIONARY.length)}
-             className="mt-8 p-3 bg-white/5 hover:bg-white/10 rounded-full transition-colors active:scale-90"
-           >
-             <RefreshCw size={18} className="text-slate-400" />
-           </button>
-        </section>
-      </div>
-
-      {/* Attendees Modal */}
-      {showAttendees && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in" onClick={() => setShowAttendees(false)}>
-           <div className="bg-white w-full max-w-md rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl overflow-hidden relative flex flex-col max-h-[80vh] animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-              <div className="p-6 md:p-8 border-b border-slate-50 flex justify-between items-center">
-                 <h3 className="text-xl md:text-2xl font-black text-slate-950">נרשמו לסשן</h3>
-                 <button onClick={() => setShowAttendees(false)} className="p-2.5 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"><CloseIcon size={20} /></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 md:p-8">
-                 <div className="grid grid-cols-2 gap-5 md:gap-6">
-                    {attendees.map(a => (
-                      <div key={a.id} className="flex flex-col items-center gap-3 group">
-                          <img src={a.avatar} className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover border-2 border-slate-50 group-hover:border-indigo-100 transition-all shadow-sm" alt={a.name} />
-                          <h4 className="font-black text-slate-900 text-[10px] md:text-xs text-center">{a.name}</h4>
-                      </div>
-                    ))}
+        {/* Surf Context Row: Quotes and Dictionary Side-by-Side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+           {/* Surf Quotes */}
+           <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group">
+              <div className="flex items-center gap-3 mb-6">
+                 <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
+                    <Quote size={20} />
                  </div>
+                 <h4 className="font-black text-slate-950 text-sm uppercase tracking-widest">ציטוט הגולשים</h4>
+              </div>
+              <div className="space-y-2 text-right">
+                 <p className="text-lg font-black text-indigo-500 tracking-tight leading-relaxed italic">
+                    "{SURF_QUOTES[quoteIndex].text}"
+                 </p>
+                 <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">
+                    — {SURF_QUOTES[quoteIndex].author}
+                 </p>
+              </div>
+           </div>
+
+           {/* Surf Dictionary */}
+           <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group">
+              <div className="flex items-center gap-3 mb-6">
+                 <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">
+                    <BookOpen size={20} />
+                 </div>
+                 <h4 className="font-black text-slate-950 text-sm uppercase tracking-widest">מילון הגולשים</h4>
+              </div>
+              <div className="space-y-2 text-right">
+                 <p className="text-lg font-black text-amber-500 tracking-tight">{SURF_DICTIONARY[dictionaryIndex].term}</p>
+                 <p className="text-xs font-bold text-slate-500 leading-relaxed">
+                   {SURF_DICTIONARY[dictionaryIndex].definition}
+                 </p>
+              </div>
+           </div>
+        </div>
+      </div>
+
+      {showAttendees && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in" onClick={() => setShowAttendees(false)}>
+           <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                 <h3 className="text-2xl font-black text-slate-950 tracking-tighter">רשימת משתתפים</h3>
+                 <button onClick={() => setShowAttendees(false)} className="p-2 bg-white rounded-xl shadow-sm text-slate-400 hover:text-slate-950 transition-colors"><CloseIcon size={20} /></button>
+              </div>
+              <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                 {attendees.length > 0 ? (
+                   <div className="grid grid-cols-1 gap-3">
+                      {attendees.map(a => (
+                        <div key={a.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                           <img src={a.avatar} className="w-12 h-12 rounded-xl object-cover" alt="" />
+                           <div className="flex-1 text-right">
+                              <p className="font-black text-slate-950">{a.name}</p>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{a.role === 'Admin' ? 'מנהל' : 'חבר נבחרת'}</p>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                 ) : (
+                   <div className="py-12 text-center text-slate-400 font-bold">טרם נרשמו חברים. תהיה הראשון!</div>
+                 )}
               </div>
            </div>
         </div>

@@ -1,4 +1,3 @@
-
 export interface Member {
   id: string;
   uid?: string; // Firebase Auth UID
@@ -69,6 +68,7 @@ export interface NewsItem {
   category: 'Update' | 'Activity' | 'Announcement' | 'Personal' | 'Share';
   authorId?: string;
   authorName?: string;
+  authorAvatar?: string;
 }
 
 export interface AuthState {

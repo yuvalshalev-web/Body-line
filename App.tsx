@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { db } from './services/firebase';
 import { Member, GalleryItem, Event, NewsItem, JoinRequest } from './types';
+import { hashPassword } from './utils/crypto';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -220,7 +221,7 @@ const App: React.FC = () => {
             </button>
           </div>
 
-          <nav className="flex-1 space-y-1.5">
+          <nav className="flex-1 space-y-2">
             {[
               { to: '/', icon: Home, label: 'עמוד ראשי' },
               { to: '/directory', icon: Users, label: 'חברי קהילה' },
@@ -229,25 +230,30 @@ const App: React.FC = () => {
               { to: '/events', icon: Calendar, label: 'אירועים' },
               { to: '/profile', icon: User, label: 'הפרופיל שלי' },
               ...(currentUser.role === 'Admin' ? [{ to: '/admin', icon: ShieldAlert, label: 'ניהול מערכת' }] : [])
-            ].map(link => (
-              <Link 
-                key={link.to} 
-                to={link.to} 
-                onClick={() => setIsSidebarOpen(false)}
-                className={`flex items-center gap-4 px-6 py-4.5 rounded-[1.25rem] transition-all font-black text-sm active:scale-95 ${location.pathname === link.to ? 'bg-slate-100 text-slate-950' : 'hover:bg-slate-50 text-slate-500'}`}
-              >
-                <link.icon size={20} />
-                <span>{link.label}</span>
-              </Link>
-            ))}
+            ].map(link => {
+              const isActive = location.pathname === link.to;
+              return (
+                <Link 
+                  key={link.to} 
+                  to={link.to} 
+                  onClick={() => setIsSidebarOpen(false)}
+                  className={`group flex items-center gap-4 px-6 py-4.5 rounded-[1.25rem] transition-all duration-300 font-black text-sm active:scale-95 ${isActive 
+                    ? 'bg-slate-950 text-white shadow-lg shadow-slate-200' 
+                    : 'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 hover:scale-[1.02]'}`}
+                >
+                  <link.icon size={20} className={`transition-colors duration-300 ${isActive ? 'text-white' : 'group-hover:text-indigo-600'}`} />
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="pt-8 border-t border-slate-100 mt-8">
             <button 
               onClick={handleLogout} 
-              className="w-full flex items-center gap-4 px-6 py-4.5 rounded-[1.25rem] text-rose-500 hover:bg-rose-50 transition-all font-black text-sm active:scale-95"
+              className="group w-full flex items-center gap-4 px-6 py-4.5 rounded-[1.25rem] text-rose-500 hover:bg-rose-50 transition-all duration-300 font-black text-sm active:scale-95"
             >
-              <LogOut size={20} />
+              <LogOut size={20} className="group-hover:scale-110 transition-transform" />
               <span>התנתקות</span>
             </button>
           </div>
@@ -317,9 +323,24 @@ const App: React.FC = () => {
                   onApproveRequest={async (id) => {
                     const req = joinRequests.find(r => r.id === id);
                     if (req) {
+                      const tempPassword = Math.random().toString(36).slice(-8);
+                      const hashedPassword = await hashPassword(tempPassword);
                       const { id: reqId, ...memberData } = req;
-                      await addDoc(collection(db, 'members'), { ...memberData, role: 'Member', joinedAt: new Date().toLocaleDateString('he-IL'), totalAttendance: 0 });
+                      
+                      const newMember = { 
+                        ...memberData, 
+                        password: hashedPassword,
+                        isTempPassword: true,
+                        role: 'Member' as const, 
+                        joinedAt: new Date().toLocaleDateString('he-IL'), 
+                        totalAttendance: 0,
+                        isActive: true
+                      };
+                      
+                      await addDoc(collection(db, 'members'), newMember);
                       await deleteDoc(doc(db, 'joinRequests', id));
+                      
+                      return { name: req.name, mobile: req.mobile, tempPassword };
                     }
                     return null;
                   }}
