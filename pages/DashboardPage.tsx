@@ -14,11 +14,7 @@ import {
   Quote,
   BookOpen,
   RefreshCw,
-  Bird,
-  Waves as ReefIcon,
-  Wind,
-  Play,
-  Monitor
+  Video
 } from 'lucide-react';
 import { Member, NewsItem } from '../types';
 
@@ -72,7 +68,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'long' });
   }, [activeSessionDate]);
 
-  const latestNews = useMemo(() => news.slice(0, 3), [news]);
+  const latestNews = useMemo(() => news.slice(0, 4), [news]);
   const isUserAttending = attendees.some(a => a.id === currentUser.id);
 
   const statsCards = [
@@ -82,10 +78,18 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     { label: 'תחזית', value: 'GoSurf', icon: Waves, color: 'text-sky-500', bgColor: 'bg-sky-50', path: 'https://gosurf.co.il/forecast/herzliya-marina', external: true }
   ];
 
+  const categoryTranslations: Record<string, string> = {
+    'Update': 'עדכון',
+    'Activity': 'פעילות',
+    'Announcement': 'הודעה',
+    'Personal': 'אישי',
+    'Share': 'שיתוף'
+  };
+
   return (
     <div className="space-y-10 md:space-y-16 animate-in fade-in duration-700 max-w-5xl mx-auto pb-10" dir="rtl">
       
-      {/* Hero Section - Mobile Square, Desktop Wide */}
+      {/* Hero Section */}
       <section className="relative w-full aspect-square md:aspect-video lg:min-h-[500px] rounded-[2.5rem] md:rounded-[3.5rem] overflow-hidden shadow-2xl border border-slate-100 group">
         <img 
           src={heroBg} 
@@ -96,7 +100,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         
         <div className="relative z-10 h-full w-full flex flex-col items-center justify-center py-10 px-6 text-center space-y-5 md:space-y-8">
           <div className="space-y-2">
-            <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter leading-none mb-1 drop-shadow-2xl">
+            <h2 
+              className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-none mb-1 drop-shadow-2xl"
+              style={{ color: '#F1D179' }}
+            >
               יום חמישי הגדול
             </h2>
             <p className="text-white/90 font-black text-sm md:text-xl uppercase tracking-widest bg-white/10 backdrop-blur-sm inline-block px-4 md:px-6 py-2 rounded-full border border-white/10">
@@ -123,101 +130,80 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </section>
 
-      {/* Stats Cards - 2 cols on mobile, 4 on desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {statsCards.map((card, idx) => {
-          const content = (
-            <div className="bg-white p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-50 shadow-sm flex flex-col items-center justify-center gap-3 hover:shadow-xl transition-all group h-full active:scale-95">
-              <div className={`w-10 h-10 md:w-14 md:h-14 ${card.bgColor} rounded-xl md:rounded-2xl flex items-center justify-center ${card.color} group-hover:scale-110 transition-transform`}>
-                <card.icon size={20} className="md:w-6 md:h-6" />
+      {/* Main Stats Hub - Replicating exact image style */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 px-4">
+          <Sparkles className="text-slate-950" size={20} />
+          <h3 className="text-xl md:text-2xl font-black text-slate-950">סטטיסטיקה וגלים</h3>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {statsCards.map((card, idx) => {
+            const content = (
+              <div className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-50 shadow-sm flex flex-col items-center justify-center gap-4 hover:shadow-xl transition-all group h-full active:scale-95">
+                <div className={`w-14 h-14 md:w-16 md:h-16 ${card.bgColor} rounded-[1.25rem] flex items-center justify-center ${card.color} group-hover:scale-110 transition-transform shadow-sm border border-slate-100/50`}>
+                  <card.icon size={26} />
+                </div>
+                <div className="text-center space-y-1">
+                  <p className="text-slate-500 font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] mb-0.5">{card.label}</p>
+                  <h4 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter leading-none">{card.value}</h4>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-slate-600 font-black text-[8px] md:text-[10px] uppercase tracking-widest mb-1">{card.label}</p>
-                <h4 className="text-xl md:text-3xl font-black text-slate-950">{card.value}</h4>
-              </div>
-            </div>
-          );
-          return card.external ? <a key={idx} href={card.path} target="_blank" rel="noopener noreferrer" className="block">{content}</a> : <Link key={idx} to={card.path} className="block">{content}</Link>;
-        })}
+            );
+            return card.external ? <a key={idx} href={card.path} target="_blank" rel="noopener noreferrer" className="block">{content}</a> : <Link key={idx} to={card.path} className="block">{content}</Link>;
+          })}
+        </div>
       </div>
 
-      {/* News and Socials Stacking */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-14">
-        {/* Latest Posts */}
-        <div className="lg:col-span-2 space-y-6 md:space-y-8">
-          <div className="flex items-center justify-between px-4">
-            <div className="flex items-center gap-3">
-              <Newspaper className="text-slate-950" size={20} />
-              <h3 className="text-xl md:text-2xl font-black text-slate-950">פוסטים אחרונים</h3>
-            </div>
-            <Link to="/news" className="text-[10px] md:text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform">
-              לכל הכתבות <ArrowRight size={14} />
+      {/* Latest Posts Thumbnails - Using the same visual style as Stats */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <Newspaper className="text-slate-950" size={20} />
+            <h3 className="text-xl md:text-2xl font-black text-slate-950">פוסטים אחרונים</h3>
+          </div>
+          <Link to="/news" className="text-[10px] md:text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform">
+            לכל הכתבות <ArrowRight size={14} />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {latestNews.map((item) => (
+            <Link key={item.id} to="/news" className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-50 shadow-sm flex flex-col items-center justify-center gap-4 hover:shadow-xl transition-all group h-full active:scale-95 text-center">
+              <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-50 rounded-[1.25rem] flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform overflow-hidden relative shadow-sm border border-slate-100">
+                {item.imageUrl ? (
+                  <img src={item.imageUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" alt="" />
+                ) : (
+                  <Newspaper size={26} />
+                )}
+                <div className="absolute inset-0 bg-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-slate-500 font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] mb-0.5">{categoryTranslations[item.category] || item.category}</p>
+                <h4 className="text-sm md:text-lg font-black text-slate-900 line-clamp-2 px-1 leading-tight tracking-tight">{item.title}</h4>
+              </div>
             </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
-            {latestNews.length > 0 ? latestNews.map((item) => (
-              <Link key={item.id} to="/news" className="group bg-white p-5 md:p-6 rounded-[2rem] md:rounded-[2.5rem] border border-slate-50 shadow-sm hover:shadow-xl transition-all flex flex-col gap-4 active:scale-95">
-                <div className="aspect-[16/9] rounded-[1.25rem] md:rounded-[1.5rem] overflow-hidden bg-slate-50 relative">
-                   {item.imageUrl ? (
-                     <img src={item.imageUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" alt="" />
-                   ) : (
-                     <div className="w-full h-full flex items-center justify-center text-slate-200"><Newspaper size={32} /></div>
-                   )}
-                   <div className="absolute top-3 left-3 px-2 py-0.5 bg-white/90 backdrop-blur-md rounded-lg text-[8px] font-black uppercase tracking-widest text-slate-950 border border-slate-100">
-                      {item.category}
-                   </div>
-                </div>
-                <div>
-                  <h4 className="font-black text-slate-900 text-sm md:text-lg leading-tight mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">{item.title}</h4>
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
-                       <Bird size={10} />
-                    </div>
-                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{item.authorName}</span>
-                  </div>
-                </div>
-              </Link>
-            )) : (
-              <div className="col-span-full py-12 text-center bg-slate-50 rounded-[2rem] text-slate-500 font-black text-sm italic">ממתינים לעדכונים...</div>
-            )}
-          </div>
-        </div>
-
-        {/* Live Cam Sidebar - Desktop Only or Top Stack on Mobile */}
-        <div className="space-y-6 md:space-y-8">
-          <div className="flex items-center gap-3 px-4">
-            <Monitor size={20} className="text-slate-950" />
-            <h3 className="text-xl md:text-2xl font-black text-slate-950">מבט לים</h3>
-          </div>
-          <a 
-            href="https://beachcam.co.il/marina.html" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="block w-full aspect-video rounded-[2.5rem] bg-slate-950 border border-slate-200 overflow-hidden relative shadow-xl group active:scale-95 transition-all"
-          >
-            <img 
-              src="https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=1200" 
-              className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" 
-              alt="Live Cam Preview" 
-            />
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/5 transition-colors"></div>
-            <div className="absolute top-4 left-4 px-2 py-1 bg-rose-600 rounded-lg flex items-center gap-2 shadow-lg z-20">
-              <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
-              <span className="text-[8px] font-black text-white uppercase tracking-widest">LIVE</span>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center z-20">
-               <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-all">
-                  <Play size={30} fill="white" className="text-white ml-1.5" />
-               </div>
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/80 to-transparent z-20">
-               <span className="text-white font-black text-[10px] md:text-xs tracking-tight">מרינה הרצליה • שידור חי</span>
-            </div>
-          </a>
+          ))}
+          {/* If less than 4 news, fill with Live Cam or placeholders */}
+          {latestNews.length < 4 && (
+            <a 
+              href="https://beachcam.co.il/marina.html" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-50 shadow-sm flex flex-col items-center justify-center gap-4 hover:shadow-xl transition-all group h-full active:scale-95 text-center"
+            >
+              <div className="w-14 h-14 md:w-16 md:h-16 bg-rose-50 rounded-[1.25rem] flex items-center justify-center text-rose-600 group-hover:scale-110 transition-transform relative shadow-sm border border-slate-100">
+                <div className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse z-10"></div>
+                <Video size={26} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-slate-500 font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] mb-0.5">מבט לים</p>
+                <h4 className="text-lg md:text-2xl font-black text-slate-900 px-1 leading-none tracking-tighter">Live</h4>
+              </div>
+            </a>
+          )}
         </div>
       </div>
 
-      {/* Surf Dictionary/Quotes - Stacked on Mobile */}
+      {/* Surf Dictionary/Quotes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
         <section className="bg-slate-900 rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-slate-800 text-center">
            <Quote className="text-indigo-400 opacity-50 mx-auto mb-6" size={40} />

@@ -26,8 +26,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
   const [joinAvatar, setJoinAvatar] = useState('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const vintageCream = "#F5D682";
-  const titleAreaBg = "#0A0A0A";
+  const buffColor = "#F1D179";
   
   const defaultBg = "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media";
   const currentBg = siteAssets.loginBg || siteAssets.heroBg || defaultBg;
@@ -111,44 +110,44 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=2000';
           }}
         />
-        <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px]"></div>
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
       </div>
 
       <div className="relative z-10 w-full max-w-lg animate-in fade-in zoom-in-95 duration-700">
         
-        {/* Responsive Knockout Title Section */}
-        <div 
-          className="text-center mb-6 md:mb-10 p-8 md:p-12 rounded-[2rem] shadow-2xl flex flex-col items-center justify-center gap-3 md:gap-4 overflow-visible"
-          style={{ backgroundColor: titleAreaBg }}
-        >
-          <h1 
-            className="text-5xl sm:text-7xl md:text-9xl font-black inline-block whitespace-nowrap"
-            style={{ 
-              fontFamily: "'Heebo', sans-serif",
-              letterSpacing: "-0.05em",
-              transform: "scaleX(1.1)",
-              WebkitTextStroke: `2px ${vintageCream}`,
-              color: 'transparent',
-              lineHeight: '1'
-            }}
-          >
-            חבל זוג
-          </h1>
+        {/* Branding Section - Updated: Removed background, added lines */}
+        <div className="text-center mb-6 md:mb-10 p-8 flex flex-col items-center justify-center gap-3 md:gap-4">
           
-          <div className="w-4/5 h-px" style={{ backgroundColor: vintageCream }}></div>
+          {/* Top Line */}
+          <div className="w-full h-1 md:h-1.5 opacity-90 rounded-full" style={{ backgroundColor: buffColor }}></div>
           
-          <p 
-            className="text-3xl sm:text-4xl md:text-5xl font-black inline-block"
-            style={{ 
-              fontFamily: "'Heebo', sans-serif",
-              letterSpacing: "-0.02em",
-              transform: "scaleX(1.05)",
-              WebkitTextStroke: `1.5px ${vintageCream}`,
-              color: 'transparent'
-            }}
-          >
-            הרצליה
-          </p>
+          <div className="py-2">
+            <h1 
+              className="text-5xl sm:text-7xl md:text-9xl font-black inline-block whitespace-nowrap tracking-tighter leading-none drop-shadow-2xl"
+              style={{ 
+                color: buffColor
+              }}
+            >
+              חבל זוג
+            </h1>
+            
+            <div className="w-full flex justify-center py-2">
+               <div className="w-4/5 h-px opacity-30" style={{ backgroundColor: buffColor }}></div>
+            </div>
+            
+            <p 
+              className="text-3xl sm:text-4xl md:text-5xl font-black inline-block tracking-tighter drop-shadow-2xl"
+              style={{ 
+                color: buffColor
+              }}
+            >
+              הרצליה
+            </p>
+          </div>
+
+          {/* Bottom Line */}
+          <div className="w-full h-1 md:h-1.5 opacity-90 rounded-full" style={{ backgroundColor: buffColor }}></div>
+          
         </div>
 
         <div className="bg-white rounded-[2.5rem] md:rounded-[3rem] shadow-2xl border border-slate-100 p-8 md:p-14 overflow-hidden relative">
