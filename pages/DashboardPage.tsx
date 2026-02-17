@@ -98,7 +98,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent"></div>
         
-        <div className="relative z-10 h-full w-full flex flex-col items-center justify-center py-10 px-6 text-center space-y-5 md:space-y-8">
+        <div className="relative z-10 h-full w-full flex flex-col items-center justify-center py-10 px-6 text-center space-y-4 md:space-y-6">
+          {/* Subtle White Quote */}
+          <p className="text-white/80 font-medium text-sm md:text-xl italic max-w-xl tracking-wider animate-in fade-in slide-in-from-top-6 duration-1000 text-center -mt-10 md:-mt-24 mb-4 md:mb-6 px-4">
+            "A day will come that is like no other... and nothing that happens after will ever be the same."
+          </p>
+
           <div className="space-y-2">
             <h2 
               className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-none mb-1 drop-shadow-2xl"
@@ -117,7 +122,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               disabled={isProcessing}
               className={`w-full py-4.5 md:py-6 rounded-[1.5rem] md:rounded-[2rem] font-black text-lg md:text-2xl transition-all shadow-2xl flex items-center justify-center gap-3 md:gap-4 active:scale-95 ${isUserAttending ? 'bg-rose-600 text-white' : 'bg-white text-slate-950 hover:bg-slate-100'}`}
             >
-              {isProcessing ? <Loader2 className="animate-spin" size={24} /> : (isUserAttending ? 'רשום • ביטול?' : 'אני מגיע!')}
+              {isProcessing ? <Loader2 className="animate-spin" size={24} /> : (isUserAttending ? 'אופס... צריך לבטל' : 'אני מגיע!')}
               {!isProcessing && <Sparkles size={20} className={isUserAttending ? 'text-white' : 'text-indigo-600'} />}
             </button>
             <button 
@@ -130,7 +135,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </section>
 
-      {/* Main Stats Hub - Replicating exact image style */}
+      {/* Main Stats Hub */}
       <div className="space-y-6">
         <div className="flex items-center gap-3 px-4">
           <Sparkles className="text-slate-950" size={20} />
@@ -154,7 +159,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </div>
 
-      {/* Latest Posts Thumbnails - Using the same visual style as Stats */}
+      {/* Latest Posts Thumbnails */}
       <div className="space-y-6">
         <div className="flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
@@ -182,7 +187,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
             </Link>
           ))}
-          {/* If less than 4 news, fill with Live Cam or placeholders */}
           {latestNews.length < 4 && (
             <a 
               href="https://beachcam.co.il/marina.html" 
@@ -205,8 +209,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
       {/* Surf Dictionary/Quotes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
-        <section className="bg-slate-900 rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-slate-800 text-center">
-           <Quote className="text-indigo-400 opacity-50 mx-auto mb-6" size={40} />
+        <section className="bg-slate-900 rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-slate-800 text-center group">
+           
+           {/* Interactive Quote Header Area */}
+           <div className="h-10 mb-6 flex items-center justify-center group/header">
+             <Quote className="text-indigo-400 opacity-50 group-hover/header:hidden block transition-all" size={40} />
+             <h3 className="hidden group-hover/header:block text-indigo-400 font-black text-xl md:text-2xl uppercase tracking-tighter animate-in fade-in zoom-in-95">
+                ציטוטי גולשים
+             </h3>
+           </div>
+
            <div className="space-y-4">
               <h3 className="text-lg md:text-2xl font-black italic leading-relaxed">
                 "{SURF_QUOTES[quoteIndex].text}"
@@ -223,8 +235,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
            </button>
         </section>
 
-        <section className="bg-indigo-950 rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-indigo-900 text-center">
-           <BookOpen className="text-indigo-400 opacity-50 mx-auto mb-6" size={32} />
+        <section className="bg-indigo-950 rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl border border-indigo-900 text-center group">
+           
+           {/* Interactive Dictionary Header Area */}
+           <div className="h-10 mb-6 flex items-center justify-center group/header">
+             <BookOpen className="text-indigo-400 opacity-50 group-hover/header:hidden block transition-all" size={32} />
+             <h3 className="hidden group-hover/header:block text-indigo-400 font-black text-xl md:text-2xl uppercase tracking-tighter animate-in fade-in zoom-in-95">
+                מילון גלישה
+             </h3>
+           </div>
+
            <div className="space-y-4">
               <h3 className="text-xl md:text-2xl font-black italic">
                 {SURF_DICTIONARY[dictionaryIndex].term}
