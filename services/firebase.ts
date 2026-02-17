@@ -1,9 +1,8 @@
 
-// Fix: Use scoped package names for modular Firebase exports to resolve missing member errors
-import { initializeApp, getApp, getApps } from '@firebase/app';
-import { getFirestore } from '@firebase/firestore';
-import { getStorage } from '@firebase/storage';
-import { getAnalytics, isSupported } from '@firebase/analytics';
+import { initializeApp, getApp, getApps } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCzzpZyz8rBhtnskhbkXB7_dTfHgXLPHfs",

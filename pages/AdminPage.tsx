@@ -1,6 +1,5 @@
 
 import React, { useState, useRef } from 'react';
-import JSZip from 'jszip';
 import { 
   Users, 
   Trash2, 
@@ -9,104 +8,111 @@ import {
   Phone, 
   Search,
   CheckCircle2,
-  Image as ImageIcon,
-  Calendar,
-  Plus,
-  Newspaper,
-  ShieldCheck,
-  Upload,
+  ShieldX,
   Loader2,
-  Check,
+  X,
   UserCheck,
-  Clock3,
-  Edit3,
-  Download,
-  Database,
-  FileJson,
-  RefreshCw,
-  FileArchive,
+  ToggleLeft,
+  ToggleRight,
+  UserPlus,
+  Clock,
+  Palette,
   Camera,
-  Layout,
-  FileImage
+  Save,
+  ImageIcon,
+  UserCog,
+  Waves,
+  Plus,
+  Bird,
+  Anchor,
+  Trash,
+  Calendar,
+  Newspaper,
+  Star,
+  LogIn,
+  Edit2,
+  Facebook,
+  Instagram,
+  Linkedin,
+  Globe,
+  Music,
+  AlertTriangle
 } from 'lucide-react';
-import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../services/firebase';
-import { Member, GalleryItem, Event, NewsItem, JoinRequest } from '../types';
-import { optimizeImage } from '../utils/image';
+import { Member, JoinRequest, Event, NewsItem } from '../types';
+
+const XLogo = ({ size = 16 }: { size?: number }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932 6.064-6.932zm-1.292 19.494h2.039L6.486 3.24H4.298l13.311 17.407z" />
+  </svg>
+);
 
 interface AdminPageProps {
   user: Member;
   members: Member[];
-  onDeleteMember: (id: string) => void;
-  onResetPassword: (id: string) => void;
-  onToggleRole: (id: string) => void;
-  onUpdateMember: (member: Member) => void;
+  onDeleteMember: (id: string) => Promise<void>;
+  onResetPassword: (id: string) => Promise<void>;
+  onToggleRole: (id: string) => Promise<void>;
+  onUpdateMember: (member: Member) => Promise<void>;
   joinRequests: JoinRequest[];
   onApproveRequest: (id: string) => Promise<Member | null>;
-  onRejectRequest: (id: string) => void;
-  galleryItems: GalleryItem[];
-  onAddGalleryItem: (item: Omit<GalleryItem, 'id'>) => void;
-  onDeleteGalleryItems: (ids: string[]) => void;
+  onRejectRequest: (id: string) => Promise<void>;
+  siteAssets: { 
+    clubLogo?: string; 
+    atalefLogo?: string; 
+    habalZugLogo?: string;
+    heroBg?: string; 
+    loginBg?: string;
+    extraLogos?: string[]; 
+    extraHeroImages?: string[] 
+  };
   events: Event[];
-  onAddEvent: (details: Omit<Event, 'id'>) => void;
-  onDeleteEvent: (id: string) => void;
   news: NewsItem[];
-  onAddNews: (details: Omit<NewsItem, 'id'>) => void;
-  onDeleteNews: (id: string) => void;
+  onDeleteEvent: (id: string) => Promise<void>;
+  onDeleteNews: (id: string) => Promise<void>;
 }
 
 const AdminPage: React.FC<AdminPageProps> = ({ 
-  user,
   members, 
   onDeleteMember, 
   onResetPassword, 
-  onToggleRole,
+  onToggleRole, 
   onUpdateMember,
   joinRequests,
   onApproveRequest,
   onRejectRequest,
-  galleryItems,
-  onAddGalleryItem,
-  onDeleteGalleryItems,
+  siteAssets,
   events,
-  onAddEvent,
-  onDeleteEvent,
   news,
-  onAddNews,
+  onDeleteEvent,
   onDeleteNews
 }) => {
-  const [activeTab, setActiveTab] = useState<'MEMBERS' | 'REQUESTS' | 'GALLERY' | 'EVENTS' | 'NEWS' | 'ADD' | 'SYSTEM'>('MEMBERS');
+  const [activeTab, setActiveTab] = useState<'MEMBERS' | 'REQUESTS' | 'EVENTS' | 'NEWS' | 'SITE'>('MEMBERS');
   const [searchTerm, setSearchTerm] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  
-  const importFileInputRef = useRef<HTMLInputElement>(null);
-  const eventImgRef = useRef<HTMLInputElement>(null);
-  const newsImgRef = useRef<HTMLInputElement>(null);
-  const logoRef = useRef<HTMLInputElement>(null);
-  const heroRef = useRef<HTMLInputElement>(null);
-
-  // Form States
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [approvedMember, setApprovedMember] = useState<Member | null>(null);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadType, setUploadType] = useState<'extraLogo' | 'extraHero' | 'memberAvatar' | null>(null);
 
-  // Add Event Form State
-  const [eventTitle, setEventTitle] = useState('');
-  const [eventDesc, setEventDesc] = useState('');
-  const [eventDate, setEventDate] = useState('');
-  const [eventTime, setEventTime] = useState('');
-  const [eventLoc, setEventLoc] = useState('');
-  const [eventImageBlob, setEventImageBlob] = useState<Blob | null>(null);
-  const [eventPreview, setEventPreview] = useState('');
-
-  // Add News Form State
-  const [newsTitle, setNewsTitle] = useState('');
-  const [newsContent, setNewsContent] = useState('');
-  const [newsCategory, setNewsCategory] = useState<NewsItem['category']>('Update');
-  const [newsImageBlob, setNewsImageBlob] = useState<Blob | null>(null);
-  const [newsPreview, setNewsPreview] = useState('');
+  // Helper to ensure member object has all social fields correctly initialized
+  // Identical logic to ProfilePage to ensure cross-app consistency
+  const initializeMemberForEdit = (m: Member): Member => ({
+    ...m,
+    facebookUrl: m.facebookUrl || '',
+    instagramUrl: m.instagramUrl || '',
+    linkedinUrl: m.linkedinUrl || '',
+    tiktokUrl: m.tiktokUrl || '',
+    twitterUrl: m.twitterUrl || '',
+    websiteUrl: m.websiteUrl || '',
+    bio: m.bio || '',
+    mobile: m.mobile || '',
+    email: m.email || '',
+    birthday: m.birthday || ''
+  });
 
   const filteredMembers = members.filter(m => 
     m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -114,380 +120,443 @@ const AdminPage: React.FC<AdminPageProps> = ({
   );
 
   const handleApprove = async (id: string) => {
-    const newMember = await onApproveRequest(id);
-    if (newMember) {
-      setApprovedMember(newMember);
-      setShowEmailModal(true);
+    setIsProcessing(id);
+    try { await onApproveRequest(id); } finally { setIsProcessing(null); }
+  };
+
+  const handleReject = async (id: string) => {
+    if (window.confirm('האם אתה בטוח שברצונך לדחות את הבקשה?')) {
+      setIsProcessing(id);
+      try { await onRejectRequest(id); } finally { setIsProcessing(null); }
     }
   };
 
-  const handleExportZip = async () => {
-    setIsProcessing(true);
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+    setIsProcessing('SAVE_EDIT');
     try {
-      const zip = new JSZip();
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const backupData = { members, galleryItems, events, news, joinRequests, exportDate: new Date().toISOString() };
-      zip.file("database.json", JSON.stringify(backupData, null, 2));
-      const content = (await zip.generateAsync({ type: "blob" })) as unknown as Blob;
-      const url = URL.createObjectURL(content);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `habal_zug_full_backup_${timestamp}.zip`;
-      link.click();
-      setSuccessMsg('גיבוי ZIP נוצר והורד בהצלחה!');
-      setTimeout(() => setSuccessMsg(''), 3000);
+      await onUpdateMember(editingMember);
+      setEditingMember(null);
     } catch (err) {
       console.error(err);
-      alert('שגיאה ביצירת הגיבוי');
+      alert('שגיאה בשמירת הפרטים');
     } finally {
-      setIsProcessing(false);
+      setIsProcessing(null);
     }
   };
 
-  const handleExportJson = () => {
-    const backupData = { members, galleryItems, events, news, joinRequests, exportDate: new Date().toISOString() };
-    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `habal_zug_backup_${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    setSuccessMsg('נתוני JSON יוצאו בהצלחה!');
-    setTimeout(() => setSuccessMsg(''), 3000);
-  };
-
-  const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAssetUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const importedData = JSON.parse(event.target?.result as string);
-        if (window.confirm('האם אתה בטוח שברצונך לייבא את הנתונים? פעולה זו עשויה לדרוס נתונים קיימים.')) {
-          localStorage.setItem('members_hv', JSON.stringify(importedData.members || []));
-          alert('הנתונים יובאו בהצלחה. המערכת תתרענן כעת.');
-          window.location.reload();
+    if (!file || !uploadType) return;
+
+    setIsUploading(uploadType);
+    try {
+      const storageRef = ref(storage, `site_assets/${uploadType}_${Date.now()}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+
+      if (uploadType === 'memberAvatar' && editingMember) {
+        setEditingMember({ ...editingMember, avatar: url });
+      } else {
+        const assetsRef = doc(db, 'site_data', 'assets');
+        if (uploadType === 'extraLogo') {
+          await updateDoc(assetsRef, { extraLogos: arrayUnion(url) });
+        } else if (uploadType === 'extraHero') {
+          await updateDoc(assetsRef, { extraHeroImages: arrayUnion(url) });
         }
-      } catch (err) {
-        alert('שגיאה בקריאת הקובץ.');
+        alert('הקובץ הועלה בהצלחה!');
       }
-    };
-    reader.readAsText(file);
-  };
-
-  const handleEventImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const optimized = await optimizeImage(file, 1200, 0.7);
-      setEventImageBlob(optimized);
-      setEventPreview(URL.createObjectURL(optimized));
-    }
-  };
-
-  const handleNewsImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const optimized = await optimizeImage(file, 1200, 0.7);
-      setNewsImageBlob(optimized);
-      setNewsPreview(URL.createObjectURL(optimized));
-    }
-  };
-
-  const handleAddEventSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-    try {
-      let imageUrl = 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=800';
-      if (eventImageBlob) {
-        const storageRef = ref(storage, `events/${Date.now()}_event.jpg`);
-        const snapshot = await uploadBytes(storageRef, eventImageBlob);
-        imageUrl = await getDownloadURL(snapshot.ref);
-      }
-      onAddEvent({
-        title: eventTitle,
-        description: eventDesc,
-        date: eventDate,
-        time: eventTime,
-        location: eventLoc,
-        imageUrl,
-        attendees: []
-      });
-      setSuccessMsg('אירוע חדש פורסם בהצלחה!');
-      setEventTitle(''); setEventDesc(''); setEventDate(''); setEventTime(''); setEventLoc(''); setEventImageBlob(null); setEventPreview('');
-      setTimeout(() => { setSuccessMsg(''); setActiveTab('EVENTS'); }, 2000);
     } catch (err) {
       console.error(err);
-      alert("שגיאה בהוספת האירוע.");
+      alert('שגיאה בהעלאת הקובץ.');
     } finally {
-      setIsProcessing(false);
+      setIsUploading(null);
+      setUploadType(null);
     }
   };
 
-  const handleAddNewsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-    try {
-      let imageUrl = '';
-      if (newsImageBlob) {
-        const storageRef = ref(storage, `news/${Date.now()}_admin_news.jpg`);
-        const snapshot = await uploadBytes(storageRef, newsImageBlob);
-        imageUrl = await getDownloadURL(snapshot.ref);
-      }
-      onAddNews({
-        title: newsTitle,
-        content: newsContent,
-        category: newsCategory,
-        date: new Date().toISOString().split('T')[0],
-        imageUrl: imageUrl || undefined,
-        authorId: user.id,
-        authorName: user.name
-      });
-      setSuccessMsg('עדכון חדש פורסם בהצלחה!');
-      setNewsTitle(''); setNewsContent(''); setNewsCategory('Update'); setNewsImageBlob(null); setNewsPreview('');
-      setTimeout(() => { setSuccessMsg(''); setActiveTab('NEWS'); }, 2000);
-    } catch (err) {
-      console.error(err);
-      alert("שגיאה בהוספת החדשות.");
-    } finally {
-      setIsProcessing(false);
-    }
+  const removeAsset = async (type: 'extraLogo' | 'extraHero', url: string) => {
+    if (!window.confirm('האם למחוק נכס זה?')) return;
+    const assetsRef = doc(db, 'site_data', 'assets');
+    const field = type === 'extraLogo' ? 'extraLogos' : 'extraHeroImages';
+    await updateDoc(assetsRef, { [field]: arrayRemove(url) });
+    
+    if (url === siteAssets.clubLogo) await updateDoc(assetsRef, { clubLogo: "" });
+    if (url === siteAssets.atalefLogo) await updateDoc(assetsRef, { atalefLogo: "" });
+    if (url === siteAssets.habalZugLogo) await updateDoc(assetsRef, { habalZugLogo: "" });
+    if (url === siteAssets.heroBg) await updateDoc(assetsRef, { heroBg: "" });
+    if (url === siteAssets.loginBg) await updateDoc(assetsRef, { loginBg: "" });
   };
 
-  const handleSiteAssetUpload = async (file: File, assetName: string) => {
-    setIsProcessing(true);
-    try {
-      const optimized = await optimizeImage(file, 1600, 0.8);
-      const storageRef = ref(storage, `assets/${assetName}_${Date.now()}.jpg`);
-      const snapshot = await uploadBytes(storageRef, optimized);
-      const downloadUrl = await getDownloadURL(snapshot.ref);
-      
-      await updateDoc(doc(db, 'site_data', 'assets'), { [assetName]: downloadUrl });
-      setSuccessMsg(`הנכס ${assetName} עודכן בהצלחה!`);
-      setTimeout(() => setSuccessMsg(''), 3000);
-    } catch (err) {
-      console.error(err);
-      alert("שגיאה בעדכון נכס האתר.");
-    } finally {
-      setIsProcessing(false);
-    }
+  const setAsPrimary = async (type: 'clubLogo' | 'atalefLogo' | 'habalZugLogo' | 'heroBg' | 'loginBg', url: string) => {
+    const assetsRef = doc(db, 'site_data', 'assets');
+    await setDoc(assetsRef, { [type]: url }, { merge: true });
+    alert('עודכן כראשי!');
   };
+
+  const triggerUpload = (type: 'extraLogo' | 'extraHero' | 'memberAvatar') => {
+    setUploadType(type);
+    fileInputRef.current?.click();
+  };
+
+  const combinedLogos = Array.from(new Set([
+    ...(siteAssets.clubLogo ? [siteAssets.clubLogo] : []),
+    ...(siteAssets.atalefLogo ? [siteAssets.atalefLogo] : []),
+    ...(siteAssets.habalZugLogo ? [siteAssets.habalZugLogo] : []),
+    ...(siteAssets.extraLogos || [])
+  ]));
+
+  const combinedHeroes = Array.from(new Set([
+    ...(siteAssets.heroBg ? [siteAssets.heroBg] : []),
+    ...(siteAssets.loginBg ? [siteAssets.loginBg] : []),
+    ...(siteAssets.extraHeroImages || [])
+  ]));
 
   return (
-    <div className="relative min-h-screen -m-6 p-6 md:-m-12 md:p-12 overflow-hidden bg-white text-right" dir="rtl">
-      {/* Background Accents */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-slate-100/50 rounded-full blur-[120px] -mr-64 -mt-64"></div>
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-50/40 rounded-full blur-[100px] -ml-48"></div>
-      </div>
-
-      <div className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="relative min-h-screen -m-6 p-6 md:-m-12 md:p-12 bg-white text-right">
+      <div className="max-w-7xl mx-auto animate-in fade-in duration-700">
+        
         <div className="mb-14 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-950 text-slate-200 text-[10px] font-black uppercase tracking-widest mb-3 border border-white/10 shadow-xl">
-              <ShieldAlert size={12} className="text-indigo-400" />
-              בקרת מנהל מערכת
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950 text-white text-[10px] font-black uppercase tracking-widest mb-4 shadow-xl">
+              <ShieldAlert size={12} className="text-rose-400" />
+              מרכז שליטה
             </div>
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight">מרכז ניהול קהילה</h2>
+            <h2 className="text-5xl font-black text-slate-950 tracking-tighter mb-3">ניהול קהילה</h2>
+          </div>
+          
+          <div className="flex bg-slate-50 p-2 rounded-[2rem] border border-slate-100 flex-wrap gap-1">
+            {[
+              { id: 'MEMBERS', label: 'חברים', icon: Users },
+              { id: 'REQUESTS', label: 'בקשות', icon: UserPlus },
+              { id: 'EVENTS', label: 'אירועים', icon: Calendar },
+              { id: 'NEWS', label: 'חדשות', icon: Newspaper },
+              { id: 'SITE', label: 'נכסים', icon: Palette }
+            ].map((tab) => (
+              <button 
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-6 py-3 rounded-[1.5rem] font-black text-[11px] transition-all flex items-center gap-2 ${activeTab === tab.id ? 'bg-white text-slate-950 shadow-lg' : 'text-slate-400'}`}
+              >
+                <tab.icon size={14} />
+                <span>{tab.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {successMsg && (
-          <div className="mb-8 bg-slate-950 text-white px-8 py-4 rounded-3xl flex items-center gap-4 animate-in slide-in-from-top-4 shadow-2xl border border-white/10">
-            <CheckCircle2 className="text-emerald-400" />
-            <span className="font-black text-sm uppercase tracking-wider">{successMsg}</span>
-          </div>
-        )}
+        <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleAssetUpload} />
 
-        <div className="flex flex-wrap gap-3 p-2 bg-slate-100 rounded-[2.5rem] w-fit mb-12 overflow-x-auto shadow-inner">
-          {[
-            { id: 'MEMBERS', label: 'חברים', icon: Users },
-            { id: 'REQUESTS', label: 'בקשות', icon: UserCheck, count: joinRequests.length },
-            { id: 'EVENTS', label: 'אירועים', icon: Calendar },
-            { id: 'NEWS', label: 'חדשות', icon: Newspaper },
-            { id: 'ADD', label: 'הוספה', icon: Plus },
-            { id: 'SYSTEM', label: 'תחזוקה', icon: RefreshCw },
-          ].map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex items-center gap-3 px-8 py-4 rounded-[2rem] font-black text-sm transition-all whitespace-nowrap relative group ${activeTab === tab.id ? 'bg-white text-slate-950 shadow-xl scale-105' : 'text-slate-500 hover:text-slate-900'}`}>
-              <tab.icon size={20} className={activeTab === tab.id ? 'text-indigo-600' : 'text-slate-400'} />
-              {tab.label}
-              {tab.count ? <span className="absolute -top-1 -right-1 w-6 h-6 bg-indigo-600 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-white animate-pulse">{tab.count}</span> : null}
-            </button>
-          ))}
-        </div>
-
-        <div className="bg-white rounded-[4rem] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden min-h-[600px] relative">
+        <div className="space-y-6">
           {activeTab === 'MEMBERS' && (
-            <div className="p-12">
-              <div className="mb-14 max-w-xl">
-                <div className="relative group">
-                  <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-600 transition-colors" size={22} />
-                  <input type="text" placeholder="חפש חבר קהילה..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pr-16 pl-8 py-5 bg-slate-50 border border-slate-100 rounded-[2rem] focus:bg-white focus:border-indigo-200 outline-none transition-all font-black text-slate-950 shadow-inner" />
-                </div>
+            <>
+              <div className="mb-10 relative group">
+                <Search className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-slate-950 transition-colors" size={24} />
+                <input 
+                  type="text" 
+                  placeholder="חפש חבר..." 
+                  className="w-full pr-20 pl-10 py-6 bg-slate-50 border border-slate-100 rounded-[2.5rem] focus:bg-white outline-none transition-all font-black text-slate-950"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredMembers.map((member) => (
-                  <div key={member.id} className="bg-white rounded-[3rem] border border-slate-100 p-8 hover:shadow-2xl transition-all duration-500 group flex flex-col hover:-translate-y-1">
-                    <div className="flex items-center justify-between mb-8">
-                      <img src={member.avatar} alt={member.name} className="w-20 h-20 rounded-[1.75rem] border border-slate-100 shadow-lg object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                      <button onClick={() => setEditingMember(member)} className="p-3 bg-slate-50 text-slate-400 hover:text-slate-950 hover:bg-slate-100 rounded-2xl transition-all"><Edit3 size={20} /></button>
-                    </div>
-                    <h4 className="font-black text-slate-950 text-xl mb-1 tracking-tight">{member.name}</h4>
-                    <p className="text-slate-400 font-bold text-[10px] uppercase mb-6 tracking-widest">{member.role === 'Admin' ? 'מנהל מערכת' : 'חבר קהילה'}</p>
-                    <div className="mt-auto pt-6 flex gap-3 border-t border-slate-50">
-                      <button onClick={() => onResetPassword(member.id)} className="flex-1 py-3 bg-slate-50 text-slate-950 rounded-xl font-black text-[10px] uppercase">איפוס</button>
-                      <button onClick={() => onDeleteMember(member.id)} className="flex-1 py-3 bg-red-50 text-red-500 rounded-xl font-black text-[10px] uppercase">מחק</button>
-                    </div>
-                  </div>
-                ))}
+              <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+                <table className="w-full text-right">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-100">
+                      <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">חבר נבחרת</th>
+                      <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">תפקיד</th>
+                      <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">פעולות</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {filteredMembers.map((m) => (
+                      <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-10 py-6">
+                          <div className="flex items-center gap-5">
+                            <img src={m.avatar} className="w-14 h-14 rounded-2xl object-cover" alt={m.name} />
+                            <div>
+                              <p className="font-black text-slate-950 text-lg leading-none mb-1">{m.name}</p>
+                              <p className="text-slate-400 font-bold text-xs">{m.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-10 py-6">
+                          <button 
+                            onClick={() => onToggleRole(m.id)}
+                            className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${m.role === 'Admin' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'bg-slate-50 text-slate-400'}`}
+                          >
+                            {m.role === 'Admin' ? 'מנהל' : 'חבר'}
+                          </button>
+                        </td>
+                        <td className="px-10 py-6">
+                          <div className="flex items-center justify-end gap-3">
+                            <button 
+                              onClick={() => setEditingMember(initializeMemberForEdit(m))}
+                              className="p-3 text-slate-400 hover:text-indigo-600 bg-slate-50 rounded-xl hover:bg-indigo-50 transition-all"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                            <button 
+                              onClick={() => { if(window.confirm('למחוק חבר זה?')) onDeleteMember(m.id); }}
+                              className="p-3 text-slate-400 hover:text-rose-600 bg-slate-50 rounded-xl hover:bg-rose-50 transition-all"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
+            </>
           )}
 
           {activeTab === 'REQUESTS' && (
-            <div className="p-12">
-              <h3 className="text-3xl font-black text-slate-950 mb-10 tracking-tight">בקשות הממתינות לאישור</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                {joinRequests.map((req) => (
-                  <div key={req.id} className="bg-slate-50 rounded-[3rem] border border-slate-100 p-10 flex flex-col group hover:bg-white hover:shadow-2xl transition-all duration-500">
-                    <h4 className="font-black text-slate-950 text-xl mb-6">{req.name}</h4>
-                    <div className="space-y-3 text-slate-500 font-bold text-sm mb-10">
-                      <div className="flex items-center gap-3"><Mail size={16} /> {req.email}</div>
-                      <div className="flex items-center gap-3"><Phone size={16} /> {req.mobile}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {joinRequests.length > 0 ? (
+                joinRequests.map((req) => (
+                  <div key={req.id} className="bg-white rounded-[3rem] border border-slate-100 p-10 shadow-sm">
+                    <div className="flex items-center gap-6 mb-8">
+                      <img src={req.avatar} className="w-16 h-16 rounded-2xl object-cover" alt={req.name} />
+                      <div>
+                        <h4 className="text-2xl font-black text-slate-950">{req.name}</h4>
+                        <p className="text-slate-400 text-xs font-black">{req.email}</p>
+                      </div>
                     </div>
-                    <div className="flex gap-4 mt-auto">
-                      <button onClick={() => handleApprove(req.id)} className="flex-1 py-4 bg-slate-950 text-white rounded-xl font-black text-xs">אשר</button>
-                      <button onClick={() => onRejectRequest(req.id)} className="flex-1 py-4 bg-white border border-slate-100 text-red-500 rounded-xl font-black text-xs">דחה</button>
+                    <div className="flex gap-4">
+                      <button onClick={() => handleApprove(req.id)} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm">אישור</button>
+                      <button onClick={() => handleReject(req.id)} className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-2xl font-black text-sm">דחייה</button>
                     </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-20 text-center text-slate-300 font-black">אין בקשות ממתינות.</div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'EVENTS' && (
+            <div className="space-y-6">
+              <h3 className="text-2xl font-black text-slate-950 mb-4">ניהול אירועים</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {events.map(event => (
+                  <div key={event.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between group">
+                    <div className="flex items-center gap-4">
+                       <img src={event.imageUrl} className="w-16 h-16 rounded-xl object-cover" alt="" />
+                       <div>
+                         <h4 className="font-black text-slate-900">{event.title}</h4>
+                         <p className="text-slate-400 text-xs font-bold">{event.date} | {event.location}</p>
+                       </div>
+                    </div>
+                    <button 
+                      onClick={() => onDeleteEvent(event.id)}
+                      className="p-3 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {activeTab === 'ADD' && (
-            <div className="p-14 max-w-6xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-                <form onSubmit={handleAddEventSubmit} className="space-y-8 bg-slate-50/50 p-10 rounded-[3rem] border border-slate-100">
-                  <h3 className="text-2xl font-black text-slate-950 flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm"><Calendar size={24} /></div>
-                    הוספת אירוע
-                  </h3>
-                  <input type="text" placeholder="שם האירוע" required value={eventTitle} onChange={e => setEventTitle(e.target.value)} className="w-full px-8 py-5 bg-white border border-slate-100 rounded-2xl focus:border-indigo-400 outline-none font-black text-lg shadow-sm" />
-                  <textarea placeholder="תיאור האירוע" required value={eventDesc} onChange={e => setEventDesc(e.target.value)} className="w-full px-8 py-5 bg-white border border-slate-100 rounded-2xl focus:border-indigo-400 outline-none font-bold min-h-[120px] shadow-sm italic" />
-                  
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">תמונת אירוע</label>
-                    <div onClick={() => eventImgRef.current?.click()} className="w-full aspect-video bg-white border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center cursor-pointer overflow-hidden relative hover:border-indigo-300 transition-all">
-                      {eventPreview ? <img src={eventPreview} className="w-full h-full object-cover" /> : <div className="text-center text-slate-300"><ImageIcon size={32} className="mx-auto mb-2" /><span className="text-xs font-black">לחץ להעלאת תמונה</span></div>}
-                      <input type="file" ref={eventImgRef} hidden accept="image/*" onChange={handleEventImage} />
+          {activeTab === 'NEWS' && (
+            <div className="space-y-6">
+              <h3 className="text-2xl font-black text-slate-950 mb-4">ניהול חדשות</h3>
+              <div className="space-y-4">
+                {news.map(item => (
+                  <div key={item.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-between group">
+                    <div className="flex items-center gap-4">
+                       {item.imageUrl ? (
+                         <img src={item.imageUrl} className="w-16 h-16 rounded-xl object-cover" alt="" />
+                       ) : (
+                         <div className="w-16 h-16 bg-slate-50 rounded-xl flex items-center justify-center"><Newspaper className="text-slate-300" /></div>
+                       )}
+                       <div>
+                         <h4 className="font-black text-slate-900">{item.title}</h4>
+                         <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{item.date} | {item.authorName}</p>
+                       </div>
                     </div>
+                    <button 
+                      onClick={() => onDeleteNews(item.id)}
+                      className="p-3 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <input type="date" required value={eventDate} onChange={e => setEventDate(e.target.value)} className="px-6 py-5 bg-white border border-slate-100 rounded-2xl outline-none font-black" />
-                    <input type="time" required value={eventTime} onChange={e => setEventTime(e.target.value)} className="px-6 py-5 bg-white border border-slate-100 rounded-2xl outline-none font-black" />
-                  </div>
-                  <input type="text" placeholder="מיקום האירוע" required value={eventLoc} onChange={e => setEventLoc(e.target.value)} className="w-full px-8 py-5 bg-white border border-slate-100 rounded-2xl focus:border-indigo-400 outline-none font-black shadow-sm" />
-                  <button type="submit" disabled={isProcessing} className="w-full py-6 bg-slate-950 text-white rounded-[1.5rem] font-black text-xl hover:bg-indigo-600 shadow-2xl transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3">
-                    {isProcessing ? <Loader2 className="animate-spin" /> : <Plus />} פרסם אירוע
-                  </button>
-                </form>
-
-                <form onSubmit={handleAddNewsSubmit} className="space-y-8 bg-slate-50/50 p-10 rounded-[3rem] border border-slate-100">
-                  <h3 className="text-2xl font-black text-slate-950 flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm"><Newspaper size={24} /></div>
-                    הוספת חדשות
-                  </h3>
-                  <input type="text" placeholder="כותרת הכתבה" required value={newsTitle} onChange={e => setNewsTitle(e.target.value)} className="w-full px-8 py-5 bg-white border border-slate-100 rounded-2xl focus:border-blue-400 outline-none font-black text-lg shadow-sm" />
-                  <textarea placeholder="תוכן הכתבה..." required value={newsContent} onChange={e => setNewsContent(e.target.value)} className="w-full px-8 py-5 bg-white border border-slate-100 rounded-2xl focus:border-blue-400 outline-none font-bold min-h-[180px] shadow-sm italic leading-relaxed" />
-                  
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">תמונה לכתבה (אופציונלי)</label>
-                    <div onClick={() => newsImgRef.current?.click()} className="w-full aspect-video bg-white border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center cursor-pointer overflow-hidden relative hover:border-blue-300 transition-all">
-                      {newsPreview ? <img src={newsPreview} className="w-full h-full object-cover" /> : <div className="text-center text-slate-300"><FileImage size={32} className="mx-auto mb-2" /><span className="text-xs font-black">לחץ להעלאת תמונה</span></div>}
-                      <input type="file" ref={newsImgRef} hidden accept="image/*" onChange={handleNewsImage} />
-                    </div>
-                  </div>
-
-                  <select value={newsCategory} onChange={e => setNewsCategory(e.target.value as any)} className="w-full px-8 py-5 bg-white border border-slate-100 rounded-2xl font-black shadow-sm">
-                    <option value="Update">עדכון כללי</option>
-                    <option value="Activity">פעילות שטח</option>
-                    <option value="Announcement">הודעה חשובה</option>
-                    <option value="Personal">חוויה אישית</option>
-                    <option value="Share">רוצה לשתף</option>
-                  </select>
-                  <button type="submit" disabled={isProcessing} className="w-full py-6 bg-slate-950 text-white rounded-[1.5rem] font-black text-xl hover:bg-blue-600 shadow-2xl transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3">
-                    {isProcessing ? <Loader2 className="animate-spin" /> : <Plus />} פרסם כתבה
-                  </button>
-                </form>
+                ))}
               </div>
             </div>
           )}
 
-          {activeTab === 'SYSTEM' && (
-            <div className="p-16 max-w-5xl mx-auto space-y-16">
-              <div className="text-center space-y-6">
-                <Database className="w-20 h-20 text-slate-950 mx-auto" />
-                <h3 className="text-3xl font-black text-slate-950 tracking-tight">תחזוקה וסנכרון נתונים</h3>
-              </div>
+          {activeTab === 'SITE' && (
+            <div className="grid grid-cols-1 gap-12">
+               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-2">
+                 <AlertTriangle size={16} className="text-amber-500" />
+                 <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest">
+                   אם אתה לא מפתח Front End אל תגע
+                 </p>
+                 <AlertTriangle size={16} className="text-amber-500" />
+               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100">
-                  <h4 className="text-xl font-black text-slate-950 mb-8 flex items-center gap-3"><Layout className="text-indigo-600" /> נכסי עיצוב האתר</h4>
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center"><ImageIcon size={20} className="text-slate-400" /></div>
-                        <span className="font-black text-sm">לוגו האתר</span>
-                      </div>
-                      <button onClick={() => logoRef.current?.click()} className="p-3 bg-slate-950 text-white rounded-xl hover:bg-indigo-600 transition-all"><Upload size={18} /></button>
-                      <input type="file" ref={logoRef} hidden accept="image/*" onChange={(e) => e.target.files?.[0] && handleSiteAssetUpload(e.target.files[0], 'logo')} />
+               <div className="bg-white rounded-[3.5rem] border border-slate-100 p-10 shadow-sm space-y-8">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-5">
+                       <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                          <Plus size={24} />
+                       </div>
+                       <h3 className="text-2xl font-black text-slate-950">ניהול לוגואים</h3>
                     </div>
-                    <div className="flex items-center justify-between p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center"><ImageIcon size={20} className="text-slate-400" /></div>
-                        <span className="font-black text-sm">תמונת רקע (Hero)</span>
-                      </div>
-                      <button onClick={() => heroRef.current?.click()} className="p-3 bg-slate-950 text-white rounded-xl hover:bg-indigo-600 transition-all"><Upload size={18} /></button>
-                      <input type="file" ref={heroRef} hidden accept="image/*" onChange={(e) => e.target.files?.[0] && handleSiteAssetUpload(e.target.files[0], 'heroBg')} />
-                    </div>
+                    <button onClick={() => triggerUpload('extraLogo')} className="px-6 py-3 bg-slate-950 text-white rounded-2xl font-black text-xs flex items-center gap-2">
+                      {isUploading === 'extraLogo' ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
+                      העלאת לוגו
+                    </button>
                   </div>
-                </div>
-
-                <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 flex flex-col justify-center gap-6">
-                  <button onClick={handleExportZip} disabled={isProcessing} className="w-full py-6 bg-indigo-600 text-white rounded-2xl font-black text-lg shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
-                    {isProcessing ? <Loader2 className="animate-spin" /> : <FileArchive />} גיבוי ZIP מלא
-                  </button>
-                  <button onClick={handleExportJson} className="w-full py-6 bg-white border border-slate-200 text-slate-950 rounded-2xl font-black text-lg hover:shadow-lg transition-all flex items-center justify-center gap-3">
-                    <FileJson /> ייצוא JSON
-                  </button>
-                  <button onClick={() => importFileInputRef.current?.click()} className="w-full py-6 bg-white border border-slate-200 text-slate-950 rounded-2xl font-black text-lg hover:shadow-lg transition-all flex items-center justify-center gap-3">
-                    <Upload /> שחזור נתונים
-                  </button>
-                  <input type="file" ref={importFileInputRef} hidden accept=".json" onChange={handleImportData} />
-                </div>
-              </div>
-
-              <div className="bg-slate-950 p-10 rounded-[3rem] flex items-center justify-between text-white">
-                <div className="flex items-center gap-6">
-                   <Clock3 size={40} className="text-indigo-400" />
-                   <div><p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-1">סטטוס סנכרון</p><p className="font-black text-xl">המערכת מעודכנת ומסונכרנת</p></div>
-                </div>
-                <button onClick={() => window.location.reload()} className="px-10 py-5 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black text-xs backdrop-blur-md transition-all border border-white/10"><RefreshCw size={16} /></button>
-              </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-6">
+                    {combinedLogos.map((url, i) => {
+                      const isClub = url === siteAssets.clubLogo;
+                      const isAtalef = url === siteAssets.atalefLogo;
+                      const isHabalZug = url === siteAssets.habalZugLogo;
+                      return (
+                        <div key={i} className={`relative group aspect-square bg-slate-50 rounded-3xl border-2 flex items-center justify-center p-4 transition-all ${isClub || isAtalef || isHabalZug ? 'border-indigo-500 shadow-lg' : 'border-slate-100'}`}>
+                          <img src={url} className="max-h-full max-w-full object-contain" alt="Logo Asset" />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-2">
+                            <button onClick={() => setAsPrimary('habalZugLogo', url)} className={`w-full py-1.5 rounded-lg text-[8px] font-black uppercase tracking-tighter transition-all ${isHabalZug ? 'bg-indigo-500 text-white' : 'bg-white text-slate-950'}`}>ראשי - חבל זוג</button>
+                            <button onClick={() => setAsPrimary('clubLogo', url)} className={`w-full py-1.5 rounded-lg text-[8px] font-black uppercase tracking-tighter transition-all ${isClub ? 'bg-indigo-500 text-white' : 'bg-white text-slate-950'}`}>ראשי - ריף</button>
+                            <button onClick={() => setAsPrimary('atalefLogo', url)} className={`w-full py-1.5 rounded-lg text-[8px] font-black uppercase tracking-tighter transition-all ${isAtalef ? 'bg-indigo-500 text-white' : 'bg-white text-slate-950'}`}>ראשי - עטלף</button>
+                            <button onClick={() => removeAsset('extraLogo', url)} className="w-full py-1.5 bg-rose-500 text-white rounded-lg text-[8px] font-black uppercase tracking-tighter">מחיקה</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+               </div>
+               <div className="bg-white rounded-[3.5rem] border border-slate-100 p-10 shadow-sm space-y-8">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-5">
+                       <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center">
+                          <ImageIcon size={24} />
+                       </div>
+                       <h3 className="text-2xl font-black text-slate-950">ניהול רקעים (Hero)</h3>
+                    </div>
+                    <button onClick={() => triggerUpload('extraHero')} className="px-6 py-3 bg-slate-950 text-white rounded-2xl font-black text-xs flex items-center gap-2">
+                      {isUploading === 'extraHero' ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
+                      הוספת רקע
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {combinedHeroes.map((url, i) => {
+                      const isMain = url === siteAssets.heroBg;
+                      const isLogin = url === siteAssets.loginBg;
+                      return (
+                        <div key={i} className={`relative group rounded-3xl overflow-hidden border-4 transition-all ${isMain || isLogin ? 'border-indigo-500 shadow-xl' : 'border-slate-50'}`}>
+                          <img src={url} className="w-full h-40 object-cover" alt="Hero Asset" />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-4">
+                             <div className="flex items-center gap-2 w-full">
+                               <button onClick={() => setAsPrimary('heroBg', url)} className={`flex-1 px-4 py-2 rounded-xl font-black text-[10px] uppercase transition-all ${isMain ? 'bg-indigo-500 text-white' : 'bg-white text-slate-950'}`}>קבע כראשי</button>
+                               <button onClick={() => setAsPrimary('loginBg', url)} className={`flex-1 px-4 py-2 rounded-xl font-black text-[10px] uppercase transition-all ${isLogin ? 'bg-rose-500 text-white' : 'bg-white text-slate-950'}`}>רקע כניסה</button>
+                             </div>
+                             <button onClick={() => removeAsset('extraHero', url)} className="w-full py-2 bg-rose-500/20 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl transition-all font-black text-[10px] uppercase">מחיקה</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+               </div>
             </div>
           )}
-          {/* NEWS and EVENTS display tabs are similar to before */}
         </div>
       </div>
 
-      {showEmailModal && approvedMember && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-xl rounded-[4rem] shadow-2xl p-16 text-center animate-in zoom-in-95">
-             <CheckCircle2 size={64} className="text-emerald-500 mx-auto mb-10" />
-             <h3 className="text-3xl font-black text-slate-950 mb-4 tracking-tight">החבר אושר!</h3>
-             <p className="text-slate-500 font-bold mb-12 text-lg">פרטי הגישה נוצרו עבור {approvedMember.name}. סיסמה זמנית: temp</p>
-             <button onClick={() => setShowEmailModal(false)} className="w-full py-6 bg-slate-950 text-white rounded-[2rem] font-black text-xl">סגור</button>
+      {editingMember && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in" onClick={() => setEditingMember(null)}>
+          <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+               <div className="flex items-center gap-4">
+                  <UserCog className="text-indigo-600" size={24} />
+                  <h3 className="text-2xl font-black text-slate-950">עריכת פרטי חבר</h3>
+               </div>
+               <button onClick={() => setEditingMember(null)} className="p-2 bg-white rounded-xl shadow-sm text-slate-400 hover:text-slate-950 transition-colors"><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleEditSave} className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar">
+              <div className="flex flex-col items-center gap-4 mb-4">
+                 <div className="relative group">
+                    <img src={editingMember.avatar} className="w-24 h-24 rounded-3xl object-cover border-4 border-slate-100" alt={editingMember.name} />
+                    <button type="button" onClick={() => triggerUpload('memberAvatar')} className="absolute -bottom-2 -left-2 p-2 bg-indigo-600 text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
+                       <Camera size={14} />
+                    </button>
+                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">שם מלא</label>
+                    <input type="text" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.name} onChange={e => setEditingMember({...editingMember, name: e.target.value})} />
+                 </div>
+                 <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">אימייל</label>
+                    <input type="email" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.email} onChange={e => setEditingMember({...editingMember, email: e.target.value})} />
+                 </div>
+                 <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">טלפון</label>
+                    <input type="tel" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.mobile} onChange={e => setEditingMember({...editingMember, mobile: e.target.value})} />
+                 </div>
+                 <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">תאריך יום הולדת</label>
+                    <input type="date" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={editingMember.birthday || ''} onChange={e => setEditingMember({...editingMember, birthday: e.target.value})} />
+                 </div>
+              </div>
+
+              <div className="space-y-1">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">ביוגרפיה</label>
+                 <textarea className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold min-h-[100px] resize-none" value={editingMember.bio} onChange={e => setEditingMember({...editingMember, bio: e.target.value})} />
+              </div>
+
+              <div className="space-y-4">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">רשתות חברתיות</label>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="relative">
+                       <Facebook className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                       <input type="url" placeholder="Facebook URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.facebookUrl || ''} onChange={e => setEditingMember({...editingMember, facebookUrl: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                       <Instagram className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                       <input type="url" placeholder="Instagram URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.instagramUrl || ''} onChange={e => setEditingMember({...editingMember, instagramUrl: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                       <Linkedin className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                       <input type="url" placeholder="Linkedin URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.linkedinUrl || ''} onChange={e => setEditingMember({...editingMember, linkedinUrl: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300"><XLogo size={16} /></div>
+                       <input type="url" placeholder="X (Twitter) URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.twitterUrl || ''} onChange={e => setEditingMember({...editingMember, twitterUrl: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                       <Music className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                       <input type="url" placeholder="TikTok URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.tiktokUrl || ''} onChange={e => setEditingMember({...editingMember, tiktokUrl: e.target.value})} />
+                    </div>
+                    <div className="relative">
+                       <Globe className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                       <input type="url" placeholder="Website URL" className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs" value={editingMember.websiteUrl || ''} onChange={e => setEditingMember({...editingMember, websiteUrl: e.target.value})} />
+                    </div>
+                 </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-slate-50">
+                <button 
+                  type="submit" 
+                  disabled={isProcessing === 'SAVE_EDIT'}
+                  className="w-full py-5 bg-slate-950 text-white rounded-2xl font-black text-lg hover:bg-indigo-600 transition-all flex items-center justify-center gap-3"
+                >
+                  {isProcessing === 'SAVE_EDIT' ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                  <span>שמירת שינויים</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

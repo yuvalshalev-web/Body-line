@@ -2,78 +2,49 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Search, 
-  Mail, 
-  Phone, 
+  ChevronDown, 
+  Zap, 
+  X, 
   Facebook, 
   Instagram, 
-  Music, 
-  Linkedin,
-  SortAsc, 
+  Linkedin, 
+  Globe, 
+  Music,
   Calendar,
-  X,
+  MessageSquare,
+  Phone,
+  Mail,
+  Cake,
   ExternalLink,
-  Sparkles,
-  User,
-  ShieldCheck,
-  ChevronDown,
-  Waves,
-  Share2,
-  Copy,
-  Check
+  Bird
 } from 'lucide-react';
 import { Member } from '../types';
 
-type SortOption = 'name-asc' | 'name-desc' | 'newest' | 'oldest' | 'role';
+type SortOption = 'name-asc' | 'attendance' | 'newest';
+
+const XLogo = ({ size = 16 }: { size?: number }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932 6.064-6.932zm-1.292 19.494h2.039L6.486 3.24H4.298l13.311 17.407z" />
+  </svg>
+);
 
 interface DirectoryPageProps {
   members: Member[];
 }
-
-const WhatsAppLogo = () => (
-  <svg 
-    viewBox="0 0 24 24" 
-    width="28" 
-    height="28" 
-    fill="currentColor" 
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-  </svg>
-);
 
 const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
-
-  const sortOptions = [
-    { id: 'name-asc', label: 'שם (א-ת)', icon: SortAsc },
-    { id: 'name-desc', label: 'שם (ת-א)', icon: SortAsc },
-    { id: 'newest', label: 'הצטרפו לאחרונה', icon: Calendar },
-    { id: 'oldest', label: 'חברים ותיקים', icon: Calendar },
-    { id: 'role', label: 'מנהלים תחילה', icon: ShieldCheck },
-  ];
 
   const processedMembers = useMemo(() => {
-    let filtered = members.filter(m => 
-      m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.bio.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
+    let filtered = members.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()));
     return filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'name-asc': return a.name.localeCompare(b.name, 'he');
-        case 'name-desc': return b.name.localeCompare(a.name, 'he');
-        case 'newest': return new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime();
-        case 'oldest': return new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime();
-        case 'role': 
-          if (a.role === b.role) return a.name.localeCompare(b.name, 'he');
-          return a.role === 'Admin' ? -1 : 1;
-        default: return 0;
-      }
+      if (sortBy === 'name-asc') return a.name.localeCompare(b.name, 'he');
+      if (sortBy === 'attendance') return (b.totalAttendance || 0) - (a.totalAttendance || 0);
+      if (sortBy === 'newest') return new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime();
+      return 0;
     });
   }, [members, searchTerm, sortBy]);
 
@@ -84,295 +55,207 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
     return `https://${trimmed}`;
   };
 
-  const getWhatsAppLink = (mobile: string) => {
-    const cleanNumber = mobile.replace(/[^0-9]/g, '');
-    const formattedNumber = cleanNumber.startsWith('0') ? '972' + cleanNumber.substring(1) : cleanNumber;
-    return `https://wa.me/${formattedNumber}`;
+  const getWhatsAppUrl = (mobile?: string) => {
+    if (!mobile) return '';
+    const cleaned = mobile.replace(/\D/g, '');
+    const withPrefix = cleaned.startsWith('0') ? `972${cleaned.substring(1)}` : cleaned;
+    return `https://wa.me/${withPrefix}`;
   };
 
-  const copyToClipboard = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
-
-  const SocialIconLink = ({ href, icon: Icon, brandColor, label }: { href?: string, icon: any, brandColor: string, label: string }) => {
-    if (!href || !href.trim()) return null;
-    return (
-      <a 
-        href={ensureAbsoluteUrl(href)} 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        onClick={(e) => e.stopPropagation()}
-        className="w-16 h-16 flex items-center justify-center bg-white rounded-2xl shadow-sm border border-slate-100 transition-all hover:scale-110 active:scale-95 group/social hover:shadow-xl hover:-translate-y-1"
-        title={label}
-      >
-        <Icon size={28} className={`${brandColor} transition-transform`} />
-      </a>
-    );
+  const formatBirthday = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long' });
   };
 
   return (
-    <div className="relative min-h-screen -m-6 p-6 md:-m-14 md:p-14 overflow-hidden bg-white text-right">
-      {/* Background Accents */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-50/40 rounded-full blur-[120px] -mr-64 -mt-64"></div>
-        <div className="absolute bottom-1/4 left-0 w-[400px] h-[400px] bg-slate-50 rounded-full blur-[100px] -ml-48"></div>
+    <div className="min-h-screen bg-white text-right" dir="rtl">
+      <div className="mb-10 space-y-2">
+        <h2 className="text-4xl font-black italic tracking-tighter big-wednesday-title text-slate-900">ספר החברים</h2>
+        <p className="text-slate-600 font-black text-[10px] uppercase tracking-widest">נבחרת המייסדים • {members.length} חברים</p>
       </div>
 
-      <div className="relative z-10 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-        <div className="mb-14">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950 text-white text-[10px] font-black uppercase tracking-widest mb-4 shadow-xl">
-            <Sparkles size={12} className="text-indigo-400" />
-            נבחרת הכוכבים
-          </div>
-          <h2 className="text-5xl font-black text-slate-950 tracking-tighter leading-tight mb-3">האנשים שמאחורי הגלים</h2>
-          <p className="text-slate-500 text-xl font-medium max-w-2xl">הכירו את קהילת חבל זוג. מרחב של חברות, מקצוענות ואהבה לים.</p>
+      <div className="flex flex-col md:flex-row gap-4 mb-10">
+        <div className="flex-1 relative">
+           <Search className="absolute right-5 top-1/2 -translate-y-1/2 opacity-30" size={18} />
+           <input 
+             type="text" 
+             placeholder="חפש חבר..." 
+             className="w-full pr-14 pl-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-black outline-none focus:bg-white transition-all shadow-sm text-sm"
+             value={searchTerm}
+             onChange={e => setSearchTerm(e.target.value)}
+           />
         </div>
-
-        {/* Action Bar */}
-        <div className="flex flex-col md:flex-row gap-5 mb-14">
-          <div className="flex-1 relative group">
-            <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-600 transition-colors" size={20} />
-            <input 
-              type="text" 
-              placeholder="חפש חבר בנבחרת..." 
-              className="w-full pr-16 pl-8 py-5.5 bg-slate-50 border border-slate-100 rounded-[2rem] focus:bg-white focus:border-indigo-200 outline-none transition-all font-black text-slate-950 shadow-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <div className="relative">
-            <button 
-              onClick={() => setIsSortOpen(!isSortOpen)}
-              className="h-full flex items-center gap-5 px-10 py-5.5 bg-white border border-slate-100 rounded-[2rem] font-black text-sm hover:bg-slate-50 transition-all shadow-sm min-w-[240px]"
-            >
-              <SortAsc size={20} className="text-slate-400" />
-              <span className="flex-1 text-right">{sortOptions.find(o => o.id === sortBy)?.label}</span>
-              <ChevronDown size={18} className={`transition-transform duration-500 ${isSortOpen ? 'rotate-180' : ''}`} />
-            </button>
-            
-            {isSortOpen && (
-              <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-100 rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] z-50 py-3 overflow-hidden animate-in slide-in-from-top-4 duration-500">
-                {sortOptions.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => { setSortBy(option.id as SortOption); setIsSortOpen(false); }}
-                    className={`w-full flex items-center gap-4 px-8 py-4.5 text-right hover:bg-slate-50 transition-all font-black text-sm ${sortBy === option.id ? 'text-indigo-600 bg-indigo-50/30' : 'text-slate-600'}`}
-                  >
-                    <option.icon size={18} className={sortBy === option.id ? 'text-indigo-600' : 'text-slate-300'} />
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+        <div className="relative">
+           <button 
+             onClick={() => setIsSortOpen(!isSortOpen)}
+             className="h-full px-8 py-4 bg-slate-950 text-white rounded-2xl font-black text-xs flex items-center gap-3 hover:bg-indigo-600 transition-all shadow-lg"
+           >
+              מיין לפי <ChevronDown size={14} className={isSortOpen ? 'rotate-180 transition-transform' : 'transition-transform'} />
+           </button>
+           {isSortOpen && (
+             <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                <button onClick={() => {setSortBy('name-asc'); setIsSortOpen(false)}} className="w-full p-3 text-right font-black text-xs hover:bg-slate-50 transition-colors border-b border-slate-50">שם (א-ת)</button>
+                <button onClick={() => {setSortBy('attendance'); setIsSortOpen(false)}} className="w-full p-3 text-right font-black text-xs hover:bg-slate-50 transition-colors border-b border-slate-50">הכי פעילים</button>
+                <button onClick={() => {setSortBy('newest'); setIsSortOpen(false)}} className="w-full p-3 text-right font-black text-xs hover:bg-slate-50 transition-colors">חדשים</button>
+             </div>
+           )}
         </div>
-
-        {/* Members Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 md:gap-10">
-          {processedMembers.map((member) => (
-            <div 
-              key={member.id}
-              onClick={() => setSelectedMember(member)}
-              className="group bg-white rounded-[3.5rem] border border-slate-100 p-7 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] transition-all duration-700 cursor-pointer hover:-translate-y-3 flex flex-col h-full relative"
-            >
-              <div className="relative mb-8 overflow-hidden rounded-[2.5rem]">
-                <img 
-                  src={member.avatar} 
-                  alt={member.name} 
-                  className="w-full aspect-square object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000 shadow-xl"
-                />
-                {member.role === 'Admin' && (
-                  <div className="absolute top-5 left-5 bg-slate-950 text-white px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] shadow-2xl border border-white/10 backdrop-blur-md">
-                    מנהל
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex-1 flex flex-col">
-                <h3 className="text-2xl font-black text-slate-950 group-hover:text-indigo-600 transition-colors mb-2 tracking-tight leading-none">{member.name}</h3>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-5">חבר בנבחרת • {member.joinedAt}</p>
-                
-                <p className="text-slate-500 font-bold text-sm leading-relaxed italic line-clamp-3 mb-8 flex-1">
-                  "{member.bio}"
-                </p>
-
-                <div className="flex items-center justify-between pt-6 border-t border-slate-50">
-                  <div className="flex items-center gap-2">
-                    {member.facebookUrl && <Facebook size={14} className="text-slate-300 group-hover:text-[#1877F2] transition-colors" />}
-                    {member.instagramUrl && <Instagram size={14} className="text-slate-300 group-hover:text-[#E4405F] transition-colors" />}
-                    {member.linkedinUrl && <Linkedin size={14} className="text-slate-300 group-hover:text-[#0A66C2] transition-colors" />}
-                    {member.tiktokUrl && <Music size={14} className="text-slate-300 group-hover:text-slate-950 transition-colors" />}
-                  </div>
-                  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 group-hover:translate-x-0 translate-x-4 transition-all duration-500">
-                    פרופיל מלא
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {processedMembers.length === 0 && (
-          <div className="py-48 text-center flex flex-col items-center animate-in fade-in duration-700">
-            <div className="w-28 h-28 bg-slate-50 rounded-full flex items-center justify-center mb-10 text-slate-200 border border-slate-100">
-              <User size={56} />
-            </div>
-            <h3 className="text-3xl font-black text-slate-900 tracking-tight">לא מצאנו אף חבר כזה...</h3>
-            <p className="text-slate-400 mt-2 font-medium text-xl">נסה לחפש שם אחר או פשוט דפדף ברשימה.</p>
-            <button onClick={() => setSearchTerm('')} className="mt-12 px-12 py-5 bg-slate-950 text-white rounded-2xl font-black text-sm hover:bg-indigo-600 transition-all shadow-2xl active:scale-95">נקה את כל המסננים</button>
-          </div>
-        )}
       </div>
 
-      {/* Member Profile Modal - ENHANCED */}
+      {/* Denser Grid of Members */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
+        {processedMembers.map(member => (
+          <div 
+            key={member.id} 
+            className="group cursor-pointer flex flex-col items-center gap-2 animate-in fade-in zoom-in-95"
+            onClick={() => setSelectedMember(member)}
+          >
+            <div className="relative w-full aspect-square rounded-2xl overflow-hidden border-2 border-slate-50 group-hover:border-indigo-600 group-hover:shadow-xl transition-all duration-300">
+               <img src={member.avatar} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" alt={member.name} />
+               {member.role === 'Admin' && (
+                 <div className="absolute top-1 left-1 bg-slate-950/90 text-white px-1.5 py-0.5 font-black text-[6px] uppercase tracking-widest rounded-md">ADMIN</div>
+               )}
+            </div>
+            <h3 className="text-[10px] font-black text-slate-800 text-center truncate w-full group-hover:text-indigo-600 transition-colors">{member.name}</h3>
+          </div>
+        ))}
+      </div>
+
+      {/* Member Profile Modal */}
       {selectedMember && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-8 bg-slate-950/70 backdrop-blur-xl animate-in fade-in duration-500">
-          <div className="bg-white w-full max-w-5xl rounded-[4rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-500 max-h-[95vh] overflow-y-auto border border-white/20">
-            
-            <button 
-              onClick={() => setSelectedMember(null)}
-              className="absolute top-8 left-8 p-3.5 bg-white/95 backdrop-blur-md text-slate-400 hover:text-slate-950 rounded-2xl shadow-2xl border border-slate-100 z-50 transition-all hover:scale-110 active:scale-90"
-            >
-              <X size={24} />
-            </button>
-            
-            <div className="h-64 md:h-80 bg-gradient-to-br from-slate-950 to-indigo-950 relative">
-               <div className="absolute inset-0 overflow-hidden">
-                  <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500/30 rounded-full blur-[120px] -mr-48 -mt-48"></div>
-                  <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[100px] -ml-32 -mb-32"></div>
-                  <div className="absolute inset-0 opacity-10 flex items-center justify-center pointer-events-none">
-                     <Waves size={240} className="text-white animate-pulse" />
-                  </div>
-               </div>
-            </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedMember(null)}>
+           <div className="bg-white w-full max-w-4xl rounded-[4rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-500 flex flex-col md:flex-row max-h-[90vh]" onClick={e => e.stopPropagation()}>
+              
+              {/* Image Section */}
+              <div className="md:w-5/12 relative aspect-square md:aspect-auto">
+                 <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={selectedMember.name} />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent md:hidden"></div>
+                 <button 
+                    onClick={() => setSelectedMember(null)}
+                    className="absolute top-6 left-6 p-3 text-slate-400 hover:text-slate-950 transition-colors bg-white/90 backdrop-blur-md rounded-2xl z-20 md:hidden"
+                  >
+                    <X size={20} />
+                  </button>
+              </div>
 
-            <div className="relative px-8 md:px-20 pb-20">
-               {/* Hero Info */}
-               <div className="flex flex-col md:flex-row items-end gap-10 -mt-24 md:-mt-32 mb-16">
-                  <div className="relative group/avatar mx-auto md:mx-0">
-                    <div className="absolute -inset-2 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-[3.5rem] blur-2xl opacity-30"></div>
-                    <img 
-                      src={selectedMember.avatar} 
-                      className="relative w-48 h-48 md:w-64 md:h-64 rounded-[3rem] object-cover shadow-2xl border-8 border-white bg-white" 
-                      alt={selectedMember.name} 
-                    />
+              {/* Info Section */}
+              <div className="flex-1 p-8 md:p-14 overflow-y-auto custom-scrollbar">
+                <button 
+                  onClick={() => setSelectedMember(null)}
+                  className="absolute top-8 left-8 p-3 text-slate-400 hover:text-slate-950 transition-colors bg-slate-50 rounded-2xl z-20 hidden md:block"
+                >
+                  <X size={24} />
+                </button>
+
+                <div className="space-y-10">
+                  {/* Header */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
+                       <h3 className="text-4xl md:text-5xl font-black text-slate-950 tracking-tighter">{selectedMember.name}</h3>
+                       {selectedMember.role === 'Admin' && (
+                         <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black border border-indigo-100 uppercase tracking-widest">
+                           ADMIN
+                         </div>
+                       )}
+                    </div>
+                    <p className="text-xs font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                       <Bird size={14} /> חבר נבחרת • הצטרף ב-{selectedMember.joinedAt}
+                    </p>
                   </div>
-                  <div className="flex-1 pb-4 text-center md:text-right">
-                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-widest rounded-full mb-5 border border-indigo-100 shadow-sm">
-                        {selectedMember.role === 'Admin' ? <ShieldCheck size={14} /> : <User size={14} />}
-                        {selectedMember.role === 'Admin' ? 'מנהל מערכת' : 'חבר בקהילה'}
-                     </div>
-                     <h3 className="text-5xl md:text-7xl font-black text-slate-950 tracking-tighter leading-none mb-3">{selectedMember.name}</h3>
-                     <p className="text-slate-400 font-bold text-sm uppercase tracking-[0.2em] flex items-center gap-3 justify-center md:justify-start">
-                        <Calendar size={16} className="text-indigo-400" />
-                        חלק מהקהילה מ-{selectedMember.joinedAt}
+
+                  {/* Contact Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {selectedMember.email && (
+                      <div className="flex items-center gap-4 p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-500 shadow-sm">
+                          <Mail size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-0.5">אימייל</p>
+                          <p className="text-xs font-black text-slate-900 truncate">{selectedMember.email}</p>
+                        </div>
+                      </div>
+                    )}
+                    {selectedMember.birthday && (
+                      <div className="flex items-center gap-4 p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-rose-400 shadow-sm">
+                          <Cake size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-0.5">יום הולדת</p>
+                          <p className="text-xs font-black text-slate-900">{formatBirthday(selectedMember.birthday)}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bio */}
+                  <div className="space-y-3">
+                     <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest border-b border-slate-50 pb-2">קצת עלי</h4>
+                     <p className="text-slate-700 font-bold leading-relaxed italic text-lg pr-4 border-r-4 border-indigo-100">
+                       "{selectedMember.bio || 'גולש בנבחרת חבל זוג, חי את הגלים ואת החוף.'}"
                      </p>
                   </div>
-               </div>
 
-               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
-                  {/* About & Socials */}
-                  <div className="lg:col-span-7 space-y-16">
-                     <div className="text-right">
-                        <div className="flex items-center gap-4 mb-8">
-                           <div className="h-px flex-1 bg-slate-100"></div>
-                           <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">סיפור אישי</h4>
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                     <div className="p-6 bg-slate-900 text-white rounded-[2.5rem] shadow-xl flex flex-col justify-center gap-1">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">פעילות קהילתית</p>
+                        <div className="flex items-center gap-3">
+                           <Zap size={20} className="text-yellow-400" />
+                           <span className="text-3xl font-black">{selectedMember.totalAttendance || 0}</span>
+                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">מפגשים</span>
                         </div>
-                        <div className="bg-slate-50/50 p-10 rounded-[3rem] border border-slate-100 shadow-inner relative overflow-hidden">
-                           <Sparkles size={40} className="absolute -bottom-4 -left-4 text-indigo-500/5 rotate-12" />
-                           <p className="text-slate-700 font-bold text-xl md:text-2xl leading-relaxed italic text-right relative z-10">
-                              "{selectedMember.bio}"
-                           </p>
-                        </div>
-                     </div>
-
-                     <div className="text-right">
-                        <div className="flex items-center gap-4 mb-10">
-                           <div className="h-px flex-1 bg-slate-100"></div>
-                           <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] flex items-center gap-2">
-                             <Share2 size={14} className="text-indigo-500" />
-                             רשתות חברתיות
-                           </h4>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-6 justify-end">
-                           <SocialIconLink href={selectedMember.facebookUrl} icon={Facebook} brandColor="text-[#1877F2]" label="Facebook" />
-                           <SocialIconLink href={selectedMember.instagramUrl} icon={Instagram} brandColor="text-[#E4405F]" label="Instagram" />
-                           <SocialIconLink href={selectedMember.linkedinUrl} icon={Linkedin} brandColor="text-[#0A66C2]" label="LinkedIn" />
-                           <SocialIconLink href={selectedMember.tiktokUrl} icon={Music} brandColor="text-slate-950" label="TikTok" />
-                        </div>
-                        {(!selectedMember.facebookUrl && !selectedMember.instagramUrl && !selectedMember.linkedinUrl && !selectedMember.tiktokUrl) && (
-                          <p className="text-slate-300 font-bold text-sm italic">לא שותפו קישורים חברתיים.</p>
-                        )}
-                     </div>
-                  </div>
-
-                  {/* Contact Sidebar */}
-                  <div className="lg:col-span-5 space-y-12">
-                     <div>
-                        <div className="flex items-center gap-4 mb-10">
-                           <div className="h-px flex-1 bg-slate-100"></div>
-                           <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">פרטי התקשרות</h4>
-                        </div>
-                        <div className="space-y-6">
-                           <div className="flex items-center gap-6 p-6 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm group hover:border-indigo-100 transition-all hover:shadow-md relative overflow-hidden">
-                              <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                                 <Mail size={28} />
-                              </div>
-                              <div className="min-w-0 flex-1 text-right">
-                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">אימייל</p>
-                                 <p className="text-slate-900 font-black text-lg truncate">{selectedMember.email}</p>
-                              </div>
-                              <button 
-                                onClick={() => copyToClipboard(selectedMember.email, 'email')}
-                                className="p-3 text-slate-300 hover:text-indigo-600 transition-colors"
-                              >
-                                {copiedField === 'email' ? <Check size={20} className="text-emerald-500" /> : <Copy size={20} />}
-                              </button>
-                           </div>
-                           
-                           <div className="flex items-center gap-6 p-6 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm group hover:border-emerald-100 transition-all hover:shadow-md relative overflow-hidden">
-                              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                                 <Phone size={28} />
-                              </div>
-                              <div className="min-w-0 flex-1 text-right">
-                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">טלפון</p>
-                                 <p className="text-slate-900 font-black text-lg">{selectedMember.mobile}</p>
-                              </div>
-                              <button 
-                                onClick={() => copyToClipboard(selectedMember.mobile, 'phone')}
-                                className="p-3 text-slate-300 hover:text-emerald-600 transition-colors"
-                              >
-                                {copiedField === 'phone' ? <Check size={20} className="text-emerald-500" /> : <Copy size={20} />}
-                              </button>
-                           </div>
-                        </div>
-                     </div>
-
-                     <div className="pt-4">
-                        <a 
-                          href={getWhatsAppLink(selectedMember.mobile)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full py-8 bg-[#25D366] text-white rounded-[2.5rem] font-black text-2xl hover:bg-[#128C7E] transition-all shadow-2xl flex items-center justify-center gap-5 group active:scale-95 overflow-hidden relative"
-                        >
-                          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 animate-pulse transition-opacity"></div>
-                          <WhatsAppLogo />
-                          <span>וואטסאפ לזמינות מהירה</span>
-                        </a>
                      </div>
                      
-                     <div className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100 text-center">
-                        <p className="text-slate-400 font-bold text-xs leading-relaxed italic">
-                          "הפרטים מוצגים עבור חברי הקהילה הרשומים בלבד. שמרו על פרטיות החברים."
-                        </p>
+                     {selectedMember.mobile && (
+                       <a 
+                         href={getWhatsAppUrl(selectedMember.mobile)}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="p-6 bg-emerald-500 text-white rounded-[2.5rem] shadow-xl shadow-emerald-200 flex flex-col justify-center gap-1 hover:bg-emerald-600 transition-all hover:scale-[1.02] active:scale-95 group/btnwa"
+                       >
+                          <p className="text-[9px] font-black text-emerald-100 uppercase tracking-widest mb-1">WhatsApp</p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                               <MessageSquare size={20} />
+                               <span className="text-xl font-black">שלח הודעה</span>
+                            </div>
+                            <ExternalLink size={16} className="opacity-50 group-hover/btnwa:translate-x-1 transition-transform" />
+                          </div>
+                       </a>
+                     )}
+                  </div>
+
+                  {/* Social Networks */}
+                  <div className="space-y-4">
+                     <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest border-b border-slate-50 pb-2">חיבורים חברתיים</h4>
+                     <div className="flex flex-wrap gap-5">
+                        {[
+                          { url: selectedMember.facebookUrl, icon: Facebook, color: '#1877F2', name: 'Facebook' },
+                          { url: selectedMember.instagramUrl, icon: Instagram, color: '#E4405F', name: 'Instagram' },
+                          { url: selectedMember.linkedinUrl, icon: Linkedin, color: '#0A66C2', name: 'Linkedin' },
+                          { url: selectedMember.tiktokUrl, icon: Music, color: '#000000', name: 'TikTok' },
+                          { url: selectedMember.twitterUrl, icon: XLogo, color: '#000000', name: 'X' },
+                          { url: selectedMember.websiteUrl, icon: Globe, color: '#4F46E5', name: 'Website' }
+                        ].map((soc, idx) => soc.url ? (
+                          <a 
+                            key={idx} 
+                            href={ensureAbsoluteUrl(soc.url)} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center transition-all hover:-translate-y-1 hover:shadow-lg group"
+                            style={{ color: soc.color }}
+                          >
+                            <soc.icon size={24} className="group-hover:scale-110 transition-transform" />
+                          </a>
+                        ) : null)}
                      </div>
                   </div>
-               </div>
-            </div>
-          </div>
+                </div>
+              </div>
+           </div>
         </div>
       )}
     </div>

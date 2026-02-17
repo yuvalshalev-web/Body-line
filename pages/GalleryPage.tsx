@@ -1,12 +1,11 @@
 
 import React, { useState, useRef } from 'react';
-import { collection, addDoc, serverTimestamp, deleteDoc, doc } from '@firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
+import { collection, addDoc, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Plus, Sparkles, User, Loader2, Trash2, Image as ImageIcon } from 'lucide-react';
 import { db, storage } from '../services/firebase';
 import { GalleryItem, Member } from '../types';
 import { analyzeImage } from '../services/geminiService';
-import { optimizeImage } from '../utils/image';
 
 interface GalleryPageProps {
   user: Member;
@@ -25,21 +24,15 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ user, galleryItems }) => {
     setIsUploading(true);
     for (const file of files) {
       try {
-        // 1. Optimize image before upload to save space (Max 1600px for gallery)
-        const optimizedBlob = await optimizeImage(file, 1600, 0.8);
-        
-        // 2. Upload to Firebase Storage
         const storageRef = ref(storage, `gallery/${Date.now()}_${file.name}`);
-        const snapshot = await uploadBytes(storageRef, optimizedBlob);
+        const snapshot = await uploadBytes(storageRef, file);
         const downloadUrl = await getDownloadURL(snapshot.ref);
 
-        // 3. Convert to base64 for Gemini Analysis (using optimized version)
         const reader = new FileReader();
         reader.onload = async (event) => {
           const base64 = event.target?.result as string;
           const aiDescription = await analyzeImage(base64);
 
-          // 4. Save to Firestore
           await addDoc(collection(db, 'gallery'), {
             imageUrl: downloadUrl,
             uploaderId: user.id,
@@ -49,9 +42,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ user, galleryItems }) => {
             aiDescription: aiDescription
           });
         };
-        reader.readAsDataURL(optimizedBlob);
+        reader.readAsDataURL(file);
       } catch (err) {
-        console.error("Upload failed for file:", file.name, err);
+        console.error("Upload failed:", err);
       }
     }
     setIsUploading(false);
@@ -93,7 +86,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ user, galleryItems }) => {
               <div className="relative">
                 <img src={item.imageUrl} alt={item.caption} className="w-full h-auto object-cover transition-all duration-1000 group-hover:scale-105" />
                 {user.id === item.uploaderId && (
-                  <button onClick={() => deleteItem(item.id)} className="absolute top-6 left-6 p-3 bg-red-50 text-white rounded-2xl opacity-0 group-hover:opacity-100 transition-all">
+                  <button onClick={() => deleteItem(item.id)} className="absolute top-6 left-6 p-3 bg-red-500 text-white rounded-2xl opacity-0 group-hover:opacity-100 transition-all">
                     <Trash2 size={18} />
                   </button>
                 )}

@@ -9,12 +9,17 @@ export interface Member {
   bio: string;
   role: 'Member' | 'Admin';
   joinedAt: string;
+  isActive?: boolean; // true = active, false = inactive
   password?: string;
   isTempPassword?: boolean;
   facebookUrl?: string;
   instagramUrl?: string;
   tiktokUrl?: string;
   linkedinUrl?: string;
+  twitterUrl?: string; // Added for X support
+  websiteUrl?: string;
+  totalAttendance?: number; // Lifetime count of sessions attended
+  birthday?: string; // YYYY-MM-DD
 }
 
 export interface JoinRequest {
@@ -22,6 +27,14 @@ export interface JoinRequest {
   name: string;
   email: string;
   mobile: string;
+  avatar: string;
+  bio: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  linkedinUrl?: string;
+  twitterUrl?: string;
+  websiteUrl?: string;
   requestedAt: string;
 }
 
@@ -44,6 +57,7 @@ export interface Event {
   location: string;
   imageUrl: string;
   attendees: string[]; // Array of member IDs
+  attendeeCount?: number; // Added for analysis
 }
 
 export interface NewsItem {
