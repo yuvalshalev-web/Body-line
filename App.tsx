@@ -159,16 +159,10 @@ const App: React.FC = () => {
 
   const updateProfile = async (data: Member) => {
     const { id, ...cleanData } = data;
-    
-    // Safety sanitization: Remove undefined fields and ensure social fields are at least empty strings
-    // Firestore updateDoc crashes if it encounters an undefined value.
     const sanitizedData = Object.entries(cleanData).reduce((acc, [key, value]) => {
-      if (value !== undefined) {
-        acc[key] = value;
-      }
+      if (value !== undefined) acc[key] = value;
       return acc;
     }, {} as any);
-
     await updateDoc(doc(db, 'members', id), sanitizedData);
   };
 
@@ -186,25 +180,47 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex" dir="rtl">
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-[60] px-6 py-4 flex items-center justify-between border-b border-slate-100">
-        <h1 className="text-xl font-black tracking-tighter big-wednesday-title">חבל זוג</h1>
-        <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-slate-900"><Menu size={24} /></button>
+    <div className="min-h-screen bg-white flex flex-col lg:flex-row" dir="rtl">
+      {/* Mobile Header */}
+      <div className="lg:hidden sticky top-0 left-0 right-0 bg-white/90 backdrop-blur-xl z-[60] px-5 py-4 flex items-center justify-between border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-slate-950 rounded-xl flex items-center justify-center text-white shadow-lg">
+            <Waves size={18} />
+          </div>
+          <h1 className="text-xl font-black tracking-tighter text-slate-950">חבל זוג</h1>
+        </div>
+        <button 
+          onClick={() => setIsSidebarOpen(true)} 
+          className="p-2.5 bg-slate-50 rounded-xl text-slate-900 active:scale-95 transition-all"
+        >
+          <Menu size={24} />
+        </button>
       </div>
 
-      <aside className={`fixed inset-y-0 right-0 z-[70] w-72 bg-white border-l border-slate-100 text-slate-950 transform transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full shadow-2xl lg:shadow-none'}`}>
+      {/* Overlay for Sidebar */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[65] lg:hidden animate-in fade-in duration-300"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar / Navigation */}
+      <aside className={`fixed inset-y-0 right-0 z-[70] w-72 bg-white border-l border-slate-100 text-slate-950 transform transition-transform duration-500 ease-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full shadow-2xl lg:shadow-none'}`}>
         <div className="h-full flex flex-col p-8">
           <div className="flex items-center justify-between mb-12">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-slate-950 rounded-xl flex items-center justify-center text-white">
+              <div className="w-10 h-10 bg-slate-950 rounded-xl flex items-center justify-center text-white shadow-xl">
                 <Waves size={24} />
               </div>
               <h1 className="text-2xl font-black tracking-tighter text-slate-950">חבל זוג</h1>
             </div>
-            <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-slate-400"><X size={24} /></button>
+            <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-slate-400 active:scale-90 transition-all">
+              <X size={24} />
+            </button>
           </div>
 
-          <nav className="flex-1 space-y-2">
+          <nav className="flex-1 space-y-1.5">
             {[
               { to: '/', icon: Home, label: 'עמוד ראשי' },
               { to: '/directory', icon: Users, label: 'חברי קהילה' },
@@ -218,7 +234,7 @@ const App: React.FC = () => {
                 key={link.to} 
                 to={link.to} 
                 onClick={() => setIsSidebarOpen(false)}
-                className={`flex items-center gap-4 px-6 py-4 rounded-2xl transition-all font-black text-sm ${location.pathname === link.to ? 'bg-slate-100 text-slate-950' : 'hover:bg-slate-50 text-slate-500'}`}
+                className={`flex items-center gap-4 px-6 py-4.5 rounded-[1.25rem] transition-all font-black text-sm active:scale-95 ${location.pathname === link.to ? 'bg-slate-100 text-slate-950' : 'hover:bg-slate-50 text-slate-500'}`}
               >
                 <link.icon size={20} />
                 <span>{link.label}</span>
@@ -227,7 +243,10 @@ const App: React.FC = () => {
           </nav>
 
           <div className="pt-8 border-t border-slate-100 mt-8">
-            <button onClick={handleLogout} className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-rose-500 hover:bg-rose-50 transition-all font-black text-sm">
+            <button 
+              onClick={handleLogout} 
+              className="w-full flex items-center gap-4 px-6 py-4.5 rounded-[1.25rem] text-rose-500 hover:bg-rose-50 transition-all font-black text-sm active:scale-95"
+            >
               <LogOut size={20} />
               <span>התנתקות</span>
             </button>
@@ -235,8 +254,9 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      <main className="flex-1 h-screen overflow-y-auto pt-20 lg:pt-0">
-        <div className="p-6 md:p-12">
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-x-hidden">
+        <div className="p-5 md:p-8 lg:p-12 max-w-screen-2xl mx-auto">
           <Routes>
             <Route path="/" element={
               <DashboardPage 
@@ -287,7 +307,7 @@ const App: React.FC = () => {
                   user={currentUser}
                   members={members}
                   onDeleteMember={async (id) => { await deleteDoc(doc(db, 'members', id)); }}
-                  onResetPassword={async (id) => { /* logic here if needed */ }}
+                  onResetPassword={async (id) => { /* logic */ }}
                   onToggleRole={async (id) => {
                     const m = members.find(mem => mem.id === id);
                     if (m) await updateDoc(doc(db, 'members', id), { role: m.role === 'Admin' ? 'Member' : 'Admin' });

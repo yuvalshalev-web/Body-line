@@ -26,7 +26,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
   const [joinAvatar, setJoinAvatar] = useState('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // New styling colors
   const vintageCream = "#F5D682";
   const titleAreaBg = "#0A0A0A";
   
@@ -101,7 +100,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative overflow-hidden font-['Assistant']" dir="rtl">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden font-['Assistant']" dir="rtl">
       
       <div className="absolute inset-0 z-0">
         <img 
@@ -117,20 +116,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
 
       <div className="relative z-10 w-full max-w-lg animate-in fade-in zoom-in-95 duration-700">
         
-        {/* Massive Knockout Title Section */}
+        {/* Responsive Knockout Title Section */}
         <div 
-          className="text-center mb-10 p-12 rounded-[2rem] shadow-2xl flex flex-col items-center justify-center gap-4 overflow-visible"
+          className="text-center mb-6 md:mb-10 p-8 md:p-12 rounded-[2rem] shadow-2xl flex flex-col items-center justify-center gap-3 md:gap-4 overflow-visible"
           style={{ backgroundColor: titleAreaBg }}
         >
           <h1 
-            className="text-7xl md:text-9xl font-black inline-block whitespace-nowrap"
+            className="text-5xl sm:text-7xl md:text-9xl font-black inline-block whitespace-nowrap"
             style={{ 
               fontFamily: "'Heebo', sans-serif",
-              letterSpacing: "-5px",
-              transform: "scaleX(1.3)",
-              WebkitTextStroke: `4px ${vintageCream}`,
+              letterSpacing: "-0.05em",
+              transform: "scaleX(1.1)",
+              WebkitTextStroke: `2px ${vintageCream}`,
               color: 'transparent',
-              lineHeight: '0.8'
+              lineHeight: '1'
             }}
           >
             חבל זוג
@@ -139,12 +138,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
           <div className="w-4/5 h-px" style={{ backgroundColor: vintageCream }}></div>
           
           <p 
-            className="text-4xl md:text-5xl font-black inline-block"
+            className="text-3xl sm:text-4xl md:text-5xl font-black inline-block"
             style={{ 
               fontFamily: "'Heebo', sans-serif",
-              letterSpacing: "-2px",
-              transform: "scaleX(1.1)",
-              WebkitTextStroke: `2px ${vintageCream}`,
+              letterSpacing: "-0.02em",
+              transform: "scaleX(1.05)",
+              WebkitTextStroke: `1.5px ${vintageCream}`,
               color: 'transparent'
             }}
           >
@@ -152,56 +151,56 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
           </p>
         </div>
 
-        <div className="bg-white rounded-[3rem] shadow-2xl border border-slate-100 p-10 md:p-14 overflow-hidden relative">
+        <div className="bg-white rounded-[2.5rem] md:rounded-[3rem] shadow-2xl border border-slate-100 p-8 md:p-14 overflow-hidden relative">
           {mode === 'LOGIN' ? (
-            <form onSubmit={handleLoginSubmit} className="space-y-8">
-              <div className="space-y-2">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">אימייל חבר נבחרת</label>
+            <form onSubmit={handleLoginSubmit} className="space-y-6 md:space-y-8">
+              <div className="space-y-1.5">
+                <label className="block text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">אימייל חבר נבחרת</label>
                 <input 
                   type="email" required value={email} onChange={e => setEmail(e.target.value)} 
-                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white outline-none font-bold text-slate-900"
+                  className="w-full px-6 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white outline-none font-bold text-slate-900 shadow-sm"
                   placeholder="name@habal-zug.co.il"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">סיסמה</label>
+              <div className="space-y-1.5">
+                <label className="block text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">סיסמה</label>
                 <div className="relative">
                   <input 
                     type={showPassword ? "text" : "password"} 
                     required 
                     value={password} 
                     onChange={e => setPassword(e.target.value)} 
-                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white outline-none font-bold text-slate-900"
+                    className="w-full px-6 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white outline-none font-bold text-slate-900 shadow-sm"
                     placeholder="••••••••"
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-2"
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
               {error && <p className="text-rose-500 text-xs font-black text-center">{error}</p>}
               <button 
                 disabled={isLoading} 
-                className="w-full py-5 bg-slate-950 text-white rounded-2xl font-black text-lg hover:bg-black transition-all shadow-xl flex items-center justify-center gap-3"
+                className="w-full py-5 md:py-6 bg-slate-950 text-white rounded-2xl font-black text-lg md:text-xl hover:bg-black transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95"
               >
-                {isLoading ? <Loader2 className="animate-spin" size={20} /> : <LogIn size={20} />}
+                {isLoading ? <Loader2 className="animate-spin" size={24} /> : <LogIn size={24} />}
                 <span>כניסה למערכת</span>
               </button>
-              <button type="button" onClick={() => setMode('JOIN')} className="w-full text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-950 transition-all underline underline-offset-4 decoration-slate-200">
+              <button type="button" onClick={() => setMode('JOIN')} className="w-full text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-950 transition-all underline underline-offset-4 decoration-slate-200">
                 בקשת הצטרפות לנבחרת
               </button>
             </form>
           ) : (
             <form onSubmit={handleJoinSubmit} className="space-y-6">
-              <div className="flex flex-col items-center mb-6">
+              <div className="flex flex-col items-center mb-4">
                 <div className="relative group">
-                  <img src={joinAvatar} className="w-24 h-24 rounded-3xl object-cover border-4 border-white shadow-xl" alt="Preview" />
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute -bottom-2 -left-2 p-2.5 bg-slate-950 text-white rounded-xl shadow-lg hover:scale-110 transition-all border-2 border-white">
-                    <Camera size={16} />
+                  <img src={joinAvatar} className="w-20 h-20 md:w-24 md:h-24 rounded-[1.5rem] md:rounded-3xl object-cover border-4 border-white shadow-xl" alt="Preview" />
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute -bottom-1.5 -left-1.5 p-2 bg-slate-950 text-white rounded-xl shadow-lg hover:scale-110 transition-all border-2 border-white active:scale-90">
+                    <Camera size={14} />
                   </button>
                   <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleAvatarChange} />
                 </div>
@@ -209,64 +208,64 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
               </div>
               <input 
                 type="text" required value={joinName} onChange={e => setJoinName(e.target.value)} 
-                placeholder="שם מלא" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 outline-none font-bold"
+                placeholder="שם מלא" className="w-full px-6 py-4.5 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 outline-none font-bold shadow-sm"
               />
               <input 
                 type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} 
-                placeholder="אימייל" className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 outline-none font-bold"
+                placeholder="אימייל" className="w-full px-6 py-4.5 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 outline-none font-bold shadow-sm"
               />
               {success ? (
-                <div className="bg-emerald-50 text-emerald-600 p-4 rounded-2xl text-center font-black text-xs border border-emerald-100">
+                <div className="bg-emerald-50 text-emerald-600 p-5 rounded-2xl text-center font-black text-xs border border-emerald-100">
                   הבקשה נשלחה בהצלחה!
                 </div>
               ) : (
-                <button className="w-full py-5 bg-slate-950 text-white rounded-2xl font-black text-lg hover:bg-black transition-all">שלח בקשה</button>
+                <button className="w-full py-5 md:py-6 bg-slate-950 text-white rounded-2xl font-black text-lg md:text-xl active:scale-95 transition-all">שלח בקשה</button>
               )}
-              <button type="button" onClick={() => setMode('LOGIN')} className="w-full text-xs font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+              <button type="button" onClick={() => setMode('LOGIN')} className="w-full text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
                 <ArrowRight size={14} /> חזרה לכניסה
               </button>
             </form>
           )}
         </div>
 
-        <div className="mt-12 flex flex-col items-center gap-8">
-           <div className="flex flex-col items-center gap-4">
-              <p className="text-xl font-black text-slate-800 uppercase tracking-tighter big-wednesday-title">הרוח מאחורי הגלים שלנו</p>
+        <div className="mt-10 md:mt-12 flex flex-col items-center gap-6 md:gap-8">
+           <div className="flex flex-col items-center gap-3">
+              <p className="text-lg md:text-xl font-black text-slate-800 uppercase tracking-tighter big-wednesday-title">הרוח מאחורי הגלים שלנו</p>
               
-              <div className="flex items-center gap-12">
+              <div className="flex items-center gap-8 md:gap-12">
                  <a href="https://atalef.com/" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 group">
                    {siteAssets.atalefLogo ? (
                      <img 
                        src={siteAssets.atalefLogo} 
-                       className="h-14 w-auto object-contain transition-transform group-hover:scale-110" 
+                       className="h-10 md:h-14 w-auto object-contain transition-transform group-hover:scale-110 active:scale-90" 
                        alt="Atalef" 
                      />
                    ) : (
-                     <Bird size={28} className="text-slate-600" />
+                     <Bird size={24} className="text-slate-600" />
                    )}
-                   <span className="text-[8px] font-black text-slate-700 uppercase tracking-widest">עמותת העטלף</span>
+                   <span className="text-[7px] md:text-[8px] font-black text-slate-700 uppercase tracking-widest">עמותת העטלף</span>
                  </a>
                  
-                 <div className="h-10 w-px bg-slate-300"></div>
+                 <div className="h-8 md:h-10 w-px bg-slate-300"></div>
                  
                  <a href="https://reefseacenter.co.il/" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 group">
                    {siteAssets.clubLogo ? (
                      <img 
                        src={siteAssets.clubLogo} 
-                       className="h-14 w-auto object-contain transition-transform group-hover:scale-110" 
+                       className="h-10 md:h-14 w-auto object-contain transition-transform group-hover:scale-110 active:scale-90" 
                        alt="Reef Club" 
                      />
                    ) : (
-                     <ReefIcon size={28} className="text-slate-600" />
+                     <ReefIcon size={24} className="text-slate-600" />
                    )}
-                   <span className="text-[8px] font-black text-slate-700 uppercase tracking-widest">מועדון ריף</span>
+                   <span className="text-[7px] md:text-[8px] font-black text-slate-700 uppercase tracking-widest">מועדון ריף</span>
                  </a>
               </div>
            </div>
 
-           <div className="flex flex-col items-center gap-3">
-             <Waves size={24} className="text-slate-400 animate-pulse" />
-             <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.6em]">EST. 2025 • HERZLIYA SPIRIT</p>
+           <div className="flex flex-col items-center gap-2.5">
+             <Waves size={20} className="text-slate-400 animate-pulse" />
+             <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.5em]">EST. 2025 • HERZLIYA SPIRIT</p>
            </div>
         </div>
       </div>
