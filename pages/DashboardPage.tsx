@@ -17,7 +17,15 @@ import {
   Video,
   Radio,
   Star,
-  AlertCircle
+  AlertCircle,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  Activity as ActivityIcon,
+  Zap,
+  Heart,
+  MessageCircle
 } from 'lucide-react';
 import { Member, NewsItem } from '../types';
 import { GoogleGenAI } from "@google/genai";
@@ -220,6 +228,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const activeTerm = dictionary[dictionaryIndex];
   const activeQuote = quotes[quoteIndex];
 
+  const getCategoryDetails = (cat: NewsItem['category']) => {
+    switch (cat) {
+      case 'Update': return { label: 'עדכון', icon: <Info size={14} className="text-blue-500" /> };
+      case 'Activity': return { label: 'פעילות', icon: <ActivityIcon size={14} className="text-emerald-500" /> };
+      case 'Announcement': return { label: 'הודעה', icon: <Zap size={14} className="text-amber-500" /> };
+      case 'Personal': return { label: 'חוויה אישית', icon: <Heart size={14} className="text-rose-500" /> };
+      case 'Share': return { label: 'רוצה לשתף', icon: <MessageCircle size={14} className="text-indigo-500" /> };
+      default: return { label: 'עדכון', icon: <Info size={14} className="text-blue-500" /> };
+    }
+  };
+
   return (
     <div className="space-y-6 md:space-y-12 animate-in fade-in duration-700 max-w-5xl mx-auto pb-10" dir="rtl">
       
@@ -298,6 +317,79 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           </Link>
         ))}
       </div>
+
+      {/* News Carousel Section - The missing "Posts" object logic */}
+      {news.length > 0 && (
+        <section className="bg-white border border-slate-100 rounded-[2.5rem] md:rounded-[3.5rem] shadow-sm hover:shadow-xl transition-all overflow-hidden relative group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full blur-[60px] -mr-16 -mt-16"></div>
+          
+          <div className="p-8 md:p-12 flex flex-col md:flex-row gap-8 items-center">
+            {activePost?.imageUrl && (
+              <div className="w-full md:w-1/3 aspect-video md:aspect-square rounded-[2rem] overflow-hidden shadow-lg">
+                <img src={activePost.imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="" />
+              </div>
+            )}
+            
+            <div className="flex-1 space-y-4 md:space-y-6 text-right relative">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                    <Newspaper size={20} />
+                  </div>
+                  <h4 className="font-black text-slate-950 text-sm uppercase tracking-widest">פוסטים מהקהילה</h4>
+                </div>
+                <div className="flex gap-1.5">
+                  {news.map((_, i) => (
+                    <button 
+                      key={i} 
+                      onClick={() => setCurrentNewsIndex(i)}
+                      className={`h-1.5 transition-all duration-300 rounded-full ${i === currentNewsIndex ? 'w-8 bg-indigo-500' : 'w-1.5 bg-slate-200'}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div key={currentNewsIndex} className="animate-in fade-in slide-in-from-left-6 duration-700 space-y-4">
+                <div className="flex items-center gap-4 text-slate-400">
+                  {activePost && (
+                    <div className="px-3 py-1 bg-slate-50 rounded-full border border-slate-100 flex items-center gap-2">
+                       {getCategoryDetails(activePost.category).icon}
+                       <span className="text-[10px] font-black uppercase tracking-widest">{getCategoryDetails(activePost.category).label}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Clock size={12} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">{activePost?.date}</span>
+                  </div>
+                </div>
+
+                <h3 className="text-2xl md:text-3xl font-black text-slate-950 tracking-tight leading-tight">
+                  {activePost?.title}
+                </h3>
+                
+                <p className="text-slate-500 font-bold leading-relaxed line-clamp-2 md:line-clamp-3">
+                  {activePost?.content}
+                </p>
+
+                <div className="pt-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <img src={activePost?.authorAvatar} className="w-8 h-8 rounded-full object-cover border-2 border-slate-50" alt="" />
+                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{activePost?.authorName}</span>
+                  </div>
+                  
+                  <Link 
+                    to="/posts" 
+                    className="flex items-center gap-3 px-6 py-2.5 bg-slate-950 text-white rounded-full font-black text-xs hover:bg-indigo-600 transition-all active:scale-95 group/link"
+                  >
+                    <span>קרא עוד</span>
+                    <ArrowRight size={14} className="group-hover/link:-translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Tickers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">

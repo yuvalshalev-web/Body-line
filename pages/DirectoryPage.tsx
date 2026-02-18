@@ -235,7 +235,7 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
                   </div>
 
                   <div className="space-y-4 pt-4">
-                     <h4 className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2 text-center md:text-right">חיבורים חברתיים</h4>
+                     <h4 className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2 text-center md:text-right">איפה עוד תמצאו אותי?</h4>
                      <div className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-5">
                         {[
                           { url: selectedMember.facebookUrl, icon: Facebook, color: '#1877F2' },
@@ -250,10 +250,10 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
                             href={ensureAbsoluteUrl(soc.url)} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="w-12 h-12 md:w-14 md:h-14 rounded-[1rem] md:rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center transition-all hover:-translate-y-1 hover:shadow-lg active:scale-90"
+                            className="w-12 h-12 md:w-14 md:h-14 rounded-[1rem] md:rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center transition-all hover:-translate-y-2 hover:scale-110 hover:shadow-xl hover:bg-white active:scale-90 group/soclink"
                             style={{ color: soc.color }}
                           >
-                            <soc.icon size={22} className="md:w-6 md:h-6" />
+                            <soc.icon size={22} className="md:w-6 md:h-6 transition-all group-hover/soclink:scale-110" />
                           </a>
                         ) : null)}
                      </div>

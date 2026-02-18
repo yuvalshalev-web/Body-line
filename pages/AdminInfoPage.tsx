@@ -16,32 +16,41 @@ import {
   PieChart,
   Loader2,
   Trophy,
-  RefreshCw
+  RefreshCw,
+  CalendarDays
 } from 'lucide-react';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { Member, Event } from '../types';
 import Chart from 'chart.js/auto';
+
+interface WeeklyStat {
+  date: string;
+  count: number;
+}
 
 const AdminInfoPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState<Member[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [weeklyStats, setWeeklyStats] = useState<WeeklyStat[]>([]);
   const [showTop10, setShowTop10] = useState(false);
 
   const sessionsChartRef = useRef<HTMLCanvasElement>(null);
   const eventsChartRef = useRef<HTMLCanvasElement>(null);
   const loginsChartRef = useRef<HTMLCanvasElement>(null);
   const userEventsChartRef = useRef<HTMLCanvasElement>(null);
+  const weeklyAttendanceChartRef = useRef<HTMLCanvasElement>(null);
   
   const chartsInstance = useRef<{ [key: string]: Chart | null }>({
     sessions: null,
     events: null,
     logins: null,
     userEvents: null,
+    weeklyAttendance: null,
   });
 
-  // Listen to Members & Events in real-time
+  // Listen to Members, Events & Weekly Stats in real-time
   useEffect(() => {
     const unsubMembers = onSnapshot(collection(db, 'members'), (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member));
@@ -54,9 +63,17 @@ const AdminInfoPage: React.FC = () => {
       setEvents(data);
     });
 
+    // Listener for historical weekly attendance stats
+    const qWeekly = query(collection(db, 'weekly_stats'), orderBy('date', 'asc'), limit(12));
+    const unsubWeekly = onSnapshot(qWeekly, (snapshot) => {
+      const data = snapshot.docs.map(d => d.data() as WeeklyStat);
+      setWeeklyStats(data);
+    });
+
     return () => {
       unsubMembers();
       unsubEvents();
+      unsubWeekly();
     };
   }, []);
 
@@ -154,7 +171,7 @@ const AdminInfoPage: React.FC = () => {
               beginAtZero: true,
               grid: { display: false }, 
               ticks: { 
-                stepSize: 1, // Force integers
+                stepSize: 1,
                 precision: 0,
                 font: { family: 'Assistant', weight: 'bold' as const } 
               } 
@@ -186,7 +203,7 @@ const AdminInfoPage: React.FC = () => {
               beginAtZero: true,
               ticks: { 
                 font: { family: 'Assistant', weight: 'bold' as const }, 
-                stepSize: 1, // Force integers
+                stepSize: 1,
                 precision: 0
               } 
             }
@@ -220,7 +237,7 @@ const AdminInfoPage: React.FC = () => {
               beginAtZero: true,
               ticks: { 
                 font: { family: 'Assistant', weight: 'bold' as const },
-                stepSize: 1, // Force integers
+                stepSize: 1,
                 precision: 0
               } 
             }
@@ -259,10 +276,43 @@ const AdminInfoPage: React.FC = () => {
       });
     }
 
+    // 5. Weekly Attendance Trend (NEW - Bar Chart)
+    if (weeklyAttendanceChartRef.current && weeklyStats.length > 0) {
+      chartsInstance.current.weeklyAttendance = new Chart(weeklyAttendanceChartRef.current, {
+        type: 'bar',
+        data: {
+          labels: weeklyStats.map(s => {
+            const date = new Date(s.date);
+            return `${date.getDate()}/${date.getMonth() + 1}`;
+          }),
+          datasets: [{
+            label: 'משתתפים',
+            data: weeklyStats.map(s => s.count),
+            backgroundColor: '#6366f1',
+            borderRadius: 12,
+            borderSkipped: false,
+          }]
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { family: 'Assistant', weight: 'bold' as const } } },
+            y: { 
+              beginAtZero: true,
+              ticks: { 
+                font: { family: 'Assistant', weight: 'bold' as const },
+                stepSize: 5
+              } 
+            }
+          }
+        }
+      });
+    }
+
     return () => {
       (Object.values(chartsInstance.current) as (Chart | null)[]).forEach(chart => chart?.destroy());
     };
-  }, [loading, stats, showTop10]);
+  }, [loading, stats, showTop10, weeklyStats]);
 
   const summaryCards = [
     { label: 'סך סשנים (חמישי)', value: stats.totalSessions.toLocaleString(), icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -328,7 +378,55 @@ const AdminInfoPage: React.FC = () => {
            ))}
         </div>
 
-        {/* Top Charts Grid */}
+        {/* Weekly Attendance Historical Chart (NEW) */}
+        <div className="mb-8">
+           <div className="bg-white p-8 md:p-12 border border-slate-100 rounded-[3.5rem] shadow-sm flex flex-col h-[500px] relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/50 rounded-full blur-[80px] -mr-32 -mt-32"></div>
+              
+              <div className="flex items-center justify-between mb-10 relative z-10">
+                 <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                       <CalendarDays size={28} />
+                    </div>
+                    <div>
+                       <h3 className="text-2xl font-black text-slate-900 tracking-tight">📅 מגמת השתתפות שבועית - חמישי הגדול</h3>
+                       <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-1">נתונים היסטוריים הנשמרים בכל יום חמישי בשעה 09:00</p>
+                    </div>
+                 </div>
+                 
+                 <div className="hidden md:flex items-center gap-4">
+                    <div className="flex flex-col items-end">
+                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">ממוצע שבועי</span>
+                       <span className="text-xl font-black text-slate-900">
+                         {weeklyStats.length > 0 
+                           ? Math.round(weeklyStats.reduce((acc, s) => acc + s.count, 0) / weeklyStats.length)
+                           : 0}
+                       </span>
+                    </div>
+                    <div className="w-px h-8 bg-slate-100"></div>
+                    <div className="flex flex-col items-end">
+                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">שיא תקופתי</span>
+                       <span className="text-xl font-black text-indigo-600">
+                         {weeklyStats.length > 0 ? Math.max(...weeklyStats.map(s => s.count)) : 0}
+                       </span>
+                    </div>
+                 </div>
+              </div>
+              
+              <div className="flex-1 relative z-10">
+                 {weeklyStats.length > 0 ? (
+                   <canvas ref={weeklyAttendanceChartRef}></canvas>
+                 ) : (
+                   <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4">
+                      <BarChart3 size={48} className="opacity-20" />
+                      <p className="font-bold">טרם נאספו נתונים היסטוריים...</p>
+                   </div>
+                 )}
+              </div>
+           </div>
+        </div>
+
+        {/* Participation Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
            {/* Sessions (Horizontal Bar) */}
            <div className="bg-white p-8 md:p-10 border border-slate-100 rounded-[3rem] shadow-sm flex flex-col h-[600px] relative overflow-hidden group">
@@ -424,6 +522,8 @@ const AdminInfoPage: React.FC = () => {
            <p className="text-white/60 font-bold max-w-3xl leading-relaxed mb-6">
              המערכת מבצעת סנכרון דו-כיווני מול השרת. כל ביטול השתתפות ("Toggle Off") בסשן חמישי או באירוע מעדכן באופן מיידי את מונה הנוכחות של החבר. 
              בצורה זו, הסטטיסטיקה המוצגת כאן היא תמונת מצב מדויקת של המעורבות הקהילתית כפי שהיא ברגע זה.
+             <br /><br />
+             הגרף השבועי החדש מציג את רמת ההשתתפות ההיסטורית בכל יום חמישי. הנתונים מתועדים באופן אוטומטי ונשמרים לצורך ניתוח מגמות ארוך טווח.
            </p>
            <div className="flex gap-8">
               <div className="flex items-center gap-3">
