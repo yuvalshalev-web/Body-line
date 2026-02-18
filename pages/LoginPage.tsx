@@ -343,30 +343,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
           )}
 
         </div>
-
-        <div className="mt-12 flex items-center justify-center gap-12 opacity-80">
-          <div className="flex flex-col items-center gap-2 group cursor-pointer transition-all">
-             <div className="w-12 h-12 bg-white/5 backdrop-blur-md rounded-xl p-2.5 border border-white/10 group-hover:scale-110 group-hover:bg-white/20 transition-all">
-               <img 
-                 src={siteAssets.atalefLogo || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fatalef-logo.png?alt=media"} 
-                 className="w-full h-full object-contain" 
-                 alt="Atalef" 
-               />
-             </div>
-             <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] group-hover:text-white transition-colors">Atalef</span>
-          </div>
-
-          <div className="flex flex-col items-center gap-2 group cursor-pointer transition-all">
-             <div className="w-12 h-12 bg-white/5 backdrop-blur-md rounded-xl p-2.5 border border-white/10 group-hover:scale-110 group-hover:bg-white/20 transition-all">
-               <img 
-                 src={siteAssets.clubLogo || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Freef-logo.png?alt=media"} 
-                 className="w-full h-full object-contain" 
-                 alt="Reef" 
-               />
-             </div>
-             <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] group-hover:text-white transition-colors">Reef Club</span>
-          </div>
-        </div>
       </div>
     </div>
   );

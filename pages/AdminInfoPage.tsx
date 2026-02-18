@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { 
   ShieldCheck, 
@@ -21,7 +20,9 @@ import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestor
 import { db } from '../services/firebase';
 import { Member, Event } from '../types';
 import { Chart, registerables } from 'chart.js';
+
 Chart.register(...registerables);
+
 interface WeeklyStat {
   date: string;
   count: number;
@@ -69,7 +70,6 @@ const AdminInfoPage: React.FC = () => {
       unsubEvents();
       unsubWeekly();
       // Cleanup all charts on unmount
-      // Fix: Cast the chart instance to any to call the destroy method, resolving the unknown type error
       Object.values(chartInstances.current).forEach((chart: any) => {
         if (chart) chart.destroy();
       });

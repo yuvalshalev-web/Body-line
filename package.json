@@ -20,7 +20,7 @@
     "@firebase/storage": "^0.14.0",
     "@firebase/app": "^0.14.8",
     "@firebase/analytics": "^0.10.19",
-    "chart.js": "latest"
+    "chart.js": "^4.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
