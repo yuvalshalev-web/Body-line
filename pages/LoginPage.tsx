@@ -38,6 +38,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
     setError('');
     try {
       if (email.toLowerCase().trim() === 'yuval@shalev.org' && password === 'Yuval!1970') {
+        const devHashedPassword = await hashPassword('Yuval!1970');
         onLogin({
           id: 'dev-admin-id', 
           name: 'יובל שלו', 
@@ -48,6 +49,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, siteAssets }) => {
           role: 'Admin', 
           joinedAt: '01/01/2025', 
           isActive: true,
+          password: devHashedPassword,
           facebookUrl: '',
           instagramUrl: '',
           tiktokUrl: '',

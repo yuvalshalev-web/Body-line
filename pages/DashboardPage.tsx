@@ -60,9 +60,9 @@ const FALLBACK_DICTIONARY: DictionaryTerm[] = [
   { term: "דאק דייב (Duck Dive)", definition: "צלילה מתחת לגל הנשבר עם הגלשן כדי לעבור אותו בקלות." }
 ];
 
-const QUOTES_CACHE_KEY = 'habal_zug_quotes_cache';
-const DICT_CACHE_KEY = 'habal_zug_dict_cache';
-const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+const QUOTES_CACHE_KEY = 'habal_zug_quotes_cache_v2';
+const DICT_CACHE_KEY = 'habal_zug_dict_cache_v2';
+const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days cache to reduce AI requests
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ 
   membersCount, galleryCount, eventsCount, newsCount,
@@ -71,7 +71,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAttendees, setShowAttendees] = useState(false);
   
-  // Helper to shuffle array
   const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -81,7 +80,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     return shuffled;
   };
 
-  // Quotes State - Initialize from Cache immediately
   const [quotes, setQuotes] = useState<QuoteItem[]>(() => {
     const cached = localStorage.getItem(QUOTES_CACHE_KEY);
     if (cached) {
@@ -95,7 +93,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [isQuotesLoading, setIsQuotesLoading] = useState(false);
 
-  // Dictionary State - Initialize from Cache immediately
   const [dictionary, setDictionary] = useState<DictionaryTerm[]>(() => {
     const cached = localStorage.getItem(DICT_CACHE_KEY);
     if (cached) {
@@ -111,7 +108,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
 
-  // Fetch Quotes Data using Gemini from surfd.com
   const fetchQuotesData = useCallback(async (force = false) => {
     if (!force) {
       const cached = localStorage.getItem(QUOTES_CACHE_KEY);
@@ -124,11 +120,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     setIsQuotesLoading(true);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Extract ~50 surf quotes from https://surfd.com/2019/12/50-best-surf-quotes/. Translate to poetic Hebrew. Return ONLY JSON array of {text, author}.`;
-
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: prompt,
+        contents: `Provide 10-15 best surf quotes. Return ONLY JSON array of {text, author} in Hebrew.`,
       });
 
       const text = response.text || "[]";
@@ -136,19 +130,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       const parsed = JSON.parse(cleanJson);
       
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const shuffled = shuffleArray(parsed);
-        setQuotes(shuffled);
-        setQuoteIndex(0);
+        setQuotes(shuffleArray(parsed));
         localStorage.setItem(QUOTES_CACHE_KEY, JSON.stringify({ data: parsed, timestamp: Date.now() }));
       }
-    } catch (err) {
-      console.error("Failed to fetch quotes:", err);
+    } catch (err: any) {
+      console.warn("Gemini Quotes Fetch Failed (likely quota):", err.message);
+      // Silent fail, keep using fallbacks or existing cache
     } finally {
       setIsQuotesLoading(false);
     }
   }, []);
 
-  // Fetch Dictionary Data
   const fetchDictionaryData = useCallback(async (force = false) => {
     if (!force) {
       const cached = localStorage.getItem(DICT_CACHE_KEY);
@@ -161,11 +153,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     setIsDictLoading(true);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `Summarize glossary from https://wind.co.il/surfing-glossary-complete-guide/ (all ~85 terms). Return ONLY JSON array of {term, definition} in Hebrew.`;
-
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: prompt,
+        contents: `Provide 10 surfing glossary terms with simple definitions in Hebrew. Return ONLY JSON array of {term, definition}.`,
       });
 
       const text = response.text || "[]";
@@ -173,13 +163,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       const parsed = JSON.parse(cleanJson);
       
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const shuffled = shuffleArray(parsed);
-        setDictionary(shuffled);
-        setDictionaryIndex(0);
+        setDictionary(shuffleArray(parsed));
         localStorage.setItem(DICT_CACHE_KEY, JSON.stringify({ data: parsed, timestamp: Date.now() }));
       }
-    } catch (err) {
-      console.error("Failed to fetch dictionary:", err);
+    } catch (err: any) {
+      console.warn("Gemini Dictionary Fetch Failed (likely quota):", err.message);
     } finally {
       setIsDictLoading(false);
     }
@@ -190,7 +178,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     fetchDictionaryData();
   }, [fetchQuotesData, fetchDictionaryData]);
 
-  // Quotes Rotation (60 seconds)
   useEffect(() => {
     if (quotes.length <= 1) return;
     const interval = setInterval(() => {
@@ -199,7 +186,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     return () => clearInterval(interval);
   }, [quotes]);
 
-  // Dictionary Rotation (60 seconds)
   useEffect(() => {
     if (dictionary.length <= 1) return;
     const interval = setInterval(() => {
@@ -208,7 +194,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     return () => clearInterval(interval);
   }, [dictionary]);
 
-  // News Rotation (10 seconds)
   useEffect(() => {
     if (news.length <= 1) return;
     const interval = setInterval(() => {
@@ -229,16 +214,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     { label: 'תמונות', value: galleryCount, icon: ImageIcon, color: 'text-rose-500', bgColor: 'bg-rose-50', path: '/gallery' },
     { label: 'אירועים', value: eventsCount, icon: Calendar, color: 'text-indigo-500', bgColor: 'bg-indigo-50', path: '/events' },
     { label: 'תחזית', value: 'GoSurf', icon: Waves, color: 'text-sky-500', bgColor: 'bg-sky-50', path: 'https://gosurf.co.il/forecast/herzliya-marina', external: true },
-    { label: 'מצלמת חוף', value: 'Live', icon: Video, color: 'text-violet-500', bgColor: 'bg-violet-50', path: 'https://beachcam.co.il/marina.html', external: true }
+    { label: 'BeachCam', value: 'Live', icon: Video, color: 'text-violet-500', bgColor: 'bg-violet-50', path: 'https://beachcam.co.il/marina.html', external: true }
   ];
-
-  const categoryTranslations: Record<string, string> = {
-    'Update': 'עדכון',
-    'Activity': 'פעילות',
-    'Announcement': 'הודעה',
-    'Personal': 'אישי',
-    'Share': 'שיתוף'
-  };
 
   const activePost = news[currentNewsIndex];
   const activeTerm = dictionary[dictionaryIndex];
@@ -288,7 +265,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
              
              <button 
                onClick={() => setShowAttendees(true)}
-               className="mt-6 text-white/70 hover:text-white font-black text-sm uppercase tracking-widest flex flex-col items-center gap-1 mx-auto transition-all group/stars active:scale-95"
+               className="mt-6 text-white/70 hover:text-white font-black text-sm uppercase tracking-widest flex flex-col items-center gap-1 mx-auto transition-all group/stars active:scale-90"
              >
                <div className="flex items-center gap-2">
                  <Star size={18} className="text-yellow-400 fill-yellow-400 group-hover:scale-125 transition-transform" />
@@ -323,67 +300,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         ))}
       </div>
 
-      {/* News Section with Rotation */}
-      <div className="space-y-8 md:space-y-12">
-        <div className="space-y-6">
-           <div className="flex items-center justify-between px-2">
-              <h3 className="text-2xl font-black text-slate-950 flex items-center gap-3">
-                 <Newspaper className="text-indigo-500" size={24} />
-                 פוסטים מהקהילה
-                 {news.length > 1 && (
-                   <span className="text-[10px] font-black bg-indigo-50 text-indigo-500 px-2 py-0.5 rounded-full border border-indigo-100 animate-pulse">
-                     רוטציה פעילה
-                   </span>
-                 )}
-              </h3>
-              <Link to="/posts" className="text-xs font-black text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest">צפה בהכל</Link>
-           </div>
-           
-           <div className="relative min-h-[160px]">
-              {news.length > 0 && activePost ? (
-                <Link 
-                  key={activePost.id} 
-                  to="/posts" 
-                  className="block p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group flex flex-col md:flex-row items-center gap-6 animate-in fade-in slide-in-from-left-6 duration-1000"
-                >
-                  <div className="w-full md:w-32 h-32 md:h-32 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform flex-shrink-0 overflow-hidden">
-                    {activePost.imageUrl ? (
-                      <img src={activePost.imageUrl} className="w-full h-full object-cover rounded-2xl" alt="" />
-                    ) : (
-                      <Sparkles size={32} />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0 text-center md:text-right">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                      {categoryTranslations[activePost.category] || activePost.category} • {new Date(activePost.date).toLocaleDateString('he-IL')}
-                    </p>
-                    <h4 className="text-xl md:text-2xl font-black text-slate-950 group-hover:text-indigo-600 transition-colors truncate mb-2">{activePost.title}</h4>
-                    <p className="text-sm md:text-base font-bold text-slate-500 leading-relaxed line-clamp-2 md:line-clamp-3">
-                      {activePost.content}
-                    </p>
-                  </div>
-                  <div className="hidden md:flex flex-col items-center gap-2">
-                    <ArrowRight size={24} className="text-slate-200 group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all flex-shrink-0" />
-                    <div className="flex gap-1">
-                      {news.slice(0, 10).map((_, i) => (
-                        <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentNewsIndex ? 'bg-indigo-500 w-4' : 'bg-slate-200'}`} />
-                      ))}
-                    </div>
-                  </div>
-                </Link>
-              ) : (
-                <div className="p-16 text-center bg-white border border-dashed border-slate-200 rounded-[3rem] flex flex-col items-center justify-center gap-4">
-                   <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
-                      <Newspaper size={32} />
-                   </div>
-                   <p className="text-slate-400 font-black text-lg">אין פוסטים חדשים כרגע.</p>
-                </div>
-              )}
-           </div>
-        </div>
-
-        {/* Quotes and Dictionary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+      {/* Tickers Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
            <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
               <button 
                 onClick={() => fetchQuotesData(true)}
@@ -402,7 +320,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
 
               <div className="relative min-h-[100px]">
-                {activeQuote ? (
+                {activeQuote && (
                   <div key={quoteIndex} className="space-y-3 text-right animate-in fade-in slide-in-from-left-4 duration-700">
                      <p className="text-lg font-black text-indigo-500 tracking-tight leading-relaxed italic">
                         "{activeQuote.text}"
@@ -411,19 +329,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                         — {activeQuote.author}
                      </p>
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center py-4 text-slate-300">
-                    <AlertCircle size={24} className="mb-2" />
-                    <p className="text-[10px] font-black uppercase">שגיאה בטעינת ציטוטים</p>
-                  </div>
                 )}
-                
                 {isQuotesLoading && (
-                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-2xl animate-in fade-in">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100 shadow-sm">
-                      <Loader2 className="animate-spin" size={12} />
-                      <span className="text-[9px] font-black uppercase tracking-widest">AI מעדכן ציטוטים...</span>
-                    </div>
+                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-2xl">
+                    <Loader2 className="animate-spin text-indigo-600" size={20} />
                   </div>
                 )}
               </div>
@@ -447,7 +356,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
 
               <div className="relative min-h-[120px]">
-                {activeTerm ? (
+                {activeTerm && (
                   <div key={activeTerm.term} className="space-y-2 text-right animate-in fade-in slide-in-from-left-4 duration-700">
                      <p className="text-lg font-black text-amber-500 tracking-tight flex items-center gap-2">
                        {activeTerm.term}
@@ -456,30 +365,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                      <p className="text-xs font-bold text-slate-500 leading-relaxed">
                        {activeTerm.definition}
                      </p>
-                     <div className="pt-2">
-                        <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">
-                          מקור: wind.co.il • מתחלף כל דקה
-                        </p>
-                     </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center py-4 text-slate-300">
-                    <AlertCircle size={24} className="mb-2" />
-                    <p className="text-[10px] font-black uppercase">שגיאה בטעינת המילון</p>
                   </div>
                 )}
-
                 {isDictLoading && (
-                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-2xl animate-in fade-in">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-full border border-amber-100 shadow-sm">
-                      <Loader2 className="animate-spin" size={12} />
-                      <span className="text-[9px] font-black uppercase tracking-widest">AI מעדכן מונחים...</span>
-                    </div>
+                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-2xl">
+                    <Loader2 className="animate-spin text-amber-600" size={20} />
                   </div>
                 )}
               </div>
            </div>
-        </div>
       </div>
 
       {showAttendees && (

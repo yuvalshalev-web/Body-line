@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { 
   collection, 
@@ -59,13 +58,20 @@ const App: React.FC = () => {
   const [siteAssets, setSiteAssets] = useState<any>({});
   const [activeSessionAttendees, setActiveSessionAttendees] = useState<Member[]>([]);
 
+  // Guard to prevent snapshot updates from overriding local changes during save
+  const isUpdatingProfile = useRef(false);
+
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     const savedUser = localStorage.getItem('habal_zug_user');
     if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
+      try {
+        setCurrentUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem('habal_zug_user');
+      }
     }
     setLoading(false);
   }, []);
@@ -99,10 +105,14 @@ const App: React.FC = () => {
     const unsubMembers = onSnapshot(collection(db, 'members'), (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member));
       setMembers(data);
-      const updatedMe = data.find(m => m.id === currentUser.id);
-      if (updatedMe) {
-        setCurrentUser(updatedMe);
-        localStorage.setItem('habal_zug_user', JSON.stringify(updatedMe));
+      
+      // Only sync current user from snapshot if we aren't in the middle of an update
+      if (!isUpdatingProfile.current) {
+        const updatedMe = data.find(m => m.id === currentUser.id);
+        if (updatedMe) {
+          setCurrentUser(updatedMe);
+          localStorage.setItem('habal_zug_user', JSON.stringify(updatedMe));
+        }
       }
     });
 
@@ -144,7 +154,7 @@ const App: React.FC = () => {
   };
 
   const handleToggleAttendance = async () => {
-    if (!currentUser || currentUser.id === 'dev-admin-id') return;
+    if (!currentUser) return;
     const today = new Date();
     const nextThursday = new Date(today);
     nextThursday.setDate(today.getDate() + (4 + 7 - today.getDay()) % 7);
@@ -155,40 +165,34 @@ const App: React.FC = () => {
 
     if (isAttending) {
       await updateDoc(sessionRef, { attendees: arrayRemove(currentUser.id) });
-      await updateDoc(doc(db, 'members', currentUser.id), { totalAttendance: increment(-1) });
+      await setDoc(doc(db, 'members', currentUser.id), { totalAttendance: increment(-1) }, { merge: true });
     } else {
       await setDoc(sessionRef, { attendees: arrayUnion(currentUser.id) }, { merge: true });
-      await updateDoc(doc(db, 'members', currentUser.id), { totalAttendance: increment(1) });
+      await setDoc(doc(db, 'members', currentUser.id), { totalAttendance: increment(1) }, { merge: true });
     }
   };
 
   const updateProfile = async (data: Member) => {
-    if (data.id === 'dev-admin-id') {
-      console.log("Dev admin update simulated.");
-      return;
-    }
-
-    console.log("DEBUG: updateProfile flow started. Data received from form:", data);
-
-    const { id, password, ...cleanData } = data;
+    if (!data.id) return;
+    isUpdatingProfile.current = true;
     
-    const allowedFields = [
+    const { id, password, joinedAt, ...rest } = data;
+    
+    const fieldsToSave = [
       'name', 'email', 'mobile', 'avatar', 'bio', 'role', 'isActive', 
       'facebookUrl', 'instagramUrl', 'tiktokUrl', 'linkedinUrl', 
       'twitterUrl', 'websiteUrl', 'birthday', 'totalAttendance', 'loginCount'
     ];
     
     const sanitizedData: any = {};
-    allowedFields.forEach(field => {
-      const val = (cleanData as any)[field];
-      if (val !== undefined) {
-        // Ensure even empty strings are passed to overwrite existing data if needed
-        sanitizedData[field] = (val === null) ? '' : val;
+    fieldsToSave.forEach(field => {
+      const val = (data as any)[field];
+      if (val === undefined || val === null) {
+        sanitizedData[field] = (field === 'totalAttendance' || field === 'loginCount') ? 0 : '';
+      } else {
+        sanitizedData[field] = val;
       }
     });
-    
-    // Log sanitized data before firestore call
-    console.log("DEBUG: Sanitized data being sent to Firestore collection 'members' for doc ID:", id, sanitizedData);
 
     if (password && password.trim() !== '') {
       sanitizedData.password = password;
@@ -197,11 +201,18 @@ const App: React.FC = () => {
     
     try {
       const memberRef = doc(db, 'members', id);
-      await updateDoc(memberRef, sanitizedData);
-      console.log("DEBUG: Firestore updateDoc successful for ID:", id);
+      await setDoc(memberRef, sanitizedData, { merge: true });
+      
+      const finalUser = { ...currentUser, ...sanitizedData, id } as Member;
+      setCurrentUser(finalUser);
+      localStorage.setItem('habal_zug_user', JSON.stringify(finalUser));
     } catch (err) {
-      console.error("CRITICAL ERROR updating profile in Firestore:", err);
+      console.error("Update profile failed:", err);
       throw err;
+    } finally {
+      setTimeout(() => {
+        isUpdatingProfile.current = false;
+      }, 1500);
     }
   };
 
@@ -236,7 +247,6 @@ const App: React.FC = () => {
         </button>
       </div>
 
-      {/* Overlay for Sidebar */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[65] lg:hidden animate-in fade-in duration-300"
@@ -244,7 +254,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Sidebar / Navigation */}
       <aside className={`fixed inset-y-0 right-0 z-[70] w-72 bg-white border-l border-slate-100 text-slate-950 transform transition-transform duration-500 ease-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full shadow-2xl lg:shadow-none'}`}>
         <div className="h-full flex flex-col p-8">
           <div className="flex items-center justify-between mb-12">
@@ -302,7 +311,6 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <main className="flex-1 overflow-x-hidden">
         <div className="p-5 md:p-8 lg:p-12 max-w-screen-2xl mx-auto">
           <Routes>

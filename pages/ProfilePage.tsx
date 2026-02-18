@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   Phone, 
@@ -20,7 +19,8 @@ import {
   Cake,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  AlertCircle
 } from 'lucide-react';
 import { Member } from '../types';
 import { generateBio } from '../services/geminiService';
@@ -67,9 +67,9 @@ const SocialInput = ({
           <Icon size={18} />
         </div>
         <input
-          type="url"
-          id={name}
           name={name}
+          id={name}
+          type="text"
           placeholder={placeholder}
           className="w-full pr-14 pl-14 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-[1.25rem] md:rounded-[1.5rem] focus:bg-white outline-none transition-all font-black text-slate-900 shadow-sm text-sm"
           value={value || ''}
@@ -90,8 +90,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
     ...m,
     facebookUrl: m.facebookUrl || '',
     instagramUrl: m.instagramUrl || '',
-    linkedinUrl: m.linkedinUrl || '',
     tiktokUrl: m.tiktokUrl || '',
+    linkedinUrl: m.linkedinUrl || '',
     twitterUrl: m.twitterUrl || '',
     websiteUrl: m.websiteUrl || '',
     bio: m.bio || '',
@@ -106,25 +106,17 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
   const [isGeneratingBio, setIsGeneratingBio] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
-  // Password change state
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false });
   
-  // Track the last user prop value that was successfully synced to state
-  const lastSyncedUserPropRef = useRef<string>(JSON.stringify(initializeMember(user)));
-
   useEffect(() => {
-    const initializedUser = initializeMember(user);
-    const userJson = JSON.stringify(initializedUser);
-    
-    // Sync state with props ONLY if user ID changed or if we aren't editing and the props are different
-    if (initializedUser.id !== formData.id || (!isDirty && userJson !== lastSyncedUserPropRef.current)) {
-       setFormData(initializedUser);
-       lastSyncedUserPropRef.current = userJson;
+    if (!isDirty || user.id !== formData.id) {
+       setFormData(initializeMember(user));
     }
-  }, [user, isDirty, formData.id]);
+  }, [user.id, user]); 
 
   const ensureAbsoluteUrl = (url?: string) => {
     if (!url) return '';
@@ -149,20 +141,16 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
     e.preventDefault();
     setIsSaving(true);
     
-    // Log the entire formData before processing to see what's collected
-    console.log("DEBUG [ProfilePage]: Final data being sent for update:", formData);
-    
     try {
       let finalData = { ...formData };
 
-      // Handle Password Change if requested
       if (showPasswordForm && passwords.new) {
         if (!passwords.current) throw new Error('יש להזין סיסמה נוכחית');
         const currentHashed = await hashPassword(passwords.current);
         if (currentHashed !== user.password) throw new Error('סיסמה נוכחית אינה נכונה');
         if (passwords.new !== passwords.confirm) throw new Error('הסיסמאות החדשות אינן תואמות');
         const requirements = validatePassword(passwords.new);
-        if (!isPasswordValid(requirements)) throw new Error('הסיסמה החדשה אינה עומדת בדרישות האבטחה');
+        if (!requirements.length || !requirements.hasNumber) throw new Error('הסיסמה החדשה אינה עומדת בדרישות האבטחה');
         
         const newHashed = await hashPassword(passwords.new);
         finalData.password = newHashed;
@@ -171,20 +159,19 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
 
       await onUpdate(finalData);
       
-      // Update our sync ref immediately to prevent race conditions
-      lastSyncedUserPropRef.current = JSON.stringify(initializeMember(finalData));
-      
       setToastMsg('הפרופיל עודכן בהצלחה!');
+      setToastType('success');
       setShowToast(true);
       setIsDirty(false);
       setShowPasswordForm(false);
       setPasswords({ current: '', new: '', confirm: '' });
-      
       setTimeout(() => setShowToast(false), 3000);
     } catch (err: any) {
-      console.error("ERROR [ProfilePage]: Update failed", err);
+      console.error("Profile save error:", err);
       setToastMsg(err.message || 'שגיאה בעדכון הפרופיל.');
+      setToastType('error');
       setShowToast(true);
+      setTimeout(() => setShowToast(false), 4000);
     } finally {
       setIsSaving(false);
     }
@@ -245,8 +232,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-12">
               <div className="space-y-6 md:space-y-8">
                 <div>
-                  <label htmlFor="fullName" className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">שם מלא</label>
-                  <input id="fullName" name="fullName" type="text" className="w-full px-6 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all" value={formData.name} onChange={(e) => handleFieldChange('name', e.target.value)} />
+                  <label htmlFor="name" className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">שם מלא</label>
+                  <input id="name" name="name" type="text" className="w-full px-6 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all" value={formData.name} onChange={(e) => handleFieldChange('name', e.target.value)} />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
@@ -318,7 +305,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מומלץ להחליף סיסמה מעת לעת</p>
                     </div>
                   </div>
-                  <button type="button" onClick={() => setShowPasswordForm(!showPasswordForm)} className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${showPasswordForm ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                  <button type="button" onClick={() => setShowPasswordForm(!showPasswordForm)} className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${showPasswordForm ? 'bg-slate-950 text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
                     {showPasswordForm ? 'ביטול' : 'שינוי סיסמה'}
                   </button>
                </div>
@@ -326,27 +313,27 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
                {showPasswordForm && (
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-4 duration-500 mb-12">
                    <div className="space-y-1.5">
-                     <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה נוכחית</label>
+                     <label htmlFor="currentPassword" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה נוכחית</label>
                      <div className="relative">
-                       <input type={showPass.current ? "text" : "password"} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={passwords.current} onChange={e => setPasswords({...passwords, current: e.target.value})} />
+                       <input id="currentPassword" name="currentPassword" type={showPass.current ? "text" : "password"} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={passwords.current} onChange={e => setPasswords({...passwords, current: e.target.value})} />
                        <button type="button" onClick={() => setShowPass({...showPass, current: !showPass.current})} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
                          {showPass.current ? <EyeOff size={16} /> : <Eye size={16} />}
                        </button>
                      </div>
                    </div>
                    <div className="space-y-1.5">
-                     <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה חדשה</label>
+                     <label htmlFor="newPassword" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה חדשה</label>
                      <div className="relative">
-                       <input type={showPass.new ? "text" : "password"} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={passwords.new} onChange={e => setPasswords({...passwords, new: e.target.value})} />
+                       <input id="newPassword" name="newPassword" type={showPass.new ? "text" : "password"} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={passwords.new} onChange={e => setPasswords({...passwords, new: e.target.value})} />
                        <button type="button" onClick={() => setShowPass({...showPass, new: !showPass.new})} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
                          {showPass.new ? <EyeOff size={16} /> : <Eye size={16} />}
                        </button>
                      </div>
                    </div>
                    <div className="space-y-1.5">
-                     <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">אימות סיסמה</label>
+                     <label htmlFor="confirmPassword" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">אימות סיסמה</label>
                      <div className="relative">
-                       <input type={showPass.confirm ? "text" : "password"} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={passwords.confirm} onChange={e => setPasswords({...passwords, confirm: e.target.value})} />
+                       <input id="confirmPassword" name="confirmPassword" type={showPass.confirm ? "text" : "password"} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={passwords.confirm} onChange={e => setPasswords({...passwords, confirm: e.target.value})} />
                        <button type="button" onClick={() => setShowPass({...showPass, confirm: !showPass.confirm})} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
                          {showPass.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
                        </button>
@@ -367,8 +354,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
       </div>
 
       {showToast && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] px-8 py-4 bg-slate-900 text-white rounded-full font-black shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-10">
-          <Check size={20} className="text-emerald-400" />
+        <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] px-8 py-4 ${toastType === 'success' ? 'bg-slate-900' : 'bg-rose-600'} text-white rounded-full font-black shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-10`}>
+          {toastType === 'success' ? <Check size={20} className="text-emerald-400" /> : <AlertCircle size={20} className="text-white" />}
           <span className="text-sm">{toastMsg}</span>
         </div>
       )}
