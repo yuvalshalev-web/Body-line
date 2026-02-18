@@ -40,13 +40,10 @@ import {
   Cake,
   ExternalLink,
   ShieldCheck,
-  UserCircle
+  UserCircle,
+  Activity
 } from 'lucide-react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db, storage } from '../services/firebase';
 import { Member, JoinRequest, Event, NewsItem } from '../types';
-import { hashPassword } from '../utils/crypto';
 
 interface AdminPageProps {
   user: Member;
@@ -91,11 +88,7 @@ const AdminPage: React.FC<AdminPageProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'MEMBERS' | 'REQUESTS' | 'EVENTS' | 'NEWS' | 'SITE' | 'ARCHIVE'>('MEMBERS');
   const [searchTerm, setSearchTerm] = useState('');
-  const [isProcessing, setIsProcessing] = useState<string | null>(null);
-  const [editingMember, setEditingMember] = useState<Member | null>(null);
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const currentAssetField = useRef<string | null>(null);
+  const [isProcessingId, setIsProcessingId] = useState<string | null>(null);
 
   const formatDate = (dateValue?: string) => {
     if (!dateValue) return '---';
@@ -113,6 +106,15 @@ const AdminPage: React.FC<AdminPageProps> = ({
     return matchesSearch;
   });
 
+  const handleToggle = async (id: string, toggleFn: (id: string) => Promise<void>) => {
+    setIsProcessingId(id);
+    try {
+      await toggleFn(id);
+    } finally {
+      setIsProcessingId(null);
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-white text-right" dir="rtl">
       <div className="max-w-7xl mx-auto space-y-12 pb-20 pt-8">
@@ -125,7 +127,7 @@ const AdminPage: React.FC<AdminPageProps> = ({
               מרכז שליטה מנהל
             </div>
             <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-2">ניהול חברים</h2>
-            <p className="text-slate-500 font-bold text-lg">בצע עריכה, אירכוב וניהול תפקידים של חברי הנבחרת.</p>
+            <p className="text-slate-500 font-bold text-lg">עריכה, ניהול סטטוסים ותפקידים של חברי הנבחרת.</p>
           </div>
           
           <div className="flex bg-slate-100 p-2 rounded-[2.5rem] border border-slate-200 flex-wrap gap-1">
@@ -161,94 +163,108 @@ const AdminPage: React.FC<AdminPageProps> = ({
               />
             </div>
 
-            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-[3.5rem] border border-slate-100 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-right min-w-[900px]">
+                  <table className="w-full text-right min-w-[1000px]">
                     <thead>
-                      <tr className="bg-slate-50 border-b border-slate-100">
-                        <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">חבר הנבחרת ותפעול סטטוס</th>
-                        <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">מידע נוסף</th>
-                        <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">הצטרף ב-</th>
-                        <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">פעולות</th>
+                      <tr className="bg-slate-50/50 border-b border-slate-100">
+                        <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">חבר נבחרת וניהול סטטוס</th>
+                        <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">מידע נוסף</th>
+                        <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">הצטרפות</th>
+                        <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">פעולות</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {filteredMembers.map((m) => (
-                        <tr key={m.id} className="hover:bg-slate-50/30 transition-colors group/row">
-                          <td className="px-10 py-8">
-                            <div className="flex items-start gap-6">
-                              <div className="shrink-0">
-                                <img src={m.avatar} className={`w-16 h-16 rounded-[1.5rem] object-cover border-2 ${!m.isActive ? 'grayscale opacity-40 border-slate-200' : 'border-white shadow-md'}`} alt="" />
+                        <tr key={m.id} className="hover:bg-slate-50/20 transition-colors group/row">
+                          <td className="px-10 py-10">
+                            <div className="flex items-start gap-8">
+                              <div className="relative shrink-0">
+                                <img src={m.avatar} className={`w-20 h-20 rounded-[2rem] object-cover border-4 ${!m.isActive ? 'grayscale opacity-30 border-slate-200' : 'border-white shadow-xl'}`} alt="" />
+                                {isProcessingId === m.id && (
+                                  <div className="absolute inset-0 bg-white/60 rounded-[2rem] flex items-center justify-center backdrop-blur-[1px]">
+                                    <Loader2 className="animate-spin text-slate-950" size={24} />
+                                  </div>
+                                )}
                               </div>
-                              <div className="space-y-4">
+                              <div className="space-y-6">
                                 <div>
-                                  <p className={`font-black text-xl leading-tight ${!m.isActive ? 'text-slate-400' : 'text-slate-900'}`}>{m.name}</p>
-                                  <p className="text-slate-400 font-bold text-xs">{m.email}</p>
+                                  <div className="flex items-center gap-3 mb-1">
+                                    <p className={`font-black text-2xl leading-tight ${!m.isActive ? 'text-slate-400' : 'text-slate-900'}`}>{m.name}</p>
+                                    {m.role === 'Admin' && <ShieldCheck size={18} className="text-indigo-600" />}
+                                  </div>
+                                  <p className="text-slate-400 font-bold text-sm tracking-tight">{m.email}</p>
                                 </div>
                                 
-                                {/* --- Rolling Toggles Injection --- */}
-                                <div className="flex items-center gap-10 bg-slate-50/50 p-3 rounded-2xl border border-slate-100/50">
-                                  {/* Activity Toggle */}
-                                  <div className="flex flex-col items-center gap-1">
-                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">סטטוס פעיל</span>
-                                    <div className="scale-[0.25] origin-top">
+                                {/* --- Rolling Toggles Area --- */}
+                                <div className="flex items-center gap-12 bg-white/50 backdrop-blur-sm p-5 rounded-[2.5rem] border border-slate-100 shadow-sm w-fit">
+                                  
+                                  {/* Active/Suspended Toggle */}
+                                  <div className="flex flex-col items-center gap-2">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">סטטוס משתמש</span>
+                                    <div className="scale-[0.35] origin-top">
                                       <input 
                                         type="checkbox" 
                                         id={`toggle-active-${m.id}`} 
                                         className="rolling-toggle-checkbox" 
                                         checked={m.isActive !== false}
-                                        onChange={() => onToggleStatus(m.id)}
+                                        onChange={() => handleToggle(m.id, onToggleStatus)}
                                       />
                                       <div className="rolling-toggle-bg">
                                         <label htmlFor={`toggle-active-${m.id}`} className="rolling-toggle-ball"></label>
                                       </div>
                                     </div>
-                                    <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${m.isActive !== false ? 'text-emerald-500' : 'text-slate-400'}`}>
-                                      {m.isActive !== false ? 'פעיל' : 'מושבת'}
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${m.isActive !== false ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                      {m.isActive !== false ? 'פעיל' : 'מושעה'}
                                     </span>
                                   </div>
 
-                                  {/* Role Toggle */}
-                                  <div className="flex flex-col items-center gap-1">
-                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">סוג מנוי</span>
-                                    <div className="scale-[0.25] origin-top">
+                                  {/* Admin/Member Toggle */}
+                                  <div className="flex flex-col items-center gap-2">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">סוג הרשאה</span>
+                                    <div className="scale-[0.35] origin-top">
                                       <input 
                                         type="checkbox" 
                                         id={`toggle-role-${m.id}`} 
                                         className="rolling-toggle-checkbox" 
                                         checked={m.role === 'Admin'}
-                                        onChange={() => onToggleRole(m.id)}
+                                        onChange={() => handleToggle(m.id, onToggleRole)}
                                       />
                                       <div className="rolling-toggle-bg">
                                         <label htmlFor={`toggle-role-${m.id}`} className="rolling-toggle-ball"></label>
                                       </div>
                                     </div>
-                                    <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${m.role === 'Admin' ? 'text-indigo-600' : 'text-slate-500'}`}>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${m.role === 'Admin' ? 'text-indigo-600' : 'text-slate-500'}`}>
                                       {m.role === 'Admin' ? 'מנהל' : 'חבר'}
                                     </span>
                                   </div>
+
                                 </div>
-                                {/* --- End of Toggles --- */}
                               </div>
                             </div>
                           </td>
-                          <td className="px-10 py-6 text-center">
+                          <td className="px-10 py-10 text-center">
                             <div className="flex flex-col items-center gap-1">
-                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סשנים</p>
-                               <span className="text-xl font-black text-slate-900">{m.totalAttendance || 0}</span>
+                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">סך סשנים</p>
+                               <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-900 text-xl shadow-inner">
+                                 {m.totalAttendance || 0}
+                               </div>
                             </div>
                           </td>
-                          <td className="px-10 py-6 text-center text-slate-500 font-black text-sm">
-                            {formatDate(m.joinedAt)}
+                          <td className="px-10 py-10 text-center text-slate-500 font-black text-sm">
+                             <div className="flex flex-col items-center gap-1">
+                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">תאריך</p>
+                               <span>{formatDate(m.joinedAt)}</span>
+                             </div>
                           </td>
-                          <td className="px-10 py-6">
-                            <div className="flex items-center justify-end gap-3">
+                          <td className="px-10 py-10">
+                            <div className="flex items-center justify-end gap-4">
                                <button 
                                  onClick={() => onPermanentDeleteMember(m.id)} 
-                                 className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-rose-500 transition-colors"
+                                 className="w-12 h-12 flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all rounded-2xl border border-transparent hover:border-rose-100"
                                  title="מחיקה סופית"
                                >
-                                 <Trash2 size={18} />
+                                 <Trash2 size={20} />
                                </button>
                             </div>
                           </td>
@@ -262,44 +278,59 @@ const AdminPage: React.FC<AdminPageProps> = ({
         )}
 
         {activeTab === 'REQUESTS' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in">
             {joinRequests.length > 0 ? joinRequests.map(req => (
-              <div key={req.id} className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center gap-6 mb-8">
-                  <img src={req.avatar} className="w-20 h-20 rounded-[1.5rem] object-cover" alt="" />
+              <div key={req.id} className="bg-white p-10 rounded-[4rem] border border-slate-100 shadow-xl flex flex-col justify-between hover:shadow-2xl transition-all">
+                <div className="flex items-center gap-6 mb-10">
+                  <img src={req.avatar} className="w-24 h-24 rounded-[2.5rem] object-cover border-4 border-slate-50 shadow-md" alt="" />
                   <div>
-                    <h4 className="text-2xl font-black text-slate-900">{req.name}</h4>
-                    <p className="text-slate-400 font-bold text-xs">{req.email} • {req.mobile}</p>
+                    <h4 className="text-2xl font-black text-slate-900 leading-tight mb-1">{req.name}</h4>
+                    <p className="text-slate-400 font-bold text-xs">{req.email}</p>
+                    <p className="text-slate-400 font-bold text-xs">{req.mobile}</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <button onClick={() => onApproveRequest(req.id)} className="flex-1 py-4 bg-slate-950 text-white rounded-2xl font-black text-xs hover:bg-emerald-600 transition-all flex items-center justify-center gap-2">
-                    <UserCheck size={16} /> אישור
+                  <button onClick={() => onApproveRequest(req.id)} className="flex-1 py-5 bg-slate-950 text-white rounded-[1.5rem] font-black text-sm hover:bg-emerald-600 transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95">
+                    <UserCheck size={18} /> אישור
                   </button>
-                  <button onClick={() => onRejectRequest(req.id)} className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-2xl font-black text-xs hover:bg-rose-50 hover:text-rose-600 transition-all">
+                  <button onClick={() => onRejectRequest(req.id)} className="flex-1 py-5 bg-slate-50 text-slate-400 rounded-[1.5rem] font-black text-sm hover:bg-rose-50 hover:text-rose-600 transition-all active:scale-95">
                     דחייה
                   </button>
                 </div>
               </div>
             )) : (
-              <div className="col-span-full py-20 text-center text-slate-400 font-black italic">אין בקשות חדשות כרגע...</div>
+              <div className="col-span-full py-40 text-center bg-white rounded-[4rem] border-2 border-dashed border-slate-100 flex flex-col items-center">
+                <UserPlus size={48} className="text-slate-200 mb-6" />
+                <h3 className="text-2xl font-black text-slate-900 tracking-tight">אין בקשות חדשות</h3>
+                <p className="text-slate-400 font-bold">כל הבקשות טופלו בהצלחה.</p>
+              </div>
             )}
           </div>
         )}
 
         {activeTab === 'SITE' && (
-           <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm">
-              <h3 className="text-2xl font-black text-slate-900 mb-6">נכסי ויזואליה של האתר</h3>
-              <p className="text-slate-500 mb-10 font-bold">כאן ניתן לעדכן את הלוגואים והרקעים המרכזיים המופיעים במערכת.</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+           <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-xl">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-14 h-14 bg-indigo-50 rounded-[1.5rem] flex items-center justify-center text-indigo-600 shadow-sm">
+                  <Palette size={28} />
+                </div>
+                <div>
+                  <h3 className="text-3xl font-black text-slate-900 tracking-tight">נכסי ויזואליה</h3>
+                  <p className="text-slate-500 font-bold">ניהול הלוגואים והרקעים של מערכת חבל זוג.</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mt-12">
                 {['heroBg', 'loginBg', 'habalZugLogo', 'atalefLogo', 'clubLogo'].map(assetKey => (
-                  <div key={assetKey} className="space-y-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">{assetKey}</p>
-                    <div className="aspect-video rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
+                  <div key={assetKey} className="space-y-4 group">
+                    <div className="flex justify-between items-center px-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{assetKey}</p>
+                    </div>
+                    <div className="aspect-video rounded-[2.5rem] bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden relative shadow-inner group-hover:border-indigo-100 transition-colors">
                        {siteAssets[assetKey as keyof typeof siteAssets] ? (
-                         <img src={siteAssets[assetKey as keyof typeof siteAssets]} className="w-full h-full object-contain" alt="" />
+                         <img src={siteAssets[assetKey as keyof typeof siteAssets]} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" alt="" />
                        ) : (
-                         <ImageIcon size={32} className="text-slate-200" />
+                         <ImageIcon size={40} className="text-slate-200" />
                        )}
                     </div>
                   </div>

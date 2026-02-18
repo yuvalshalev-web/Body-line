@@ -20,8 +20,8 @@ import {
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { Member, Event } from '../types';
-import Chart from 'chart.js';
-
+import { Chart, registerables } from 'chart.js';
+Chart.register(...registerables);
 interface WeeklyStat {
   date: string;
   count: number;
