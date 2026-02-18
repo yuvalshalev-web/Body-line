@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { 
   Search, 
@@ -62,10 +61,14 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
     return `https://wa.me/${withPrefix}`;
   };
 
-  const formatBirthday = (dateString?: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long' });
+  const formatDate = (dateValue?: string) => {
+    if (!dateValue) return '';
+    const d = new Date(dateValue);
+    if (isNaN(d.getTime())) return dateValue;
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   return (
@@ -103,7 +106,6 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
         </div>
       </div>
 
-      {/* Responsive Grid: 3 cols on tiny mobile, 4 on small, 6 on md, 10 on lg */}
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 md:gap-5">
         {processedMembers.map(member => (
           <div 
@@ -122,7 +124,6 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
         ))}
       </div>
 
-      {/* Member Profile Modal - Optimized for Touch & Mobile Screens */}
       {selectedMember && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedMember(null)}>
            <div className="bg-white w-full max-w-4xl rounded-[2.5rem] md:rounded-[4rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-500 flex flex-col md:flex-row max-h-[90vh]" onClick={e => e.stopPropagation()}>
@@ -157,7 +158,7 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
                        )}
                     </div>
                     <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest flex items-center justify-center md:justify-start gap-2">
-                       <Bird size={14} className="text-indigo-400" /> חבר נבחרת • {selectedMember.joinedAt}
+                       <Bird size={14} className="text-indigo-400" /> חבר נבחרת • {formatDate(selectedMember.joinedAt)}
                     </p>
                   </div>
 
@@ -192,7 +193,7 @@ const DirectoryPage: React.FC<DirectoryPageProps> = ({ members }) => {
                         </div>
                         <div className="flex-1 min-w-0 text-right">
                           <p className="text-[7px] md:text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">יום הולדת</p>
-                          <p className="text-[11px] md:text-xs font-black text-slate-900">{formatBirthday(selectedMember.birthday)}</p>
+                          <p className="text-[11px] md:text-xs font-black text-slate-900">{formatDate(selectedMember.birthday)}</p>
                         </div>
                       </div>
                     )}

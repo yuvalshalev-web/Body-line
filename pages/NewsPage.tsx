@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { 
   Newspaper, 
@@ -49,6 +48,15 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDel
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
+  };
+
+  const formatDate = (dateValue: string) => {
+    const d = new Date(dateValue);
+    if (isNaN(d.getTime())) return dateValue;
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   const handlePostSubmit = async (e: React.FormEvent) => {
@@ -181,7 +189,7 @@ const NewsPage: React.FC<NewsPageProps> = ({ news, currentUser, onAddNews, onDel
                         {label}
                       </div>
                       <span className="text-[10px] font-black uppercase tracking-widest">
-                        {new Date(item.date).toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        {formatDate(item.date)}
                       </span>
                     </div>
 

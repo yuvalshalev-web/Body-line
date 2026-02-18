@@ -12,11 +12,6 @@ interface Article {
   content: string;
 }
 
-interface CachedNews {
-  articles: Article[];
-  timestamp: number;
-}
-
 const CACHE_KEY = 'habal_zug_surf_news_cache';
 const CACHE_DURATION = 60 * 60 * 1000; // 60 minutes in milliseconds
 
@@ -34,10 +29,10 @@ const SurfingNewsPage: React.FC = () => {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         try {
-          const parsedCache: CachedNews = JSON.parse(cached);
+          const parsedCache = JSON.parse(cached);
           const isExpired = Date.now() - parsedCache.timestamp > CACHE_DURATION;
           
-          if (!isExpired && parsedCache.articles.length > 0) {
+          if (!isExpired && parsedCache.articles && parsedCache.articles.length > 0) {
             setArticles(parsedCache.articles);
             setLoading(false);
             return;
@@ -69,7 +64,7 @@ const SurfingNewsPage: React.FC = () => {
           const data = await res.json();
           if (data.status !== 'ok') return [];
           
-          return (data.items || []).map((item: any) => ({
+          return (data.items || []).map((item) => ({
             title: item.title || 'Untitled',
             description: item.description || item.content || '',
             url: item.link,
@@ -85,8 +80,8 @@ const SurfingNewsPage: React.FC = () => {
         })
       );
 
-      const combined = results
-        .filter((result): result is PromiseFulfilledResult<Article[]> => result.status === 'fulfilled')
+      // Fix: Cast the results to the fulfilled type after filtering to safely access the 'value' property
+      const combined = (results.filter(result => result.status === 'fulfilled') as PromiseFulfilledResult<Article[]>[])
         .flatMap(result => result.value)
         .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
@@ -95,7 +90,7 @@ const SurfingNewsPage: React.FC = () => {
       }
 
       // Save to Cache
-      const cacheData: CachedNews = {
+      const cacheData = {
         articles: combined,
         timestamp: Date.now()
       };
@@ -110,13 +105,13 @@ const SurfingNewsPage: React.FC = () => {
     }
   };
 
-  const extractImage = (html?: string) => {
+  const extractImage = (html) => {
     if (!html) return '';
     const match = html.match(/<img[^>]+(?:src|data-src)="([^">]+)"/);
     return match ? match[1] : '';
   };
 
-  const cleanDescription = (text: string) => {
+  const cleanDescription = (text) => {
     if (!text) return '';
     return text
       .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gmi, '')
@@ -197,7 +192,7 @@ const SurfingNewsPage: React.FC = () => {
                       className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
                       alt={article.title}
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=800`;
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=800";
                       }}
                     />
                     <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/50 text-[10px] font-black text-slate-900 shadow-lg flex items-center gap-2">

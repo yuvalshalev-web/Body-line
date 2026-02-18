@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   User, 
   Phone, 
@@ -11,27 +11,24 @@ import {
   Music, 
   Linkedin, 
   Check, 
-  ExternalLink,
-  Globe,
-  RefreshCw,
-  MessageSquare,
-  Mail,
-  Cake,
-  Lock,
-  Eye,
-  EyeOff,
-  AlertCircle
+  ExternalLink, 
+  Globe, 
+  RefreshCw, 
+  MessageSquare, 
+  Mail, 
+  Cake, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  AlertCircle,
+  X,
+  Calendar,
+  Bird,
+  ShieldCheck
 } from 'lucide-react';
 import { Member } from '../types';
 import { generateBio } from '../services/geminiService';
 import { hashPassword } from '../utils/crypto';
-import { validatePassword, isPasswordValid } from '../utils/validation';
-
-const XLogo = ({ className, size = 16 }: { className?: string, size?: number }) => (
-  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
-    <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932 6.064-6.932zm-1.292 19.494h2.039L6.486 3.24H4.298l13.311 17.407z" />
-  </svg>
-);
 
 interface ProfilePageProps {
   user: Member;
@@ -71,21 +68,34 @@ const SocialInput = ({
           id={name}
           type="text"
           placeholder={placeholder}
-          className="w-full pr-14 pl-14 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-[1.25rem] md:rounded-[1.5rem] focus:bg-white outline-none transition-all font-black text-slate-900 shadow-sm text-sm"
+          className="w-full pr-14 pl-20 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-[1.25rem] md:rounded-[1.5rem] focus:bg-white outline-none transition-all font-black text-slate-900 shadow-sm text-sm"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
         />
-        {hasValue && (
-          <a href={ensureAbsoluteUrl(value)} target="_blank" rel="noopener noreferrer" className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white text-slate-400 rounded-xl shadow-sm border border-slate-100 transition-all active:scale-90">
-            <ExternalLink size={14} style={{ color: brandColor }} />
-          </a>
-        )}
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {hasValue && (
+            <>
+              <button 
+                type="button" 
+                onClick={() => onChange('')}
+                className="p-2 text-slate-300 hover:text-rose-500 transition-colors bg-white rounded-xl shadow-sm border border-slate-100"
+              >
+                <X size={14} />
+              </button>
+              <a href={ensureAbsoluteUrl(value)} target="_blank" rel="noopener noreferrer" className="p-2 bg-white text-slate-400 rounded-xl shadow-sm border border-slate-100">
+                <ExternalLink size={14} style={{ color: brandColor }} />
+              </a>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  
   const initializeMember = (m: Member): Member => ({
     ...m,
     facebookUrl: m.facebookUrl || '',
@@ -97,7 +107,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
     bio: m.bio || '',
     mobile: m.mobile || '',
     email: m.email || '',
-    birthday: m.birthday || ''
+    birthday: m.birthday || '',
+    isActive: m.isActive !== undefined ? m.isActive : true,
+    role: m.role || 'Member'
   });
 
   const [formData, setFormData] = useState<Member>(initializeMember(user));
@@ -108,10 +120,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
   const [toastMsg, setToastMsg] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
-  const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false });
-  
   useEffect(() => {
     if (!isDirty || user.id !== formData.id) {
        setFormData(initializeMember(user));
@@ -125,11 +133,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
     return `https://${trimmed}`;
   };
 
-  const getWhatsAppUrl = (mobile?: string) => {
-    if (!mobile) return '';
-    const cleaned = mobile.replace(/\D/g, '');
-    const withPrefix = cleaned.startsWith('0') ? `972${cleaned.substring(1)}` : cleaned;
-    return `https://wa.me/${withPrefix}`;
+  const formatDateDisplay = (dateValue?: string) => {
+    if (!dateValue) return 'בחירת תאריך לידה';
+    const d = new Date(dateValue);
+    if (isNaN(d.getTime())) return dateValue;
+    return d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
   const handleFieldChange = (field: keyof Member, value: any) => {
@@ -140,35 +148,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    
     try {
-      let finalData = { ...formData };
-
-      if (showPasswordForm && passwords.new) {
-        if (!passwords.current) throw new Error('יש להזין סיסמה נוכחית');
-        const currentHashed = await hashPassword(passwords.current);
-        if (currentHashed !== user.password) throw new Error('סיסמה נוכחית אינה נכונה');
-        if (passwords.new !== passwords.confirm) throw new Error('הסיסמאות החדשות אינן תואמות');
-        const requirements = validatePassword(passwords.new);
-        if (!requirements.length || !requirements.hasNumber) throw new Error('הסיסמה החדשה אינה עומדת בדרישות האבטחה');
-        
-        const newHashed = await hashPassword(passwords.new);
-        finalData.password = newHashed;
-        finalData.isTempPassword = false;
-      }
-
-      await onUpdate(finalData);
-      
+      await onUpdate(formData);
       setToastMsg('הפרופיל עודכן בהצלחה!');
       setToastType('success');
       setShowToast(true);
       setIsDirty(false);
-      setShowPasswordForm(false);
-      setPasswords({ current: '', new: '', confirm: '' });
       setTimeout(() => setShowToast(false), 3000);
     } catch (err: any) {
-      console.error("Profile save error:", err);
-      setToastMsg(err.message || 'שגיאה בעדכון הפרופיל.');
+      setToastMsg('שגיאה בעדכון הפרופיל.');
       setToastType('error');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 4000);
@@ -195,87 +183,121 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
   };
 
   return (
-    <div className="relative min-h-full bg-white text-right animate-in fade-in duration-700">
+    <div className="relative min-h-full bg-white text-right animate-in fade-in duration-700 pb-20">
       <div className="max-w-5xl mx-auto">
-        <div className="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+        <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-widest mb-3 border border-indigo-100">
-              <User size={12} /> פרופיל אישי
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest mb-3 shadow-md">
+              <User size={12} /> עריכת פרופיל
             </div>
-            <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">הפרופיל שלי</h2>
+            <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">הגדרות חשבון</h2>
           </div>
           {isDirty && (
-            <div className="flex items-center gap-3 px-5 py-3 bg-amber-50 text-amber-700 rounded-2xl border border-amber-100">
+            <div className="flex items-center gap-3 px-5 py-3 bg-amber-50 text-amber-700 rounded-2xl border border-amber-100 animate-pulse">
                <RefreshCw size={16} className="animate-spin" />
                <span className="font-black text-[10px] uppercase tracking-widest">שינויים לא שמורים</span>
             </div>
           )}
         </div>
 
-        <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] border border-slate-100 shadow-2xl overflow-hidden mb-12">
-          <div className="h-32 md:h-40 bg-gradient-to-br from-slate-900 to-indigo-950"></div>
-          <form onSubmit={handleSubmit} className="px-6 md:px-12 pb-14 -mt-16 md:-mt-20 relative">
-            <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-10 mb-12 md:mb-14 text-center md:text-right">
-              <div className="relative group mx-auto md:mx-0">
-                <img src={formData.avatar} className="w-40 h-40 md:w-48 md:h-48 rounded-[2.5rem] md:rounded-[3rem] border-4 md:border-8 border-white object-cover shadow-2xl bg-white" alt={formData.name} />
-                <label className="absolute bottom-1.5 left-1.5 p-3.5 bg-slate-950 text-white rounded-2xl cursor-pointer hover:bg-indigo-600 transition-all border-4 border-white active:scale-90">
+        <div className="bg-white rounded-[4rem] border border-slate-100 shadow-2xl overflow-hidden mb-12">
+          <div className="h-40 bg-gradient-to-br from-slate-900 to-indigo-950"></div>
+          <form onSubmit={handleSubmit} className="px-6 md:px-12 pb-14 -mt-20 relative">
+            <div className="flex flex-col md:flex-row md:items-start gap-10 mb-14 text-center md:text-right">
+              <div className="relative group mx-auto md:mx-0 shrink-0">
+                <img src={formData.avatar} className="w-48 h-48 rounded-[3rem] border-8 border-white object-cover shadow-2xl bg-white" alt="" />
+                <label className="absolute bottom-1.5 left-1.5 p-3.5 bg-slate-950 text-white rounded-2xl cursor-pointer hover:bg-indigo-600 transition-all border-4 border-white active:scale-90 shadow-xl">
                   <Camera size={22} />
                   <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} />
                 </label>
               </div>
-              <div className="flex-1 mb-4">
+              <div className="flex-1 pt-24 md:pt-28">
                 <h3 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight mb-2">{formData.name}</h3>
-                <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">{formData.role === 'Admin' ? 'מנהל קהילה' : 'חבר נבחרת'}</p>
+                <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest mb-6">נבחרת חבל זוג • {formData.email}</p>
+                
+                {/* --- Rolling Toggles Section --- */}
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-8 md:gap-14 mt-8 py-4 border-t border-slate-50">
+                  
+                  {/* Activity Toggle */}
+                  <div className="rolling-toggle-container">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-1">סטטוס משתמש</span>
+                    <div className="scale-[0.4] md:scale-[0.5] origin-top">
+                      <input 
+                        type="checkbox" 
+                        id="toggle-active" 
+                        className="rolling-toggle-checkbox" 
+                        checked={formData.isActive}
+                        onChange={(e) => handleFieldChange('isActive', e.target.checked)}
+                      />
+                      <div className="rolling-toggle-bg">
+                        <label htmlFor="toggle-active" className="rolling-toggle-ball"></label>
+                      </div>
+                    </div>
+                    <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${formData.isActive ? 'text-emerald-500' : 'text-slate-400'}`}>
+                      {formData.isActive ? 'משתמש פעיל' : 'משתמש מושבת'}
+                    </span>
+                  </div>
+
+                  {/* Role Toggle */}
+                  <div className="rolling-toggle-container">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-1">סוג חשבון</span>
+                    <div className="scale-[0.4] md:scale-[0.5] origin-top">
+                      <input 
+                        type="checkbox" 
+                        id="toggle-role" 
+                        className="rolling-toggle-checkbox" 
+                        checked={formData.role === 'Admin'}
+                        onChange={(e) => handleFieldChange('role', e.target.checked ? 'Admin' : 'Member')}
+                      />
+                      <div className="rolling-toggle-bg">
+                        <label htmlFor="toggle-role" className="rolling-toggle-ball"></label>
+                      </div>
+                    </div>
+                    <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${formData.role === 'Admin' ? 'text-indigo-600' : 'text-slate-400'}`}>
+                      {formData.role === 'Admin' ? 'מנהל מערכת' : 'חבר נבחרת'}
+                    </span>
+                  </div>
+
+                </div>
+                {/* --- End of Toggles --- */}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-12">
-              <div className="space-y-6 md:space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-10">
+              <div className="space-y-8">
                 <div>
-                  <label htmlFor="name" className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">שם מלא</label>
-                  <input id="name" name="name" type="text" className="w-full px-6 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all" value={formData.name} onChange={(e) => handleFieldChange('name', e.target.value)} />
+                  <label className="block text-[9px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">שם מלא</label>
+                  <input type="text" className="w-full px-6 py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all" value={formData.name} onChange={(e) => handleFieldChange('name', e.target.value)} />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="email" className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">כתובת אימייל</label>
-                    <div className="relative">
-                      <Mail className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                      <input id="email" name="email" type="email" className="w-full pr-14 pl-6 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all" value={formData.email} onChange={(e) => handleFieldChange('email', e.target.value)} />
-                    </div>
+                    <label className="block text-[9px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">אימייל</label>
+                    <input type="email" className="w-full px-6 py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900" value={formData.email} onChange={(e) => handleFieldChange('email', e.target.value)} />
                   </div>
-
                   <div>
-                    <label htmlFor="mobile" className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">טלפון נייד</label>
-                    <div className="relative">
-                      <Phone className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                      <input id="mobile" name="mobile" type="tel" className="w-full pr-14 pl-14 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all" value={formData.mobile} onChange={(e) => handleFieldChange('mobile', e.target.value)} />
-                      {formData.mobile && (
-                        <a href={getWhatsAppUrl(formData.mobile)} target="_blank" rel="noopener noreferrer" className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-emerald-500 text-white rounded-xl shadow-lg active:scale-90 transition-transform">
-                          <MessageSquare size={14} />
-                        </a>
-                      )}
-                    </div>
+                    <label className="block text-[9px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">טלפון נייד</label>
+                    <input type="tel" className="w-full px-6 py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900" value={formData.mobile} onChange={(e) => handleFieldChange('mobile', e.target.value)} />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="birthday" className="block text-[9px] md:text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">תאריך יום הולדת</label>
-                  <div className="relative">
-                    <Cake className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                    <input id="birthday" name="birthday" type="date" className="w-full pr-14 pl-8 py-4 md:py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm focus:bg-white outline-none transition-all cursor-pointer" value={formData.birthday || ''} onChange={(e) => handleFieldChange('birthday', e.target.value)} />
+                  <label className="block text-[9px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">תאריך לידה</label>
+                  <div className="relative cursor-pointer group/date" onClick={() => dateInputRef.current?.showPicker()}>
+                    <div className="w-full pr-14 pl-8 py-4.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-900 shadow-sm flex items-center min-h-[60px]">
+                      <Calendar className="absolute right-5 text-slate-300 group-hover/date:text-indigo-500 transition-colors" size={18} />
+                      <span className={formData.birthday ? 'text-slate-900' : 'text-slate-300'}>{formatDateDisplay(formData.birthday)}</span>
+                    </div>
+                    <input ref={dateInputRef} type="date" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" value={formData.birthday || ''} onChange={(e) => handleFieldChange('birthday', e.target.value)} />
                   </div>
                 </div>
 
                 <div className="space-y-5 pt-4">
-                  <label className="block text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 pr-3">רשתות חברתיות</label>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest border-b pb-2 pr-3">קישורים חברתיים</label>
                   <div className="space-y-4">
-                    <SocialInput label="Facebook" name="facebookUrl" value={formData.facebookUrl || ''} onChange={(v) => handleFieldChange('facebookUrl', v)} icon={Facebook} placeholder="פייסבוק..." brandColor="#1877F2" ensureAbsoluteUrl={ensureAbsoluteUrl} />
-                    <SocialInput label="Linkedin" name="linkedinUrl" value={formData.linkedinUrl || ''} onChange={(v) => handleFieldChange('linkedinUrl', v)} icon={Linkedin} placeholder="לינקדין..." brandColor="#0A66C2" ensureAbsoluteUrl={ensureAbsoluteUrl} />
-                    <SocialInput label="Instagram" name="instagramUrl" value={formData.instagramUrl || ''} onChange={(v) => handleFieldChange('instagramUrl', v)} icon={Instagram} placeholder="אינסטגרם..." brandColor="#E4405F" ensureAbsoluteUrl={ensureAbsoluteUrl} />
-                    <SocialInput label="X (Twitter)" name="twitterUrl" value={formData.twitterUrl || ''} onChange={(v) => handleFieldChange('twitterUrl', v)} icon={XLogo} placeholder="X..." brandColor="#000000" ensureAbsoluteUrl={ensureAbsoluteUrl} />
-                    <SocialInput label="TikTok" name="tiktokUrl" value={formData.tiktokUrl || ''} onChange={(v) => handleFieldChange('tiktokUrl', v)} icon={Music} placeholder="טיקטוק..." brandColor="#000000" ensureAbsoluteUrl={ensureAbsoluteUrl} />
-                    <SocialInput label="אתר אישי" name="websiteUrl" value={formData.websiteUrl || ''} onChange={(v) => handleFieldChange('websiteUrl', v)} icon={Globe} placeholder="אתר..." brandColor="#4F46E5" ensureAbsoluteUrl={ensureAbsoluteUrl} />
+                    <SocialInput label="Instagram" name="instagramUrl" value={formData.instagramUrl || ''} onChange={(v) => handleFieldChange('instagramUrl', v)} icon={Instagram} placeholder="קישור לפרופיל..." brandColor="#E4405F" ensureAbsoluteUrl={ensureAbsoluteUrl} />
+                    <SocialInput label="Facebook" name="facebookUrl" value={formData.facebookUrl || ''} onChange={(v) => handleFieldChange('facebookUrl', v)} icon={Facebook} placeholder="קישור לפרופיל..." brandColor="#1877F2" ensureAbsoluteUrl={ensureAbsoluteUrl} />
+                    <SocialInput label="LinkedIn" name="linkedinUrl" value={formData.linkedinUrl || ''} onChange={(v) => handleFieldChange('linkedinUrl', v)} icon={Linkedin} placeholder="קישור לפרופיל..." brandColor="#0A66C2" ensureAbsoluteUrl={ensureAbsoluteUrl} />
                   </div>
                 </div>
               </div>
@@ -283,80 +305,31 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUpdate }) => {
               <div className="space-y-8">
                 <div>
                   <div className="flex items-center justify-between mb-3 px-2">
-                    <label htmlFor="bio" className="block text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">קצת עלי</label>
-                    <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl font-black text-[9px] md:text-[10px] hover:bg-indigo-100 active:scale-95 transition-all">
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest">ביוגרפיה (AI Enhanced)</label>
+                    <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl font-black text-[10px] hover:bg-indigo-100 active:scale-95 transition-all">
                       {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                      שיפור עם AI
+                      שדרג עם AI
                     </button>
                   </div>
-                  <textarea id="bio" name="bio" className="w-full p-6 md:p-8 bg-slate-50 border border-slate-100 rounded-[2rem] md:rounded-[2.5rem] font-bold text-slate-700 min-h-[300px] md:min-h-[450px] resize-none focus:bg-white outline-none transition-all shadow-inner leading-relaxed" value={formData.bio} onChange={(e) => handleFieldChange('bio', e.target.value)} />
+                  <textarea className="w-full p-8 bg-slate-50 border border-slate-100 rounded-[3rem] font-bold text-slate-700 min-h-[400px] resize-none focus:bg-white outline-none transition-all shadow-inner leading-relaxed" value={formData.bio} onChange={(e) => handleFieldChange('bio', e.target.value)} placeholder="ספר על עצמך..." />
                 </div>
               </div>
             </div>
 
-            <div className="mt-12 pt-12 border-t border-slate-100">
-               <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
-                       <Lock size={18} />
-                    </div>
-                    <div>
-                      <h4 className="text-xl font-black text-slate-900 tracking-tight">אבטחה וסיסמה</h4>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מומלץ להחליף סיסמה מעת לעת</p>
-                    </div>
-                  </div>
-                  <button type="button" onClick={() => setShowPasswordForm(!showPasswordForm)} className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${showPasswordForm ? 'bg-slate-950 text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
-                    {showPasswordForm ? 'ביטול' : 'שינוי סיסמה'}
-                  </button>
-               </div>
-
-               {showPasswordForm && (
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-4 duration-500 mb-12">
-                   <div className="space-y-1.5">
-                     <label htmlFor="currentPassword" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה נוכחית</label>
-                     <div className="relative">
-                       <input id="currentPassword" name="currentPassword" type={showPass.current ? "text" : "password"} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={passwords.current} onChange={e => setPasswords({...passwords, current: e.target.value})} />
-                       <button type="button" onClick={() => setShowPass({...showPass, current: !showPass.current})} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
-                         {showPass.current ? <EyeOff size={16} /> : <Eye size={16} />}
-                       </button>
-                     </div>
-                   </div>
-                   <div className="space-y-1.5">
-                     <label htmlFor="newPassword" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה חדשה</label>
-                     <div className="relative">
-                       <input id="newPassword" name="newPassword" type={showPass.new ? "text" : "password"} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={passwords.new} onChange={e => setPasswords({...passwords, new: e.target.value})} />
-                       <button type="button" onClick={() => setShowPass({...showPass, new: !showPass.new})} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
-                         {showPass.new ? <EyeOff size={16} /> : <Eye size={16} />}
-                       </button>
-                     </div>
-                   </div>
-                   <div className="space-y-1.5">
-                     <label htmlFor="confirmPassword" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest pr-3">אימות סיסמה</label>
-                     <div className="relative">
-                       <input id="confirmPassword" name="confirmPassword" type={showPass.confirm ? "text" : "password"} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" value={passwords.confirm} onChange={e => setPasswords({...passwords, confirm: e.target.value})} />
-                       <button type="button" onClick={() => setShowPass({...showPass, confirm: !showPass.confirm})} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
-                         {showPass.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                       </button>
-                     </div>
-                   </div>
-                 </div>
-               )}
-            </div>
-
-            <div className="mt-12 md:mt-16 flex items-center justify-center">
-              <button type="submit" disabled={isSaving || !isDirty} className="w-full max-w-md py-5 md:py-6 bg-slate-950 text-white rounded-[1.75rem] md:rounded-[2rem] font-black text-lg md:text-xl hover:bg-indigo-600 transition-all shadow-2xl flex items-center justify-center gap-4 disabled:opacity-50 active:scale-95">
-                {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
-                שמירת פרופיל
-              </button>
+            <div className="mt-16 pt-12 border-t border-slate-100 flex flex-col items-center">
+               <button type="submit" disabled={isSaving || !isDirty} className="w-full max-w-md py-5 bg-slate-950 text-white rounded-[2rem] font-black text-xl hover:bg-emerald-600 transition-all shadow-2xl flex items-center justify-center gap-4 disabled:opacity-30 active:scale-95">
+                  {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
+                  <span>שמור שינויים</span>
+               </button>
             </div>
           </form>
         </div>
       </div>
-
+      
       {showToast && (
-        <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] px-8 py-4 ${toastType === 'success' ? 'bg-slate-900' : 'bg-rose-600'} text-white rounded-full font-black shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-10`}>
-          {toastType === 'success' ? <Check size={20} className="text-emerald-400" /> : <AlertCircle size={20} className="text-white" />}
-          <span className="text-sm">{toastMsg}</span>
+        <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[150] px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-6 duration-500 ${toastType === 'success' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
+          {toastType === 'success' ? <Check size={20} /> : <AlertCircle size={20} />}
+          <span className="font-black text-sm">{toastMsg}</span>
         </div>
       )}
     </div>

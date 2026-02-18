@@ -43,6 +43,15 @@ const EventsPage: React.FC<EventsPageProps> = ({ events, currentUser, onAddEvent
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
   };
 
+  const formatDate = (dateValue: string) => {
+    const d = new Date(dateValue);
+    if (isNaN(d.getTime())) return dateValue;
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !date || !time) return;
@@ -148,12 +157,10 @@ const EventsPage: React.FC<EventsPageProps> = ({ events, currentUser, onAddEvent
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-md rounded-3xl p-4 text-center min-w-[75px] shadow-2xl border border-white/50 animate-in zoom-in-95">
-                    <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">
-                      {new Date(event.date).toLocaleString('he-IL', { month: 'short' })}
-                    </p>
-                    <p className="text-3xl font-black text-slate-950 tracking-tighter leading-none">
-                      {new Date(event.date).getDate()}
+                  <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-md rounded-2xl px-3 py-2 text-center shadow-2xl border border-white/50 animate-in zoom-in-95">
+                    <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] mb-0.5">תאריך</p>
+                    <p className="text-sm font-black text-slate-950 tracking-tighter">
+                      {formatDate(event.date)}
                     </p>
                   </div>
                 </div>
