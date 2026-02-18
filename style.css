@@ -48,6 +48,57 @@ body {
   background-color: var(--accent-blue);
 }
 
+/* Sea Wave Button Effect */
+.btn-wave-effect {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%);
+  z-index: 1;
+}
+
+.btn-wave-effect::before,
+.btn-wave-effect::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 250%;
+  height: 250%;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 40%;
+  transform: translate(-50%, -70%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.btn-wave-effect::before {
+  animation: wave-flow 7s linear infinite;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-wave-effect::after {
+  animation: wave-flow 12s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes wave-flow {
+  0% { transform: translate(-50%, -70%) rotate(0deg); }
+  100% { transform: translate(-50%, -70%) rotate(360deg); }
+}
+
+/* Subtle Text Wave Animation */
+@keyframes subtle-text-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33% { transform: translateY(-1.5px) rotate(0.5deg); }
+  66% { transform: translateY(1px) rotate(-0.5deg); }
+}
+
+.animate-text-wave {
+  display: inline-block;
+  animation: subtle-text-float 4s ease-in-out infinite;
+  will-change: transform;
+}
+
 /* Essential Helper Classes */
 .big-wednesday-title {
   display: block;

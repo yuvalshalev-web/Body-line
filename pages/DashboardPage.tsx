@@ -135,7 +135,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       }
     } catch (err: any) {
       console.warn("Gemini Quotes Fetch Failed (likely quota):", err.message);
-      // Silent fail, keep using fallbacks or existing cache
     } finally {
       setIsQuotesLoading(false);
     }
@@ -380,7 +379,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in" onClick={() => setShowAttendees(false)}>
            <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
               <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                 <h3 className="text-2xl font-black text-slate-950 tracking-tighter">רשימת משתתפים</h3>
+                 <h3 className="text-2xl font-black text-slate-950 tracking-tighter">רשימת משתתפים בסשן הקרוב</h3>
                  <button onClick={() => setShowAttendees(false)} className="p-2 bg-white rounded-xl shadow-sm text-slate-400 hover:text-slate-950 transition-colors"><CloseIcon size={20} /></button>
               </div>
               <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
