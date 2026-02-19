@@ -1,345 +1,206 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { 
   Users, 
   Trash2, 
   ShieldAlert, 
-  Mail, 
-  Phone, 
   Search,
   Loader2,
-  X,
   UserCheck,
   UserPlus,
   Palette,
-  Save,
-  UserCog,
-  Calendar,
-  Newspaper,
-  Edit2,
-  Lock,
-  UserX,
-  Archive,
-  RotateCcw,
-  AlertOctagon,
-  Check,
-  Box,
-  Image as ImageIcon,
-  Upload,
-  RefreshCw,
   Layout,
-  UserMinus,
-  CheckCircle2,
-  Info,
-  Facebook,
-  Instagram,
-  Linkedin,
-  Globe,
-  Music,
-  Camera,
-  MessageSquare,
-  Cake,
-  ExternalLink,
+  Archive,
   ShieldCheck,
-  UserCircle,
-  Activity
+  Pencil,
+  X,
+  Save,
+  Camera,
+  Key,
+  Instagram,
+  Facebook,
+  Linkedin,
+  Music,
+  Globe
 } from 'lucide-react';
-import { Member, JoinRequest, Event, NewsItem } from '../types';
+import { useData } from '../contexts/DataContext';
+import { Member } from '../types';
 
-interface AdminPageProps {
-  user: Member;
-  members: Member[];
-  onDeleteMember: (id: string) => Promise<void>;
-  onPermanentDeleteMember: (id: string) => Promise<void>;
-  onResetPassword: (id: string) => Promise<void>;
-  onToggleRole: (id: string) => Promise<void>;
-  onToggleStatus: (id: string) => Promise<void>;
-  onUpdateMember: (member: Member) => Promise<void>;
-  joinRequests: JoinRequest[];
-  onApproveRequest: (id: string) => Promise<{ name: string; mobile: string; tempPassword: string } | null>;
-  onRejectRequest: (id: string) => Promise<void>;
-  siteAssets: { 
-    clubLogo?: string; 
-    atalefLogo?: string; 
-    habalZugLogo?: string;
-    heroBg?: string; 
-    loginBg?: string;
-  };
-  events: Event[];
-  news: NewsItem[];
-  onDeleteEvent: (id: string) => Promise<void>;
-  onDeleteNews: (id: string) => Promise<void>;
-}
+const XLogo = ({ size = 16 }: { size?: number }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932 6.064-6.932zm-1.292 19.494h2.039L6.486 3.24H4.298l13.311 17.407z" />
+  </svg>
+);
 
-const AdminPage: React.FC<AdminPageProps> = ({ 
-  members, 
-  onDeleteMember, 
-  onPermanentDeleteMember,
-  onToggleStatus,
-  onToggleRole,
-  onUpdateMember,
-  joinRequests,
-  onApproveRequest,
-  onRejectRequest,
-  siteAssets,
-  events,
-  news,
-  onDeleteEvent,
-  onDeleteNews
-}) => {
-  const [activeTab, setActiveTab] = useState<'MEMBERS' | 'REQUESTS' | 'EVENTS' | 'NEWS' | 'SITE' | 'ARCHIVE'>('MEMBERS');
+const AdminPage: React.FC = () => {
+  const { 
+    members, joinRequests, siteAssets,
+    updateMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest
+  } = useData();
+
+  const [activeTab, setActiveTab] = useState<'MEMBERS' | 'REQUESTS' | 'SITE' | 'ARCHIVE'>('MEMBERS');
   const [searchTerm, setSearchTerm] = useState('');
-  const [isProcessingId, setIsProcessingId] = useState<string | null>(null);
-
-  const formatDate = (dateValue?: string) => {
-    if (!dateValue) return '---';
-    const d = new Date(dateValue);
-    if (isNaN(d.getTime())) return dateValue;
-    return d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  };
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const filteredMembers = members.filter(m => {
-    const matchesSearch = (m.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (m.email || "").toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.email.toLowerCase().includes(searchTerm.toLowerCase());
     if (activeTab === 'MEMBERS') return matchesSearch && m.isActive !== false;
     if (activeTab === 'ARCHIVE') return matchesSearch && m.isActive === false;
     return matchesSearch;
   });
 
-  const handleToggle = async (id: string, toggleFn: (id: string) => Promise<void>) => {
-    setIsProcessingId(id);
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+    setIsSaving(true);
     try {
-      await toggleFn(id);
+      await updateMember(editingMember);
+      setEditingMember(null);
+    } catch (err) {
+      alert('שגיאה בעדכון');
     } finally {
-      setIsProcessingId(null);
+      setIsSaving(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen bg-white text-right" dir="rtl">
-      <div className="max-w-7xl mx-auto space-y-12 pb-20 pt-8">
-        
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+    <div className="relative min-h-screen bg-white text-right space-y-12 pb-20 pt-8" dir="rtl">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-end mb-12">
           <div>
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950 text-white text-[10px] font-black uppercase tracking-widest mb-4 shadow-xl">
-              <ShieldAlert size={12} className="text-rose-400" />
-              מרכז שליטה מנהל
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white text-[10px] font-black rounded-full mb-4">
+              <ShieldAlert size={12} className="text-rose-400" /> מנהל מערכת
             </div>
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-2">ניהול חברים</h2>
-            <p className="text-slate-500 font-bold text-lg">עריכה, ניהול סטטוסים ותפקידים של חברי הנבחרת.</p>
+            <h2 className="text-5xl font-black text-slate-900 tracking-tighter">ניהול חברי הנבחרת</h2>
           </div>
-          
-          <div className="flex bg-slate-100 p-2 rounded-[2.5rem] border border-slate-200 flex-wrap gap-1">
-            {[
-              { id: 'MEMBERS', label: 'חברים פעילים', icon: Users },
-              { id: 'ARCHIVE', label: 'ארכיון', icon: Archive },
-              { id: 'REQUESTS', label: 'בקשות הצטרפות', icon: UserPlus },
-              { id: 'SITE', label: 'נכסי אתר', icon: Layout }
-            ].map((tab) => (
+          <div className="flex bg-slate-100 p-2 rounded-full gap-1">
+            {['MEMBERS', 'ARCHIVE', 'REQUESTS', 'SITE'].map(tab => (
               <button 
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`px-6 py-3.5 rounded-full font-black text-xs transition-all flex items-center gap-2.5 ${activeTab === tab.id ? 'bg-white text-slate-900 shadow-xl border border-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
+                key={tab} 
+                onClick={() => setActiveTab(tab as any)}
+                className={`px-6 py-3 rounded-full font-black text-xs transition-all ${activeTab === tab ? 'bg-white shadow-xl text-slate-900' : 'text-slate-400'}`}
               >
-                <tab.icon size={16} />
-                <span>{tab.label}</span>
+                {tab === 'MEMBERS' ? 'פעילים' : tab === 'ARCHIVE' ? 'ארכיון' : tab === 'REQUESTS' ? 'בקשות' : 'אתר'}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Table View for Members */}
-        {(activeTab === 'MEMBERS' || activeTab === 'ARCHIVE') && (
-          <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="relative group">
-              <Search className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-slate-950 transition-colors" size={24} />
-              <input 
-                type="text" 
-                placeholder="חפש חבר לפי שם או אימייל..." 
-                className="w-full pr-20 pl-10 py-6 bg-slate-50 border border-slate-100 rounded-[3rem] focus:bg-white outline-none transition-all font-black text-slate-950 shadow-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+        <div className="relative mb-8">
+           <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300" />
+           <input 
+             type="text" 
+             placeholder="חיפוש חבר..." 
+             className="w-full pr-16 pl-6 py-6 bg-slate-50 rounded-[2.5rem] border-none font-black focus:ring-2 ring-slate-200"
+             value={searchTerm}
+             onChange={e => setSearchTerm(e.target.value)}
+           />
+        </div>
 
-            <div className="bg-white rounded-[3.5rem] border border-slate-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-right min-w-[1000px]">
-                    <thead>
-                      <tr className="bg-slate-50/50 border-b border-slate-100">
-                        <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">חבר נבחרת וניהול סטטוס</th>
-                        <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">מידע נוסף</th>
-                        <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">הצטרפות</th>
-                        <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">פעולות</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {filteredMembers.map((m) => (
-                        <tr key={m.id} className="hover:bg-slate-50/20 transition-colors group/row">
-                          <td className="px-10 py-10">
-                            <div className="flex items-start gap-8">
-                              <div className="relative shrink-0">
-                                <img src={m.avatar} className={`w-20 h-20 rounded-[2rem] object-cover border-4 ${!m.isActive ? 'grayscale opacity-30 border-slate-200' : 'border-white shadow-xl'}`} alt="" />
-                                {isProcessingId === m.id && (
-                                  <div className="absolute inset-0 bg-white/60 rounded-[2rem] flex items-center justify-center backdrop-blur-[1px]">
-                                    <Loader2 className="animate-spin text-slate-950" size={24} />
-                                  </div>
-                                )}
-                              </div>
-                              <div className="space-y-6">
-                                <div>
-                                  <div className="flex items-center gap-3 mb-1">
-                                    <p className={`font-black text-2xl leading-tight ${!m.isActive ? 'text-slate-400' : 'text-slate-900'}`}>{m.name}</p>
-                                    {m.role === 'Admin' && <ShieldCheck size={18} className="text-indigo-600" />}
-                                  </div>
-                                  <p className="text-slate-400 font-bold text-sm tracking-tight">{m.email}</p>
-                                </div>
-                                
-                                {/* --- Rolling Toggles Area --- */}
-                                <div className="flex items-center gap-12 bg-white/50 backdrop-blur-sm p-5 rounded-[2.5rem] border border-slate-100 shadow-sm w-fit">
-                                  
-                                  {/* Active/Suspended Toggle */}
-                                  <div className="flex flex-col items-center gap-2">
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">סטטוס משתמש</span>
-                                    <div className="scale-[0.35] origin-top">
-                                      <input 
-                                        type="checkbox" 
-                                        id={`toggle-active-${m.id}`} 
-                                        className="rolling-toggle-checkbox" 
-                                        checked={m.isActive !== false}
-                                        onChange={() => handleToggle(m.id, onToggleStatus)}
-                                      />
-                                      <div className="rolling-toggle-bg">
-                                        <label htmlFor={`toggle-active-${m.id}`} className="rolling-toggle-ball"></label>
-                                      </div>
-                                    </div>
-                                    <span className={`text-[10px] font-black uppercase tracking-widest ${m.isActive !== false ? 'text-emerald-500' : 'text-slate-400'}`}>
-                                      {m.isActive !== false ? 'פעיל' : 'מושעה'}
-                                    </span>
-                                  </div>
-
-                                  {/* Admin/Member Toggle */}
-                                  <div className="flex flex-col items-center gap-2">
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">סוג הרשאה</span>
-                                    <div className="scale-[0.35] origin-top">
-                                      <input 
-                                        type="checkbox" 
-                                        id={`toggle-role-${m.id}`} 
-                                        className="rolling-toggle-checkbox" 
-                                        checked={m.role === 'Admin'}
-                                        onChange={() => handleToggle(m.id, onToggleRole)}
-                                      />
-                                      <div className="rolling-toggle-bg">
-                                        <label htmlFor={`toggle-role-${m.id}`} className="rolling-toggle-ball"></label>
-                                      </div>
-                                    </div>
-                                    <span className={`text-[10px] font-black uppercase tracking-widest ${m.role === 'Admin' ? 'text-indigo-600' : 'text-slate-500'}`}>
-                                      {m.role === 'Admin' ? 'מנהל' : 'חבר'}
-                                    </span>
-                                  </div>
-
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-10 py-10 text-center">
-                            <div className="flex flex-col items-center gap-1">
-                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">סך סשנים</p>
-                               <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-900 text-xl shadow-inner">
-                                 {m.totalAttendance || 0}
-                               </div>
-                            </div>
-                          </td>
-                          <td className="px-10 py-10 text-center text-slate-500 font-black text-sm">
-                             <div className="flex flex-col items-center gap-1">
-                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">תאריך</p>
-                               <span>{formatDate(m.joinedAt)}</span>
+        <div className="bg-white rounded-[3rem] border border-slate-100 overflow-hidden shadow-sm">
+           <table className="w-full text-right">
+              <thead className="bg-slate-50">
+                 <tr>
+                    <th className="px-10 py-6 font-black text-xs text-slate-400 uppercase tracking-widest">חבר</th>
+                    <th className="px-10 py-6 font-black text-xs text-slate-400 uppercase tracking-widest text-center">סטטוס</th>
+                    <th className="px-10 py-6 font-black text-xs text-slate-400 uppercase tracking-widest text-left">פעולות</th>
+                 </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                 {filteredMembers.map(m => (
+                    <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
+                       <td className="px-10 py-8">
+                          <div className="flex items-center gap-4">
+                             <img src={m.avatar} className="w-14 h-14 rounded-2xl object-cover" alt="" />
+                             <div>
+                                <p className="font-black text-xl text-slate-900">{m.name}</p>
+                                <p className="text-slate-400 font-bold text-xs">{m.email}</p>
                              </div>
-                          </td>
-                          <td className="px-10 py-10">
-                            <div className="flex items-center justify-end gap-4">
-                               <button 
-                                 onClick={() => onPermanentDeleteMember(m.id)} 
-                                 className="w-12 h-12 flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all rounded-2xl border border-transparent hover:border-rose-100"
-                                 title="מחיקה סופית"
-                               >
-                                 <Trash2 size={20} />
-                               </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'REQUESTS' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in">
-            {joinRequests.length > 0 ? joinRequests.map(req => (
-              <div key={req.id} className="bg-white p-10 rounded-[4rem] border border-slate-100 shadow-xl flex flex-col justify-between hover:shadow-2xl transition-all">
-                <div className="flex items-center gap-6 mb-10">
-                  <img src={req.avatar} className="w-24 h-24 rounded-[2.5rem] object-cover border-4 border-slate-50 shadow-md" alt="" />
-                  <div>
-                    <h4 className="text-2xl font-black text-slate-900 leading-tight mb-1">{req.name}</h4>
-                    <p className="text-slate-400 font-bold text-xs">{req.email}</p>
-                    <p className="text-slate-400 font-bold text-xs">{req.mobile}</p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <button onClick={() => onApproveRequest(req.id)} className="flex-1 py-5 bg-slate-950 text-white rounded-[1.5rem] font-black text-sm hover:bg-emerald-600 transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95">
-                    <UserCheck size={18} /> אישור
-                  </button>
-                  <button onClick={() => onRejectRequest(req.id)} className="flex-1 py-5 bg-slate-50 text-slate-400 rounded-[1.5rem] font-black text-sm hover:bg-rose-50 hover:text-rose-600 transition-all active:scale-95">
-                    דחייה
-                  </button>
-                </div>
-              </div>
-            )) : (
-              <div className="col-span-full py-40 text-center bg-white rounded-[4rem] border-2 border-dashed border-slate-100 flex flex-col items-center">
-                <UserPlus size={48} className="text-slate-200 mb-6" />
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight">אין בקשות חדשות</h3>
-                <p className="text-slate-400 font-bold">כל הבקשות טופלו בהצלחה.</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'SITE' && (
-           <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-xl">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-14 h-14 bg-indigo-50 rounded-[1.5rem] flex items-center justify-center text-indigo-600 shadow-sm">
-                  <Palette size={28} />
-                </div>
-                <div>
-                  <h3 className="text-3xl font-black text-slate-900 tracking-tight">נכסי ויזואליה</h3>
-                  <p className="text-slate-500 font-bold">ניהול הלוגואים והרקעים של מערכת חבל זוג.</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mt-12">
-                {['heroBg', 'loginBg', 'habalZugLogo', 'atalefLogo', 'clubLogo'].map(assetKey => (
-                  <div key={assetKey} className="space-y-4 group">
-                    <div className="flex justify-between items-center px-4">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{assetKey}</p>
-                    </div>
-                    <div className="aspect-video rounded-[2.5rem] bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden relative shadow-inner group-hover:border-indigo-100 transition-colors">
-                       {siteAssets[assetKey as keyof typeof siteAssets] ? (
-                         <img src={siteAssets[assetKey as keyof typeof siteAssets]} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" alt="" />
-                       ) : (
-                         <ImageIcon size={40} className="text-slate-200" />
-                       )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-           </div>
-        )}
-
+                          </div>
+                       </td>
+                       <td className="px-10 py-8 text-center">
+                          <div className="flex flex-col items-center gap-3">
+                             <input 
+                               type="checkbox" 
+                               className="rolling-toggle-checkbox" 
+                               checked={m.isActive !== false} 
+                               onChange={() => toggleStatus(m.id)} 
+                               id={`t-stat-${m.id}`}
+                             />
+                             <div className="scale-[0.3] rolling-toggle-bg">
+                                <label htmlFor={`t-stat-${m.id}`} className="rolling-toggle-ball"></label>
+                             </div>
+                             <span className={`text-[10px] font-black uppercase ${m.isActive !== false ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                {m.isActive !== false ? 'פעיל' : 'מושעה'}
+                             </span>
+                          </div>
+                       </td>
+                       <td className="px-10 py-8">
+                          <div className="flex justify-end gap-2">
+                             <button onClick={() => setEditingMember(m)} className="p-3 text-slate-400 hover:text-indigo-600 bg-slate-50 rounded-xl transition-all"><Pencil size={18} /></button>
+                             <button onClick={() => resetPassword(m.id)} className="p-3 text-slate-400 hover:text-rose-500 bg-slate-50 rounded-xl transition-all"><Key size={18} /></button>
+                          </div>
+                       </td>
+                    </tr>
+                 ))}
+              </tbody>
+           </table>
+        </div>
       </div>
+
+      {editingMember && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-md animate-in fade-in">
+           <div className="bg-white w-full max-w-4xl rounded-[4rem] shadow-2xl p-14 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+              <button onClick={() => setEditingMember(null)} className="absolute top-8 left-8 p-3 bg-slate-50 rounded-full text-slate-400 hover:text-slate-950 transition-colors"><X size={24} /></button>
+              <h3 className="text-3xl font-black mb-10">עריכת פרטי חבר</h3>
+              <form onSubmit={handleUpdateSubmit} className="space-y-8">
+                <div className="flex flex-col items-center gap-6 mb-12">
+                   <div className="relative">
+                      <img src={editingMember.avatar} className="w-40 h-40 rounded-[3rem] object-cover border-8 border-slate-50 shadow-xl" alt="" />
+                      <label className="absolute -bottom-2 -left-2 p-3 bg-slate-950 text-white rounded-xl cursor-pointer">
+                        <Camera size={20} />
+                        <input type="file" className="hidden" accept="image/*" onChange={e => {
+                           const file = e.target.files?.[0];
+                           if (file) {
+                             const reader = new FileReader();
+                             reader.onload = (ev) => setEditingMember({...editingMember, avatar: ev.target?.result as string});
+                             reader.readAsDataURL(file);
+                           }
+                        }} />
+                      </label>
+                   </div>
+                   <div className="flex gap-12 bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100">
+                      <div className="flex flex-col items-center gap-2">
+                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סטטוס משתמש</span>
+                         <input type="checkbox" className="rolling-toggle-checkbox" checked={editingMember.isActive !== false} onChange={() => setEditingMember({...editingMember, isActive: !editingMember.isActive})} id="m-stat" />
+                         <div className="scale-[0.4] rolling-toggle-bg"><label htmlFor="m-stat" className="rolling-toggle-ball"></label></div>
+                      </div>
+                      <div className="flex flex-col items-center gap-2">
+                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">הרשאת ניהול</span>
+                         <input type="checkbox" className="rolling-toggle-checkbox" checked={editingMember.role === 'Admin'} onChange={() => setEditingMember({...editingMember, role: editingMember.role === 'Admin' ? 'Member' : 'Admin'})} id="m-role" />
+                         <div className="scale-[0.4] rolling-toggle-bg"><label htmlFor="m-role" className="rolling-toggle-ball"></label></div>
+                      </div>
+                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-8">
+                   <div className="space-y-4">
+                      <input type="text" value={editingMember.name} onChange={e => setEditingMember({...editingMember, name: e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-none" placeholder="שם מלא" />
+                      <input type="email" value={editingMember.email} onChange={e => setEditingMember({...editingMember, email: e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-none" placeholder="אימייל" />
+                      <input type="tel" value={editingMember.mobile} onChange={e => setEditingMember({...editingMember, mobile: e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-none" placeholder="טלפון נייד" />
+                   </div>
+                   <div className="space-y-4">
+                      <div className="flex items-center gap-3 p-5 bg-slate-50 rounded-2xl"><Instagram size={18} className="text-rose-500"/><input type="text" value={editingMember.instagramUrl || ''} onChange={e => setEditingMember({...editingMember, instagramUrl: e.target.value})} className="bg-transparent w-full font-bold outline-none" placeholder="Instagram" /></div>
+                      <div className="flex items-center gap-3 p-5 bg-slate-50 rounded-2xl"><Facebook size={18} className="text-blue-600"/><input type="text" value={editingMember.facebookUrl || ''} onChange={e => setEditingMember({...editingMember, facebookUrl: e.target.value})} className="bg-transparent w-full font-bold outline-none" placeholder="Facebook" /></div>
+                      <div className="flex items-center gap-3 p-5 bg-slate-50 rounded-2xl"><Globe size={18} className="text-indigo-600"/><input type="text" value={editingMember.websiteUrl || ''} onChange={e => setEditingMember({...editingMember, websiteUrl: e.target.value})} className="bg-transparent w-full font-bold outline-none" placeholder="Website" /></div>
+                   </div>
+                </div>
+                <button type="submit" disabled={isSaving} className="w-full py-6 bg-slate-950 text-white rounded-[2rem] font-black text-xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-4">
+                   {isSaving ? <Loader2 className="animate-spin" /> : <Save />} שמירת שינויים
+                </button>
+              </form>
+           </div>
+        </div>
+      )}
     </div>
   );
 };

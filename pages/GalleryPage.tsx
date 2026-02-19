@@ -1,23 +1,21 @@
-
 import React, { useState, useRef } from 'react';
 import { collection, addDoc, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Plus, Sparkles, User, Loader2, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Plus, Sparkles, User, Loader2, Trash2, Image as ImageIcon, Camera, X } from 'lucide-react';
 import { db, storage } from '../services/firebase';
-import { GalleryItem, Member } from '../types';
 import { analyzeImage } from '../services/geminiService';
+import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 
-interface GalleryPageProps {
-  user: Member;
-  galleryItems: GalleryItem[];
-  setGalleryItems: React.Dispatch<React.SetStateAction<GalleryItem[]>>;
-}
-
-const GalleryPage: React.FC<GalleryPageProps> = ({ user, galleryItems }) => {
+const GalleryPage: React.FC = () => {
+  const { currentUser } = useAuth();
+  const { galleryItems } = useData();
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!currentUser) return;
     const files = Array.from(e.target.files || []) as File[];
     if (files.length === 0) return;
 
@@ -35,8 +33,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ user, galleryItems }) => {
 
           await addDoc(collection(db, 'gallery'), {
             imageUrl: downloadUrl,
-            uploaderId: user.id,
-            uploaderName: user.name,
+            uploaderId: currentUser.id,
+            uploaderName: currentUser.name,
             caption: "רגע קהילתי משותף",
             timestamp: serverTimestamp(),
             aiDescription: aiDescription
@@ -51,83 +49,73 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ user, galleryItems }) => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const deleteItem = async (id: string) => {
+  const handleDelete = async (itemId: string) => {
     if (window.confirm('האם למחוק תמונה זו?')) {
-      await deleteDoc(doc(db, 'gallery', id));
+      try {
+        await deleteDoc(doc(db, 'gallery', itemId));
+      } catch (err) {
+        console.error("Delete failed:", err);
+      }
     }
   };
 
   return (
-    <div className="relative min-h-screen -m-6 p-6 md:-m-12 md:p-12 overflow-hidden bg-white text-right">
-      <div className="relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-700">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-          <div>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-widest mb-3 border border-indigo-100">
-              <Sparkles size={12} className="text-indigo-500" />
-              גלריה חכמה - Firebase & Gemini
-            </div>
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight">זכרונות מהגלים</h2>
-          </div>
-          
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="group relative flex items-center gap-4 px-10 py-5 bg-slate-950 text-white rounded-[2rem] font-black text-md hover:bg-black transition-all shadow-2xl disabled:opacity-50"
-          >
-            {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} />}
-            <span>{isUploading ? 'מעלה תמונות...' : 'העלאת תמונה'}</span>
-          </button>
-          <input type="file" ref={fileInputRef} accept="image/*" multiple className="hidden" onChange={handleFileUpload} />
+    <div className="min-h-screen bg-white text-right animate-in fade-in duration-700" dir="rtl">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div>
+          <h2 className="text-5xl font-black italic tracking-tighter text-slate-900 mb-2">גלריית הנבחרת</h2>
+          <p className="text-slate-500 font-black text-[11px] uppercase tracking-widest">רגעים שנתפסו בעדשה • {galleryItems.length} תמונות</p>
         </div>
-
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
-          {galleryItems.map((item) => (
-            <div key={item.id} className="break-inside-avoid group bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden relative">
-              <div className="relative">
-                <img src={item.imageUrl} alt={item.caption} className="w-full h-auto object-cover transition-all duration-1000 group-hover:scale-105" />
-                {user.id === item.uploaderId && (
-                  <button onClick={() => deleteItem(item.id)} className="absolute top-6 left-6 p-3 bg-red-500 text-white rounded-2xl opacity-0 group-hover:opacity-100 transition-all">
-                    <Trash2 size={18} />
-                  </button>
-                )}
-              </div>
-
-              <div className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
-                    <User size={18} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-slate-950 text-sm truncate">{item.uploaderName}</p>
-                  </div>
-                </div>
-
-                <h4 className="text-xl font-black text-slate-950 mb-3 tracking-tight group-hover:text-indigo-600 transition-colors">
-                  {item.caption}
-                </h4>
-                
-                {item.aiDescription && (
-                  <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-100">
-                    <p className="text-slate-500 font-medium text-[13px] leading-relaxed italic pr-4 border-r-2 border-indigo-500/30">
-                      {item.aiDescription}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {galleryItems.length === 0 && !isUploading && (
-          <div className="py-40 text-center flex flex-col items-center">
-             <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8 text-slate-200">
-                <ImageIcon size={48} />
-             </div>
-             <h3 className="text-3xl font-black text-slate-900 tracking-tight">הגלריה ריקה</h3>
-             <p className="text-slate-400 mt-2 font-medium text-lg">שתפו את התמונה הראשונה והתחילו את הסיפור.</p>
-          </div>
-        )}
+        
+        <button 
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          className="flex items-center gap-4 px-10 py-5 bg-slate-950 text-white rounded-[2rem] font-black text-md hover:bg-indigo-600 transition-all shadow-xl active:scale-95 disabled:opacity-50 group"
+        >
+          {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform" />}
+          <span>{isUploading ? 'מעלה תמונות...' : 'העלאת תמונות'}</span>
+          <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileUpload} />
+        </button>
       </div>
+
+      <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-6 space-y-6">
+        {galleryItems.map((item) => (
+          <div 
+            key={item.id} 
+            className="relative group rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 break-inside-avoid cursor-zoom-in"
+            onClick={() => setSelectedImage(item.imageUrl)}
+          >
+            <img src={item.imageUrl} className="w-full object-cover" alt={item.uploaderName} />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-8 flex flex-col justify-end">
+               <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white"><User size={14} /></div>
+                  <p className="text-white font-black text-xs">{item.uploaderName}</p>
+               </div>
+               <p className="text-white/80 text-[10px] font-bold leading-relaxed pr-2 border-r-2 border-indigo-500">{item.aiDescription || 'רגע של גלישה...'}</p>
+               {(currentUser?.role === 'Admin' || currentUser?.id === item.uploaderId) && (
+                 <button 
+                   onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
+                   className="absolute top-6 left-6 p-3 bg-rose-500 text-white rounded-2xl hover:bg-rose-600 transition-all shadow-lg active:scale-90"
+                 >
+                   <Trash2 size={16} />
+                 </button>
+               )}
+            </div>
+            {item.aiDescription && (
+              <div className="absolute top-4 right-4 p-2 bg-indigo-600 text-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all">
+                <Sparkles size={14} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {selectedImage && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-12 bg-slate-950/90 backdrop-blur-xl animate-in fade-in" onClick={() => setSelectedImage(null)}>
+           <button className="absolute top-8 left-8 p-4 text-white hover:text-indigo-400 transition-colors bg-white/10 rounded-2xl"><X size={32} /></button>
+           <img src={selectedImage} className="max-w-full max-h-full rounded-[2rem] shadow-2xl animate-in zoom-in-95" alt="Large view" />
+        </div>
+      )}
     </div>
   );
 };
