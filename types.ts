@@ -42,6 +42,7 @@ export interface JoinRequest {
 export interface GalleryItem {
   id: string;
   imageUrl: string;
+  storagePath?: string; // Critical for reliable storage deletion
   uploaderId: string;
   uploaderName: string;
   caption: string;
@@ -71,6 +72,18 @@ export interface NewsItem {
   authorId?: string;
   authorName?: string;
   authorAvatar?: string;
+}
+
+export interface GlossaryTerm {
+  id: string;
+  term: string;
+  definition: string;
+}
+
+export interface QuoteItem {
+  id: string;
+  text: string;
+  author: string;
 }
 
 export interface AuthState {

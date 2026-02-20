@@ -1,23 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { 
-  ShieldCheck, 
-  Zap, 
-  BarChart3, 
-  TrendingUp, 
-  Users2, 
-  Filter, 
-  Activity,
-  History,
-  PieChart,
-  Loader2,
-  Trophy,
-  RefreshCw,
-  CalendarDays,
-  Clock,
-  Calendar
-} from 'lucide-react';
+import { ShieldCheck, Zap, BarChart3, TrendingUp, Users2, Filter, Activity, History, PieChart, Loader2, Trophy, RefreshCw, CalendarDays, Clock, Calendar } from 'lucide-react';
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { getDb } from '../services/firebase';
 import { Member, Event } from '../types';
 import { Chart, registerables } from 'chart.js';
 
@@ -44,24 +28,25 @@ const AdminInfoPage: React.FC = () => {
   const userEventsChartRef = useRef<HTMLCanvasElement>(null);
   const weeklyAttendanceChartRef = useRef<HTMLCanvasElement>(null);
   
-  // Instance tracking to prevent "Canvas already in use"
   const chartInstances = useRef<{ [key: string]: Chart | null }>({});
 
   useEffect(() => {
-    const unsubMembers = onSnapshot(collection(db, 'members'), (snapshot) => {
-      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member));
+    const db = getDb();
+    
+    const unsubMembers = onSnapshot(collection(db, 'members'), (snapshot: any) => {
+      const data = snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() } as Member));
       setMembers(data);
       setLoading(false);
     });
 
-    const unsubEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
-      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event));
+    const unsubEvents = onSnapshot(collection(db, 'events'), (snapshot: any) => {
+      const data = snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() } as Event));
       setEvents(data);
     });
 
     const qWeekly = query(collection(db, 'weekly_stats'), orderBy('date', 'asc'));
-    const unsubWeekly = onSnapshot(qWeekly, (snapshot) => {
-      const data = snapshot.docs.map(d => d.data() as WeeklyStat);
+    const unsubWeekly = onSnapshot(qWeekly, (snapshot: any) => {
+      const data = snapshot.docs.map((d: any) => d.data() as WeeklyStat);
       setWeeklyStats(data);
     });
 
@@ -144,7 +129,6 @@ const AdminInfoPage: React.FC = () => {
       .sort((a, b) => b.count - a.count)
       .slice(0, showTop10 ? 10 : 20);
 
-    // 1. Cumulative Sessions Chart (This uses totalAttendance which increases after session reset)
     renderChart('sessions', sessionsChartRef, {
       type: 'bar',
       data: {
@@ -159,7 +143,6 @@ const AdminInfoPage: React.FC = () => {
       options: { ...commonOptions, indexAxis: 'y' }
     });
 
-    // 2. Events segmentation
     renderChart('segmentation', eventsChartRef, {
       type: 'doughnut',
       data: {
@@ -183,7 +166,6 @@ const AdminInfoPage: React.FC = () => {
       }
     });
 
-    // 3. Weekly Logins
     renderChart('logins', loginsChartRef, {
       type: 'bar',
       data: {
@@ -198,7 +180,6 @@ const AdminInfoPage: React.FC = () => {
       options: commonOptions
     });
 
-    // 4. Daily Logins
     renderChart('daily', dailyLoginsChartRef, {
       type: 'line',
       data: {
@@ -216,7 +197,6 @@ const AdminInfoPage: React.FC = () => {
       options: commonOptions
     });
 
-    // 5. Annual Logins
     renderChart('annual', annualLoginsChartRef, {
       type: 'bar',
       data: {
@@ -231,7 +211,6 @@ const AdminInfoPage: React.FC = () => {
       options: commonOptions
     });
 
-    // 6. User Events
     renderChart('userEvents', userEventsChartRef, {
       type: 'bar',
       data: {
@@ -246,7 +225,6 @@ const AdminInfoPage: React.FC = () => {
       options: commonOptions
     });
 
-    // 7. Weekly Attendance History (Uses archived weekly_stats)
     if (weeklyStats.length > 0) {
       renderChart('weeklyAttendance', weeklyAttendanceChartRef, {
         type: 'line',
@@ -298,7 +276,6 @@ const AdminInfoPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 text-right pb-20" dir="rtl">
       <div className="max-w-7xl mx-auto px-4 md:px-0 pt-10">
         
-        {/* Header */}
         <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white p-10 rounded-[3.5rem] shadow-sm border border-slate-100">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest mb-4">
@@ -317,7 +294,6 @@ const AdminInfoPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
            {summaryCards.map((card, i) => (
              <div key={i} className="p-10 bg-white border border-slate-100 rounded-[3rem] shadow-sm hover:shadow-xl transition-all group">
@@ -332,7 +308,6 @@ const AdminInfoPage: React.FC = () => {
            ))}
         </div>
 
-        {/* Weekly Historical Attendance */}
         <div className="mb-12">
            <div className="bg-white p-12 border border-slate-100 rounded-[4rem] shadow-sm flex flex-col h-[550px]">
               <div className="flex items-center justify-between mb-12">
@@ -343,12 +318,6 @@ const AdminInfoPage: React.FC = () => {
                     <div>
                        <h3 className="text-3xl font-black text-slate-900 tracking-tight">היסטוריית השתתפות שבועית</h3>
                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">מעקב נוכחות ב"יום חמישי הגדול" לאורך זמן</p>
-                    </div>
-                 </div>
-                 <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                       <div className="w-3 h-3 bg-indigo-600 rounded-full"></div>
-                       <span className="text-xs font-black text-slate-500">גולשים בסשן</span>
                     </div>
                  </div>
               </div>
@@ -365,7 +334,6 @@ const AdminInfoPage: React.FC = () => {
            </div>
         </div>
 
-        {/* Cumulative Participation in Sessions */}
         <div className="mb-12">
            <div className="bg-white p-12 border border-slate-100 rounded-[4rem] shadow-sm flex flex-col h-[550px]">
               <div className="flex items-center gap-3 mb-10">
@@ -379,7 +347,6 @@ const AdminInfoPage: React.FC = () => {
            </div>
         </div>
 
-        {/* Annual Trend (Full Width) */}
         <div className="mb-12">
            <div className="bg-white p-12 border border-slate-100 rounded-[4rem] shadow-sm flex flex-col h-[500px]">
               <div className="flex items-center gap-4 mb-10">
@@ -397,7 +364,6 @@ const AdminInfoPage: React.FC = () => {
            </div>
         </div>
 
-        {/* Remaining Charts Row 1 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
            <div className="bg-white p-12 border border-slate-100 rounded-[3.5rem] shadow-sm flex flex-col h-[500px]">
               <div className="flex items-center gap-3 mb-10">
@@ -419,7 +385,6 @@ const AdminInfoPage: React.FC = () => {
            </div>
         </div>
 
-        {/* Remaining Charts Row 2 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
            <div className="bg-white p-12 border border-slate-100 rounded-[3.5rem] shadow-sm flex flex-col h-[550px]">
               <div className="flex items-center gap-3 mb-10">
@@ -441,7 +406,6 @@ const AdminInfoPage: React.FC = () => {
            </div>
         </div>
 
-        {/* Summary Insights */}
         <div className="grid grid-cols-1 gap-10">
            <div className="bg-slate-900 p-12 text-white rounded-[3.5rem] flex flex-col justify-center relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>

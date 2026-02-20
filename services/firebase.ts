@@ -1,8 +1,6 @@
-
-import { initializeApp, getApp, getApps } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { getAnalytics, isSupported } from 'firebase/analytics';
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCzzpZyz8rBhtnskhbkXB7_dTfHgXLPHfs",
@@ -14,20 +12,25 @@ const firebaseConfig = {
   measurementId: "G-6KKFY0N55H"
 };
 
-// Singleton pattern for app initialization
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+// Ensure app is initialized exactly once
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Analytics safely in the browser context
-if (typeof window !== "undefined") {
-  isSupported().then(supported => {
-    if (supported) {
-      getAnalytics(app);
-    }
-  }).catch(err => console.warn("Firebase Analytics not supported in this environment"));
-}
+// Safe getter pattern for Firestore
+let dbInstance: any = null;
+export const getDb = () => {
+  if (!dbInstance) {
+    dbInstance = getFirestore(app);
+  }
+  return dbInstance;
+};
 
-// Export services strictly tied to the initialized app instance
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+// Safe getter pattern for Storage
+let storageInstance: any = null;
+export const getStorageInstance = () => {
+  if (!storageInstance) {
+    storageInstance = getStorage(app);
+  }
+  return storageInstance;
+};
 
 export default app;

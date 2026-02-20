@@ -1,66 +1,82 @@
+
 import React, { useState } from 'react';
 import { 
-  Users, 
-  Trash2, 
   ShieldAlert, 
   Search,
   Loader2,
-  UserCheck,
-  UserPlus,
-  Palette,
-  Layout,
-  Archive,
-  ShieldCheck,
-  Pencil,
+  Check,
   X,
-  Save,
-  Camera,
-  Key,
-  Instagram,
-  Facebook,
-  Linkedin,
-  Music,
-  Globe
+  UserCheck,
+  UserX,
+  Mail,
+  Phone,
+  Calendar,
+  ExternalLink,
+  MapPin,
+  CheckCircle2,
+  Copy,
+  RotateCcw,
+  MessageCircle,
+  Trash2
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
-import { Member } from '../types';
-
-const XLogo = ({ size = 16 }: { size?: number }) => (
-  <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932 6.064-6.932zm-1.292 19.494h2.039L6.486 3.24H4.298l13.311 17.407z" />
-  </svg>
-);
+import { JoinRequest } from '../types';
 
 const AdminPage: React.FC = () => {
   const { 
-    members, joinRequests, siteAssets,
-    updateMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest
+    joinRequests, siteAssets, approveRequest, rejectRequest 
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'MEMBERS' | 'REQUESTS' | 'SITE' | 'ARCHIVE'>('MEMBERS');
+  const [activeTab, setActiveTab] = useState<'REQUESTS' | 'SITE'>('REQUESTS');
   const [searchTerm, setSearchTerm] = useState('');
-  const [editingMember, setEditingMember] = useState<Member | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const [approvedUser, setApprovedUser] = useState<{ name: string; mobile: string; tempPassword: string } | null>(null);
 
-  const filteredMembers = members.filter(m => {
-    const matchesSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.email.toLowerCase().includes(searchTerm.toLowerCase());
-    if (activeTab === 'MEMBERS') return matchesSearch && m.isActive !== false;
-    if (activeTab === 'ARCHIVE') return matchesSearch && m.isActive === false;
-    return matchesSearch;
-  });
+  const filteredRequests = joinRequests.filter(req => 
+    req.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    req.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const handleUpdateSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingMember) return;
-    setIsSaving(true);
+  const handleApprove = async (id: string) => {
+    if (!window.confirm('האם לאשר את הצטרפות החבר/ה לנבחרת?')) return;
+    setIsProcessing(id);
     try {
-      await updateMember(editingMember);
-      setEditingMember(null);
+      const result = await approveRequest(id);
+      if (result) {
+        setApprovedUser(result);
+      } else {
+        alert('הבקשה כבר אינה קיימת או שאושרה על ידי מנהל אחר.');
+      }
     } catch (err) {
-      alert('שגיאה בעדכון');
+      console.error(err);
+      alert('שגיאה בתהליך האישור. בדוק את החיבור לאינטרנט.');
     } finally {
-      setIsSaving(false);
+      setIsProcessing(null);
     }
+  };
+
+  const handleReject = async (id: string) => {
+    if (!window.confirm('האם למחוק את בקשת ההצטרפות? כל הנתונים ימחקו לצמיתות מהמערכת.')) return;
+    setIsProcessing(id);
+    try {
+      await rejectRequest(id);
+    } catch (err) {
+      console.error(err);
+      alert('שגיאה במחיקת הבקשה.');
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  const formatWhatsAppMessage = (name: string, tempPass: string) => {
+    return `שלום ${name} , ברוך הבא לקהילת חבל זוג! \n\nחשבונך אושר בהצלחה. סיסמת הגישה הזמנית שלך היא: ${tempPass}\n\nמומלץ להיכנס בהקדם ולשנות את הסיסמה בפרופיל האישי.\nנתראה במים!`;
+  };
+
+  const openWhatsApp = (mobile: string, name: string, tempPass: string) => {
+    const cleanMobile = mobile.replace(/\D/g, '');
+    const finalMobile = cleanMobile.startsWith('0') ? '972' + cleanMobile.substring(1) : cleanMobile;
+    const message = encodeURIComponent(formatWhatsAppMessage(name, tempPass));
+    window.open(`https://wa.me/${finalMobile}?text=${message}`, '_blank');
   };
 
   return (
@@ -71,133 +87,181 @@ const AdminPage: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white text-[10px] font-black rounded-full mb-4">
               <ShieldAlert size={12} className="text-rose-400" /> מנהל מערכת
             </div>
-            <h2 className="text-5xl font-black text-slate-900 tracking-tighter">ניהול חברי הנבחרת</h2>
+            <h2 className="text-5xl font-black text-slate-900 tracking-tighter">ניהול בקשות הצטרפות</h2>
           </div>
           <div className="flex bg-slate-100 p-2 rounded-full gap-1">
-            {['MEMBERS', 'ARCHIVE', 'REQUESTS', 'SITE'].map(tab => (
-              <button 
-                key={tab} 
-                onClick={() => setActiveTab(tab as any)}
-                className={`px-6 py-3 rounded-full font-black text-xs transition-all ${activeTab === tab ? 'bg-white shadow-xl text-slate-900' : 'text-slate-400'}`}
-              >
-                {tab === 'MEMBERS' ? 'פעילים' : tab === 'ARCHIVE' ? 'ארכיון' : tab === 'REQUESTS' ? 'בקשות' : 'אתר'}
-              </button>
-            ))}
+            <button 
+              onClick={() => setActiveTab('REQUESTS')}
+              className={`px-8 py-3 rounded-full font-black text-xs transition-all ${activeTab === 'REQUESTS' ? 'bg-white shadow-xl text-slate-900' : 'text-slate-400'}`}
+            >
+              בקשות הצטרפות ({joinRequests.length})
+            </button>
+            <button 
+              onClick={() => setActiveTab('SITE')}
+              className={`px-8 py-3 rounded-full font-black text-xs transition-all ${activeTab === 'SITE' ? 'bg-white shadow-xl text-slate-900' : 'text-slate-400'}`}
+            >
+              הגדרות אתר
+            </button>
           </div>
         </div>
 
-        <div className="relative mb-8">
-           <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300" />
-           <input 
-             type="text" 
-             placeholder="חיפוש חבר..." 
-             className="w-full pr-16 pl-6 py-6 bg-slate-50 rounded-[2.5rem] border-none font-black focus:ring-2 ring-slate-200"
-             value={searchTerm}
-             onChange={e => setSearchTerm(e.target.value)}
-           />
-        </div>
+        {activeTab === 'REQUESTS' ? (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            <div className="relative">
+               <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300" />
+               <input 
+                 type="text" 
+                 placeholder="חיפוש לפי שם או אימייל..." 
+                 className="w-full pr-16 pl-6 py-6 bg-slate-50 rounded-[2.5rem] border-none font-black focus:ring-2 ring-slate-200 shadow-sm"
+                 value={searchTerm}
+                 onChange={e => setSearchTerm(e.target.value)}
+               />
+            </div>
 
-        <div className="bg-white rounded-[3rem] border border-slate-100 overflow-hidden shadow-sm">
-           <table className="w-full text-right">
-              <thead className="bg-slate-50">
-                 <tr>
-                    <th className="px-10 py-6 font-black text-xs text-slate-400 uppercase tracking-widest">חבר</th>
-                    <th className="px-10 py-6 font-black text-xs text-slate-400 uppercase tracking-widest text-center">סטטוס</th>
-                    <th className="px-10 py-6 font-black text-xs text-slate-400 uppercase tracking-widest text-left">פעולות</th>
-                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                 {filteredMembers.map(m => (
-                    <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
-                       <td className="px-10 py-8">
-                          <div className="flex items-center gap-4">
-                             <img src={m.avatar} className="w-14 h-14 rounded-2xl object-cover" alt="" />
-                             <div>
-                                <p className="font-black text-xl text-slate-900">{m.name}</p>
-                                <p className="text-slate-400 font-bold text-xs">{m.email}</p>
-                             </div>
+            {filteredRequests.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredRequests.map(req => (
+                  <div key={req.id} className={`bg-white border border-slate-100 rounded-[3rem] p-8 shadow-sm hover:shadow-xl transition-all group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <div className="flex items-start gap-5 mb-8">
+                       <img src={req.avatar} className="w-16 h-16 rounded-2xl object-cover shadow-md" alt="" />
+                       <div>
+                          <h4 className="text-xl font-black text-slate-900 mb-1">{req.name}</h4>
+                          <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+                             <Calendar size={12} />
+                             {new Date(req.requestedAt).toLocaleDateString('he-IL')}
                           </div>
-                       </td>
-                       <td className="px-10 py-8 text-center">
-                          <div className="flex flex-col items-center gap-3">
-                             <input 
-                               type="checkbox" 
-                               className="rolling-toggle-checkbox" 
-                               checked={m.isActive !== false} 
-                               onChange={() => toggleStatus(m.id)} 
-                               id={`t-stat-${m.id}`}
-                             />
-                             <div className="scale-[0.3] rolling-toggle-bg">
-                                <label htmlFor={`t-stat-${m.id}`} className="rolling-toggle-ball"></label>
-                             </div>
-                             <span className={`text-[10px] font-black uppercase ${m.isActive !== false ? 'text-emerald-500' : 'text-rose-500'}`}>
-                                {m.isActive !== false ? 'פעיל' : 'מושעה'}
-                             </span>
-                          </div>
-                       </td>
-                       <td className="px-10 py-8">
-                          <div className="flex justify-end gap-2">
-                             <button onClick={() => setEditingMember(m)} className="p-3 text-slate-400 hover:text-indigo-600 bg-slate-50 rounded-xl transition-all"><Pencil size={18} /></button>
-                             <button onClick={() => resetPassword(m.id)} className="p-3 text-slate-400 hover:text-rose-500 bg-slate-50 rounded-xl transition-all"><Key size={18} /></button>
-                          </div>
-                       </td>
-                    </tr>
-                 ))}
-              </tbody>
-           </table>
-        </div>
+                       </div>
+                    </div>
+
+                    <div className="space-y-4 flex-1">
+                       <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                          <Mail size={14} className="text-slate-400" />
+                          <span className="text-xs font-black truncate">{req.email}</span>
+                       </div>
+                       <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                          <Phone size={14} className="text-slate-400" />
+                          <span className="text-xs font-black">{req.mobile}</span>
+                       </div>
+                       <div className="flex items-center gap-3 p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                          <MapPin size={14} />
+                          <span className="text-xs font-black">{(req as any).group || 'הרצליה'}</span>
+                       </div>
+                    </div>
+
+                    <div className="flex gap-3 mt-10">
+                       <button 
+                         onClick={() => handleApprove(req.id)}
+                         disabled={isProcessing === req.id}
+                         className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black text-sm hover:bg-emerald-600 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                       >
+                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={18} /> : <UserCheck size={18} />}
+                         אשר הצטרפות
+                       </button>
+                       <button 
+                         onClick={() => handleReject(req.id)}
+                         disabled={isProcessing === req.id}
+                         className="p-4 bg-slate-50 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all disabled:opacity-50 flex items-center justify-center"
+                         title="מחק בקשה"
+                       >
+                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
+                       </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-32 text-center border-2 border-dashed border-slate-100 rounded-[4rem]">
+                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-200">
+                    <UserCheck size={40} />
+                 </div>
+                 <h3 className="text-2xl font-black text-slate-400">אין בקשות הצטרפות ממתינות</h3>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="animate-in fade-in slide-in-from-bottom-4 bg-white border border-slate-100 rounded-[4rem] p-12 shadow-sm">
+             <div className="flex items-center gap-4 mb-10">
+                <div className="p-4 bg-slate-900 text-white rounded-2xl shadow-lg"><RotateCcw size={24} /></div>
+                <div>
+                   <h3 className="text-2xl font-black text-slate-900">הגדרות ונכסי אתר</h3>
+                   <p className="text-slate-400 font-bold">צפייה בנכסים הוויזואליים של המערכת</p>
+                </div>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {Object.entries(siteAssets || {}).map(([key, value]: [string, any]) => (
+                   <div key={key} className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex items-center justify-between group">
+                      <div className="flex items-center gap-4">
+                         <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-slate-400 font-black text-[10px] uppercase shadow-sm">{key.slice(0, 2)}</div>
+                         <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{key}</p>
+                            <p className="text-xs font-bold text-slate-900 truncate max-w-[200px]">{typeof value === 'string' ? value : 'נתון מורכב'}</p>
+                         </div>
+                      </div>
+                      <button className="p-2 text-slate-300 hover:text-slate-950 opacity-0 group-hover:opacity-100 transition-all"><ExternalLink size={16} /></button>
+                   </div>
+                ))}
+             </div>
+          </div>
+        )}
       </div>
 
-      {editingMember && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-md animate-in fade-in">
-           <div className="bg-white w-full max-w-4xl rounded-[4rem] shadow-2xl p-14 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
-              <button onClick={() => setEditingMember(null)} className="absolute top-8 left-8 p-3 bg-slate-50 rounded-full text-slate-400 hover:text-slate-950 transition-colors"><X size={24} /></button>
-              <h3 className="text-3xl font-black mb-10">עריכת פרטי חבר</h3>
-              <form onSubmit={handleUpdateSubmit} className="space-y-8">
-                <div className="flex flex-col items-center gap-6 mb-12">
-                   <div className="relative">
-                      <img src={editingMember.avatar} className="w-40 h-40 rounded-[3rem] object-cover border-8 border-slate-50 shadow-xl" alt="" />
-                      <label className="absolute -bottom-2 -left-2 p-3 bg-slate-950 text-white rounded-xl cursor-pointer">
-                        <Camera size={20} />
-                        <input type="file" className="hidden" accept="image/*" onChange={e => {
-                           const file = e.target.files?.[0];
-                           if (file) {
-                             const reader = new FileReader();
-                             reader.onload = (ev) => setEditingMember({...editingMember, avatar: ev.target?.result as string});
-                             reader.readAsDataURL(file);
-                           }
-                        }} />
-                      </label>
-                   </div>
-                   <div className="flex gap-12 bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100">
-                      <div className="flex flex-col items-center gap-2">
-                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סטטוס משתמש</span>
-                         <input type="checkbox" className="rolling-toggle-checkbox" checked={editingMember.isActive !== false} onChange={() => setEditingMember({...editingMember, isActive: !editingMember.isActive})} id="m-stat" />
-                         <div className="scale-[0.4] rolling-toggle-bg"><label htmlFor="m-stat" className="rolling-toggle-ball"></label></div>
-                      </div>
-                      <div className="flex flex-col items-center gap-2">
-                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">הרשאת ניהול</span>
-                         <input type="checkbox" className="rolling-toggle-checkbox" checked={editingMember.role === 'Admin'} onChange={() => setEditingMember({...editingMember, role: editingMember.role === 'Admin' ? 'Member' : 'Admin'})} id="m-role" />
-                         <div className="scale-[0.4] rolling-toggle-bg"><label htmlFor="m-role" className="rolling-toggle-ball"></label></div>
-                      </div>
-                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-8">
-                   <div className="space-y-4">
-                      <input type="text" value={editingMember.name} onChange={e => setEditingMember({...editingMember, name: e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-none" placeholder="שם מלא" />
-                      <input type="email" value={editingMember.email} onChange={e => setEditingMember({...editingMember, email: e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-none" placeholder="אימייל" />
-                      <input type="tel" value={editingMember.mobile} onChange={e => setEditingMember({...editingMember, mobile: e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-none" placeholder="טלפון נייד" />
-                   </div>
-                   <div className="space-y-4">
-                      <div className="flex items-center gap-3 p-5 bg-slate-50 rounded-2xl"><Instagram size={18} className="text-rose-500"/><input type="text" value={editingMember.instagramUrl || ''} onChange={e => setEditingMember({...editingMember, instagramUrl: e.target.value})} className="bg-transparent w-full font-bold outline-none" placeholder="Instagram" /></div>
-                      <div className="flex items-center gap-3 p-5 bg-slate-50 rounded-2xl"><Facebook size={18} className="text-blue-600"/><input type="text" value={editingMember.facebookUrl || ''} onChange={e => setEditingMember({...editingMember, facebookUrl: e.target.value})} className="bg-transparent w-full font-bold outline-none" placeholder="Facebook" /></div>
-                      <div className="flex items-center gap-3 p-5 bg-slate-50 rounded-2xl"><Globe size={18} className="text-indigo-600"/><input type="text" value={editingMember.websiteUrl || ''} onChange={e => setEditingMember({...editingMember, websiteUrl: e.target.value})} className="bg-transparent w-full font-bold outline-none" placeholder="Website" /></div>
-                   </div>
-                </div>
-                <button type="submit" disabled={isSaving} className="w-full py-6 bg-slate-950 text-white rounded-[2rem] font-black text-xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-4">
-                   {isSaving ? <Loader2 className="animate-spin" /> : <Save />} שמירת שינויים
-                </button>
-              </form>
+      {/* Success Modal for Approved Member */}
+      {approvedUser && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in">
+           <div className="bg-white w-full max-w-md rounded-[3.5rem] shadow-2xl p-10 md:p-14 text-center animate-in zoom-in-95 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+              
+              <div className="w-20 h-20 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-emerald-100">
+                 <CheckCircle2 size={40} />
+              </div>
+              
+              <h3 className="text-3xl font-black text-slate-900 mb-4">חבר/ה חדש/ה בנבחרת!</h3>
+              <p className="text-slate-500 font-bold text-lg mb-10 leading-relaxed">
+                הבקשה של <span className="text-emerald-600">{approvedUser.name}</span> אושרה.
+                נא לשלוח לו/ה את פרטי הגישה:
+              </p>
+              
+              <div className="bg-slate-50 rounded-[2rem] p-8 mb-6 border border-slate-100 relative group">
+                 <div className="space-y-4">
+                    <div className="flex justify-between items-center text-right">
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">טלפון</span>
+                       <span className="font-black text-slate-900">{approvedUser.mobile}</span>
+                    </div>
+                    <div className="h-px bg-slate-200"></div>
+                    <div className="flex justify-between items-center text-right">
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סיסמה זמנית</span>
+                       <span className="font-black text-emerald-600 text-xl tracking-wider select-all">{approvedUser.tempPassword}</span>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 mb-10">
+                 <button 
+                   onClick={() => openWhatsApp(approvedUser.mobile, approvedUser.name, approvedUser.tempPassword)}
+                   className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black text-sm shadow-lg hover:bg-emerald-600 transition-all flex items-center justify-center gap-3"
+                 >
+                   <MessageCircle size={20} />
+                   שלח בוואטסאפ
+                 </button>
+                 <button 
+                   onClick={() => {
+                     navigator.clipboard.writeText(formatWhatsAppMessage(approvedUser.name, approvedUser.tempPassword));
+                     alert('הודעת ההצטרפות הועתקה ללוח');
+                   }}
+                   className="w-full py-4 bg-slate-100 text-slate-900 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all flex items-center justify-center gap-3"
+                 >
+                   <Copy size={18} />
+                   העתק הודעה ללוח
+                 </button>
+              </div>
+              
+              <button 
+                onClick={() => setApprovedUser(null)} 
+                className="w-full py-5 bg-slate-950 text-white rounded-[2rem] font-black text-lg shadow-xl hover:bg-slate-800 transition-all"
+              >
+                סגור פאנל
+              </button>
            </div>
         </div>
       )}

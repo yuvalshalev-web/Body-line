@@ -1,3 +1,4 @@
+
 import React, { useState, lazy, Suspense, useCallback } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
@@ -91,7 +92,7 @@ const App: React.FC = () => {
 
   const navItems = [
     { path: '/', icon: Home, label: 'דף הבית' },
-    { path: '/directory', icon: Users, label: 'ספר חברים' },
+    { path: '/directory', icon: Users, label: 'נבחרת הכוכבים' },
     { path: '/gallery', icon: ImageIcon, label: 'גלריית תמונות' },
     { path: '/events', icon: Calendar, label: 'אירועים קרובים' },
     { path: '/posts', icon: Newspaper, label: 'פוסטים ועדכונים' },

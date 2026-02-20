@@ -1,17 +1,22 @@
 import React, { useState, useRef } from 'react';
 import { collection, addDoc, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Plus, Sparkles, User, Loader2, Trash2, Image as ImageIcon, Camera, X } from 'lucide-react';
-import { db, storage } from '../services/firebase';
-import { analyzeImage } from '../services/geminiService';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { Plus, User, Loader2, Trash2, X, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { getDb, getStorageInstance } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { processImage } from '../utils/imageProcessor';
+import { GalleryItem } from '../types';
 
 const GalleryPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { galleryItems } = useData();
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,42 +25,98 @@ const GalleryPage: React.FC = () => {
     if (files.length === 0) return;
 
     setIsUploading(true);
-    for (const file of files) {
+    setErrorMsg(null);
+    setUploadProgress(0);
+    
+    const stepsPerFile = 2;
+    const totalSteps = files.length * stepsPerFile;
+    let completedSteps = 0;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileIndexText = files.length > 1 ? `(${i + 1}/${files.length})` : '';
+      
       try {
-        const storageRef = ref(storage, `gallery/${Date.now()}_${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
+        setUploadStatus(`מבצע אופטימיזציה ${fileIndexText}...`);
+        const { blob } = await processImage(file, 1200, 0.85);
+        completedSteps++;
+        setUploadProgress(Math.round((completedSteps / totalSteps) * 100));
+
+        setUploadStatus(`מעלה לענן ${fileIndexText}...`);
+        const fileName = `gallery_${Date.now()}_${Math.random().toString(36).substring(7)}.webp`;
+        const storagePath = `gallery/${fileName}`;
+        const storageRef = ref(getStorageInstance(), storagePath);
+        
+        const snapshot = await uploadBytes(storageRef, blob);
         const downloadUrl = await getDownloadURL(snapshot.ref);
+        
+        await addDoc(collection(getDb(), 'gallery'), {
+          imageUrl: downloadUrl,
+          storagePath: storagePath, 
+          uploaderId: currentUser.id,
+          uploaderName: currentUser.name,
+          caption: "רגע מהמים",
+          timestamp: serverTimestamp()
+        });
 
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const base64 = event.target?.result as string;
-          const aiDescription = await analyzeImage(base64);
-
-          await addDoc(collection(db, 'gallery'), {
-            imageUrl: downloadUrl,
-            uploaderId: currentUser.id,
-            uploaderName: currentUser.name,
-            caption: "רגע קהילתי משותף",
-            timestamp: serverTimestamp(),
-            aiDescription: aiDescription
-          });
-        };
-        reader.readAsDataURL(file);
-      } catch (err) {
-        console.error("Upload failed:", err);
+        completedSteps++;
+        setUploadProgress(Math.round((completedSteps / totalSteps) * 100));
+      } catch (err: any) {
+        console.error("Upload failed:", file.name, err);
+        setErrorMsg(err.message || `שגיאה בהעלאת ${file.name}`);
       }
     }
-    setIsUploading(false);
+
+    if (!errorMsg) {
+      setUploadStatus('העלאה הושלמה בהצלחה!');
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadProgress(0);
+        setUploadStatus('');
+      }, 1500);
+    } else {
+      setTimeout(() => {
+        setIsUploading(false);
+        setErrorMsg(null);
+      }, 5000);
+    }
+
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleDelete = async (itemId: string) => {
-    if (window.confirm('האם למחוק תמונה זו?')) {
-      try {
-        await deleteDoc(doc(db, 'gallery', itemId));
-      } catch (err) {
-        console.error("Delete failed:", err);
+  const handleDelete = async (item: GalleryItem) => {
+    const confirmDelete = window.confirm(
+      'האם למחוק תמונה זו לצמיתות?\nהקובץ יוסר גם מהשרת וגם מהאפליקציה.'
+    );
+    if (!confirmDelete) return;
+    
+    setDeletingId(item.id);
+    try {
+      const db = getDb();
+      const storage = getStorageInstance();
+      
+      await deleteDoc(doc(db, 'gallery', item.id));
+      console.log("Firestore document deleted");
+
+      const storageIdentifier = item.storagePath || item.imageUrl;
+      if (storageIdentifier) {
+        try {
+          const imageRef = ref(storage, storageIdentifier);
+          await deleteObject(imageRef);
+          console.log("Storage file deleted");
+        } catch (storageErr: any) {
+          if (storageErr.code === 'storage/object-not-found') {
+            console.warn("File already missing from storage");
+          } else {
+            console.error("Storage deletion failed:", storageErr);
+          }
+        }
       }
+    } catch (err: any) {
+      console.error("Delete sequence failed:", err);
+      alert(err.message || 'המחיקה נכשלה. נסה שנית מאוחר יותר.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -64,56 +125,102 @@ const GalleryPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
           <h2 className="text-5xl font-black italic tracking-tighter text-slate-900 mb-2">גלריית הנבחרת</h2>
-          <p className="text-slate-500 font-black text-[11px] uppercase tracking-widest">רגעים שנתפסו בעדשה • {galleryItems.length} תמונות</p>
+          <p className="text-slate-500 font-black text-[11px] uppercase tracking-widest">
+            רגעים מהמים • {galleryItems.length} תמונות אופטימליות
+          </p>
         </div>
         
-        <button 
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-          className="flex items-center gap-4 px-10 py-5 bg-slate-950 text-white rounded-[2rem] font-black text-md hover:bg-indigo-600 transition-all shadow-xl active:scale-95 disabled:opacity-50 group"
-        >
-          {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform" />}
-          <span>{isUploading ? 'מעלה תמונות...' : 'העלאת תמונות'}</span>
-          <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileUpload} />
-        </button>
+        <div className="flex flex-col items-end gap-3">
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="flex items-center gap-4 px-10 py-5 bg-slate-950 text-white rounded-[2rem] font-black text-md hover:bg-emerald-600 transition-all shadow-xl active:scale-95 disabled:opacity-50 group"
+          >
+            {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform" />}
+            <span>{isUploading ? 'מעבד תמונות...' : 'העלאת תמונות'}</span>
+            <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileUpload} />
+          </button>
+        </div>
       </div>
+
+      {isUploading && (
+        <div className={`mb-12 rounded-[2.5rem] p-8 border animate-in slide-in-from-top-4 ${errorMsg ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100'}`}>
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-3">
+              {errorMsg ? (
+                <AlertTriangle className="text-rose-500" size={24} />
+              ) : uploadProgress === 100 ? (
+                <CheckCircle2 className="text-emerald-500 animate-bounce" size={24} />
+              ) : (
+                <Loader2 className="animate-spin text-indigo-500" size={24} />
+              )}
+              <span className={`font-black ${errorMsg ? 'text-rose-700' : 'text-slate-900'}`}>
+                {errorMsg || uploadStatus}
+              </span>
+            </div>
+            <span className="font-black text-slate-400 text-sm">{uploadProgress}%</span>
+          </div>
+          <div className="w-full h-4 bg-slate-200 rounded-full overflow-hidden shadow-inner">
+            <div 
+              className={`h-full transition-all duration-500 ease-out ${errorMsg ? 'bg-rose-500' : 'bg-gradient-to-r from-emerald-500 to-indigo-500'}`}
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
 
       <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-6 space-y-6">
         {galleryItems.map((item) => (
           <div 
             key={item.id} 
-            className="relative group rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 break-inside-avoid cursor-zoom-in"
+            className={`relative group rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 break-inside-avoid cursor-zoom-in ${deletingId === item.id ? 'opacity-30' : ''}`}
             onClick={() => setSelectedImage(item.imageUrl)}
           >
-            <img src={item.imageUrl} className="w-full object-cover" alt={item.uploaderName} />
+            <img 
+              src={item.imageUrl} 
+              className="w-full object-cover" 
+              alt={item.uploaderName} 
+              loading="lazy" 
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-8 flex flex-col justify-end">
-               <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white"><User size={14} /></div>
+               <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
+                    <User size={14} />
+                  </div>
                   <p className="text-white font-black text-xs">{item.uploaderName}</p>
                </div>
-               <p className="text-white/80 text-[10px] font-bold leading-relaxed pr-2 border-r-2 border-indigo-500">{item.aiDescription || 'רגע של גלישה...'}</p>
+               
                {(currentUser?.role === 'Admin' || currentUser?.id === item.uploaderId) && (
                  <button 
-                   onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                   className="absolute top-6 left-6 p-3 bg-rose-500 text-white rounded-2xl hover:bg-rose-600 transition-all shadow-lg active:scale-90"
+                   onClick={(e) => { 
+                     e.stopPropagation(); 
+                     handleDelete(item); 
+                   }}
+                   disabled={deletingId === item.id}
+                   className="absolute top-6 left-6 p-3 bg-rose-500 text-white rounded-2xl hover:bg-rose-600 transition-all shadow-lg active:scale-90 z-20 disabled:opacity-50"
+                   title="מחיקת תמונה"
                  >
-                   <Trash2 size={16} />
+                   {deletingId === item.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                  </button>
                )}
             </div>
-            {item.aiDescription && (
-              <div className="absolute top-4 right-4 p-2 bg-indigo-600 text-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all">
-                <Sparkles size={14} />
-              </div>
-            )}
           </div>
         ))}
       </div>
 
       {selectedImage && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-12 bg-slate-950/90 backdrop-blur-xl animate-in fade-in" onClick={() => setSelectedImage(null)}>
-           <button className="absolute top-8 left-8 p-4 text-white hover:text-indigo-400 transition-colors bg-white/10 rounded-2xl"><X size={32} /></button>
-           <img src={selectedImage} className="max-w-full max-h-full rounded-[2rem] shadow-2xl animate-in zoom-in-95" alt="Large view" />
+        <div 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-12 bg-slate-950/90 backdrop-blur-xl animate-in fade-in" 
+          onClick={() => setSelectedImage(null)}
+        >
+           <button className="absolute top-8 left-8 p-4 text-white hover:text-indigo-400 transition-colors bg-white/10 rounded-2xl">
+             <X size={32} />
+           </button>
+           <img 
+             src={selectedImage} 
+             className="max-w-full max-h-full rounded-[2rem] shadow-2xl animate-in zoom-in-95" 
+             alt="Large view" 
+           />
         </div>
       )}
     </div>
