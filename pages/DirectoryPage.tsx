@@ -17,7 +17,8 @@ import {
   Calendar,
   Cake,
   Phone,
-  UserCircle
+  UserCircle,
+  Users
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useData } from '../contexts/DataContext';
@@ -83,21 +84,30 @@ const DirectoryPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white text-right" dir="rtl">
-      <div className="mb-12 space-y-2">
-        <h2 className="text-6xl font-black italic tracking-tighter text-slate-900">נבחרת הכוכבים</h2>
-        <p className="text-slate-500 font-black text-[11px] uppercase tracking-widest flex items-center gap-2">
-          <MapPin size={12} className="text-indigo-500" />
-          הרצליה פיתוח • {activeMembers.length} חברי קהילה פעילים
-        </p>
+      <div className="mb-20 space-y-4">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="h-1 w-12 bg-[#006994]"></div>
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#006994]">The Elite Squad</span>
+        </div>
+        <h2 className="text-7xl md:text-8xl font-black italic tracking-tighter text-slate-900 leading-none">נבחרת הכוכבים</h2>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-4">
+          <p className="text-slate-500 font-bold text-lg max-w-2xl">
+            האנשים שעושים את חבל זוג למה שהיא - קהילה של חברים שנפגשים במים
+          </p>
+          <div className="flex items-center gap-3 px-6 py-3 bg-slate-50 rounded-full border border-slate-100">
+            <Users size={18} className="text-[#006994]" />
+            <span className="text-sm font-black text-slate-900">{activeMembers.length} חברים פעילים</span>
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-12">
+      <div className="flex flex-col md:flex-row gap-6 mb-16">
         <div className="flex-1 relative group">
-           <Search className="absolute right-5 top-1/2 -translate-y-1/2 opacity-30 group-focus-within:opacity-100 transition-opacity" size={20} />
+           <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#006994] transition-colors" size={24} />
            <input 
              type="text" 
              placeholder="חפש חבר בקהילה..." 
-             className="w-full pr-14 pl-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] font-black outline-none focus:bg-white focus:ring-4 ring-indigo-50 transition-all shadow-sm text-base"
+             className="w-full pr-16 pl-8 py-6 bg-slate-50 border-none rounded-[2rem] font-bold outline-none focus:bg-white focus:ring-4 ring-[#006994]/5 transition-all shadow-inner text-lg placeholder:text-slate-300"
              value={searchTerm}
              onChange={e => setSearchTerm(e.target.value)}
            />
@@ -105,174 +115,168 @@ const DirectoryPage: React.FC = () => {
         <div className="relative">
            <button 
              onClick={() => setIsSortOpen(!isSortOpen)}
-             className="w-full md:w-auto h-full px-8 py-5 bg-[#006994] text-white rounded-[1.5rem] font-black text-xs flex items-center justify-between gap-4 hover:bg-[#4E8294] transition-all shadow-xl active:scale-95"
+             className="w-full md:w-auto h-full px-10 py-6 bg-slate-900 text-white rounded-[2rem] font-black text-sm flex items-center justify-between gap-6 hover:bg-black transition-all shadow-xl active:scale-95"
            >
-              <span>מיין לפי</span> <ChevronDown size={14} className={isSortOpen ? 'rotate-180 transition-transform' : ''} />
+              <span className="uppercase tracking-widest">Sort By</span> <ChevronDown size={18} className={isSortOpen ? 'rotate-180 transition-transform' : ''} />
            </button>
            {isSortOpen && (
-             <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                <button onClick={() => {setSortBy('name-asc'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-xs hover:bg-slate-50 transition-colors border-b border-slate-50">שם (א-ת)</button>
-                <button onClick={() => {setSortBy('attendance'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-xs hover:bg-slate-50 transition-colors border-b border-slate-50">הכי פעילים בסשנים</button>
-                <button onClick={() => {setSortBy('newest'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-xs hover:bg-slate-50 transition-colors">מצטרפים חדשים</button>
+             <div className="absolute top-full left-0 right-0 md:left-auto md:w-64 mt-4 bg-white border border-slate-100 rounded-[2rem] shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-4 backdrop-blur-xl bg-white/90">
+                <button onClick={() => {setSortBy('name-asc'); setIsSortOpen(false)}} className="w-full p-6 text-right font-black text-xs hover:bg-[#006994] hover:text-white transition-all border-b border-slate-50">שם (א-ת)</button>
+                <button onClick={() => {setSortBy('attendance'); setIsSortOpen(false)}} className="w-full p-6 text-right font-black text-xs hover:bg-[#006994] hover:text-white transition-all border-b border-slate-50">הכי פעילים בסשנים</button>
+                <button onClick={() => {setSortBy('newest'); setIsSortOpen(false)}} className="w-full p-6 text-right font-black text-xs hover:bg-[#006994] hover:text-white transition-all">מצטרפים חדשים</button>
              </div>
            )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-6">
-        {processedMembers.map(member => (
-          <div key={member.id} className="group cursor-pointer flex flex-col items-center gap-3 animate-in fade-in zoom-in-95 active:scale-95 transition-all" onClick={() => setSelectedMember(member)}>
-            <div className="relative w-full aspect-square rounded-[2rem] overflow-hidden border-2 border-slate-100 group-hover:border-indigo-500 group-hover:shadow-2xl transition-all duration-500">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
+        {processedMembers.map((member, idx) => (
+          <motion.div 
+            key={member.id} 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: idx * 0.02 }}
+            className="group cursor-pointer relative" 
+            onClick={() => setSelectedMember(member)}
+          >
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-slate-100 border border-slate-100 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-1">
                {member.avatar ? (
-                 <img src={member.avatar} className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all duration-700" alt={member.name} />
+                 <img 
+                   src={member.avatar} 
+                   className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" 
+                   alt={member.name} 
+                 />
                ) : (
-                 <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
-                   <UserCircle size={48} />
+                 <div className="w-full h-full flex items-center justify-center text-slate-200">
+                   <UserCircle size={40} strokeWidth={1} />
                  </div>
                )}
-               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-               {member.role === 'Admin' && <div className="absolute top-2 left-2 bg-slate-900/90 text-white px-2 py-0.5 font-black text-[7px] uppercase tracking-widest rounded-md backdrop-blur-sm shadow-sm">ADMIN</div>}
+               
+               {/* Overlay Info - Gallery Style */}
+               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                 <p className="text-white font-black text-[10px] leading-tight truncate">{member.name}</p>
+                 <p className="text-[#00FFFF] font-black text-[7px] uppercase tracking-widest">{member.role}</p>
+               </div>
+
+               {/* Role Indicator Dot */}
+               {member.role === 'Admin' && (
+                 <div className="absolute top-2 left-2 w-2 h-2 bg-[#00FFFF] rounded-full shadow-[0_0_10px_#00FFFF]"></div>
+               )}
             </div>
-            <h3 className="text-xs font-black text-slate-800 text-center truncate w-full group-hover:text-indigo-600 transition-colors px-2">{member.name}</h3>
-          </div>
+          </motion.div>
         ))}
       </div>
 
       {selectedMember && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-md animate-in fade-in" onClick={() => setSelectedMember(null)}>
-           <div className="bg-white w-full max-w-5xl rounded-[4rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 flex flex-col md:flex-row max-h-[92vh]" onClick={e => e.stopPropagation()}>
-              <div className="md:w-[45%] relative aspect-[4/3] md:aspect-auto overflow-hidden bg-slate-100">
-                 {selectedMember.avatar ? (
-                   <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={selectedMember.name} />
-                 ) : (
-                   <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400">
-                     <UserCircle size={80} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-12 bg-slate-950/90 backdrop-blur-xl animate-in fade-in" onClick={() => setSelectedMember(null)}>
+       <motion.div 
+         initial={{ opacity: 0, scale: 0.95, y: 40 }}
+         animate={{ opacity: 1, scale: 1, y: 0 }}
+         className="bg-white w-full max-w-7xl h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[4rem] shadow-2xl overflow-hidden relative flex flex-col md:flex-row" 
+         onClick={e => e.stopPropagation()}
+       >
+          <div className="md:w-[40%] relative h-[40vh] md:h-auto overflow-hidden bg-slate-900">
+             {selectedMember.avatar ? (
+               <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={selectedMember.name} />
+             ) : (
+               <div className="w-full h-full flex items-center justify-center text-slate-800">
+                 <UserCircle size={160} strokeWidth={0.5} />
+               </div>
+             )}
+             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+             <div className="absolute bottom-12 right-12 left-12">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-px w-12 bg-[#00FFFF]"></div>
+                  <span className="text-[10px] font-black text-[#00FFFF] uppercase tracking-[0.4em]">Member Profile</span>
+                </div>
+                <h3 className="text-6xl font-black text-white tracking-tighter leading-none">{selectedMember.name}</h3>
+             </div>
+          </div>
+
+          <div className="flex-1 p-10 md:p-20 overflow-y-auto custom-scrollbar text-right relative">
+            <button onClick={() => setSelectedMember(null)} className="absolute top-10 left-10 p-4 text-slate-400 hover:text-slate-950 transition-all bg-slate-50 hover:bg-slate-100 rounded-full z-10"><X size={32} /></button>
+            
+            <div className="max-w-2xl space-y-16">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Role</p>
+                  <p className="text-lg font-black text-slate-900">{selectedMember.role}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Sessions</p>
+                  <p className="text-lg font-black text-slate-900">{selectedMember.totalAttendance || 0}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Joined</p>
+                  <p className="text-lg font-black text-slate-900">{formatDate(selectedMember.joinedAt)}</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <p className="text-[10px] font-black text-[#006994] uppercase tracking-[0.3em]">About</p>
+                <p className="text-3xl font-bold text-slate-800 leading-tight tracking-tight italic">
+                  "{selectedMember.bio || 'חבר בקהילת הגולשים של חבל זוג. חולק את התשוקה לים ולגלים.'}"
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 flex items-center gap-6 group hover:bg-white hover:shadow-2xl transition-all duration-500">
+                   <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-[#006994] shadow-sm transition-colors"><Phone size={24} /></div>
+                   <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Mobile</p>
+                      <p className="text-xl font-black text-slate-900">{selectedMember.mobile}</p>
                    </div>
-                 )}
-                 <div className="absolute bottom-10 right-10 left-10 p-6 bg-white/20 backdrop-blur-xl rounded-3xl border border-white/30 hidden md:block">
-                    <p className="text-white text-xs font-black uppercase tracking-widest mb-1 opacity-60">הצטרפות לקהילה</p>
-                    <p className="text-white text-xl font-black">{formatDate(selectedMember.joinedAt)}</p>
-                 </div>
-              </div>
-              <div className="flex-1 p-14 md:p-16 overflow-y-auto custom-scrollbar text-right flex flex-col">
-                <button onClick={() => setSelectedMember(null)} className="absolute top-8 left-8 p-4 text-slate-400 hover:text-slate-950 transition-all bg-slate-50 hover:bg-slate-100 rounded-2xl shadow-sm"><X size={28} /></button>
-                
-                <div className="space-y-12 flex-1">
-                  <div>
-                    <div className="flex items-center gap-4 mb-3">
-                       <h3 className="text-6xl font-black text-slate-950 tracking-tighter leading-none">{selectedMember.name}</h3>
-                       {selectedMember.role === 'Admin' && <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black border border-indigo-100 uppercase tracking-widest">ADMIN</div>}
-                    </div>
-                    <div className="flex flex-wrap gap-6 items-center">
-                       <p className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                          <Bird size={16} className="text-indigo-400" /> חבר נבחרת • {selectedMember.totalAttendance || 0} סשנים
-                       </p>
-                       <p className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                          <Calendar size={16} className="text-sky-400" /> הצטרפות: {formatDate(selectedMember.joinedAt)}
-                       </p>
-                       {selectedMember.birthday && (
-                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            <Cake size={16} className="text-rose-400" /> יום הולדת: {formatDate(selectedMember.birthday)}
-                         </p>
-                       )}
-                    </div>
-                  </div>
-                  
-                  <div className="p-10 bg-slate-50 rounded-[3rem] border border-slate-100 relative group">
-                    <div className="absolute -top-3 -right-3 w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg"><Bird size={20} /></div>
-                    <p className="text-xl font-bold text-slate-700 leading-relaxed italic pr-6 border-r-4 border-indigo-200">{selectedMember.bio || 'חבר בקהילת הגולשים של חבל זוג. חולק את התשוקה לים ולגלים.'}</p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-5 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:bg-white hover:shadow-xl transition-all duration-500">
-                       <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-300 group-hover:text-indigo-600 shadow-sm transition-colors"><Phone size={20} /></div>
-                       <div className="text-right">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">מספר טלפון</p>
-                          <p className="text-sm font-black text-slate-900">{selectedMember.mobile}</p>
-                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-5 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:bg-white hover:shadow-xl transition-all duration-500">
-                       <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-300 group-hover:text-indigo-600 shadow-sm transition-colors"><Mail size={20} /></div>
-                       <div className="text-right">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">אימייל</p>
-                          <p className="text-sm font-black text-slate-900 truncate">{selectedMember.email}</p>
-                       </div>
-                    </div>
-
-                    <motion.button 
-                      onClick={() => openWhatsAppModal(selectedMember.name)}
-                      initial={{ scale: 1 }}
-                      animate={{ 
-                        scale: [1, 1.02, 1],
-                        boxShadow: [
-                          "0 4px 0 0 #388E3C, 0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                          "0 4px 0 0 #388E3C, 0 20px 25px -5px rgba(0, 0, 0, 0.2)",
-                          "0 4px 0 0 #388E3C, 0 10px 15px -3px rgba(0, 0, 0, 0.1)"
-                        ]
-                      }}
-                      transition={{ 
-                        duration: 2, 
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                      whileHover={{ 
-                        scale: 1.05,
-                        backgroundColor: "#43A047",
-                        boxShadow: "0 6px 0 0 #2E7D32, 0 25px 30px -5px rgba(0, 0, 0, 0.3)"
-                      }}
-                      whileTap={{ 
-                        scale: 0.98,
-                        y: 4,
-                        boxShadow: "0 0px 0 0 #2E7D32, 0 5px 10px -2px rgba(0, 0, 0, 0.2)"
-                      }}
-                      className="w-full flex items-center justify-center gap-4 py-5 bg-[#4CAF50] rounded-2xl transition-colors shadow-[0_4px_0_0_#388E3C] relative overflow-hidden group"
-                    >
-                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:animate-shimmer"></div>
-                       <WhatsAppIcon className="w-12 h-12 text-white drop-shadow-md" />
-                       <span className="text-white text-3xl font-black tracking-tight drop-shadow-sm">WhatsApp Chat</span>
-                    </motion.button>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-6 pr-4">רשתות חברתיות</h4>
-                    <div className="flex flex-nowrap gap-4 overflow-x-auto pb-2 custom-scrollbar">
-                      {selectedMember.instagramUrl && (
-                        <a href={ensureAbsoluteUrl(selectedMember.instagramUrl)} target="_blank" rel="noopener noreferrer" className="p-5 bg-rose-50 text-rose-600 rounded-3xl hover:bg-rose-500 hover:text-white transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
-                          <Instagram size={28} />
-                        </a>
-                      )}
-                      {selectedMember.facebookUrl && (
-                        <a href={ensureAbsoluteUrl(selectedMember.facebookUrl)} target="_blank" rel="noopener noreferrer" className="p-5 bg-blue-50 text-blue-600 rounded-3xl hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
-                          <Facebook size={28} />
-                        </a>
-                      )}
-                      {selectedMember.tiktokUrl && (
-                        <a href={ensureAbsoluteUrl(selectedMember.tiktokUrl)} target="_blank" rel="noopener noreferrer" className="p-5 bg-slate-900 text-white rounded-3xl hover:bg-black transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
-                          <Music2 size={28} />
-                        </a>
-                      )}
-                      {selectedMember.linkedinUrl && (
-                        <a href={ensureAbsoluteUrl(selectedMember.linkedinUrl)} target="_blank" rel="noopener noreferrer" className="p-5 bg-indigo-50 text-indigo-600 rounded-3xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
-                          <Linkedin size={28} />
-                        </a>
-                      )}
-                      {selectedMember.twitterUrl && (
-                        <a href={ensureAbsoluteUrl(selectedMember.twitterUrl)} target="_blank" rel="noopener noreferrer" className="p-5 bg-sky-50 text-sky-600 rounded-3xl hover:bg-sky-500 hover:text-white transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
-                          <Twitter size={28} />
-                        </a>
-                      )}
-                    </div>
-                  </div>
                 </div>
-
-                <div className="mt-12 pt-8 border-t border-slate-50">
-                   <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest text-center">Habal Zug Member Card • ID: {selectedMember.id.slice(0, 8)}</p>
+                <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 flex items-center gap-6 group hover:bg-white hover:shadow-2xl transition-all duration-500">
+                   <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-[#006994] shadow-sm transition-colors"><Mail size={24} /></div>
+                   <div className="overflow-hidden">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Email</p>
+                      <p className="text-xl font-black text-slate-900 truncate">{selectedMember.email}</p>
+                   </div>
                 </div>
               </div>
-           </div>
-        </div>
-      )}
+
+              <motion.button 
+                onClick={() => openWhatsAppModal(selectedMember.name)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-8 bg-[#25D366] text-white rounded-[2.5rem] font-black text-2xl shadow-2xl flex items-center justify-center gap-6 group relative overflow-hidden"
+              >
+                <WhatsAppIcon className="w-10 h-10" />
+                <span>Open WhatsApp Chat</span>
+                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+              </motion.button>
+
+              <div className="space-y-8">
+                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] text-center">Social Connect</p>
+                <div className="flex justify-center gap-6">
+                  {selectedMember.instagramUrl && (
+                    <a href={ensureAbsoluteUrl(selectedMember.instagramUrl)} target="_blank" rel="noopener noreferrer" className="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all hover:shadow-xl hover:-translate-y-1">
+                      <Instagram size={28} />
+                    </a>
+                  )}
+                  {selectedMember.facebookUrl && (
+                    <a href={ensureAbsoluteUrl(selectedMember.facebookUrl)} target="_blank" rel="noopener noreferrer" className="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all hover:shadow-xl hover:-translate-y-1">
+                      <Facebook size={28} />
+                    </a>
+                  )}
+                  {selectedMember.tiktokUrl && (
+                    <a href={ensureAbsoluteUrl(selectedMember.tiktokUrl)} target="_blank" rel="noopener noreferrer" className="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-black hover:text-white transition-all hover:shadow-xl hover:-translate-y-1">
+                      <Music2 size={28} />
+                    </a>
+                  )}
+                  {selectedMember.linkedinUrl && (
+                    <a href={ensureAbsoluteUrl(selectedMember.linkedinUrl)} target="_blank" rel="noopener noreferrer" className="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-[#006994] hover:text-white transition-all hover:shadow-xl hover:-translate-y-1">
+                      <Linkedin size={28} />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+       </motion.div>
+    </div>
+  )}
       {isWhatsAppModalOpen && selectedMember && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-lg animate-in fade-in" onClick={() => setIsWhatsAppModalOpen(false)}>
           <div className="bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col" onClick={e => e.stopPropagation()}>

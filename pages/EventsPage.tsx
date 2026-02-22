@@ -12,7 +12,8 @@ import {
   CheckCircle2,
   ShieldAlert,
   User,
-  Zap
+  Zap,
+  Info
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -33,7 +34,8 @@ const EventsPage: React.FC = () => {
   const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
   const [imageUrl, setImageUrl] = useState('');
-  const [eventType, setEventType] = useState<'COMMUNITY' | 'MEMBER' | 'INSTRUCTOR'>('MEMBER');
+  const [eventType, setEventType] = useState<'COMMUNITY' | 'MEMBER' | 'INSTRUCTOR' | null>(null);
+  const [showTypeWarning, setShowTypeWarning] = useState(false);
 
   const canManageCommunityEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor';
   const canManageInstructorEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor';
@@ -47,6 +49,10 @@ const EventsPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!eventType) {
+      setShowTypeWarning(true);
+      return;
+    }
     if (!title || !date || !time) return;
     setIsSaving(true);
     try {
@@ -69,7 +75,8 @@ const EventsPage: React.FC = () => {
   };
 
   const resetForm = () => {
-    setTitle(''); setDescription(''); setDate(''); setTime(''); setLocation(''); setImageUrl(''); setEventType('MEMBER');
+    setTitle(''); setDescription(''); setDate(''); setTime(''); setLocation(''); setImageUrl(''); setEventType(null);
+    setShowTypeWarning(false);
   };
 
   const handleDelete = (id: string) => {
@@ -169,13 +176,13 @@ const EventsPage: React.FC = () => {
            <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl p-12 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
              <button onClick={() => setShowModal(false)} className="absolute top-8 left-8 p-3 text-slate-400 bg-slate-50 rounded-full"><X size={24} /></button>
              <h3 className="text-3xl font-black mb-8">יצירת אירוע</h3>
-             <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-4">
                   <label className="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">בחר סוג אירוע</label>
                   <div className="grid grid-cols-3 gap-3">
                     <button 
                       type="button"
-                      onClick={() => setEventType('MEMBER')}
+                      onClick={() => { setEventType('MEMBER'); setShowTypeWarning(false); }}
                       className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group ${
                         eventType === 'MEMBER' 
                           ? 'bg-[#006994] border-[#006994] text-white shadow-xl shadow-[#006994]/20' 
@@ -199,7 +206,7 @@ const EventsPage: React.FC = () => {
 
                     <button 
                       type="button"
-                      onClick={() => setEventType('INSTRUCTOR')}
+                      onClick={() => { setEventType('INSTRUCTOR'); setShowTypeWarning(false); }}
                       className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group ${
                         eventType === 'INSTRUCTOR' 
                           ? 'bg-amber-500 border-amber-500 text-white shadow-xl shadow-amber-500/20' 
@@ -223,7 +230,7 @@ const EventsPage: React.FC = () => {
 
                     <button 
                       type="button"
-                      onClick={() => setEventType('COMMUNITY')}
+                      onClick={() => { setEventType('COMMUNITY'); setShowTypeWarning(false); }}
                       className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group ${
                         eventType === 'COMMUNITY' 
                           ? 'bg-[#006994] border-[#006994] text-white shadow-xl shadow-[#006994]/20' 
@@ -246,6 +253,13 @@ const EventsPage: React.FC = () => {
                     </button>
                   </div>
                   
+                  {showTypeWarning && (
+                    <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-[10px] font-black animate-bounce">
+                      <ShieldAlert size={16} />
+                      <p>נא לבחור את סוג האירוע</p>
+                    </div>
+                  )}
+
                   {eventType === 'COMMUNITY' && !canManageCommunityEvents && (
                     <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-center gap-3 text-orange-700 text-[10px] font-black animate-in slide-in-from-top-2">
                       <ShieldAlert size={16} />
@@ -260,22 +274,32 @@ const EventsPage: React.FC = () => {
                     </div>
                   )}
                 </div>
-               <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="כותרת האירוע" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
-               <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="תיאור האירוע" className="w-full p-5 bg-slate-50 rounded-2xl font-bold outline-none border border-slate-100 h-32 resize-none" />
-               <div className="grid grid-cols-2 gap-4">
-                 <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
-                 <input type="time" required value={time} onChange={e => setTime(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
-               </div>
-               <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
-               <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="כתובת תמונת רקע (URL)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
-               <button 
-                 type="submit" 
-                 disabled={isSaving || (eventType === 'COMMUNITY' && !canManageCommunityEvents) || (eventType === 'INSTRUCTOR' && !canManageInstructorEvents)} 
-                 className="w-full py-5 bg-[#006994] text-white rounded-[2rem] font-black text-xl hover:bg-[#4E8294] transition-all shadow-xl flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-               >
-                  {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="text-[#00FFFF]" />}
-                  צור אירוע חדש
-               </button>
+                <div className="relative group">
+                  {!eventType && (
+                    <div 
+                      className="absolute inset-0 z-10 cursor-pointer" 
+                      onClick={() => setShowTypeWarning(true)}
+                    ></div>
+                  )}
+                  <div className={`space-y-6 transition-opacity ${!eventType ? 'opacity-40' : 'opacity-100'}`}>
+                    <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="כותרת האירוע" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="תיאור האירוע" className="w-full p-5 bg-slate-50 rounded-2xl font-bold outline-none border border-slate-100 h-32 resize-none" />
+                    <div className="grid grid-cols-2 gap-4">
+                      <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                      <input type="time" required value={time} onChange={e => setTime(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                    </div>
+                    <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                    <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="כתובת תמונת רקע (URL)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                  </div>
+                </div>
+                <button 
+                  type="submit" 
+                  disabled={isSaving || !eventType || (eventType === 'COMMUNITY' && !canManageCommunityEvents) || (eventType === 'INSTRUCTOR' && !canManageInstructorEvents)} 
+                  className="w-full py-5 bg-[#006994] text-white rounded-[2rem] font-black text-xl hover:bg-[#4E8294] transition-all shadow-xl flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                   {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="text-[#00FFFF]" />}
+                   צור אירוע חדש
+                </button>
              </form>
            </div>
         </div>
