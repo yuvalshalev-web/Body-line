@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -19,7 +19,10 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 let dbInstance: any = null;
 export const getDb = () => {
   if (!dbInstance) {
-    dbInstance = getFirestore(app);
+    // Use initializeFirestore with long polling to bypass potential WebSocket restrictions
+    dbInstance = initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+    });
   }
   return dbInstance;
 };

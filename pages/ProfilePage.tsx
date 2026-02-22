@@ -16,7 +16,8 @@ import {
   ExternalLink, 
   X,
   AlertCircle,
-  Phone
+  Phone,
+  Cake
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -164,12 +165,14 @@ const ProfilePage: React.FC = () => {
               <div className="w-44 h-44 rounded-[3rem] border-[10px] border-white overflow-hidden shadow-2xl group-hover:scale-[1.02] transition-transform duration-500 bg-slate-100 flex items-center justify-center">
                 {isProcessingImage ? (
                   <Loader2 className="animate-spin text-indigo-500" size={32} />
-                ) : (
+                ) : formData.avatar ? (
                   <img src={formData.avatar} className="w-full h-full object-cover" alt="" loading="lazy" />
+                ) : (
+                  <User size={64} className="text-slate-300" />
                 )}
               </div>
-              <label className="absolute bottom-2 left-2 p-3 bg-slate-900 text-white rounded-2xl cursor-pointer hover:bg-indigo-600 transition-all shadow-xl">
-                <Camera size={20} />
+              <label className="absolute bottom-2 left-2 p-3 bg-[#006994] text-white rounded-2xl cursor-pointer hover:bg-[#4E8294] transition-all shadow-xl">
+                <Camera size={20} className="text-[#00FFFF]" />
                 <input type="file" className="hidden" accept="image/*" onChange={handleAvatarSelect} disabled={isProcessingImage} />
               </label>
             </div>
@@ -202,6 +205,18 @@ const ProfilePage: React.FC = () => {
                       />
                     </div>
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">תאריך יום הולדת</label>
+                    <div className="relative">
+                      <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                      <input 
+                        type="date" 
+                        value={formData.birthday || ''} 
+                        onChange={e => handleFieldChange('birthday', e.target.value)} 
+                        className="w-full pr-14 pl-6 py-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all" 
+                      />
+                    </div>
+                  </div>
                 </div>
               </section>
 
@@ -215,7 +230,6 @@ const ProfilePage: React.FC = () => {
                   <SocialInput label="TikTok" value={formData.tiktokUrl} onChange={(v: string) => handleFieldChange('tiktokUrl', v)} icon={Music2} brandColor="#000000" ensureAbsoluteUrl={ensureAbsoluteUrl} placeholder="קישור לפרופיל טיקטוק" />
                   <SocialInput label="LinkedIn" value={formData.linkedinUrl} onChange={(v: string) => handleFieldChange('linkedinUrl', v)} icon={Linkedin} brandColor="#0A66C2" ensureAbsoluteUrl={ensureAbsoluteUrl} placeholder="קישור לפרופיל לינקדאין" />
                   <SocialInput label="Twitter / X" value={formData.twitterUrl} onChange={(v: string) => handleFieldChange('twitterUrl', v)} icon={Twitter} brandColor="#1DA1F2" ensureAbsoluteUrl={ensureAbsoluteUrl} placeholder="קישור לפרופיל טוויטר" />
-                  <SocialInput label="אתר אישי / פורטפוליו" value={formData.websiteUrl} onChange={(v: string) => handleFieldChange('websiteUrl', v)} icon={Globe} brandColor="#4F46E5" ensureAbsoluteUrl={ensureAbsoluteUrl} placeholder="קישור לאתר שלך" />
                 </div>
               </section>
             </div>
@@ -224,8 +238,8 @@ const ProfilePage: React.FC = () => {
                <div className="sticky top-24 space-y-4">
                   <div className="flex justify-between items-center px-4">
                     <label className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">הסיפור שלי</label>
-                    <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="text-[10px] font-black text-indigo-600 flex items-center gap-1.5 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-all border border-indigo-100">
-                      {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} שדרג ביוגרפיה עם AI
+                    <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="text-[10px] font-black text-[#006994] flex items-center gap-1.5 hover:bg-[#40E0D0]/10 px-3 py-1.5 rounded-lg transition-all border border-[#006994]/10">
+                      {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} className="text-[#00FFFF]" />} שדרג ביוגרפיה עם AI
                     </button>
                   </div>
                   <textarea 
@@ -239,12 +253,12 @@ const ProfilePage: React.FC = () => {
           </div>
 
           <div className="mt-20 flex flex-col items-center gap-4">
-             <button type="submit" disabled={isSaving || !isDirty} className="group relative px-20 py-6 bg-slate-950 text-white rounded-[2.5rem] font-black text-2xl hover:bg-emerald-600 transition-all shadow-2xl shadow-slate-200 disabled:opacity-20 active:scale-95 overflow-hidden">
+             <button type="submit" disabled={isSaving || !isDirty} className="group relative px-20 py-6 bg-[#006994] text-white rounded-[2.5rem] font-black text-2xl hover:bg-[#4E8294] transition-all shadow-2xl shadow-[#006994]/20 disabled:opacity-20 active:scale-95 overflow-hidden">
                <span className="relative z-10 flex items-center gap-4">
-                 {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
+                 {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} className="text-[#00FFFF]" />}
                  שמור שינויים
                </span>
-               <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+               <div className="absolute inset-0 bg-gradient-to-r from-[#006994] to-[#4E8294] opacity-0 group-hover:opacity-100 transition-opacity"></div>
              </button>
           </div>
         </form>

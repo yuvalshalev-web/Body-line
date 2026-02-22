@@ -53,14 +53,23 @@ const NavLink = React.memo(({
 }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-sm transition-all group w-full text-right ${
+    className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-sm transition-all group w-full text-right relative overflow-hidden ${
       isActive 
-        ? 'bg-slate-900 text-white shadow-xl translate-x-1' 
-        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+        ? 'text-white shadow-lg shadow-[#006994]/20 translate-x-1' 
+        : 'text-[#006994] hover:bg-[#40E0D0]/10 hover:text-[#006994]'
     }`}
   >
-    <item.icon size={20} className={isActive ? 'text-indigo-400' : 'opacity-40 group-hover:opacity-100'} />
-    <span>{item.label}</span>
+    {isActive && (
+      <div className="absolute inset-0 bg-gradient-to-r from-[#006994] to-[#4E8294] z-0" />
+    )}
+    <div className="relative z-10 flex items-center gap-4 w-full">
+      <item.icon 
+        size={20} 
+        className={isActive ? 'text-[#00FFFF]' : 'text-[#4E8294] opacity-60 group-hover:opacity-100 group-hover:text-[#40E0D0] transition-colors'} 
+      />
+      <span className="flex-1">{item.label}</span>
+      {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#00FFFF] animate-pulse shadow-[0_0_8px_#00FFFF]" />}
+    </div>
   </button>
 ));
 
@@ -108,14 +117,14 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row-reverse font-['Assistant']" dir="rtl">
       {/* Mobile Header */}
-      <header className="md:hidden bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 sticky top-0 z-[100] shadow-sm">
+      <header className="md:hidden bg-white border-b border-[#006994]/10 h-16 flex items-center justify-between px-6 sticky top-0 z-[100] shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-slate-950 rounded-lg flex items-center justify-center text-white">
-            <Waves size={20} />
+          <div className="w-8 h-8 bg-[#006994] rounded-lg flex items-center justify-center text-white shadow-md">
+            <Waves size={20} className="text-[#00FFFF]" />
           </div>
-          <span className="font-black text-slate-900 tracking-tighter">חבל זוג</span>
+          <span className="font-black text-[#006994] tracking-tighter">חבל זוג</span>
         </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-slate-900">
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-[#006994]">
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </header>
@@ -126,11 +135,19 @@ const App: React.FC = () => {
           <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
           <div className="absolute right-0 top-0 bottom-0 w-72 bg-white shadow-2xl p-6 flex flex-col animate-in slide-in-from-right duration-300">
              <div className="flex items-center gap-4 mb-10 pb-6 border-b border-slate-100">
-               <img src={currentUser.avatar} className="w-12 h-12 rounded-xl object-cover" alt="" />
-               <div className="flex-1 overflow-hidden">
-                 <p className="font-black text-slate-950 truncate">{currentUser.name}</p>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{currentUser.role === 'Admin' ? 'מנהל' : 'חבר'}</p>
-               </div>
+               {currentUser.avatar ? (
+                 <img src={currentUser.avatar} className="w-12 h-12 rounded-xl object-cover" alt="" />
+               ) : (
+                 <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-slate-400">
+                   <UserCircle size={24} />
+                 </div>
+               )}
+                <div className="flex-1 overflow-hidden">
+                  <p className="font-black text-slate-950 truncate">{currentUser.name}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    {currentUser.role === 'Admin' ? 'מנהל' : currentUser.role === 'Instructor' ? 'מדריך' : 'חבר'}
+                  </p>
+                </div>
              </div>
              <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
                 {navItems.map(item => (
@@ -162,12 +179,14 @@ const App: React.FC = () => {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-80 bg-white border-l border-slate-200 sticky top-0 h-screen z-50 p-8 shadow-sm">
+      <aside className="hidden md:flex flex-col w-80 bg-white border-l border-[#006994]/10 sticky top-0 h-screen z-50 p-8 shadow-sm">
         <div className="flex items-center gap-4 mb-14">
-          <div className="w-12 h-12 bg-slate-950 rounded-2xl flex items-center justify-center text-white shadow-lg"><Waves size={28} /></div>
+          <div className="w-12 h-12 bg-[#006994] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#006994]/20">
+            <Waves size={28} className="text-[#00FFFF]" />
+          </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-950 tracking-tighter leading-none mb-1">חבל זוג</h1>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">קהילת הגולשים</p>
+            <h1 className="text-2xl font-black text-[#006994] tracking-tighter leading-none mb-1">חבל זוג</h1>
+            <p className="text-[10px] font-black text-[#4E8294] uppercase tracking-[0.2em]">קהילת הגולשים</p>
           </div>
         </div>
         <nav className="flex-1 space-y-3 overflow-y-auto custom-scrollbar">
@@ -183,7 +202,7 @@ const App: React.FC = () => {
             <div className="pt-8 mt-8 border-t border-slate-100 space-y-3">
               <div className="flex items-center gap-2 pr-4 mb-4">
                 <ShieldAlert size={14} className="text-slate-400" />
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">מנהלה</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">מרכז ניהול</p>
               </div>
               {adminNavItems.map(item => (
                 <NavLink 
@@ -198,13 +217,21 @@ const App: React.FC = () => {
         </nav>
         <div className="mt-auto pt-8 border-t border-slate-100">
           <div className="flex items-center gap-4 mb-8">
-             <img src={currentUser.avatar} className="w-12 h-12 rounded-xl object-cover shadow-md" alt="" />
+             {currentUser.avatar ? (
+               <img src={currentUser.avatar} className="w-12 h-12 rounded-xl object-cover shadow-md border border-[#006994]/10" alt="" />
+             ) : (
+               <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-[#4E8294] shadow-md border border-[#006994]/10">
+                 <UserCircle size={24} />
+               </div>
+             )}
              <div className="flex-1 overflow-hidden">
-                <p className="font-black text-slate-950 text-sm truncate">{currentUser.name}</p>
-                <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest">{currentUser.role === 'Admin' ? 'מנהל' : 'חבר'}</p>
+                <p className="font-black text-[#006994] text-sm truncate">{currentUser.name}</p>
+                <p className="text-[9px] font-black text-[#40E0D0] uppercase tracking-widest">
+                  {currentUser.role === 'Admin' ? 'מנהל' : currentUser.role === 'Instructor' ? 'מדריך' : 'חבר'}
+                </p>
              </div>
           </div>
-          <button onClick={handleLogout} className="flex items-center gap-4 w-full px-6 py-4 text-slate-400 font-black text-sm rounded-2xl hover:text-rose-500 hover:bg-rose-50 transition-all">
+          <button onClick={handleLogout} className="flex items-center gap-4 w-full px-6 py-4 text-[#4E8294] font-black text-sm rounded-2xl hover:text-rose-500 hover:bg-rose-50 transition-all">
             <LogOut size={20} /> התנתקות
           </button>
         </div>

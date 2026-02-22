@@ -7,7 +7,7 @@ export interface Member {
   mobile: string;
   avatar: string;
   bio: string;
-  role: 'Member' | 'Admin';
+  role: 'Member' | 'Instructor' | 'Admin';
   joinedAt: string;
   isActive?: boolean; // true = active, false = inactive
   password?: string;

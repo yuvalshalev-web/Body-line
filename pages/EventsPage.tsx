@@ -16,8 +16,9 @@ import { useData } from '../contexts/DataContext';
 
 const EventsPage: React.FC = () => {
   const { currentUser } = useAuth();
-  const { events, addEvent, deleteEvent, toggleEventAttendance } = useData();
+  const { events, members, addEvent, deleteEvent, toggleEventAttendance } = useData();
 
+  const activeMemberIds = members.filter(m => m.isActive !== false).map(m => m.id);
   const [showModal, setShowModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -84,9 +85,9 @@ const EventsPage: React.FC = () => {
         {isAdmin && (
           <button 
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-4 px-10 py-5 bg-slate-950 text-white rounded-[2rem] font-black text-md hover:bg-rose-600 transition-all shadow-xl active:scale-95 group"
+            className="flex items-center gap-4 px-10 py-5 bg-[#006994] text-white rounded-[2rem] font-black text-md hover:bg-[#4E8294] transition-all shadow-xl active:scale-95 group"
           >
-            <Plus size={24} className="group-hover:rotate-90 transition-transform" />
+            <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />
             <span>הוספת אירוע</span>
           </button>
         )}
@@ -112,14 +113,19 @@ const EventsPage: React.FC = () => {
                 <div className="space-y-4 mb-8">
                   <div className="flex items-center gap-3 text-slate-600"><Clock size={16} className="text-rose-500" /><span className="text-xs font-black">{event.time}</span></div>
                   <div className="flex items-center gap-3 text-slate-600"><MapPin size={16} className="text-rose-500" /><span className="text-xs font-black">{event.location}</span></div>
-                  <div className="flex items-center gap-3 text-slate-600"><Users size={16} className="text-rose-500" /><span className="text-xs font-black">{(event.attendees || []).length} משתתפים</span></div>
+                  <div className="flex items-center gap-3 text-slate-600">
+                    <Users size={16} className="text-rose-500" />
+                    <span className="text-xs font-black">
+                      {(event.attendees || []).filter(id => activeMemberIds.includes(id)).length} משתתפים
+                    </span>
+                  </div>
                 </div>
                 <button 
                   onClick={() => handleToggleAttendance(event.id)}
                   disabled={isProcessing}
-                  className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all ${isAttending ? 'bg-rose-600 text-white' : 'bg-slate-950 text-white hover:bg-rose-600'}`}
+                  className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all ${isAttending ? 'bg-rose-600 text-white' : 'bg-[#006994] text-white hover:bg-[#4E8294]'}`}
                 >
-                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} />}
+                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-[#00FFFF]" />}
                   {isAttending ? 'מבטל הגעה' : 'אני מגיע/ה'}
                 </button>
               </div>
@@ -142,8 +148,8 @@ const EventsPage: React.FC = () => {
                </div>
                <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="כתובת תמונת רקע (URL)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
-               <button type="submit" disabled={isSaving} className="w-full py-5 bg-slate-950 text-white rounded-[2rem] font-black text-xl hover:bg-rose-600 transition-all shadow-xl flex items-center justify-center gap-4">
-                  {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} />}
+               <button type="submit" disabled={isSaving} className="w-full py-5 bg-[#006994] text-white rounded-[2rem] font-black text-xl hover:bg-[#4E8294] transition-all shadow-xl flex items-center justify-center gap-4 active:scale-95">
+                  {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="text-[#00FFFF]" />}
                   צור אירוע חדש
                </button>
              </form>

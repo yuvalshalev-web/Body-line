@@ -287,9 +287,9 @@ const AdminInfoPage: React.FC = () => {
           </div>
           <button 
             onClick={() => setShowTop10(!showTop10)}
-            className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-sm transition-all shadow-lg ${showTop10 ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border'}`}
+            className={`flex items-center gap-2 px-8 py-3.5 rounded-2xl font-black text-sm transition-all shadow-lg active:scale-95 ${showTop10 ? 'bg-[#006994] text-white' : 'bg-white text-[#006994] border border-[#006994]/20 hover:bg-[#006994]/5'}`}
           >
-            <Filter size={18} />
+            <Filter size={18} className={showTop10 ? 'text-[#00FFFF]' : ''} />
             <span>הצג {showTop10 ? 'הכל' : 'טופ 10'}</span>
           </button>
         </div>

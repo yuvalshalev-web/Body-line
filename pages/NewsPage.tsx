@@ -113,7 +113,13 @@ const NewsPage: React.FC = () => {
                 <h3 className="text-3xl font-black text-slate-950 mb-4">{item.title}</h3>
                 <p className="text-slate-500 font-bold leading-relaxed mb-8 text-lg whitespace-pre-wrap">{item.content}</p>
                 <div className="flex items-center gap-3">
-                   <img src={item.authorAvatar || ''} className="w-8 h-8 rounded-full object-cover" alt="" loading="lazy" />
+                   {item.authorAvatar ? (
+                     <img src={item.authorAvatar} className="w-8 h-8 rounded-full object-cover" alt="" loading="lazy" />
+                   ) : (
+                     <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-400">
+                       <User size={14} />
+                     </div>
+                   )}
                    <span className="text-xs font-black text-slate-400">{item.authorName}</span>
                 </div>
               </div>

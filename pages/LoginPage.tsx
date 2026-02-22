@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, increment, addDoc } from 'firebase/firestore';
-import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, ChevronDown, MapPin, CheckCircle2, UserPlus, Mail, RotateCcw, X, UserCheck, Sparkles } from 'lucide-react';
+import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, ChevronDown, MapPin, CheckCircle2, UserPlus, Mail, RotateCcw, X, UserCheck, Sparkles, Waves, User } from 'lucide-react';
 import { getDb } from '../services/firebase';
 import { Member } from '../types';
 import { hashPassword } from '../utils/crypto';
@@ -12,7 +12,7 @@ const groups = ["הרצליה", "אשדוד", "אשקלון", "כינרת", "ק�
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
-  const { siteAssets } = useData();
+  const { siteAssets, isLoading: isDataLoading } = useData();
 
   const [mode, setMode] = useState<'LOGIN' | 'JOIN'>('LOGIN');
   const [isLoading, setIsLoading] = useState(false);
@@ -25,17 +25,18 @@ const LoginPage: React.FC = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [logoError, setLogoError] = useState(false);
 
   const [joinName, setJoinName] = useState('');
   const [joinEmail, setJoinEmail] = useState('');
   const [joinMobile, setJoinMobile] = useState('');
   const [mobileError, setMobileError] = useState('');
-  const [joinAvatar, setJoinAvatar] = useState('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200');
+  const [joinAvatar, setJoinAvatar] = useState('');
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentBg = siteAssets?.loginBg || siteAssets?.heroBg || 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=2000';
-  const logoUrl = siteAssets?.habalZugLogo || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fhz-logo-fixed.png?alt=media";
+  const logoUrl = siteAssets?.habalZugLogo;
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,26 +193,52 @@ const LoginPage: React.FC = () => {
         <div className="bg-white/10 backdrop-blur-xl rounded-[3rem] border border-white/20 p-8 md:p-14 shadow-2xl">
           {mode === 'LOGIN' ? (
             <form onSubmit={handleLoginSubmit} className="space-y-6">
-               <div className="text-center mb-8 drop-shadow-2xl">
-                 <img src={logoUrl} className="h-24 w-auto mx-auto object-contain" alt="Logo" />
+               <div className="text-center mb-8 drop-shadow-2xl flex flex-col items-center min-h-[120px] justify-center">
+                 {isDataLoading ? (
+                   <Loader2 className="animate-spin text-white/20" size={32} />
+                 ) : (!logoError && logoUrl) ? (
+                   <img 
+                     src={logoUrl} 
+                     className="h-24 w-auto mx-auto object-contain animate-in fade-in duration-500" 
+                     alt="Logo" 
+                     onError={() => setLogoError(true)}
+                   />
+                 ) : (
+                   <div className="flex flex-col items-center gap-2 animate-in fade-in zoom-in-95">
+                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-slate-950 shadow-lg">
+                       <Waves size={32} />
+                     </div>
+                     <div className="text-white text-4xl font-black italic tracking-tighter">חבל זוג</div>
+                     <div className="text-white/50 text-[10px] font-black uppercase tracking-[0.3em]">HERZLIYA SURF CLUB</div>
+                   </div>
+                 )}
                </div>
               <input 
                 type="email" required value={email} onChange={e => setEmail(e.target.value)} 
                 className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none"
                 placeholder="אימייל חבר"
               />
-              <input 
-                type={showPassword ? "text" : "password"} 
-                required value={password} onChange={e => setPassword(e.target.value)} 
-                className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none"
-                placeholder="סיסמה"
-              />
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  required value={password} onChange={e => setPassword(e.target.value)} 
+                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14"
+                  placeholder="סיסמה"
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
               {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
-              <button type="submit" disabled={isLoading} className="w-full py-5 bg-white text-slate-950 rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-3">
-                {isLoading ? <Loader2 className="animate-spin" /> : <LogIn size={24} />}
+              <button type="submit" disabled={isLoading} className="w-full py-5 bg-[#006994] text-white rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-3 hover:bg-[#4E8294] transition-all active:scale-95">
+                {isLoading ? <Loader2 className="animate-spin" /> : <LogIn size={24} className="text-[#00FFFF]" />}
                 כניסה
               </button>
-              <button type="button" onClick={() => setMode('JOIN')} className="w-full text-white/50 hover:text-white font-black text-xs">בקשת הצטרפות</button>
+              <button type="button" onClick={() => setMode('JOIN')} className="w-full text-white/50 hover:text-[#00FFFF] font-black text-xs transition-colors">בקשת הצטרפות</button>
             </form>
           ) : (
             <form onSubmit={handleJoinSubmit} className="space-y-6">
@@ -229,16 +256,25 @@ const LoginPage: React.FC = () => {
                   <div className="flex flex-col items-center gap-4">
                     <div className="relative">
                       <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-white/20 bg-white/5 flex items-center justify-center">
-                        {isProcessingImage ? <Loader2 className="animate-spin text-white" /> : <img src={joinAvatar} className="w-full h-full object-cover" alt="" loading="lazy" />}
+                        {isProcessingImage ? (
+                          <Loader2 className="animate-spin text-white" />
+                        ) : joinAvatar ? (
+                          <img src={joinAvatar} className="w-full h-full object-cover" alt="" loading="lazy" />
+                        ) : (
+                          <User size={48} className="text-white/20" />
+                        )}
                       </div>
-                      <label className="absolute -bottom-2 -left-2 p-2 bg-white text-slate-950 rounded-xl cursor-pointer shadow-lg"><Camera size={16} /><input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} disabled={isProcessingImage} /></label>
+                      <label className="absolute -bottom-2 -left-2 p-2 bg-[#006994] text-white rounded-xl cursor-pointer shadow-lg hover:bg-[#4E8294] transition-all">
+                        <Camera size={16} className="text-[#00FFFF]" />
+                        <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} disabled={isProcessingImage} />
+                      </label>
                     </div>
                   </div>
                   <input type="text" required value={joinName} onChange={e => setJoinName(e.target.value)} placeholder="שם מלא" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
                   <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="אימייל" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
                   <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
                   {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
-                  <button type="submit" disabled={isLoading || isProcessingImage} className="w-full py-5 bg-white text-slate-950 rounded-2xl font-black text-lg">
+                  <button type="submit" disabled={isLoading || isProcessingImage} className="w-full py-5 bg-[#006994] text-white rounded-2xl font-black text-lg hover:bg-[#4E8294] transition-all active:scale-95">
                     {isLoading ? <Loader2 className="animate-spin mx-auto" /> : 'שלח בקשה ב-WebP'}
                   </button>
                 </>

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, orderBy, limit, addDoc, writeBatch } from 'firebase/firestore';
 import { getDb } from '../services/firebase';
 import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem } from '../types';
+import { SUPER_ADMIN_EMAIL } from '../constants';
 import { hashPassword } from '../utils/crypto';
 
 interface DataContextType {
@@ -17,8 +18,9 @@ interface DataContextType {
   activeSessionDate: string;
   isLoading: boolean;
   updateMember: (member: Member) => Promise<void>;
+  deleteMember: (id: string) => Promise<void>;
   toggleStatus: (id: string) => Promise<void>;
-  toggleRole: (id: string) => Promise<void>;
+  toggleRole: (id: string, requesterEmail?: string) => Promise<void>;
   resetPassword: (id: string) => Promise<void>;
   approveRequest: (id: string) => Promise<{ name: string; mobile: string; tempPassword: string } | null>;
   rejectRequest: (id: string) => Promise<void>;
@@ -32,6 +34,7 @@ interface DataContextType {
   batchAddGlossary: (items: Omit<GlossaryTerm, 'id'>[]) => Promise<void>;
   batchAddQuotes: (items: Omit<QuoteItem, 'id'>[]) => Promise<void>;
   clearCollection: (collectionName: string) => Promise<void>;
+  updateSiteAssets: (assets: any) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -157,14 +160,36 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await updateDoc(doc(getDb(), 'members', id), data);
   };
 
+  const deleteMember = async (id: string) => {
+    await deleteDoc(doc(getDb(), 'members', id));
+  };
+
   const toggleStatus = async (id: string) => {
     const member = members.find(m => m.id === id);
     if (member) await updateDoc(doc(getDb(), 'members', id), { isActive: !member.isActive });
   };
 
-  const toggleRole = async (id: string) => {
+  const toggleRole = async (id: string, requesterEmail?: string) => {
     const member = members.find(m => m.id === id);
-    if (member) await updateDoc(doc(getDb(), 'members', id), { role: member.role === 'Admin' ? 'Member' : 'Admin' });
+    if (member) {
+      const isSuperAdmin = requesterEmail === SUPER_ADMIN_EMAIL;
+      let nextRole: Member['role'] = 'Member';
+
+      if (isSuperAdmin) {
+        // Super Admin: Cycle through all roles
+        if (member.role === 'Member') nextRole = 'Instructor';
+        else if (member.role === 'Instructor') nextRole = 'Admin';
+        else nextRole = 'Member';
+      } else {
+        // Regular Admin: Only toggle between Member and Instructor
+        if (member.role === 'Admin') {
+          throw new Error('Unauthorized: Only Super Admin can change Admin roles');
+        }
+        nextRole = member.role === 'Member' ? 'Instructor' : 'Member';
+      }
+      
+      await updateDoc(doc(getDb(), 'members', id), { role: nextRole });
+    }
   };
 
   const resetPassword = async (id: string) => {
@@ -303,12 +328,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
+  const updateSiteAssets = async (assets: any) => {
+    await setDoc(doc(getDb(), 'site_data', 'assets'), assets, { merge: true });
+  };
+
   return (
     <DataContext.Provider value={{ 
       members, joinRequests, events, news, galleryItems, glossary, quotes, siteAssets, attendeeIds, activeSessionDate, isLoading,
-      updateMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
+      updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, toggleEventAttendance, addNews, deleteNews, toggleSessionAttendance, forceResetSession,
-      batchAddGlossary, batchAddQuotes, clearCollection
+      batchAddGlossary, batchAddQuotes, clearCollection, updateSiteAssets
     }}>
       {children}
     </DataContext.Provider>
