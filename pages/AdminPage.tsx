@@ -142,8 +142,15 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const handleReject = async (id: string) => {
-    if (!window.confirm('האם למחוק את בקשת ההצטרפות? כל הנתונים ימחקו לצמיתות מהמערכת.')) return;
+  const handleReject = async (id: string, name: string, mobile: string) => {
+    if (!window.confirm(`האם לדחות את בקשת ההצטרפות של ${name}? הבקשה תימחק והמשתמש יקבל הודעת דחייה.`)) return;
+    
+    // Send rejection message first
+    const cleanMobile = mobile.replace(/\D/g, '');
+    const finalMobile = cleanMobile.startsWith('0') ? '972' + cleanMobile.substring(1) : cleanMobile;
+    const rejectMsg = `היי *${name}*, תודה על הפנייה ל-אתר חבל זוג 🌊\nכרגע זה פחות מתאים, אבל נשמח לשמור על קשר ולהתעדכן בהמשך במידה ומשהו ישתנה.\nשיהיה אחלה יום! 👋`;
+    window.open(`https://wa.me/${finalMobile}?text=${encodeURIComponent(rejectMsg)}`, '_blank');
+
     setIsProcessing(id);
     try {
       await rejectRequest(id);
@@ -155,14 +162,15 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const formatWhatsAppMessage = (name: string, tempPass: string) => {
-    return `שלום ${name} , ברוך הבא לקהילת חבל זוג! \n\nחשבונך אושר בהצלחה. סיסמת הגישה הזמנית שלך היא: ${tempPass}\n\nמומלץ להיכנס בהקדם ולשנות את הסיסמה בפרופיל האישי.\nנתראה במים!`;
+  const formatWhatsAppMessage = (name: string, email: string, tempPass: string) => {
+    const siteUrl = window.location.origin;
+    return `היי *${name}*, איזה כיף! 🌊 הבקשה שלך להצטרפות לאתר קהילת חבל זוג אושרה רשמית. \n\n*פרטי התחברות ראשונית:*\n🔗 כתובת האתר: ${siteUrl}\n👤 שם משתמש: *${email}*\n🔑 סיסמה זמנית: \`${tempPass}\` \n\nלידיעתך: הסיסמה תקפה לכניסה הראשונה בלבד, ולאחריה המערכת תבקש ממך לבחור סיסמה אישית וקבועה.\nנתראה בפנים! צוות האתר 💪`;
   };
 
-  const openWhatsApp = (mobile: string, name: string, tempPass: string) => {
+  const openWhatsApp = (mobile: string, name: string, email: string, tempPass: string) => {
     const cleanMobile = mobile.replace(/\D/g, '');
     const finalMobile = cleanMobile.startsWith('0') ? '972' + cleanMobile.substring(1) : cleanMobile;
-    const message = encodeURIComponent(formatWhatsAppMessage(name, tempPass));
+    const message = encodeURIComponent(formatWhatsAppMessage(name, email, tempPass));
     window.open(`https://wa.me/${finalMobile}?text=${message}`, '_blank');
   };
 
@@ -257,12 +265,12 @@ const AdminPage: React.FC = () => {
                          אשר הצטרפות
                        </button>
                        <button 
-                         onClick={() => handleReject(req.id)}
+                         onClick={() => handleReject(req.id, req.name, req.mobile)}
                          disabled={isProcessing === req.id}
                          className="p-4 bg-slate-50 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all disabled:opacity-50 flex items-center justify-center"
-                         title="מחק בקשה"
+                         title="דחה ומחק בקשה"
                        >
-                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
+                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={18} /> : <UserX size={18} />}
                        </button>
                     </div>
                   </div>
