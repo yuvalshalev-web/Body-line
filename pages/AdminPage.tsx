@@ -769,9 +769,18 @@ const AdminPage: React.FC = () => {
                       <span className="text-lg leading-none">{event.date.split('.')[0]}</span>
                       <span className="text-[10px] uppercase">{event.date.split('.')[1]}</span>
                     </div>
-                    <div>
+                    <div className="flex flex-col">
                       <h4 className="text-xl font-black text-slate-900 mb-1">{event.title}</h4>
-                      <p className="text-xs font-bold text-slate-400">{event.location}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold text-slate-400">{event.location}</p>
+                        <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider ${
+                          event.type === 'COMMUNITY' ? 'bg-[#006994] text-white' : 
+                          event.type === 'INSTRUCTOR' ? 'bg-amber-500 text-white' : 
+                          'bg-slate-100 text-slate-500'
+                        }`}>
+                          {event.type === 'COMMUNITY' ? 'קהילה' : event.type === 'INSTRUCTOR' ? 'מדריך' : 'חבר'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <button 

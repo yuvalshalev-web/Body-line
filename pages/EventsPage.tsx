@@ -9,7 +9,10 @@ import {
   X, 
   Trash2, 
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  ShieldAlert,
+  User,
+  Zap
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -30,7 +33,10 @@ const EventsPage: React.FC = () => {
   const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [eventType, setEventType] = useState<'COMMUNITY' | 'MEMBER' | 'INSTRUCTOR'>('MEMBER');
 
+  const canManageCommunityEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor';
+  const canManageInstructorEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor';
   const isAdmin = currentUser?.role === 'Admin';
 
   const formatDate = (dateValue: string) => {
@@ -51,6 +57,8 @@ const EventsPage: React.FC = () => {
         time,
         location: location || 'הרצליה',
         imageUrl: imageUrl || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=800',
+        type: eventType,
+        creatorId: currentUser?.id,
         attendees: []
       });
       setShowModal(false);
@@ -61,7 +69,7 @@ const EventsPage: React.FC = () => {
   };
 
   const resetForm = () => {
-    setTitle(''); setDescription(''); setDate(''); setTime(''); setLocation(''); setImageUrl('');
+    setTitle(''); setDescription(''); setDate(''); setTime(''); setLocation(''); setImageUrl(''); setEventType('MEMBER');
   };
 
   const handleDelete = (id: string) => {
@@ -82,7 +90,7 @@ const EventsPage: React.FC = () => {
           <p className="text-slate-500 font-black text-[11px] uppercase tracking-widest">מפגשים וחוויות קהילתיות • {events.length} אירועים</p>
         </div>
 
-        {isAdmin && (
+        {currentUser && (
           <button 
             onClick={() => setShowModal(true)}
             className="flex items-center gap-4 px-10 py-5 bg-[#006994] text-white rounded-[2rem] font-black text-md hover:bg-[#4E8294] transition-all shadow-xl active:scale-95 group"
@@ -97,20 +105,42 @@ const EventsPage: React.FC = () => {
         {events.map((event) => {
           const isAttending = currentUser ? (event.attendees || []).includes(currentUser.id) : false;
           const isProcessing = processingId === event.id;
+          const canDelete = isAdmin || (currentUser && event.creatorId === currentUser.id);
 
           return (
             <div key={event.id} className="group bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col relative">
-              {isAdmin && (
+              {canDelete && (
                 <button onClick={() => handleDelete(event.id)} className="absolute top-6 left-6 p-3 bg-red-500 text-white rounded-2xl opacity-0 group-hover:opacity-100 transition-all z-20 shadow-xl"><Trash2 size={18} /></button>
               )}
               <div className="relative aspect-video overflow-hidden">
                 <img src={event.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
-                <div className="absolute top-6 right-6 bg-white/95 px-3 py-1.5 rounded-xl text-center shadow-lg"><p className="text-sm font-black text-slate-950">{formatDate(event.date)}</p></div>
+                <div className="absolute top-6 right-6 flex flex-col gap-2 items-end">
+                  <div className="bg-white/95 px-3 py-1.5 rounded-xl text-center shadow-lg">
+                    <p className="text-sm font-black text-slate-950">{formatDate(event.date)}</p>
+                  </div>
+                  <div className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-md ${
+                    event.type === 'COMMUNITY' ? 'bg-[#006994] text-white' : 
+                    event.type === 'INSTRUCTOR' ? 'bg-amber-500 text-white' : 
+                    'bg-white text-[#4E8294]'
+                  }`}>
+                    {event.type === 'COMMUNITY' ? 'אירוע קהילה' : event.type === 'INSTRUCTOR' ? 'אירוע מדריך' : 'אירוע של חבר'}
+                  </div>
+                </div>
               </div>
               <div className="p-8 flex-1 flex flex-col">
                 <h3 className="text-2xl font-black text-slate-900 mb-4 group-hover:text-rose-600 transition-colors">{event.title}</h3>
                 <p className="text-slate-500 font-bold text-sm mb-8 line-clamp-3">{event.description}</p>
                 <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-3 text-slate-600">
+                    {event.type === 'COMMUNITY' ? <ShieldAlert size={16} className="text-[#006994]" /> : 
+                     event.type === 'INSTRUCTOR' ? <Zap size={16} className="text-amber-500" /> : 
+                     <User size={16} className="text-[#4E8294]" />}
+                    <span className="text-xs font-black">
+                      {event.type === 'COMMUNITY' ? 'אירוע קהילה רשמי' : 
+                       event.type === 'INSTRUCTOR' ? 'אירוע מדריך' : 
+                       'אירוע חברתי'}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-3 text-slate-600"><Clock size={16} className="text-rose-500" /><span className="text-xs font-black">{event.time}</span></div>
                   <div className="flex items-center gap-3 text-slate-600"><MapPin size={16} className="text-rose-500" /><span className="text-xs font-black">{event.location}</span></div>
                   <div className="flex items-center gap-3 text-slate-600">
@@ -140,6 +170,96 @@ const EventsPage: React.FC = () => {
              <button onClick={() => setShowModal(false)} className="absolute top-8 left-8 p-3 text-slate-400 bg-slate-50 rounded-full"><X size={24} /></button>
              <h3 className="text-3xl font-black mb-8">יצירת אירוע</h3>
              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">בחר סוג אירוע</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button 
+                      type="button"
+                      onClick={() => setEventType('MEMBER')}
+                      className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group ${
+                        eventType === 'MEMBER' 
+                          ? 'bg-[#006994] border-[#006994] text-white shadow-xl shadow-[#006994]/20' 
+                          : 'bg-white border-slate-100 text-slate-400 hover:border-[#4E8294] hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                        eventType === 'MEMBER' ? 'bg-white/20 text-[#00FFFF]' : 'bg-slate-50 text-slate-300 group-hover:text-[#4E8294]'
+                      }`}>
+                        <User size={16} />
+                      </div>
+                      <div>
+                        <p className="font-black text-[10px] mb-0.5">אירוע חבר</p>
+                      </div>
+                      {eventType === 'MEMBER' && (
+                        <div className="absolute top-2 left-2">
+                          <CheckCircle2 size={12} className="text-[#00FFFF]" />
+                        </div>
+                      )}
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={() => setEventType('INSTRUCTOR')}
+                      className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group ${
+                        eventType === 'INSTRUCTOR' 
+                          ? 'bg-amber-500 border-amber-500 text-white shadow-xl shadow-amber-500/20' 
+                          : 'bg-white border-slate-100 text-slate-400 hover:border-amber-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                        eventType === 'INSTRUCTOR' ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-300 group-hover:text-amber-500'
+                      }`}>
+                        <Zap size={16} />
+                      </div>
+                      <div>
+                        <p className="font-black text-[10px] mb-0.5">אירוע מדריך</p>
+                      </div>
+                      {eventType === 'INSTRUCTOR' && (
+                        <div className="absolute top-2 left-2">
+                          <CheckCircle2 size={12} className="text-white" />
+                        </div>
+                      )}
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={() => setEventType('COMMUNITY')}
+                      className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group ${
+                        eventType === 'COMMUNITY' 
+                          ? 'bg-[#006994] border-[#006994] text-white shadow-xl shadow-[#006994]/20' 
+                          : 'bg-white border-slate-100 text-slate-400 hover:border-[#4E8294] hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                        eventType === 'COMMUNITY' ? 'bg-white/20 text-[#00FFFF]' : 'bg-slate-50 text-slate-300 group-hover:text-[#4E8294]'
+                      }`}>
+                        <Users size={16} />
+                      </div>
+                      <div>
+                        <p className="font-black text-[10px] mb-0.5">אירוע קהילה</p>
+                      </div>
+                      {eventType === 'COMMUNITY' && (
+                        <div className="absolute top-2 left-2">
+                          <CheckCircle2 size={12} className="text-[#00FFFF]" />
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                  
+                  {eventType === 'COMMUNITY' && !canManageCommunityEvents && (
+                    <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-center gap-3 text-orange-700 text-[10px] font-black animate-in slide-in-from-top-2">
+                      <ShieldAlert size={16} />
+                      <p>רק מנהל או מדריך יכולים ליצור אירוע רשמי של הקהילה.</p>
+                    </div>
+                  )}
+
+                  {eventType === 'INSTRUCTOR' && !canManageInstructorEvents && (
+                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3 text-amber-700 text-[10px] font-black animate-in slide-in-from-top-2">
+                      <Zap size={16} />
+                      <p>הלו... אתה עדיין לא מדריך. 😉</p>
+                    </div>
+                  )}
+                </div>
                <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="כותרת האירוע" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="תיאור האירוע" className="w-full p-5 bg-slate-50 rounded-2xl font-bold outline-none border border-slate-100 h-32 resize-none" />
                <div className="grid grid-cols-2 gap-4">
@@ -148,7 +268,11 @@ const EventsPage: React.FC = () => {
                </div>
                <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="כתובת תמונת רקע (URL)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
-               <button type="submit" disabled={isSaving} className="w-full py-5 bg-[#006994] text-white rounded-[2rem] font-black text-xl hover:bg-[#4E8294] transition-all shadow-xl flex items-center justify-center gap-4 active:scale-95">
+               <button 
+                 type="submit" 
+                 disabled={isSaving || (eventType === 'COMMUNITY' && !canManageCommunityEvents) || (eventType === 'INSTRUCTOR' && !canManageInstructorEvents)} 
+                 className="w-full py-5 bg-[#006994] text-white rounded-[2rem] font-black text-xl hover:bg-[#4E8294] transition-all shadow-xl flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+               >
                   {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="text-[#00FFFF]" />}
                   צור אירוע חדש
                </button>

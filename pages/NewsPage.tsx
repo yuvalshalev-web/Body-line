@@ -90,9 +90,9 @@ const NewsPage: React.FC = () => {
         
         <button 
           onClick={() => { setShowSuccess(false); setErrorMsg(null); setShowCreateModal(true); }}
-          className="flex items-center gap-4 px-10 py-5 bg-slate-950 text-white rounded-[2rem] font-black text-md hover:bg-emerald-600 transition-all shadow-xl"
+          className="flex items-center gap-4 px-10 py-5 bg-[#006994] text-white rounded-[2rem] font-black text-md hover:bg-[#4E8294] transition-all shadow-xl active:scale-95 group"
         >
-          <Plus size={24} />
+          <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />
           <span>פרסום פוסט חדש</span>
         </button>
       </div>
@@ -138,7 +138,12 @@ const NewsPage: React.FC = () => {
           <div className="bg-white w-full max-w-2xl rounded-[3.5rem] p-12 relative max-h-[90vh] overflow-y-auto">
             {!showSuccess && <button onClick={() => setShowCreateModal(false)} className="absolute top-8 left-8 p-3 bg-slate-50 rounded-full"><X size={24} /></button>}
             {showSuccess ? (
-              <div className="py-20 text-center"><CheckCircle2 size={64} className="text-emerald-500 mx-auto mb-6" /><h3 className="text-4xl font-black">פורסם!</h3></div>
+              <div className="py-20 text-center">
+                <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle2 size={48} className="text-emerald-500" />
+                </div>
+                <h3 className="text-4xl font-black text-slate-900">פורסם!</h3>
+              </div>
             ) : (
               <form onSubmit={handlePostSubmit} className="space-y-6">
                 <h3 className="text-2xl font-black mb-4">יצירת פוסט אופטימלי</h3>
@@ -149,8 +154,13 @@ const NewsPage: React.FC = () => {
                   {selectedImage ? <img src={selectedImage.dataUrl} className="w-full h-full object-cover" alt="" /> : <ImageIcon size={32} className="text-slate-300" />}
                   <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageChange} />
                 </div>
-                <button type="submit" disabled={isPosting} className="w-full py-5 bg-slate-950 text-white rounded-[2rem] font-black text-xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-3">
-                  {isPosting ? <Loader2 className="animate-spin" /> : 'פרסם בפורמט WebP'}
+                <button 
+                  type="submit" 
+                  disabled={isPosting} 
+                  className="w-full py-5 bg-[#006994] text-white rounded-[2rem] font-black text-xl hover:bg-[#4E8294] transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:opacity-50"
+                >
+                  {isPosting ? <Loader2 className="animate-spin" /> : <Zap size={24} className="text-[#00FFFF]" />}
+                  <span>{isPosting ? 'מפרסם...' : 'פרסם בפורמט WebP'}</span>
                 </button>
               </form>
             )}

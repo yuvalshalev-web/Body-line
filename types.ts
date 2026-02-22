@@ -58,6 +58,8 @@ export interface Event {
   time: string;
   location: string;
   imageUrl: string;
+  type: 'COMMUNITY' | 'MEMBER' | 'INSTRUCTOR';
+  creatorId?: string;
   attendees: string[]; // Array of member IDs
   attendeeCount?: number; // Added for analysis
 }

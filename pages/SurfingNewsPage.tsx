@@ -151,8 +151,8 @@ const SurfingNewsPage: React.FC = () => {
       <div className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
           <div>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest mb-3 border border-blue-100 shadow-sm">
-              <Globe size={12} className="text-blue-500" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#006994]/10 text-[#006994] text-[10px] font-black uppercase tracking-widest mb-3 border border-[#006994]/20 shadow-sm">
+              <Globe size={12} className="text-[#40E0D0]" />
               עדכונים מהעולם
             </div>
             <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none">חדשות גלישה</h2>
@@ -162,10 +162,10 @@ const SurfingNewsPage: React.FC = () => {
           <button 
             onClick={() => fetchNews(true)}
             disabled={loading}
-            className="flex items-center gap-4 px-8 py-4 bg-slate-50 text-slate-900 rounded-[1.5rem] font-black text-sm hover:bg-slate-100 transition-all border border-slate-100 active:scale-95 shadow-sm"
+            className="flex items-center gap-4 px-8 py-4 bg-[#006994] text-white rounded-[1.5rem] font-black text-sm hover:bg-[#4E8294] transition-all active:scale-95 shadow-lg group disabled:opacity-50"
           >
-            {loading ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} />}
-            רענן עדכונים
+            {loading ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} className="group-hover:rotate-180 transition-transform text-[#00FFFF]" />}
+            <span>רענן עדכונים</span>
           </button>
         </div>
 
@@ -174,7 +174,13 @@ const SurfingNewsPage: React.FC = () => {
             <AlertCircle size={48} className="text-rose-400 mb-6" />
             <h3 className="text-2xl font-black text-rose-900 mb-2">אופס, משהו השתבש</h3>
             <p className="text-rose-600 font-bold mb-8 max-w-md mx-auto">{error}</p>
-            <button onClick={() => fetchNews(true)} className="px-8 py-4 bg-rose-500 text-white rounded-2xl font-black text-sm shadow-xl hover:bg-rose-600 transition-all">נסה שנית</button>
+            <button 
+              onClick={() => fetchNews(true)} 
+              className="px-8 py-4 bg-[#006994] text-white rounded-2xl font-black text-sm shadow-xl hover:bg-[#4E8294] transition-all active:scale-95 flex items-center gap-3"
+            >
+              <RefreshCw size={18} />
+              <span>נסה שנית</span>
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -195,8 +201,8 @@ const SurfingNewsPage: React.FC = () => {
                         (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=800";
                       }}
                     />
-                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/50 text-[10px] font-black text-slate-900 shadow-lg flex items-center gap-2">
-                      <Waves size={10} className="text-blue-500" />
+                    <div className="absolute top-4 right-4 bg-[#006994]/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 text-[10px] font-black text-white shadow-lg flex items-center gap-2">
+                      <Waves size={10} className="text-[#00FFFF]" />
                       {article.source}
                     </div>
                   </div>
@@ -207,7 +213,7 @@ const SurfingNewsPage: React.FC = () => {
                       {new Date(article.publishedAt).toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </div>
                     
-                    <h3 className="text-xl font-black text-slate-950 mb-4 group-hover:text-blue-600 transition-colors tracking-tight leading-snug line-clamp-2" dir="ltr">
+                    <h3 className="text-xl font-black text-slate-950 mb-4 group-hover:text-[#006994] transition-colors tracking-tight leading-snug line-clamp-2" dir="ltr">
                       {article.title}
                     </h3>
                     
@@ -219,10 +225,10 @@ const SurfingNewsPage: React.FC = () => {
                       href={article.url} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between text-blue-500 font-black text-xs uppercase tracking-widest group/link"
+                      className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between text-[#006994] font-black text-xs uppercase tracking-widest group/link hover:text-[#4E8294] transition-colors"
                     >
                       <span>Read More</span>
-                      <ExternalLink size={14} className="group-hover/link:translate-x-[-4px] transition-transform" />
+                      <ExternalLink size={14} className="group-hover/link:translate-x-[-4px] transition-transform text-[#40E0D0]" />
                     </a>
                   </div>
                 </div>
