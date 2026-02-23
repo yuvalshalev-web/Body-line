@@ -139,7 +139,7 @@ const DirectoryPage: React.FC = () => {
             className="group cursor-pointer relative" 
             onClick={() => setSelectedMember(member)}
           >
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-slate-100 border border-slate-100 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-1">
+            <div className="relative aspect-square overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-slate-100 border border-slate-100 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-1">
                {member.avatar ? (
                  <img 
                    src={member.avatar} 
