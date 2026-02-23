@@ -424,5 +424,3 @@ const SurfingSessionAttendance: React.FC = () => {
 };
 
 export default SurfingSessionAttendance;
-
-export default SurfingSessionAttendance;
