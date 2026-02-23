@@ -1,4 +1,3 @@
-
 import React, { useState, lazy, Suspense, useCallback } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
@@ -20,6 +19,7 @@ import {
   Loader2,
   ShieldAlert
 } from 'lucide-react';
+
 
 // Lazy loaded components
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -111,6 +111,7 @@ const App: React.FC = () => {
 
   const adminNavItems = [
     { path: '/admin', icon: Settings, label: 'פאנל ניהול' },
+    { path: '/attendance', icon: Users, label: 'סנכרון נוכחות' },
     { path: '/admin-info', icon: BarChart3, label: 'סטטיסטיקה' }
   ];
 
@@ -252,6 +253,7 @@ const App: React.FC = () => {
               <>
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="/admin-info" element={<AdminInfoPage />} />
+                
               </>
             )}
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,6 +1,7 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, initializeFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { initializeFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCzzpZyz8rBhtnskhbkXB7_dTfHgXLPHfs",
@@ -12,28 +13,15 @@ const firebaseConfig = {
   measurementId: "G-6KKFY0N55H"
 };
 
-// Ensure app is initialized exactly once
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const app = initializeApp(firebaseConfig);
+const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+});
 
-// Safe getter pattern for Firestore
-let dbInstance: any = null;
-export const getDb = () => {
-  if (!dbInstance) {
-    // Use initializeFirestore with long polling to bypass potential WebSocket restrictions
-    dbInstance = initializeFirestore(app, {
-      experimentalForceLongPolling: true,
-    });
-  }
-  return dbInstance;
-};
+const auth = getAuth(app);
+const storage = getStorage(app);
 
-// Safe getter pattern for Storage
-let storageInstance: any = null;
-export const getStorageInstance = () => {
-  if (!storageInstance) {
-    storageInstance = getStorage(app);
-  }
-  return storageInstance;
-};
-
+export { db, auth, storage };
+export const getDb = () => db;
+export const getStorageInstance = () => storage;
 export default app;

@@ -22,7 +22,7 @@ interface DataContextType {
   toggleStatus: (id: string) => Promise<void>;
   toggleRole: (id: string, requesterEmail?: string) => Promise<void>;
   resetPassword: (id: string) => Promise<void>;
-  approveRequest: (id: string) => Promise<{ name: string; mobile: string; tempPassword: string } | null>;
+  approveRequest: (id: string) => Promise<{ name: string; email: string; mobile: string; tempPassword: string } | null>;
   rejectRequest: (id: string) => Promise<void>;
   addEvent: (details: Omit<Event, 'id'>) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
@@ -195,33 +195,37 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const resetPassword = async (id: string) => {
     const tempPass = Math.random().toString(36).slice(-8);
     const hashed = await hashPassword(tempPass);
-    await updateDoc(doc(getDb(), 'members', id), { password: hashed, isTempPassword: true });
+    await updateDoc(doc(getDb(), 'members', id), { password: hashed, isTemporary: true });
     alert(`סיסמה זמנית חדשה: ${tempPass}`);
   };
 
   const approveRequest = async (id: string) => {
+    console.log('DataContext: approveRequest starting for id:', id);
     try {
       const db = getDb();
       const requestRef = doc(db, 'joinRequests', id);
       const requestSnap = await getDoc(requestRef);
       
-      if (!requestSnap.exists()) return null;
+      if (!requestSnap.exists()) {
+        alert('שגיאה: בקשת ההצטרפות לא נמצאה במסד הנתונים.');
+        return null;
+      }
       
       const reqData = requestSnap.data() as JoinRequest;
       const tempPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = await hashPassword(tempPassword);
       
-      const newMember: Omit<Member, 'id'> = {
-        name: reqData.name, 
-        email: reqData.email, 
-        mobile: reqData.mobile, 
-        avatar: reqData.avatar, 
+      const newMemberData = {
+        name: reqData.name || 'ללא שם', 
+        email: reqData.email || '', 
+        mobile: reqData.mobile || '', 
+        avatar: reqData.avatar || '', 
         bio: reqData.bio || '',
         role: 'Member', 
         joinedAt: new Date().toLocaleDateString('he-IL'), 
         isActive: true,
         password: hashedPassword, 
-        isTempPassword: true, 
+        isTemporary: true, 
         loginCount: 0, 
         totalAttendance: 0,
         facebookUrl: reqData.facebookUrl || '',
@@ -232,16 +236,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         websiteUrl: reqData.websiteUrl || ''
       };
       
-      const batch = writeBatch(db);
       const memberRef = doc(db, 'members', id);
+      await setDoc(memberRef, newMemberData);
+      await deleteDoc(requestRef);
       
-      batch.set(memberRef, newMember);
-      batch.delete(requestRef);
-      
-      await batch.commit();
-      return { name: reqData.name, mobile: reqData.mobile, tempPassword };
-    } catch (err) {
-      console.error("Approve request failed:", err);
+      return { 
+        name: newMemberData.name, 
+        email: newMemberData.email, 
+        mobile: newMemberData.mobile, 
+        tempPassword 
+      };
+    } catch (err: any) {
+      alert('שגיאה באישור המשתמש: ' + (err.message || 'שגיאה לא ידועה'));
       throw err;
     }
   };
@@ -249,8 +255,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const rejectRequest = async (id: string) => {
     try {
       await deleteDoc(doc(getDb(), 'joinRequests', id));
-    } catch (err) {
-      console.error("Reject request failed:", err);
+    } catch (err: any) {
+      alert('שגיאה בדחיית המשתמש: ' + (err.message || 'שגיאה לא ידועה'));
       throw err;
     }
   };

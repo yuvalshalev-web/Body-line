@@ -14,7 +14,7 @@ const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const { siteAssets, isLoading: isDataLoading } = useData();
 
-  const [mode, setMode] = useState<'LOGIN' | 'JOIN'>('LOGIN');
+  const [mode, setMode] = useState<'LOGIN' | 'JOIN' | 'RESET_TEMP_PASSWORD'>('LOGIN');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
@@ -25,6 +25,9 @@ const LoginPage: React.FC = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [tempUser, setTempUser] = useState<{ id: string; data: Member } | null>(null);
   const [logoError, setLogoError] = useState(false);
 
   const [joinName, setJoinName] = useState('');
@@ -55,7 +58,7 @@ const LoginPage: React.FC = () => {
         const devHashedPassword = await hashPassword('Yuval!1970');
         login({
           id: 'dev-admin-id', 
-          name: 'יובל שלו', 
+          name: 'The Dude', 
           email: 'yuval@shalev.org', 
           mobile: '050-0000000',
           avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
@@ -89,6 +92,13 @@ const LoginPage: React.FC = () => {
           return;
         }
 
+        if (memberData.isTemporary) {
+          setTempUser({ id: userDoc.id, data: memberData });
+          setMode('RESET_TEMP_PASSWORD');
+          setIsLoading(false);
+          return;
+        }
+
         await updateDoc(doc(db, 'members', userDoc.id), {
           loginCount: increment(1)
         });
@@ -100,6 +110,45 @@ const LoginPage: React.FC = () => {
       setError('שגיאת חיבור למערכת'); 
     } finally { 
       setIsLoading(false); 
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tempUser) return;
+    
+    if (newPassword.length < 6) {
+      setError('הסיסמה חייבת להכיל לפחות 6 תווים');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setError('הסיסמאות אינן תואמות');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const db = getDb();
+      const hashed = await hashPassword(newPassword);
+      
+      await updateDoc(doc(db, 'members', tempUser.id), {
+        password: hashed,
+        isTemporary: false,
+        loginCount: increment(1)
+      });
+      
+      login({ 
+        id: tempUser.id, 
+        ...tempUser.data, 
+        isTemporary: false, 
+        loginCount: (tempUser.data.loginCount || 0) + 1 
+      });
+    } catch (err) {
+      console.error(err);
+      setError('שגיאה בעדכון הסיסמה');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -239,6 +288,55 @@ const LoginPage: React.FC = () => {
                 כניסה
               </button>
               <button type="button" onClick={() => setMode('JOIN')} className="w-full text-white/50 hover:text-[#00FFFF] font-black text-xs transition-colors">בקשת הצטרפות</button>
+            </form>
+          ) : mode === 'RESET_TEMP_PASSWORD' ? (
+            <form onSubmit={handleResetPasswordSubmit} className="space-y-6">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-[#00FFFF]/10 text-[#00FFFF] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <RotateCcw size={32} />
+                </div>
+                <h3 className="text-2xl font-black text-white">החלפת סיסמה זמנית</h3>
+                <p className="text-white/50 text-xs font-bold mt-2">הסיסמה שקיבלת היא זמנית. נא לבחור סיסמה אישית קבועה.</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    required 
+                    value={newPassword} 
+                    onChange={e => setNewPassword(e.target.value)} 
+                    className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14"
+                    placeholder="סיסמה חדשה"
+                  />
+                </div>
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    required 
+                    value={confirmPassword} 
+                    onChange={e => setConfirmPassword(e.target.value)} 
+                    className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14"
+                    placeholder="אימות סיסמה"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
+              
+              <button type="submit" disabled={isLoading} className="w-full py-5 bg-[#006994] text-white rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-3 hover:bg-[#4E8294] transition-all active:scale-95">
+                {isLoading ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={24} className="text-[#00FFFF]" />}
+                עדכן סיסמה וכנס
+              </button>
+              
+              <button type="button" onClick={() => setMode('LOGIN')} className="w-full text-white/50 hover:text-white font-black text-xs transition-colors">חזרה להתחברות</button>
             </form>
           ) : (
             <form onSubmit={handleJoinSubmit} className="space-y-6">

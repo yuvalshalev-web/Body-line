@@ -11,7 +11,7 @@ export interface Member {
   joinedAt: string;
   isActive?: boolean; // true = active, false = inactive
   password?: string;
-  isTempPassword?: boolean;
+  isTemporary?: boolean;
   facebookUrl?: string;
   instagramUrl?: string;
   tiktokUrl?: string;
@@ -37,6 +37,7 @@ export interface JoinRequest {
   twitterUrl?: string;
   websiteUrl?: string;
   requestedAt: string;
+  group?: string;
 }
 
 export interface GalleryItem {
