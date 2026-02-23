@@ -282,6 +282,42 @@ const LoginPage: React.FC = () => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+
+              {/* Location Selection Dropdown */}
+              <div className="relative">
+                <button 
+                  type="button"
+                  onClick={() => setIsGroupMenuOpen(!isGroupMenuOpen)}
+                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none flex items-center justify-between group hover:bg-white/10 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <MapPin size={20} className="text-[#00FFFF]" />
+                    <span>{selectedGroup}</span>
+                  </div>
+                  <ChevronDown size={20} className={`text-white/40 transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isGroupMenuOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    {groups.map((group) => (
+                      <button
+                        key={group}
+                        type="button"
+                        onClick={() => {
+                          setSelectedGroup(group);
+                          setIsGroupMenuOpen(false);
+                        }}
+                        className={`w-full px-6 py-4 text-right font-bold transition-all hover:bg-white/10 ${
+                          selectedGroup === group ? 'text-[#00FFFF] bg-white/5' : 'text-white/70'
+                        }`}
+                      >
+                        {group}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
               <button type="submit" disabled={isLoading} className="w-full py-5 bg-[#006994] text-white rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-3 hover:bg-[#4E8294] transition-all active:scale-95">
                 {isLoading ? <Loader2 className="animate-spin" /> : <LogIn size={24} className="text-[#00FFFF]" />}

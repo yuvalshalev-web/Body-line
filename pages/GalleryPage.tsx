@@ -124,7 +124,7 @@ const GalleryPage: React.FC = () => {
     <div className="min-h-screen bg-white text-right animate-in fade-in duration-700" dir="rtl">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
-          <h2 className="text-5xl font-black italic tracking-tighter text-slate-900 mb-2">גלריית הנבחרת</h2>
+          <h2 className="text-5xl font-black italic tracking-tighter text-[#006994] mb-2">הליינאפ התמונות</h2>
           <p className="text-slate-500 font-black text-[11px] uppercase tracking-widest">
             רגעים מהמים • {galleryItems.length} תמונות אופטימליות
           </p>
@@ -169,25 +169,28 @@ const GalleryPage: React.FC = () => {
         </div>
       )}
 
-      <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-6 space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {galleryItems.map((item) => (
           <div 
             key={item.id} 
-            className={`relative group rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 break-inside-avoid cursor-zoom-in ${deletingId === item.id ? 'opacity-30' : ''}`}
+            className={`relative group aspect-square overflow-hidden rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 cursor-zoom-in ${deletingId === item.id ? 'opacity-30' : ''}`}
             onClick={() => setSelectedImage(item.imageUrl)}
           >
             <img 
               src={item.imageUrl} 
-              className="w-full object-cover" 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
               alt={item.uploaderName} 
               loading="lazy" 
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-8 flex flex-col justify-end">
-               <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
-                    <User size={14} />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-8">
+               <div className="flex items-center gap-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30">
+                    <User size={18} />
                   </div>
-                  <p className="text-white font-black text-xs">{item.uploaderName}</p>
+                  <div>
+                    <p className="text-white font-black text-sm">{item.uploaderName}</p>
+                    <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">רגע מהמים</p>
+                  </div>
                </div>
                
                {(currentUser?.role === 'Admin' || currentUser?.id === item.uploaderId) && (
@@ -197,10 +200,10 @@ const GalleryPage: React.FC = () => {
                      handleDelete(item); 
                    }}
                    disabled={deletingId === item.id}
-                   className="absolute top-6 left-6 p-3 bg-rose-500 text-white rounded-2xl hover:bg-rose-600 transition-all shadow-lg active:scale-90 z-20 disabled:opacity-50"
+                   className="absolute top-6 left-6 p-3 bg-rose-500/90 backdrop-blur-sm text-white rounded-2xl hover:bg-rose-600 transition-all shadow-lg active:scale-90 z-20 disabled:opacity-50"
                    title="מחיקת תמונה"
                  >
-                   {deletingId === item.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                   {deletingId === item.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                  </button>
                )}
             </div>
@@ -210,17 +213,25 @@ const GalleryPage: React.FC = () => {
 
       {selectedImage && (
         <div 
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-12 bg-slate-950/90 backdrop-blur-xl animate-in fade-in" 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-12 bg-black/90 backdrop-blur-md animate-in fade-in duration-300" 
           onClick={() => setSelectedImage(null)}
         >
-           <button className="absolute top-8 left-8 p-4 text-white hover:text-indigo-400 transition-colors bg-white/10 rounded-2xl">
+           <button 
+             className="absolute top-8 left-8 p-4 text-white hover:text-[#00FFFF] transition-colors bg-white/10 hover:bg-white/20 rounded-2xl z-[130]"
+             onClick={(e) => {
+               e.stopPropagation();
+               setSelectedImage(null);
+             }}
+           >
              <X size={32} />
            </button>
-           <img 
-             src={selectedImage} 
-             className="max-w-full max-h-full rounded-[2rem] shadow-2xl animate-in zoom-in-95" 
-             alt="Large view" 
-           />
+           <div className="relative max-w-5xl max-h-full" onClick={e => e.stopPropagation()}>
+             <img 
+               src={selectedImage} 
+               className="w-full h-full object-contain rounded-[2rem] shadow-2xl animate-in zoom-in-95 duration-300" 
+               alt="Large view" 
+             />
+           </div>
         </div>
       )}
     </div>

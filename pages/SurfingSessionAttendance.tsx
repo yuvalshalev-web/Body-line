@@ -171,6 +171,50 @@ const SurfingSessionAttendance: React.FC = () => {
     setView('current');
   };
 
+  const seedHistory = async () => {
+    if (!window.confirm("האם לייצר היסטוריית סשנים אוטומטית מתחילת 2026?")) return;
+    
+    setIsSaving(true);
+    try {
+      const db = getDb();
+      const startDate = new Date('2026-01-01');
+      const today = new Date();
+      let current = new Date(startDate);
+      
+      // Find first Thursday
+      while (current.getDay() !== 4) {
+        current.setDate(current.getDate() + 1);
+      }
+
+      const batch = [];
+      while (current <= today) {
+        const participantsCount = Math.floor(Math.random() * 15) + 5;
+        const randomParticipants = users
+          .sort(() => 0.5 - Math.random())
+          .slice(0, participantsCount)
+          .map(u => u.id);
+
+        batch.push(addDoc(collection(db, 'weekly_history'), {
+          date: Timestamp.fromDate(new Date(current)),
+          participantsCount,
+          participantIds: randomParticipants,
+          instructorName: 'מדריך חבל זוג',
+          createdAt: new Date().toISOString()
+        }));
+        
+        current.setDate(current.getDate() + 7);
+      }
+
+      await Promise.all(batch);
+      alert('היסטוריה יוצרה בהצלחה');
+    } catch (error) {
+      console.error("Error seeding history:", error);
+      alert('שגיאה בייצור היסטוריה');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const formatDate = (date: any) => {
     if (!date) return '';
     const d = date instanceof Timestamp ? date.toDate() : new Date(date);
@@ -199,7 +243,7 @@ const SurfingSessionAttendance: React.FC = () => {
             onClick={() => { setView('current'); setEditingHistorySession(null); }}
             className={`px-6 py-2.5 rounded-xl font-black text-sm transition-all ${view === 'current' && !editingHistorySession ? 'bg-[#006994] text-white shadow-lg' : 'text-[#4E8294] hover:bg-slate-50'}`}
           >
-            סשן פעיל
+            הסשן הקרוב
           </button>
           <button 
             onClick={() => { setView('history'); setEditingHistorySession(null); }}
@@ -304,11 +348,8 @@ const SurfingSessionAttendance: React.FC = () => {
                           alt={user.name}
                         />
                         
-                        {/* Checkbox Overlay */}
-                        <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isSelected ? 'bg-[#006994]/20 opacity-100' : 'bg-black/20 opacity-0 group-hover:opacity-100'}`}>
-                          <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-[#00FFFF] border-[#00FFFF]' : 'bg-white/20 border-white'}`}>
-                            {isSelected && <Check size={14} className="text-[#006994]" strokeWidth={4} />}
-                          </div>
+                        {/* Selection Overlay (Dimming only) */}
+                        <div className={`absolute inset-0 transition-opacity duration-300 ${isSelected ? 'bg-[#006994]/20 opacity-100' : 'bg-black/10 opacity-0 group-hover:opacity-100'}`}>
                         </div>
                       </div>
                       
@@ -413,7 +454,13 @@ const SurfingSessionAttendance: React.FC = () => {
             {history.length === 0 && (
               <div className="py-20 text-center bg-white/40 rounded-[3rem] border-2 border-dashed border-[#006994]/10">
                 <History size={48} className="mx-auto mb-4 text-[#006994]/20" />
-                <p className="text-[#4E8294] font-bold">אין היסטוריית סשנים זמינה</p>
+                <p className="text-[#4E8294] font-bold mb-6">אין היסטוריית סשנים זמינה</p>
+                <button 
+                  onClick={seedHistory}
+                  className="px-6 py-3 bg-[#006994] text-white rounded-xl font-black text-xs hover:bg-[#00FFFF] hover:text-[#006994] transition-all"
+                >
+                  ייצר היסטוריה מתחילת 2026
+                </button>
               </div>
             )}
           </div>

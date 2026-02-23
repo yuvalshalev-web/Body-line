@@ -89,7 +89,7 @@ const DirectoryPage: React.FC = () => {
           <div className="h-1 w-12 bg-[#006994]"></div>
           <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#006994]">The Elite Squad</span>
         </div>
-        <h2 className="text-7xl md:text-8xl font-black italic tracking-tighter text-slate-900 leading-none">נבחרת הכוכבים</h2>
+        <h2 className="text-7xl md:text-8xl font-black italic tracking-tighter text-[#006994] leading-none">נבחרת הכוכבים</h2>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-4">
           <p className="text-slate-500 font-bold text-lg max-w-2xl">
             האנשים שעושים את חבל זוג למה שהיא - קהילה של חברים שנפגשים במים
@@ -115,9 +115,9 @@ const DirectoryPage: React.FC = () => {
         <div className="relative">
            <button 
              onClick={() => setIsSortOpen(!isSortOpen)}
-             className="w-full md:w-auto h-full px-10 py-6 bg-slate-900 text-white rounded-[2rem] font-black text-sm flex items-center justify-between gap-6 hover:bg-black transition-all shadow-xl active:scale-95"
+             className="w-full md:w-auto h-full px-10 py-6 bg-[#006994] text-white rounded-[2rem] font-black text-sm flex items-center justify-between gap-6 hover:bg-[#4E8294] transition-all shadow-xl active:scale-95"
            >
-              <span className="uppercase tracking-widest">Sort By</span> <ChevronDown size={18} className={isSortOpen ? 'rotate-180 transition-transform' : ''} />
+              <span className="uppercase tracking-widest">מיון</span> <ChevronDown size={18} className={isSortOpen ? 'rotate-180 transition-transform' : ''} />
            </button>
            {isSortOpen && (
              <div className="absolute top-full left-0 right-0 md:left-auto md:w-64 mt-4 bg-white border border-slate-100 rounded-[2rem] shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-4 backdrop-blur-xl bg-white/90">
@@ -139,7 +139,7 @@ const DirectoryPage: React.FC = () => {
             className="group cursor-pointer relative" 
             onClick={() => setSelectedMember(member)}
           >
-            <div className="relative aspect-square overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-slate-100 border border-slate-100 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-1">
+             <div className="relative aspect-square overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-slate-100 border border-slate-100 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-1">
                {member.avatar ? (
                  <img 
                    src={member.avatar} 
@@ -162,6 +162,9 @@ const DirectoryPage: React.FC = () => {
                {member.role === 'Admin' && (
                  <div className="absolute top-2 left-2 w-2 h-2 bg-[#00FFFF] rounded-full shadow-[0_0_10px_#00FFFF]"></div>
                )}
+            </div>
+            <div className="mt-2 text-center">
+              <p className="text-[10px] font-black text-[#006994] truncate px-1">{member.name}</p>
             </div>
           </motion.div>
         ))}
