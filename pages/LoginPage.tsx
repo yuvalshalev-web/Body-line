@@ -323,7 +323,25 @@ const LoginPage: React.FC = () => {
                 {isLoading ? <Loader2 className="animate-spin" /> : <LogIn size={24} className="text-[#00FFFF]" />}
                 כניסה
               </button>
-              <button type="button" onClick={() => setMode('JOIN')} className="w-full text-white/50 hover:text-[#00FFFF] font-black text-xs transition-colors">בקשת הצטרפות</button>
+              
+              <div className="pt-4 flex justify-center">
+                <button 
+                  type="button" 
+                  onClick={() => setMode('JOIN')} 
+                  className="group relative flex items-center gap-3 bg-[#006994] text-white px-8 py-4 rounded-2xl font-black overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(0,255,255,0.3)]"
+                >
+                  {/* אפקט "נצנוץ" בציאן ברקע במעבר עכבר */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#00FFFF]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  {/* האייקון עם הנפשה קטנה */}
+                  <UserPlus 
+                    size={22} 
+                    className="text-[#00FFFF] transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" 
+                  />
+                  
+                  <span className="relative z-10 text-lg">בקשת הצטרפות לקהילה</span>
+                </button>
+              </div>
             </form>
           ) : mode === 'RESET_TEMP_PASSWORD' ? (
             <form onSubmit={handleResetPasswordSubmit} className="space-y-6">

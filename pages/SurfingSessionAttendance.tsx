@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 import { Users as UsersIcon, Check, Save, Search, Loader2, ChevronRight, History, Calendar as CalendarIcon, User as UserIcon, AlertTriangle, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useData } from '../contexts/DataContext';
 
 interface User {
   id: string;
@@ -37,6 +38,7 @@ interface SessionHistory {
 }
 
 const SurfingSessionAttendance: React.FC = () => {
+  const { finalizeThursdaySession } = useData();
   const [users, setUsers] = useState<User[]>([]);
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
@@ -149,17 +151,12 @@ const SurfingSessionAttendance: React.FC = () => {
 
     setIsSaving(true);
     try {
-      const db = getDb();
-      await addDoc(collection(db, 'weekly_history'), {
-        date: serverTimestamp(),
-        participantsCount: confirmedIds.size,
-        participantIds: Array.from(confirmedIds),
-        createdAt: new Date().toISOString()
-      });
+      await finalizeThursdaySession();
       alert('הנוכחות נשמרה בהצלחה בארכיון השבועי');
-    } catch (error) {
+      setConfirmedIds(new Set());
+    } catch (error: any) {
       console.error("Error saving attendance:", error);
-      alert('שגיאה בשמירת הנתונים');
+      alert('שגיאה בשמירת הנתונים: ' + (error.message || ''));
     } finally {
       setIsSaving(false);
     }

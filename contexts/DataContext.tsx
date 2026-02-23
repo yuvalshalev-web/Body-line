@@ -31,6 +31,7 @@ interface DataContextType {
   deleteNews: (id: string) => Promise<void>;
   toggleSessionAttendance: (userId: string) => Promise<void>;
   forceResetSession: () => Promise<void>;
+  finalizeThursdaySession: () => Promise<void>;
   batchAddGlossary: (items: Omit<GlossaryTerm, 'id'>[]) => Promise<void>;
   batchAddQuotes: (items: Omit<QuoteItem, 'id'>[]) => Promise<void>;
   clearCollection: (collectionName: string) => Promise<void>;
@@ -105,40 +106,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const data = snapshot.data() as any;
         const sessionDate = data.date;
         const attendees = data.attendees || [];
-        const now = new Date();
-        const sDate = new Date(sessionDate);
         
-        if (sessionDate && now.getTime() >= sDate.getTime()) {
-          const sessionRef = doc(db, 'site_data', 'active_session');
-          const currentSnap = await getDoc(sessionRef);
-          if (currentSnap.exists() && (currentSnap.data() as any).date === sessionDate) {
-            try {
-              await addDoc(collection(db, 'weekly_stats'), {
-                date: sessionDate,
-                count: attendees.length,
-                timestamp: new Date().toISOString()
-              });
-            } catch (e) { console.error("Archive failed", e); }
-
-            const batch = writeBatch(db);
-            attendees.forEach((uid: string) => {
-              const mRef = doc(db, 'members', uid);
-              batch.update(mRef, { totalAttendance: increment(1) });
-            });
-            try { await batch.commit(); } catch (e) { console.error("Batch update failed", e); }
-
-            const nextThurs = getNextThursday();
-            await setDoc(sessionRef, {
-              attendees: [],
-              date: nextThurs
-            }, { merge: true });
-            setAttendeeIds([]);
-            setActiveSessionDate(nextThurs);
-          }
-        } else {
-          setAttendeeIds(attendees);
-          setActiveSessionDate(sessionDate || getNextThursday());
-        }
+        setAttendeeIds(attendees);
+        setActiveSessionDate(sessionDate || getNextThursday());
       } else {
         const nextThurs = getNextThursday();
         await setDoc(doc(db, 'site_data', 'active_session'), {
@@ -304,6 +274,46 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
+  const finalizeThursdaySession = async () => {
+    const db = getDb();
+    const sessionRef = doc(db, 'site_data', 'active_session');
+    const sessionSnap = await getDoc(sessionRef);
+    
+    if (!sessionSnap.exists()) throw new Error("Active session not found");
+    
+    const data = sessionSnap.data() as any;
+    const attendees = data.attendees || [];
+    const sessionDate = data.date;
+
+    if (attendees.length === 0) throw new Error("No attendees to finalize");
+
+    const batch = writeBatch(db);
+    
+    // 1. Update totalAttendance for all attendees
+    attendees.forEach((uid: string) => {
+      const memberRef = doc(db, 'members', uid);
+      batch.update(memberRef, { totalAttendance: increment(1) });
+    });
+
+    // 2. Create weekly_stats entry
+    const statsRef = doc(collection(db, 'weekly_stats'));
+    batch.set(statsRef, {
+      date: sessionDate,
+      count: attendees.length,
+      participantIds: attendees,
+      timestamp: new Date().toISOString()
+    });
+
+    // 3. Reset active session
+    const nextThurs = getNextThursday();
+    batch.update(sessionRef, {
+      attendees: [],
+      date: nextThurs
+    });
+
+    await batch.commit();
+  };
+
   const batchAddGlossary = async (items: Omit<GlossaryTerm, 'id'>[]) => {
     const db = getDb();
     const batch = writeBatch(db);
@@ -343,7 +353,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       members, joinRequests, events, news, galleryItems, glossary, quotes, siteAssets, attendeeIds, activeSessionDate, isLoading,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, toggleEventAttendance, addNews, deleteNews, toggleSessionAttendance, forceResetSession,
-      batchAddGlossary, batchAddQuotes, clearCollection, updateSiteAssets
+      finalizeThursdaySession, batchAddGlossary, batchAddQuotes, clearCollection, updateSiteAssets
     }}>
       {children}
     </DataContext.Provider>
