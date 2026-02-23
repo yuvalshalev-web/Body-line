@@ -32,6 +32,7 @@ const EventsPage = lazy(() => import('./pages/EventsPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
 const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage'));
 const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage'));
+const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance'));
 
 const PageLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -253,6 +254,7 @@ const App: React.FC = () => {
               <>
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="/admin-info" element={<AdminInfoPage />} />
+                <Route path="/attendance" element={<SurfingSessionAttendance />} />
                 
               </>
             )}

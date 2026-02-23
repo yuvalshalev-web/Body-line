@@ -4,7 +4,7 @@ import {
   Users, Archive, Mic, Image as ImageIcon, Calendar, Settings, UserCheck, ShieldAlert, Search, 
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
-  Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save
+  Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
@@ -101,7 +101,7 @@ const AdminPage: React.FC = () => {
   );
 
   const handleApprove = async (id: string) => {
-    window.alert('AdminPage: handleApprove triggered for id: ' + id);
+    console.log('AdminPage: handleApprove triggered for id:', id);
     if (!window.confirm('האם לאשר את הצטרפות החבר/ה לנבחרת?')) return;
     
     setIsProcessing(id);
@@ -135,7 +135,7 @@ const AdminPage: React.FC = () => {
   };
 
   const handleReject = async (id: string, name: string, mobile: string) => {
-    window.alert('AdminPage: handleReject triggered for id: ' + id);
+    console.log('AdminPage: handleReject triggered for id:', id);
     if (!window.confirm(`האם לדחות את בקשת ההצטרפות של ${name}? הבקשה תימחק והמשתמש יקבל הודעת דחייה.`)) return;
     
     setIsProcessing(id);
@@ -193,7 +193,7 @@ const AdminPage: React.FC = () => {
                 { id: 'DASHBOARD', label: 'ראשי', icon: LayoutDashboard },
                 { id: 'USERS', label: 'משתמשים', icon: Users },
                 { id: 'ARCHIVE', label: 'ארכיון', icon: Archive },
-                { id: 'PODCASTS', label: 'פודקאסטים', icon: Mic },
+                { id: 'POSTS', label: 'פוסטים', icon: Newspaper },
                 { id: 'GALLERY', label: 'גלריה', icon: ImageIcon },
                 { id: 'EVENTS', label: 'אירועים', icon: Calendar },
                 { id: 'REQUESTS', label: 'בקשות', icon: UserCheck, count: joinRequests.length },
@@ -238,6 +238,11 @@ const AdminPage: React.FC = () => {
 
           {/* Main Content Area */}
           <div className="flex-1 min-w-0 w-full">
+            {isProcessing && (
+              <div className="fixed top-4 left-4 bg-black text-white p-2 z-[999] text-[10px]">
+                Processing: {isProcessing}
+              </div>
+            )}
             
             {activeTab === 'DASHBOARD' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
@@ -246,7 +251,7 @@ const AdminPage: React.FC = () => {
                   { id: 'REQUESTS', label: 'בקשות הצטרפות', desc: `${joinRequests.length} ממתינים לאישור`, icon: UserCheck, color: 'bg-[#f063c1]', count: joinRequests.length },
                   { id: 'EVENTS', label: 'ניהול אירועים', desc: `${events.length} אירועים בלוח`, icon: Calendar, color: 'bg-[#f7c1ea]' },
                   { id: 'GALLERY', label: 'גלריית תמונות', desc: `${galleryItems.length} פריטים במדיה`, icon: ImageIcon, color: 'bg-[#ffd2fa]' },
-                  { id: 'PODCASTS', label: 'פודקאסטים', desc: 'ניהול תכני שמע', icon: Mic, color: 'bg-[#f2def0]' },
+                  { id: 'POSTS', label: 'פוסטים', desc: 'ניהול תכני האתר', icon: Newspaper, color: 'bg-[#f2def0]' },
                   { id: 'SITE', label: 'הגדרות אתר', desc: 'לוגואים, רקעים ונכסים', icon: Settings, color: 'bg-[#4a002e]' },
                   { id: 'ARCHIVE', label: 'ארכיון משתמשים', desc: 'ניהול חברים שהושעו', icon: Archive, color: 'bg-[#f063c1]' },
                 ].map((item) => (
@@ -328,17 +333,21 @@ const AdminPage: React.FC = () => {
 
                     <div className="flex gap-3 mt-10">
                        <button 
-                         onClick={(e) => { e.stopPropagation(); handleApprove(req.id); }}
+                         onClick={() => {
+                           handleApprove(req.id);
+                         }}
                          disabled={isProcessing === req.id}
-                         className="flex-1 py-4 bg-[#ff009f] text-white rounded-2xl font-black text-sm hover:bg-[#4a002e] transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 relative z-10"
+                         className="flex-1 py-4 bg-[#ff009f] text-white rounded-2xl font-black text-sm hover:bg-[#4a002e] transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
                        >
                          {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserCheck size={20} className="text-[#ffd2fa]" />}
                          אשר הצטרפות
                        </button>
                        <button 
-                         onClick={(e) => { e.stopPropagation(); handleReject(req.id, req.name, req.mobile); }}
+                         onClick={() => {
+                           handleReject(req.id, req.name, req.mobile);
+                         }}
                          disabled={isProcessing === req.id}
-                         className="p-4 bg-rose-50 text-rose-600 rounded-2xl hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50 flex items-center justify-center border-2 border-rose-200 hover:border-rose-600 shadow-sm relative z-10"
+                         className="p-4 bg-rose-50 text-rose-600 rounded-2xl hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50 flex items-center justify-center border-2 border-rose-200 hover:border-rose-600 shadow-sm"
                          title="דחה ומחק בקשה"
                        >
                          {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserX size={20} />}
@@ -805,13 +814,13 @@ const AdminPage: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'PODCASTS' && (
+        {activeTab === 'POSTS' && (
           <div className="py-32 text-center border-2 border-dashed border-[#ff009f]/10 rounded-[4rem] animate-in fade-in">
              <div className="w-20 h-20 bg-[#f7c1ea]/10 rounded-full flex items-center justify-center mx-auto mb-6 text-[#f063c1]/20">
-                <Mic size={40} />
+                <Newspaper size={40} />
              </div>
-             <h3 className="text-2xl font-black text-[#f063c1]/40">ניהול פודקאסטים בקרוב</h3>
-             <p className="text-[#f063c1]/40 font-bold mt-2">כאן תוכלו לנהל את רשימת הפרקים והקישורים</p>
+             <h3 className="text-2xl font-black text-[#f063c1]/40">ניהול פוסטים בקרוב</h3>
+             <p className="text-[#f063c1]/40 font-bold mt-2">כאן תוכלו לנהל את רשימת הפוסטים והעדכונים</p>
           </div>
         )}
 
