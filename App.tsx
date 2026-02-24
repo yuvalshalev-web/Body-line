@@ -112,8 +112,7 @@ const App: React.FC = () => {
 
   const adminNavItems = [
     { path: '/admin', icon: Settings, label: 'פאנל ניהול' },
-    { path: '/attendance', icon: Users, label: 'סנכרון נוכחות' },
-    { path: '/admin-info', icon: BarChart3, label: 'סטטיסטיקה' }
+    { path: '/attendance', icon: Users, label: 'סנכרון נוכחות' }
   ];
 
   return (

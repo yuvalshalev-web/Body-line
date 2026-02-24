@@ -5,6 +5,7 @@ import { HashRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
+import { ModalProvider } from './contexts/ModalContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
@@ -15,7 +16,9 @@ root.render(
     <HashRouter>
       <AuthProvider>
         <DataProvider>
-          <App />
+          <ModalProvider>
+            <App />
+          </ModalProvider>
         </DataProvider>
       </AuthProvider>
     </HashRouter>

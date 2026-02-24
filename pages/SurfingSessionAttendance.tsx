@@ -22,6 +22,7 @@ import {
 import { Users as UsersIcon, Check, Save, Search, Loader2, ChevronRight, History, Calendar as CalendarIcon, User as UserIcon, AlertTriangle, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
+import { useModal } from '../contexts/ModalContext';
 
 interface User {
   id: string;
@@ -43,6 +44,7 @@ interface SessionHistory {
 const SurfingSessionAttendance: React.FC = () => {
   const navigate = useNavigate();
   const { finalizeThursdaySession, members: globalMembers, isLoading: globalLoading } = useData();
+  const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -182,13 +184,13 @@ const SurfingSessionAttendance: React.FC = () => {
       });
     } catch (error) {
       console.error("Error toggling user attendance:", error);
-      alert('שגיאה בעדכון הנוכחות');
+      showError('שגיאה בעדכון הנוכחות');
     }
   };
 
   const handleFinalConfirm = async () => {
     if (confirmedIds.size === 0) {
-      alert('נא לבחור לפחות משתתף אחד');
+      showAlert('נא לבחור לפחות משתתף אחד');
       return;
     }
 
@@ -197,83 +199,101 @@ const SurfingSessionAttendance: React.FC = () => {
       const db = getDb();
 
       if (editingHistorySession) {
-        if (!window.confirm("שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות. האם אתה בטוח שברצונך לעדכן את הרישום?")) {
-          setIsSaving(false);
-          return;
-        }
-        
-        const batch = writeBatch(db);
-        const newParticipants = Array.from(confirmedIds);
-        const oldParticipants = editingHistorySession.participantIds || [];
-        
-        const membersRef = collection(db, 'members');
-        const historyRef = collection(db, 'weekly_history');
+        showConfirm({
+          message: "שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות. האם אתה בטוח שברצונך לעדכן את הרישום?",
+          onConfirm: async () => {
+            try {
+              setIsSaving(true);
+              const batch = writeBatch(db);
+              const newParticipants = Array.from(confirmedIds);
+              const oldParticipants = editingHistorySession.participantIds || [];
+              
+              const membersRef = collection(db, 'members');
+              const historyRef = collection(db, 'weekly_history');
 
-        // Find added and removed members to sync totalAttendance
-        const added = newParticipants.filter(id => !oldParticipants.includes(id));
-        const removed = oldParticipants.filter(id => !newParticipants.includes(id));
-        
-        added.forEach((uid: string) => {
-          batch.update(doc(membersRef, uid), { totalAttendance: increment(1) });
+              // Find added and removed members to sync totalAttendance
+              const added = newParticipants.filter(id => !oldParticipants.includes(id));
+              const removed = oldParticipants.filter(id => !newParticipants.includes(id));
+              
+              added.forEach((uid: string) => {
+                batch.update(doc(membersRef, uid), { totalAttendance: increment(1) });
+              });
+              removed.forEach((uid: string) => {
+                batch.update(doc(membersRef, uid), { totalAttendance: increment(-1) });
+              });
+
+              // Robust date handling for Firestore Timestamp
+              let finalDate;
+              try {
+                if (editingHistorySession.date && typeof editingHistorySession.date.toDate === 'function') {
+                  finalDate = editingHistorySession.date;
+                } else if (editingHistorySession.date instanceof Date) {
+                  finalDate = Timestamp.fromDate(editingHistorySession.date);
+                } else if (editingHistorySession.date && editingHistorySession.date.seconds) {
+                  finalDate = new Timestamp(editingHistorySession.date.seconds, editingHistorySession.date.nanoseconds || 0);
+                } else {
+                  finalDate = Timestamp.fromDate(new Date(editingHistorySession.date));
+                }
+              } catch (e) {
+                finalDate = Timestamp.now();
+              }
+
+              const sessionData = {
+                participantIds: newParticipants,
+                participantsCount: newParticipants.length,
+                updatedAt: serverTimestamp(),
+                date: finalDate,
+                instructorName: editingHistorySession.instructorName || 'מדריך חבל זוג'
+              };
+
+              if (editingHistorySession.id) {
+                batch.update(doc(historyRef, editingHistorySession.id), sessionData);
+              } else {
+                const newDocRef = doc(historyRef);
+                batch.set(newDocRef, {
+                  ...sessionData,
+                  createdAt: serverTimestamp()
+                });
+              }
+              
+              await batch.commit();
+              showSuccess('נשמר בהצלחה');
+              setEditingHistorySession(null);
+              setConfirmedIds(new Set());
+              navigate('/admin');
+            } catch (error: any) {
+              console.error("Error saving history:", error);
+              showError('שגיאה בשמירת הנתונים: ' + (error.message || 'שגיאה לא ידועה'));
+            } finally {
+              setIsSaving(false);
+            }
+          },
+          onCancel: () => setIsSaving(false)
         });
-        removed.forEach((uid: string) => {
-          batch.update(doc(membersRef, uid), { totalAttendance: increment(-1) });
-        });
-
-        // Robust date handling for Firestore Timestamp
-        let finalDate;
-        try {
-          if (editingHistorySession.date && typeof editingHistorySession.date.toDate === 'function') {
-            finalDate = editingHistorySession.date;
-          } else if (editingHistorySession.date instanceof Date) {
-            finalDate = Timestamp.fromDate(editingHistorySession.date);
-          } else if (editingHistorySession.date && editingHistorySession.date.seconds) {
-            finalDate = new Timestamp(editingHistorySession.date.seconds, editingHistorySession.date.nanoseconds || 0);
-          } else {
-            finalDate = Timestamp.fromDate(new Date(editingHistorySession.date));
-          }
-        } catch (e) {
-          finalDate = Timestamp.now();
-        }
-
-        const sessionData = {
-          participantIds: newParticipants,
-          participantsCount: newParticipants.length,
-          updatedAt: serverTimestamp(),
-          date: finalDate,
-          instructorName: editingHistorySession.instructorName || 'מדריך חבל זוג'
-        };
-
-        if (editingHistorySession.id) {
-          batch.update(doc(historyRef, editingHistorySession.id), sessionData);
-        } else {
-          const newDocRef = doc(historyRef);
-          batch.set(newDocRef, {
-            ...sessionData,
-            createdAt: serverTimestamp()
-          });
-        }
-        
-        await batch.commit();
-        alert('נשמר בהצלחה');
-        setEditingHistorySession(null);
-        setConfirmedIds(new Set());
-        navigate('/admin/stats');
       } else {
         // Current session finalize
-        if (!window.confirm(`האם לאשר סופית נוכחות של ${confirmedIds.size} גולשים?`)) {
-          setIsSaving(false);
-          return;
-        }
-        await finalizeThursdaySession();
-        alert('נשמר בהצלחה');
-        setConfirmedIds(new Set());
-        navigate('/admin/stats');
+        showConfirm({
+          message: `האם לאשר סופית נוכחות של ${confirmedIds.size} גולשים?`,
+          onConfirm: async () => {
+            try {
+              setIsSaving(true);
+              await finalizeThursdaySession();
+              showSuccess('נשמר בהצלחה');
+              setConfirmedIds(new Set());
+              navigate('/admin');
+            } catch (error: any) {
+              console.error("Error finalizing session:", error);
+              showError('שגיאה בשמירת הנתונים: ' + (error.message || 'שגיאה לא ידועה'));
+            } finally {
+              setIsSaving(false);
+            }
+          },
+          onCancel: () => setIsSaving(false)
+        });
       }
     } catch (error: any) {
       console.error("Error saving session:", error);
-      alert('שגיאה בשמירת הנתונים: ' + (error.message || 'שגיאה לא ידועה'));
-    } finally {
+      showError('שגיאה בשמירת הנתונים: ' + (error.message || 'שגיאה לא ידועה'));
       setIsSaving(false);
     }
   };
@@ -308,47 +328,50 @@ const SurfingSessionAttendance: React.FC = () => {
   };
 
   const seedHistory = async () => {
-    if (!window.confirm("האם לייצר היסטוריית סשנים אוטומטית מתחילת 2026?")) return;
-    
-    setIsSaving(true);
-    try {
-      const db = getDb();
-      const startDate = new Date('2026-01-01');
-      const today = new Date();
-      let current = new Date(startDate);
-      
-      // Find first Thursday
-      while (current.getDay() !== 4) {
-        current.setDate(current.getDate() + 1);
+    showConfirm({
+      message: "האם לייצר היסטוריית סשנים אוטומטית מתחילת 2026?",
+      onConfirm: async () => {
+        setIsSaving(true);
+        try {
+          const db = getDb();
+          const startDate = new Date('2026-01-01');
+          const today = new Date();
+          let current = new Date(startDate);
+          
+          // Find first Thursday
+          while (current.getDay() !== 4) {
+            current.setDate(current.getDate() + 1);
+          }
+
+          const batch = [];
+          while (current <= today) {
+            const participantsCount = Math.floor(Math.random() * 15) + 5;
+            const randomParticipants = globalMembers
+              .sort(() => 0.5 - Math.random())
+              .slice(0, participantsCount)
+              .map(u => u.id);
+
+            batch.push(addDoc(collection(db, 'weekly_history'), {
+              date: Timestamp.fromDate(new Date(current)),
+              participantsCount,
+              participantIds: randomParticipants,
+              instructorName: 'מדריך חבל זוג',
+              createdAt: new Date().toISOString()
+            }));
+            
+            current.setDate(current.getDate() + 7);
+          }
+
+          await Promise.all(batch);
+          showSuccess('היסטוריה יוצרה בהצלחה');
+        } catch (error) {
+          console.error("Error seeding history:", error);
+          showError('שגיאה בייצור היסטוריה');
+        } finally {
+          setIsSaving(false);
+        }
       }
-
-      const batch = [];
-      while (current <= today) {
-        const participantsCount = Math.floor(Math.random() * 15) + 5;
-        const randomParticipants = globalMembers
-          .sort(() => 0.5 - Math.random())
-          .slice(0, participantsCount)
-          .map(u => u.id);
-
-        batch.push(addDoc(collection(db, 'weekly_history'), {
-          date: Timestamp.fromDate(new Date(current)),
-          participantsCount,
-          participantIds: randomParticipants,
-          instructorName: 'מדריך חבל זוג',
-          createdAt: new Date().toISOString()
-        }));
-        
-        current.setDate(current.getDate() + 7);
-      }
-
-      await Promise.all(batch);
-      alert('היסטוריה יוצרה בהצלחה');
-    } catch (error) {
-      console.error("Error seeding history:", error);
-      alert('שגיאה בייצור היסטוריה');
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const formatDate = (date: any) => {
