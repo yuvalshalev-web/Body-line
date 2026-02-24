@@ -27,7 +27,7 @@ const ASSET_LABELS: Record<string, string> = {
 const AdminPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { 
-    joinRequests, siteAssets, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember
+    joinRequests, siteAssets, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember
   } = useData();
 
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'PODCASTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE'>('DASHBOARD');
@@ -37,9 +37,55 @@ const AdminPage: React.FC = () => {
   const [editingAsset, setEditingAsset] = useState<{ key: string, value: string } | null>(null);
   const [isUploadingAsset, setIsUploadingAsset] = useState<string | null>(null);
   const assetFileInputRef = useRef<HTMLInputElement>(null);
+  const eventImageInputRef = useRef<HTMLInputElement>(null);
   const [replacingAssetKey, setReplacingAssetKey] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
-  const isSuperAdmin = currentUser?.email === SUPER_ADMIN_EMAIL;
+  
+  // Event Editing State
+  const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [eventForm, setEventForm] = useState({
+    title: '', description: '', date: '', time: '', location: '', imageUrl: '', type: 'COMMUNITY' as any
+  });
+  const [isSavingEvent, setIsSavingEvent] = useState(false);
+  const [isUploadingEventImage, setIsUploadingEventImage] = useState(false);
+
+  const isSuperAdmin = currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
+
+  const formatDate = (dateValue: string) => {
+    const d = new Date(dateValue);
+    if (isNaN(d.getTime())) return dateValue;
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const handleEditEvent = (event: any) => {
+    setEditingEvent(event);
+    setEventForm({
+      title: event.title,
+      description: event.description,
+      date: event.date,
+      time: event.time,
+      location: event.location,
+      imageUrl: event.imageUrl,
+      type: event.type
+    });
+  };
+
+  const handleSaveEvent = async () => {
+    if (!editingEvent) return;
+    setIsSavingEvent(true);
+    try {
+      await updateEvent({ ...editingEvent, ...eventForm });
+      setEditingEvent(null);
+      alert('האירוע עודכן בהצלחה');
+    } catch (err) {
+      alert('שגיאה בעדכון האירוע');
+    } finally {
+      setIsSavingEvent(false);
+    }
+  };
 
   const handleAssetFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -74,6 +120,30 @@ const AdminPage: React.FC = () => {
     } catch (err) {
       console.error(err);
       alert('שגיאה בעדכון הנכס');
+    }
+  };
+
+  const handleEventImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingEventImage(true);
+    try {
+      const processed = await processImage(file, 1200, 0.85);
+      const storage = getStorageInstance();
+      const storageRef = ref(storage, `events/${Date.now()}_${file.name}`);
+      
+      await uploadBytes(storageRef, processed.blob);
+      const downloadUrl = await getDownloadURL(storageRef);
+      
+      setEventForm(prev => ({ ...prev, imageUrl: downloadUrl }));
+      alert('התמונה הועלתה בהצלחה');
+    } catch (err) {
+      console.error(err);
+      alert('שגיאה בהעלאת התמונה');
+    } finally {
+      setIsUploadingEventImage(false);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -853,9 +923,8 @@ const AdminPage: React.FC = () => {
               {events.map(event => (
                 <div key={event.id} className="bg-white border border-[#ff009f]/5 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-[#ff009f]/5 transition-all flex items-center justify-between group">
                   <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 bg-[#ff009f]/10 text-[#ff009f] rounded-2xl flex flex-col items-center justify-center font-black">
-                      <span className="text-lg leading-none">{event.date.split('.')[0]}</span>
-                      <span className="text-[10px] uppercase">{event.date.split('.')[1]}</span>
+                    <div className="bg-[#ff009f]/10 text-[#ff009f] p-4 rounded-2xl flex items-center justify-center font-black min-w-max">
+                      <span className="text-sm whitespace-nowrap tabular-nums">{formatDate(event.date)}</span>
                     </div>
                     <div className="flex flex-col">
                       <h4 className="text-xl font-black text-[#4a002e] mb-1">{event.title}</h4>
@@ -871,12 +940,24 @@ const AdminPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => deleteEvent(event.id)}
-                    className="p-4 bg-[#f7c1ea]/10 text-[#f063c1]/20 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all"
-                  >
-                    <Trash2 size={20} />
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleEditEvent(event)}
+                      className="p-4 bg-[#f7c1ea]/10 text-[#f063c1] rounded-2xl hover:bg-[#ff009f] hover:text-white transition-all"
+                      title="עריכת אירוע"
+                    >
+                      <Pencil size={20} />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (window.confirm('האם למחוק אירוע זה?')) deleteEvent(event.id);
+                      }}
+                      className="p-4 bg-rose-50 text-rose-400 rounded-2xl hover:bg-rose-500 hover:text-white transition-all"
+                      title="מחיקת אירוע"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1003,6 +1084,131 @@ const AdminPage: React.FC = () => {
                 className="py-4 bg-[#ff009f] text-white rounded-2xl font-black text-sm shadow-lg hover:bg-[#4a002e] transition-all"
               >
                 עדכון נכס
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Event Modal */}
+      {editingEvent && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-[#4a002e]/60 backdrop-blur-md animate-in fade-in">
+          <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-2xl p-10 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-3xl font-black text-[#4a002e]">עריכת אירוע</h3>
+              <button onClick={() => setEditingEvent(null)} className="p-2 text-slate-400 hover:text-rose-500 transition-colors"><X size={24} /></button>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-4">כותרת האירוע</label>
+                <input 
+                  type="text"
+                  value={eventForm.title}
+                  onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
+                  className="w-full bg-[#f7c1ea]/10 border border-[#ff009f]/5 rounded-2xl px-6 py-4 font-bold text-[#4a002e] focus:ring-2 focus:ring-[#ff009f] outline-none transition-all"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-4">תיאור</label>
+                <textarea 
+                  value={eventForm.description}
+                  onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                  className="w-full bg-[#f7c1ea]/10 border border-[#ff009f]/5 rounded-2xl px-6 py-4 font-bold text-[#4a002e] focus:ring-2 focus:ring-[#ff009f] outline-none transition-all h-32 resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-4">תאריך</label>
+                  <input 
+                    type="date"
+                    value={eventForm.date}
+                    onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
+                    className="w-full bg-[#f7c1ea]/10 border border-[#ff009f]/5 rounded-2xl px-6 py-4 font-bold text-[#4a002e] focus:ring-2 focus:ring-[#ff009f] outline-none transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-4">שעה</label>
+                  <input 
+                    type="time"
+                    value={eventForm.time}
+                    onChange={(e) => setEventForm({ ...eventForm, time: e.target.value })}
+                    className="w-full bg-[#f7c1ea]/10 border border-[#ff009f]/5 rounded-2xl px-6 py-4 font-bold text-[#4a002e] focus:ring-2 focus:ring-[#ff009f] outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-4">מיקום</label>
+                <input 
+                  type="text"
+                  value={eventForm.location}
+                  onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
+                  className="w-full bg-[#f7c1ea]/10 border border-[#ff009f]/5 rounded-2xl px-6 py-4 font-bold text-[#4a002e] focus:ring-2 focus:ring-[#ff009f] outline-none transition-all"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-4">תמונת רקע</label>
+                <div className="relative group/img aspect-video rounded-3xl overflow-hidden border-2 border-dashed border-[#ff009f]/20 bg-[#f7c1ea]/5 flex flex-col items-center justify-center gap-4 transition-all hover:border-[#ff009f]/40">
+                  {eventForm.imageUrl ? (
+                    <>
+                      <img src={eventForm.imageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Preview" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                        <button 
+                          onClick={() => eventImageInputRef.current?.click()}
+                          className="px-6 py-3 bg-white text-[#ff009f] rounded-2xl font-black text-sm shadow-xl flex items-center gap-2 active:scale-95"
+                        >
+                          <Camera size={18} />
+                          החלפת תמונת רקע
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <button 
+                      onClick={() => eventImageInputRef.current?.click()}
+                      className="flex flex-col items-center gap-2 text-[#f063c1]/40 hover:text-[#ff009f] transition-colors"
+                    >
+                      <div className="p-4 bg-white rounded-2xl shadow-sm">
+                        <Camera size={32} />
+                      </div>
+                      <span className="font-black text-xs">לחץ להעלאת תמונה</span>
+                    </button>
+                  )}
+                  
+                  {isUploadingEventImage && (
+                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
+                      <Loader2 className="animate-spin text-[#ff009f]" size={32} />
+                      <span className="font-black text-[#ff009f] text-[10px] uppercase tracking-widest">מעלה תמונה...</span>
+                    </div>
+                  )}
+                </div>
+                <input 
+                  type="file"
+                  ref={eventImageInputRef}
+                  onChange={handleEventImageUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-10">
+              <button 
+                onClick={() => setEditingEvent(null)}
+                className="py-4 bg-[#f2def0] text-[#ff009f] rounded-2xl font-black text-sm hover:bg-[#ffd2fa] transition-all"
+              >
+                ביטול
+              </button>
+              <button 
+                onClick={handleSaveEvent}
+                disabled={isSavingEvent}
+                className="py-4 bg-[#ff009f] text-white rounded-2xl font-black text-sm shadow-lg hover:bg-[#4a002e] transition-all flex items-center justify-center gap-2"
+              >
+                {isSavingEvent ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                שמור שינויים
               </button>
             </div>
           </div>

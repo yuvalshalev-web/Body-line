@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, orderBy, limit, addDoc, writeBatch } from 'firebase/firestore';
+import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, orderBy, limit, addDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { getDb } from '../services/firebase';
 import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
@@ -26,6 +26,7 @@ interface DataContextType {
   rejectRequest: (id: string) => Promise<void>;
   addEvent: (details: Omit<Event, 'id'>) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
+  updateEvent: (event: Event) => Promise<void>;
   toggleEventAttendance: (eventId: string, userId: string) => Promise<void>;
   addNews: (details: Omit<NewsItem, 'id'>) => Promise<void>;
   deleteNews: (id: string) => Promise<void>;
@@ -101,7 +102,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (doc.exists()) setSiteAssets(doc.data());
     });
 
+    // Safety timeout for loading state
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+    }, 4000);
+
     const unsubAttendees = onSnapshot(doc(db, 'site_data', 'active_session'), async (snapshot) => {
+      clearTimeout(timeoutId);
       if (snapshot.exists()) {
         const data = snapshot.data() as any;
         const sessionDate = data.date;
@@ -111,16 +118,25 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setActiveSessionDate(sessionDate || getNextThursday());
       } else {
         const nextThurs = getNextThursday();
-        await setDoc(doc(db, 'site_data', 'active_session'), {
-          attendees: [],
-          date: nextThurs
-        });
+        try {
+          await setDoc(doc(db, 'site_data', 'active_session'), {
+            attendees: [],
+            date: nextThurs
+          });
+        } catch (e) {
+          console.error("Error creating active_session:", e);
+        }
         setActiveSessionDate(nextThurs);
       }
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Attendees sync error:", error);
+      clearTimeout(timeoutId);
       setIsLoading(false);
     });
 
     return () => {
+      clearTimeout(timeoutId);
       unsubMembers(); unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubGlossary(); unsubQuotes(); unsubAssets(); unsubAttendees();
     };
   }, []);
@@ -239,6 +255,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await deleteDoc(doc(getDb(), 'events', id));
   };
 
+  const updateEvent = async (event: Event) => {
+    const { id, ...data } = event;
+    await updateDoc(doc(getDb(), 'events', id), data);
+  };
+
   const toggleEventAttendance = async (eventId: string, userId: string) => {
     const event = events.find(e => e.id === eventId);
     if (!event) return;
@@ -295,13 +316,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       batch.update(memberRef, { totalAttendance: increment(1) });
     });
 
-    // 2. Create weekly_stats entry
-    const statsRef = doc(collection(db, 'weekly_stats'));
-    batch.set(statsRef, {
-      date: sessionDate,
-      count: attendees.length,
+    // 2. Create weekly_history entry
+    const historyRef = doc(collection(db, 'weekly_history'));
+    batch.set(historyRef, {
+      date: Timestamp.fromDate(new Date(sessionDate)),
+      participantsCount: attendees.length,
       participantIds: attendees,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      instructorName: 'מדריך חבל זוג'
     });
 
     // 3. Reset active session
@@ -352,7 +374,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <DataContext.Provider value={{ 
       members, joinRequests, events, news, galleryItems, glossary, quotes, siteAssets, attendeeIds, activeSessionDate, isLoading,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
-      addEvent, deleteEvent, toggleEventAttendance, addNews, deleteNews, toggleSessionAttendance, forceResetSession,
+      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, deleteNews, toggleSessionAttendance, forceResetSession,
       finalizeThursdaySession, batchAddGlossary, batchAddQuotes, clearCollection, updateSiteAssets
     }}>
       {children}

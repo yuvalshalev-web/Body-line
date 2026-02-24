@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getDb } from '../services/firebase';
 import { 
   collection, 
@@ -14,9 +15,11 @@ import {
   arrayUnion,
   arrayRemove,
   limit,
-  Timestamp
+  Timestamp,
+  writeBatch,
+  increment
 } from 'firebase/firestore';
-import { Users as UsersIcon, Check, Save, Search, Loader2, ChevronRight, History, Calendar as CalendarIcon, User as UserIcon, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Users as UsersIcon, Check, Save, Search, Loader2, ChevronRight, History, Calendar as CalendarIcon, User as UserIcon, AlertTriangle, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 
@@ -38,44 +41,84 @@ interface SessionHistory {
 }
 
 const SurfingSessionAttendance: React.FC = () => {
-  const { finalizeThursdaySession } = useData();
-  const [users, setUsers] = useState<User[]>([]);
+  const navigate = useNavigate();
+  const { finalizeThursdaySession, members: globalMembers, isLoading: globalLoading } = useData();
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [view, setView] = useState<'current' | 'history'>('current');
   const [history, setHistory] = useState<SessionHistory[]>([]);
   const [editingHistorySession, setEditingHistorySession] = useState<SessionHistory | null>(null);
+  const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
+  const [showManualDatePicker, setShowManualDatePicker] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Track unsaved changes
+  useEffect(() => {
+    if (editingHistorySession) {
+      const originalIds = new Set(editingHistorySession.participantIds || []);
+      const currentIds = confirmedIds;
+      
+      const isDifferent = originalIds.size !== currentIds.size || 
+        Array.from(originalIds).some(id => !currentIds.has(id));
+      
+      setHasUnsavedChanges(isDifferent);
+    } else {
+      setHasUnsavedChanges(false);
+    }
+  }, [confirmedIds, editingHistorySession]);
+
+  // Warn before leaving
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  const generateThursdays = () => {
+    const dates = [];
+    const start = new Date('2026-01-01');
+    const today = new Date();
+    let current = new Date(start);
+    
+    while (current.getDay() !== 4) {
+      current.setDate(current.getDate() + 1);
+    }
+
+    while (current <= today) {
+      dates.push(new Date(current));
+      current.setDate(current.getDate() + 7);
+    }
+    return dates.reverse();
+  };
+
+  const thursdays = generateThursdays();
+
+  const dropdownDates = useMemo(() => {
+    const historyDates = history.map(s => {
+      const d = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
+      return d;
+    });
+    
+    const allDates = [...historyDates];
+    thursdays.forEach(t => {
+      if (!allDates.some(ad => ad.toDateString() === t.toDateString())) {
+        allDates.push(t);
+      }
+    });
+    
+    return allDates.sort((a, b) => b.getTime() - a.getTime());
+  }, [history, thursdays]);
 
   useEffect(() => {
     const db = getDb();
     
-    // 1. Fetch all members
-    const unsubUsers = onSnapshot(collection(db, 'members'), (snapshot) => {
-      const usersList = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as User));
-      setUsers(usersList);
-      setIsLoading(false);
-    });
-
-    // 2. Real-time sync with 'Big Thursday' (active_session)
-    const sessionRef = doc(db, 'site_data', 'active_session');
-    const unsubSession = onSnapshot(sessionRef, (snapshot) => {
-      if (view === 'current' && !editingHistorySession) {
-        const data = snapshot.data();
-        const attendees = data?.attendees;
-        if (Array.isArray(attendees)) {
-          setConfirmedIds(new Set(attendees));
-        } else {
-          setConfirmedIds(new Set());
-        }
-      }
-    });
-
-    // 3. Fetch History
+    // 1. Fetch History
     const historyQuery = query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(20));
     const unsubHistory = onSnapshot(historyQuery, (snapshot) => {
       const historyList = snapshot.docs.map(doc => ({
@@ -86,10 +129,35 @@ const SurfingSessionAttendance: React.FC = () => {
     });
 
     return () => {
-      unsubUsers();
-      unsubSession();
       unsubHistory();
     };
+  }, []);
+
+  // 3. Separate effect for active session sync to prevent race conditions
+  useEffect(() => {
+    // Only sync with active_session if we are in 'current' view AND NOT editing a historical session
+    if (view !== 'current' || editingHistorySession !== null) {
+      return;
+    }
+
+    const db = getDb();
+    const sessionRef = doc(db, 'site_data', 'active_session');
+    
+    const unsubSession = onSnapshot(sessionRef, (snapshot) => {
+      if (!snapshot.exists()) return;
+      
+      const data = snapshot.data();
+      const attendees = data?.attendees;
+      if (Array.isArray(attendees)) {
+        setConfirmedIds(new Set(attendees));
+      } else {
+        setConfirmedIds(new Set());
+      }
+    }, (error) => {
+      console.error("Active session sync error:", error);
+    });
+
+    return () => unsubSession();
   }, [view, editingHistorySession]);
 
   const toggleUser = async (userId: string) => {
@@ -124,39 +192,87 @@ const SurfingSessionAttendance: React.FC = () => {
       return;
     }
 
-    if (editingHistorySession) {
-      if (!window.confirm("שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות. האם אתה בטוח שברצונך לעדכן את הרישום?")) return;
-      
-      setIsSaving(true);
-      try {
-        const db = getDb();
-        await updateDoc(doc(db, 'weekly_history', editingHistorySession.id), {
-          participantIds: Array.from(confirmedIds),
-          participantsCount: confirmedIds.size,
-          updatedAt: serverTimestamp()
-        });
-        alert('הסשן ההיסטורי עודכן בהצלחה');
-        setEditingHistorySession(null);
-        setView('history');
-      } catch (error) {
-        console.error("Error updating history:", error);
-        alert('שגיאה בעדכון הסשן');
-      } finally {
-        setIsSaving(false);
-      }
-      return;
-    }
-
-    if (!window.confirm(`האם לאשר סופית נוכחות של ${confirmedIds.size} גולשים?`)) return;
-
     setIsSaving(true);
     try {
-      await finalizeThursdaySession();
-      alert('הנוכחות נשמרה בהצלחה בארכיון השבועי');
-      setConfirmedIds(new Set());
+      const db = getDb();
+
+      if (editingHistorySession) {
+        if (!window.confirm("שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות. האם אתה בטוח שברצונך לעדכן את הרישום?")) {
+          setIsSaving(false);
+          return;
+        }
+        
+        const batch = writeBatch(db);
+        const newParticipants = Array.from(confirmedIds);
+        const oldParticipants = editingHistorySession.participantIds || [];
+        
+        const membersRef = collection(db, 'members');
+        const historyRef = collection(db, 'weekly_history');
+
+        // Find added and removed members to sync totalAttendance
+        const added = newParticipants.filter(id => !oldParticipants.includes(id));
+        const removed = oldParticipants.filter(id => !newParticipants.includes(id));
+        
+        added.forEach((uid: string) => {
+          batch.update(doc(membersRef, uid), { totalAttendance: increment(1) });
+        });
+        removed.forEach((uid: string) => {
+          batch.update(doc(membersRef, uid), { totalAttendance: increment(-1) });
+        });
+
+        // Robust date handling for Firestore Timestamp
+        let finalDate;
+        try {
+          if (editingHistorySession.date && typeof editingHistorySession.date.toDate === 'function') {
+            finalDate = editingHistorySession.date;
+          } else if (editingHistorySession.date instanceof Date) {
+            finalDate = Timestamp.fromDate(editingHistorySession.date);
+          } else if (editingHistorySession.date && editingHistorySession.date.seconds) {
+            finalDate = new Timestamp(editingHistorySession.date.seconds, editingHistorySession.date.nanoseconds || 0);
+          } else {
+            finalDate = Timestamp.fromDate(new Date(editingHistorySession.date));
+          }
+        } catch (e) {
+          finalDate = Timestamp.now();
+        }
+
+        const sessionData = {
+          participantIds: newParticipants,
+          participantsCount: newParticipants.length,
+          updatedAt: serverTimestamp(),
+          date: finalDate,
+          instructorName: editingHistorySession.instructorName || 'מדריך חבל זוג'
+        };
+
+        if (editingHistorySession.id) {
+          batch.update(doc(historyRef, editingHistorySession.id), sessionData);
+        } else {
+          const newDocRef = doc(historyRef);
+          batch.set(newDocRef, {
+            ...sessionData,
+            createdAt: serverTimestamp()
+          });
+        }
+        
+        await batch.commit();
+        alert('נשמר בהצלחה');
+        setEditingHistorySession(null);
+        setConfirmedIds(new Set());
+        navigate('/admin/stats');
+      } else {
+        // Current session finalize
+        if (!window.confirm(`האם לאשר סופית נוכחות של ${confirmedIds.size} גולשים?`)) {
+          setIsSaving(false);
+          return;
+        }
+        await finalizeThursdaySession();
+        alert('נשמר בהצלחה');
+        setConfirmedIds(new Set());
+        navigate('/admin/stats');
+      }
     } catch (error: any) {
-      console.error("Error saving attendance:", error);
-      alert('שגיאה בשמירת הנתונים: ' + (error.message || ''));
+      console.error("Error saving session:", error);
+      alert('שגיאה בשמירת הנתונים: ' + (error.message || 'שגיאה לא ידועה'));
     } finally {
       setIsSaving(false);
     }
@@ -166,6 +282,29 @@ const SurfingSessionAttendance: React.FC = () => {
     setEditingHistorySession(session);
     setConfirmedIds(new Set(session.participantIds));
     setView('current');
+    setShowHistoryDropdown(false);
+  };
+
+  const handleSelectHistoryDate = (date: Date) => {
+    const existingSession = history.find(s => {
+      const sDate = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
+      return sDate.toDateString() === date.toDateString();
+    });
+
+    if (existingSession) {
+      loadHistorySession(existingSession);
+    } else {
+      // Create a new historical session object
+      const newSession: SessionHistory = {
+        id: '', // No ID means it's new
+        date: Timestamp.fromDate(date),
+        participantsCount: 0,
+        participantIds: [],
+        instructorName: 'מדריך חבל זוג'
+      };
+      loadHistorySession(newSession);
+    }
+    setShowManualDatePicker(false);
   };
 
   const seedHistory = async () => {
@@ -186,7 +325,7 @@ const SurfingSessionAttendance: React.FC = () => {
       const batch = [];
       while (current <= today) {
         const participantsCount = Math.floor(Math.random() * 15) + 5;
-        const randomParticipants = users
+        const randomParticipants = globalMembers
           .sort(() => 0.5 - Math.random())
           .slice(0, participantsCount)
           .map(u => u.id);
@@ -214,15 +353,15 @@ const SurfingSessionAttendance: React.FC = () => {
 
   const formatDate = (date: any) => {
     if (!date) return '';
-    const d = date instanceof Timestamp ? date.toDate() : new Date(date);
+    const d = date instanceof Timestamp ? date.toDate() : (date.toDate ? date.toDate() : new Date(date));
     return d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = globalMembers.filter(u => 
     u.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (isLoading) {
+  if (globalLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="animate-spin text-[#006994]" size={40} />
@@ -233,74 +372,176 @@ const SurfingSessionAttendance: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto font-['Assistant']" dir="rtl">
-      {/* View Toggle */}
-      <div className="flex justify-center mb-12">
+      {/* Header Section - Now at the very top */}
+      <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#006994] text-[#00FFFF] text-[10px] font-black rounded-full mb-4 shadow-lg shadow-[#006994]/20">
+            <UsersIcon size={12} /> 
+            {view === 'history' && !editingHistorySession ? 'ארכיון סשנים' : (editingHistorySession ? 'עריכת סשן היסטורי' : 'סנכרון נוכחות שבועי')}
+          </div>
+          <h2 className="text-3xl md:text-4xl font-black text-[#006994] tracking-tighter">
+            {view === 'history' && !editingHistorySession ? 'ארכיון סשנים: יום חמישי הגדול' : 
+             (editingHistorySession ? `עריכה: ${formatDate(editingHistorySession.date)}` : 'ארכיון סשנים: יום חמישי הגדול')}
+          </h2>
+          <p className="text-[#4E8294] font-bold mt-2">
+            {view === 'history' && !editingHistorySession ? 'היסטוריית גלישה ונוכחות לאורך זמן 🌊' : 'סמן את כל הגולשים שיצאו מהמים 🌊'}
+          </p>
+          
+          {editingHistorySession && (
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 text-amber-800 animate-pulse">
+              <AlertTriangle className="shrink-0 mt-0.5" size={20} />
+              <p className="text-sm font-bold leading-relaxed">
+                שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {(view === 'current' || editingHistorySession) && (
+          <div className="flex items-center gap-4">
+            {editingHistorySession && (
+              <button 
+                onClick={() => { setView('history'); setEditingHistorySession(null); }}
+                className="px-6 py-4 bg-slate-100 text-[#4E8294] rounded-2xl font-black text-sm hover:bg-slate-200 transition-all flex items-center gap-2"
+              >
+                <ArrowRight size={18} /> ביטול
+              </button>
+            )}
+            
+            <button 
+              onClick={handleFinalConfirm}
+              disabled={isSaving || confirmedIds.size === 0}
+              className="px-8 py-4 bg-[#006994] text-white rounded-2xl font-black text-sm shadow-xl shadow-[#006994]/20 hover:bg-[#60DD8E] hover:text-[#006994] transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group min-w-[160px] justify-center"
+            >
+              {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} className="group-hover:scale-110 transition-transform" />}
+              {editingHistorySession ? 'עדכון סשן' : 'שמירה'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* View Toggle & History Dropdown */}
+      <div className="flex justify-center mb-12 relative">
         <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-[#006994]/10 flex gap-2">
-          <button 
-            onClick={() => { setView('current'); setEditingHistorySession(null); }}
-            className={`px-6 py-2.5 rounded-xl font-black text-sm transition-all ${view === 'current' && !editingHistorySession ? 'bg-[#006994] text-white shadow-lg' : 'text-[#4E8294] hover:bg-slate-50'}`}
-          >
-            הסשן הקרוב
-          </button>
-          <button 
-            onClick={() => { setView('history'); setEditingHistorySession(null); }}
-            className={`px-6 py-2.5 rounded-xl font-black text-sm transition-all ${view === 'history' ? 'bg-[#006994] text-white shadow-lg' : 'text-[#4E8294] hover:bg-slate-50'}`}
-          >
-            היסטוריית סשנים
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setShowManualDatePicker(!showManualDatePicker)}
+              className={`px-6 py-2.5 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${view === 'current' && !editingHistorySession ? 'bg-[#006994] text-white shadow-lg' : 'text-[#4E8294] hover:bg-slate-50'}`}
+            >
+              <CalendarIcon size={16} />
+              צור סשן ידנית
+            </button>
+
+            <AnimatePresence>
+              {showManualDatePicker && (
+                <>
+                  <div className="fixed inset-0 z-[90]" onClick={() => setShowManualDatePicker(false)} />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute top-full right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 p-6 z-[100]"
+                  >
+                    <p className="text-[10px] font-black text-[#4E8294] uppercase tracking-widest mb-4">בחר תאריך לסשן (כולל 2025)</p>
+                    <input 
+                      type="date" 
+                      min="2025-01-01"
+                      max="2026-12-31"
+                      className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-black text-[#006994] outline-none focus:ring-2 ring-[#00FFFF]/30 mb-4"
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleSelectHistoryDate(new Date(e.target.value));
+                        }
+                      }}
+                    />
+                    <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold italic">
+                      <AlertTriangle size={12} />
+                      <span>בחירת תאריך תפתח סשן חדש או תטען קיים</span>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          <div className="relative">
+            <button 
+              onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
+              className={`px-6 py-2.5 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${view === 'history' || editingHistorySession ? 'bg-[#006994] text-white shadow-lg' : 'text-[#4E8294] hover:bg-slate-50'}`}
+            >
+              <History size={16} />
+              היסטוריית סשנים
+              <ChevronRight size={16} className={`transition-transform ${showHistoryDropdown ? 'rotate-90' : '-rotate-90'}`} />
+            </button>
+
+            <AnimatePresence>
+              {showHistoryDropdown && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-[90]" 
+                    onClick={() => setShowHistoryDropdown(false)}
+                  />
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-[100] max-h-80 overflow-y-auto"
+                  >
+                    <div className="px-4 py-2 border-bottom border-slate-50 mb-2">
+                      <p className="text-[10px] font-black text-[#4E8294] uppercase tracking-widest">בחר תאריך (ימי חמישי וסשנים קיימים)</p>
+                    </div>
+                    {dropdownDates.map((date, idx) => {
+                      const isExisting = history.some(s => {
+                        const sDate = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
+                        return sDate.toDateString() === date.toDateString();
+                      });
+
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => handleSelectHistoryDate(date)}
+                          className="w-full px-4 py-3 text-right hover:bg-[#00FFFF]/10 transition-colors flex items-center justify-between group"
+                        >
+                          <span className="font-bold text-[#006994]">{formatDate(date)}</span>
+                          {isExisting ? (
+                            <span className="text-[8px] font-black bg-[#00FFFF] text-[#006994] px-2 py-0.5 rounded-full uppercase">קיים</span>
+                          ) : (
+                            <span className="text-[8px] font-black bg-slate-100 text-slate-400 px-2 py-0.5 rounded-full uppercase">חדש</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
       {view === 'current' ? (
         <>
-          {/* Header Section */}
-          <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#006994] text-[#00FFFF] text-[10px] font-black rounded-full mb-4 shadow-lg shadow-[#006994]/20">
-                <UsersIcon size={12} /> {editingHistorySession ? 'עריכת סשן היסטורי' : 'סנכרון נוכחות שבועי'}
-              </div>
-              <h2 className="text-3xl md:text-4xl font-black text-[#006994] tracking-tighter">
-                {editingHistorySession ? `עריכה: ${formatDate(editingHistorySession.date)}` : 'סנכרון נוכחות: יום חמישי הגדול'}
-              </h2>
-              <p className="text-[#4E8294] font-bold mt-2">סמן את כל הגולשים שיצאו ממים 🌊</p>
-              
-              {editingHistorySession && (
-                <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 text-amber-800 animate-pulse">
-                  <AlertTriangle className="shrink-0 mt-0.5" size={20} />
-                  <p className="text-sm font-bold leading-relaxed">
-                    שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות.
-                  </p>
-                </div>
-              )}
+          {/* Dynamic Section Title & Stats */}
+          <div className="flex items-center justify-between gap-4 mb-10 bg-white/40 p-6 rounded-[2.5rem] border border-[#006994]/5">
+            {/* Header Text */}
+            <div className="text-right">
+              <h3 className="text-xl md:text-2xl font-black text-[#006994] tracking-tight">
+                {editingHistorySession 
+                  ? `רשימת משתתפים בסשן ההיסטורי ${formatDate(editingHistorySession.date)}` 
+                  : 'רשימת משתתפים בסשן הקרוב (מתעדכן)'}
+              </h3>
+              <div className="w-16 h-1 bg-[#00FFFF] mt-1 rounded-full shadow-sm"></div>
             </div>
 
-            <div className="flex items-center gap-4">
-              {editingHistorySession && (
-                <button 
-                  onClick={() => { setView('history'); setEditingHistorySession(null); }}
-                  className="px-6 py-4 bg-slate-100 text-[#4E8294] rounded-2xl font-black text-sm hover:bg-slate-200 transition-all flex items-center gap-2"
-                >
-                  <ArrowRight size={18} /> ביטול
-                </button>
-              )}
-              <div className="bg-white px-6 py-3 rounded-2xl border border-[#006994]/10 shadow-sm flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#00FFFF]/10 rounded-full flex items-center justify-center text-[#006994]">
-                  <UsersIcon size={20} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-[#4E8294] uppercase tracking-widest">סה"כ נוכחים</p>
-                  <p className="text-xl font-black text-[#006994]">{confirmedIds.size}</p>
-                </div>
+            {/* Stats Widget */}
+            <div className="bg-white px-4 py-2 md:px-6 md:py-3 rounded-2xl border border-[#006994]/10 shadow-sm flex items-center gap-3 shrink-0">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-[#00FFFF]/10 rounded-full flex items-center justify-center text-[#006994]">
+                <UsersIcon size={18} />
               </div>
-              
-              <button 
-                onClick={handleFinalConfirm}
-                disabled={isSaving || confirmedIds.size === 0}
-                className="px-8 py-4 bg-[#006994] text-white rounded-2xl font-black text-sm shadow-xl shadow-[#006994]/20 hover:bg-[#00FFFF] hover:text-[#006994] transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group"
-              >
-                {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} className="group-hover:scale-110 transition-transform" />}
-                {editingHistorySession ? 'עדכון סשן' : 'אישור סופי ושמירה'}
-              </button>
+              <div>
+                <p className="text-[8px] md:text-[10px] font-black text-[#4E8294] uppercase tracking-widest leading-none mb-1">סה"כ נוכחים</p>
+                <p className="text-lg md:text-xl font-black text-[#006994] leading-none">{confirmedIds.size}</p>
+              </div>
             </div>
           </div>
 
@@ -329,15 +570,15 @@ const SurfingSessionAttendance: React.FC = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     onClick={() => toggleUser(user.id)}
-                    className={`relative cursor-pointer group rounded-[2.5rem] p-4 transition-all duration-500 flex flex-col items-center ${
+                    className={`relative cursor-pointer group rounded-[2.5rem] p-4 transition-all duration-500 flex flex-col items-center border ${
                       isSelected 
-                        ? 'bg-white shadow-2xl shadow-[#006994]/10 border-2 border-[#00FFFF]' 
-                        : 'bg-white/40 border border-transparent hover:bg-white hover:shadow-xl'
+                        ? 'bg-[#60DD8E]/5 shadow-2xl shadow-[#006994]/5 border-[#60DD8E]/40' 
+                        : 'bg-white/40 border-transparent hover:bg-white hover:shadow-xl hover:border-[#006994]/5'
                     }`}
                   >
                     <div className="relative mb-4">
-                      <div className={`w-24 h-24 rounded-[2rem] overflow-hidden border-4 transition-all duration-500 ${
-                        isSelected ? 'border-[#00FFFF] scale-105 shadow-lg shadow-[#00FFFF]/20' : 'border-white grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100'
+                      <div className={`w-24 h-24 rounded-[2rem] overflow-hidden border transition-all duration-500 ${
+                        isSelected ? 'border-[#60DD8E] scale-105 shadow-lg shadow-[#60DD8E]/10' : 'border-white grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100'
                       }`}>
                         <img 
                           src={user.photoURL || user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=006994&color=fff`} 
@@ -345,33 +586,35 @@ const SurfingSessionAttendance: React.FC = () => {
                           alt={user.name}
                         />
                         
-                        {/* Selection Overlay (Dimming only) */}
-                        <div className={`absolute inset-0 transition-opacity duration-300 ${isSelected ? 'bg-[#006994]/20 opacity-100' : 'bg-black/10 opacity-0 group-hover:opacity-100'}`}>
+                        {/* Selection Overlay */}
+                        <div className={`absolute inset-0 transition-opacity duration-300 ${isSelected ? 'bg-[#006994]/5 opacity-100' : 'bg-black/5 opacity-0 group-hover:opacity-100'}`}>
                         </div>
                       </div>
                       
-                      {isSelected && (
-                        <motion.div 
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute -top-2 -right-2 w-8 h-8 bg-[#00FFFF] text-[#006994] rounded-full flex items-center justify-center border-4 border-white shadow-lg z-10"
-                        >
-                          <Check size={16} strokeWidth={4} />
-                        </motion.div>
+                      {/* Selection Checkmark - Top Right */}
+                      <div className={`absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center border border-white shadow-md z-10 transition-all duration-500 ${
+                        isSelected ? 'bg-[#60DD8E] text-[#006994] scale-110 rotate-0' : 'bg-white text-slate-200 scale-0 rotate-45'
+                      }`}>
+                        <CheckCircle2 size={18} strokeWidth={2.5} />
+                      </div>
+
+                      {/* Role Badge */}
+                      {user.role && (
+                        <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full shadow-sm border transition-all ${
+                          isSelected ? 'bg-[#006994] text-white border-[#006994]' : 'bg-white text-[#4E8294] border-slate-100'
+                        }`}>
+                          <span className="text-[8px] font-black uppercase tracking-tighter whitespace-nowrap">
+                            {user.role === 'Admin' ? 'מנהל' : user.role === 'Instructor' ? 'מדריך' : 'חבר'}
+                          </span>
+                        </div>
                       )}
                     </div>
 
-                    <span className={`text-sm font-black text-center transition-colors ${
+                    <span className={`text-sm font-black text-center transition-colors mt-1 ${
                       isSelected ? 'text-[#006994]' : 'text-[#4E8294]'
                     }`}>
                       {user.name}
                     </span>
-
-                    {isSelected && (
-                      <div className="mt-2 px-3 py-1 bg-[#00FFFF]/10 rounded-full">
-                        <span className="text-[10px] font-black text-[#006994] uppercase tracking-widest">נוכח/ת</span>
-                      </div>
-                    )}
                   </motion.div>
                 );
               })}
@@ -417,11 +660,11 @@ const SurfingSessionAttendance: React.FC = () => {
                   <div className="flex items-center justify-between md:justify-end gap-8">
                     <div className="flex -space-x-3 space-x-reverse">
                       {session.participantIds.slice(0, 3).map((uid, i) => {
-                        const user = users.find(u => u.id === uid);
+                        const user = globalMembers.find(u => u.id === uid);
                         return (
                           <div key={i} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-slate-100 shadow-sm">
                             <img 
-                              src={user?.photoURL || user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'G')}&background=006994&color=fff`} 
+                              src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'G')}&background=006994&color=fff`} 
                               className="w-full h-full object-cover"
                               alt=""
                             />

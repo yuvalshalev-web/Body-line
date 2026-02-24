@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Calendar, 
   Clock, 
@@ -13,17 +13,25 @@ import {
   ShieldAlert,
   User,
   Zap,
-  Info
+  Info,
+  Pencil,
+  Camera
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { Event } from '../types';
+import { SUPER_ADMIN_EMAIL } from '../constants';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getStorageInstance } from '../services/firebase';
+import { processImage } from '../utils/imageProcessor';
 
 const EventsPage: React.FC = () => {
   const { currentUser } = useAuth();
-  const { events, members, addEvent, deleteEvent, toggleEventAttendance } = useData();
+  const { events, members, addEvent, deleteEvent, updateEvent, toggleEventAttendance } = useData();
 
   const activeMemberIds = members.filter(m => m.isActive !== false).map(m => m.id);
   const [showModal, setShowModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
   
@@ -36,15 +44,44 @@ const EventsPage: React.FC = () => {
   const [imageUrl, setImageUrl] = useState('');
   const [eventType, setEventType] = useState<'COMMUNITY' | 'MEMBER' | 'INSTRUCTOR' | null>(null);
   const [showTypeWarning, setShowTypeWarning] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const canManageCommunityEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor';
-  const canManageInstructorEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor';
-  const isAdmin = currentUser?.role === 'Admin';
+  const canManageCommunityEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor' || currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
+  const canManageInstructorEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor' || currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
+  const isAdmin = currentUser?.role === 'Admin' || currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
 
   const formatDate = (dateValue: string) => {
     const d = new Date(dateValue);
     if (isNaN(d.getTime())) return dateValue;
-    return d.toLocaleDateString('he-IL');
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const processed = await processImage(file, 1200, 0.85);
+      const storage = getStorageInstance();
+      const storageRef = ref(storage, `events/${Date.now()}_${file.name}`);
+      
+      await uploadBytes(storageRef, processed.blob);
+      const downloadUrl = await getDownloadURL(storageRef);
+      
+      setImageUrl(downloadUrl);
+      alert('התמונה הועלתה בהצלחה');
+    } catch (err) {
+      console.error(err);
+      alert('שגיאה בהעלאת התמונה');
+    } finally {
+      setIsUploading(false);
+      if (e.target) e.target.value = '';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,17 +93,30 @@ const EventsPage: React.FC = () => {
     if (!title || !date || !time) return;
     setIsSaving(true);
     try {
-      await addEvent({
-        title,
-        description,
-        date,
-        time,
-        location: location || 'הרצליה',
-        imageUrl: imageUrl || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=800',
-        type: eventType,
-        creatorId: currentUser?.id,
-        attendees: []
-      });
+      if (editingEvent) {
+        await updateEvent({
+          ...editingEvent,
+          title,
+          description,
+          date,
+          time,
+          location: location || 'הרצליה',
+          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=800',
+          type: eventType,
+        });
+      } else {
+        await addEvent({
+          title,
+          description,
+          date,
+          time,
+          location: location || 'הרצליה',
+          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=800',
+          type: eventType,
+          creatorId: currentUser?.id,
+          attendees: []
+        });
+      }
       setShowModal(false);
       resetForm();
     } finally {
@@ -77,6 +127,19 @@ const EventsPage: React.FC = () => {
   const resetForm = () => {
     setTitle(''); setDescription(''); setDate(''); setTime(''); setLocation(''); setImageUrl(''); setEventType(null);
     setShowTypeWarning(false);
+    setEditingEvent(null);
+  };
+
+  const handleEdit = (event: Event) => {
+    setEditingEvent(event);
+    setTitle(event.title);
+    setDescription(event.description);
+    setDate(event.date);
+    setTime(event.time);
+    setLocation(event.location);
+    setImageUrl(event.imageUrl);
+    setEventType(event.type);
+    setShowModal(true);
   };
 
   const handleDelete = (id: string) => {
@@ -116,14 +179,31 @@ const EventsPage: React.FC = () => {
 
           return (
             <div key={event.id} className="group bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col relative">
-              {canDelete && (
-                <button onClick={() => handleDelete(event.id)} className="absolute top-6 left-6 p-3 bg-red-500 text-white rounded-2xl opacity-0 group-hover:opacity-100 transition-all z-20 shadow-xl"><Trash2 size={18} /></button>
-              )}
+              <div className="absolute top-6 left-6 flex gap-2 z-20">
+                {(currentUser && (event.creatorId === currentUser.id || currentUser.email === SUPER_ADMIN_EMAIL || currentUser.email === 'yuval@shalev.io')) && (
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleEdit(event)} 
+                      title="עריכת אירוע"
+                      className="p-3 bg-white text-[#006994] border border-slate-200 rounded-2xl shadow-xl hover:bg-slate-50 transition-all active:scale-90 flex items-center justify-center"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(event.id)} 
+                      title="מחיקת אירוע"
+                      className="p-3 bg-white text-red-500 border border-slate-200 rounded-2xl shadow-xl hover:bg-red-50 transition-all active:scale-90 flex items-center justify-center"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="relative aspect-video overflow-hidden">
                 <img src={event.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
                 <div className="absolute top-6 right-6 flex flex-col gap-2 items-end">
-                  <div className="bg-white/95 px-3 py-1.5 rounded-xl text-center shadow-lg">
-                    <p className="text-sm font-black text-slate-950">{formatDate(event.date)}</p>
+                  <div className="bg-white/95 px-4 py-2 rounded-xl text-center shadow-lg min-w-max">
+                    <p className="text-sm font-black text-slate-950 whitespace-nowrap tabular-nums">{formatDate(event.date)}</p>
                   </div>
                   <div className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-md ${
                     event.type === 'COMMUNITY' ? 'bg-[#006994] text-white' : 
@@ -174,8 +254,8 @@ const EventsPage: React.FC = () => {
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-md animate-in fade-in">
            <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl p-12 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
-             <button onClick={() => setShowModal(false)} className="absolute top-8 left-8 p-3 text-slate-400 bg-slate-50 rounded-full"><X size={24} /></button>
-             <h3 className="text-3xl font-black mb-8">יצירת אירוע</h3>
+             <button onClick={() => { setShowModal(false); resetForm(); }} className="absolute top-8 left-8 p-3 text-slate-400 bg-slate-50 rounded-full"><X size={24} /></button>
+             <h3 className="text-3xl font-black mb-8">{editingEvent ? 'עריכת אירוע' : 'יצירת אירוע'}</h3>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-4">
                   <label className="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">בחר סוג אירוע</label>
@@ -289,7 +369,51 @@ const EventsPage: React.FC = () => {
                       <input type="time" required value={time} onChange={e => setTime(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                     </div>
                     <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
-                    <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="כתובת תמונת רקע (URL)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">תמונת רקע</label>
+                      <div className="relative group/img aspect-video rounded-3xl overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-4 transition-all hover:border-[#006994]/40">
+                        {imageUrl ? (
+                          <>
+                            <img src={imageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Preview" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                              <button 
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="px-6 py-3 bg-white text-[#006994] rounded-2xl font-black text-sm shadow-xl flex items-center gap-2 active:scale-95"
+                              >
+                                <Camera size={18} />
+                                החלפת תמונת רקע
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <button 
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex flex-col items-center gap-2 text-slate-400 hover:text-[#006994] transition-colors"
+                          >
+                            <div className="p-4 bg-white rounded-2xl shadow-sm">
+                              <Camera size={32} />
+                            </div>
+                            <span className="font-black text-xs">לחץ להעלאת תמונה</span>
+                          </button>
+                        )}
+                        
+                        {isUploading && (
+                          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
+                            <Loader2 className="animate-spin text-[#006994]" size={32} />
+                            <span className="font-black text-[#006994] text-[10px] uppercase tracking-widest">מעלה תמונה...</span>
+                          </div>
+                        )}
+                      </div>
+                      <input 
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageUpload}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                    </div>
                   </div>
                 </div>
                 <button 
@@ -297,8 +421,8 @@ const EventsPage: React.FC = () => {
                   disabled={isSaving || !eventType || (eventType === 'COMMUNITY' && !canManageCommunityEvents) || (eventType === 'INSTRUCTOR' && !canManageInstructorEvents)} 
                   className="w-full py-5 bg-[#006994] text-white rounded-[2rem] font-black text-xl hover:bg-[#4E8294] transition-all shadow-xl flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                   {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="text-[#00FFFF]" />}
-                   צור אירוע חדש
+                   {isSaving ? <Loader2 className="animate-spin" size={24} /> : editingEvent ? <CheckCircle2 size={24} className="text-[#00FFFF]" /> : <Plus size={24} className="text-[#00FFFF]" />}
+                   {editingEvent ? 'שמור שינויים' : 'צור אירוע חדש'}
                 </button>
              </form>
            </div>

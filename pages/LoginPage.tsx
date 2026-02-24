@@ -248,7 +248,7 @@ const LoginPage: React.FC = () => {
                  ) : (!logoError && logoUrl) ? (
                    <img 
                      src={logoUrl} 
-                     className="h-24 w-auto mx-auto object-contain animate-in fade-in duration-500" 
+                     className="h-28 w-auto mx-auto object-contain animate-in fade-in duration-500" 
                      alt="Logo" 
                      onError={() => setLogoError(true)}
                    />
@@ -328,7 +328,7 @@ const LoginPage: React.FC = () => {
                 <button 
                   type="button" 
                   onClick={() => setMode('JOIN')} 
-                  className="group relative flex items-center gap-3 bg-[#006994] text-white px-8 py-4 rounded-2xl font-black overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(0,255,255,0.3)]"
+                  className="group relative flex items-center gap-3 bg-white/5 border border-white/10 text-white px-8 py-4 rounded-2xl font-black overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(0,255,255,0.3)]"
                 >
                   {/* אפקט "נצנוץ" בציאן ברקע במעבר עכבר */}
                   <div className="absolute inset-0 bg-gradient-to-r from-[#00FFFF]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

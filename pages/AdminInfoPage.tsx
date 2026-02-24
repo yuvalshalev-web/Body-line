@@ -9,7 +9,7 @@ Chart.register(...registerables);
 
 interface WeeklyStat {
   date: string;
-  count: number;
+  participantsCount: number;
 }
 
 const AdminInfoPage: React.FC = () => {
@@ -44,7 +44,7 @@ const AdminInfoPage: React.FC = () => {
       setEvents(data);
     });
 
-    const qWeekly = query(collection(db, 'weekly_stats'), orderBy('date', 'asc'));
+    const qWeekly = query(collection(db, 'weekly_history'), orderBy('date', 'asc'));
     const unsubWeekly = onSnapshot(qWeekly, (snapshot: any) => {
       const data = snapshot.docs.map((d: any) => d.data() as WeeklyStat);
       setWeeklyStats(data);
@@ -237,7 +237,7 @@ const AdminInfoPage: React.FC = () => {
           }),
           datasets: [{
             label: 'משתתפים בסשן',
-            data: weeklyStats.map(s => s.count),
+            data: weeklyStats.map(s => s.participantsCount),
             borderColor: '#6366f1',
             backgroundColor: 'rgba(99, 102, 241, 0.1)',
             fill: true,
