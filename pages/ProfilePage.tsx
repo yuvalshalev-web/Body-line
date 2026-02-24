@@ -129,7 +129,7 @@ const ProfilePage: React.FC = () => {
     if (!formData) return;
     setIsGeneratingBio(true);
     try {
-      const newBio = await generateBio(formData.name, formData.role, formData.bio);
+      const newBio = await generateBio(`${formData.firstName} ${formData.lastName}`, formData.role, formData.bio);
       handleFieldChange('bio', newBio);
     } catch (err) {
       console.error(err);
@@ -177,7 +177,7 @@ const ProfilePage: React.FC = () => {
               </label>
             </div>
             <div className="flex-1 mb-4 text-center md:text-right">
-               <h3 className="text-4xl font-black text-slate-900 tracking-tight mb-2">{formData.name}</h3>
+               <h3 className="text-4xl font-black text-slate-900 tracking-tight mb-2">{formData.firstName} {formData.lastName}</h3>
                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{formData.role === 'Admin' ? 'מנהל מערכת' : 'חבר נבחרת'}</p>
             </div>
           </div>
@@ -190,8 +190,12 @@ const ProfilePage: React.FC = () => {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם מלא</label>
-                    <input type="text" value={formData.name} onChange={e => handleFieldChange('name', e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all" />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם פרטי</label>
+                    <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם משפחה</label>
+                    <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">טלפון נייד</label>

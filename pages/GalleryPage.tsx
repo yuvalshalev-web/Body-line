@@ -54,7 +54,7 @@ const GalleryPage: React.FC = () => {
           imageUrl: downloadUrl,
           storagePath: storagePath, 
           uploaderId: currentUser.id,
-          uploaderName: currentUser.name,
+          uploaderName: `${currentUser.firstName} ${currentUser.lastName}`,
           caption: "רגע מהמים",
           timestamp: serverTimestamp()
         });

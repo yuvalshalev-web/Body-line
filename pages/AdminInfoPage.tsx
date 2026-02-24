@@ -6,19 +6,24 @@ import CommunityAnalytics from '../components/CommunityAnalytics';
 import UserAnalytics from '../components/UserAnalytics';
 import SystemMonitor from '../components/SystemMonitor';
 
-type Tab = 'community' | 'user' | 'system';
+type Tab = 'community' | 'system';
 
 const AdminInfoPage: React.FC = () => {
   const { currentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab>('user');
+  const [activeTab, setActiveTab] = useState<Tab>('community');
 
   const tabs = [
-    { id: 'user', label: 'הגל שלי', icon: Waves, color: 'text-[#40E0D0]' },
-    { id: 'community', label: 'דופק הקהילה', icon: TrendingUp, color: 'text-[#006994]', adminOnly: true },
-    { id: 'system', label: 'חדר מכונות', icon: Server, color: 'text-slate-900', adminOnly: true },
+    { id: 'community', label: 'דופק הקהילה', icon: TrendingUp, color: 'text-[#006994]' },
+    { id: 'system', label: 'חדר מכונות', icon: Server, color: 'text-slate-900' },
   ];
 
-  const filteredTabs = tabs.filter(tab => !tab.adminOnly || currentUser?.role === 'Admin');
+  if (currentUser?.role !== 'Admin') {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-slate-400 font-black uppercase tracking-widest">גישה למנהלים בלבד</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 font-['Assistant']" dir="rtl">
@@ -38,7 +43,7 @@ const AdminInfoPage: React.FC = () => {
 
       {/* Tab Navigation */}
       <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-16">
-        {filteredTabs.map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as Tab)}
@@ -72,7 +77,6 @@ const AdminInfoPage: React.FC = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            {activeTab === 'user' && <UserAnalytics userId={currentUser?.id || 'guest'} />}
             {activeTab === 'community' && <CommunityAnalytics />}
             {activeTab === 'system' && <SystemMonitor />}
           </motion.div>

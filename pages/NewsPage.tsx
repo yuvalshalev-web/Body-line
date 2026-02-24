@@ -58,7 +58,7 @@ const NewsPage: React.FC = () => {
         date: new Date().toISOString().split('T')[0],
         imageUrl: imageUrl || "", 
         authorId: currentUser.id,
-        authorName: currentUser.name,
+        authorName: `${currentUser.firstName} ${currentUser.lastName}`,
         authorAvatar: currentUser.avatar
       });
 

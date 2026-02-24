@@ -32,6 +32,7 @@ const EventsPage = lazy(() => import('./pages/EventsPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
 const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage'));
 const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage'));
+const MyWavePage = lazy(() => import('./pages/MyWavePage'));
 const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance'));
 
 const PageLoader = () => (
@@ -107,11 +108,13 @@ const App: React.FC = () => {
     { path: '/events', icon: Calendar, label: 'אירועים קרובים' },
     { path: '/posts', icon: Newspaper, label: 'פוסטים ועדכונים' },
     { path: '/world-news', icon: Globe, label: 'חדשות מהעולם' },
+    { path: '/my-wave', icon: Waves, label: 'הגל שלי' },
     { path: '/profile', icon: UserCircle, label: 'פרופיל אישי' }
   ];
 
   const adminNavItems = [
     { path: '/admin', icon: Settings, label: 'פאנל ניהול' },
+    { path: '/admin-info', icon: BarChart3, label: 'תצפית הים' },
     { path: '/attendance', icon: Users, label: 'סנכרון נוכחות' }
   ];
 
@@ -144,7 +147,7 @@ const App: React.FC = () => {
                  </div>
                )}
                 <div className="flex-1 overflow-hidden">
-                  <p className="font-black text-slate-950 truncate">{currentUser.name}</p>
+                  <p className="font-black text-slate-950 truncate">{currentUser.firstName} {currentUser.lastName}</p>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     {currentUser.role === 'Admin' ? 'מנהל' : currentUser.role === 'Instructor' ? 'מדריך' : 'חבר'}
                   </p>
@@ -226,7 +229,7 @@ const App: React.FC = () => {
                </div>
              )}
              <div className="flex-1 overflow-hidden">
-                <p className="font-black text-[#006994] text-sm truncate">{currentUser.name}</p>
+                <p className="font-black text-[#006994] text-sm truncate">{currentUser.firstName} {currentUser.lastName}</p>
                 <p className="text-[9px] font-black text-[#40E0D0] uppercase tracking-widest">
                   {currentUser.role === 'Admin' ? 'מנהל' : currentUser.role === 'Instructor' ? 'מדריך' : 'חבר'}
                 </p>
@@ -248,13 +251,13 @@ const App: React.FC = () => {
             <Route path="/events" element={<EventsPage />} />
             <Route path="/posts" element={<NewsPage />} />
             <Route path="/world-news" element={<SurfingNewsPage />} />
+            <Route path="/my-wave" element={<MyWavePage />} />
             <Route path="/profile" element={<ProfilePage />} />
             {currentUser.role === 'Admin' && (
               <>
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="/admin-info" element={<AdminInfoPage />} />
                 <Route path="/attendance" element={<SurfingSessionAttendance />} />
-                
               </>
             )}
             <Route path="*" element={<Navigate to="/" replace />} />

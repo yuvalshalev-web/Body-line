@@ -46,7 +46,18 @@ const DashboardPage: React.FC = () => {
   const [isRefreshingPost, setIsRefreshingPost] = useState(false);
 
   const activeMembers = useMemo(() => members.filter(m => m.isActive !== false), [members]);
-  const attendees = useMemo(() => activeMembers.filter(m => attendeeIds.includes(m.id)), [activeMembers, attendeeIds]);
+  const attendees = useMemo(() => activeMembers.filter(m => attendeeIds.includes(m.id)).sort((a, b) => {
+    const aLast = a.lastName || '';
+    const bLast = b.lastName || '';
+    const aFirst = a.firstName || '';
+    const bFirst = b.firstName || '';
+    if (aLast || bLast) {
+      const lastCompare = aLast.localeCompare(bLast, 'he');
+      if (lastCompare !== 0) return lastCompare;
+      return aFirst.localeCompare(bFirst, 'he');
+    }
+    return (a.firstName + ' ' + a.lastName).localeCompare((b.firstName + ' ' + b.lastName), 'he');
+  }), [activeMembers, attendeeIds]);
   const isUserAttending = useMemo(() => currentUser ? attendeeIds.includes(currentUser.id) : false, [attendeeIds, currentUser]);
 
   const refreshPost = useCallback(() => {
@@ -183,7 +194,7 @@ const DashboardPage: React.FC = () => {
                         <img key={a.id} src={a.avatar} className="w-10 h-10 rounded-full border-2 border-slate-900 object-cover" alt="" loading="lazy" />
                       ) : (
                         <div key={a.id} className="w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-900 flex items-center justify-center text-[10px] text-white font-black">
-                          {a.name.charAt(0)}
+                          {a.firstName.charAt(0)}
                         </div>
                       )
                     ))}
@@ -195,7 +206,7 @@ const DashboardPage: React.FC = () => {
                 {attendees.length > 0 && (
                   <div className="flex flex-wrap justify-center gap-2 max-w-md">
                     {attendees.slice(0, 10).map(a => (
-                      <span key={a.id} className="text-[10px] font-black text-white/40 bg-white/5 px-2 py-1 rounded-md">{a.name.split(' ')[0]}</span>
+                      <span key={a.id} className="text-[10px] font-black text-white/40 bg-white/5 px-2 py-1 rounded-md">{a.firstName}</span>
                     ))}
                   </div>
                 )}
@@ -309,7 +320,7 @@ const DashboardPage: React.FC = () => {
                       </div>
                     )}
                     <div>
-                      <p className="font-black text-slate-900">{a.name}</p>
+                      <p className="font-black text-slate-900">{a.firstName} {a.lastName}</p>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{a.role === 'Admin' ? 'מנהל' : 'חבר'}</p>
                     </div>
                   </div>

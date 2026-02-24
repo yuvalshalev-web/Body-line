@@ -30,7 +30,8 @@ const LoginPage: React.FC = () => {
   const [tempUser, setTempUser] = useState<{ id: string; data: Member } | null>(null);
   const [logoError, setLogoError] = useState(false);
 
-  const [joinName, setJoinName] = useState('');
+  const [joinFirstName, setJoinFirstName] = useState('');
+  const [joinLastName, setJoinLastName] = useState('');
   const [joinEmail, setJoinEmail] = useState('');
   const [joinMobile, setJoinMobile] = useState('');
   const [mobileError, setMobileError] = useState('');
@@ -203,7 +204,8 @@ const LoginPage: React.FC = () => {
       }
 
       await addDoc(collection(db, 'joinRequests'), {
-        name: joinName,
+        firstName: joinFirstName,
+        lastName: joinLastName,
         email: normalizedEmail,
         mobile: joinMobile,
         bio: '',
@@ -422,7 +424,10 @@ const LoginPage: React.FC = () => {
                       </label>
                     </div>
                   </div>
-                  <input type="text" required value={joinName} onChange={e => setJoinName(e.target.value)} placeholder="שם מלא" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
+                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
+                  </div>
                   <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="אימייל" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
                   <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
                   {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}

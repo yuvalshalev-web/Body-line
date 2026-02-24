@@ -32,6 +32,42 @@ const WhatsAppIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   </svg>
 );
 
+const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }> = ({ member, idx, onClick }) => {
+  // Random rotation between -2 and 2 degrees for polaroid feel
+  const rotation = useMemo(() => (Math.random() * 4 - 2).toFixed(1), []);
+  
+  return (
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.9, rotate: 0 }}
+      animate={{ opacity: 1, scale: 1, rotate: parseFloat(rotation) }}
+      whileHover={{ scale: 1.05, rotate: 0, zIndex: 10 }}
+      transition={{ delay: idx * 0.02, type: 'spring', stiffness: 300 }}
+      className="group cursor-pointer relative" 
+      onClick={onClick}
+    >
+      <div className="bg-white p-3 pb-8 shadow-md border border-slate-100 transition-all duration-500 group-hover:shadow-2xl">
+        <div className="aspect-square overflow-hidden bg-slate-50 mb-4">
+          {member.avatar ? (
+            <img 
+              src={member.avatar} 
+              className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" 
+              alt={`${member.firstName} ${member.lastName}`} 
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-slate-200">
+              <UserCircle size={40} strokeWidth={1} />
+            </div>
+          )}
+        </div>
+        <div className="text-center">
+          <p className="text-[11px] font-['Assistant'] font-black text-[#006994] truncate px-1">{member.firstName} {member.lastName}</p>
+          <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mt-0.5">{member.role === 'Admin' ? 'מנהל' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const DirectoryPage: React.FC = () => {
   const { members } = useData();
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,9 +80,28 @@ const DirectoryPage: React.FC = () => {
   const activeMembers = useMemo(() => members.filter(m => m.isActive !== false), [members]);
 
   const processedMembers = useMemo(() => {
-    let filtered = activeMembers.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    let filtered = activeMembers.filter(m => 
+      (m.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (m.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (m.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (m.lastName || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
     return filtered.sort((a, b) => {
-      if (sortBy === 'name-asc') return a.name.localeCompare(b.name, 'he');
+      if (sortBy === 'name-asc') {
+        // Use firstName and lastName if available, otherwise fallback to name
+        const aLast = a.lastName || '';
+        const bLast = b.lastName || '';
+        const aFirst = a.firstName || '';
+        const bFirst = b.firstName || '';
+        
+        if (aLast || bLast) {
+          const lastCompare = aLast.localeCompare(bLast, 'he');
+          if (lastCompare !== 0) return lastCompare;
+          return aFirst.localeCompare(bFirst, 'he');
+        }
+        
+        return (a.firstName + ' ' + a.lastName).localeCompare((b.firstName + ' ' + b.lastName), 'he');
+      }
       if (sortBy === 'attendance') return (b.totalAttendance || 0) - (a.totalAttendance || 0);
       if (sortBy === 'newest') return new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime();
       return 0;
@@ -67,8 +122,8 @@ const DirectoryPage: React.FC = () => {
     return `https://${trimmed}`;
   };
 
-  const openWhatsAppModal = (name: string) => {
-    setWhatsappMessage(`היי ${name}, מה קורה? ראיתי את הפרופיל שלך בנבחרת חבל זוג...`);
+  const openWhatsAppModal = (firstName: string, lastName: string) => {
+    setWhatsappMessage(`היי ${firstName}, מה קורה? ראיתי את הפרופיל שלך בנבחרת חבל זוג...`);
     setIsWhatsAppModalOpen(true);
   };
 
@@ -100,42 +155,6 @@ const DirectoryPage: React.FC = () => {
     
     return groups;
   }, [processedMembers]);
-
-  const MemberCard = ({ member, idx }: { member: Member, idx: number }) => {
-    // Random rotation between -2 and 2 degrees for polaroid feel
-    const rotation = useMemo(() => (Math.random() * 4 - 2).toFixed(1), []);
-    
-    return (
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9, rotate: 0 }}
-        animate={{ opacity: 1, scale: 1, rotate: parseFloat(rotation) }}
-        whileHover={{ scale: 1.05, rotate: 0, zIndex: 10 }}
-        transition={{ delay: idx * 0.02, type: 'spring', stiffness: 300 }}
-        className="group cursor-pointer relative" 
-        onClick={() => setSelectedMember(member)}
-      >
-        <div className="bg-white p-3 pb-8 shadow-md border border-slate-100 transition-all duration-500 group-hover:shadow-2xl">
-          <div className="aspect-square overflow-hidden bg-slate-50 mb-4">
-            {member.avatar ? (
-              <img 
-                src={member.avatar} 
-                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" 
-                alt={member.name} 
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-200">
-                <UserCircle size={40} strokeWidth={1} />
-              </div>
-            )}
-          </div>
-          <div className="text-center">
-            <p className="text-[11px] font-['Assistant'] font-black text-[#006994] truncate px-1">{member.name}</p>
-            <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mt-0.5">{member.role === 'Admin' ? 'מנהל' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}</p>
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-white text-right" dir="rtl">
@@ -193,7 +212,7 @@ const DirectoryPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-8">
               {groupedMembers.Admin.map((member, idx) => (
-                <MemberCard key={member.id} member={member} idx={idx} />
+                <MemberCard key={member.id} member={member} idx={idx} onClick={() => setSelectedMember(member)} />
               ))}
             </div>
           </section>
@@ -207,7 +226,7 @@ const DirectoryPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-8">
               {groupedMembers.Instructor.map((member, idx) => (
-                <MemberCard key={member.id} member={member} idx={idx} />
+                <MemberCard key={member.id} member={member} idx={idx} onClick={() => setSelectedMember(member)} />
               ))}
             </div>
           </section>
@@ -221,7 +240,7 @@ const DirectoryPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-8">
               {groupedMembers.Member.map((member, idx) => (
-                <MemberCard key={member.id} member={member} idx={idx} />
+                <MemberCard key={member.id} member={member} idx={idx} onClick={() => setSelectedMember(member)} />
               ))}
             </div>
           </section>
@@ -238,7 +257,7 @@ const DirectoryPage: React.FC = () => {
        >
           <div className="md:w-[40%] relative h-[40vh] md:h-auto overflow-hidden bg-slate-900">
              {selectedMember.avatar ? (
-               <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={selectedMember.name} />
+               <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={`${selectedMember.firstName} ${selectedMember.lastName}`} />
              ) : (
                <div className="w-full h-full flex items-center justify-center text-slate-800">
                  <UserCircle size={160} strokeWidth={0.5} />
@@ -250,7 +269,7 @@ const DirectoryPage: React.FC = () => {
                   <div className="h-px w-12 bg-[#00FFFF]"></div>
                   <span className="text-[10px] font-black text-[#00FFFF] uppercase tracking-[0.4em]">Member Profile</span>
                 </div>
-                <h3 className="text-6xl font-black text-white tracking-tighter leading-none">{selectedMember.name}</h3>
+                <h3 className="text-6xl font-black text-white tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
              </div>
           </div>
 
@@ -298,7 +317,7 @@ const DirectoryPage: React.FC = () => {
               </div>
 
               <motion.button 
-                onClick={() => openWhatsAppModal(selectedMember.name)}
+                onClick={() => openWhatsAppModal(selectedMember.firstName, selectedMember.lastName)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-8 bg-[#25D366] text-white rounded-[2.5rem] font-black text-2xl shadow-2xl flex items-center justify-center gap-6 group relative overflow-hidden"
@@ -347,7 +366,7 @@ const DirectoryPage: React.FC = () => {
               </div>
               <div>
                 <h4 className="font-black text-xl">שלח הודעת WhatsApp</h4>
-                <p className="text-xs opacity-70 font-bold">אל: {selectedMember.name}</p>
+                <p className="text-xs opacity-70 font-bold">אל: {selectedMember.firstName} {selectedMember.lastName}</p>
               </div>
             </div>
             

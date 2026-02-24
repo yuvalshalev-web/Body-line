@@ -26,6 +26,8 @@ import { useModal } from '../contexts/ModalContext';
 
 interface User {
   id: string;
+  firstName: string;
+  lastName: string;
   name: string;
   photoURL?: string;
   avatar?: string;
@@ -380,9 +382,21 @@ const SurfingSessionAttendance: React.FC = () => {
     return d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  const filteredUsers = globalMembers.filter(u => 
-    u.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = useMemo(() => globalMembers.filter(u => 
+    (u.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (u.lastName || '').toLowerCase().includes(searchTerm.toLowerCase())
+  ).sort((a, b) => {
+    const aLast = a.lastName || '';
+    const bLast = b.lastName || '';
+    const aFirst = a.firstName || '';
+    const bFirst = b.firstName || '';
+    if (aLast || bLast) {
+      const lastCompare = aLast.localeCompare(bLast, 'he');
+      if (lastCompare !== 0) return lastCompare;
+      return aFirst.localeCompare(bFirst, 'he');
+    }
+    return (a.firstName + ' ' + a.lastName).localeCompare((b.firstName + ' ' + b.lastName), 'he');
+  }), [globalMembers, searchTerm]);
 
   if (globalLoading) {
     return (
@@ -551,7 +565,7 @@ const SurfingSessionAttendance: React.FC = () => {
               <h3 className="text-xl md:text-2xl font-black text-[#006994] tracking-tight">
                 {editingHistorySession 
                   ? `רשימת משתתפים בסשן ההיסטורי ${formatDate(editingHistorySession.date)}` 
-                  : 'רשימת משתתפים בסשן הקרוב (מתעדכן)'}
+                  : 'נוכחות עדכנית לסשן הקרוב'}
               </h3>
               <div className="w-16 h-1 bg-[#00FFFF] mt-1 rounded-full shadow-sm"></div>
             </div>
@@ -604,9 +618,9 @@ const SurfingSessionAttendance: React.FC = () => {
                         isSelected ? 'border-[#60DD8E] scale-105 shadow-lg shadow-[#60DD8E]/10' : 'border-white grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100'
                       }`}>
                         <img 
-                          src={user.photoURL || user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=006994&color=fff`} 
+                          src={user.photoURL || user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + ' ' + user.lastName)}&background=006994&color=fff`} 
                           className="w-full h-full object-cover" 
-                          alt={user.name}
+                          alt={`${user.firstName} ${user.lastName}`}
                         />
                         
                         {/* Selection Overlay */}
@@ -636,7 +650,7 @@ const SurfingSessionAttendance: React.FC = () => {
                     <span className={`text-sm font-black text-center transition-colors mt-1 ${
                       isSelected ? 'text-[#006994]' : 'text-[#4E8294]'
                     }`}>
-                      {user.name}
+                      {user.firstName} {user.lastName}
                     </span>
                   </motion.div>
                 );
@@ -687,7 +701,7 @@ const SurfingSessionAttendance: React.FC = () => {
                         return (
                           <div key={i} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-slate-100 shadow-sm">
                             <img 
-                              src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'G')}&background=006994&color=fff`} 
+                              src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent((user?.firstName || '') + ' ' + (user?.lastName || ''))}&background=006994&color=fff`} 
                               className="w-full h-full object-cover"
                               alt=""
                             />

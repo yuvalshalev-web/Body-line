@@ -22,7 +22,7 @@ interface DataContextType {
   toggleStatus: (id: string) => Promise<void>;
   toggleRole: (id: string, requesterEmail?: string) => Promise<void>;
   resetPassword: (id: string) => Promise<void>;
-  approveRequest: (id: string) => Promise<{ name: string; email: string; mobile: string; tempPassword: string } | null>;
+  approveRequest: (id: string) => Promise<{ firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null>;
   rejectRequest: (id: string) => Promise<void>;
   addEvent: (details: Omit<Event, 'id'>) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
@@ -37,6 +37,7 @@ interface DataContextType {
   batchAddQuotes: (items: Omit<QuoteItem, 'id'>[]) => Promise<void>;
   clearCollection: (collectionName: string) => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
+  archiveMember: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -193,7 +194,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const requestSnap = await getDoc(requestRef);
       
       if (!requestSnap.exists()) {
-        alert('שגיאה: בקשת ההצטרפות לא נמצאה במסד הנתונים.');
         return null;
       }
       
@@ -202,7 +202,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const hashedPassword = await hashPassword(tempPassword);
       
       const newMemberData = {
-        name: reqData.name || 'ללא שם', 
+        firstName: reqData.firstName || '',
+        lastName: reqData.lastName || '',
         email: reqData.email || '', 
         mobile: reqData.mobile || '', 
         avatar: reqData.avatar || '', 
@@ -227,13 +228,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await deleteDoc(requestRef);
       
       return { 
-        name: newMemberData.name, 
+        firstName: newMemberData.firstName,
+        lastName: newMemberData.lastName,
         email: newMemberData.email, 
         mobile: newMemberData.mobile, 
         tempPassword 
       };
     } catch (err: any) {
-      alert('שגיאה באישור המשתמש: ' + (err.message || 'שגיאה לא ידועה'));
       throw err;
     }
   };
@@ -242,7 +243,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await deleteDoc(doc(getDb(), 'joinRequests', id));
     } catch (err: any) {
-      alert('שגיאה בדחיית המשתמש: ' + (err.message || 'שגיאה לא ידועה'));
       throw err;
     }
   };
@@ -370,12 +370,35 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await setDoc(doc(getDb(), 'site_data', 'assets'), assets, { merge: true });
   };
 
+  const archiveMember = async (id: string) => {
+    const db = getDb();
+    const batch = writeBatch(db);
+    
+    // 1. Update member status
+    const memberRef = doc(db, 'members', id);
+    batch.update(memberRef, { isActive: false });
+    
+    // 2. Remove from active session
+    const activeSessionRef = doc(getDb(), 'site_data', 'active_session');
+    batch.update(activeSessionRef, { attendees: arrayRemove(id) });
+    
+    // 3. Remove from all future events
+    events.forEach(event => {
+      if (event.attendees && event.attendees.includes(id)) {
+        const eventRef = doc(db, 'events', event.id);
+        batch.update(eventRef, { attendees: arrayRemove(id) });
+      }
+    });
+    
+    await batch.commit();
+  };
+
   return (
     <DataContext.Provider value={{ 
       members, joinRequests, events, news, galleryItems, glossary, quotes, siteAssets, attendeeIds, activeSessionDate, isLoading,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, deleteNews, toggleSessionAttendance, forceResetSession,
-      finalizeThursdaySession, batchAddGlossary, batchAddQuotes, clearCollection, updateSiteAssets
+      finalizeThursdaySession, batchAddGlossary, batchAddQuotes, clearCollection, updateSiteAssets, archiveMember
     }}>
       {children}
     </DataContext.Provider>

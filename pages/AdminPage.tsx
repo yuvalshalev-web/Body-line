@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../contexts/ModalContext';
 import { JoinRequest, Member } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -26,8 +27,9 @@ const ASSET_LABELS: Record<string, string> = {
 
 const AdminPage: React.FC = () => {
   const { currentUser } = useAuth();
+  const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
-    joinRequests, siteAssets, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember
+    joinRequests, siteAssets, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember
   } = useData();
 
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'PODCASTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE'>('DASHBOARD');
@@ -79,9 +81,9 @@ const AdminPage: React.FC = () => {
     try {
       await updateEvent({ ...editingEvent, ...eventForm });
       setEditingEvent(null);
-      alert('האירוע עודכן בהצלחה');
+      showSuccess('האירוע עודכן בהצלחה');
     } catch (err) {
-      alert('שגיאה בעדכון האירוע');
+      showError('שגיאה בעדכון האירוע');
     } finally {
       setIsSavingEvent(false);
     }
@@ -101,10 +103,10 @@ const AdminPage: React.FC = () => {
       const downloadUrl = await getDownloadURL(storageRef);
       
       await updateSiteAssets({ [replacingAssetKey]: downloadUrl });
-      alert('הנכס עודכן בהצלחה');
+      showSuccess('הנכס עודכן בהצלחה');
     } catch (err) {
       console.error(err);
-      alert('שגיאה בהעלאת הנכס');
+      showError('שגיאה בהעלאת הנכס');
     } finally {
       setIsUploadingAsset(null);
       setReplacingAssetKey(null);
@@ -119,7 +121,7 @@ const AdminPage: React.FC = () => {
       setEditingAsset(null);
     } catch (err) {
       console.error(err);
-      alert('שגיאה בעדכון הנכס');
+      showError('שגיאה בעדכון הנכס');
     }
   };
 
@@ -137,10 +139,10 @@ const AdminPage: React.FC = () => {
       const downloadUrl = await getDownloadURL(storageRef);
       
       setEventForm(prev => ({ ...prev, imageUrl: downloadUrl }));
-      alert('התמונה הועלתה בהצלחה');
+      showSuccess('התמונה הועלתה בהצלחה');
     } catch (err) {
       console.error(err);
-      alert('שגיאה בהעלאת התמונה');
+      showError('שגיאה בהעלאת התמונה');
     } finally {
       setIsUploadingEventImage(false);
       if (e.target) e.target.value = '';
@@ -148,89 +150,85 @@ const AdminPage: React.FC = () => {
   };
 
   const resetAssets = async () => {
-    if (!window.confirm('האם לאפס את כל הנכסים לערכי ברירת המחדל?')) return;
-    const defaults = {
-      habalZugLogo: "", // Let user upload the correct one
-      atalefLogo: "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fatalef-logo.png?alt=media",
-      reefLogo: "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Freef-logo.png?alt=media",
-      heroBg: "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media",
-      loginBg: "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=2000"
-    };
-    try {
-      await updateSiteAssets(defaults);
-      alert('הנכסים אופסו בהצלחה');
-    } catch (err) {
-      console.error(err);
-      alert('שגיאה באיפוס הנכסים');
-    }
+    showConfirm({
+      message: 'האם לאפס את כל הנכסים לערכי ברירת המחדל?',
+      onConfirm: async () => {
+        const defaults = {
+          habalZugLogo: "", // Let user upload the correct one
+          atalefLogo: "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fatalef-logo.png?alt=media",
+          reefLogo: "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Freef-logo.png?alt=media",
+          heroBg: "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media",
+          loginBg: "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=2000"
+        };
+        try {
+          await updateSiteAssets(defaults);
+          showSuccess('הנכסים אופסו בהצלחה');
+        } catch (err) {
+          console.error(err);
+          showError('שגיאה באיפוס הנכסים');
+        }
+      }
+    });
   };
 
   const filteredRequests = joinRequests.filter(req => 
-    req.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (req.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (req.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
     req.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleApprove = async (id: string) => {
-    console.log('AdminPage: handleApprove triggered for id:', id);
-    if (!window.confirm('האם לאשר את הצטרפות החבר/ה לנבחרת?')) return;
-    
     setIsProcessing(id);
     try {
-      console.log('AdminPage: Calling approveRequest...');
       const result = await approveRequest(id);
-      console.log('AdminPage: approveRequest result:', result);
       
       if (result) {
         setApprovedUser(result);
-        // Automatically open WhatsApp with the formatted message
-        const message = encodeURIComponent(formatWhatsAppMessage(result.name, result.email, result.tempPassword));
+        const message = encodeURIComponent(formatWhatsAppMessage(`${result.firstName} ${result.lastName}`, result.email, result.tempPassword));
         const cleanMobile = result.mobile.replace(/\D/g, '');
         const finalMobile = cleanMobile.startsWith('0') ? '972' + cleanMobile.substring(1) : cleanMobile;
         const waUrl = `https://wa.me/${finalMobile}?text=${message}`;
         
-        console.log('AdminPage: Opening WhatsApp URL:', waUrl);
         const win = window.open(waUrl, '_blank');
         if (!win) {
-          alert('הבקשה אושרה! אך חוסם הפופ-אפים מנע את פתיחת וואטסאפ. נא ללחוץ על הכפתור בפאנל שייפתח.');
+          showAlert('הבקשה אושרה! אך חוסם הפופ-אפים מנע את פתיחת וואטסאפ. נא ללחוץ על הכפתור בפאנל שייפתח.');
         }
       } else {
-        alert('הבקשה כבר אינה קיימת או שאושרה על ידי מנהל אחר.');
+        showError('הבקשה כבר אינה קיימת או שאושרה על ידי מנהל אחר.');
       }
     } catch (err) {
       console.error('AdminPage: Approve error:', err);
-      alert('שגיאה בתהליך האישור. בדוק את החיבור לאינטרנט או את הרשאות המנהל.');
+      showError('שגיאה בתהליך האישור. בדוק את החיבור לאינטרנט או את הרשאות המנהל.');
     } finally {
       setIsProcessing(null);
     }
   };
 
   const handleReject = async (id: string, name: string, mobile: string) => {
-    console.log('AdminPage: handleReject triggered for id:', id);
-    if (!window.confirm(`האם לדחות את בקשת ההצטרפות של ${name}? הבקשה תימחק והמשתמש יקבל הודעת דחייה.`)) return;
-    
-    setIsProcessing(id);
-    try {
-      console.log('AdminPage: Calling rejectRequest...');
-      await rejectRequest(id);
-      console.log('AdminPage: rejectRequest completed');
-      
-      // Send rejection message after successful deletion
-      const cleanMobile = mobile.replace(/\D/g, '');
-      const finalMobile = cleanMobile.startsWith('0') ? '972' + cleanMobile.substring(1) : cleanMobile;
-      const rejectMsg = `היי *${name}*, תודה על הפנייה ל-אתר חבל זוג 🌊\nכרגע זה פחות מתאים, אבל נשמח לשמור על קשר ולהתעדכן בהמשך במידה ומשהו ישתנה.\nשיהיה אחלה יום! 👋`;
-      const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(rejectMsg)}`;
-      
-      console.log('AdminPage: Opening Rejection WhatsApp URL:', waUrl);
-      const win = window.open(waUrl, '_blank');
-      if (!win) {
-        alert('הבקשה נדחתה ונמחקה! אך חוסם הפופ-אפים מנע את פתיחת וואטסאפ.');
+    showConfirm({
+      message: `האם לדחות את בקשת ההצטרפות של ${name}? הבקשה תימחק והמשתמש יקבל הודעת דחייה.`,
+      onConfirm: async () => {
+        setIsProcessing(id);
+        try {
+          await rejectRequest(id);
+          
+          const cleanMobile = mobile.replace(/\D/g, '');
+          const finalMobile = cleanMobile.startsWith('0') ? '972' + cleanMobile.substring(1) : cleanMobile;
+          const rejectMsg = `היי *${name}*, תודה על הפנייה ל-אתר חבל זוג 🌊\nכרגע זה פחות מתאים, אבל נשמח לשמור על קשר ולהתעדכן בהמשך במידה ומשהו ישתנה.\nשיהיה אחלה יום! 👋`;
+          const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(rejectMsg)}`;
+          
+          const win = window.open(waUrl, '_blank');
+          if (!win) {
+            showAlert('הבקשה נדחתה ונמחקה! אך חוסם הפופ-אפים מנע את פתיחת וואטסאפ.');
+          }
+        } catch (err) {
+          console.error('AdminPage: Reject error:', err);
+          showError('שגיאה במחיקת הבקשה.');
+        } finally {
+          setIsProcessing(null);
+        }
       }
-    } catch (err) {
-      console.error('AdminPage: Reject error:', err);
-      alert('שגיאה במחיקת הבקשה.');
-    } finally {
-      setIsProcessing(null);
-    }
+    });
   };
 
   const formatWhatsAppMessage = (name: string, email: string, tempPass: string) => {
@@ -378,7 +376,7 @@ const AdminPage: React.FC = () => {
                          </div>
                        )}
                        <div>
-                          <h4 className="text-xl font-black text-[#4a002e] mb-1">{req.name}</h4>
+                          <h4 className="text-xl font-black text-[#4a002e] mb-1">{req.firstName} {req.lastName}</h4>
                           <div className="flex items-center gap-2 text-[#f063c1]/60 font-bold text-[10px] uppercase tracking-widest">
                              <Calendar size={12} />
                              {new Date(req.requestedAt).toLocaleDateString('he-IL')}
@@ -414,7 +412,7 @@ const AdminPage: React.FC = () => {
                        </button>
                        <button 
                          onClick={() => {
-                           handleReject(req.id, req.name, req.mobile);
+                           handleReject(req.id, `${req.firstName} ${req.lastName}`, req.mobile);
                          }}
                          disabled={isProcessing === req.id}
                          className="p-4 bg-rose-50 text-rose-600 rounded-2xl hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50 flex items-center justify-center border-2 border-rose-200 hover:border-rose-600 shadow-sm"
@@ -558,11 +556,21 @@ const AdminPage: React.FC = () => {
 
                   {/* Basic Info */}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-2">שם מלא</label>
+                    <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-2">שם פרטי</label>
                     <input 
                       type="text"
-                      value={editingMember.name}
-                      onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
+                      value={editingMember.firstName || ''}
+                      onChange={(e) => setEditingMember({ ...editingMember, firstName: e.target.value })}
+                      className="w-full p-4 bg-[#f7c1ea]/10 border-none rounded-2xl font-black text-[#4a002e] focus:ring-2 ring-[#ff009f]/30 transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-2">שם משפחה</label>
+                    <input 
+                      type="text"
+                      value={editingMember.lastName || ''}
+                      onChange={(e) => setEditingMember({ ...editingMember, lastName: e.target.value })}
                       className="w-full p-4 bg-[#f7c1ea]/10 border-none rounded-2xl font-black text-[#4a002e] focus:ring-2 ring-[#ff009f]/30 transition-all"
                     />
                   </div>
@@ -671,80 +679,115 @@ const AdminPage: React.FC = () => {
                   </div>
 
                   <div className="md:col-span-2 pt-12 flex flex-col gap-4">
-                    <div className="flex gap-4">
-                      <button 
-                        type="button"
-                        onClick={async () => {
-                          if (!editingMember) return;
-                          setIsProcessing(editingMember.id);
-                          try {
-                            await updateMember(editingMember);
-                            setEditingMember(null);
-                            alert('השינויים נשמרו בהצלחה');
-                          } catch (err) {
-                            alert('שגיאה בשמירת הנתונים');
-                          } finally {
-                            setIsProcessing(null);
-                          }
-                        }}
-                        disabled={isProcessing === editingMember.id}
-                        className="flex-1 py-4 bg-[#4a002e] text-white rounded-2xl font-black text-base shadow-lg shadow-[#4a002e]/20 hover:bg-[#ff009f] transition-all flex items-center justify-center gap-2 active:scale-95"
-                      >
-                        {isProcessing === editingMember.id ? (
-                          <Loader2 className="animate-spin" size={20} />
-                        ) : (
-                          <>
-                            <Save size={20} /> שמירה
-                          </>
-                        )}
-                      </button>
+                    {editingMember.isActive !== false ? (
+                      <>
+                        <div className="flex gap-4">
+                          <button 
+                            type="button"
+                            onClick={async () => {
+                              if (!editingMember) return;
+                              setIsProcessing(editingMember.id);
+                              try {
+                                await updateMember(editingMember);
+                                setEditingMember(null);
+                                showSuccess('השינויים נשמרו בהצלחה');
+                              } catch (err) {
+                                showError('שגיאה בשמירת הנתונים');
+                              } finally {
+                                setIsProcessing(null);
+                              }
+                            }}
+                            disabled={isProcessing === editingMember.id}
+                            className="flex-1 py-4 bg-[#4a002e] text-white rounded-2xl font-black text-base shadow-lg shadow-[#4a002e]/20 hover:bg-[#ff009f] transition-all flex items-center justify-center gap-2 active:scale-95"
+                          >
+                            {isProcessing === editingMember.id ? (
+                              <Loader2 className="animate-spin" size={20} />
+                            ) : (
+                              <>
+                                <Save size={20} /> שמירה
+                              </>
+                            )}
+                          </button>
 
-                      <button 
-                        type="button"
-                        onClick={async () => {
-                          if (!editingMember) return;
-                          if (!window.confirm(`האם להעביר את ${editingMember.name} לארכיון?`)) return;
-                          
-                          setIsProcessing(editingMember.id);
-                          try {
-                            await updateMember({ ...editingMember, isActive: false });
-                            setEditingMember(null);
-                            setActiveTab('ARCHIVE');
-                            alert('המשתמש הועבר לארכיון בהצלחה');
-                          } catch (err: any) {
-                            alert('שגיאה: ' + err.message);
-                          } finally {
-                            setIsProcessing(null);
-                          }
-                        }}
-                        disabled={isProcessing === editingMember.id}
-                        className="flex-1 py-4 bg-[#ff009f] text-white rounded-2xl font-black text-base shadow-lg shadow-[#ff009f]/20 hover:bg-[#4a002e] transition-all flex items-center justify-center gap-2 active:scale-95"
-                      >
-                        <Archive size={20} /> ארכיון
-                      </button>
-                    </div>
+                          <button 
+                            type="button"
+                            onClick={async () => {
+                              if (!editingMember) return;
+                              showConfirm({
+                                message: `האם להעביר את ${editingMember.firstName} ${editingMember.lastName} לארכיון?`,
+                                onConfirm: async () => {
+                                  setIsProcessing(editingMember.id);
+                                  try {
+                                    await archiveMember(editingMember.id);
+                                    setEditingMember(null);
+                                    setActiveTab('ARCHIVE');
+                                    showSuccess('המשתמש הועבר לארכיון בהצלחה');
+                                  } catch (err: any) {
+                                    showError('שגיאה: ' + err.message);
+                                  } finally {
+                                    setIsProcessing(null);
+                                  }
+                                }
+                              });
+                            }}
+                            disabled={isProcessing === editingMember.id}
+                            className="flex-1 py-4 bg-[#ff009f] text-white rounded-2xl font-black text-base shadow-lg shadow-[#ff009f]/20 hover:bg-[#4a002e] transition-all flex items-center justify-center gap-2 active:scale-95"
+                          >
+                            <Archive size={20} /> ארכיון
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex gap-4">
+                        <button 
+                          type="button"
+                          onClick={async () => {
+                            if (!editingMember) return;
+                            setIsProcessing(editingMember.id);
+                            try {
+                              await updateMember({ ...editingMember, isActive: true });
+                              setEditingMember(null);
+                              setActiveTab('USERS');
+                              showSuccess('המשתמש הוחזר לפעילות');
+                            } catch (err) {
+                              showError('שגיאה בהחזרת המשתמש');
+                            } finally {
+                              setIsProcessing(null);
+                            }
+                          }}
+                          disabled={isProcessing === editingMember.id}
+                          className="flex-1 py-4 bg-[#ff009f] text-white rounded-2xl font-black text-base shadow-lg shadow-[#ff009f]/20 hover:bg-[#4a002e] transition-all flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <RefreshCw size={20} /> החייאת משתמש
+                        </button>
 
-                    <button 
-                      type="button"
-                      onClick={async () => {
-                        if (!editingMember) return;
-                        if (!window.confirm('האם למחוק את המשתמש לצמיתות? פעולה זו אינה הפיכה!')) return;
-                        setIsProcessing(editingMember.id);
-                        try {
-                          await deleteMember(editingMember.id);
-                          setEditingMember(null);
-                          alert('המשתמש נמחק לצמיתות');
-                        } catch (err) {
-                          alert('שגיאה במחיקת המשתמש');
-                        } finally {
-                          setIsProcessing(null);
-                        }
-                      }}
-                      disabled={isProcessing === editingMember.id}
-                      className="w-full py-4 bg-[#4a002e] text-white rounded-2xl font-black text-base hover:bg-[#ff009f] transition-all flex items-center justify-center gap-2 active:scale-95"
-                    >
-                      <Trash2 size={20} /> מחיקת משתמש לצמיתות
-                    </button>
+                        <button 
+                          type="button"
+                          onClick={async () => {
+                            if (!editingMember) return;
+                            showConfirm({
+                              message: 'האם למחוק את המשתמש לצמיתות? פעולה זו אינה הפיכה!',
+                              onConfirm: async () => {
+                                setIsProcessing(editingMember.id);
+                                try {
+                                  await deleteMember(editingMember.id);
+                                  setEditingMember(null);
+                                  showSuccess('המשתמש נמחק לצמיתות');
+                                } catch (err) {
+                                  showError('שגיאה במחיקת המשתמש');
+                                } finally {
+                                  setIsProcessing(null);
+                                }
+                              }
+                            });
+                          }}
+                          disabled={isProcessing === editingMember.id}
+                          className="flex-1 py-4 bg-[#4a002e] text-white rounded-2xl font-black text-base hover:bg-[#ff009f] transition-all flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <Trash2 size={20} /> מחיקה לצמיתות
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -760,7 +803,18 @@ const AdminPage: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#f7c1ea]/20">
-                      {members.filter(m => m.isActive !== false).map(member => (
+                      {members.filter(m => m.isActive !== false).sort((a, b) => {
+                        const aLast = a.lastName || '';
+                        const bLast = b.lastName || '';
+                        const aFirst = a.firstName || '';
+                        const bFirst = b.firstName || '';
+                        if (aLast || bLast) {
+                          const lastCompare = aLast.localeCompare(bLast, 'he');
+                          if (lastCompare !== 0) return lastCompare;
+                          return aFirst.localeCompare(bFirst, 'he');
+                        }
+                        return aFirst.localeCompare(bFirst, 'he');
+                      }).map(member => (
                         <tr key={member.id} className="hover:bg-[#f7c1ea]/10 transition-all group">
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-4">
@@ -772,7 +826,7 @@ const AdminPage: React.FC = () => {
                                 </div>
                               )}
                               <div>
-                                <h4 className="font-black text-[#4a002e]">{member.name}</h4>
+                                <h4 className="font-black text-[#4a002e]">{member.firstName} {member.lastName}</h4>
                                 <p className="text-[10px] text-[#f063c1]/60 font-black truncate max-w-[150px]">{member.email}</p>
                               </div>
                             </div>
@@ -822,19 +876,38 @@ const AdminPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#f7c1ea]/10">
-                    {members.filter(m => m.isActive === false).map(member => (
+                    {members.filter(m => m.isActive === false).sort((a, b) => {
+                      const aLast = a.lastName || '';
+                      const bLast = b.lastName || '';
+                      const aFirst = a.firstName || '';
+                      const bFirst = b.firstName || '';
+                      if (aLast || bLast) {
+                        const lastCompare = aLast.localeCompare(bLast, 'he');
+                        if (lastCompare !== 0) return lastCompare;
+                        return aFirst.localeCompare(bFirst, 'he');
+                      }
+                      return aFirst.localeCompare(bFirst, 'he');
+                    }).map(member => (
                       <tr key={member.id} className="hover:bg-[#f7c1ea]/10 transition-all group">
                         <td className="px-8 py-6">
                           <div className="flex items-center gap-4">
                             {member.avatar ? (
-                              <img src={member.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm opacity-50" alt="" />
+                              <img 
+                                src={member.avatar} 
+                                className="w-12 h-12 rounded-xl object-cover shadow-sm opacity-50 cursor-pointer hover:opacity-100 transition-opacity" 
+                                alt="" 
+                                onClick={() => setEditingMember(member)}
+                              />
                             ) : (
-                              <div className="w-12 h-12 rounded-xl bg-[#f7c1ea]/20 flex items-center justify-center text-[#f063c1]/20">
+                              <div 
+                                className="w-12 h-12 rounded-xl bg-[#f7c1ea]/20 flex items-center justify-center text-[#f063c1]/20 cursor-pointer hover:bg-[#f7c1ea]/30 transition-colors"
+                                onClick={() => setEditingMember(member)}
+                              >
                                 <UserCircle size={24} />
                               </div>
                             )}
                             <div>
-                              <h4 className="font-black text-[#f063c1]/40">{member.name}</h4>
+                              <h4 className="font-black text-[#f063c1]/40">{member.firstName} {member.lastName}</h4>
                               <p className="text-[10px] text-[#f063c1]/20 font-black truncate max-w-[150px]">{member.email}</p>
                             </div>
                           </div>
@@ -855,13 +928,17 @@ const AdminPage: React.FC = () => {
                             </button>
                             <button 
                               onClick={async () => {
-                                if (!window.confirm('האם להחזיר את המשתמש לפעילות?')) return;
-                                try {
-                                  await updateMember({ ...member, isActive: true });
-                                  alert('המשתמש הוחזר לפעילות');
-                                } catch (err) {
-                                  alert('שגיאה בהחזרת המשתמש');
-                                }
+                                showConfirm({
+                                  message: 'האם להחזיר את המשתמש לפעילות?',
+                                  onConfirm: async () => {
+                                    try {
+                                      await updateMember({ ...member, isActive: true });
+                                      showSuccess('המשתמש הוחזר לפעילות');
+                                    } catch (err) {
+                                      showError('שגיאה בהחזרת המשתמש');
+                                    }
+                                  }
+                                });
                               }}
                               className="w-10 h-10 bg-white border border-[#ff009f]/10 rounded-xl flex items-center justify-center text-[#f063c1]/40 hover:text-[#ff009f] hover:border-[#ff009f]/30 hover:shadow-lg transition-all"
                               title="החזר לפעילות"
@@ -950,7 +1027,10 @@ const AdminPage: React.FC = () => {
                     </button>
                     <button 
                       onClick={() => {
-                        if (window.confirm('האם למחוק אירוע זה?')) deleteEvent(event.id);
+                        showConfirm({
+                          message: 'האם למחוק אירוע זה?',
+                          onConfirm: () => deleteEvent(event.id)
+                        });
                       }}
                       className="p-4 bg-rose-50 text-rose-400 rounded-2xl hover:bg-rose-500 hover:text-white transition-all"
                       title="מחיקת אירוע"
@@ -1227,7 +1307,7 @@ const AdminPage: React.FC = () => {
               
               <h3 className="text-3xl font-black text-[#4a002e] mb-4">חבר/ה חדש/ה בנבחרת!</h3>
               <p className="text-[#f063c1]/60 font-bold text-lg mb-10 leading-relaxed">
-                הבקשה של <span className="text-[#ff009f]">{approvedUser.name}</span> אושרה.
+                הבקשה של <span className="text-[#ff009f]">{approvedUser.firstName} {approvedUser.lastName}</span> אושרה.
                 נא לשלוח לו/ה את פרטי הגישה:
               </p>
               
@@ -1247,7 +1327,7 @@ const AdminPage: React.FC = () => {
 
               <div className="grid grid-cols-1 gap-3 mb-10">
                  <button 
-                   onClick={() => openWhatsApp(approvedUser.mobile, approvedUser.name, approvedUser.email, approvedUser.tempPassword)}
+                   onClick={() => openWhatsApp(approvedUser.mobile, `${approvedUser.firstName} ${approvedUser.lastName}`, approvedUser.email, approvedUser.tempPassword)}
                    className="w-full py-4 bg-[#ff009f] text-white rounded-2xl font-black text-sm shadow-lg hover:bg-[#4a002e] transition-all flex items-center justify-center gap-3"
                  >
                    <MessageCircle size={20} />
@@ -1255,8 +1335,8 @@ const AdminPage: React.FC = () => {
                  </button>
                  <button 
                    onClick={() => {
-                     navigator.clipboard.writeText(formatWhatsAppMessage(approvedUser.name, approvedUser.email, approvedUser.tempPassword));
-                     alert('הודעת ההצטרפות הועתקה ללוח');
+                     navigator.clipboard.writeText(formatWhatsAppMessage(`${approvedUser.firstName} ${approvedUser.lastName}`, approvedUser.email, approvedUser.tempPassword));
+                     showSuccess('הודעת ההצטרפות הועתקה ללוח');
                    }}
                    className="w-full py-4 bg-[#f7c1ea]/20 text-[#ff009f] rounded-2xl font-black text-sm hover:bg-[#f7c1ea]/30 transition-all flex items-center justify-center gap-3"
                  >

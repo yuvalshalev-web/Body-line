@@ -2,7 +2,8 @@
 export interface Member {
   id: string;
   uid?: string; // Firebase Auth UID
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   mobile: string;
   avatar: string;
@@ -25,7 +26,8 @@ export interface Member {
 
 export interface JoinRequest {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   mobile: string;
   avatar: string;

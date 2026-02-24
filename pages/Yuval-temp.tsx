@@ -33,7 +33,8 @@ const AttendanceGrid = () => {
   };
 
   const filteredPeople = people.filter(p => 
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    (p.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (p.lastName || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -68,9 +69,9 @@ const AttendanceGrid = () => {
               <div className={`w-20 h-20 rounded-full border-4 transition-all duration-300 overflow-hidden
                 ${person.isPresent ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'border-slate-700 opacity-40 grayscale'}`}>
                 <img 
-                  src={person.photoURL || 'https://via.placeholder.com/150'} 
+                  src={person.photoURL || person.avatar || 'https://via.placeholder.com/150'} 
                   className="w-full h-full object-cover" 
-                  alt={person.name}
+                  alt={`${person.firstName} ${person.lastName}`}
                 />
               </div>
 
@@ -85,7 +86,7 @@ const AttendanceGrid = () => {
             </div>
             
             <span className={`mt-2 text-xs font-bold text-center truncate w-full px-1 ${person.isPresent ? 'text-green-400' : 'text-slate-500'}`}>
-              {person.name || 'ללא שם'}
+              {person.firstName ? `${person.firstName} ${person.lastName || ''}` : 'ללא שם'}
             </span>
           </div>
         ))}
