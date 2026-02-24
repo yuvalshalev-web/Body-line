@@ -82,6 +82,61 @@ const DirectoryPage: React.FC = () => {
     setIsWhatsAppModalOpen(false);
   };
 
+  const groupedMembers = useMemo(() => {
+    const groups = {
+      Admin: [] as Member[],
+      Instructor: [] as Member[],
+      Member: [] as Member[]
+    };
+    
+    processedMembers.forEach(m => {
+      const role = m.role || 'Member';
+      if (groups[role as keyof typeof groups]) {
+        groups[role as keyof typeof groups].push(m);
+      } else {
+        groups.Member.push(m);
+      }
+    });
+    
+    return groups;
+  }, [processedMembers]);
+
+  const MemberCard = ({ member, idx }: { member: Member, idx: number }) => {
+    // Random rotation between -2 and 2 degrees for polaroid feel
+    const rotation = useMemo(() => (Math.random() * 4 - 2).toFixed(1), []);
+    
+    return (
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, rotate: 0 }}
+        animate={{ opacity: 1, scale: 1, rotate: parseFloat(rotation) }}
+        whileHover={{ scale: 1.05, rotate: 0, zIndex: 10 }}
+        transition={{ delay: idx * 0.02, type: 'spring', stiffness: 300 }}
+        className="group cursor-pointer relative" 
+        onClick={() => setSelectedMember(member)}
+      >
+        <div className="bg-white p-3 pb-8 shadow-md border border-slate-100 transition-all duration-500 group-hover:shadow-2xl">
+          <div className="aspect-square overflow-hidden bg-slate-50 mb-4">
+            {member.avatar ? (
+              <img 
+                src={member.avatar} 
+                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" 
+                alt={member.name} 
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-200">
+                <UserCircle size={40} strokeWidth={1} />
+              </div>
+            )}
+          </div>
+          <div className="text-center">
+            <p className="text-[11px] font-['Assistant'] font-black text-[#006994] truncate px-1">{member.name}</p>
+            <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mt-0.5">{member.role === 'Admin' ? 'מנהל' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}</p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-white text-right" dir="rtl">
       <div className="mb-20 space-y-4">
@@ -89,7 +144,7 @@ const DirectoryPage: React.FC = () => {
           <div className="h-1 w-12 bg-[#006994]"></div>
           <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#006994]">The Elite Squad</span>
         </div>
-        <h2 className="text-7xl md:text-8xl font-black italic tracking-tighter text-[#006994] leading-none">נבחרת הכוכבים</h2>
+        <h2 className="text-5xl md:text-6xl font-black italic tracking-tighter text-[#006994] leading-none">נבחרת הכוכבים</h2>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-4">
           <p className="text-slate-500 font-bold text-lg max-w-2xl">
             האנשים שעושים את חבל זוג למה שהיא - קהילה של חברים שנפגשים במים
@@ -129,45 +184,48 @@ const DirectoryPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
-        {processedMembers.map((member, idx) => (
-          <motion.div 
-            key={member.id} 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: idx * 0.02 }}
-            className="group cursor-pointer relative" 
-            onClick={() => setSelectedMember(member)}
-          >
-             <div className="relative aspect-square overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-slate-100 border border-slate-100 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-1">
-               {member.avatar ? (
-                 <img 
-                   src={member.avatar} 
-                   className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" 
-                   alt={member.name} 
-                 />
-               ) : (
-                 <div className="w-full h-full flex items-center justify-center text-slate-200">
-                   <UserCircle size={40} strokeWidth={1} />
-                 </div>
-               )}
-               
-               {/* Overlay Info - Gallery Style */}
-               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
-                 <p className="text-white font-black text-[10px] leading-tight truncate">{member.name}</p>
-                 <p className="text-[#00FFFF] font-black text-[7px] uppercase tracking-widest">{member.role}</p>
-               </div>
+      <div className="space-y-20">
+        {groupedMembers.Admin.length > 0 && (
+          <section>
+            <div className="flex items-center gap-4 mb-10">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.4em] whitespace-nowrap">הנהלה</h3>
+              <div className="h-px w-full bg-slate-100"></div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-8">
+              {groupedMembers.Admin.map((member, idx) => (
+                <MemberCard key={member.id} member={member} idx={idx} />
+              ))}
+            </div>
+          </section>
+        )}
 
-               {/* Role Indicator Dot */}
-               {member.role === 'Admin' && (
-                 <div className="absolute top-2 left-2 w-2 h-2 bg-[#00FFFF] rounded-full shadow-[0_0_10px_#00FFFF]"></div>
-               )}
+        {groupedMembers.Instructor.length > 0 && (
+          <section>
+            <div className="flex items-center gap-4 mb-10">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.4em] whitespace-nowrap">מדריכים</h3>
+              <div className="h-px w-full bg-slate-100"></div>
             </div>
-            <div className="mt-2 text-center">
-              <p className="text-[10px] font-black text-[#006994] truncate px-1">{member.name}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-8">
+              {groupedMembers.Instructor.map((member, idx) => (
+                <MemberCard key={member.id} member={member} idx={idx} />
+              ))}
             </div>
-          </motion.div>
-        ))}
+          </section>
+        )}
+
+        {groupedMembers.Member.length > 0 && (
+          <section>
+            <div className="flex items-center gap-4 mb-10">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.4em] whitespace-nowrap">חברי הקהילה</h3>
+              <div className="h-px w-full bg-slate-100"></div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-8">
+              {groupedMembers.Member.map((member, idx) => (
+                <MemberCard key={member.id} member={member} idx={idx} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       {selectedMember && (
