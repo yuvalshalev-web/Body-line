@@ -55,18 +55,18 @@ const StorageDisplay: React.FC = () => {
 
       <div className="flex justify-between items-end">
         <div className="text-right">
-          <p className="text-lg font-black text-slate-900 tabular-nums leading-none">{sizeInMB} MB</p>
-          <p className="text-[9px] font-bold text-slate-400 mt-1">בשימוש</p>
+          <p className="text-base font-black text-slate-600 tabular-nums leading-none">{sizeInMB} MB</p>
+          <p className="text-[8px] font-bold text-slate-400 mt-1">בשימוש</p>
         </div>
         
         <div className="text-center">
-          <p className="text-base font-black text-slate-900 tabular-nums leading-none">{percentage}%</p>
-          <p className="text-[9px] font-bold text-slate-400 mt-1">ניצול</p>
+          <p className="text-sm font-black text-slate-600 tabular-nums leading-none">{percentage}%</p>
+          <p className="text-[8px] font-bold text-slate-400 mt-1">ניצול</p>
         </div>
 
         <div className="text-left">
-          <p className="text-sm font-black text-slate-900 tabular-nums leading-none">{QUOTA_MB} MB</p>
-          <p className="text-[9px] font-bold text-slate-400 mt-1">מכסה</p>
+          <p className="text-xs font-black text-slate-600 tabular-nums leading-none">{QUOTA_MB} MB</p>
+          <p className="text-[8px] font-bold text-slate-400 mt-1">מכסה</p>
         </div>
       </div>
     </div>

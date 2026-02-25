@@ -12,12 +12,18 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
   useEffect(() => {
     fetch(`/api/stats/user/${userId}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        return res.json();
+      })
       .then(json => {
         setData(json);
         setLoading(false);
       })
-      .catch(err => console.error('Error fetching user stats:', err));
+      .catch(err => {
+        console.error('Error fetching user stats:', err);
+        setLoading(false);
+      });
   }, [userId]);
 
   if (loading) return <div className="p-8 text-center font-black text-[#40E0D0] animate-pulse">טוען את הגל שלך...</div>;

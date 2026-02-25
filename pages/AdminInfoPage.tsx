@@ -33,7 +33,7 @@ const AdminInfoPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('community');
 
   const tabs = [
-    { id: 'attendance', label: 'צלילה לסשנים', icon: SnorkelIcon, color: 'text-[#00FFFF]', bgColor: 'bg-[#006994]', textColor: 'text-white' },
+    { id: 'attendance', label: 'צלילה לסשנים', icon: SnorkelIcon, color: 'text-[#006994]' },
     { id: 'community', label: 'דופק הקהילה', icon: TrendingUp, color: 'text-[#006994]' },
     { id: 'system', label: 'חדר מכונות', icon: Server, color: 'text-slate-900' },
   ];
@@ -74,12 +74,10 @@ const AdminInfoPage: React.FC = () => {
                 setActiveTab(tab.id as Tab);
               }
             }}
-            className={`flex items-center gap-3 px-8 py-4 rounded-3xl font-black text-sm transition-all relative overflow-hidden group ${
+            className={`flex items-center gap-3 px-8 py-4 rounded-3xl font-black text-sm transition-all relative overflow-hidden group border border-transparent ${
               activeTab === tab.id 
-                ? 'bg-white text-slate-900 shadow-2xl shadow-slate-200' 
-                : tab.id === 'attendance' 
-                  ? 'bg-[#006994] text-white shadow-lg shadow-[#006994]/20 hover:bg-[#4E8294]'
-                  : 'text-slate-400 hover:text-slate-600'
+                ? 'bg-white text-slate-900 shadow-2xl shadow-slate-200 border-slate-100' 
+                : 'bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100'
             }`}
           >
             {activeTab === tab.id && (
@@ -89,7 +87,7 @@ const AdminInfoPage: React.FC = () => {
               />
             )}
             <div className="relative z-10 flex items-center gap-3">
-              <tab.icon size={20} className={activeTab === tab.id ? tab.color : tab.id === 'attendance' ? 'text-[#00FFFF]' : 'opacity-40'} />
+              <tab.icon size={20} className={activeTab === tab.id ? tab.color : 'opacity-40'} />
               <span>{tab.label}</span>
             </div>
           </button>

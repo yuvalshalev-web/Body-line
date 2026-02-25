@@ -31,7 +31,8 @@ const AdminPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
-    joinRequests, siteAssets, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember
+    joinRequests, siteAssets, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember,
+    yearConfig, updateYearConfig
   } = useData();
 
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'PODCASTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE'>('DASHBOARD');
@@ -45,6 +46,26 @@ const AdminPage: React.FC = () => {
   const [replacingAssetKey, setReplacingAssetKey] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   
+  // Year Config State
+  const [isEditingYear, setIsEditingYear] = useState(false);
+  const [yearForm, setYearForm] = useState({ startDate: '', endDate: '' });
+  const [isSavingYear, setIsSavingYear] = useState(false);
+
+  React.useEffect(() => {
+    if (yearConfig) {
+      setYearForm({ startDate: yearConfig.startDate, endDate: yearConfig.endDate });
+    }
+  }, [yearConfig]);
+
+  const calculateWeeks = (startDateStr: string) => {
+    if (!startDateStr) return 0;
+    const start = new Date(startDateStr);
+    const now = new Date();
+    if (now < start) return 0;
+    const diff = now.getTime() - start.getTime();
+    return Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1;
+  };
+
   // Event Editing State
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [eventForm, setEventForm] = useState({
@@ -315,7 +336,7 @@ const AdminPage: React.FC = () => {
                 Processing: {isProcessing}
               </div>
             )}
-            
+
             {activeTab === 'DASHBOARD' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
                 {[
@@ -351,11 +372,6 @@ const AdminPage: React.FC = () => {
                     </div>
                   </button>
                 ))}
-                
-                {/* Storage Monitor Addition */}
-                <div className="md:col-span-2 lg:col-span-3">
-                  <StorageDisplay />
-                </div>
               </div>
             )}
 
@@ -1057,7 +1073,60 @@ const AdminPage: React.FC = () => {
         )}
 
         {activeTab === 'SITE' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 bg-white border border-[#ff009f]/10 rounded-[4rem] p-12 shadow-sm">
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
+            {/* Habal Zug Year Config Widget */}
+            <div className="bg-gradient-to-br from-[#4a002e] to-[#2d001c] p-1 rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                
+                <div className="flex items-center gap-6 relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                    <Calendar size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">שנת חבל זוג</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest">תקופה פעילה כעת</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4 lg:gap-12 relative z-10">
+                  <div className="flex items-center gap-4 bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
+                    <div className="text-right">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">תחילת שנת פעילות</p>
+                      <p className="text-base font-black text-[#4a002e] tabular-nums">{formatDate(yearConfig?.startDate || '---')}</p>
+                    </div>
+                    <div className="w-px h-8 bg-slate-200 mx-2" />
+                    <div className="text-right">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">סיום שנת פעילות</p>
+                      <p className="text-base font-black text-[#4a002e] tabular-nums">{formatDate(yearConfig?.endDate || '---')}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6">
+                    <div className="text-center">
+                      <p className="text-[9px] font-black text-[#f063c1] uppercase tracking-widest mb-1">שבועות שחלפו</p>
+                      <div className="flex items-baseline gap-1 justify-center">
+                        <span className="text-4xl font-black text-[#ff009f] tabular-nums">{calculateWeeks(yearConfig?.startDate || '')}</span>
+                        <span className="text-[10px] font-black text-slate-400">/ 52</span>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => setIsEditingYear(true)}
+                      className="w-14 h-14 bg-[#4a002e] text-white rounded-2xl flex items-center justify-center hover:bg-[#ff009f] transition-all shadow-xl shadow-[#4a002e]/10 active:scale-90"
+                      title="עריכת הגדרות שנה"
+                    >
+                      <Settings size={24} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-[#ff009f]/10 rounded-[4rem] p-12 shadow-sm">
              <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-4">
                    <div className="p-4 bg-[#ff009f] text-white rounded-2xl shadow-lg"><RotateCcw size={24} /></div>
@@ -1304,6 +1373,80 @@ const AdminPage: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Year Config Warning Modal */}
+      {isEditingYear && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl animate-in fade-in">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white w-full max-w-lg rounded-[3.5rem] shadow-2xl overflow-hidden relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="bg-rose-500 p-10 text-white text-center relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+              <ShieldAlert size={64} className="mx-auto mb-6 animate-bounce" />
+              <h3 className="text-3xl font-black mb-2">אזהרת מערכת קריטית</h3>
+              <p className="text-white/80 font-bold">שינוי הגדרות זמן ליבה</p>
+            </div>
+
+            <div className="p-10 space-y-8">
+              <div className="bg-rose-50 p-6 rounded-2xl border border-rose-100 text-rose-700 text-center font-black leading-relaxed">
+                ⚠️ שים לב: שינוי התאריכים ישבש את תפקוד האתר ואת הדוחות. נגיעה מותרת רק בחירום.
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">תאריך התחלה חדש</label>
+                  <input 
+                    type="date" 
+                    value={yearForm.startDate}
+                    onChange={e => setYearForm(prev => ({ ...prev, startDate: e.target.value }))}
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 ring-[#ff009f]/5 focus:bg-white transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">תאריך סיום חדש</label>
+                  <input 
+                    type="date" 
+                    value={yearForm.endDate}
+                    onChange={e => setYearForm(prev => ({ ...prev, endDate: e.target.value }))}
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 ring-[#ff009f]/5 focus:bg-white transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 pt-4">
+                <button 
+                  onClick={async () => {
+                    setIsSavingYear(true);
+                    try {
+                      await updateYearConfig(yearForm);
+                      setIsEditingYear(false);
+                      showSuccess('הגדרות השנה עודכנו בהצלחה');
+                    } catch (err) {
+                      showError('שגיאה בעדכון הגדרות השנה');
+                    } finally {
+                      setIsSavingYear(false);
+                    }
+                  }}
+                  disabled={isSavingYear}
+                  className="w-full py-5 bg-rose-500 text-white rounded-[2rem] font-black text-lg shadow-xl shadow-rose-500/20 hover:bg-rose-600 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                >
+                  {isSavingYear ? <Loader2 className="animate-spin" /> : <Save size={20} />}
+                  אני מבין את ההשלכות - שמור שינויים
+                </button>
+                <button 
+                  onClick={() => setIsEditingYear(false)}
+                  className="w-full py-5 bg-slate-100 text-slate-500 rounded-[2rem] font-black text-lg hover:bg-slate-200 transition-all"
+                >
+                  ביטול וחזרה
+                </button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       )}
 

@@ -19,6 +19,9 @@ const SystemMonitor: React.FC = () => {
           fetch('/api/stats/system'),
           getStorageSizeMB()
         ]);
+        
+        if (!statsRes.ok) throw new Error(`Server error: ${statsRes.status}`);
+        
         const statsJson = await statsRes.json();
         setData(statsJson);
         setStorageSize(realStorageSize);

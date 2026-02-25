@@ -13,12 +13,18 @@ const CommunityAnalytics: React.FC = () => {
 
   useEffect(() => {
     fetch('/api/stats/community')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        return res.json();
+      })
       .then(json => {
         setData(json);
         setLoading(false);
       })
-      .catch(err => console.error('Error fetching community stats:', err));
+      .catch(err => {
+        console.error('Error fetching community stats:', err);
+        setLoading(false);
+      });
   }, []);
 
   const activeMembersCount = members.filter(m => m.isActive).length;

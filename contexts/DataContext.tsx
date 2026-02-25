@@ -16,6 +16,7 @@ interface DataContextType {
   quotes: QuoteItem[];
   weeklyHistory: any[];
   siteAssets: any;
+  yearConfig: { startDate: string; endDate: string } | null;
   attendeeIds: string[];
   activeSessionDate: string;
   isLoading: boolean;
@@ -39,6 +40,7 @@ interface DataContextType {
   batchAddQuotes: (items: Omit<QuoteItem, 'id'>[]) => Promise<void>;
   clearCollection: (collectionName: string) => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
+  updateYearConfig: (config: { startDate: string; endDate: string }) => Promise<void>;
   archiveMember: (id: string) => Promise<void>;
 }
 
@@ -54,6 +56,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
   const [weeklyHistory, setWeeklyHistory] = useState<any[]>([]);
   const [siteAssets, setSiteAssets] = useState<any>({});
+  const [yearConfig, setYearConfig] = useState<{ startDate: string; endDate: string } | null>(null);
   const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
   const [activeSessionDate, setActiveSessionDate] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -111,6 +114,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (doc.exists()) setSiteAssets(doc.data());
     });
 
+    const unsubYearConfig = onSnapshot(doc(db, 'site_data', 'year_config'), (doc) => {
+      if (doc.exists()) setYearConfig(doc.data() as { startDate: string; endDate: string });
+    });
+
     // Safety timeout for loading state
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
@@ -146,7 +153,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     return () => {
       clearTimeout(timeoutId);
-      unsubMembers(); unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubGlossary(); unsubQuotes(); unsubHistory(); unsubAssets(); unsubAttendees();
+      unsubMembers(); unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubGlossary(); unsubQuotes(); unsubHistory(); unsubAssets(); unsubYearConfig(); unsubAttendees();
     };
   }, []);
 
@@ -378,6 +385,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await setDoc(doc(getDb(), 'site_data', 'assets'), assets, { merge: true });
   };
 
+  const updateYearConfig = async (config: { startDate: string; endDate: string }) => {
+    await setDoc(doc(getDb(), 'site_data', 'year_config'), config);
+  };
+
   const archiveMember = async (id: string) => {
     const db = getDb();
     const batch = writeBatch(db);
@@ -403,10 +414,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <DataContext.Provider value={{ 
-      members, joinRequests, events, news, galleryItems, glossary, quotes, weeklyHistory, siteAssets, attendeeIds, activeSessionDate, isLoading,
+      members, joinRequests, events, news, galleryItems, glossary, quotes, weeklyHistory, siteAssets, yearConfig, attendeeIds, activeSessionDate, isLoading,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, deleteNews, toggleSessionAttendance, forceResetSession,
-      finalizeThursdaySession, batchAddGlossary, batchAddQuotes, clearCollection, updateSiteAssets, archiveMember
+      finalizeThursdaySession, batchAddGlossary, batchAddQuotes, clearCollection, updateSiteAssets, updateYearConfig, archiveMember
     }}>
       {children}
     </DataContext.Provider>
