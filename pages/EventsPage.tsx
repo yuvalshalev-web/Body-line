@@ -24,6 +24,7 @@ import { SUPER_ADMIN_EMAIL } from '../constants';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getStorageInstance } from '../services/firebase';
 import { processImage } from '../utils/imageProcessor';
+import { syncStorageOnUpload } from '../utils/storageStats';
 
 const EventsPage: React.FC = () => {
   const { currentUser } = useAuth();
@@ -71,6 +72,7 @@ const EventsPage: React.FC = () => {
       const storageRef = ref(storage, `events/${Date.now()}_${file.name}`);
       
       await uploadBytes(storageRef, processed.blob);
+      await syncStorageOnUpload(processed.blob.size);
       const downloadUrl = await getDownloadURL(storageRef);
       
       setImageUrl(downloadUrl);

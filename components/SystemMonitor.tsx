@@ -4,19 +4,32 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import { Server, Database, Activity, AlertCircle } from 'lucide-react';
+import { getStorageSizeMB } from '../utils/storageStats';
+import StorageDisplay from './StorageDisplay';
 
 const SystemMonitor: React.FC = () => {
   const [data, setData] = useState<any>(null);
+  const [storageSize, setStorageSize] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/stats/system')
-      .then(res => res.json())
-      .then(json => {
-        setData(json);
+    const fetchStats = async () => {
+      try {
+        const [statsRes, realStorageSize] = await Promise.all([
+          fetch('/api/stats/system'),
+          getStorageSizeMB()
+        ]);
+        const statsJson = await statsRes.json();
+        setData(statsJson);
+        setStorageSize(realStorageSize);
+      } catch (err) {
+        console.error('Error fetching system stats:', err);
+      } finally {
         setLoading(false);
-      })
-      .catch(err => console.error('Error fetching system stats:', err));
+      }
+    };
+
+    fetchStats();
   }, []);
 
   if (loading) return <div className="p-8 text-center font-black text-slate-400 animate-pulse">מתחבר לחדר מכונות...</div>;
@@ -64,7 +77,7 @@ const SystemMonitor: React.FC = () => {
       </div>
 
       {/* Technical Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <div className="bg-slate-900 p-6 rounded-[2rem] text-white flex flex-col justify-between h-40">
           <div className="flex justify-between items-start">
             <Activity size={20} className="text-[#00FFFF]" />
@@ -83,8 +96,12 @@ const SystemMonitor: React.FC = () => {
           </div>
           <div>
             <p className="text-3xl font-black text-slate-900 tabular-nums">{data.dbSize}MB</p>
-            <p className="text-[10px] text-slate-400">נפח אחסון נוכחי</p>
+            <p className="text-[10px] text-slate-400">נפח מסד נתונים</p>
           </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between h-40">
+          <StorageDisplay />
         </div>
 
         <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between h-40">

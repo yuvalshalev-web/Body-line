@@ -67,6 +67,7 @@ async function startServer() {
         weekly: 850
       },
       dbSize: 4.2, // MB
+      storageSize: 156.4, // MB
       errorRate: 0.02, // 2%
       traffic: [
         { time: '00:00', value: 10 },

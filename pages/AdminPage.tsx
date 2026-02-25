@@ -15,6 +15,8 @@ import { SUPER_ADMIN_EMAIL } from '../constants';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getStorageInstance } from '../services/firebase';
 import { processImage } from '../utils/imageProcessor';
+import { updateStorageStats, syncStorageOnUpload } from '../utils/storageStats';
+import StorageDisplay from '../components/StorageDisplay';
 
 const ASSET_LABELS: Record<string, string> = {
   habalZugLogo: 'לוגו חבל זוג',
@@ -35,7 +37,7 @@ const AdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'PODCASTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE'>('DASHBOARD');
   const [searchTerm, setSearchTerm] = useState('');
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
-  const [approvedUser, setApprovedUser] = useState<{ name: string; email: string; mobile: string; tempPassword: string } | null>(null);
+  const [approvedUser, setApprovedUser] = useState<{ firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null>(null);
   const [editingAsset, setEditingAsset] = useState<{ key: string, value: string } | null>(null);
   const [isUploadingAsset, setIsUploadingAsset] = useState<string | null>(null);
   const assetFileInputRef = useRef<HTMLInputElement>(null);
@@ -100,6 +102,7 @@ const AdminPage: React.FC = () => {
       const storageRef = ref(storage, `assets/site/${replacingAssetKey}_${Date.now()}`);
       
       await uploadBytes(storageRef, processed.blob);
+      await syncStorageOnUpload(processed.blob.size);
       const downloadUrl = await getDownloadURL(storageRef);
       
       await updateSiteAssets({ [replacingAssetKey]: downloadUrl });
@@ -136,6 +139,7 @@ const AdminPage: React.FC = () => {
       const storageRef = ref(storage, `events/${Date.now()}_${file.name}`);
       
       await uploadBytes(storageRef, processed.blob);
+      await syncStorageOnUpload(processed.blob.size);
       const downloadUrl = await getDownloadURL(storageRef);
       
       setEventForm(prev => ({ ...prev, imageUrl: downloadUrl }));
@@ -347,6 +351,11 @@ const AdminPage: React.FC = () => {
                     </div>
                   </button>
                 ))}
+                
+                {/* Storage Monitor Addition */}
+                <div className="md:col-span-2 lg:col-span-3">
+                  <StorageDisplay />
+                </div>
               </div>
             )}
 
@@ -469,8 +478,8 @@ const AdminPage: React.FC = () => {
                           onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              const base64 = await processImage(file);
-                              setEditingMember({ ...editingMember, avatar: base64 });
+                              const processed = await processImage(file);
+                              setEditingMember({ ...editingMember, avatar: processed.dataUrl });
                             }
                           }}
                         />
@@ -961,13 +970,13 @@ const AdminPage: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'POSTS' && (
+        {activeTab === 'PODCASTS' as any && (
           <div className="py-32 text-center border-2 border-dashed border-[#ff009f]/10 rounded-[4rem] animate-in fade-in">
              <div className="w-20 h-20 bg-[#f7c1ea]/10 rounded-full flex items-center justify-center mx-auto mb-6 text-[#f063c1]/20">
-                <Newspaper size={40} />
+                <Mic size={40} />
              </div>
-             <h3 className="text-2xl font-black text-[#f063c1]/40">ניהול פוסטים בקרוב</h3>
-             <p className="text-[#f063c1]/40 font-bold mt-2">כאן תוכלו לנהל את רשימת הפוסטים והעדכונים</p>
+             <h3 className="text-2xl font-black text-[#f063c1]/40">ניהול פודקאסטים בקרוב</h3>
+             <p className="text-[#f063c1]/40 font-bold mt-2">כאן תוכלו לנהל את רשימת הפרקים והפודקאסטים</p>
           </div>
         )}
 
@@ -976,15 +985,18 @@ const AdminPage: React.FC = () => {
              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                {galleryItems.map(item => (
                  <div key={item.id} className="aspect-square rounded-2xl overflow-hidden relative group border border-[#ff009f]/5">
-                   {item.url ? (
-                     <img src={item.url} className="w-full h-full object-cover" alt="" />
+                   {item.imageUrl ? (
+                     <img src={item.imageUrl} className="w-full h-full object-cover" alt="" />
                    ) : (
                      <div className="w-full h-full bg-[#f7c1ea]/10 flex items-center justify-center text-[#f063c1]/20">
                        <ImageIcon size={32} />
                      </div>
                    )}
                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
-                     <button className="p-3 bg-rose-500 text-white rounded-xl shadow-lg hover:bg-rose-600 transition-all">
+                     <button 
+                       onClick={() => window.open(item.imageUrl, '_blank')}
+                       className="p-3 bg-rose-500 text-white rounded-xl shadow-lg hover:bg-rose-600 transition-all"
+                     >
                        <Trash2 size={18} />
                      </button>
                    </div>

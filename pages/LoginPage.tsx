@@ -59,7 +59,8 @@ const LoginPage: React.FC = () => {
         const devHashedPassword = await hashPassword('Yuval!1970');
         login({
           id: 'dev-admin-id', 
-          name: 'The Dude', 
+          firstName: 'The',
+          lastName: 'Dude',
           email: 'yuval@shalev.org', 
           mobile: '050-0000000',
           avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',

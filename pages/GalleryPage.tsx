@@ -1,12 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { collection, addDoc, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject, getMetadata } from 'firebase/storage';
 import { Plus, User, Loader2, Trash2, X, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { getDb, getStorageInstance } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { processImage } from '../utils/imageProcessor';
 import { GalleryItem } from '../types';
+import { syncStorageOnUpload, syncStorageOnDelete } from '../utils/storageStats';
 
 const GalleryPage: React.FC = () => {
   const { currentUser } = useAuth();
@@ -48,6 +49,7 @@ const GalleryPage: React.FC = () => {
         const storageRef = ref(getStorageInstance(), storagePath);
         
         const snapshot = await uploadBytes(storageRef, blob);
+        await syncStorageOnUpload(blob.size);
         const downloadUrl = await getDownloadURL(snapshot.ref);
         
         await addDoc(collection(getDb(), 'gallery'), {
@@ -102,6 +104,17 @@ const GalleryPage: React.FC = () => {
       if (storageIdentifier) {
         try {
           const imageRef = ref(storage, storageIdentifier);
+          
+          // Fetch metadata to get file size before deletion
+          try {
+            const metadata = await getMetadata(imageRef);
+            if (metadata.size) {
+              await syncStorageOnDelete(metadata.size);
+            }
+          } catch (metaErr) {
+            console.warn("Could not fetch metadata for size sync:", metaErr);
+          }
+
           await deleteObject(imageRef);
           console.log("Storage file deleted");
         } catch (storageErr: any) {

@@ -4,6 +4,7 @@ import { getDb } from '../services/firebase';
 import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
 import { hashPassword } from '../utils/crypto';
+import { initializeStorageStats } from '../utils/storageStats';
 
 interface DataContextType {
   members: Member[];
@@ -13,6 +14,7 @@ interface DataContextType {
   galleryItems: GalleryItem[];
   glossary: GlossaryTerm[];
   quotes: QuoteItem[];
+  weeklyHistory: any[];
   siteAssets: any;
   attendeeIds: string[];
   activeSessionDate: string;
@@ -50,6 +52,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [glossary, setGlossary] = useState<GlossaryTerm[]>([]);
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
+  const [weeklyHistory, setWeeklyHistory] = useState<any[]>([]);
   const [siteAssets, setSiteAssets] = useState<any>({});
   const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
   const [activeSessionDate, setActiveSessionDate] = useState<string>('');
@@ -70,6 +73,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     const db = getDb();
+    initializeStorageStats();
     
     const unsubMembers = onSnapshot(collection(db, 'members'), (snapshot: any) => {
       setMembers(snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() } as Member)));
@@ -97,6 +101,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     const unsubQuotes = onSnapshot(collection(db, 'quotes'), (snapshot: any) => {
       setQuotes(snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() } as QuoteItem)));
+    });
+
+    const unsubHistory = onSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc')), (snapshot: any) => {
+      setWeeklyHistory(snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() })));
     });
     
     const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (doc) => {
@@ -138,7 +146,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     return () => {
       clearTimeout(timeoutId);
-      unsubMembers(); unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubGlossary(); unsubQuotes(); unsubAssets(); unsubAttendees();
+      unsubMembers(); unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubGlossary(); unsubQuotes(); unsubHistory(); unsubAssets(); unsubAttendees();
     };
   }, []);
 
@@ -395,7 +403,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <DataContext.Provider value={{ 
-      members, joinRequests, events, news, galleryItems, glossary, quotes, siteAssets, attendeeIds, activeSessionDate, isLoading,
+      members, joinRequests, events, news, galleryItems, glossary, quotes, weeklyHistory, siteAssets, attendeeIds, activeSessionDate, isLoading,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, deleteNews, toggleSessionAttendance, forceResetSession,
       finalizeThursdaySession, batchAddGlossary, batchAddQuotes, clearCollection, updateSiteAssets, archiveMember

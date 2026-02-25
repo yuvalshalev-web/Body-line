@@ -4,8 +4,10 @@ import {
   AreaChart, Area, PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { Users, TrendingUp, UserPlus, Calendar } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
 
 const CommunityAnalytics: React.FC = () => {
+  const { members, weeklyHistory } = useData();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -18,6 +20,33 @@ const CommunityAnalytics: React.FC = () => {
       })
       .catch(err => console.error('Error fetching community stats:', err));
   }, []);
+
+  const activeMembersCount = members.filter(m => m.isActive).length;
+  
+  // New joiners in the last 30 days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  const newJoinersCount = members.filter(m => {
+    if (!m.joinedAt) return false;
+    // Try to parse he-IL date "DD.MM.YYYY"
+    const parts = m.joinedAt.split('.');
+    if (parts.length === 3) {
+      const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+      return date >= thirtyDaysAgo;
+    }
+    // Fallback for other formats
+    const date = new Date(m.joinedAt);
+    return !isNaN(date.getTime()) && date >= thirtyDaysAgo;
+  }).length;
+
+  // Sessions this year
+  const currentYear = new Date().getFullYear();
+  const sessionsThisYear = weeklyHistory.filter(s => {
+    if (!s.date) return false;
+    const date = s.date.toDate ? s.date.toDate() : new Date(s.date);
+    return date.getFullYear() === currentYear;
+  }).length;
 
   if (loading) return <div className="p-8 text-center font-black text-[#006994] animate-pulse">טוען דופק קהילה...</div>;
 
@@ -44,7 +73,7 @@ const CommunityAnalytics: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">חברים פעילים</p>
-            <p className="text-2xl font-black text-[#006994] tabular-nums">1,240</p>
+            <p className="text-2xl font-black text-[#006994] tabular-nums">{activeMembersCount.toLocaleString()}</p>
           </div>
         </div>
         <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
@@ -52,8 +81,8 @@ const CommunityAnalytics: React.FC = () => {
             <UserPlus size={24} />
           </div>
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מצטרפים החודש</p>
-            <p className="text-2xl font-black text-emerald-600 tabular-nums">+42</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מצטרפים חדשים (30 יום)</p>
+            <p className="text-2xl font-black text-emerald-600 tabular-nums">+{newJoinersCount}</p>
           </div>
         </div>
         <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
@@ -62,7 +91,7 @@ const CommunityAnalytics: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סשנים השנה</p>
-            <p className="text-2xl font-black text-amber-600 tabular-nums">156</p>
+            <p className="text-2xl font-black text-amber-600 tabular-nums">{sessionsThisYear}</p>
           </div>
         </div>
       </div>

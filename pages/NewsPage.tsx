@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { NewsItem } from '../types';
 import { processImage } from '../utils/imageProcessor';
+import { syncStorageOnUpload } from '../utils/storageStats';
 
 const NewsPage: React.FC = () => {
   const { currentUser } = useAuth();
@@ -48,6 +49,7 @@ const NewsPage: React.FC = () => {
       if (selectedImage) {
         const storageRef = ref(getStorageInstance(), `news/${Date.now()}_post.webp`);
         const snapshot = await uploadBytes(storageRef, selectedImage.blob);
+        await syncStorageOnUpload(selectedImage.blob.size);
         imageUrl = await getDownloadURL(snapshot.ref);
       }
 

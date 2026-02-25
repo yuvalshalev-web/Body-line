@@ -207,7 +207,7 @@ const DirectoryPage: React.FC = () => {
         {groupedMembers.Admin.length > 0 && (
           <section>
             <div className="flex items-center gap-4 mb-10">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.4em] whitespace-nowrap">הנהלה</h3>
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.4em] whitespace-nowrap">צוות קדמי</h3>
               <div className="h-px w-full bg-slate-100"></div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-8">

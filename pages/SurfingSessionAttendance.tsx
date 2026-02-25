@@ -618,7 +618,7 @@ const SurfingSessionAttendance: React.FC = () => {
                         isSelected ? 'border-[#60DD8E] scale-105 shadow-lg shadow-[#60DD8E]/10' : 'border-white grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100'
                       }`}>
                         <img 
-                          src={user.photoURL || user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + ' ' + user.lastName)}&background=006994&color=fff`} 
+                          src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + ' ' + user.lastName)}&background=006994&color=fff`} 
                           className="w-full h-full object-cover" 
                           alt={`${user.firstName} ${user.lastName}`}
                         />
