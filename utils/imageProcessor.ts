@@ -8,8 +8,8 @@
  */
 export const processImage = async (
   file: File, 
-  maxWidth = 1200, 
-  quality = 0.8
+  maxWidth = 800, 
+  quality = 0.6
 ): Promise<{ blob: Blob; dataUrl: string }> => {
   return new Promise((resolve, reject) => {
     // ולידציה בסיסית לגודל קובץ מקורי
@@ -27,7 +27,8 @@ export const processImage = async (
         let width = img.width;
         let height = img.height;
 
-        // חישוב מידות חדשות לשמירה על יחס גובה-רוחב
+        // For profile pictures, we want them small (under 50KB)
+        // 800px width is plenty for a profile pic
         if (width > maxWidth) {
           height = (maxWidth / width) * height;
           width = maxWidth;
@@ -38,22 +39,30 @@ export const processImage = async (
         const ctx = canvas.getContext('2d');
         if (!ctx) return reject(new Error('לא ניתן ליצור הקשר Canvas.'));
 
-        // ציור התמונה על הקנבס במידות החדשות
         ctx.drawImage(img, 0, 0, width, height);
 
-        // המרה ל-Blob בפורמט WebP
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const dataUrl = canvas.toDataURL('image/webp', quality);
-              resolve({ blob, dataUrl });
-            } else {
-              reject(new Error('עיבוד התמונה ל-Blob נכשל.'));
-            }
-          },
-          'image/webp',
-          quality
-        );
+        // Try to get it under 50KB by adjusting quality if needed
+        const compress = (q: number) => {
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                // If blob is still too large and quality is high enough, try again
+                if (blob.size > 50 * 1024 && q > 0.1) {
+                  compress(q - 0.1);
+                } else {
+                  const dataUrl = canvas.toDataURL('image/webp', q);
+                  resolve({ blob, dataUrl });
+                }
+              } else {
+                reject(new Error('עיבוד התמונה ל-Blob נכשל.'));
+              }
+            },
+            'image/webp',
+            q
+          );
+        };
+
+        compress(quality);
       };
       img.onerror = () => reject(new Error('טעינת התמונה נכשלה. הקובץ עשוי להיות פגום.'));
     };

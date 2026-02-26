@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import { Flame, Trophy, Calendar, Crown, Star } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
-import { calculateUserStats } from '../utils/analytics';
+import { calculateUserStats } from '../src/utils/analytics';
 
 interface PlayerCardProps {
   userId: string;

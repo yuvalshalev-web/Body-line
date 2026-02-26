@@ -389,7 +389,7 @@ const SessionStatsPage: React.FC = () => {
       </header>
 
       {stats ? (
-        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-[400px]">
           {/* Top Stats Row */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-white p-8 rounded-[2.5rem] border border-[#006994]/10 shadow-sm">

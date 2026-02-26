@@ -27,6 +27,14 @@ export let sessionReadCount = 0;
  * Wrapper חכם לשליפת מסמכים שסופר קריאות בזמן אמת
  */
 export const trackedGetDocs = async (query: Query): Promise<QuerySnapshot> => {
+    // בדיקת Kill Switch
+    const isKillSwitchActive = localStorage.getItem('kill_switch_active') === 'true';
+    if (isKillSwitchActive) {
+      console.warn('Kill Switch is active. Blocking Firebase read.');
+      // במקרה של Kill Switch, אנחנו זורקים שגיאה כדי שה-DataContext ישתמש ב-Cache
+      throw new Error('QUOTA_EXCEEDED_OR_KILL_SWITCH');
+    }
+
     const snapshot = await getDocs(query);
     // Firebase מחייב על כל מסמך שחזר + 1 על השאילתה עצמה
     const reads = snapshot.size || 1; 

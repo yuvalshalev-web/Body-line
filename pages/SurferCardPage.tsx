@@ -5,7 +5,7 @@ import PlayerCard from '../components/PlayerCard';
 import ConsistencyRankWidget from '../components/ConsistencyRankWidget';
 import UserAnalytics from '../components/UserAnalytics';
 import { Trophy, Waves, Target } from 'lucide-react';
-import { calculateUserStats } from '../utils/analytics';
+import { calculateUserStats } from '../src/utils/analytics';
 
 const SurferCardPage: React.FC = () => {
   const { currentUser } = useAuth();

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp } from 'firebase/firestore';
-import { getDb } from '../services/firebase';
+import { getDb, trackedGetDocs } from '../services/firebase';
 import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
 import { hashPassword } from '../utils/crypto';
@@ -90,35 +90,71 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     // 1. One-time fetches for static-ish data with sessionStorage caching
     const fetchData = async () => {
+      const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+      const now = Date.now();
+
+      const getCachedData = (key: string) => {
+        const cached = sessionStorage.getItem(key);
+        if (!cached) return null;
+        const { data, timestamp } = JSON.parse(cached);
+        if (now - timestamp > CACHE_DURATION) return null;
+        return data;
+      };
+
+      const setCachedData = (key: string, data: any) => {
+        sessionStorage.setItem(key, JSON.stringify({ data, timestamp: now }));
+      };
+
       try {
         // Members
-        const cachedMembers = sessionStorage.getItem('cached_members');
+        const cachedMembers = getCachedData('cached_members_v2');
         if (cachedMembers) {
-          setMembers(JSON.parse(cachedMembers));
+          setMembers(cachedMembers);
         } else {
-          const mSnap = await getDocs(collection(db, 'members'));
-          const mData = mSnap.docs.map(d => ({ id: d.id, ...d.data() } as Member));
-          setMembers(mData);
-          sessionStorage.setItem('cached_members', JSON.stringify(mData));
+          try {
+            const mSnap = await trackedGetDocs(collection(db, 'members'));
+            const mData = mSnap.docs.map(d => ({ id: d.id, ...d.data() } as Member));
+            setMembers(mData);
+            setCachedData('cached_members_v2', mData);
+          } catch (e: any) {
+            if (e.message === 'QUOTA_EXCEEDED_OR_KILL_SWITCH') {
+              const fallback = sessionStorage.getItem('cached_members_v2');
+              if (fallback) setMembers(JSON.parse(fallback).data);
+            }
+            throw e;
+          }
         }
 
         // Weekly History (Limited to shnatHevelZug)
-        const cachedHistory = sessionStorage.getItem('cached_history');
+        const cachedHistory = getCachedData('cached_history_v2');
         if (cachedHistory) {
-          setWeeklyHistory(JSON.parse(cachedHistory));
+          setWeeklyHistory(cachedHistory);
         } else {
-          const hSnap = await getDocs(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)));
-          const hData = hSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-          setWeeklyHistory(hData);
-          sessionStorage.setItem('cached_history', JSON.stringify(hData));
+          try {
+            const hSnap = await trackedGetDocs(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)));
+            const hData = hSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            setWeeklyHistory(hData);
+            setCachedData('cached_history_v2', hData);
+          } catch (e: any) {
+            if (e.message === 'QUOTA_EXCEEDED_OR_KILL_SWITCH') {
+              const fallback = sessionStorage.getItem('cached_history_v2');
+              if (fallback) setWeeklyHistory(JSON.parse(fallback).data);
+            }
+            throw e;
+          }
         }
 
         // Glossary & Quotes
-        const glSnap = await getDocs(collection(db, 'glossary'));
-        setGlossary(glSnap.docs.map(d => ({ id: d.id, ...d.data() } as GlossaryTerm)));
-        
-        const qSnap = await getDocs(collection(db, 'quotes'));
-        setQuotes(qSnap.docs.map(d => ({ id: d.id, ...d.data() } as QuoteItem)));
+        try {
+          const glSnap = await trackedGetDocs(collection(db, 'glossary'));
+          setGlossary(glSnap.docs.map(d => ({ id: d.id, ...d.data() } as GlossaryTerm)));
+          
+          const qSnap = await trackedGetDocs(collection(db, 'quotes'));
+          setQuotes(qSnap.docs.map(d => ({ id: d.id, ...d.data() } as QuoteItem)));
+        } catch (e: any) {
+          if (e.message !== 'QUOTA_EXCEEDED_OR_KILL_SWITCH') throw e;
+          // Fallback logic for glossary/quotes could be added here if needed
+        }
 
       } catch (err) {
         handleFirestoreError(err);
@@ -455,7 +491,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <DataContext.Provider value={{ 
-      members, joinRequests, events, news, galleryItems, glossary, quotes, weeklyHistory, siteAssets, yearConfig, attendeeIds, activeSessionDate, isLoading,
+      members, joinRequests, events, news, galleryItems, glossary, quotes, weeklyHistory, siteAssets, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, deleteNews, toggleSessionAttendance, forceResetSession,
       finalizeThursdaySession, batchAddGlossary, batchAddQuotes, clearCollection, updateSiteAssets, updateYearConfig, archiveMember

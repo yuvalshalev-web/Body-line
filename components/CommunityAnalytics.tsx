@@ -61,7 +61,7 @@ const CommunityAnalytics: React.FC = () => {
   const COLORS = ['#006994', '#40E0D0', '#4E8294', '#60DD8E'];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700" dir="rtl">
+    <div className="space-y-8 animate-in fade-in duration-700 min-h-[400px]" dir="rtl">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <div className="w-12 h-12 bg-[#006994] rounded-2xl flex items-center justify-center text-white shadow-lg">
@@ -126,7 +126,7 @@ const CommunityAnalytics: React.FC = () => {
         {/* Growth Chart */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
           <h3 className="text-lg font-black text-[#006994] mb-6">צמיחת הקהילה (חדשים מול ותיקים)</h3>
-          <div className="h-80">
+          <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.growth} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -147,7 +147,7 @@ const CommunityAnalytics: React.FC = () => {
         {/* Activity Venn Representation (Simplified as Pie for now) */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
           <h3 className="text-lg font-black text-[#006994] mb-6">חפיפת פעילויות</h3>
-          <div className="h-80">
+          <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

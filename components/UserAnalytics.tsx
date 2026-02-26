@@ -6,7 +6,7 @@ import {
 import { Waves, Zap, Trophy, Flame } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useData } from '../contexts/DataContext';
-import { calculateUserStats } from '../utils/analytics';
+import { calculateUserStats } from '../src/utils/analytics';
 
 const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
   const { members, weeklyHistory, yearConfig, isLoading } = useData();
@@ -21,7 +21,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
   const COLORS = ['#006994', '#40E0D0'];
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700" dir="rtl">
+    <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700 min-h-[400px]" dir="rtl">
       {/* Mobile-First Header */}
       <div className="flex flex-col items-center text-center gap-4 mb-10">
         <div className="w-20 h-20 bg-gradient-to-br from-[#006994] to-[#40E0D0] rounded-3xl flex items-center justify-center text-white shadow-xl rotate-3">
@@ -71,7 +71,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
         
         <div className="flex flex-col md:flex-row items-center justify-around gap-8">
           {data.progress.map((item: any, idx: number) => (
-            <div key={idx} className="relative w-40 h-40">
+            <div key={idx} className="relative w-full h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -104,7 +104,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
       {/* Radar Chart for Skills (Mocked for visual impact) */}
       <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
         <h3 className="text-lg font-black text-[#006994] mb-6 text-center">פרופיל גולש</h3>
-        <div className="h-64">
+        <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
               { subject: 'טכניקה', A: 120, fullMark: 150 },

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, increment, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, increment, addDoc, limit } from 'firebase/firestore';
 import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, ChevronDown, MapPin, CheckCircle2, UserPlus, Mail, RotateCcw, X, UserCheck, Sparkles, Waves, User } from 'lucide-react';
-import { getDb } from '../services/firebase';
+import { getDb, trackedGetDocs } from '../services/firebase';
 import { Member } from '../types';
 import { hashPassword } from '../utils/crypto';
 import { useAuth } from '../contexts/AuthContext';
@@ -79,9 +79,10 @@ const LoginPage: React.FC = () => {
       const q = query(
         collection(db, 'members'), 
         where('email', '==', email.toLowerCase().trim()), 
-        where('password', '==', hashedPassword)
+        where('password', '==', hashedPassword),
+        limit(1)
       );
-      const snapshot = await getDocs(q);
+      const snapshot = await trackedGetDocs(q);
       
       if (snapshot.empty) {
         setError('פרטי הגישה אינם נכונים');
@@ -196,8 +197,8 @@ const LoginPage: React.FC = () => {
     try {
       const db = getDb();
       const normalizedEmail = joinEmail.toLowerCase().trim();
-      const q = query(collection(db, 'members'), where('email', '==', normalizedEmail));
-      const snapshot = await getDocs(q);
+      const q = query(collection(db, 'members'), where('email', '==', normalizedEmail), limit(1));
+      const snapshot = await trackedGetDocs(q);
       if (!snapshot.empty) {
         setShowDuplicateModal(true);
         setIsLoading(false);
