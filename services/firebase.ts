@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore } from 'firebase/firestore';
+import { initializeFirestore, getDocs, Query, QuerySnapshot } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -20,6 +20,23 @@ const db = initializeFirestore(app, {
 
 const auth = getAuth(app);
 const storage = getStorage(app);
+
+export let sessionReadCount = 0;
+
+/**
+ * Wrapper חכם לשליפת מסמכים שסופר קריאות בזמן אמת
+ */
+export const trackedGetDocs = async (query: Query): Promise<QuerySnapshot> => {
+    const snapshot = await getDocs(query);
+    // Firebase מחייב על כל מסמך שחזר + 1 על השאילתה עצמה
+    const reads = snapshot.size || 1; 
+    sessionReadCount += reads;
+    
+    // עדכון אירוע מותאם אישית כדי שחדר המכונות יתעדכן
+    window.dispatchEvent(new CustomEvent('db-read-update', { detail: sessionReadCount }));
+    
+    return snapshot;
+};
 
 export { db, auth, storage };
 export const getDb = () => db;

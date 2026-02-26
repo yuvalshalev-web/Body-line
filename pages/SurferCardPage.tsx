@@ -1,31 +1,22 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 import PlayerCard from '../components/PlayerCard';
 import ConsistencyRankWidget from '../components/ConsistencyRankWidget';
 import UserAnalytics from '../components/UserAnalytics';
 import { Trophy, Waves, Target } from 'lucide-react';
+import { calculateUserStats } from '../utils/analytics';
 
 const SurferCardPage: React.FC = () => {
   const { currentUser } = useAuth();
-  const [userData, setUserData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { members, weeklyHistory, yearConfig, isLoading } = useData();
 
-  useEffect(() => {
-    if (!currentUser) return;
-    
-    fetch(`/api/stats/user/${currentUser.id}`)
-      .then(res => res.json())
-      .then(data => {
-        setUserData(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching user stats:', err);
-        setLoading(false);
-      });
-  }, [currentUser]);
+  const userData = useMemo(() => {
+    if (!currentUser || isLoading) return null;
+    return calculateUserStats(currentUser.id, members, weeklyHistory, yearConfig);
+  }, [currentUser, members, weeklyHistory, yearConfig, isLoading]);
 
-  if (loading) return (
+  if (isLoading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-4 border-[#006994] border-t-transparent rounded-full animate-spin" />

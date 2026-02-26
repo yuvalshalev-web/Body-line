@@ -1,36 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import Chart from 'react-apexcharts';
 import { Target } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
 
 interface ConsistencyRankWidgetProps {
   userSessions: number;
 }
 
 const ConsistencyRankWidget: React.FC<ConsistencyRankWidgetProps> = ({ userSessions }) => {
-  const [percentile, setPercentile] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { members, weeklyHistory, yearConfig, isLoading } = useData();
 
-  useEffect(() => {
-    fetch('/api/stats/community/attendance')
-      .then(res => res.json())
-      .then(data => {
-        const counts: number[] = data.counts;
-        if (counts.length === 0) {
-          setPercentile(0);
-          return;
-        }
-        
-        // Calculate percentile: how many members have fewer or equal sessions
-        const smaller = counts.filter(c => c <= userSessions).length;
-        const p = Math.round((smaller / counts.length) * 100);
-        setPercentile(p);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching community attendance:', err);
-        setLoading(false);
-      });
-  }, [userSessions]);
+  const percentile = useMemo(() => {
+    if (isLoading || !members.length) return null;
+
+    // Filter sessions from shnatHevelZug onwards
+    const startDate = yearConfig?.startDate ? new Date(yearConfig.startDate) : new Date(0);
+    
+    // Calculate total sessions for each member from history
+    const memberSessionCounts = members.map(member => {
+      // Count how many sessions in history this member attended after startDate
+      const count = weeklyHistory.filter(session => {
+        const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+        return sessionDate >= startDate && session.participantIds?.includes(member.id);
+      }).length;
+      return count;
+    });
+
+    if (memberSessionCounts.length === 0) return 0;
+
+    // Calculate percentile: how many members have fewer or equal sessions
+    const smaller = memberSessionCounts.filter(c => c <= userSessions).length;
+    return Math.round((smaller / memberSessionCounts.length) * 100);
+  }, [members, weeklyHistory, yearConfig, userSessions, isLoading]);
 
   const chartOptions: any = {
     chart: {
@@ -47,7 +48,7 @@ const ConsistencyRankWidget: React.FC<ConsistencyRankWidgetProps> = ({ userSessi
         track: {
           background: "#e7e7e7",
           strokeWidth: '97%',
-          margin: 5, // margin is in pixels
+          margin: 5,
         },
         dataLabels: {
           name: {
@@ -99,7 +100,7 @@ const ConsistencyRankWidget: React.FC<ConsistencyRankWidgetProps> = ({ userSessi
     labels: ['התמדה'],
   };
 
-  if (loading) return <div className="h-48 flex items-center justify-center text-slate-400 font-bold">מחשב דירוג התמדה...</div>;
+  if (isLoading || percentile === null) return <div className="h-48 flex items-center justify-center text-slate-400 font-bold">מחשב דירוג התמדה...</div>;
 
   return (
     <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col items-center" dir="rtl">
@@ -111,7 +112,7 @@ const ConsistencyRankWidget: React.FC<ConsistencyRankWidgetProps> = ({ userSessi
       <div className="w-full max-w-[300px]">
         <Chart 
           options={chartOptions} 
-          series={[percentile || 0]} 
+          series={[percentile]} 
           type="radialBar" 
           height={240} 
         />

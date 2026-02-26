@@ -1,32 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, 
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
 import { Waves, Zap, Trophy, Flame } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useData } from '../contexts/DataContext';
+import { calculateUserStats } from '../utils/analytics';
 
 const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { members, weeklyHistory, yearConfig, isLoading } = useData();
 
-  useEffect(() => {
-    fetch(`/api/stats/user/${userId}`)
-      .then(res => {
-        if (!res.ok) throw new Error(`Server error: ${res.status}`);
-        return res.json();
-      })
-      .then(json => {
-        setData(json);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching user stats:', err);
-        setLoading(false);
-      });
-  }, [userId]);
+  const data = useMemo(() => {
+    if (isLoading) return null;
+    return calculateUserStats(userId, members, weeklyHistory, yearConfig);
+  }, [userId, members, weeklyHistory, yearConfig, isLoading]);
 
-  if (loading) return <div className="p-8 text-center font-black text-[#40E0D0] animate-pulse">טוען את הגל שלך...</div>;
+  if (isLoading || !data) return <div className="p-8 text-center font-black text-[#40E0D0] animate-pulse">טוען את הגל שלך...</div>;
 
   const COLORS = ['#006994', '#40E0D0'];
 

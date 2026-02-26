@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, orderBy, limit, addDoc, writeBatch, Timestamp } from 'firebase/firestore';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { getDb } from '../services/firebase';
 import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
@@ -20,6 +20,7 @@ interface DataContextType {
   attendeeIds: string[];
   activeSessionDate: string;
   isLoading: boolean;
+  hasQuotaError: boolean;
   updateMember: (member: Member) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
   toggleStatus: (id: string) => Promise<void>;
@@ -60,6 +61,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
   const [activeSessionDate, setActiveSessionDate] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [hasQuotaError, setHasQuotaError] = useState(false);
 
   const getNextThursday = () => {
     const now = new Date();
@@ -74,54 +76,83 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return resultDate.toISOString();
   };
 
+  const handleFirestoreError = useCallback((error: any) => {
+    console.error("Firestore error:", error);
+    if (error.code === 'resource-exhausted' || error.message?.includes('429') || error.message?.includes('quota')) {
+      setHasQuotaError(true);
+      alert("שגיאת מכסה (Quota Exceeded). המערכת עברה למצב לא מקוון זמנית.");
+    }
+  }, []);
+
   useEffect(() => {
     const db = getDb();
     initializeStorageStats();
     
-    const unsubMembers = onSnapshot(collection(db, 'members'), (snapshot: any) => {
-      setMembers(snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() } as Member)));
-    });
-    
-    const unsubRequests = onSnapshot(collection(db, 'joinRequests'), (snapshot: any) => {
-      setJoinRequests(snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() } as JoinRequest)));
-    });
-    
-    const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date', 'desc')), (snapshot: any) => {
-      setEvents(snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() } as Event)));
-    });
-    
-    const unsubNews = onSnapshot(query(collection(db, 'news'), orderBy('date', 'desc')), (snapshot: any) => {
-      setNews(snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() } as NewsItem)));
-    });
-    
-    const unsubGallery = onSnapshot(query(collection(db, 'gallery'), orderBy('timestamp', 'desc')), (snapshot: any) => {
-      setGalleryItems(snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() } as GalleryItem)));
-    });
-    
-    const unsubGlossary = onSnapshot(collection(db, 'glossary'), (snapshot: any) => {
-      setGlossary(snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() } as GlossaryTerm)));
-    });
-    
-    const unsubQuotes = onSnapshot(collection(db, 'quotes'), (snapshot: any) => {
-      setQuotes(snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() } as QuoteItem)));
-    });
+    // 1. One-time fetches for static-ish data with sessionStorage caching
+    const fetchData = async () => {
+      try {
+        // Members
+        const cachedMembers = sessionStorage.getItem('cached_members');
+        if (cachedMembers) {
+          setMembers(JSON.parse(cachedMembers));
+        } else {
+          const mSnap = await getDocs(collection(db, 'members'));
+          const mData = mSnap.docs.map(d => ({ id: d.id, ...d.data() } as Member));
+          setMembers(mData);
+          sessionStorage.setItem('cached_members', JSON.stringify(mData));
+        }
 
-    const unsubHistory = onSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc')), (snapshot: any) => {
-      setWeeklyHistory(snapshot.docs.map((d: any) => ({ id: d.id, ...d.data() })));
-    });
+        // Weekly History (Limited to shnatHevelZug)
+        const cachedHistory = sessionStorage.getItem('cached_history');
+        if (cachedHistory) {
+          setWeeklyHistory(JSON.parse(cachedHistory));
+        } else {
+          const hSnap = await getDocs(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)));
+          const hData = hSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+          setWeeklyHistory(hData);
+          sessionStorage.setItem('cached_history', JSON.stringify(hData));
+        }
+
+        // Glossary & Quotes
+        const glSnap = await getDocs(collection(db, 'glossary'));
+        setGlossary(glSnap.docs.map(d => ({ id: d.id, ...d.data() } as GlossaryTerm)));
+        
+        const qSnap = await getDocs(collection(db, 'quotes'));
+        setQuotes(qSnap.docs.map(d => ({ id: d.id, ...d.data() } as QuoteItem)));
+
+      } catch (err) {
+        handleFirestoreError(err);
+      }
+    };
+
+    fetchData();
+
+    // 2. Real-time listeners for dynamic data
+    const unsubRequests = onSnapshot(collection(db, 'joinRequests'), (snapshot) => {
+      setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
+    }, handleFirestoreError);
+    
+    const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date', 'desc')), (snapshot) => {
+      setEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event)));
+    }, handleFirestoreError);
+    
+    const unsubNews = onSnapshot(query(collection(db, 'news'), orderBy('date', 'desc')), (snapshot) => {
+      setNews(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as NewsItem)));
+    }, handleFirestoreError);
+    
+    const unsubGallery = onSnapshot(query(collection(db, 'gallery'), orderBy('timestamp', 'desc'), limit(50)), (snapshot) => {
+      setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
+    }, handleFirestoreError);
     
     const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (doc) => {
       if (doc.exists()) setSiteAssets(doc.data());
-    });
+    }, handleFirestoreError);
 
     const unsubYearConfig = onSnapshot(doc(db, 'site_data', 'year_config'), (doc) => {
       if (doc.exists()) setYearConfig(doc.data() as { startDate: string; endDate: string });
-    });
+    }, handleFirestoreError);
 
-    // Safety timeout for loading state
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 4000);
+    const timeoutId = setTimeout(() => setIsLoading(false), 4000);
 
     const unsubAttendees = onSnapshot(doc(db, 'site_data', 'active_session'), async (snapshot) => {
       clearTimeout(timeoutId);
@@ -129,42 +160,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const data = snapshot.data() as any;
         const sessionDate = data.date;
         const attendees = data.attendees || [];
-        
         setAttendeeIds(attendees);
         setActiveSessionDate(sessionDate || getNextThursday());
-
-        // Auto-finalize check: If session date is in the past (more than 1 hour past 07:00 Thursday)
-        const now = new Date();
-        const sessionDateObj = new Date(sessionDate || getNextThursday());
-        if (now > new Date(sessionDateObj.getTime() + 60 * 60 * 1000)) {
-          // Session is stale, finalize it
-          console.log("Auto-finalizing stale session:", sessionDate);
-          finalizeThursdaySession();
-        }
-      } else {
-        const nextThurs = getNextThursday();
-        try {
-          await setDoc(doc(db, 'site_data', 'active_session'), {
-            attendees: [],
-            date: nextThurs
-          });
-        } catch (e) {
-          console.error("Error creating active_session:", e);
-        }
-        setActiveSessionDate(nextThurs);
       }
       setIsLoading(false);
-    }, (error) => {
-      console.error("Attendees sync error:", error);
-      clearTimeout(timeoutId);
-      setIsLoading(false);
-    });
+    }, handleFirestoreError);
 
     return () => {
       clearTimeout(timeoutId);
-      unsubMembers(); unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubGlossary(); unsubQuotes(); unsubHistory(); unsubAssets(); unsubYearConfig(); unsubAttendees();
+      unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubAssets(); unsubYearConfig(); unsubAttendees();
     };
-  }, []);
+  }, [handleFirestoreError]);
 
   const updateMember = async (member: Member) => {
     const { id, ...data } = member;
@@ -334,22 +340,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const sessionDate = new Date(sessionDateStr);
 
     // Idempotency check: Has this session already been archived?
-    const historyQuery = query(
-      collection(db, 'weekly_history'), 
-      orderBy('date', 'desc'), 
-      limit(5)
-    );
-    const historySnap = await onSnapshot(historyQuery, () => {}); // This is just to get a one-time check if I use getDocs
-    // Better use getDocs for one-time check
-    const { getDocs } = await import('firebase/firestore');
-    const existingHistory = await getDocs(historyQuery);
-    const alreadyExists = existingHistory.docs.some(d => {
-      const dDate = d.data().date?.toDate ? d.data().date.toDate() : new Date(d.data().date);
+    // Use the already fetched weeklyHistory from state if possible, or a limited query
+    const alreadyExists = weeklyHistory.some(d => {
+      const dDate = d.date?.toDate ? d.date.toDate() : new Date(d.date);
       return dDate.toDateString() === sessionDate.toDateString();
     });
 
     if (alreadyExists) {
-      // If it already exists, just reset the active session to the next Thursday
       const nextThurs = getNextThursday();
       await updateDoc(sessionRef, {
         attendees: [],
@@ -359,7 +356,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     if (attendees.length === 0) {
-      // If no one attended, just move to next week
       const nextThurs = getNextThursday();
       await updateDoc(sessionRef, {
         attendees: [],

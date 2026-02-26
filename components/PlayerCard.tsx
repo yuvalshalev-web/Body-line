@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import { Flame, Trophy, Calendar, Crown, Star } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
+import { calculateUserStats } from '../utils/analytics';
 
 interface PlayerCardProps {
   userId: string;
@@ -20,23 +22,14 @@ const Counter = ({ value, duration = 2 }: { value: number; duration?: number }) 
 };
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { members, weeklyHistory, yearConfig, isLoading } = useData();
 
-  useEffect(() => {
-    fetch(`/api/stats/user/${userId}`)
-      .then(res => res.json())
-      .then(json => {
-        setData(json);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching player card data:', err);
-        setLoading(false);
-      });
-  }, [userId]);
+  const data = useMemo(() => {
+    if (isLoading) return null;
+    return calculateUserStats(userId, members, weeklyHistory, yearConfig);
+  }, [userId, members, weeklyHistory, yearConfig, isLoading]);
 
-  if (loading) return (
+  if (isLoading) return (
     <div className="player-card animate-pulse bg-white/5 border-white/10">
       <div className="w-[120px] h-[120px] rounded-full bg-white/10" />
       <div className="flex-1 space-y-4">
