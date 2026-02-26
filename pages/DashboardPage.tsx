@@ -32,7 +32,7 @@ const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
 const DashboardPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { 
-    members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news
+    members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate
   } = useData();
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -111,12 +111,20 @@ const DashboardPage: React.FC = () => {
   useEffect(() => {
     const updateCountdown = () => {
       const now = new Date();
-      const target = new Date(now);
-      let daysToAdd = (4 - now.getDay() + 7) % 7;
-      if (daysToAdd === 0 && now.getHours() >= 7) daysToAdd = 7;
-      target.setDate(now.getDate() + daysToAdd);
-      target.setHours(7, 0, 0, 0);
+      const target = activeSessionDate ? new Date(activeSessionDate) : new Date();
+      if (!activeSessionDate) {
+        let daysToAdd = (4 - now.getDay() + 7) % 7;
+        if (daysToAdd === 0 && now.getHours() >= 7) daysToAdd = 7;
+        target.setDate(now.getDate() + daysToAdd);
+        target.setHours(7, 0, 0, 0);
+      }
+      
       const diff = target.getTime() - now.getTime();
+      if (diff <= 0) {
+        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
       setCountdown({
         days: Math.floor(diff / (1000 * 60 * 60 * 24)),
         hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
@@ -127,7 +135,7 @@ const DashboardPage: React.FC = () => {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeSessionDate]);
 
   const handleToggle = async () => {
     if (!currentUser) return;

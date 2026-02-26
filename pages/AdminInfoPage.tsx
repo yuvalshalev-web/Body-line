@@ -33,7 +33,7 @@ const AdminInfoPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('community');
 
   const tabs = [
-    { id: 'attendance', label: 'צלילה לסשנים', icon: SnorkelIcon, color: 'text-[#006994]' },
+    { id: 'attendance', label: 'צוללים לסשנים', icon: SnorkelIcon, color: 'text-[#006994]' },
     { id: 'community', label: 'דופק הקהילה', icon: TrendingUp, color: 'text-[#006994]' },
     { id: 'system', label: 'חדר מכונות', icon: Server, color: 'text-slate-900' },
   ];
@@ -69,7 +69,7 @@ const AdminInfoPage: React.FC = () => {
             key={tab.id}
             onClick={() => {
               if (tab.id === 'attendance') {
-                navigate('/attendance');
+                navigate('/session-stats');
               } else {
                 setActiveTab(tab.id as Tab);
               }

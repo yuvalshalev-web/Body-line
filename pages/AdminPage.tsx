@@ -1093,14 +1093,23 @@ const AdminPage: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 lg:gap-12 relative z-10">
-                  <div className="flex items-center gap-4 bg-slate-50/50 p-4 rounded-3xl border border-slate-100">
+                  <div 
+                    className="flex items-center gap-4 bg-slate-50/50 p-4 rounded-3xl border border-slate-100 cursor-pointer hover:bg-white hover:shadow-md transition-all group/dates"
+                    onClick={() => setIsEditingYear(true)}
+                  >
                     <div className="text-right">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">תחילת שנת פעילות</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-1">
+                        תחילת שנת פעילות
+                        <Calendar size={10} className="text-[#ff009f] opacity-0 group-hover/dates:opacity-100 transition-opacity" />
+                      </p>
                       <p className="text-base font-black text-[#4a002e] tabular-nums">{formatDate(yearConfig?.startDate || '---')}</p>
                     </div>
                     <div className="w-px h-8 bg-slate-200 mx-2" />
                     <div className="text-right">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">סיום שנת פעילות</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-1">
+                        סיום שנת פעילות
+                        <Calendar size={10} className="text-[#ff009f] opacity-0 group-hover/dates:opacity-100 transition-opacity" />
+                      </p>
                       <p className="text-base font-black text-[#4a002e] tabular-nums">{formatDate(yearConfig?.endDate || '---')}</p>
                     </div>
                   </div>
@@ -1191,12 +1200,10 @@ const AdminPage: React.FC = () => {
                       </div>
                    </div>
                 ))}
-             </div>
+              </div>
+            </div>
           </div>
         )}
-          </div>
-        </div>
-      </div>
 
       {/* Hidden File Input for Assets */}
       <input 
@@ -1404,7 +1411,8 @@ const AdminPage: React.FC = () => {
                     type="date" 
                     value={yearForm.startDate}
                     onChange={e => setYearForm(prev => ({ ...prev, startDate: e.target.value }))}
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 ring-[#ff009f]/5 focus:bg-white transition-all"
+                    onClick={(e) => (e.currentTarget as any).showPicker?.()}
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 ring-[#ff009f]/5 focus:bg-white transition-all cursor-pointer"
                   />
                 </div>
                 <div className="space-y-2">
@@ -1413,7 +1421,8 @@ const AdminPage: React.FC = () => {
                     type="date" 
                     value={yearForm.endDate}
                     onChange={e => setYearForm(prev => ({ ...prev, endDate: e.target.value }))}
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 ring-[#ff009f]/5 focus:bg-white transition-all"
+                    onClick={(e) => (e.currentTarget as any).showPicker?.()}
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 ring-[#ff009f]/5 focus:bg-white transition-all cursor-pointer"
                   />
                 </div>
               </div>
@@ -1510,6 +1519,9 @@ const AdminPage: React.FC = () => {
         </div>
       )}
     </div>
+  </div>
+</div>
+</div>
   );
 };
 

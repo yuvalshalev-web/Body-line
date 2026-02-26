@@ -132,6 +132,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         setAttendeeIds(attendees);
         setActiveSessionDate(sessionDate || getNextThursday());
+
+        // Auto-finalize check: If session date is in the past (more than 1 hour past 07:00 Thursday)
+        const now = new Date();
+        const sessionDateObj = new Date(sessionDate || getNextThursday());
+        if (now > new Date(sessionDateObj.getTime() + 60 * 60 * 1000)) {
+          // Session is stale, finalize it
+          console.log("Auto-finalizing stale session:", sessionDate);
+          finalizeThursdaySession();
+        }
       } else {
         const nextThurs = getNextThursday();
         try {
@@ -315,13 +324,49 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const sessionRef = doc(db, 'site_data', 'active_session');
     const sessionSnap = await getDoc(sessionRef);
     
-    if (!sessionSnap.exists()) throw new Error("Active session not found");
+    if (!sessionSnap.exists()) return;
     
     const data = sessionSnap.data() as any;
     const attendees = data.attendees || [];
-    const sessionDate = data.date;
+    const sessionDateStr = data.date;
 
-    if (attendees.length === 0) throw new Error("No attendees to finalize");
+    if (!sessionDateStr) return;
+    const sessionDate = new Date(sessionDateStr);
+
+    // Idempotency check: Has this session already been archived?
+    const historyQuery = query(
+      collection(db, 'weekly_history'), 
+      orderBy('date', 'desc'), 
+      limit(5)
+    );
+    const historySnap = await onSnapshot(historyQuery, () => {}); // This is just to get a one-time check if I use getDocs
+    // Better use getDocs for one-time check
+    const { getDocs } = await import('firebase/firestore');
+    const existingHistory = await getDocs(historyQuery);
+    const alreadyExists = existingHistory.docs.some(d => {
+      const dDate = d.data().date?.toDate ? d.data().date.toDate() : new Date(d.data().date);
+      return dDate.toDateString() === sessionDate.toDateString();
+    });
+
+    if (alreadyExists) {
+      // If it already exists, just reset the active session to the next Thursday
+      const nextThurs = getNextThursday();
+      await updateDoc(sessionRef, {
+        attendees: [],
+        date: nextThurs
+      });
+      return;
+    }
+
+    if (attendees.length === 0) {
+      // If no one attended, just move to next week
+      const nextThurs = getNextThursday();
+      await updateDoc(sessionRef, {
+        attendees: [],
+        date: nextThurs
+      });
+      return;
+    }
 
     const batch = writeBatch(db);
     
@@ -334,7 +379,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // 2. Create weekly_history entry
     const historyRef = doc(collection(db, 'weekly_history'));
     batch.set(historyRef, {
-      date: Timestamp.fromDate(new Date(sessionDate)),
+      date: Timestamp.fromDate(sessionDate),
       participantsCount: attendees.length,
       participantIds: attendees,
       timestamp: new Date().toISOString(),

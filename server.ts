@@ -50,12 +50,28 @@ async function startServer() {
       },
       streak: 5,
       rank: "Local", // Rookie, Local, Legend
+      gritScore: 88,
+      totalSessions: 54,
+      attendancePercent: 92,
+      isTop10: true,
+      joiningDate: "01/09/2023",
+      ageGroup: "U18",
       progress: [
         { name: 'Sea', value: 75, color: '#006994' },
         { name: 'Social', value: 40, color: '#40E0D0' }
       ]
     };
     res.json(data);
+  });
+
+  // Get all members attendance for percentile calculation
+  app.get("/api/stats/community/attendance", (req, res) => {
+    // Mocking a list of attendance counts for all members
+    // In a real app, this would be a query like:
+    // db.collection('users').get().then(snap => snap.docs.map(d => d.data().totalSessions))
+    const counts = Array.from({ length: 150 }, () => Math.floor(Math.random() * 100));
+    // Ensure the current user's count is in there or similar
+    res.json({ counts });
   });
 
   // Module C: System & Infrastructure

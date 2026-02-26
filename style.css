@@ -135,3 +135,46 @@ body {
 .animate-shimmer {
   animation: shimmer 1.5s infinite;
 }
+
+/* Player Card Styles */
+.player-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    color: white;
+    margin-bottom: 30px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 10px 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.profile-glow {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    padding: 5px;
+    background: linear-gradient(45deg, #f093fb, #f5576c); /* צבעי "נחישות" */
+}

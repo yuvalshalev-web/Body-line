@@ -45,7 +45,7 @@ interface SessionHistory {
 
 const SurfingSessionAttendance: React.FC = () => {
   const navigate = useNavigate();
-  const { finalizeThursdaySession, members: globalMembers, isLoading: globalLoading } = useData();
+  const { finalizeThursdaySession, members: globalMembers, isLoading: globalLoading, yearConfig } = useData();
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
@@ -84,12 +84,14 @@ const SurfingSessionAttendance: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  const generateThursdays = () => {
+  const thursdays = useMemo(() => {
     const dates = [];
-    const start = new Date('2026-01-01');
+    const startStr = yearConfig?.startDate || '2026-01-01';
+    const start = new Date(startStr);
     const today = new Date();
     let current = new Date(start);
     
+    // Find first Thursday on or after start date
     while (current.getDay() !== 4) {
       current.setDate(current.getDate() + 1);
     }
@@ -99,9 +101,7 @@ const SurfingSessionAttendance: React.FC = () => {
       current.setDate(current.getDate() + 7);
     }
     return dates.reverse();
-  };
-
-  const thursdays = generateThursdays();
+  }, [yearConfig]);
 
   const dropdownDates = useMemo(() => {
     const historyDates = history.map(s => {
@@ -330,13 +330,14 @@ const SurfingSessionAttendance: React.FC = () => {
   };
 
   const seedHistory = async () => {
+    const startStr = yearConfig?.startDate || '2026-01-01';
     showConfirm({
-      message: "האם לייצר היסטוריית סשנים אוטומטית מתחילת 2026?",
+      message: `האם לייצר היסטוריית סשנים אוטומטית מתאריך ${startStr}?`,
       onConfirm: async () => {
         setIsSaving(true);
         try {
           const db = getDb();
-          const startDate = new Date('2026-01-01');
+          const startDate = new Date(startStr);
           const today = new Date();
           let current = new Date(startDate);
           
@@ -418,7 +419,7 @@ const SurfingSessionAttendance: React.FC = () => {
           </div>
           <h2 className="text-3xl md:text-4xl font-black text-[#006994] tracking-tighter">
             {view === 'history' && !editingHistorySession ? 'ארכיון סשנים: יום חמישי הגדול' : 
-             (editingHistorySession ? `עריכה: ${formatDate(editingHistorySession.date)}` : 'ארכיון סשנים: יום חמישי הגדול')}
+             (editingHistorySession ? `עריכה: ${formatDate(editingHistorySession.date)}` : 'סנכרון נוכחות שבועי')}
           </h2>
           <p className="text-[#4E8294] font-bold mt-2">
             {view === 'history' && !editingHistorySession ? 'היסטוריית גלישה ונוכחות לאורך זמן 🌊' : 'סמן את כל הגולשים שיצאו מהמים 🌊'}
@@ -664,7 +665,9 @@ const SurfingSessionAttendance: React.FC = () => {
           <div className="absolute right-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#006994] via-[#006994]/20 to-transparent"></div>
           
           <div className="space-y-8 pr-16">
-            {history.map((session, idx) => (
+            {history
+              .filter(s => (s.participantsCount || 0) > 0)
+              .map((session, idx) => (
               <motion.div 
                 key={session.id}
                 initial={{ opacity: 0, x: 20 }}

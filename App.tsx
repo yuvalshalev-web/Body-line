@@ -17,9 +17,12 @@ import {
   Waves,
   BarChart3,
   Loader2,
-  ShieldAlert
+  ShieldAlert,
+  Trophy
 } from 'lucide-react';
 
+
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy loaded components
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -32,8 +35,11 @@ const EventsPage = lazy(() => import('./pages/EventsPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
 const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage'));
 const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage'));
-const MyWavePage = lazy(() => import('./pages/MyWavePage'));
+import MyWavePage from './pages/MyWavePage';
+const SurferCardPage = lazy(() => import('./pages/SurferCardPage'));
+// const MyWavePage = lazy(() => import('./pages/MyWavePage'));
 const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance'));
+const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage'));
 
 const PageLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -108,6 +114,7 @@ const App: React.FC = () => {
     { path: '/events', icon: Calendar, label: 'אירועים קרובים' },
     { path: '/posts', icon: Newspaper, label: 'פוסטים ועדכונים' },
     { path: '/world-news', icon: Globe, label: 'חדשות מהעולם' },
+    { path: '/surfer-card', icon: Trophy, label: 'כרטיס הגולש שלי' },
     { path: '/my-wave', icon: Waves, label: 'הגל שלי' },
     { path: '/profile', icon: UserCircle, label: 'פרופיל אישי' }
   ];
@@ -115,7 +122,8 @@ const App: React.FC = () => {
   const adminNavItems = [
     { path: '/admin', icon: Settings, label: 'פאנל ניהול' },
     { path: '/admin-info', icon: BarChart3, label: 'תצפית הים' },
-    { path: '/attendance', icon: Users, label: 'סנכרון נוכחות' }
+    { path: '/attendance', icon: Users, label: 'סנכרון נוכחות' },
+    { path: '/session-stats', icon: BarChart3, label: 'צוללים לסשנים' }
   ];
 
   return (
@@ -243,26 +251,30 @@ const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto bg-slate-50">
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/directory" element={<DirectoryPage />} />
-            <Route path="/gallery" element={<GalleryPage />} />
-            <Route path="/events" element={<EventsPage />} />
-            <Route path="/posts" element={<NewsPage />} />
-            <Route path="/world-news" element={<SurfingNewsPage />} />
-            <Route path="/my-wave" element={<MyWavePage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            {currentUser.role === 'Admin' && (
-              <>
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/admin-info" element={<AdminInfoPage />} />
-                <Route path="/attendance" element={<SurfingSessionAttendance />} />
-              </>
-            )}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/directory" element={<DirectoryPage />} />
+              <Route path="/gallery" element={<GalleryPage />} />
+              <Route path="/events" element={<EventsPage />} />
+              <Route path="/posts" element={<NewsPage />} />
+              <Route path="/world-news" element={<SurfingNewsPage />} />
+            <Route path="/surfer-card" element={<SurferCardPage />} />
+              <Route path="/my-wave" element={<MyWavePage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              {currentUser.role === 'Admin' && (
+                <>
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/admin-info" element={<AdminInfoPage />} />
+                  <Route path="/attendance" element={<SurfingSessionAttendance />} />
+                  <Route path="/session-stats" element={<SessionStatsPage />} />
+                </>
+              )}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </main>
     </div>
   );
