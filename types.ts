@@ -85,6 +85,16 @@ export interface GlossaryTerm {
   definition: string;
 }
 
+export interface Exercise {
+  id: string;
+  title: string;
+  description: string;
+  difficulty?: 'Rookie' | 'Local' | 'Legend';
+  category?: string;
+  videoUrl?: string;
+  imageUrl?: string;
+}
+
 export interface QuoteItem {
   id: string;
   text: string;

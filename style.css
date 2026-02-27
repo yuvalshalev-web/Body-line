@@ -136,6 +136,31 @@ body {
   animation: shimmer 1.5s infinite;
 }
 
+@keyframes wave {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ripple {
+  0% { transform: translateX(-25%); }
+  100% { transform: translateX(25%); }
+}
+
+@keyframes shine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+@keyframes pulse-turquoise {
+  0% { box-shadow: 0 0 0 0 rgba(64, 224, 208, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(64, 224, 208, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(64, 224, 208, 0); }
+}
+
+.animate-pulse-turquoise {
+  animation: pulse-turquoise 2s infinite;
+}
+
 /* Player Card Styles */
 .player-card {
     background: rgba(255, 255, 255, 0.1);

@@ -1,5 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { getDb } from '../services/firebase';
 import { Member } from '../types';
 
 interface AuthContextType {
@@ -32,6 +34,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCurrentUser(user);
     localStorage.setItem('habal_zug_user', JSON.stringify(user));
   };
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    const db = getDb();
+    const unsub = onSnapshot(doc(db, 'members', currentUser.id), (snapshot) => {
+      if (snapshot.exists()) {
+        const updatedData = { id: snapshot.id, ...snapshot.data() } as Member;
+        setCurrentUser(prev => {
+          // Only update if data actually changed to avoid infinite loops or unnecessary renders
+          if (JSON.stringify(updatedData) !== JSON.stringify(prev)) {
+            localStorage.setItem('habal_zug_user', JSON.stringify(updatedData));
+            return updatedData;
+          }
+          return prev;
+        });
+      } else {
+        // User was deleted
+        logout();
+      }
+    }, (error) => {
+      console.error("Error listening to user doc:", error);
+    });
+
+    return () => unsub();
+  }, [currentUser?.id]);
 
   return (
     <AuthContext.Provider value={{ currentUser, isAuthenticated: !!currentUser, login, logout, updateUser }}>

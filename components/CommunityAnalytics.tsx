@@ -6,6 +6,7 @@ import {
 } from 'recharts';
 import { Users, TrendingUp, UserPlus, Calendar, ArrowLeft } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { parseDate } from '../src/utils/dateUtils';
 
 const CommunityAnalytics: React.FC = () => {
   const navigate = useNavigate();
@@ -37,15 +38,8 @@ const CommunityAnalytics: React.FC = () => {
   
   const newJoinersCount = members.filter(m => {
     if (!m.joinedAt) return false;
-    // Try to parse he-IL date "DD.MM.YYYY"
-    const parts = m.joinedAt.split('.');
-    if (parts.length === 3) {
-      const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-      return date >= thirtyDaysAgo;
-    }
-    // Fallback for other formats
-    const date = new Date(m.joinedAt);
-    return !isNaN(date.getTime()) && date >= thirtyDaysAgo;
+    const date = parseDate(m.joinedAt);
+    return date && date >= thirtyDaysAgo;
   }).length;
 
   // Sessions this year

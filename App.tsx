@@ -35,9 +35,7 @@ const EventsPage = lazy(() => import('./pages/EventsPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
 const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage'));
 const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage'));
-import MyWavePage from './pages/MyWavePage';
 const SurferCardPage = lazy(() => import('./pages/SurferCardPage'));
-// const MyWavePage = lazy(() => import('./pages/MyWavePage'));
 const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance'));
 const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage'));
 
@@ -115,7 +113,6 @@ const App: React.FC = () => {
     { path: '/posts', icon: Newspaper, label: 'פוסטים ועדכונים' },
     { path: '/world-news', icon: Globe, label: 'חדשות מהעולם' },
     { path: '/surfer-card', icon: Trophy, label: 'כרטיס הגולש שלי' },
-    { path: '/my-wave', icon: Waves, label: 'הגל שלי' },
     { path: '/profile', icon: UserCircle, label: 'פרופיל אישי' }
   ];
 
@@ -261,7 +258,6 @@ const App: React.FC = () => {
               <Route path="/posts" element={<NewsPage />} />
               <Route path="/world-news" element={<SurfingNewsPage />} />
             <Route path="/surfer-card" element={<SurferCardPage />} />
-              <Route path="/my-wave" element={<MyWavePage />} />
               <Route path="/profile" element={<ProfilePage />} />
               {currentUser.role === 'Admin' && (
                 <>

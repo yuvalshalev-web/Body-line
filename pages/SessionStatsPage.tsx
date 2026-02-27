@@ -477,143 +477,90 @@ const SessionStatsPage: React.FC = () => {
 
           {/* Main Dashboard Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            {/* Row 1: Pulse Area Chart (Full Width) */}
+            {/* Row 1: Pulse Area Chart (Full Width) - Temporarily Disabled for Stability */}
             <div className="bg-white p-10 rounded-[3.5rem] border border-[#006994]/10 shadow-sm lg:col-span-2">
               <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-[#006994] text-white rounded-xl shadow-lg"><TrendingUp size={20} /></div>
                   <h3 className="text-2xl font-black text-[#006994]">דופק הסשנים (Pulse)</h3>
                 </div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מספר משתתפים לאורך זמן</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">נתוני נוכחות</p>
               </div>
-              <div className="h-[400px] w-full">
+              <div className="h-[400px] w-full mt-6">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={stats.pulseData}>
+                  <AreaChart data={stats.pulseData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="pulseGradient" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="colorPulse" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#006994" stopOpacity={0.3}/>
                         <stop offset="95%" stopColor="#006994" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} />
-                    <Tooltip 
-                      contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '20px' }}
-                      itemStyle={{ fontWeight: 900, color: '#006994' }}
+                    <XAxis 
+                      dataKey="date" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} 
                     />
-                    <Area type="monotone" dataKey="count" stroke="#006994" strokeWidth={4} fillOpacity={1} fill="url(#pulseGradient)" />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} 
+                    />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: 'none', color: '#fff' }}
+                      itemStyle={{ color: '#00FFFF', fontWeight: 900 }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="count" 
+                      stroke="#006994" 
+                      strokeWidth={4} 
+                      fillOpacity={1} 
+                      fill="url(#colorPulse)" 
+                      animationDuration={2000}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            {/* Row 2: Age Radial Bar (Right) & Donut Chart (Left) */}
+            {/* Row 2: Age Radial Bar (Right) & Donut Chart (Left) - Temporarily Disabled for Stability */}
             <div className="bg-white p-10 rounded-[3.5rem] border border-[#006994]/10 shadow-sm">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shadow-lg"><Users size={20} /></div>
                   <h3 className="text-2xl font-black text-[#006994]">אנליזה קבוצתית (גילאים)</h3>
                 </div>
-                
-                {/* Triple View Toggle */}
-                <div className="flex bg-slate-100 p-1 rounded-2xl">
-                  {(['annual', 'monthly', 'lastSession'] as const).map((view) => (
-                    <button
-                      key={view}
-                      onClick={() => setAgeView(view)}
-                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                        ageView === view 
-                          ? 'bg-white text-[#006994] shadow-sm' 
-                          : 'text-slate-400 hover:text-slate-600'
-                      }`}
-                    >
-                      {view === 'annual' ? 'שנתי' : view === 'monthly' ? 'חודשי' : 'סשן אחרון'}
-                    </button>
-                  ))}
-                </div>
               </div>
-
-              <div className="h-[400px] w-full relative">
-                <Chart
-                  options={{
-                    chart: {
-                      type: 'radialBar',
-                      toolbar: { show: false }
-                    },
-                    plotOptions: {
-                      radialBar: {
-                        hollow: {
-                          size: '35%',
-                        },
-                        track: {
-                          background: '#f1f5f9',
-                          strokeWidth: '97%',
-                        },
-                        dataLabels: {
-                          name: {
-                            show: true,
-                            fontSize: '12px',
-                            fontWeight: 900,
-                            color: '#94a3b8',
-                            offsetY: -10
-                          },
-                          value: {
-                            show: true,
-                            fontSize: '24px',
-                            fontWeight: 900,
-                            color: '#006994',
-                            offsetY: 5,
-                            formatter: function (val) {
-                              return val.toString();
-                            }
-                          },
-                          total: {
-                            show: true,
-                            label: ageView === 'annual' ? 'סה"כ שנתי' : ageView === 'monthly' ? 'סה"כ חודשי' : 'סשן אחרון',
-                            formatter: function () {
-                              return stats.radialSummary[ageView].toString();
-                            }
-                          }
-                        }
-                      }
-                    },
-                    colors: stats.ageGroupsBase.map(g => g.color),
-                    labels: stats.ageGroupsBase.map(g => g.label),
-                    stroke: {
-                      lineCap: 'round'
-                    },
-                    legend: {
-                      show: true,
-                      position: 'bottom',
-                      horizontalAlign: 'center',
-                      fontSize: '12px',
-                      fontWeight: 900,
-                      fontFamily: 'Assistant',
-                      markers: { size: 6 }
-                    },
-                    fill: {
-                      type: 'gradient',
-                      gradient: {
-                        shade: 'dark',
-                        type: 'horizontal',
-                        shadeIntensity: 0.5,
-                        gradientToColors: stats.ageGroupsBase.map(g => g.color + '99'), // Subtle gradient
-                        inverseColors: true,
-                        opacityFrom: 1,
-                        opacityTo: 1,
-                        stops: [0, 100]
-                      }
-                    }
-                  }}
-                  series={stats.radialPercentages.map(p => 
-                    ageView === 'annual' ? p.annual : 
-                    ageView === 'monthly' ? p.monthly : 
-                    p.lastSessionPercent
-                  )}
-                  type="radialBar"
-                  height="100%"
-                />
+              <div className="h-[350px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats.ageStackedData} layout="vertical" margin={{ left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis type="number" hide />
+                    <YAxis 
+                      dataKey="name" 
+                      type="category" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 12, fontWeight: 900, fill: '#006994' }} 
+                    />
+                    <Tooltip 
+                      cursor={{ fill: 'transparent' }}
+                      contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: 'none', color: '#fff' }}
+                    />
+                    <Legend iconType="circle" />
+                    {stats.ageGroupsBase.map((group, idx) => (
+                      <Bar 
+                        key={idx} 
+                        dataKey={group.label} 
+                        stackId="a" 
+                        fill={group.color} 
+                        radius={idx === stats.ageGroupsBase.length - 1 ? [0, 4, 4, 0] : [0, 0, 0, 0]} 
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
 
@@ -622,7 +569,7 @@ const SessionStatsPage: React.FC = () => {
                 <div className="p-3 bg-slate-100 text-[#006994] rounded-xl shadow-lg"><PieChartIcon size={20} /></div>
                 <h3 className="text-2xl font-black text-[#006994]">פילוח קבועים/מזדמנים</h3>
               </div>
-              <div className="h-[350px] w-full">
+              <div className="h-[350px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -630,18 +577,18 @@ const SessionStatsPage: React.FC = () => {
                       cx="50%"
                       cy="50%"
                       innerRadius={80}
-                      outerRadius={120}
-                      paddingAngle={8}
+                      outerRadius={110}
+                      paddingAngle={5}
                       dataKey="value"
                     >
-                      {stats.segmentation.map((entry: any, index: number) => (
+                      {stats.segmentation.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip 
-                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                      contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: 'none', color: '#fff' }}
                     />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                    <Legend verticalAlign="bottom" height={36}/>
                   </PieChart>
                 </ResponsiveContainer>
               </div>

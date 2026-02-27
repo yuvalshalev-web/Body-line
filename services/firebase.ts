@@ -28,7 +28,7 @@ export let sessionReadCount = 0;
  */
 export const trackedGetDocs = async (query: Query): Promise<QuerySnapshot> => {
     // בדיקת Kill Switch
-    const isKillSwitchActive = localStorage.getItem('kill_switch_active') === 'true';
+    const isKillSwitchActive = typeof window !== 'undefined' && localStorage.getItem('kill_switch_active') === 'true';
     if (isKillSwitchActive) {
       console.warn('Kill Switch is active. Blocking Firebase read.');
       // במקרה של Kill Switch, אנחנו זורקים שגיאה כדי שה-DataContext ישתמש ב-Cache

@@ -4,6 +4,7 @@ import {
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import { Server, Database, Activity, AlertCircle, Power, ShieldAlert } from 'lucide-react';
+import { motion } from 'motion/react';
 import { getStorageSizeMB } from '../utils/storageStats';
 import StorageDisplay from './StorageDisplay';
 import { sessionReadCount } from '../services/firebase';
@@ -121,14 +122,47 @@ const SystemMonitor: React.FC = () => {
 
         <button 
           onClick={toggleKillSwitch}
-          className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-xs transition-all ${
+          className={`relative group flex items-center gap-4 px-8 py-4 rounded-2xl font-black text-sm transition-all border-4 overflow-hidden ${
             isKillSwitchActive 
-              ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' 
-              : 'bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-500'
+              ? 'bg-rose-700 text-white border-rose-400 shadow-[0_0_50px_rgba(225,29,72,0.8)]' 
+              : 'bg-white text-rose-600 border-rose-600 hover:bg-rose-600 hover:text-white shadow-[0_0_20px_rgba(225,29,72,0.2)]'
           }`}
+          title="Emergency Database Shutdown"
         >
-          <Power size={18} />
-          {isKillSwitchActive ? 'OFFLINE MODE ACTIVE' : 'KILL SWITCH (FIREBASE)'}
+          {/* Hazard Stripes Background for Active State */}
+          {isKillSwitchActive && (
+            <div className="absolute inset-0 opacity-20 pointer-events-none" 
+                 style={{ 
+                   backgroundImage: 'linear-gradient(45deg, #000 25%, transparent 25%, transparent 50%, #000 50%, #000 75%, transparent 75%, transparent)',
+                   backgroundSize: '20px 20px'
+                 }} 
+            />
+          )}
+          
+          <div className="relative z-10 flex items-center gap-3">
+            {isKillSwitchActive ? (
+              <motion.div
+                animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                transition={{ repeat: Infinity, duration: 0.5 }}
+              >
+                <ShieldAlert size={24} className="text-white" />
+              </motion.div>
+            ) : (
+              <AlertCircle size={24} className="group-hover:animate-ping" />
+            )}
+            
+            <div className="flex flex-col items-start leading-none">
+              <span className="text-[10px] uppercase tracking-[0.2em] opacity-70 mb-1">Emergency Protocol</span>
+              <span className="text-lg tracking-tighter">
+                {isKillSwitchActive ? 'SYSTEM OFFLINE' : 'KILL SWITCH'}
+              </span>
+            </div>
+          </div>
+
+          {/* Pulse Ring for Active State */}
+          {isKillSwitchActive && (
+            <div className="absolute inset-0 border-4 border-white/30 rounded-2xl animate-ping pointer-events-none" />
+          )}
         </button>
       </div>
 

@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { getDb, trackedGetDocs } from '../services/firebase';
-import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem } from '../types';
+import { formatDate, getCurrentDateFormatted } from '../src/utils/dateUtils';
+import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
 import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats } from '../utils/storageStats';
+import { storage } from '../src/utils/storage';
 
 interface DataContextType {
   members: Member[];
@@ -13,6 +15,7 @@ interface DataContextType {
   news: NewsItem[];
   galleryItems: GalleryItem[];
   glossary: GlossaryTerm[];
+  exercises: Exercise[];
   quotes: QuoteItem[];
   weeklyHistory: any[];
   siteAssets: any;
@@ -38,6 +41,7 @@ interface DataContextType {
   forceResetSession: () => Promise<void>;
   finalizeThursdaySession: () => Promise<void>;
   batchAddGlossary: (items: Omit<GlossaryTerm, 'id'>[]) => Promise<void>;
+  batchAddExercises: (items: Omit<Exercise, 'id'>[]) => Promise<void>;
   batchAddQuotes: (items: Omit<QuoteItem, 'id'>[]) => Promise<void>;
   clearCollection: (collectionName: string) => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
@@ -54,6 +58,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [news, setNews] = useState<NewsItem[]>([]);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [glossary, setGlossary] = useState<GlossaryTerm[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
   const [weeklyHistory, setWeeklyHistory] = useState<any[]>([]);
   const [siteAssets, setSiteAssets] = useState<any>({});
@@ -77,6 +82,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const handleFirestoreError = useCallback((error: any) => {
+    // Ignore transient connection issues in logs if they are just "unavailable"
+    if (error.code === 'unavailable') {
+      console.warn("Firestore is temporarily unavailable. Operating in offline mode.");
+      return;
+    }
+
     console.error("Firestore error:", error);
     if (error.code === 'resource-exhausted' || error.message?.includes('429') || error.message?.includes('quota')) {
       setHasQuotaError(true);
@@ -88,72 +99,45 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const db = getDb();
     initializeStorageStats();
     
-    // 1. One-time fetches for static-ish data with sessionStorage caching
+    // 1. Initial Placeholder from Cache (Freshness check: 2 mins)
+    const cachedMembers = storage.get('cached_members_v3');
+    if (cachedMembers) setMembers(cachedMembers);
+    
+    const cachedHistory = storage.get('cached_history_v3');
+    if (cachedHistory) setWeeklyHistory(cachedHistory);
+
+    // 2. One-time fetches for static-ish data
     const fetchData = async () => {
-      const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
-      const now = Date.now();
-
-      const getCachedData = (key: string) => {
-        const cached = sessionStorage.getItem(key);
-        if (!cached) return null;
-        const { data, timestamp } = JSON.parse(cached);
-        if (now - timestamp > CACHE_DURATION) return null;
-        return data;
-      };
-
-      const setCachedData = (key: string, data: any) => {
-        sessionStorage.setItem(key, JSON.stringify({ data, timestamp: now }));
-      };
-
       try {
-        // Members
-        const cachedMembers = getCachedData('cached_members_v2');
-        if (cachedMembers) {
-          setMembers(cachedMembers);
-        } else {
-          try {
-            const mSnap = await trackedGetDocs(collection(db, 'members'));
-            const mData = mSnap.docs.map(d => ({ id: d.id, ...d.data() } as Member));
-            setMembers(mData);
-            setCachedData('cached_members_v2', mData);
-          } catch (e: any) {
-            if (e.message === 'QUOTA_EXCEEDED_OR_KILL_SWITCH') {
-              const fallback = sessionStorage.getItem('cached_members_v2');
-              if (fallback) setMembers(JSON.parse(fallback).data);
-            }
-            throw e;
-          }
-        }
-
-        // Weekly History (Limited to shnatHevelZug)
-        const cachedHistory = getCachedData('cached_history_v2');
-        if (cachedHistory) {
-          setWeeklyHistory(cachedHistory);
-        } else {
-          try {
-            const hSnap = await trackedGetDocs(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)));
-            const hData = hSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-            setWeeklyHistory(hData);
-            setCachedData('cached_history_v2', hData);
-          } catch (e: any) {
-            if (e.message === 'QUOTA_EXCEEDED_OR_KILL_SWITCH') {
-              const fallback = sessionStorage.getItem('cached_history_v2');
-              if (fallback) setWeeklyHistory(JSON.parse(fallback).data);
-            }
-            throw e;
-          }
-        }
-
-        // Glossary & Quotes
+        // Glossary & Exercises (with 24h localStorage caching)
         try {
-          const glSnap = await trackedGetDocs(collection(db, 'glossary'));
-          setGlossary(glSnap.docs.map(d => ({ id: d.id, ...d.data() } as GlossaryTerm)));
+          // Glossary
+          const cachedGlossary = storage.get('cached_glossary_v2');
+          if (cachedGlossary) {
+            setGlossary(cachedGlossary);
+          } else {
+            const glSnap = await trackedGetDocs(collection(db, 'glossary'));
+            const glData = glSnap.docs.map(d => ({ id: d.id, ...d.data() } as GlossaryTerm));
+            setGlossary(glData);
+            storage.set('cached_glossary_v2', glData, 24);
+          }
+
+          // Exercises
+          const cachedExercises = storage.get('cached_exercises_v2');
+          if (cachedExercises) {
+            setExercises(cachedExercises);
+          } else {
+            const exSnap = await trackedGetDocs(collection(db, 'exercises'));
+            const exData = exSnap.docs.map(d => ({ id: d.id, ...d.data() } as Exercise));
+            setExercises(exData);
+            storage.set('cached_exercises_v2', exData, 24);
+          }
           
+          // Quotes (still one-time fetch, but not cached in localStorage yet as per request)
           const qSnap = await trackedGetDocs(collection(db, 'quotes'));
           setQuotes(qSnap.docs.map(d => ({ id: d.id, ...d.data() } as QuoteItem)));
         } catch (e: any) {
           if (e.message !== 'QUOTA_EXCEEDED_OR_KILL_SWITCH') throw e;
-          // Fallback logic for glossary/quotes could be added here if needed
         }
 
       } catch (err) {
@@ -163,7 +147,21 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     fetchData();
 
-    // 2. Real-time listeners for dynamic data
+    // 3. Real-time listeners for dynamic data (Background Fetch)
+    // Members (with 2-min placeholder cache)
+    const unsubMembers = onSnapshot(query(collection(db, 'members'), limit(200)), (snapshot) => {
+      const mData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member));
+      setMembers(mData);
+      storage.set('cached_members_v3', mData, 2 / 60); // 2 mins cache
+    }, handleFirestoreError);
+
+    // Weekly History (with 2-min placeholder cache)
+    const unsubHistory = onSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
+      const hData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setWeeklyHistory(hData);
+      storage.set('cached_history_v3', hData, 2 / 60); // 2 mins cache
+    }, handleFirestoreError);
+
     const unsubRequests = onSnapshot(collection(db, 'joinRequests'), (snapshot) => {
       setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
     }, handleFirestoreError);
@@ -204,7 +202,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     return () => {
       clearTimeout(timeoutId);
-      unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubAssets(); unsubYearConfig(); unsubAttendees();
+      unsubMembers(); unsubHistory(); unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubAssets(); unsubYearConfig(); unsubAttendees();
     };
   }, [handleFirestoreError]);
 
@@ -275,7 +273,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         avatar: reqData.avatar || '', 
         bio: reqData.bio || '',
         role: 'Member', 
-        joinedAt: new Date().toLocaleDateString('he-IL'), 
+        joinedAt: getCurrentDateFormatted(), 
         isActive: true,
         password: hashedPassword, 
         isTemporary: true, 
@@ -436,6 +434,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       batch.set(newDocRef, item);
     });
     await batch.commit();
+    storage.remove('cached_glossary_v2'); // Invalidate cache
+  };
+
+  const batchAddExercises = async (items: Omit<Exercise, 'id'>[]) => {
+    const db = getDb();
+    const batch = writeBatch(db);
+    items.forEach(item => {
+      const newDocRef = doc(collection(db, 'exercises'));
+      batch.set(newDocRef, item);
+    });
+    await batch.commit();
+    storage.remove('cached_exercises_v2'); // Invalidate cache
   };
 
   const batchAddQuotes = async (items: Omit<QuoteItem, 'id'>[]) => {
@@ -491,10 +501,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <DataContext.Provider value={{ 
-      members, joinRequests, events, news, galleryItems, glossary, quotes, weeklyHistory, siteAssets, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError,
+      members, joinRequests, events, news, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, deleteNews, toggleSessionAttendance, forceResetSession,
-      finalizeThursdaySession, batchAddGlossary, batchAddQuotes, clearCollection, updateSiteAssets, updateYearConfig, archiveMember
+      finalizeThursdaySession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateYearConfig, archiveMember
     }}>
       {children}
     </DataContext.Provider>

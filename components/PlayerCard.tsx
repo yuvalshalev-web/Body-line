@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
-import { Flame, Trophy, Calendar, Crown, Star } from 'lucide-react';
+import { Flame, Trophy, Calendar, Crown, Star, Waves } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { calculateUserStats } from '../src/utils/analytics';
 
@@ -24,109 +24,156 @@ const Counter = ({ value, duration = 2 }: { value: number; duration?: number }) 
 const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   const { members, weeklyHistory, yearConfig, isLoading } = useData();
 
-  const data = useMemo(() => {
-    if (isLoading) return null;
+  const member = useMemo(() => {
+    return members.find(m => m.id === userId);
+  }, [userId, members]);
+
+  const stats = useMemo(() => {
+    if (!userId || members.length === 0 || isLoading) return null;
     return calculateUserStats(userId, members, weeklyHistory, yearConfig);
   }, [userId, members, weeklyHistory, yearConfig, isLoading]);
 
-  if (isLoading) return (
-    <div className="player-card animate-pulse bg-white/5 border-white/10">
-      <div className="w-[120px] h-[120px] rounded-full bg-white/10" />
-      <div className="flex-1 space-y-4">
-        <div className="h-8 w-48 bg-white/10 rounded-lg" />
-        <div className="h-4 w-32 bg-white/10 rounded-lg" />
-      </div>
-    </div>
-  );
+  const agePercentile = useMemo(() => {
+    if (!member?.birthday || members.length === 0) return null;
 
-  if (!data) return null;
+    const calculateAge = (birthday: string) => {
+      const birthDate = new Date(birthday);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    };
 
-  const isElite = data.streak >= 4;
-  const hasGoldBorder = data.streak >= 3;
+    const userAge = calculateAge(member.birthday);
+    const allAges = members
+      .map(m => m.birthday ? calculateAge(m.birthday) : null)
+      .filter((age): age is number => age !== null)
+      .sort((a, b) => a - b);
+
+    if (allAges.length === 0) return null;
+
+    const index = allAges.indexOf(userAge);
+    const percentile = (index / (allAges.length - 1)) * 100;
+    const roundedPercentile = Math.round(percentile);
+
+    let label = `גולש מנוסה: אתה בוגר ומנוסה יותר מ-${roundedPercentile}% מהקהילה`;
+    let badge = null;
+
+    if (percentile <= 10) {
+      badge = 'Grommet';
+      label = 'Grommet: מהצעירים והמבטיחים ביותר בקהילה!';
+    } else if (percentile >= 90) {
+      badge = 'Legend/Senior';
+      label = 'Legend/Senior: מעמודי התווך המנוסים ביותר שלנו!';
+    } else if (percentile > 50) {
+      label = `גולש מנוסה: אתה בוגר ומנוסה יותר מ-${roundedPercentile}% מהקהילה`;
+    } else {
+      label = `גולש צעיר: יש לך עוד המון גלים לכבוש, אתה צעיר יותר מ-${100 - roundedPercentile}% מהקהילה`;
+    }
+
+    return { percentile, label, badge };
+  }, [member, members]);
+
+  if (isLoading) return <div className="p-4 bg-white rounded-2xl border border-slate-100 animate-pulse">טוען...</div>;
+  if (!member || !stats) return null;
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="player-card relative overflow-hidden group"
-      dir="rtl"
-    >
-      {/* Background Glow Effect */}
-      <div className="absolute -top-24 -left-24 w-64 h-64 bg-[#006994]/20 blur-[100px] rounded-full pointer-events-none" />
-      <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-[#40E0D0]/20 blur-[100px] rounded-full pointer-events-none" />
-
-      {/* Left Section: Profile Picture */}
-      <div className="relative flex-shrink-0">
-        <div className={`profile-glow ${hasGoldBorder ? 'ring-4 ring-amber-400 ring-offset-4 ring-offset-transparent shadow-[0_0_20px_rgba(251,191,36,0.5)]' : ''}`}>
-          <div className="w-full h-full rounded-full overflow-hidden border-2 border-white/20 bg-slate-800">
-            {data.avatar ? (
-              <img src={data.avatar} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white/20">
-                <Star size={48} />
-              </div>
-            )}
-          </div>
+    <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-8 relative overflow-hidden" dir="rtl">
+      {/* Background Accent */}
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#006994]/5 rounded-full blur-3xl -z-10" />
+      
+      <div className="relative">
+        <div className="w-28 h-28 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl bg-slate-50 rotate-3">
+          {member.avatar ? (
+            <img src={member.avatar} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-slate-300">
+              <Star size={48} />
+            </div>
+          )}
         </div>
-        {data.isTop10 && (
-          <div className="absolute -top-2 -right-2 bg-amber-400 text-slate-900 p-1.5 rounded-full shadow-lg border-2 border-white">
-            <Crown size={16} />
+        {stats.isTop10 && (
+          <div className="absolute -top-2 -right-2 w-10 h-10 bg-amber-400 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white animate-bounce">
+            <Crown size={20} />
           </div>
         )}
       </div>
 
-      {/* Middle Section: User Info */}
-      <div className="flex-1">
-        <div className="flex items-center gap-3 mb-1">
-          <h2 className="text-3xl font-black tracking-tighter text-white">
-            {data.firstName || 'גולש'} {data.lastName || 'חבל זוג'}
+      <div className="flex-1 text-center md:text-right">
+        <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2">
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+            {member.firstName} {member.lastName}
           </h2>
-          {data.isTop10 && <Crown size={24} className="text-amber-400 animate-bounce" />}
+          <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+            <span className="inline-flex px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+              {stats.rank}
+            </span>
+            {agePercentile?.badge && (
+              <span className="inline-flex px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                {agePercentile.badge}
+              </span>
+            )}
+          </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-4 text-white/60 text-sm font-bold">
-          <div className="flex items-center gap-1.5">
-            <Calendar size={14} />
-            <span>הצטרף ב-{data.joiningDate}</span>
-          </div>
-          <div className="px-3 py-0.5 bg-white/10 rounded-full border border-white/10 text-[10px] uppercase tracking-widest text-[#40E0D0]">
-            {data.ageGroup}
-          </div>
-          {isElite && (
-            <div className="px-3 py-0.5 bg-amber-400/20 text-amber-400 rounded-full border border-amber-400/20 text-[10px] font-black uppercase tracking-widest">
-              Elite Member
+        <div className="flex items-center justify-center md:justify-start gap-4 text-slate-400 font-bold text-sm">
+          <span className="flex items-center gap-1"><Calendar size={14} /> הצטרף ב-{stats.joiningDate}</span>
+          <span className="w-1 h-1 bg-slate-200 rounded-full" />
+          <span className="px-2 py-0.5 bg-slate-100 rounded-full text-[10px] uppercase tracking-widest">
+            {member.role === 'Admin' ? 'מנהל' : 'חבר'}
+          </span>
+        </div>
+
+        {/* Age Percentile Indicator */}
+        {agePercentile && (
+          <div className="mt-4 max-w-xs mx-auto md:mx-0">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">אחוזון גיל</span>
+              <span className="text-[9px] font-black text-[#006994]">{Math.round(agePercentile.percentile)}%</span>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Right Section: Key Power Stats */}
-      <div className="flex flex-col gap-4 min-w-[140px]">
-        <div className="stat-badge group-hover:scale-105 transition-transform">
-          <div className="flex items-center justify-center gap-2 text-orange-400 mb-1">
-            <Flame size={16} fill="currentColor" />
-            <span className="stat-label text-white">Grit Score</span>
+            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${agePercentile.percentile}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="h-full bg-gradient-to-r from-[#006994] to-[#40E0D0]"
+              />
+            </div>
+            <p className="text-[10px] text-slate-400 font-bold mt-1">{agePercentile.label}</p>
           </div>
-          <span className="stat-value text-white">
-            <Counter value={data.gritScore} />
-          </span>
-        </div>
+        )}
 
-        <div className="stat-badge !bg-white/10 !border !border-white/10 group-hover:scale-105 transition-transform delay-75">
-          <span className="stat-label">סך הכל סשנים</span>
-          <span className="stat-value">
-            <Counter value={data.totalSessions} />
-          </span>
-        </div>
-
-        <div className="stat-badge !bg-white/10 !border !border-white/10 group-hover:scale-105 transition-transform delay-150">
-          <span className="stat-label">אחוז נוכחות</span>
-          <span className="stat-value">
-            <Counter value={data.attendancePercent} />%
-          </span>
+        <div className="mt-6 grid grid-cols-3 gap-4">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start">
+              <Waves size={10} className="text-[#006994]" /> סשנים
+            </span>
+            <span className="text-2xl font-black text-[#006994] tabular-nums">
+              <Counter value={stats.totalSessions} />
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start">
+              <Flame size={10} className="text-orange-500" /> רצף
+            </span>
+            <span className="text-2xl font-black text-orange-500 tabular-nums">
+              <Counter value={stats.streak} />
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start">
+              <Trophy size={10} className="text-amber-500" /> Grit
+            </span>
+            <span className="text-2xl font-black text-amber-500 tabular-nums">
+              <Counter value={Math.round(stats.gritScore)} />
+            </span>
+          </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

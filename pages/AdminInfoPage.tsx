@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { TrendingUp, Waves, Server, ShieldAlert, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CommunityAnalytics from '../components/CommunityAnalytics';
-import UserAnalytics from '../components/UserAnalytics';
 import SystemMonitor from '../components/SystemMonitor';
 
 type Tab = 'community' | 'system';
