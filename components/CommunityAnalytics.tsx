@@ -57,29 +57,29 @@ const CommunityAnalytics: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-700 min-h-[400px]" dir="rtl">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-12 h-12 bg-[#006994] rounded-2xl flex items-center justify-center text-white shadow-lg">
+      <div className="flex items-center gap-[var(--spacing-md)] mb-[var(--spacing-lg)]">
+        <div className="w-12 h-12 bg-[var(--ocean-bg)] rounded-[var(--radius-md)] flex items-center justify-center text-white shadow-lg">
           <TrendingUp size={24} />
         </div>
         <div>
-          <h2 className="text-3xl font-black text-[#006994] tracking-tight">דופק הקהילה</h2>
-          <p className="text-slate-400 font-bold text-sm">מגמות צמיחה ונוכחות מאקרו</p>
+          <h2 className="text-3xl font-black text-[var(--ocean-liquid)] tracking-tight">דופק הקהילה</h2>
+          <p className="text-[var(--ocean-text-dim)] font-bold text-sm">מגמות צמיחה ונוכחות מאקרו</p>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-[#006994]">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[var(--spacing-md)]">
+        <div className="bg-white p-[var(--spacing-md)] rounded-[var(--radius-md)] border border-slate-100 shadow-sm flex items-center gap-[var(--spacing-md)]">
+          <div className="w-12 h-12 bg-blue-50 rounded-[var(--radius-sm)] flex items-center justify-center text-[var(--ocean-liquid)]">
             <Users size={24} />
           </div>
           <div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">חברים פעילים</p>
-            <p className="text-2xl font-black text-[#006994] tabular-nums">{activeMembersCount.toLocaleString()}</p>
+            <p className="text-2xl font-black text-[var(--ocean-liquid)] tabular-nums">{activeMembersCount.toLocaleString()}</p>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+        <div className="bg-white p-[var(--spacing-md)] rounded-[var(--radius-md)] border border-slate-100 shadow-sm flex items-center gap-[var(--spacing-md)]">
+          <div className="w-12 h-12 bg-emerald-50 rounded-[var(--radius-sm)] flex items-center justify-center text-emerald-600">
             <UserPlus size={24} />
           </div>
           <div>
@@ -87,8 +87,8 @@ const CommunityAnalytics: React.FC = () => {
             <p className="text-2xl font-black text-emerald-600 tabular-nums">+{newJoinersCount}</p>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+        <div className="bg-white p-[var(--spacing-md)] rounded-[var(--radius-md)] border border-slate-100 shadow-sm flex items-center gap-[var(--spacing-md)]">
+          <div className="w-12 h-12 bg-amber-50 rounded-[var(--radius-sm)] flex items-center justify-center text-amber-600">
             <Calendar size={24} />
           </div>
           <div>
@@ -100,10 +100,10 @@ const CommunityAnalytics: React.FC = () => {
         {/* New Action Card */}
         <button 
           onClick={() => navigate('/session-stats')}
-          className="bg-gradient-to-br from-[#006994] to-[#4E8294] p-6 rounded-[2rem] shadow-lg shadow-[#006994]/20 flex items-center justify-between group hover:scale-[1.02] transition-all text-right"
+          className="bg-gradient-to-br from-[var(--ocean-bg)] to-[var(--ocean-pipe-empty)] p-[var(--spacing-md)] rounded-[var(--radius-md)] shadow-lg shadow-[#006994]/20 flex items-center justify-between group hover:scale-[1.02] transition-all text-right"
         >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-white">
+          <div className="flex items-center gap-[var(--spacing-md)]">
+            <div className="w-12 h-12 bg-white/20 rounded-[var(--radius-sm)] flex items-center justify-center text-white">
               <TrendingUp size={24} />
             </div>
             <div>
@@ -116,10 +116,10 @@ const CommunityAnalytics: React.FC = () => {
       </div>
 
       {/* Main Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--spacing-lg)]">
         {/* Growth Chart */}
-        <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
-          <h3 className="text-lg font-black text-[#006994] mb-6">צמיחת הקהילה (חדשים מול ותיקים)</h3>
+        <div className="bg-white p-[var(--spacing-lg)] rounded-[var(--radius-lg)] border border-slate-100 shadow-sm">
+          <h3 className="text-lg font-black text-[var(--ocean-liquid)] mb-6">צמיחת הקהילה (חדשים מול ותיקים)</h3>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.growth} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>

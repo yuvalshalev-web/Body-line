@@ -7,6 +7,41 @@
   --bg-alt: #f8fafc;
   --text-main: #0f172a;
   --text-muted: #64748b;
+
+  /* --- OceanTheme --- */
+  --ocean-bg: #0D3B46;
+  --ocean-pipe-empty: #1B5E6E;
+  --ocean-liquid: #00CED1;
+  --ocean-text-main: #D1E1E4;
+  --ocean-text-dim: #6096A4;
+  --ocean-milestone: #FFFFFF;
+  --ocean-glass: rgba(255, 255, 255, 0.1);
+
+  /* --- SandTheme: Warm & Natural Earth Tones --- */
+  --sand-light: #ECC48B;         /* חול בהיר - לטקסטים מודגשים או רקעים רכים */
+  --sand-medium: #B39365;        /* חול קלאסי - לאלמנטים מבניים משניים */
+  --sand-dark: #684628;          /* אדמה עמוקה - לטקסטים כהים על רקע בהיר */
+  --sand-accent: #A67746;        /* צבע דגש חם - לכפתורים או אייקונים */
+  --sand-shadow: #2E1D0D;        /* צל עמוק מאוד - לניגודיות חזקה */
+  --sand-muted: #9E7E5E;         /* גוון חול מעומעם - למצבי Hover או Disable */
+  
+  /* Gold Legend Special */
+  --gold-finish: #D0AB7B;        /* צבע הזהב הסופי לדרגת ה-Legend */
+
+  /* --- מבנה וריווחים (Structure) --- */
+  --radius-sm: 8px;    /* לפינות של כפתורים או סמנים */
+  --radius-md: 16px;   /* לפינות של ה-Progress Bar */
+  --radius-lg: 24px;   /* לפינות של הכרטיסים הראשיים (Cards) */
+  
+  --spacing-xs: 4px;   /* ריווח בין אייקון לטקסט */
+  --spacing-sm: 12px;  /* ריווח בתוך רכיבים קטנים */
+  --spacing-md: 20px;  /* ריווח פנימי של כרטיסים (Padding) */
+  --spacing-lg: 32px;  /* ריווח בין כרטיסים שונים */
+
+  /* --- אפקטים של עומק (Depth) --- */
+  --glow-soft: 0 0 10px rgba(0, 206, 209, 0.3);
+  --glow-intense: 0 0 20px rgba(0, 206, 209, 0.6);
+  --glass-blur: blur(12px);
 }
 
 body {

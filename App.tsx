@@ -61,20 +61,20 @@ const NavLink = React.memo(({
     onClick={onClick}
     className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-sm transition-all group w-full text-right relative overflow-hidden ${
       isActive 
-        ? 'text-white shadow-lg shadow-[#006994]/20 translate-x-1' 
-        : 'text-[#006994] hover:bg-[#40E0D0]/10 hover:text-[#006994]'
+        ? 'text-white shadow-lg shadow-[var(--sand-shadow)]/20 translate-x-1' 
+        : 'text-[var(--sand-dark)] hover:bg-[var(--sand-light)]/10 hover:text-[var(--sand-accent)]'
     }`}
   >
     {isActive && (
-      <div className="absolute inset-0 bg-gradient-to-r from-[#006994] to-[#4E8294] z-0" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[var(--sand-accent)] to-[var(--sand-medium)] z-0" />
     )}
     <div className="relative z-10 flex items-center gap-4 w-full">
       <item.icon 
         size={20} 
-        className={isActive ? 'text-[#00FFFF]' : 'text-[#4E8294] opacity-60 group-hover:opacity-100 group-hover:text-[#40E0D0] transition-colors'} 
+        className={isActive ? 'text-[var(--sand-light)]' : 'text-[var(--sand-muted)] opacity-60 group-hover:opacity-100 group-hover:text-[var(--sand-accent)] transition-colors'} 
       />
       <span className="flex-1">{item.label}</span>
-      {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#00FFFF] animate-pulse shadow-[0_0_8px_#00FFFF]" />}
+      {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[var(--sand-light)] animate-pulse shadow-[0_0_8px_var(--sand-light)]" />}
     </div>
   </button>
 ));
@@ -126,14 +126,14 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row-reverse font-['Assistant']" dir="rtl">
       {/* Mobile Header */}
-      <header className="md:hidden bg-white border-b border-[#006994]/10 h-16 flex items-center justify-between px-6 sticky top-0 z-[100] shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#006994] rounded-lg flex items-center justify-center text-white shadow-md">
-            <Waves size={20} className="text-[#00FFFF]" />
+      <header className="md:hidden bg-white border-b border-[var(--sand-medium)]/10 h-16 flex items-center justify-between px-[var(--spacing-md)] sticky top-0 z-[100] shadow-sm">
+        <div className="flex items-center gap-[var(--spacing-xs)]">
+          <div className="w-8 h-8 bg-[var(--sand-accent)] rounded-[var(--radius-sm)] flex items-center justify-center text-white shadow-md">
+            <Waves size={20} className="text-[var(--sand-light)]" />
           </div>
-          <span className="font-black text-[#006994] tracking-tighter">חבל זוג</span>
+          <span className="font-black text-[var(--sand-dark)] tracking-tighter">חבל זוג</span>
         </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-[#006994]">
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-[var(--sand-dark)]">
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </header>
@@ -145,15 +145,15 @@ const App: React.FC = () => {
           <div className="absolute right-0 top-0 bottom-0 w-72 bg-white shadow-2xl p-6 flex flex-col animate-in slide-in-from-right duration-300">
              <div className="flex items-center gap-4 mb-10 pb-6 border-b border-slate-100">
                {currentUser.avatar ? (
-                 <img src={currentUser.avatar} className="w-12 h-12 rounded-xl object-cover" alt="" />
+                 <img src={currentUser.avatar} className="w-12 h-12 rounded-xl object-cover border border-[var(--sand-medium)]/10" alt="" />
                ) : (
-                 <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-slate-400">
+                 <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-[var(--sand-muted)] border border-[var(--sand-medium)]/10">
                    <UserCircle size={24} />
                  </div>
                )}
                 <div className="flex-1 overflow-hidden">
-                  <p className="font-black text-slate-950 truncate">{currentUser.firstName} {currentUser.lastName}</p>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <p className="font-black text-[var(--sand-dark)] truncate">{currentUser.firstName} {currentUser.lastName}</p>
+                  <p className="text-[10px] font-black text-[var(--sand-accent)] uppercase tracking-widest">
                     {currentUser.role === 'Admin' ? 'מנהל' : currentUser.role === 'Instructor' ? 'מדריך' : 'חבר'}
                   </p>
                 </div>
@@ -188,14 +188,14 @@ const App: React.FC = () => {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-80 bg-white border-l border-[#006994]/10 sticky top-0 h-screen z-50 p-8 shadow-sm">
-        <div className="flex items-center gap-4 mb-14">
-          <div className="w-12 h-12 bg-[#006994] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#006994]/20">
-            <Waves size={28} className="text-[#00FFFF]" />
+      <aside className="hidden md:flex flex-col w-80 bg-white border-l border-[var(--sand-medium)]/10 sticky top-0 h-screen z-50 p-[var(--spacing-md)] shadow-sm">
+        <div className="flex items-center gap-[var(--spacing-xs)] mb-14">
+          <div className="w-12 h-12 bg-[var(--sand-accent)] rounded-[var(--radius-md)] flex items-center justify-center text-white shadow-lg shadow-[var(--sand-shadow)]/20">
+            <Waves size={28} className="text-[var(--sand-light)]" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-[#006994] tracking-tighter leading-none mb-1">חבל זוג</h1>
-            <p className="text-[10px] font-black text-[#4E8294] uppercase tracking-[0.2em]">קהילת הגולשים</p>
+            <h1 className="text-2xl font-black text-[var(--sand-dark)] tracking-tighter leading-none mb-1">חבל זוג</h1>
+            <p className="text-[10px] font-black text-[var(--sand-muted)] uppercase tracking-[0.2em]">קהילת הגולשים</p>
           </div>
         </div>
         <nav className="flex-1 space-y-3 overflow-y-auto custom-scrollbar">
@@ -227,20 +227,20 @@ const App: React.FC = () => {
         <div className="mt-auto pt-8 border-t border-slate-100">
           <div className="flex items-center gap-4 mb-8">
              {currentUser.avatar ? (
-               <img src={currentUser.avatar} className="w-12 h-12 rounded-xl object-cover shadow-md border border-[#006994]/10" alt="" />
+               <img src={currentUser.avatar} className="w-12 h-12 rounded-xl object-cover shadow-md border border-[var(--sand-medium)]/10" alt="" />
              ) : (
-               <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-[#4E8294] shadow-md border border-[#006994]/10">
+               <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-[var(--sand-muted)] shadow-md border border-[var(--sand-medium)]/10">
                  <UserCircle size={24} />
                </div>
              )}
              <div className="flex-1 overflow-hidden">
-                <p className="font-black text-[#006994] text-sm truncate">{currentUser.firstName} {currentUser.lastName}</p>
-                <p className="text-[9px] font-black text-[#40E0D0] uppercase tracking-widest">
+                <p className="font-black text-[var(--sand-dark)] text-sm truncate">{currentUser.firstName} {currentUser.lastName}</p>
+                <p className="text-[9px] font-black text-[var(--sand-accent)] uppercase tracking-widest">
                   {currentUser.role === 'Admin' ? 'מנהל' : currentUser.role === 'Instructor' ? 'מדריך' : 'חבר'}
                 </p>
              </div>
           </div>
-          <button onClick={handleLogout} className="flex items-center gap-4 w-full px-6 py-4 text-[#4E8294] font-black text-sm rounded-2xl hover:text-rose-500 hover:bg-rose-50 transition-all">
+          <button onClick={handleLogout} className="flex items-center gap-4 w-full px-6 py-4 text-[var(--sand-muted)] font-black text-sm rounded-2xl hover:text-rose-500 hover:bg-rose-50 transition-all">
             <LogOut size={20} /> התנתקות
           </button>
         </div>

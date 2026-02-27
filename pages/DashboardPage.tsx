@@ -146,8 +146,8 @@ const DashboardPage: React.FC = () => {
   const brandColor = '#F1D179';
 
   return (
-    <div className="space-y-16 animate-in fade-in duration-700 max-w-6xl mx-auto pb-20 px-4 md:px-0" dir="rtl">
-      <section className="relative w-full min-h-[700px] md:min-h-[650px] rounded-[3.5rem] overflow-hidden shadow-2xl border border-slate-100 group">
+    <div className="space-y-16 animate-in fade-in duration-700 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
+      <section className="relative w-full min-h-[700px] md:min-h-[650px] rounded-[var(--radius-lg)] overflow-hidden shadow-2xl border border-slate-100 group">
         <img 
           src={siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
           className="absolute inset-0 w-full h-full object-cover grayscale-[0.2] brightness-[0.7] group-hover:scale-105 transition-transform duration-[3000ms]" 
@@ -188,7 +188,7 @@ const DashboardPage: React.FC = () => {
               <button 
                 onClick={handleToggle}
                 disabled={isProcessing}
-                className={`px-10 md:px-16 py-4 md:py-6 rounded-full font-black text-xl md:text-2xl transition-all shadow-2xl active:scale-95 flex items-center gap-4 ${isUserAttending ? 'bg-rose-600 text-white' : 'bg-[#006994] text-white hover:bg-[#4E8294]'}`}
+                className={`px-10 md:px-16 py-4 md:py-6 rounded-full font-black text-xl md:text-2xl transition-all shadow-2xl active:scale-95 flex items-center gap-[var(--spacing-md)] ${isUserAttending ? 'bg-rose-600 text-white' : 'bg-[var(--ocean-bg)] text-white hover:bg-[var(--ocean-pipe-empty)]'}`}
               >
                 {isProcessing ? <Loader2 className="animate-spin" size={28} /> : <Waves size={28} className="text-[#00FFFF]" />}
                 {isUserAttending ? 'בטל הגעה' : 'אני מגיע/ה'}
@@ -223,7 +223,7 @@ const DashboardPage: React.FC = () => {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[var(--spacing-md)]">
         {[
           { label: 'נבחרת הכוכבים', value: activeMembers.length, icon: Users, path: '/directory', color: 'bg-emerald-50 text-emerald-600' },
           { label: 'תמונות', value: galleryItems.length, icon: ImageIcon, path: '/gallery', color: 'bg-rose-50 text-rose-600' },
@@ -232,8 +232,8 @@ const DashboardPage: React.FC = () => {
           { label: 'תחזית גלים', value: 'GoSurf', icon: Waves, path: 'https://gosurf.co.il', external: true, color: 'bg-sky-50 text-sky-600' },
           { label: 'BeachCam', value: 'Live', icon: Video, path: 'https://beachcam.co.il', external: true, color: 'bg-violet-50 text-violet-600' }
         ].map((card, i) => (
-          <Link key={i} to={card.path} target={card.external ? "_blank" : undefined} className={`p-8 rounded-[2.5rem] border border-slate-100 hover:shadow-xl transition-all flex flex-col items-center text-center ${card.color}`}>
-            <card.icon size={28} className="mb-4" />
+          <Link key={i} to={card.path} target={card.external ? "_blank" : undefined} className={`p-[var(--spacing-md)] rounded-[var(--radius-lg)] border border-slate-100 hover:shadow-xl transition-all flex flex-col items-center text-center ${card.color}`}>
+            <card.icon size={28} className="mb-[var(--spacing-sm)]" />
             <p className="text-3xl font-black text-slate-900 mb-1">{card.value}</p>
             <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{card.label}</p>
           </Link>

@@ -81,9 +81,9 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   if (!member || !stats) return null;
 
   return (
-    <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-8 relative overflow-hidden" dir="rtl">
+    <div className="bg-white p-[var(--spacing-md)] rounded-[var(--radius-lg)] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
       {/* Background Accent */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#006994]/5 rounded-full blur-3xl -z-10" />
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-[var(--ocean-liquid)]/5 rounded-full blur-3xl -z-10" />
       
       <div className="relative">
         <div className="w-28 h-28 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl bg-slate-50 rotate-3">
@@ -132,26 +132,26 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
           <div className="mt-4 max-w-xs mx-auto md:mx-0">
             <div className="flex justify-between items-center mb-1">
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">אחוזון גיל</span>
-              <span className="text-[9px] font-black text-[#006994]">{Math.round(agePercentile.percentile)}%</span>
+              <span className="text-[9px] font-black text-[var(--ocean-liquid)]">{Math.round(agePercentile.percentile)}%</span>
             </div>
             <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${agePercentile.percentile}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-[#006994] to-[#40E0D0]"
+                className="h-full bg-gradient-to-r from-[var(--ocean-bg)] to-[var(--ocean-liquid)]"
               />
             </div>
             <p className="text-[10px] text-slate-400 font-bold mt-1">{agePercentile.label}</p>
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-3 gap-4">
+        <div className="mt-6 grid grid-cols-3 gap-[var(--spacing-md)]">
           <div className="flex flex-col">
-            <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start">
-              <Waves size={10} className="text-[#006994]" /> סשנים
+            <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] justify-center md:justify-start">
+              <Waves size={10} className="text-[var(--ocean-liquid)]" /> סשנים
             </span>
-            <span className="text-2xl font-black text-[#006994] tabular-nums">
+            <span className="text-2xl font-black text-[var(--ocean-liquid)] tabular-nums">
               <Counter value={stats.totalSessions} />
             </span>
           </div>

@@ -10,11 +10,26 @@ import StorageDisplay from './StorageDisplay';
 import { sessionReadCount } from '../services/firebase';
 
 const SystemMonitor: React.FC = () => {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<any>({
+    dbSize: 0,
+    errorRate: 0,
+    traffic: []
+  });
   const [storageSize, setStorageSize] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [liveReads, setLiveReads] = useState(sessionReadCount);
-  const [readHistory, setReadHistory] = useState<{ time: string, reads: number }[]>([]);
+  const [readHistory, setReadHistory] = useState<{ time: string, reads: number }[]>(() => {
+    // Initialize with some empty points for a better look
+    const now = new Date();
+    return Array.from({ length: 15 }).map((_, i) => {
+      const d = new Date(now.getTime() - (15 - i) * 5000);
+      return {
+        time: d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        reads: 0
+      };
+    });
+  });
+  const [lastReadCount, setLastReadCount] = useState(sessionReadCount);
   const [isKillSwitchActive, setIsKillSwitchActive] = useState(() => {
     return localStorage.getItem('kill_switch_active') === 'true';
   });
@@ -27,18 +42,30 @@ const SystemMonitor: React.FC = () => {
     return () => window.removeEventListener('db-read-update', handleReadUpdate);
   }, []);
 
+  // Live Request Rate Logic
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      const timeStr = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-      setReadHistory(prev => {
-        const newHistory = [...prev, { time: timeStr, reads: liveReads }];
-        if (newHistory.length > 20) return newHistory.slice(1);
-        return newHistory;
+      const timeStr = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      
+      const currentTotal = sessionReadCount;
+      setLiveReads(currentTotal);
+      
+      setLastReadCount(prevTotal => {
+        const delta = Math.max(0, currentTotal - prevTotal);
+        
+        setReadHistory(prevHistory => {
+          const newPoint = { time: timeStr, reads: delta };
+          const updatedHistory = [...prevHistory, newPoint].slice(-20);
+          return updatedHistory;
+        });
+        
+        return currentTotal;
       });
-    }, 60000); // Every minute
+    }, 5000); // Every 5 seconds for a "Live" feel
+    
     return () => clearInterval(interval);
-  }, [liveReads]);
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -71,7 +98,7 @@ const SystemMonitor: React.FC = () => {
     window.location.reload(); // Force reload to apply switch
   };
 
-  if (loading) return <div className="p-8 text-center font-black text-slate-400 animate-pulse">מתחבר לחדר מכונות...</div>;
+  if (loading && !data.traffic.length) return <div className="p-8 text-center font-black text-slate-400 animate-pulse">מתחבר לחדר מכונות...</div>;
 
   const quotaLimit = 50000;
   const quotaPercentage = Math.min(100, Math.round((liveReads / quotaLimit) * 100));
@@ -226,22 +253,72 @@ const SystemMonitor: React.FC = () => {
         </div>
 
         {/* Reads per Minute Chart */}
-        <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
-          <h3 className="text-lg font-black text-slate-900 mb-6 uppercase tracking-tight">קצב קריאות (Live)</h3>
+        <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">קצב קריאות (Live)</h3>
+            </div>
+            
+            {/* Simulation Button for testing */}
+            <button 
+              onClick={() => {
+                // Simulate a read by dispatching the event that the monitor listens to
+                // and incrementing the local count for the UI
+                const fakeTotal = liveReads + Math.floor(Math.random() * 5) + 1;
+                window.dispatchEvent(new CustomEvent('db-read-update', { detail: fakeTotal }));
+                // We also need to update the global variable if we want it to persist in this session
+                // but for simulation, the event is enough to trigger the graph
+              }}
+              className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-black rounded-lg transition-colors uppercase tracking-wider"
+            >
+              בצע בדיקת קריאה
+            </button>
+          </div>
+
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={readHistory}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} />
+                <XAxis 
+                  dataKey="time" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 8, fontWeight: 900, fill: '#64748b' }} 
+                  interval={2}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }}
+                  domain={[0, 'auto']}
+                  allowDecimals={false}
+                  minTickGap={10}
+                />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: 'none', color: '#fff' }}
                   itemStyle={{ color: '#00FFFF', fontWeight: 900 }}
                 />
-                <Line type="monotone" dataKey="reads" stroke="#006994" strokeWidth={3} dot={false} />
+                <Line 
+                  type="monotone" 
+                  dataKey="reads" 
+                  stroke="#006994" 
+                  strokeWidth={4} 
+                  dot={{ r: 4, fill: '#006994', strokeWidth: 2, stroke: '#fff' }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                  isAnimationActive={false}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
+          
+          {readHistory.every(pt => pt.reads === 0) && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] bg-white/80 px-4 py-2 rounded-full backdrop-blur-sm">
+                No active traffic detected
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

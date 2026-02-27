@@ -84,10 +84,10 @@ export const calculateUserStats = (
   // Rank Logic & Next Rank Calculation (Adjusted for once-a-week schedule)
   const rankThresholds = [
     { name: "Grommet", min: 0 },
-    { name: "Rookie", min: 6 },
-    { name: "Local", min: 15 },
-    { name: "Pro", min: 30 },
-    { name: "Legend", min: 42 }
+    { name: "Rookie", min: 5 },
+    { name: "Local", min: 10 },
+    { name: "Pro", min: 20 },
+    { name: "Legend", min: 40 }
   ];
 
   let currentRankIndex = 0;
