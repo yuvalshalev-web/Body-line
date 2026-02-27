@@ -176,7 +176,8 @@ const SurferCardPage: React.FC = () => {
                         <span className="text-[9px] font-black text-[var(--ocean-bg)] uppercase tracking-[0.25em] mb-0.5 drop-shadow-md">
                           CURRENT STATUS
                         </span>
-                        <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-[var(--ocean-milestone)]" />
+                        {/* The indicator arrow - physically attached to the bar with negative margin */}
+                        <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-[var(--ocean-milestone)] -mt-[1px]" />
                       </motion.div>
                     </div>
 
