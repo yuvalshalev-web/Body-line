@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { TrendingUp, Waves, Server, ShieldAlert, Users } from 'lucide-react';
+import { TrendingUp, Waves, Server, ShieldAlert, Users, Activity } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CommunityAnalytics from '../components/CommunityAnalytics';
 import SystemMonitor from '../components/SystemMonitor';
+import SessionStatsPage from './SessionStatsPage';
+import GlassNavigationBar from '../components/GlassNavigationBar';
 
-type Tab = 'community' | 'system';
+type Tab = 'community' | 'system' | 'attendance';
 
 const SnorkelIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg 
@@ -32,9 +34,9 @@ const AdminInfoPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('community');
 
   const tabs = [
-    { id: 'attendance', label: 'צוללים לסשנים', icon: SnorkelIcon, color: 'text-[#006994]' },
-    { id: 'community', label: 'דופק הקהילה', icon: TrendingUp, color: 'text-[#006994]' },
-    { id: 'system', label: 'חדר מכונות', icon: Server, color: 'text-slate-900' },
+    { id: 'community', label: 'דופק הקהילה', icon: <TrendingUp size={20} /> },
+    { id: 'attendance', label: 'צוללים לסשנים', icon: <Activity size={20} /> },
+    { id: 'system', label: 'חדר מכונות', icon: <Server size={20} /> },
   ];
 
   if (currentUser?.role !== 'Admin') {
@@ -54,7 +56,7 @@ const AdminInfoPage: React.FC = () => {
           מרכז הבקרה "תצפית הים"
         </div>
         <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
-          סטטיסטיקה וביצועים
+          דופק הקהילה: תמונת מצב
         </h1>
         <p className="text-slate-400 font-bold mt-3 text-lg">
           ניטור בזמן אמת של פעילות הקהילה והמערכת
@@ -62,35 +64,12 @@ const AdminInfoPage: React.FC = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-16">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => {
-              if (tab.id === 'attendance') {
-                navigate('/session-stats');
-              } else {
-                setActiveTab(tab.id as Tab);
-              }
-            }}
-            className={`flex items-center gap-3 px-8 py-4 rounded-3xl font-black text-sm transition-all relative overflow-hidden group border border-transparent ${
-              activeTab === tab.id 
-                ? 'bg-white text-slate-900 shadow-2xl shadow-slate-200 border-slate-100' 
-                : 'bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            {activeTab === tab.id && (
-              <motion.div 
-                layoutId="activeTab"
-                className="absolute inset-0 bg-white z-0"
-              />
-            )}
-            <div className="relative z-10 flex items-center gap-3">
-              <tab.icon size={20} className={activeTab === tab.id ? tab.color : 'opacity-40'} />
-              <span>{tab.label}</span>
-            </div>
-          </button>
-        ))}
+      <div className="mb-16">
+        <GlassNavigationBar 
+          items={tabs}
+          activeId={activeTab}
+          onChange={(id) => setActiveTab(id as Tab)}
+        />
       </div>
 
       {/* Content Area */}
@@ -104,6 +83,7 @@ const AdminInfoPage: React.FC = () => {
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
             {activeTab === 'community' && <CommunityAnalytics />}
+            {activeTab === 'attendance' && <SessionStatsPage />}
             {activeTab === 'system' && <SystemMonitor />}
           </motion.div>
         </AnimatePresence>

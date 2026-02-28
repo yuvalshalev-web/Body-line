@@ -421,24 +421,24 @@ const SessionStatsPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto font-['Assistant'] pb-20 relative" dir="rtl">
-      {/* Editorial Header */}
+      {/* Unified Header */}
       <header className="mb-16 relative">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-900/5 text-slate-500 rounded-full mb-6 border border-slate-200 backdrop-blur-md">
-              <Activity size={14} className="text-[#006994]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Session Dive Analytics</span>
-            </div>
-            <h1 className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter leading-none mb-4">
-              צלילה <span className="text-[#006994]">לסשנים</span>
-            </h1>
-            <p className="text-xl text-slate-500 font-bold max-w-2xl leading-relaxed">
-              ניתוח עומק של ביצועי הנבחרת, מגמות נוכחות ופילוח גולשים. 🌊
-            </p>
+        <div className="flex flex-col items-center text-center space-y-6">
+          <div className="header-badge-glass">
+            <Activity size={12} className="text-[#00f2fe]" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Session Dive Analytics</span>
           </div>
+          
+          <h1 className="text-5xl md:text-7xl font-black header-title-gradient tracking-tighter leading-none uppercase">
+            צלילה לסשנים
+          </h1>
+          
+          <p className="header-subtitle max-w-2xl text-xl font-bold">
+            ניתוח עומק של ביצועי הנבחרת, מגמות נוכחות ופילוח גולשים. 🌊
+          </p>
 
-          {/* Sea-Time Dashboard Widget - Using the Dark Glass style from Machine Room */}
-          <div className="relative group">
+          {/* Sea-Time Dashboard Widget - Centered below subtitle */}
+          <div className="relative group pt-4">
             <div className="absolute inset-0 bg-blue-500/20 blur-2xl group-hover:bg-blue-500/30 transition-all duration-500" />
             <div className="relative health-matrix-glass p-8 rounded-[3rem] text-center min-w-[280px] shadow-2xl border border-white/10">
               <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">זמן ים מצטבר (הערכה)</p>

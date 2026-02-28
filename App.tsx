@@ -129,8 +129,7 @@ const App: React.FC = () => {
   const adminNavItems = [
     { path: '/admin', icon: Settings, label: 'פאנל ניהול' },
     { path: '/admin-info', icon: BarChart3, label: 'תצפית הים' },
-    { path: '/attendance', icon: Users, label: 'סנכרון נוכחות' },
-    { path: '/session-stats', icon: BarChart3, label: 'צוללים לסשנים' }
+    { path: '/attendance', icon: Users, label: 'סנכרון נוכחות' }
   ];
 
   return (
@@ -279,7 +278,6 @@ const App: React.FC = () => {
                   <Route path="/admin" element={<AdminPage />} />
                   <Route path="/admin-info" element={<AdminInfoPage />} />
                   <Route path="/attendance" element={<SurfingSessionAttendance />} />
-                  <Route path="/session-stats" element={<SessionStatsPage />} />
                 </>
               )}
               <Route path="*" element={<Navigate to="/" replace />} />

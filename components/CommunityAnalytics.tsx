@@ -56,15 +56,20 @@ const CommunityAnalytics: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 min-h-[400px]" dir="rtl">
-      {/* Header */}
-      <div className="flex items-center gap-[var(--spacing-md)] mb-[var(--spacing-lg)]">
-        <div className="w-12 h-12 bg-[var(--ocean-bg)] rounded-[var(--radius-md)] flex items-center justify-center text-white shadow-lg">
-          <TrendingUp size={24} />
+      {/* Unified Header */}
+      <div className="flex flex-col items-center text-center mb-16 space-y-6">
+        <div className="header-badge-glass">
+          <TrendingUp size={12} className="text-[#00f2fe]" />
+          <span>COMMUNITY PULSE ANALYTICS</span>
         </div>
-        <div>
-          <h2 className="text-3xl font-black text-[var(--ocean-liquid)] tracking-tight">דופק הקהילה</h2>
-          <p className="text-[var(--ocean-text-dim)] font-bold text-sm">מגמות צמיחה ונוכחות מאקרו</p>
-        </div>
+
+        <h1 className="text-5xl md:text-7xl font-black header-title-gradient tracking-tighter leading-none uppercase">
+          דופק הקהילה
+        </h1>
+
+        <p className="header-subtitle max-w-2xl text-xl font-bold">
+          מגמות צמיחה, נוכחות מאקרו וחפיפת פעילויות בקהילת חבל זוג. 📈
+        </p>
       </div>
 
       {/* Stats Grid */}

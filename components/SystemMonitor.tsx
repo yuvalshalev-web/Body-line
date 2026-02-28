@@ -328,23 +328,20 @@ const SystemMonitor: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 font-mono min-h-[400px]" dir="rtl">
-      {/* Technical Header - Body-line Standard Stack */}
-      <div className="flex flex-col items-center text-center mb-10 space-y-4">
-        {/* Top Badge */}
+    <div className="space-y-8 animate-in fade-in duration-700 min-h-[400px]" dir="rtl">
+      {/* Unified Header */}
+      <div className="flex flex-col items-center text-center mb-16 space-y-6">
         <div className="header-badge-glass">
           <Activity size={12} className="text-[#00f2fe]" />
           <span>SYSTEM DIVE ANALYTICS</span>
         </div>
 
-        {/* Main Title */}
-        <h1 className="text-5xl header-title-gradient uppercase tracking-tighter">
+        <h1 className="text-5xl md:text-7xl font-black header-title-gradient tracking-tighter leading-none uppercase">
           חדר מכונות
         </h1>
 
-        {/* Subtitle with Emoji context */}
         <div className="flex flex-col items-center gap-3">
-          <p className="header-subtitle max-w-2xl">
+          <p className="header-subtitle max-w-2xl text-xl font-bold">
             ניטור תשתיות וביצועי מערכת בזמן אמת. כל המדדים הקריטיים תחת שליטה מלאה ⚙️
           </p>
           
