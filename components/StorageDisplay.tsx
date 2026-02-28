@@ -25,6 +25,12 @@ const StorageDisplay: React.FC = () => {
 
   const percentage = Math.min((Number(sizeInMB) / QUOTA_MB) * 100, 100).toFixed(1);
 
+  const formatSize = (mb: number) => {
+    if (mb >= 1024 * 1024) return `${(mb / (1024 * 1024)).toFixed(2)} TB`;
+    if (mb >= 1024) return `${(mb / 1024).toFixed(2)} GB`;
+    return `${mb.toFixed(2)} MB`;
+  };
+
   const getBarColor = () => {
     const p = Number(percentage);
     if (p < 70) return '#4caf50'; // ירוק
@@ -44,28 +50,28 @@ const StorageDisplay: React.FC = () => {
       {/* Progress Bar Container */}
       <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden shadow-inner border border-slate-200/50">
         <div 
-          className="h-full transition-all duration-1000 ease-out rounded-full"
+          className="h-full liquid-progress-bar rounded-full breathing-glow"
           style={{ 
             width: `${percentage}%`, 
             backgroundColor: getBarColor(),
-            boxShadow: `0 0 8px ${getBarColor()}30`
-          }}
+            '--glow-color': `${getBarColor()}60`
+          } as any}
         />
       </div>
 
       <div className="flex justify-between items-end">
         <div className="text-right">
-          <p className="text-base font-black text-slate-600 tabular-nums leading-none">{sizeInMB} MB</p>
+          <p className="text-sm font-black text-slate-600 tabular-nums leading-none">{formatSize(Number(sizeInMB))}</p>
           <p className="text-[8px] font-bold text-slate-400 mt-1">בשימוש</p>
         </div>
         
         <div className="text-center">
-          <p className="text-sm font-black text-slate-600 tabular-nums leading-none">{percentage}%</p>
+          <p className="text-xs font-black text-slate-600 tabular-nums leading-none">{percentage}%</p>
           <p className="text-[8px] font-bold text-slate-400 mt-1">ניצול</p>
         </div>
 
         <div className="text-left">
-          <p className="text-xs font-black text-slate-600 tabular-nums leading-none">{QUOTA_MB} MB</p>
+          <p className="text-[10px] font-black text-slate-600 tabular-nums leading-none">{formatSize(QUOTA_MB)}</p>
           <p className="text-[8px] font-bold text-slate-400 mt-1">מכסה</p>
         </div>
       </div>

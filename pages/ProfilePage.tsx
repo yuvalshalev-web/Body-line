@@ -138,17 +138,32 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto py-10 text-right animate-in fade-in" dir="rtl">
-      <div className="mb-12 flex justify-between items-end">
-        <div>
-          <h2 className="text-5xl font-black text-slate-900 tracking-tighter">הפרופיל שלי</h2>
-          <p className="text-slate-400 font-bold text-lg">עדכן את הפרטים האישיים והנוכחות הדיגיטלית שלך</p>
+      {/* Body-line Standard Header Stack */}
+      <div className="flex flex-col items-center text-center mb-10 space-y-4">
+        {/* Top Badge */}
+        <div className="header-badge-glass">
+          <User size={12} className="text-[#00f2fe]" />
+          <span>MEMBER PROFILE</span>
         </div>
-        {isDirty && (
-          <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-xl animate-bounce">
-            <AlertCircle size={16} />
-            <span className="text-xs font-black">שינויים לא שמורים</span>
-          </div>
-        )}
+
+        {/* Main Title */}
+        <h1 className="text-5xl header-title-gradient uppercase tracking-tighter">
+          הפרופיל שלי
+        </h1>
+
+        {/* Subtitle with Emoji context */}
+        <div className="flex flex-col items-center gap-6">
+          <p className="header-subtitle max-w-2xl">
+            עדכן את הפרטים האישיים והנוכחות הדיגיטלית שלך בקהילה 👤
+          </p>
+          
+          {isDirty && (
+            <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-xl animate-bounce">
+              <AlertCircle size={16} />
+              <span className="text-xs font-black">שינויים לא שמורים</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-[4rem] border border-slate-100 shadow-2xl overflow-hidden relative">

@@ -3,13 +3,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import PlayerCard from '../components/PlayerCard';
 import UserAnalytics from '../components/UserAnalytics';
-import { Trophy, Waves, Target, Crown } from 'lucide-react';
+import { Trophy, Waves, Target, Crown, WifiOff } from 'lucide-react';
 import { motion } from 'motion/react';
 import { calculateUserStats } from '../src/utils/analytics';
 
 const SurferCardPage: React.FC = () => {
   const { currentUser } = useAuth();
-  const { members, weeklyHistory, yearConfig, isLoading } = useData();
+  const { members, weeklyHistory, yearConfig, isLoading, dbStatus } = useData();
 
   const userData = useMemo(() => {
     if (!currentUser || isLoading) return null;
@@ -62,11 +62,14 @@ const SurferCardPage: React.FC = () => {
           const rankThresholds = userData?.rankThresholds || [];
           const rankIndex = rankThresholds.findIndex(r => r.name === currentRank) ?? 0;
 
-          // Dynamic Segmented Progress Calculation
+          // Dynamic Segmented Progress Calculation (4 segments of 25% each)
+          // Formula: Base % (Current Rank) + ((Current Sessions - Rank Min) / (Next Rank Min - Rank Min) * 25%)
           let progressPercent = 0;
           const totalRanks = rankThresholds.length;
           
           if (totalRanks > 1) {
+            const segmentWidth = 100 / (totalRanks - 1); // 25% for 4 segments
+            
             // Find current segment
             let segmentIndex = 0;
             for (let i = 0; i < totalRanks - 1; i++) {
@@ -80,7 +83,6 @@ const SurferCardPage: React.FC = () => {
             const currentMin = rankThresholds[segmentIndex].min;
             const nextMin = rankThresholds[segmentIndex + 1].min;
             const segmentProgress = Math.min(1, Math.max(0, (totalSessions - currentMin) / (nextMin - currentMin)));
-            const segmentWidth = 100 / (totalRanks - 1);
             
             progressPercent = (segmentIndex * segmentWidth) + (segmentProgress * segmentWidth);
             
@@ -88,9 +90,6 @@ const SurferCardPage: React.FC = () => {
               progressPercent = 100;
             }
           }
-
-          // Precision Alignment: The arrow and liquid must align perfectly with the nodes
-          const precisionPosition = `calc(24px + (${progressPercent} / 100) * (100% - 48px))`;
 
           return (
             <motion.div 
@@ -162,7 +161,13 @@ const SurferCardPage: React.FC = () => {
                 {/* Final 3-Layer Roadmap - Professional Glassmorphism */}
                 <div className="mt-10 mb-10 px-4 max-w-4xl mx-auto">
                   {/* Progress System Wrapper - Shared Coordinate System */}
-                  <div className="relative w-full h-8 bg-[var(--ocean-glass)] backdrop-blur-[var(--glass-blur)] rounded-[var(--radius-md)] border border-white/20 shadow-[inset_0_2px_10px_rgba(255,255,255,0.1),0_10px_30px_rgba(0,0,0,0.3)]">
+                  <div 
+                    className="relative w-full h-8 bg-[var(--ocean-glass)] backdrop-blur-[var(--glass-blur)] rounded-[var(--radius-md)] border border-white/20 shadow-[inset_0_2px_10px_rgba(255,255,255,0.1),0_10px_30px_rgba(0,0,0,0.3)]"
+                    style={{ 
+                      '--progress-percent': progressPercent,
+                      '--current-progress': `calc(24px + (var(--progress-percent) / 100) * (100% - 48px))`
+                    } as React.CSSProperties}
+                  >
                     
                     {/* Layer 3: 'CURRENT STATUS' Marker (Above the bar, but child of the bar to share coordinates) */}
                     <div className="absolute -top-10 inset-x-0 h-10 pointer-events-none">
@@ -171,7 +176,7 @@ const SurferCardPage: React.FC = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="absolute flex flex-col items-center"
-                        style={{ left: precisionPosition, transform: 'translateX(-50%)' }}
+                        style={{ left: 'var(--current-progress)', transform: 'translateX(-50%)' }}
                       >
                         <span className="text-[9px] font-black text-[var(--ocean-bg)] uppercase tracking-[0.25em] mb-0.5 drop-shadow-md">
                           CURRENT STATUS
@@ -187,7 +192,7 @@ const SurferCardPage: React.FC = () => {
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ 
-                          width: precisionPosition 
+                          width: 'var(--current-progress)' 
                         }}
                         transition={{ duration: 2, ease: "circOut" }}
                         className="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--ocean-bg)] via-[var(--ocean-pipe-empty)] to-[var(--ocean-liquid)] shadow-[var(--glow-soft)]"
@@ -228,10 +233,20 @@ const SurferCardPage: React.FC = () => {
                         })}
                       </div>
                     </div>
+
+                    {/* Offline Overlay (Blur + No Signal) */}
+                    {dbStatus === 'OFFLINE' && (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-[var(--radius-md)]">
+                        <div className="flex items-center gap-2 text-white/70">
+                          <WifiOff size={14} className="animate-pulse" />
+                          <span className="text-[8px] font-black uppercase tracking-widest">No Signal</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Labels (Layer 1 - Below the bar) */}
-                  <div className="relative w-full h-8 mt-2 px-10">
+                  <div className="relative w-full h-8 mt-2 px-6">
                     <div className="relative w-full h-full">
                       {userData?.rankThresholds.map((rank, idx) => {
                         const isCurrent = rank.name === currentRank;

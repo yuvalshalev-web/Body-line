@@ -25,6 +25,13 @@
   --sand-shadow: #2E1D0D;        /* צל עמוק מאוד - לניגודיות חזקה */
   --sand-muted: #9E7E5E;         /* גוון חול מעומעם - למצבי Hover או Disable */
   
+  /* --- T-Mobile Theme: Magenta & Pink Tones --- */
+  --tmobile-primary: #ff009f;    /* מגנטה ראשי */
+  --tmobile-secondary: #f063c1;  /* ורוד עמוק */
+  --tmobile-light: #f7c1ea;      /* ורוד בהיר */
+  --tmobile-extra-light: #ffd2fa; /* ורוד רך מאוד */
+  --tmobile-bg: #f2def0;         /* רקע ורדרד עדין */
+  
   /* Gold Legend Special */
   --gold-finish: #D0AB7B;        /* צבע הזהב הסופי לדרגת ה-Legend */
 
@@ -230,11 +237,283 @@ body {
     opacity: 0.8;
 }
 
-.profile-glow {
+@keyframes shimmer-wave {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes breathing-glow {
+  0%, 100% { box-shadow: 0 0 10px var(--glow-color, rgba(0, 206, 209, 0.3)); }
+  50% { box-shadow: 0 0 20px var(--glow-color, rgba(0, 206, 209, 0.6)); }
+}
+
+.liquid-progress-bar {
+  position: relative;
+  overflow: hidden;
+  transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+.liquid-progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background-size: 200% 100%;
+  animation: shimmer-wave 2s infinite linear;
+  pointer-events: none;
+}
+
+@keyframes heartbeat-flicker {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  98% { opacity: 1; filter: brightness(1); }
+  99% { opacity: 0.8; filter: brightness(1.5); }
+}
+
+@keyframes shake-vibration {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translate(-1px, -1px) rotate(-0.5deg); }
+  20%, 40%, 60%, 80% { transform: translate(1px, 1px) rotate(0.5deg); }
+}
+
+@keyframes breathing-ring {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.02); opacity: 1; }
+}
+
+.health-matrix-glass {
+  background: rgba(15, 15, 25, 0.7);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.glass-gauge-container {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(25px);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
+.gauge-ring-fill {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes shimmer-svg {
+  0% { stop-offset: -100%; }
+  100% { stop-offset: 200%; }
+}
+
+.shimmer-stop {
+  animation: shimmer-svg 2s infinite linear;
+}
+
+.gauge-value {
+  font-family: 'Inter', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -1px;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.neon-ring-azure { filter: drop-shadow(0 0 12px rgba(0, 210, 255, 0.8)); }
+.neon-ring-emerald { filter: drop-shadow(0 0 12px rgba(0, 255, 135, 0.8)); animation: heartbeat-flicker 5s infinite; }
+.neon-ring-amber { filter: drop-shadow(0 0 15px rgba(242, 153, 74, 0.8)); }
+.neon-ring-crimson { filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.9)); }
+
+.animate-shake {
+  animation: shake-vibration 0.3s infinite;
+}
+
+.animate-breathing {
+  animation: breathing-ring 4s ease-in-out infinite;
+}
+
+/* --- Dark Neon Glass Dashboard (New Design) --- */
+.dashboard-container-neon {
+    background: rgba(10, 10, 20, 0.6);
+    backdrop-filter: blur(45px);
+    -webkit-backdrop-filter: blur(45px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 30px;
+    padding: 40px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.gauge-ring-neon {
+    stroke-width: 10;
+    stroke-linecap: round;
+    fill: none;
+    filter: drop-shadow(0 0 12px var(--gauge-color));
+    transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gauge-percentage-neon {
+    font-size: 2.5rem;
+    font-weight: 200;
+    fill: #ffffff;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+}
+
+.gauge-label-neon {
+    font-size: 0.7rem;
+    fill: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* Color Variables for Neon Gauges */
+.gauge-db { --gauge-color: #00d2ff; }
+.gauge-sys { --gauge-color: #00ff87; }
+.gauge-res { --gauge-color: #f2994a; }
+.gauge-err { --gauge-color: #ff003c; }
+
+/* --- Glassmorphism for Member Cards --- */
+.member-card-glass {
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07) !important;
+  transition: all 0.3s ease !important;
+}
+
+.member-card-glass:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-4px) !important;
+}
+
+/* --- Global Progress Bar --- */
+#global-progress-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 9999;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+}
+
+#global-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--ocean-liquid), #ffffff);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 5px var(--ocean-liquid);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+/* --- Body-line Global Header Standards --- */
+.header-badge-glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.header-title-gradient {
+  background: linear-gradient(to right, #00f2fe, #4facfe);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.header-subtitle {
+  color: #64748b; /* Blue-gray dark */
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.btn-emergency-shutdown {
     position: relative;
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    padding: 5px;
-    background: linear-gradient(45deg, #f093fb, #f5576c); /* צבעי "נחישות" */
+    padding: 0 24px;
+    min-width: 260px; /* Increased to fit text better */
+    height: 50px;
+    background: linear-gradient(135deg, rgba(255, 0, 60, 0.85), rgba(180, 0, 40, 0.95));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.75rem; /* Slightly smaller to fit */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 100px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap; /* Prevent text wrapping */
+    
+    /* Intense Neon Glow */
+    box-shadow: 0 8px 25px rgba(255, 0, 60, 0.4), 
+                inset 0 0 12px rgba(255, 255, 255, 0.2);
+    
+    /* Slow Breathing Animation */
+    animation: emergency-pulse 3s infinite ease-in-out;
+}
+
+/* Pulse Animation */
+@keyframes emergency-pulse {
+    0%, 100% { box-shadow: 0 8px 20px rgba(255, 0, 60, 0.4); transform: scale(1); }
+    50% { box-shadow: 0 12px 40px rgba(255, 0, 60, 0.7); transform: scale(1.03); }
+}
+
+/* Hover State */
+.btn-emergency-shutdown:hover {
+    background: rgba(255, 0, 60, 1);
+    box-shadow: 0 15px 50px rgba(255, 0, 60, 0.9);
+    letter-spacing: 1.5px;
+    border-color: rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+}
+
+/* Active State (Click) */
+.btn-emergency-shutdown:active {
+    transform: scale(0.95) translateY(0);
+}
+
+/* Warning Icon */
+.btn-emergency-shutdown::before {
+    content: "⚠️";
+    margin-right: 12px;
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 5px white);
 }

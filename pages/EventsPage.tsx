@@ -156,21 +156,35 @@ const EventsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white text-right animate-in fade-in duration-700" dir="rtl">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
-        <div>
-          <h2 className="text-5xl font-black italic tracking-tighter text-slate-900">אירועים קרובים</h2>
-          <p className="text-slate-500 font-black text-[11px] uppercase tracking-widest">מפגשים וחוויות קהילתיות • {events.length} אירועים</p>
+      {/* Body-line Standard Header Stack */}
+      <div className="flex flex-col items-center text-center mb-10 space-y-4">
+        {/* Top Badge */}
+        <div className="header-badge-glass">
+          <Calendar size={12} className="text-[#00f2fe]" />
+          <span>COMMUNITY EVENTS</span>
         </div>
 
-        {currentUser && (
-          <button 
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-4 px-10 py-5 bg-[#006994] text-white rounded-[2rem] font-black text-md hover:bg-[#4E8294] transition-all shadow-xl active:scale-95 group"
-          >
-            <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />
-            <span>הוספת אירוע</span>
-          </button>
-        )}
+        {/* Main Title */}
+        <h1 className="text-5xl header-title-gradient uppercase tracking-tighter">
+          אירועים קרובים
+        </h1>
+
+        {/* Subtitle with Emoji context */}
+        <div className="flex flex-col items-center gap-6">
+          <p className="header-subtitle max-w-2xl">
+            מפגשים, חוויות ורגעים שקורים מחוץ למים • {events.length} אירועים 🗓️
+          </p>
+          
+          {currentUser && (
+            <button 
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-4 px-10 py-5 bg-[#006994] text-white rounded-[2rem] font-black text-md hover:bg-[#4E8294] transition-all shadow-xl active:scale-95 group"
+            >
+              <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />
+              <span>הוספת אירוע</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

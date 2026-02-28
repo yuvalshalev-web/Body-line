@@ -108,9 +108,13 @@ const LoginPage: React.FC = () => {
         
         login({ id: userDoc.id, ...memberData, loginCount: (memberData.loginCount || 0) + 1 });
       }
-    } catch (err) { 
+    } catch (err: any) { 
       console.error(err);
-      setError('שגיאת חיבור למערכת'); 
+      if (err.message === 'QUOTA_EXCEEDED_OR_KILL_SWITCH') {
+        setError('המערכת במצב לא מקוון זמנית (Emergency Shutdown)');
+      } else {
+        setError('שגיאת חיבור למערכת'); 
+      }
     } finally { 
       setIsLoading(false); 
     }
@@ -220,9 +224,13 @@ const LoginPage: React.FC = () => {
         setMode('LOGIN');
         setSuccess(false);
       }, 5000); 
-    } catch (err) { 
+    } catch (err: any) { 
       console.error(err);
-      setError('שגיאה בשליחת הבקשה'); 
+      if (err.message === 'QUOTA_EXCEEDED_OR_KILL_SWITCH') {
+        setError('המערכת במצב לא מקוון זמנית (Emergency Shutdown)');
+      } else {
+        setError('שגיאה בשליחת הבקשה'); 
+      }
     } finally { 
       setIsLoading(false); 
     }

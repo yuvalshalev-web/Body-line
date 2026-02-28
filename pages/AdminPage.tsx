@@ -45,6 +45,7 @@ const AdminPage: React.FC = () => {
   const eventImageInputRef = useRef<HTMLInputElement>(null);
   const [replacingAssetKey, setReplacingAssetKey] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [showRoleWarning, setShowRoleWarning] = useState(false);
   
   // Year Config State
   const [isEditingYear, setIsEditingYear] = useState(false);
@@ -271,11 +272,25 @@ const AdminPage: React.FC = () => {
   return (
     <div className="relative min-h-screen bg-[#f2def0]/30 text-right space-y-12 pb-20 pt-8" dir="rtl">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#ff009f] text-white text-[10px] font-black rounded-full mb-4 shadow-md shadow-[#ff009f]/20">
-            <ShieldAlert size={12} className="text-[#ffd2fa]" /> מנהל מערכת
+        {/* Body-line Standard Header Stack */}
+        <div className="flex flex-col items-center text-center mb-10 space-y-4">
+          {/* Top Badge */}
+          <div className="header-badge-glass">
+            <ShieldAlert size={12} className="text-[#ff009f]" />
+            <span>ADMIN CONTROL CENTER</span>
           </div>
-          <h2 className="text-5xl font-black text-[#4a002e] tracking-tighter">מרכז ניהול</h2>
+
+          {/* Main Title */}
+          <h1 className="text-5xl header-title-gradient uppercase tracking-tighter">
+            מרכז ניהול
+          </h1>
+
+          {/* Subtitle with Emoji context */}
+          <div className="flex flex-col items-center gap-6">
+            <p className="header-subtitle max-w-2xl">
+              ניהול משתמשים, בקשות הצטרפות והגדרות מערכת מתקדמות 🛡️
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-12 items-start">
@@ -463,29 +478,46 @@ const AdminPage: React.FC = () => {
         {activeTab === 'USERS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {editingMember ? (
-              <div className="bg-white border border-[#ff009f]/5 rounded-[3rem] p-8 md:p-12 shadow-xl max-w-4xl mx-auto">
-                <div className="flex items-center justify-between mb-12">
+              <div className="bg-[#0a0a14]/80 backdrop-blur-[25px] border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-500">
+                {/* Body-line Standard Header Stack */}
+                <div className="flex flex-col items-center text-center mb-12 space-y-4">
                   <button 
                     onClick={() => setEditingMember(null)}
-                    className="flex items-center gap-2 text-[#f063c1] hover:text-[#ff009f] font-black transition-all"
+                    className="absolute top-8 right-8 flex items-center gap-2 text-white/40 hover:text-white font-black transition-all group"
                   >
-                    <ChevronLeft size={20} /> חזרה לרשימה
+                    <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" /> 
+                    <span>חזרה</span>
                   </button>
-                  <h3 className="text-3xl font-black text-[#4a002e]">עריכת משתמש</h3>
+
+                  {/* Top Badge */}
+                  <div className="header-badge-glass">
+                    <UserCircle size={12} className="text-[#00f2fe]" />
+                    <span>USER PROFILE</span>
+                  </div>
+
+                  {/* Main Title */}
+                  <h1 className="text-4xl md:text-5xl header-title-gradient uppercase tracking-tighter">
+                    עריכת משתמש
+                  </h1>
+
+                  {/* Subtitle with Emoji context */}
+                  <p className="header-subtitle max-w-2xl">
+                    ניהול הרשאות, פרטי קשר ונוכחות דיגיטלית של חבר הנבחרת 👤
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                   {/* Avatar Section */}
-                  <div className="md:col-span-2 flex flex-col items-center mb-8">
+                  <div className="md:col-span-2 flex flex-col items-center mb-4">
                     <div className="relative group">
                       {editingMember.avatar ? (
-                        <img src={editingMember.avatar} className="w-32 h-32 rounded-[2.5rem] object-cover shadow-2xl" alt="" />
+                        <img src={editingMember.avatar} className="w-40 h-40 rounded-[3rem] object-cover shadow-2xl border-4 border-white/10" alt="" />
                       ) : (
-                        <div className="w-32 h-32 rounded-[2.5rem] bg-[#f7c1ea]/10 flex items-center justify-center text-[#f063c1]/40 shadow-inner">
-                          <UserCircle size={64} />
+                        <div className="w-40 h-40 rounded-[3rem] bg-white/5 flex items-center justify-center text-white/20 shadow-inner border-4 border-white/10">
+                          <UserCircle size={80} />
                         </div>
                       )}
-                      <label className="absolute inset-0 flex items-center justify-center bg-[#4a002e]/40 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      <label className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-[3rem] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm">
                         <Camera className="text-white" size={32} />
                         <input 
                           type="file" 
@@ -501,269 +533,336 @@ const AdminPage: React.FC = () => {
                         />
                       </label>
                     </div>
-                    <p className="mt-4 text-xs font-black text-[#f063c1]/60 uppercase tracking-widest">לחץ לשינוי תמונה</p>
+                    <p className="mt-4 text-[10px] font-black text-white/40 uppercase tracking-widest">לחץ לשינוי תמונה</p>
                     
-                    {/* Status & Role Toggles */}
-                    <div className="mt-8 flex flex-col gap-4 w-full max-w-xs">
-                      {/* Active/Suspended Toggle */}
-                      <div className="flex items-center justify-between p-4 bg-[#f7c1ea]/5 rounded-2xl">
-                        <span className="text-xs font-black text-[#4a002e]">סטטוס חשבון</span>
-                        <button 
-                          onClick={() => setEditingMember({ ...editingMember, isActive: !editingMember.isActive })}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                            editingMember.isActive !== false ? 'bg-[#ff009f]' : 'bg-[#f063c1]/20'
-                          }`}
+                    {/* Status Management - The Glass Slider */}
+                    <div className="mt-12 w-full max-w-md space-y-6">
+                      <div className="flex flex-col items-center gap-4">
+                        <label className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">סטטוס תפקיד במערכת</label>
+                        
+                        <div 
+                          className="relative w-full p-1 bg-[#0a0a14]/50 backdrop-blur-[40px] rounded-2xl border border-white/10 flex items-center overflow-hidden"
+                          onMouseEnter={() => setShowRoleWarning(true)}
+                          onMouseLeave={() => setShowRoleWarning(false)}
                         >
-                          <span className="sr-only">שנה סטטוס</span>
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                              editingMember.isActive !== false ? 'translate-x-6' : 'translate-x-1'
-                            }`}
-                          />
-                        </button>
-                        <span className={`text-[10px] font-black mr-2 ${editingMember.isActive !== false ? 'text-[#ff009f]' : 'text-[#f063c1]/40'}`}>
-                          {editingMember.isActive !== false ? 'פעיל' : 'מושעה'}
-                        </span>
-                      </div>
-
-                      {/* Member/Instructor Toggle */}
-                      <div className="flex items-center justify-between p-4 bg-[#f7c1ea]/5 rounded-2xl">
-                        <span className="text-xs font-black text-[#4a002e]">מדריך</span>
-                        <button 
-                          onClick={() => {
-                            const newRole = editingMember.role === 'Instructor' ? 'Member' : 'Instructor';
-                            setEditingMember({ ...editingMember, role: newRole });
-                          }}
-                          disabled={editingMember.role === 'Admin' && !isSuperAdmin}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                            editingMember.role === 'Instructor' ? 'bg-amber-500' : 'bg-[#f063c1]/20'
-                          } ${editingMember.role === 'Admin' && !isSuperAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          <span className="sr-only">שנה תפקיד מדריך</span>
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                              editingMember.role === 'Instructor' ? 'translate-x-6' : 'translate-x-1'
-                            }`}
-                          />
-                        </button>
-                        <span className={`text-[10px] font-black mr-2 ${editingMember.role === 'Instructor' ? 'text-amber-600' : 'text-[#f063c1]/40'}`}>
-                          {editingMember.role === 'Instructor' ? 'כן' : 'לא'}
-                        </span>
-                      </div>
-
-                      {/* Admin Toggle (Super Admin Only) */}
-                      {isSuperAdmin && (
-                        <div className="flex items-center justify-between p-4 bg-[#f7c1ea]/5 rounded-2xl border border-[#ff009f]/10">
-                          <span className="text-xs font-black text-[#4a002e]">מנהל מערכת</span>
-                          <button 
-                            onClick={() => {
-                              const newRole = editingMember.role === 'Admin' ? 'Member' : 'Admin';
-                              setEditingMember({ ...editingMember, role: newRole });
+                          {/* Active Indicator Bubble */}
+                          <motion.div
+                            className="absolute top-1 bottom-1 rounded-xl bg-gradient-to-r from-[#e20074] to-[#ff0090] shadow-[0_0_20px_rgba(226,0,116,0.5)] z-0"
+                            initial={false}
+                            animate={{
+                              right: editingMember.role === 'Member' ? '0%' : editingMember.role === 'Instructor' ? '33.33%' : '66.66%',
+                              width: '33.33%'
                             }}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                              editingMember.role === 'Admin' ? 'bg-[#ff009f]' : 'bg-[#f063c1]/20'
-                            }`}
-                          >
-                            <span className="sr-only">שנה תפקיד מנהל</span>
-                            <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                editingMember.role === 'Admin' ? 'translate-x-6' : 'translate-x-1'
-                              }`}
-                            />
-                          </button>
-                          <span className={`text-[10px] font-black mr-2 ${editingMember.role === 'Admin' ? 'text-[#ff009f]' : 'text-[#f063c1]/40'}`}>
-                            {editingMember.role === 'Admin' ? 'כן' : 'לא'}
-                          </span>
+                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                          />
+                          
+                          {[
+                            { id: 'Member', label: 'חבר' },
+                            { id: 'Instructor', label: 'מדריך' },
+                            { id: 'Admin', label: 'מנהל' }
+                          ].map((r) => (
+                            <button
+                              key={r.id}
+                              type="button"
+                              onFocus={() => setShowRoleWarning(true)}
+                              onBlur={() => setShowRoleWarning(false)}
+                              onClick={async () => {
+                                if (r.id === 'Admin' && !isSuperAdmin) return;
+                                if (!editingMember) return;
+                                
+                                const updatedMember = { ...editingMember, role: r.id as any };
+                                setEditingMember(updatedMember);
+                                
+                                try {
+                                  await updateMember(updatedMember);
+                                  showSuccess(`התפקיד עודכן ל-${r.label}`);
+                                } catch (err) {
+                                  showError('שגיאה בעדכון התפקיד');
+                                  // Rollback on error
+                                  setEditingMember(editingMember);
+                                }
+                              }}
+                              disabled={r.id === 'Admin' && !isSuperAdmin}
+                              className={`relative z-10 flex-1 py-3 text-xs font-black transition-all duration-500 outline-none ${
+                                editingMember.role === r.id ? 'text-white' : 'text-white/40 hover:text-white/60'
+                              } ${r.id === 'Admin' && !isSuperAdmin ? 'opacity-20 cursor-not-allowed' : 'focus:scale-110'}`}
+                            >
+                              {r.label}
+                            </button>
+                          ))}
                         </div>
-                      )}
+                      </div>
+
+                      {/* Permissions Guard Warning */}
+                      <AnimatePresence>
+                        {showRoleWarning && (
+                          <motion.div 
+                            initial={{ opacity: 0, height: 0, y: -10 }}
+                            animate={{ opacity: 1, height: 'auto', y: 0 }}
+                            exit={{ opacity: 0, height: 0, y: -10 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-4 bg-white/5 backdrop-blur-md rounded-2xl border border-rose-500/30 text-center">
+                              <motion.p 
+                                animate={{ opacity: [0.6, 1, 0.6] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                className="text-[11px] text-white/80 font-bold leading-relaxed"
+                              >
+                                ⚠️ שים לב: שינוי סטטוס המשתמש מעדכן באופן מיידי את <span className="text-rose-500 font-black drop-shadow-[0_0_8px_rgba(244,63,94,0.6)]">הרשאות הגישה</span> שלו במערכת.
+                              </motion.p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Account Active/Suspended Toggle - Custom Design */}
+                      <div className="status-container my-6 p-6 rounded-2xl bg-[#0a0a14]/50 backdrop-blur-xl border border-white/10 transition-all duration-300">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="text-white font-bold text-lg">סטטוס חשבון</h3>
+                            <p className="text-white/40 text-xs">קבע האם המשתמש רשאי לגשת למערכת</p>
+                          </div>
+                          
+                          <label className="relative inline-flex items-center cursor-pointer scale-125">
+                            <input 
+                              type="checkbox" 
+                              className="sr-only peer" 
+                              checked={editingMember.isActive !== false} 
+                              onChange={async (e) => {
+                                if (!editingMember) return;
+                                const updatedMember = { ...editingMember, isActive: e.target.checked };
+                                setEditingMember(updatedMember);
+                                // We keep the immediate update logic as requested previously for responsiveness
+                                try {
+                                  await updateMember(updatedMember);
+                                  showSuccess(`הסטטוס עודכן ל-${updatedMember.isActive ? 'פעיל' : 'מושעה'}`);
+                                } catch (err) {
+                                  showError('שגיאה בעדכון הסטטוס');
+                                  setEditingMember(editingMember);
+                                }
+                              }} 
+                            />
+                            <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer 
+                                            peer-checked:after:translate-x-full peer-checked:after:border-white 
+                                            after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                                            after:bg-white after:border-gray-300 after:border after:rounded-full 
+                                            after:h-5 after:w-5 after:transition-all 
+                                            peer-checked:bg-emerald-500">
+                            </div>
+                          </label>
+                        </div>
+
+                        {/* Dynamic Warning - Appears only when suspended */}
+                        {editingMember.isActive === false && (
+                          <motion.div 
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="mt-6 p-4 bg-rose-500/10 border-r-4 border-rose-500 rounded-xl"
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-rose-500">⚠️</span>
+                              <span className="text-rose-500 font-black text-sm">פעולה דרמטית: השעיית חשבון</span>
+                            </div>
+                            <p className="text-white/60 text-xs leading-relaxed font-medium">
+                              השעיית המשתמש תמנע ממנו גישה מיידית לאתר, תסיר אותו מכל פעילות פעילה 
+                              ותגרע את נתוניו מהסטטיסטיקה העכשווית של "חבל זוג".
+                            </p>
+                          </motion.div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   {/* Basic Info */}
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-2">שם פרטי</label>
+                    <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-2">שם פרטי</label>
                     <input 
                       type="text"
                       value={editingMember.firstName || ''}
                       onChange={(e) => setEditingMember({ ...editingMember, firstName: e.target.value })}
-                      className="w-full p-4 bg-[#f7c1ea]/10 border-none rounded-2xl font-black text-[#4a002e] focus:ring-2 ring-[#ff009f]/30 transition-all"
+                      className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl font-black text-white focus:ring-2 ring-[#ff009f]/30 transition-all outline-none"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-2">שם משפחה</label>
+                    <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-2">שם משפחה</label>
                     <input 
                       type="text"
                       value={editingMember.lastName || ''}
                       onChange={(e) => setEditingMember({ ...editingMember, lastName: e.target.value })}
-                      className="w-full p-4 bg-[#f7c1ea]/10 border-none rounded-2xl font-black text-[#4a002e] focus:ring-2 ring-[#ff009f]/30 transition-all"
+                      className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl font-black text-white focus:ring-2 ring-[#ff009f]/30 transition-all outline-none"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-2">אימייל</label>
+                    <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-2">אימייל</label>
                     <input 
                       type="email"
                       value={editingMember.email}
                       onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
-                      className="w-full p-4 bg-[#f7c1ea]/10 border-none rounded-2xl font-black text-[#4a002e] focus:ring-2 ring-[#ff009f]/30 transition-all"
+                      className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl font-black text-white focus:ring-2 ring-[#ff009f]/30 transition-all outline-none"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-2">טלפון נייד</label>
+                    <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-2">טלפון נייד</label>
                     <input 
                       type="text"
                       value={editingMember.mobile}
                       onChange={(e) => setEditingMember({ ...editingMember, mobile: e.target.value })}
-                      className="w-full p-4 bg-[#f7c1ea]/10 border-none rounded-2xl font-black text-[#4a002e] focus:ring-2 ring-[#ff009f]/30 transition-all text-left"
+                      className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl font-black text-white focus:ring-2 ring-[#ff009f]/30 transition-all text-left outline-none"
                       dir="ltr"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-2">ביוגרפיה</label>
+                    <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-2">ביוגרפיה</label>
                     <textarea 
                       value={editingMember.bio}
                       onChange={(e) => setEditingMember({ ...editingMember, bio: e.target.value })}
-                      className="w-full p-4 bg-[#f7c1ea]/10 border-none rounded-2xl font-black text-[#4a002e] focus:ring-2 ring-[#ff009f]/30 transition-all min-h-[120px]"
+                      className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl font-black text-white focus:ring-2 ring-[#ff009f]/30 transition-all min-h-[120px] outline-none"
                     />
                   </div>
 
                   {/* Social Networks */}
-                  <div className="md:col-span-2 pt-8 border-t border-[#ff009f]/10">
-                    <h4 className="text-lg font-black text-[#4a002e] mb-6">רשתות חברתיות</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2 pt-12 border-t border-white/10">
+                    <h4 className="text-xl font-black text-white mb-8">רשתות חברתיות</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-[#147D8F]/60 uppercase tracking-widest mr-2">פייסבוק</label>
+                        <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-2">פייסבוק</label>
                         <input 
                           type="text"
                           value={editingMember.facebookUrl || ''}
                           onChange={(e) => setEditingMember({ ...editingMember, facebookUrl: e.target.value })}
                           placeholder="https://facebook.com/..."
-                          className="w-full p-4 bg-[#3FA7D6]/5 border-none rounded-2xl font-black text-[#0B3C5D] focus:ring-2 focus:ring-[#3FA7D6] transition-all text-left"
+                          className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl font-black text-white focus:ring-2 ring-[#ff009f]/30 transition-all text-left outline-none"
                           dir="ltr"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-[#147D8F]/60 uppercase tracking-widest mr-2">אינסטגרם</label>
+                        <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-2">אינסטגרם</label>
                         <input 
                           type="text"
                           value={editingMember.instagramUrl || ''}
                           onChange={(e) => setEditingMember({ ...editingMember, instagramUrl: e.target.value })}
                           placeholder="https://instagram.com/..."
-                          className="w-full p-4 bg-[#3FA7D6]/5 border-none rounded-2xl font-black text-[#0B3C5D] focus:ring-2 focus:ring-[#3FA7D6] transition-all text-left"
+                          className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl font-black text-white focus:ring-2 ring-[#ff009f]/30 transition-all text-left outline-none"
                           dir="ltr"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-[#147D8F]/60 uppercase tracking-widest mr-2">טיקטוק</label>
+                        <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-2">טיקטוק</label>
                         <input 
                           type="text"
                           value={editingMember.tiktokUrl || ''}
                           onChange={(e) => setEditingMember({ ...editingMember, tiktokUrl: e.target.value })}
                           placeholder="https://tiktok.com/@..."
-                          className="w-full p-4 bg-[#3FA7D6]/5 border-none rounded-2xl font-black text-[#0B3C5D] focus:ring-2 focus:ring-[#3FA7D6] transition-all text-left"
+                          className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl font-black text-white focus:ring-2 ring-[#ff009f]/30 transition-all text-left outline-none"
                           dir="ltr"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-[#147D8F]/60 uppercase tracking-widest mr-2">לינקדאין</label>
+                        <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-2">לינקדאין</label>
                         <input 
                           type="text"
                           value={editingMember.linkedinUrl || ''}
                           onChange={(e) => setEditingMember({ ...editingMember, linkedinUrl: e.target.value })}
                           placeholder="https://linkedin.com/in/..."
-                          className="w-full p-4 bg-[#3FA7D6]/5 border-none rounded-2xl font-black text-[#0B3C5D] focus:ring-2 focus:ring-[#3FA7D6] transition-all text-left"
+                          className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl font-black text-white focus:ring-2 ring-[#ff009f]/30 transition-all text-left outline-none"
                           dir="ltr"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-[#147D8F]/60 uppercase tracking-widest mr-2">טוויטר / X</label>
+                        <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-2">טוויטר / X</label>
                         <input 
                           type="text"
                           value={editingMember.twitterUrl || ''}
                           onChange={(e) => setEditingMember({ ...editingMember, twitterUrl: e.target.value })}
                           placeholder="https://twitter.com/..."
-                          className="w-full p-4 bg-[#f7c1ea]/10 border-none rounded-2xl font-black text-[#4a002e] focus:ring-2 ring-[#ff009f]/30 transition-all text-left"
+                          className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl font-black text-white focus:ring-2 ring-[#ff009f]/30 transition-all text-left outline-none"
                           dir="ltr"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-2">אתר אישי</label>
+                        <label className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-2">אתר אישי</label>
                         <input 
                           type="text"
                           value={editingMember.websiteUrl || ''}
                           onChange={(e) => setEditingMember({ ...editingMember, websiteUrl: e.target.value })}
                           placeholder="https://..."
-                          className="w-full p-4 bg-[#f7c1ea]/10 border-none rounded-2xl font-black text-[#4a002e] focus:ring-2 ring-[#ff009f]/30 transition-all text-left"
+                          className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl font-black text-white focus:ring-2 ring-[#ff009f]/30 transition-all text-left outline-none"
                           dir="ltr"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="md:col-span-2 pt-12 flex flex-col gap-4">
+                  <div className="md:col-span-2 pt-12 flex flex-col gap-6">
                     {editingMember.isActive !== false ? (
-                      <>
-                        <div className="flex gap-4">
-                          <button 
-                            type="button"
-                            onClick={async () => {
-                              if (!editingMember) return;
-                              setIsProcessing(editingMember.id);
-                              try {
-                                await updateMember(editingMember);
-                                setEditingMember(null);
-                                showSuccess('השינויים נשמרו בהצלחה');
-                              } catch (err) {
-                                showError('שגיאה בשמירת הנתונים');
-                              } finally {
-                                setIsProcessing(null);
-                              }
-                            }}
-                            disabled={isProcessing === editingMember.id}
-                            className="flex-1 py-4 bg-[#4a002e] text-white rounded-2xl font-black text-base shadow-lg shadow-[#4a002e]/20 hover:bg-[#ff009f] transition-all flex items-center justify-center gap-2 active:scale-95"
-                          >
-                            {isProcessing === editingMember.id ? (
-                              <Loader2 className="animate-spin" size={20} />
-                            ) : (
-                              <>
-                                <Save size={20} /> שמירה
-                              </>
-                            )}
-                          </button>
+                      <div className="flex flex-col md:flex-row gap-4">
+                        <button 
+                          type="button"
+                          onClick={async () => {
+                            if (!editingMember) return;
+                            setIsProcessing(editingMember.id);
+                            try {
+                              // Ensure we are sending the latest state
+                              await updateMember(editingMember);
+                              setEditingMember(null);
+                              showSuccess('השינויים נשמרו בהצלחה');
+                            } catch (err) {
+                              console.error("Error saving member:", err);
+                              showError('שגיאה בשמירת הנתונים');
+                            } finally {
+                              setIsProcessing(null);
+                            }
+                          }}
+                          disabled={isProcessing === editingMember.id}
+                          className={`flex-[2] py-5 rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 ${
+                            editingMember.isActive !== false 
+                              ? 'bg-gradient-to-r from-[#00f2fe] to-[#4facfe] text-[#0a0a14] shadow-[0_0_20px_rgba(0,242,254,0.3)] hover:shadow-[0_0_30px_rgba(0,242,254,0.5)]' 
+                              : 'bg-rose-600 text-white shadow-[0_0_20px_rgba(225,29,72,0.4)] hover:bg-rose-700'
+                          }`}
+                        >
+                          {isProcessing === editingMember.id ? (
+                            <Loader2 className="animate-spin" size={24} />
+                          ) : (
+                            <>
+                              <Save size={24} /> 
+                              {editingMember.isActive !== false ? 'שמירת שינויים' : 'אשר והשעה משתמש'}
+                            </>
+                          )}
+                        </button>
 
-                          <button 
-                            type="button"
-                            onClick={async () => {
-                              if (!editingMember) return;
-                              showConfirm({
-                                message: `האם להעביר את ${editingMember.firstName} ${editingMember.lastName} לארכיון?`,
-                                onConfirm: async () => {
-                                  setIsProcessing(editingMember.id);
-                                  try {
-                                    await archiveMember(editingMember.id);
-                                    setEditingMember(null);
-                                    setActiveTab('ARCHIVE');
-                                    showSuccess('המשתמש הועבר לארכיון בהצלחה');
-                                  } catch (err: any) {
-                                    showError('שגיאה: ' + err.message);
-                                  } finally {
-                                    setIsProcessing(null);
-                                  }
+                        <button 
+                          type="button"
+                          onClick={async () => {
+                            if (!editingMember) return;
+                            showConfirm({
+                              message: `האם להעביר את ${editingMember.firstName} ${editingMember.lastName} לארכיון?`,
+                              onConfirm: async () => {
+                                setIsProcessing(editingMember.id);
+                                try {
+                                  await archiveMember(editingMember.id);
+                                  setEditingMember(null);
+                                  setActiveTab('ARCHIVE');
+                                  showSuccess('המשתמש הועבר לארכיון בהצלחה');
+                                } catch (err: any) {
+                                  showError('שגיאה: ' + err.message);
+                                } finally {
+                                  setIsProcessing(null);
                                 }
-                              });
-                            }}
-                            disabled={isProcessing === editingMember.id}
-                            className="flex-1 py-4 bg-[#ff009f] text-white rounded-2xl font-black text-base shadow-lg shadow-[#ff009f]/20 hover:bg-[#4a002e] transition-all flex items-center justify-center gap-2 active:scale-95"
-                          >
-                            <Archive size={20} /> ארכיון
-                          </button>
-                        </div>
-                      </>
+                              }
+                            });
+                          }}
+                          disabled={isProcessing === editingMember.id}
+                          className="flex-1 py-5 bg-white/5 backdrop-blur-md border border-white/10 text-white/60 hover:text-white hover:bg-white/10 rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                        >
+                          <Archive size={24} /> ארכיון
+                        </button>
+                      </div>
                     ) : (
-                      <div className="flex gap-4">
+                      <div className="flex flex-col md:flex-row gap-4">
                         <button 
                           type="button"
                           onClick={async () => {
@@ -781,9 +880,9 @@ const AdminPage: React.FC = () => {
                             }
                           }}
                           disabled={isProcessing === editingMember.id}
-                          className="flex-1 py-4 bg-[#ff009f] text-white rounded-2xl font-black text-base shadow-lg shadow-[#ff009f]/20 hover:bg-[#4a002e] transition-all flex items-center justify-center gap-2 active:scale-95"
+                          className="flex-[2] py-5 bg-gradient-to-r from-[#00f2fe] to-[#4facfe] text-[#0a0a14] rounded-[2rem] font-black text-lg shadow-[0_0_20px_rgba(0,242,254,0.3)] hover:shadow-[0_0_30px_rgba(0,242,254,0.5)] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
                         >
-                          <RefreshCw size={20} /> החייאת משתמש
+                          <RefreshCw size={24} /> החייאת משתמש
                         </button>
 
                         <button 
@@ -807,9 +906,9 @@ const AdminPage: React.FC = () => {
                             });
                           }}
                           disabled={isProcessing === editingMember.id}
-                          className="flex-1 py-4 bg-[#4a002e] text-white rounded-2xl font-black text-base hover:bg-[#ff009f] transition-all flex items-center justify-center gap-2 active:scale-95"
+                          className="flex-1 py-5 bg-rose-500/10 border border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
                         >
-                          <Trash2 size={20} /> מחיקה לצמיתות
+                          <Trash2 size={24} /> מחיקה לצמיתות
                         </button>
                       </div>
                     )}

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { collection, addDoc, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject, getMetadata } from 'firebase/storage';
-import { Plus, User, Loader2, Trash2, X, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Plus, User, Loader2, Trash2, X, CheckCircle2, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import { getDb, getStorageInstance } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -135,24 +135,36 @@ const GalleryPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white text-right animate-in fade-in duration-700" dir="rtl">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-        <div>
-          <h2 className="text-5xl font-black italic tracking-tighter text-[#006994] mb-2">הליינאפ התמונות</h2>
-          <p className="text-slate-500 font-black text-[11px] uppercase tracking-widest">
-            רגעים מהמים • {galleryItems.length} תמונות אופטימליות
-          </p>
+      {/* Body-line Standard Header Stack */}
+      <div className="flex flex-col items-center text-center mb-10 space-y-4">
+        {/* Top Badge */}
+        <div className="header-badge-glass">
+          <ImageIcon size={12} className="text-[#00f2fe]" />
+          <span>התמונות</span>
         </div>
-        
-        <div className="flex flex-col items-end gap-3">
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="flex items-center gap-4 px-10 py-5 bg-[#006994] text-white rounded-[2rem] font-black text-md hover:bg-[#4E8294] transition-all shadow-xl active:scale-95 disabled:opacity-50 group"
-          >
-            {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />}
-            <span>{isUploading ? 'מעבד תמונות...' : 'העלאת תמונות'}</span>
-            <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileUpload} />
-          </button>
+
+        {/* Main Title */}
+        <h1 className="text-5xl header-title-gradient uppercase tracking-tighter">
+          ליינאפ התמונות
+        </h1>
+
+        {/* Subtitle with Emoji context */}
+        <div className="flex flex-col items-center gap-6">
+          <p className="header-subtitle max-w-2xl">
+            רגעים מהמים • {galleryItems.length} תמונות אופטימליות של הגולשים שלנו 📸
+          </p>
+          
+          <div className="flex flex-col items-center gap-3">
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="flex items-center gap-4 px-10 py-5 bg-[#006994] text-white rounded-[2rem] font-black text-md hover:bg-[#4E8294] transition-all shadow-xl active:scale-95 disabled:opacity-50 group"
+            >
+              {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />}
+              <span>{isUploading ? 'מעבד תמונות...' : 'העלאת תמונות'}</span>
+              <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileUpload} />
+            </button>
+          </div>
         </div>
       </div>
 

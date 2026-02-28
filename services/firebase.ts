@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, getDocs, Query, QuerySnapshot } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { trackBandwidth } from '../utils/bandwidthTracker';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCzzpZyz8rBhtnskhbkXB7_dTfHgXLPHfs",
@@ -23,15 +24,38 @@ const storage = getStorage(app);
 
 export let sessionReadCount = 0;
 
+// Initialize read count from localStorage if it's from the same day
+if (typeof window !== 'undefined') {
+  const savedData = localStorage.getItem('db_read_stats');
+  if (savedData) {
+    const { count, date } = JSON.parse(savedData);
+    const today = new Date().toDateString();
+    if (date === today) {
+      sessionReadCount = count;
+    }
+  }
+}
+
+export let db_status: 'ONLINE' | 'OFFLINE' = 'ONLINE';
+
+export const setDbStatus = (status: 'ONLINE' | 'OFFLINE') => {
+  db_status = status;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('kill_switch_active', String(status === 'OFFLINE'));
+    window.dispatchEvent(new CustomEvent('db-status-changed', { detail: status }));
+  }
+};
+
 /**
  * Wrapper חכם לשליפת מסמכים שסופר קריאות בזמן אמת
  */
 export const trackedGetDocs = async (query: Query): Promise<QuerySnapshot> => {
     // בדיקת Kill Switch
-    const isKillSwitchActive = typeof window !== 'undefined' && localStorage.getItem('kill_switch_active') === 'true';
-    if (isKillSwitchActive) {
-      console.warn('Kill Switch is active. Blocking Firebase read.');
-      // במקרה של Kill Switch, אנחנו זורקים שגיאה כדי שה-DataContext ישתמש ב-Cache
+    // מאפשרים קריאה רק אם מדובר בבדיקת לוגין (members) כדי למנוע נעילה מוחלטת של מנהלים
+    const isLoginQuery = (query as any)._query?.path?.segments?.includes('members');
+
+    if (db_status === 'OFFLINE' && !isLoginQuery) {
+      console.warn('Database is OFFLINE. Blocking Firebase read.');
       throw new Error('QUOTA_EXCEEDED_OR_KILL_SWITCH');
     }
 
@@ -39,6 +63,20 @@ export const trackedGetDocs = async (query: Query): Promise<QuerySnapshot> => {
     // Firebase מחייב על כל מסמך שחזר + 1 על השאילתה עצמה
     const reads = snapshot.size || 1; 
     sessionReadCount += reads;
+    
+    // Estimate bandwidth: Average doc size 1.5KB + overhead
+    const estimatedInBytes = reads * 1536; 
+    trackBandwidth(estimatedInBytes, 'in');
+    // Outgoing query overhead (approx 200 bytes)
+    trackBandwidth(200, 'out');
+    
+    // Persist to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('db_read_stats', JSON.stringify({
+        count: sessionReadCount,
+        date: new Date().toDateString()
+      }));
+    }
     
     // עדכון אירוע מותאם אישית כדי שחדר המכונות יתעדכן
     window.dispatchEvent(new CustomEvent('db-read-update', { detail: sessionReadCount }));

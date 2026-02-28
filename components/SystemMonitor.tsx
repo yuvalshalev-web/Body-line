@@ -3,13 +3,177 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
-import { Server, Database, Activity, AlertCircle, Power, ShieldAlert } from 'lucide-react';
+import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getStorageSizeMB } from '../utils/storageStats';
 import StorageDisplay from './StorageDisplay';
 import { sessionReadCount } from '../services/firebase';
+import { useData } from '../contexts/DataContext';
+import { get24hBandwidth } from '../utils/bandwidthTracker';
+
+interface CircularRingProps {
+  value: number;
+  label: string;
+  sublabel: string;
+  gradient: [string, string];
+  ringClass?: string;
+  animateClass?: string;
+  isHigh?: boolean;
+  mode?: 'classic' | 'neon';
+}
+
+const CircularRing: React.FC<CircularRingProps> = ({ 
+  value, label, sublabel, gradient, ringClass, animateClass, isHigh, mode = 'classic'
+}) => {
+  const radius = 45;
+  const circumference = 2 * Math.PI * radius;
+  const [displayValue, setDisplayValue] = useState(0);
+  
+  useEffect(() => {
+    const duration = 1500;
+    const steps = 60;
+    const stepValue = value / steps;
+    const stepTime = duration / steps;
+    let current = 0;
+    
+    const timer = setInterval(() => {
+      current += stepValue;
+      if (current >= value) {
+        setDisplayValue(value);
+        clearInterval(timer);
+      } else {
+        setDisplayValue(current);
+      }
+    }, stepTime);
+    
+    return () => clearInterval(timer);
+  }, [value]);
+
+  const offset = circumference - (value / 100) * circumference;
+  const id = React.useId().replace(/:/g, '');
+
+  if (mode === 'neon') {
+    return (
+      <div className={`flex flex-col items-center justify-center p-4 ${animateClass || ''}`}>
+        <div className="relative w-40 h-40 flex items-center justify-center">
+          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            <circle
+              cx="50"
+              cy="50"
+              r={radius}
+              stroke="rgba(255,255,255,0.05)"
+              strokeWidth="10"
+              fill="none"
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r={radius}
+              stroke={gradient[0]}
+              strokeWidth="10"
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+              fill="none"
+              className={`gauge-ring-neon ${ringClass || ''}`}
+            />
+            <text
+              x="50"
+              y="50"
+              textAnchor="middle"
+              dominantBaseline="central"
+              className="gauge-percentage-neon transform rotate-90"
+              style={{ transformOrigin: '50px 50px' }}
+            >
+              {displayValue.toFixed(0)}%
+            </text>
+            <text
+              x="50"
+              y="75"
+              textAnchor="middle"
+              className="gauge-label-neon transform rotate-90"
+              style={{ transformOrigin: '50px 50px' }}
+            >
+              {label}
+            </text>
+          </svg>
+        </div>
+        <p className="text-[10px] font-black text-white/40 mt-4 tabular-nums uppercase tracking-widest">
+          {sublabel}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex flex-col items-center justify-center p-4 ${animateClass || ''}`}>
+      <div className="glass-gauge-container">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id={`grad-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={gradient[0]} />
+              <stop offset="50%" stopColor={gradient[1]}>
+                <animate attributeName="offset" values="0;1;0" dur="2s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="100%" stopColor={gradient[0]} />
+            </linearGradient>
+            
+            <filter id={`glow-${id}`}>
+              <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          
+          {/* Background Ring (Track) */}
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            stroke="rgba(255,255,255,0.05)"
+            strokeWidth="10"
+            fill="transparent"
+          />
+          
+          {/* Progress Ring (Fill) */}
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            stroke={`url(#grad-${id})`}
+            strokeWidth="10"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            fill="transparent"
+            className={`gauge-ring-fill ${ringClass || ''}`}
+            style={{ 
+              filter: isHigh ? 'brightness(1.5) saturate(200%)' : `url(#glow-${id})`
+            }}
+          />
+        </svg>
+        
+        <div className="absolute inset-0 flex items-center justify-center flex-col">
+          <span className="gauge-value">
+            {displayValue.toFixed(0)}%
+          </span>
+          <span className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mt-1">
+            {label}
+          </span>
+        </div>
+      </div>
+      <p className="text-[10px] font-black text-white/60 mt-6 tabular-nums uppercase tracking-widest">
+        {sublabel}
+      </p>
+    </div>
+  );
+};
 
 const SystemMonitor: React.FC = () => {
+  const { dbStatus, toggleDbStatus } = useData();
+  const [designMode, setDesignMode] = useState<'classic' | 'neon'>('classic');
   const [data, setData] = useState<any>({
     dbSize: 0,
     errorRate: 0,
@@ -19,7 +183,6 @@ const SystemMonitor: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [liveReads, setLiveReads] = useState(sessionReadCount);
   const [readHistory, setReadHistory] = useState<{ time: string, reads: number }[]>(() => {
-    // Initialize with some empty points for a better look
     const now = new Date();
     return Array.from({ length: 15 }).map((_, i) => {
       const d = new Date(now.getTime() - (15 - i) * 5000);
@@ -30,9 +193,35 @@ const SystemMonitor: React.FC = () => {
     });
   });
   const [lastReadCount, setLastReadCount] = useState(sessionReadCount);
-  const [isKillSwitchActive, setIsKillSwitchActive] = useState(() => {
-    return localStorage.getItem('kill_switch_active') === 'true';
-  });
+  const [bandwidthData, setBandwidthData] = useState(get24hBandwidth());
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const isKillSwitchActive = dbStatus === 'OFFLINE';
+
+  // Countdown Logic
+  useEffect(() => {
+    if (countdown === null) return;
+    
+    if (countdown === 0) {
+      toggleDbStatus();
+      setCountdown(null);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setCountdown(prev => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [countdown, toggleDbStatus]);
+
+  useEffect(() => {
+    const handleBandwidthUpdate = () => {
+      setBandwidthData(get24hBandwidth());
+    };
+    window.addEventListener('bandwidth-update', handleBandwidthUpdate);
+    return () => window.removeEventListener('bandwidth-update', handleBandwidthUpdate);
+  }, []);
 
   useEffect(() => {
     const handleReadUpdate = (e: any) => {
@@ -90,12 +279,17 @@ const SystemMonitor: React.FC = () => {
     fetchStats();
   }, []);
 
-  const toggleKillSwitch = () => {
-    const newState = !isKillSwitchActive;
-    setIsKillSwitchActive(newState);
-    localStorage.setItem('kill_switch_active', String(newState));
-    // In a real app, this would be checked in the firebase service
-    window.location.reload(); // Force reload to apply switch
+  const handleButtonClick = () => {
+    if (isKillSwitchActive) {
+      // Reconnecting doesn't need a countdown, just do it
+      toggleDbStatus();
+    } else if (countdown !== null) {
+      // Abort countdown
+      setCountdown(null);
+    } else {
+      // Start shutdown process
+      setShowConfirmModal(true);
+    }
   };
 
   if (loading && !data.traffic.length) return <div className="p-8 text-center font-black text-slate-400 animate-pulse">מתחבר לחדר מכונות...</div>;
@@ -135,63 +329,132 @@ const SystemMonitor: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 font-mono min-h-[400px]" dir="rtl">
-      {/* Technical Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg">
-            <Server size={24} />
-          </div>
-          <div>
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">חדר מכונות</h2>
-            <p className="text-slate-400 font-bold text-sm">ניטור תשתיות וביצועי מערכת</p>
+      {/* Technical Header - Body-line Standard Stack */}
+      <div className="flex flex-col items-center text-center mb-10 space-y-4">
+        {/* Top Badge */}
+        <div className="header-badge-glass">
+          <Activity size={12} className="text-[#00f2fe]" />
+          <span>SYSTEM DIVE ANALYTICS</span>
+        </div>
+
+        {/* Main Title */}
+        <h1 className="text-5xl header-title-gradient uppercase tracking-tighter">
+          חדר מכונות
+        </h1>
+
+        {/* Subtitle with Emoji context */}
+        <div className="flex flex-col items-center gap-3">
+          <p className="header-subtitle max-w-2xl">
+            ניטור תשתיות וביצועי מערכת בזמן אמת. כל המדדים הקריטיים תחת שליטה מלאה ⚙️
+          </p>
+          
+          <div className="flex items-center justify-center gap-3">
+            <button 
+              onClick={() => {
+                setLoading(true);
+                const fetchStats = async () => {
+                  try {
+                    const [statsRes, realStorageSize] = await Promise.all([
+                      fetch('/api/stats/system'),
+                      getStorageSizeMB()
+                    ]);
+                    if (!statsRes.ok) throw new Error(`Server error: ${statsRes.status}`);
+                    const statsJson = await statsRes.json();
+                    setData(statsJson);
+                    setStorageSize(realStorageSize);
+                  } catch (err) {
+                    console.error('Error fetching system stats:', err);
+                  } finally {
+                    setLoading(false);
+                  }
+                };
+                fetchStats();
+              }}
+              className="p-1.5 bg-white/5 hover:bg-white/10 rounded-full text-white/40 hover:text-white transition-all border border-white/5"
+              title="Refresh Stats"
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            </button>
           </div>
         </div>
 
-        <button 
-          onClick={toggleKillSwitch}
-          className={`relative group flex items-center gap-4 px-8 py-4 rounded-2xl font-black text-sm transition-all border-4 overflow-hidden ${
-            isKillSwitchActive 
-              ? 'bg-rose-700 text-white border-rose-400 shadow-[0_0_50px_rgba(225,29,72,0.8)]' 
-              : 'bg-white text-rose-600 border-rose-600 hover:bg-rose-600 hover:text-white shadow-[0_0_20px_rgba(225,29,72,0.2)]'
-          }`}
-          title="Emergency Database Shutdown"
-        >
-          {/* Hazard Stripes Background for Active State */}
-          {isKillSwitchActive && (
-            <div className="absolute inset-0 opacity-20 pointer-events-none" 
-                 style={{ 
-                   backgroundImage: 'linear-gradient(45deg, #000 25%, transparent 25%, transparent 50%, #000 50%, #000 75%, transparent 75%, transparent)',
-                   backgroundSize: '20px 20px'
-                 }} 
-            />
-          )}
-          
-          <div className="relative z-10 flex items-center gap-3">
-            {isKillSwitchActive ? (
-              <motion.div
-                animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
-                transition={{ repeat: Infinity, duration: 0.5 }}
-              >
-                <ShieldAlert size={24} className="text-white" />
-              </motion.div>
-            ) : (
-              <AlertCircle size={24} className="group-hover:animate-ping" />
+        {/* Emergency Button - Centered */}
+        <div className="w-full flex justify-center pt-4">
+          <button 
+            onClick={handleButtonClick}
+            className="btn-emergency-shutdown"
+            title={isKillSwitchActive ? "Reconnect to database" : countdown !== null ? "Click to Abort Shutdown" : "Emergency Database Shutdown"}
+          >
+            <div className="relative z-10 flex items-center">
+              {isKillSwitchActive ? (
+                <span>RECONNECT TO DATABASE</span>
+              ) : countdown !== null ? (
+                <span>SHUTTING DOWN IN {countdown}s...</span>
+              ) : (
+                <span>EMERGENCY DATABASE SHUTDOWN</span>
+              )}
+            </div>
+
+            {/* Pulse Ring for Active State */}
+            {(isKillSwitchActive || countdown !== null) && (
+              <div className="absolute inset-0 border-4 border-white/30 rounded-xl animate-ping pointer-events-none" />
             )}
+          </button>
+        </div>
+      </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-lg animate-in fade-in">
+          <div className="bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col border-4 border-[var(--tmobile-primary)]" dir="rtl">
+            <div className="bg-[var(--tmobile-primary)] p-8 text-white flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <ShieldAlert size={32} className="text-white" />
+              </div>
+              <div>
+                <h4 className="font-black text-xl uppercase tracking-tight">פרוטוקול חירום</h4>
+                <p className="text-xs opacity-70 font-bold">השבתת מסד נתונים מיידית</p>
+              </div>
+            </div>
             
-            <div className="flex flex-col items-start leading-none">
-              <span className="text-[10px] uppercase tracking-[0.2em] opacity-70 mb-1">Emergency Protocol</span>
-              <span className="text-lg tracking-tighter">
-                {isKillSwitchActive ? 'SYSTEM OFFLINE' : 'KILL SWITCH'}
-              </span>
+            <div className="p-8 space-y-6">
+              <div className="space-y-4">
+                <p className="text-slate-900 font-black text-lg leading-tight">
+                  האם אתה בטוח שברצונך להשבית את מסד הנתונים?
+                </p>
+                <div className="bg-rose-50 p-4 rounded-2xl border border-rose-100 space-y-2">
+                  <p className="text-rose-600 text-sm font-bold flex items-start gap-2">
+                    <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                    <span>פעולה זו תנתק את כל המשתמשים המחוברים ותחסום כל גישה למידע באתר.</span>
+                  </p>
+                  <p className="text-rose-600 text-sm font-bold flex items-start gap-2">
+                    <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                    <span>האתר יפסיק לתפקד עד שתפעיל מחדש את הגישה.</span>
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-4 pt-2">
+                <button 
+                  onClick={() => {
+                    setShowConfirmModal(false);
+                    setCountdown(10);
+                  }}
+                  className="flex-1 py-4 bg-[var(--tmobile-primary)] text-white rounded-2xl font-black text-lg hover:opacity-90 transition-all shadow-lg active:scale-95"
+                >
+                  אישור (הפעל טיימר)
+                </button>
+                <button 
+                  onClick={() => setShowConfirmModal(false)}
+                  className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-lg hover:bg-slate-200 transition-all active:scale-95"
+                >
+                  ביטול
+                </button>
+              </div>
             </div>
           </div>
-
-          {/* Pulse Ring for Active State */}
-          {isKillSwitchActive && (
-            <div className="absolute inset-0 border-4 border-white/30 rounded-2xl animate-ping pointer-events-none" />
-          )}
-        </button>
-      </div>
+        </div>
+      )}
 
       {liveReads > 1000 && (
         <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-center gap-4 text-rose-600 animate-pulse">
@@ -200,64 +463,112 @@ const SystemMonitor: React.FC = () => {
         </div>
       )}
 
-      {/* Technical Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-slate-900 p-6 rounded-[2rem] text-white flex flex-col justify-between h-40">
-          <div className="flex justify-between items-start">
-            <Database size={20} className="text-[#00FFFF]" />
-            <span className="text-[8px] font-black opacity-50 uppercase tracking-widest">Live Quota</span>
-          </div>
-          <div>
-            <p className="text-3xl font-black tabular-nums">{liveReads.toLocaleString()}</p>
-            <p className="text-[10px] opacity-50">Database Usage (Live)</p>
-          </div>
-        </div>
+      {/* Health-Check Matrix (2x2 Grid) */}
+      <div className={`${designMode === 'neon' ? 'dashboard-container-neon' : 'health-matrix-glass p-12'} mb-12 shadow-2xl relative`}>
+        {/* Design Toggle */}
+        <button 
+          onClick={() => setDesignMode(prev => prev === 'classic' ? 'neon' : 'classic')}
+          className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white/40 hover:text-white transition-all z-50"
+          title="Switch Design Mode"
+        >
+          <RefreshCw size={16} className={designMode === 'neon' ? 'rotate-180' : ''} />
+        </button>
 
-        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between h-40">
-          <div className="flex justify-between items-start">
-            <Database size={20} className="text-[#006994]" />
-            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Database</span>
-          </div>
-          <div>
-            <p className="text-3xl font-black text-slate-900 tabular-nums">{data.dbSize}MB</p>
-            <p className="text-[10px] text-slate-400">נפח מסד נתונים</p>
-          </div>
-        </div>
+        <div className={designMode === 'neon' ? '' : 'grid grid-cols-2 gap-12'}>
+          {/* 1. Database Usage (Azure/Cyan) */}
+          {(() => {
+            const dbQuotaMB = 1024;
+            const dbSizeMB = Number(data.dbSize) || 0;
+            const percentage = Math.min((dbSizeMB / dbQuotaMB) * 100, 100);
+            const isHigh = percentage > 85;
+            
+            return (
+              <CircularRing 
+                mode={designMode}
+                value={percentage}
+                label="Database"
+                sublabel={`${dbSizeMB.toFixed(2)} MB / ${dbQuotaMB} MB`}
+                gradient={isHigh ? ['#FFFFFF', '#3A7BD5'] : ['#00D2FF', '#3A7BD5']}
+                ringClass={designMode === 'neon' ? 'gauge-db' : 'neon-ring-azure'}
+                animateClass="animate-breathing"
+              />
+            );
+          })()}
 
-        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between h-40">
-          <StorageDisplay />
-        </div>
+          {/* 2. System Status (Live Quota - Emerald/Spring) */}
+          {(() => {
+            const percentage = Math.min((liveReads / quotaLimit) * 100, 100);
+            
+            return (
+              <CircularRing 
+                mode={designMode}
+                value={percentage}
+                label="System Status"
+                sublabel={`${liveReads.toLocaleString()} / ${quotaLimit.toLocaleString()} Reads`}
+                gradient={['#00FF87', '#60EFFF']}
+                ringClass={designMode === 'neon' ? 'gauge-sys' : 'neon-ring-emerald'}
+                animateClass="animate-breathing"
+              />
+            );
+          })()}
 
-        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between h-40">
-          <div className="flex justify-between items-start">
-            <AlertCircle size={20} className="text-rose-500" />
-            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Errors</span>
-          </div>
-          <div>
-            <p className="text-3xl font-black text-rose-500 tabular-nums">{(data.errorRate * 100).toFixed(1)}%</p>
-            <p className="text-[10px] text-slate-400">קצב שגיאות API</p>
-          </div>
+          {/* 3. Memory/Resource Load (Storage - Amber/Sun) */}
+          {(() => {
+            const quotaMB = 1000;
+            const sizeMB = Number(storageSize) || 0;
+            const percentage = Math.min((sizeMB / quotaMB) * 100, 100);
+            const isHigh = percentage > 70;
+            
+            return (
+              <CircularRing 
+                mode={designMode}
+                value={percentage}
+                label="Resources"
+                sublabel={`${sizeMB.toFixed(2)} MB / ${quotaMB} MB`}
+                gradient={['#F2994A', '#F2C94C']}
+                ringClass={designMode === 'neon' ? 'gauge-res' : 'neon-ring-amber'}
+                animateClass="animate-breathing"
+                isHigh={isHigh}
+              />
+            );
+          })()}
+
+          {/* 4. Errors/Security (Crimson/Ruby) */}
+          {(() => {
+            const percentage = Math.min(data.errorRate * 100, 100);
+            const hasErrors = percentage > 0;
+            
+            return (
+              <CircularRing 
+                mode={designMode}
+                value={percentage}
+                label="Security"
+                sublabel={`${percentage.toFixed(2)}% Error Rate`}
+                gradient={['#FF0000', '#D31027']}
+                ringClass={designMode === 'neon' ? 'gauge-err' : 'neon-ring-crimson'}
+                animateClass={hasErrors ? 'animate-shake' : 'animate-breathing'}
+              />
+            );
+          })()}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Quota Gauge */}
-        <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
-          <h3 className="text-lg font-black text-slate-900 mb-8 uppercase tracking-tight text-center">שימוש במכסה יומית (חינם)</h3>
-          <Gauge 
-            value={quotaPercentage} 
-            label="Daily Quota Used" 
-            color={quotaPercentage > 80 ? '#f43f5e' : quotaPercentage > 50 ? '#f59e0b' : '#006994'} 
-            sublabel={`מתוך ${quotaLimit.toLocaleString()} קריאות`}
-          />
-        </div>
-
+      <div className="grid grid-cols-1 gap-8">
         {/* Reads per Minute Chart */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
-              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">קצב קריאות (Live)</h3>
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">קצב קריאות ממסד הנתונים (Live)</h3>
+              <div className="relative group">
+                <Info size={14} className="text-slate-300 cursor-help hover:text-slate-600 transition-colors" />
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-slate-900 text-white text-[11px] font-medium rounded-2xl opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 z-[100] shadow-2xl pointer-events-none text-right leading-relaxed border border-white/10" dir="rtl">
+                  גרף זה מציג את כמות הבקשות (Requests) שנשלחות למסד הנתונים בזמן אמת, בכל רגע נתון.
+                  <br /><br />
+                  כל נקודה בגרף מייצגת את מספר המסמכים שנשלפו ב-5 השניות האחרונות. זה עוזר לזהות "פיקים" של פעילות באתר.
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900" />
+                </div>
+              </div>
             </div>
             
             {/* Simulation Button for testing */}
@@ -324,24 +635,46 @@ const SystemMonitor: React.FC = () => {
 
       {/* Traffic Area Chart */}
       <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
-        <h3 className="text-lg font-black text-slate-900 mb-6 uppercase tracking-tight">תנועת רשת (24 שעות)</h3>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">תנועת רשת (24 שעות - MB)</h3>
+          <div className="flex gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-[#006994]" />
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                <ArrowDown size={10} /> Incoming
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-[#40E0D0]" />
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                <ArrowUp size={10} /> Outgoing
+              </span>
+            </div>
+          </div>
+        </div>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data.traffic} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <AreaChart data={bandwidthData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="colorIn" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#006994" stopOpacity={0.3}/>
                   <stop offset="95%" stopColor="#006994" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorOut" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#40E0D0" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#40E0D0" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
               <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} unit="MB" />
               <Tooltip 
                 contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: 'none', color: '#fff' }}
-                itemStyle={{ color: '#00FFFF', fontWeight: 900 }}
+                itemStyle={{ fontWeight: 900 }}
+                formatter={(value: any) => [`${value} MB`]}
               />
-              <Area type="monotone" dataKey="value" stroke="#006994" strokeWidth={3} fillOpacity={1} fill="url(#colorTraffic)" />
+              <Area type="monotone" dataKey="in" name="Incoming" stroke="#006994" strokeWidth={3} fillOpacity={1} fill="url(#colorIn)" />
+              <Area type="monotone" dataKey="out" name="Outgoing" stroke="#40E0D0" strokeWidth={3} fillOpacity={1} fill="url(#colorOut)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>

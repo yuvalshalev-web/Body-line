@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp } from 'firebase/firestore';
-import { getDb, trackedGetDocs } from '../services/firebase';
+import { getDb, trackedGetDocs, setDbStatus, db_status } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../src/utils/dateUtils';
 import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
@@ -24,6 +24,8 @@ interface DataContextType {
   activeSessionDate: string;
   isLoading: boolean;
   hasQuotaError: boolean;
+  dbStatus: 'ONLINE' | 'OFFLINE';
+  toggleDbStatus: () => void;
   updateMember: (member: Member) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
   toggleStatus: (id: string) => Promise<void>;
@@ -67,6 +69,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [activeSessionDate, setActiveSessionDate] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [hasQuotaError, setHasQuotaError] = useState(false);
+  const [dbStatus, setDbStatusState] = useState<'ONLINE' | 'OFFLINE'>(() => {
+    const saved = localStorage.getItem('kill_switch_active');
+    return saved === 'true' ? 'OFFLINE' : 'ONLINE';
+  });
+
+  const toggleDbStatus = useCallback(() => {
+    const newStatus = dbStatus === 'ONLINE' ? 'OFFLINE' : 'ONLINE';
+    setDbStatusState(newStatus);
+    setDbStatus(newStatus);
+  }, [dbStatus]);
 
   const getNextThursday = () => {
     const now = new Date();
@@ -82,9 +94,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const handleFirestoreError = useCallback((error: any) => {
-    // Ignore transient connection issues in logs if they are just "unavailable"
-    if (error.code === 'unavailable') {
-      console.warn("Firestore is temporarily unavailable. Operating in offline mode.");
+    // Ignore transient connection issues or intentional kill switch
+    if (error.code === 'unavailable' || error.message === 'QUOTA_EXCEEDED_OR_KILL_SWITCH') {
+      if (error.code === 'unavailable') {
+        console.warn("Firestore is temporarily unavailable. Operating in offline mode.");
+      } else {
+        console.warn("Database is OFFLINE (Kill Switch). Blocking request.");
+      }
       return;
     }
 
@@ -96,6 +112,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   useEffect(() => {
+    if (db_status !== dbStatus) {
+      setDbStatus(dbStatus);
+    }
+
+    if (dbStatus === 'OFFLINE') {
+      setIsLoading(false);
+      return;
+    }
+
     const db = getDb();
     initializeStorageStats();
     
@@ -204,7 +229,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       clearTimeout(timeoutId);
       unsubMembers(); unsubHistory(); unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubAssets(); unsubYearConfig(); unsubAttendees();
     };
-  }, [handleFirestoreError]);
+  }, [handleFirestoreError, dbStatus]);
 
   const updateMember = async (member: Member) => {
     const { id, ...data } = member;
@@ -501,7 +526,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <DataContext.Provider value={{ 
-      members, joinRequests, events, news, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError,
+      members, joinRequests, events, news, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, deleteNews, toggleSessionAttendance, forceResetSession,
       finalizeThursdaySession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateYearConfig, archiveMember

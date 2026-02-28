@@ -12,6 +12,28 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Global error tracking for "Sea Observation"
+  let totalRequests = 0;
+  let errorRequests = 0;
+  const requestHistory: { timestamp: number; isError: boolean }[] = [];
+
+  // Middleware to track requests and errors
+  app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      totalRequests++;
+      const isError = res.statusCode >= 400;
+      if (isError) errorRequests++;
+      
+      requestHistory.push({ timestamp: Date.now(), isError });
+      
+      // Keep only last 1000 requests for the rate calculation
+      if (requestHistory.length > 1000) requestHistory.shift();
+    });
+    next();
+  });
+
   // API Routes for Statistics Center "Sea Observation"
   
   // Module A: Community Pulse
@@ -76,15 +98,29 @@ async function startServer() {
 
   // Module C: System & Infrastructure
   app.get("/api/stats/system", (req, res) => {
-    // Mocking system data
+    // Calculate real error rate from history (last 1 hour or last 1000 requests)
+    const now = Date.now();
+    const oneHourAgo = now - (60 * 60 * 1000);
+    const recentRequests = requestHistory.filter(r => r.timestamp > oneHourAgo);
+    
+    let calculatedErrorRate = 0;
+    if (recentRequests.length > 0) {
+      const recentErrors = recentRequests.filter(r => r.isError).length;
+      calculatedErrorRate = recentErrors / recentRequests.length;
+    } else {
+      // Fallback to a very low baseline if no traffic yet
+      calculatedErrorRate = 0.001; 
+    }
+
+    // Mocking other system data
     const data = {
       visitors: {
-        daily: 120,
+        daily: 120 + Math.floor(Math.random() * 10),
         weekly: 850
       },
-      dbSize: 4.2, // MB
+      dbSize: 4.2 + (Math.random() * 0.1), // MB
       storageSize: 156.4, // MB
-      errorRate: 0.02, // 2%
+      errorRate: calculatedErrorRate,
       traffic: [
         { time: '00:00', value: 10 },
         { time: '04:00', value: 5 },

@@ -95,6 +95,16 @@ const App: React.FC = () => {
     navigate('/');
   }, [logout, navigate]);
 
+  // Global Progress Bar Function
+  React.useEffect(() => {
+    (window as any).updateProgressBar = (percent: number) => {
+      const bar = document.getElementById('global-progress-bar');
+      if (bar) {
+        bar.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+      }
+    };
+  }, []);
+
   if (!currentUser) {
     return (
       <Suspense fallback={<PageLoader />}>
@@ -125,6 +135,11 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row-reverse font-['Assistant']" dir="rtl">
+      {/* Global Progress Bar */}
+      <div id="global-progress-container">
+        <div id="global-progress-bar"></div>
+      </div>
+
       {/* Mobile Header */}
       <header className="md:hidden bg-white border-b border-[var(--sand-medium)]/10 h-16 flex items-center justify-between px-[var(--spacing-md)] sticky top-0 z-[100] shadow-sm">
         <div className="flex items-center gap-[var(--spacing-xs)]">

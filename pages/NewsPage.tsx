@@ -84,19 +84,33 @@ const NewsPage: React.FC = () => {
 
   return (
     <div className="relative min-h-screen bg-white text-right p-6 md:p-12 animate-in fade-in" dir="rtl">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
-        <div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">פוסטים מהנבחרת</h2>
-          <p className="text-slate-500 mt-2 font-medium">עדכונים אופטימליים מחברי חבל זוג.</p>
+      {/* Body-line Standard Header Stack */}
+      <div className="flex flex-col items-center text-center mb-10 space-y-4">
+        {/* Top Badge */}
+        <div className="header-badge-glass">
+          <Newspaper size={12} className="text-[#00f2fe]" />
+          <span>COMMUNITY UPDATES</span>
         </div>
-        
-        <button 
-          onClick={() => { setShowSuccess(false); setErrorMsg(null); setShowCreateModal(true); }}
-          className="flex items-center gap-4 px-10 py-5 bg-[#006994] text-white rounded-[2rem] font-black text-md hover:bg-[#4E8294] transition-all shadow-xl active:scale-95 group"
-        >
-          <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />
-          <span>פרסום פוסט חדש</span>
-        </button>
+
+        {/* Main Title */}
+        <h1 className="text-5xl header-title-gradient uppercase tracking-tighter">
+          פוסטים מהנבחרת
+        </h1>
+
+        {/* Subtitle with Emoji context */}
+        <div className="flex flex-col items-center gap-6">
+          <p className="header-subtitle max-w-2xl">
+            עדכונים אופטימליים ורגעים מהחיים של חברי חבל זוג 🗞️
+          </p>
+          
+          <button 
+            onClick={() => { setShowSuccess(false); setErrorMsg(null); setShowCreateModal(true); }}
+            className="flex items-center gap-4 px-10 py-5 bg-[#006994] text-white rounded-[2rem] font-black text-md hover:bg-[#4E8294] transition-all shadow-xl active:scale-95 group"
+          >
+            <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />
+            <span>פרסום פוסט חדש</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-12">

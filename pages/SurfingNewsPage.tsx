@@ -149,24 +149,34 @@ const SurfingNewsPage: React.FC = () => {
   return (
     <div className="relative min-h-screen -m-6 p-6 md:-m-12 md:p-12 overflow-hidden bg-white text-right">
       <div className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
-          <div>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#006994]/10 text-[#006994] text-[10px] font-black uppercase tracking-widest mb-3 border border-[#006994]/20 shadow-sm">
-              <Globe size={12} className="text-[#40E0D0]" />
-              עדכונים מהעולם
-            </div>
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none">חדשות גלישה</h2>
-            <p className="text-slate-500 mt-2 text-lg font-medium">מבזקים חיים מ-Surfline, WSL ו-Surfer (אנגלית).</p>
+        {/* Body-line Standard Header Stack */}
+        <div className="flex flex-col items-center text-center mb-10 space-y-4">
+          {/* Top Badge */}
+          <div className="header-badge-glass">
+            <Globe size={12} className="text-[#00f2fe]" />
+            <span>GLOBAL SURF UPDATES</span>
           </div>
-          
-          <button 
-            onClick={() => fetchNews(true)}
-            disabled={loading}
-            className="flex items-center gap-4 px-8 py-4 bg-[#006994] text-white rounded-[1.5rem] font-black text-sm hover:bg-[#4E8294] transition-all active:scale-95 shadow-lg group disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} className="group-hover:rotate-180 transition-transform text-[#00FFFF]" />}
-            <span>רענן עדכונים</span>
-          </button>
+
+          {/* Main Title */}
+          <h1 className="text-5xl header-title-gradient uppercase tracking-tighter">
+            חדשות גלישה
+          </h1>
+
+          {/* Subtitle with Emoji context */}
+          <div className="flex flex-col items-center gap-6">
+            <p className="header-subtitle max-w-2xl">
+              מבזקים חיים ועדכונים מהעולם - Surfline, WSL ו-Surfer 🌍
+            </p>
+            
+            <button 
+              onClick={() => fetchNews(true)}
+              disabled={loading}
+              className="flex items-center gap-4 px-8 py-4 bg-[#006994] text-white rounded-[1.5rem] font-black text-sm hover:bg-[#4E8294] transition-all active:scale-95 shadow-lg group disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} className="group-hover:rotate-180 transition-transform text-[#00FFFF]" />}
+              <span>רענן עדכונים</span>
+            </button>
+          </div>
         </div>
 
         {error ? (
