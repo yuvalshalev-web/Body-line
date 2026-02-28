@@ -1,4 +1,6 @@
 
+export type Gender = 'זכר' | 'נקבה' | 'מעדיף/ה לא לציין';
+
 export interface Member {
   id: string;
   uid?: string; // Firebase Auth UID
@@ -22,6 +24,7 @@ export interface Member {
   totalAttendance?: number; // Lifetime count of sessions attended
   loginCount?: number; // Added for analytics
   birthday?: string; // YYYY-MM-DD
+  gender?: Gender;
 }
 
 export interface JoinRequest {
@@ -40,6 +43,7 @@ export interface JoinRequest {
   websiteUrl?: string;
   requestedAt: string;
   group?: string;
+  gender?: Gender;
 }
 
 export interface GalleryItem {

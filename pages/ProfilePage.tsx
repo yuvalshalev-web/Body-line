@@ -17,8 +17,10 @@ import {
   X,
   AlertCircle,
   Phone,
-  Cake
+  Cake,
+  ChevronDown
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { Member } from '../types';
@@ -58,6 +60,7 @@ const ProfilePage: React.FC = () => {
   const [formData, setFormData] = useState<Member | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
   const [isGeneratingBio, setIsGeneratingBio] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [toast, setToast] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
@@ -234,6 +237,50 @@ const ProfilePage: React.FC = () => {
                         onChange={e => handleFieldChange('birthday', e.target.value)} 
                         className="w-full pr-14 pl-6 py-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all" 
                       />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">מגדר</label>
+                    <div className="relative">
+                      <User size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                      <button 
+                        type="button"
+                        onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
+                        className="w-full pr-14 pl-12 py-5 bg-slate-50 rounded-2xl font-black text-sm outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all flex items-center justify-between group"
+                      >
+                        <span>{formData.gender || 'בחר מגדר'}</span>
+                        <ChevronDown size={18} className={`text-slate-300 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      <AnimatePresence>
+                        {isGenderDropdownOpen && (
+                          <>
+                            <div className="fixed inset-0 z-[60]" onClick={() => setIsGenderDropdownOpen(false)} />
+                            <motion.div 
+                              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                              className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-2xl border border-slate-100 rounded-2xl shadow-2xl z-[70] overflow-hidden"
+                            >
+                              {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
+                                <button
+                                  key={g}
+                                  type="button"
+                                  onClick={() => {
+                                    handleFieldChange('gender', g);
+                                    setIsGenderDropdownOpen(false);
+                                  }}
+                                  className={`w-full px-6 py-4 text-right font-black transition-all hover:bg-indigo-50 ${
+                                    formData.gender === g ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'
+                                  }`}
+                                >
+                                  {g}
+                                </button>
+                              ))}
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
                 </div>

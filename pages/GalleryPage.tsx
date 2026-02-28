@@ -5,6 +5,7 @@ import { Plus, User, Loader2, Trash2, X, CheckCircle2, AlertTriangle, Image as I
 import { getDb, getStorageInstance } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { useModal } from '../contexts/ModalContext';
 import { processImage } from '../utils/imageProcessor';
 import { GalleryItem } from '../types';
 import { syncStorageOnUpload, syncStorageOnDelete } from '../utils/storageStats';
@@ -12,6 +13,7 @@ import { syncStorageOnUpload, syncStorageOnDelete } from '../utils/storageStats'
 const GalleryPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { galleryItems } = useData();
+  const { showConfirm, showError } = useModal();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState('');
@@ -87,50 +89,53 @@ const GalleryPage: React.FC = () => {
   };
 
   const handleDelete = async (item: GalleryItem) => {
-    const confirmDelete = window.confirm(
-      'האם למחוק תמונה זו לצמיתות?\nהקובץ יוסר גם מהשרת וגם מהאפליקציה.'
-    );
-    if (!confirmDelete) return;
-    
-    setDeletingId(item.id);
-    try {
-      const db = getDb();
-      const storage = getStorageInstance();
-      
-      await deleteDoc(doc(db, 'gallery', item.id));
-      console.log("Firestore document deleted");
-
-      const storageIdentifier = item.storagePath || item.imageUrl;
-      if (storageIdentifier) {
+    showConfirm({
+      title: 'מחיקת תמונה',
+      message: 'האם למחוק תמונה זו לצמיתות?\nהקובץ יוסר גם מהשרת וגם מהאפליקציה.',
+      confirmText: 'מחק',
+      cancelText: 'ביטול',
+      onConfirm: async () => {
+        setDeletingId(item.id);
         try {
-          const imageRef = ref(storage, storageIdentifier);
+          const db = getDb();
+          const storage = getStorageInstance();
           
-          // Fetch metadata to get file size before deletion
-          try {
-            const metadata = await getMetadata(imageRef);
-            if (metadata.size) {
-              await syncStorageOnDelete(metadata.size);
-            }
-          } catch (metaErr) {
-            console.warn("Could not fetch metadata for size sync:", metaErr);
-          }
+          await deleteDoc(doc(db, 'gallery', item.id));
+          console.log("Firestore document deleted");
 
-          await deleteObject(imageRef);
-          console.log("Storage file deleted");
-        } catch (storageErr: any) {
-          if (storageErr.code === 'storage/object-not-found') {
-            console.warn("File already missing from storage");
-          } else {
-            console.error("Storage deletion failed:", storageErr);
+          const storageIdentifier = item.storagePath || item.imageUrl;
+          if (storageIdentifier) {
+            try {
+              const imageRef = ref(storage, storageIdentifier);
+              
+              // Fetch metadata to get file size before deletion
+              try {
+                const metadata = await getMetadata(imageRef);
+                if (metadata.size) {
+                  await syncStorageOnDelete(metadata.size);
+                }
+              } catch (metaErr) {
+                console.warn("Could not fetch metadata for size sync:", metaErr);
+              }
+
+              await deleteObject(imageRef);
+              console.log("Storage file deleted");
+            } catch (storageErr: any) {
+              if (storageErr.code === 'storage/object-not-found') {
+                console.warn("File already missing from storage");
+              } else {
+                console.error("Storage deletion failed:", storageErr);
+              }
+            }
           }
+        } catch (err: any) {
+          console.error("Delete sequence failed:", err);
+          showError(err.message || 'המחיקה נכשלה. נסה שנית מאוחר יותר.');
+        } finally {
+          setDeletingId(null);
         }
       }
-    } catch (err: any) {
-      console.error("Delete sequence failed:", err);
-      alert(err.message || 'המחיקה נכשלה. נסה שנית מאוחר יותר.');
-    } finally {
-      setDeletingId(null);
-    }
+    });
   };
 
   return (

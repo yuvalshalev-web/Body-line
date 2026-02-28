@@ -15,11 +15,11 @@ root.render(
   <React.StrictMode>
     <HashRouter>
       <AuthProvider>
-        <DataProvider>
-          <ModalProvider>
+        <ModalProvider>
+          <DataProvider>
             <App />
-          </ModalProvider>
-        </DataProvider>
+          </DataProvider>
+        </ModalProvider>
       </AuthProvider>
     </HashRouter>
   </React.StrictMode>

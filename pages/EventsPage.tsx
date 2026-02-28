@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { useModal } from '../contexts/ModalContext';
 import { Event } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -29,6 +30,7 @@ import { syncStorageOnUpload } from '../utils/storageStats';
 const EventsPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { events, members, addEvent, deleteEvent, updateEvent, toggleEventAttendance } = useData();
+  const { showConfirm, showSuccess, showError } = useModal();
 
   const activeMemberIds = members.filter(m => m.isActive !== false).map(m => m.id);
   const [showModal, setShowModal] = useState(false);
@@ -76,10 +78,10 @@ const EventsPage: React.FC = () => {
       const downloadUrl = await getDownloadURL(storageRef);
       
       setImageUrl(downloadUrl);
-      alert('התמונה הועלתה בהצלחה');
+      showSuccess('התמונה הועלתה בהצלחה');
     } catch (err) {
       console.error(err);
-      alert('שגיאה בהעלאת התמונה');
+      showError('שגיאה בהעלאת התמונה');
     } finally {
       setIsUploading(false);
       if (e.target) e.target.value = '';
@@ -145,7 +147,13 @@ const EventsPage: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('האם למחוק אירוע זה?')) deleteEvent(id);
+    showConfirm({
+      title: 'מחיקת אירוע',
+      message: 'האם למחוק אירוע זה?',
+      confirmText: 'מחק',
+      cancelText: 'ביטול',
+      onConfirm: () => deleteEvent(id)
+    });
   };
 
   const handleToggleAttendance = async (eventId: string) => {

@@ -7,6 +7,7 @@ import { SUPER_ADMIN_EMAIL } from '../constants';
 import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats } from '../utils/storageStats';
 import { storage } from '../src/utils/storage';
+import { useModal } from './ModalContext';
 
 interface DataContextType {
   members: Member[];
@@ -54,6 +55,7 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { showAlert } = useModal();
   const [members, setMembers] = useState<Member[]>([]);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
@@ -107,9 +109,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     console.error("Firestore error:", error);
     if (error.code === 'resource-exhausted' || error.message?.includes('429') || error.message?.includes('quota')) {
       setHasQuotaError(true);
-      alert("שגיאת מכסה (Quota Exceeded). המערכת עברה למצב לא מקוון זמנית.");
+      showAlert("שגיאת מכסה (Quota Exceeded). המערכת עברה למצב לא מקוון זמנית.", "שגיאת מערכת");
     }
-  }, []);
+  }, [showAlert]);
 
   useEffect(() => {
     if (db_status !== dbStatus) {
@@ -272,7 +274,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const tempPass = Math.random().toString(36).slice(-8);
     const hashed = await hashPassword(tempPass);
     await updateDoc(doc(getDb(), 'members', id), { password: hashed, isTemporary: true });
-    alert(`סיסמה זמנית חדשה: ${tempPass}`);
+    showAlert(`סיסמה זמנית חדשה: ${tempPass}`, "איפוס סיסמה");
   };
 
   const approveRequest = async (id: string) => {
@@ -297,6 +299,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         mobile: reqData.mobile || '', 
         avatar: reqData.avatar || '', 
         bio: reqData.bio || '',
+        gender: reqData.gender || 'מעדיף/ה לא לציין',
         role: 'Member', 
         joinedAt: getCurrentDateFormatted(), 
         isActive: true,

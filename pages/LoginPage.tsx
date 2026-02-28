@@ -3,6 +3,7 @@ import { collection, query, where, getDocs, doc, updateDoc, increment, addDoc, l
 import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, ChevronDown, MapPin, CheckCircle2, UserPlus, Mail, RotateCcw, X, UserCheck, Sparkles, Waves, User } from 'lucide-react';
 import { getDb, trackedGetDocs } from '../services/firebase';
 import { Member } from '../types';
+import { motion, AnimatePresence } from 'motion/react';
 import { hashPassword } from '../utils/crypto';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -34,6 +35,8 @@ const LoginPage: React.FC = () => {
   const [joinLastName, setJoinLastName] = useState('');
   const [joinEmail, setJoinEmail] = useState('');
   const [joinMobile, setJoinMobile] = useState('');
+  const [joinGender, setJoinGender] = useState<string>('');
+  const [isGenderMenuOpen, setIsGenderMenuOpen] = useState(false);
   const [mobileError, setMobileError] = useState('');
   const [joinAvatar, setJoinAvatar] = useState('');
   const [isProcessingImage, setIsProcessingImage] = useState(false);
@@ -214,6 +217,7 @@ const LoginPage: React.FC = () => {
         lastName: joinLastName,
         email: normalizedEmail,
         mobile: joinMobile,
+        gender: joinGender || 'מעדיף/ה לא לציין',
         bio: '',
         avatar: joinAvatar,
         requestedAt: new Date().toISOString(),
@@ -439,7 +443,49 @@ const LoginPage: React.FC = () => {
                     <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
                   </div>
                   <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="אימייל" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
-                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
+                    <div className="relative">
+                      <button 
+                        type="button"
+                        onClick={() => setIsGenderMenuOpen(!isGenderMenuOpen)}
+                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none flex items-center justify-between group hover:bg-white/10 transition-all"
+                      >
+                        <span className={joinGender ? 'text-white' : 'text-white/40'}>{joinGender || 'מגדר'}</span>
+                        <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      <AnimatePresence>
+                        {isGenderMenuOpen && (
+                          <>
+                            <div className="fixed inset-0 z-[60]" onClick={() => setIsGenderMenuOpen(false)} />
+                            <motion.div 
+                              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                              className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-[70] overflow-hidden"
+                            >
+                              {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
+                                <button
+                                  key={g}
+                                  type="button"
+                                  onClick={() => {
+                                    setJoinGender(g);
+                                    setIsGenderMenuOpen(false);
+                                  }}
+                                  className={`w-full px-6 py-4 text-right font-bold transition-all hover:bg-white/10 ${
+                                    joinGender === g ? 'text-[#00FFFF] bg-white/5' : 'text-white/70'
+                                  }`}
+                                >
+                                  {g}
+                                </button>
+                              ))}
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
                   {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
                   <button type="submit" disabled={isLoading || isProcessingImage} className="w-full py-5 bg-[#006994] text-white rounded-2xl font-black text-lg hover:bg-[#4E8294] transition-all active:scale-95">
                     {isLoading ? <Loader2 className="animate-spin mx-auto" /> : 'שלח בקשה ב-WebP'}

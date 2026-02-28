@@ -4,6 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getStorageInstance } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { useModal } from '../contexts/ModalContext';
 import { NewsItem } from '../types';
 import { processImage } from '../utils/imageProcessor';
 import { syncStorageOnUpload } from '../utils/storageStats';
@@ -11,6 +12,7 @@ import { syncStorageOnUpload } from '../utils/storageStats';
 const NewsPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { news, addNews, deleteNews } = useData();
+  const { showConfirm } = useModal();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
@@ -77,9 +79,13 @@ const NewsPage: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('האם אתה בטוח שברצונך למחוק פוסט זה?')) {
-      deleteNews(id);
-    }
+    showConfirm({
+      title: 'מחיקת פוסט',
+      message: 'האם אתה בטוח שברצונך למחוק פוסט זה?',
+      confirmText: 'מחק',
+      cancelText: 'ביטול',
+      onConfirm: () => deleteNews(id)
+    });
   };
 
   return (
