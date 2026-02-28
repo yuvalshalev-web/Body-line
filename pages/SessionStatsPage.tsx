@@ -161,12 +161,10 @@ const SessionStatsPage: React.FC = () => {
     };
 
     const ageGroupsBase = [
-      { label: '18–24', min: 18, max: 24, color: '#006994' },
-      { label: '25–34', min: 25, max: 34, color: '#40E0D0' },
-      { label: '35–44', min: 35, max: 44, color: '#6366f1' },
-      { label: '45–54', min: 45, max: 54, color: '#f59e0b' },
-      { label: '55–64', min: 55, max: 64, color: '#ec4899' },
-      { label: '65+', min: 65, max: 120, color: '#94a3b8' },
+      { label: 'צעירים (18-25)', min: 18, max: 25, color: '#006994' },
+      { label: 'בוגרים (26-40)', min: 26, max: 40, color: '#40E0D0' },
+      { label: 'אמצע החיים (41-60)', min: 41, max: 60, color: '#6366f1' },
+      { label: 'ותיקים (60+)', min: 61, max: 120, color: '#94a3b8' },
     ];
 
     // Last Month Sessions
@@ -285,7 +283,35 @@ const SessionStatsPage: React.FC = () => {
       lastSession: totalLastParticipants
     };
 
-    // 7. Pulse Data (Full timeline from startDate to lastSessionDate)
+    // 7. Gender Analytics
+    const genderStatsObj = {
+      men: { label: 'גברים', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-blue-500', hex: '#3b82f6' },
+      women: { label: 'נשים', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-pink-500', hex: '#ec4899' },
+      unspecified: { label: 'לא צוין', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-gray-400', hex: '#9ca3af' }
+    };
+
+    members.forEach(m => {
+      const g = m.gender === 'זכר' ? 'men' : m.gender === 'נקבה' ? 'women' : 'unspecified';
+      genderStatsObj[g].count++;
+      genderStatsObj[g].totalAttendance += (memberStatsMap[m.id]?.total || 0);
+      genderStatsObj[g].sessionsPossible += totalSessionsCount;
+    });
+
+    const genderImpact = Object.entries(genderStatsObj).map(([key, data]) => ({
+      key,
+      ...data,
+      retention: data.sessionsPossible > 0 && data.count > 0 
+        ? Math.round((data.totalAttendance / (data.count * totalSessionsCount)) * 100) 
+        : 0
+    }));
+
+    // 8. Sea Time Calculation
+    const totalSeaTimeMinutes = filteredSessions.reduce((acc, s) => acc + (s.participantsCount || 0) * 90, 0);
+    const totalSeaTimeHours = Math.round(totalSeaTimeMinutes / 60);
+    const monthlySeaTimeMinutes = lastMonthSessions.reduce((acc, s) => acc + (s.participantsCount || 0) * 90, 0);
+    const monthlySeaTimeHours = Math.round(monthlySeaTimeMinutes / 60);
+
+    // 9. Pulse Data (Full timeline from startDate to lastSessionDate)
     const pulseData = [];
     if (filteredSessions.length > 0) {
       const lastSession = filteredSessions[filteredSessions.length - 1];
@@ -316,6 +342,28 @@ const SessionStatsPage: React.FC = () => {
       }
     }
 
+    // 10. Age & Activity Table Data (Participation rate per group across 3 time ranges)
+    const ageActivityData = ageGroupsBase.map(group => {
+      const groupMembers = members.filter(m => ageMap.get(m.id) === group.label);
+      const groupCount = groupMembers.length;
+
+      const calcRate = (sessions: any[]) => {
+        if (groupCount === 0 || sessions.length === 0) return 0;
+        const actualAttendance = sessions.reduce((acc, s) => {
+          return acc + (s.participantIds || []).filter((uid: string) => ageMap.get(uid) === group.label).length;
+        }, 0);
+        return Math.round((actualAttendance / (groupCount * sessions.length)) * 100);
+      };
+
+      return {
+        label: group.label,
+        lastSession: calcRate(filteredSessions.slice(-1)),
+        lastFour: calcRate(filteredSessions.slice(-4)),
+        annual: calcRate(filteredSessions)
+      };
+    });
+
+    // 11. Grit Leaderboard
     const filteredGrit = processedMembers.filter(m => 
       `${m.firstName} ${m.lastName}`.toLowerCase().includes(gritSearchTerm.toLowerCase())
     );
@@ -350,15 +398,19 @@ const SessionStatsPage: React.FC = () => {
       radialPercentages,
       radialSummary,
       pulseData,
-      gritLeaderboard
+      gritLeaderboard,
+      genderImpact,
+      totalSeaTimeHours,
+      monthlySeaTimeHours,
+      ageActivityData
     };
   }, [weeklyHistory, members, yearConfig, gritSortConfig, gritSearchTerm]);
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Loader2 className="animate-spin text-[#006994]" size={40} />
-        <p className="text-[#006994] font-black animate-pulse">טוען נתונים...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 bg-[#0f172a] fixed inset-0 z-50">
+        <Loader2 className="animate-spin text-[#00FFFF]" size={40} />
+        <p className="text-white font-black animate-pulse">טוען נתונים...</p>
       </div>
     );
   }
@@ -368,35 +420,49 @@ const SessionStatsPage: React.FC = () => {
   ) || [];
 
   return (
-    <div className="max-w-7xl mx-auto font-['Assistant'] pb-20" dir="rtl">
+    <div className="max-w-7xl mx-auto font-['Assistant'] pb-20 relative" dir="rtl">
       {/* Editorial Header */}
       <header className="mb-16 relative">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#006994]/10 text-[#006994] rounded-full mb-6 border border-[#006994]/10">
-              <Activity size={14} className="text-[#00FFFF]" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-900/5 text-slate-500 rounded-full mb-6 border border-slate-200 backdrop-blur-md">
+              <Activity size={14} className="text-[#006994]" />
               <span className="text-[10px] font-black uppercase tracking-[0.2em]">Session Dive Analytics</span>
             </div>
-            <h1 className="text-6xl md:text-8xl font-black text-[#006994] tracking-tighter leading-none mb-4">
-              צלילה <span className="text-[#40E0D0]">לסשנים</span>
+            <h1 className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter leading-none mb-4">
+              צלילה <span className="text-[#006994]">לסשנים</span>
             </h1>
-            <p className="text-xl text-[#4E8294] font-bold max-w-2xl leading-relaxed">
+            <p className="text-xl text-slate-500 font-bold max-w-2xl leading-relaxed">
               ניתוח עומק של ביצועי הנבחרת, מגמות נוכחות ופילוח גולשים. 🌊
             </p>
           </div>
+
+          {/* Sea-Time Dashboard Widget - Using the Dark Glass style from Machine Room */}
+          <div className="relative group">
+            <div className="absolute inset-0 bg-blue-500/20 blur-2xl group-hover:bg-blue-500/30 transition-all duration-500" />
+            <div className="relative health-matrix-glass p-8 rounded-[3rem] text-center min-w-[280px] shadow-2xl border border-white/10">
+              <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">זמן ים מצטבר (הערכה)</p>
+              <div className="flex flex-col items-center">
+                <span className="text-6xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                  {stats?.totalSeaTimeHours || 0}
+                </span>
+                <span className="text-xl font-black text-blue-400 mt-1">שעות גלישה הוענקו</span>
+              </div>
+              <p className="text-[9px] text-white/20 mt-4 font-bold">* מבוסס על הערכה של 90 דק' גלישה למשתתף</p>
+            </div>
+          </div>
         </div>
-        <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#00FFFF]/5 rounded-full blur-3xl -z-10" />
       </header>
 
       {stats ? (
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-[400px]">
-          {/* Top Stats Row */}
+          {/* Top Stats Row - Using Modern White Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white p-8 rounded-[2.5rem] border border-[#006994]/10 shadow-sm">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">סך הכל סשנים (שהתקיימו)</p>
-              <p className="text-4xl font-black text-[#006994]">{stats.totalSessions}</p>
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">סך הכל סשנים</p>
+              <p className="text-4xl font-black text-slate-900">{stats.totalSessions}</p>
             </div>
-            <div className="bg-white p-8 rounded-[2.5rem] border border-[#006994]/10 shadow-sm">
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ממוצע גולשים לסשן</p>
                 <div className="relative">
@@ -406,11 +472,11 @@ const SessionStatsPage: React.FC = () => {
                     onMouseLeave={() => setActiveTooltip(null)}
                     className={`p-1 rounded-full border transition-all cursor-help outline-none ${
                       activeTooltip === 'avg' 
-                        ? 'bg-[#006994]/10 border-[#006994]/30' 
+                        ? 'bg-slate-100 border-slate-300' 
                         : 'bg-slate-50 border-slate-100'
                     }`}
                   >
-                    <Info size={14} className={`transition-colors ${activeTooltip === 'avg' ? 'text-[#006994]' : 'text-[#006994]/40'}`} />
+                    <Info size={14} className={`transition-colors ${activeTooltip === 'avg' ? 'text-slate-900' : 'text-slate-300'}`} />
                   </button>
                   <AnimatePresence>
                     {activeTooltip === 'avg' && (
@@ -418,18 +484,18 @@ const SessionStatsPage: React.FC = () => {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute bottom-full right-0 mb-3 w-56 p-3 bg-[#006994] text-white text-[11px] font-bold rounded-2xl z-50 shadow-2xl border border-white/20 backdrop-blur-sm pointer-events-none"
+                        className="absolute bottom-full right-0 mb-3 w-56 p-3 bg-slate-900 text-white text-[11px] font-bold rounded-2xl z-50 shadow-2xl border border-white/20 backdrop-blur-md pointer-events-none"
                       >
                         מספר המשתתפים הממוצע לסשן בודד, מתחילת שנת חבל זוג ועד היום.
-                        <div className="absolute top-full right-3 border-[6px] border-transparent border-t-[#006994]"></div>
+                        <div className="absolute top-full right-3 border-[6px] border-transparent border-t-slate-900"></div>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               </div>
-              <p className="text-4xl font-black text-[#006994]">{stats.avgAttendance}</p>
+              <p className="text-4xl font-black text-slate-900">{stats.avgAttendance}</p>
             </div>
-            <div className="bg-white p-8 rounded-[2.5rem] border border-[#006994]/10 shadow-sm">
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סך כל הכניסות למים</p>
                 <div className="relative">
@@ -439,11 +505,11 @@ const SessionStatsPage: React.FC = () => {
                     onMouseLeave={() => setActiveTooltip(null)}
                     className={`p-1 rounded-full border transition-all cursor-help outline-none ${
                       activeTooltip === 'total' 
-                        ? 'bg-[#006994]/10 border-[#006994]/30' 
+                        ? 'bg-slate-100 border-slate-300' 
                         : 'bg-slate-50 border-slate-100'
                     }`}
                   >
-                    <Info size={14} className={`transition-colors ${activeTooltip === 'total' ? 'text-[#006994]' : 'text-[#006994]/40'}`} />
+                    <Info size={14} className={`transition-colors ${activeTooltip === 'total' ? 'text-slate-900' : 'text-slate-300'}`} />
                   </button>
                   <AnimatePresence>
                     {activeTooltip === 'total' && (
@@ -451,21 +517,21 @@ const SessionStatsPage: React.FC = () => {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute bottom-full right-0 mb-3 w-56 p-3 bg-[#006994] text-white text-[11px] font-bold rounded-2xl z-50 shadow-2xl border border-white/20 backdrop-blur-sm pointer-events-none"
+                        className="absolute bottom-full right-0 mb-3 w-56 p-3 bg-slate-900 text-white text-[11px] font-bold rounded-2xl z-50 shadow-2xl border border-white/20 backdrop-blur-md pointer-events-none"
                       >
                         סך ההשתתפויות המצטבר של כל חברי הנבחרת בכל הסשנים שהתקיימו מתחילת שנת חבל זוג.
-                        <div className="absolute top-full right-3 border-[6px] border-transparent border-t-[#006994]"></div>
+                        <div className="absolute top-full right-3 border-[6px] border-transparent border-t-slate-900"></div>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               </div>
-              <p className="text-4xl font-black text-[#006994]">{stats.totalAttendance}</p>
+              <p className="text-4xl font-black text-slate-900">{stats.totalAttendance}</p>
             </div>
             <div className={`p-8 rounded-[2.5rem] border shadow-sm flex flex-col justify-between ${
-              stats.globalTrend === 'up' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 
-              stats.globalTrend === 'down' ? 'bg-rose-50 border-rose-100 text-rose-700' : 
-              'bg-slate-50 border-slate-100 text-slate-700'
+              stats.globalTrend === 'up' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
+              stats.globalTrend === 'down' ? 'bg-rose-50 border-rose-100 text-rose-600' : 
+              'bg-white border-slate-100 text-slate-400'
             }`}>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">מגמת נוכחות כללית</p>
               <div className="flex items-center gap-3">
@@ -476,289 +542,265 @@ const SessionStatsPage: React.FC = () => {
           </div>
 
           {/* Main Dashboard Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            {/* Row 1: Pulse Area Chart (Full Width) - Temporarily Disabled for Stability */}
-            <div className="bg-white p-10 rounded-[3.5rem] border border-[#006994]/10 shadow-sm lg:col-span-2">
-              <div className="flex items-center justify-between mb-10">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-[#006994] text-white rounded-xl shadow-lg"><TrendingUp size={20} /></div>
-                  <h3 className="text-2xl font-black text-[#006994]">דופק הסשנים (Pulse)</h3>
-                </div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">נתוני נוכחות</p>
-              </div>
-              <div className="h-[400px] w-full mt-6">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={stats.pulseData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorPulse" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#006994" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#006994" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis 
-                      dataKey="date" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} 
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} 
-                    />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: 'none', color: '#fff' }}
-                      itemStyle={{ color: '#00FFFF', fontWeight: 900 }}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="count" 
-                      stroke="#006994" 
-                      strokeWidth={4} 
-                      fillOpacity={1} 
-                      fill="url(#colorPulse)" 
-                      animationDuration={2000}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Row 2: Age Radial Bar (Right) & Donut Chart (Left) - Temporarily Disabled for Stability */}
-            <div className="bg-white p-10 rounded-[3.5rem] border border-[#006994]/10 shadow-sm">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shadow-lg"><Users size={20} /></div>
-                  <h3 className="text-2xl font-black text-[#006994]">אנליזה קבוצתית (גילאים)</h3>
-                </div>
-              </div>
-              <div className="h-[350px] w-full mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats.ageStackedData} layout="vertical" margin={{ left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                    <XAxis type="number" hide />
-                    <YAxis 
-                      dataKey="name" 
-                      type="category" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 12, fontWeight: 900, fill: '#006994' }} 
-                    />
-                    <Tooltip 
-                      cursor={{ fill: 'transparent' }}
-                      contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: 'none', color: '#fff' }}
-                    />
-                    <Legend iconType="circle" />
-                    {stats.ageGroupsBase.map((group, idx) => (
-                      <Bar 
-                        key={idx} 
-                        dataKey={group.label} 
-                        stackId="a" 
-                        fill={group.color} 
-                        radius={idx === stats.ageGroupsBase.length - 1 ? [0, 4, 4, 0] : [0, 0, 0, 0]} 
-                      />
-                    ))}
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="bg-white p-10 rounded-[3.5rem] border border-[#006994]/10 shadow-sm">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="p-3 bg-slate-100 text-[#006994] rounded-xl shadow-lg"><PieChartIcon size={20} /></div>
-                <h3 className="text-2xl font-black text-[#006994]">פילוח קבועים/מזדמנים</h3>
-              </div>
-              <div className="h-[350px] w-full mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={stats.segmentation}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={80}
-                      outerRadius={110}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {stats.segmentation.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1rem', border: 'none', color: '#fff' }}
-                    />
-                    <Legend verticalAlign="bottom" height={36}/>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Row 3: Grit Leaderboard (Full Width) */}
-            <div className="bg-white p-10 rounded-[3.5rem] border border-[#006994]/10 shadow-sm lg:col-span-2">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-amber-50 text-amber-500 rounded-xl shadow-lg border border-amber-200">
-                    <Award size={20} className="drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            
+            {/* Gender Impact Card (Right Side) - Using Dark Glass for high contrast */}
+            <div className="lg:col-span-5 space-y-10">
+              <div className="relative p-10 rounded-[3.5rem] overflow-hidden border border-white/10 shadow-2xl health-matrix-glass">
+                <div className="flex justify-between items-start mb-10">
                   <div>
-                    <h3 className="text-2xl font-black text-[#006994]">מדד נחישות (Grit Leaderboard)</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">טופ 50 גולשים</p>
+                    <h3 className="text-white font-black text-2xl tracking-tighter">פילוח מגדרי ואימפקט</h3>
+                    <p className="text-white/40 text-[10px] uppercase tracking-widest mt-1">תמהיל הקהילה ומדדי התמדה</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-2xl text-blue-400">
+                    <PieChartIcon size={24} />
                   </div>
                 </div>
-                <div className="relative group min-w-[300px]">
-                  <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                  <input 
-                    type="text" 
-                    placeholder="חפש במדד נחישות..." 
-                    value={gritSearchTerm}
-                    onChange={e => setGritSearchTerm(e.target.value)}
-                    className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:ring-2 ring-amber-500/10 transition-all"
-                  />
+
+                {/* Stacked Progress Bar */}
+                <div className="mb-12">
+                  <div className="flex justify-between text-[10px] font-black text-white/40 uppercase tracking-widest mb-3">
+                    <span>תמהיל קהילתי</span>
+                    <span>{members.length} חברים</span>
+                  </div>
+                  <div className="flex h-4 w-full rounded-full overflow-hidden bg-white/5 p-[2px] border border-white/5">
+                    {stats.genderImpact.map((item, idx) => {
+                      const width = (item.count / members.length) * 100;
+                      if (width === 0) return null;
+                      return (
+                        <div 
+                          key={idx}
+                          className={`${item.color} h-full transition-all duration-1000`}
+                          style={{ 
+                            width: `${width}%`,
+                            boxShadow: `0 0 15px ${item.hex}40`
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Detailed Metrics */}
+                <div className="space-y-4">
+                  {stats.genderImpact.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-5 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-3 h-3 rounded-full ${item.color} shadow-[0_0_10px_currentColor]`} />
+                        <div>
+                          <span className="text-white font-black text-lg block leading-none mb-1">{item.label}</span>
+                          <span className="text-white/30 text-[10px] font-bold uppercase tracking-widest">{item.count} חברי קהילה</span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-left">
+                        <div className="flex flex-col items-end">
+                          <span className={`font-black text-2xl ${item.retention >= 90 ? 'text-emerald-400' : 'text-white'}`}>
+                            {item.retention}%
+                          </span>
+                          <span className="text-white/20 text-[9px] uppercase font-black tracking-widest">מדד התמדה</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Impact Insight */}
+                <div className="mt-10 pt-6 border-t border-white/10">
+                  <div className="bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20">
+                    <p className="text-xs text-blue-300 leading-relaxed text-center font-bold">
+                      💡 <strong className="text-white">תובנת אימפקט:</strong> קבוצת הנשים שומרת על אחוזי התמדה גבוהים, מה שמעיד על חיבור עמוק לקהילה למרות הייצוג המספרי הקטן.
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-right">
-                  <thead>
-                    <tr className="border-b border-slate-100">
-                      <th 
-                        className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4 cursor-pointer hover:text-[#006994] transition-colors"
-                        onClick={() => setGritSortConfig(prev => ({ key: 'firstName', direction: prev.key === 'firstName' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
-                      >
-                        <div className="flex items-center gap-1">
-                          גולש <ArrowUpDown size={12} className="opacity-50" />
-                        </div>
-                      </th>
-                      <th 
-                        className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-[#006994] transition-colors"
-                        onClick={() => setGritSortConfig(prev => ({ key: 'streak', direction: prev.key === 'streak' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
-                      >
-                        <div className="flex items-center gap-1">
-                          רצף נוכחות (Streak) <ArrowUpDown size={12} className="opacity-50" />
-                        </div>
-                      </th>
-                      <th 
-                        className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-[#006994] transition-colors"
-                        onClick={() => setGritSortConfig(prev => ({ key: 'totalAttendance', direction: prev.key === 'totalAttendance' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
-                      >
-                        <div className="flex items-center gap-1">
-                          סך הכל השתתפויות <ArrowUpDown size={12} className="opacity-50" />
-                        </div>
-                      </th>
-                      <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">מגמה</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {stats.gritLeaderboard.map((member: any) => (
-                      <tr key={member.id} className="group hover:bg-slate-50/50 transition-colors">
-                        <td className="py-4 pr-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm">
-                              <img src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.firstName + ' ' + member.lastName)}&background=006994&color=fff`} className="w-full h-full object-cover" alt="" />
-                            </div>
-                            <span className="font-black text-[#006994]">{member.firstName} {member.lastName}</span>
-                          </div>
-                        </td>
-                        <td className="py-4">
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl font-black text-[#006994]">{member.streak}</span>
-                            <span className="text-[10px] font-black text-slate-400 uppercase">סשנים רצופים</span>
-                          </div>
-                        </td>
-                        <td className="py-4 font-black text-[#4E8294]">{member.totalAttendance}</td>
-                        <td className="py-4">
-                          {member.trend === 'up' ? (
-                            <ArrowUpRight className="text-emerald-500" size={20} />
-                          ) : member.trend === 'down' ? (
-                            <ArrowDownRight className="text-rose-500" size={20} />
-                          ) : (
-                            <Minus className="text-slate-300" size={20} />
-                          )}
-                        </td>
+
+              {/* Age & Activity Card - Using White Card */}
+              <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm">
+                <div className="flex items-center gap-4 mb-10">
+                  <div className="p-3 bg-slate-50 text-emerald-600 rounded-xl shadow-sm border border-slate-100"><Activity size={20} /></div>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tighter">מדדי פעילות לפי גיל</h3>
+                </div>
+                
+                <div className="overflow-hidden rounded-3xl border border-slate-100">
+                  <table className="w-full text-right">
+                    <thead>
+                      <tr className="bg-slate-50">
+                        <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">קבוצת גיל</th>
+                        <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">סשן אחרון</th>
+                        <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">4 אחרונים</th>
+                        <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">שנתי</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {stats.ageActivityData.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-5">
+                            <span className="text-sm font-black text-slate-900">{row.label}</span>
+                          </td>
+                          <td className="p-5 text-center">
+                            <span className={`text-sm font-black ${row.lastSession >= 80 ? 'text-emerald-600' : 'text-slate-500'}`}>{row.lastSession}%</span>
+                          </td>
+                          <td className="p-5 text-center">
+                            <span className={`text-sm font-black ${row.lastFour >= 80 ? 'text-emerald-600' : 'text-slate-500'}`}>{row.lastFour}%</span>
+                          </td>
+                          <td className="p-5 text-center">
+                            <span className={`text-sm font-black ${row.annual >= 80 ? 'text-emerald-600' : 'text-slate-500'}`}>{row.annual}%</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-[9px] text-slate-300 mt-6 font-bold text-center uppercase tracking-widest">הנתונים מייצגים אחוז השתתפות מתוך פוטנציאל הקבוצה</p>
               </div>
             </div>
 
-            {/* Member Search Table */}
-            <div className="bg-white p-10 rounded-[3.5rem] border border-[#006994]/10 shadow-sm lg:col-span-2">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-slate-50 text-slate-600 rounded-xl shadow-lg"><Search size={20} /></div>
-                  <h3 className="text-2xl font-black text-[#006994]">חיפוש ומגמות אישיות</h3>
+            {/* Charts & Pulse (Left Side) - Using White Cards */}
+            <div className="lg:col-span-7 space-y-10">
+              {/* Pulse Area Chart */}
+              <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm">
+                <div className="flex items-center justify-between mb-10">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-slate-50 text-blue-600 rounded-xl shadow-sm border border-slate-100"><TrendingUp size={20} /></div>
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tighter">דופק הסשנים (Pulse)</h3>
+                  </div>
                 </div>
-                <div className="relative group min-w-[300px]">
-                  <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                  <input 
-                    type="text" 
-                    placeholder="חפש גולש..." 
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:ring-2 ring-[#006994]/10 transition-all"
-                  />
+                <div className="h-[400px] w-full mt-6">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={stats.pulseData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorPulse" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#006994" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#006994" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis 
+                        dataKey="date" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} 
+                      />
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} 
+                      />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1.5rem', border: 'none', color: '#fff' }}
+                        itemStyle={{ color: '#00FFFF', fontWeight: 900 }}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="count" 
+                        stroke="#006994" 
+                        strokeWidth={4} 
+                        fillOpacity={1} 
+                        fill="url(#colorPulse)" 
+                        animationDuration={2000}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-right">
-                  <thead>
-                    <tr className="border-b border-slate-100">
-                      <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4">גולש</th>
-                      <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">סך הכל סשנים</th>
-                      <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">מגמת שיפור</th>
-                      <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">סטטוס</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {filteredMembers.slice(0, 20).map((member) => (
-                      <tr key={member.id} className="group hover:bg-slate-50/50 transition-colors">
-                        <td className="py-4 pr-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm">
-                              <img src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.firstName + ' ' + member.lastName)}&background=006994&color=fff`} className="w-full h-full object-cover" alt="" />
-                            </div>
-                            <span className="font-black text-[#006994]">{member.firstName} {member.lastName}</span>
+              {/* Grit Leaderboard */}
+              <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-slate-50 text-amber-600 rounded-xl shadow-sm border border-slate-100">
+                      <Award size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-slate-900 tracking-tighter">מדד נחישות (Grit Leaderboard)</h3>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">טופ 50 גולשים</p>
+                    </div>
+                  </div>
+                  <div className="relative group min-w-[300px]">
+                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                    <input 
+                      type="text" 
+                      placeholder="חפש במדד נחישות..." 
+                      value={gritSearchTerm}
+                      onChange={e => setGritSearchTerm(e.target.value)}
+                      className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm text-slate-900 outline-none focus:ring-2 ring-blue-500/20 transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-right">
+                    <thead>
+                      <tr className="border-b border-slate-100">
+                        <th 
+                          className="pb-6 text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4 cursor-pointer hover:text-slate-900 transition-colors"
+                          onClick={() => setGritSortConfig(prev => ({ key: 'firstName', direction: prev.key === 'firstName' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
+                        >
+                          <div className="flex items-center gap-1">
+                            גולש <ArrowUpDown size={12} className="opacity-50" />
                           </div>
-                        </td>
-                        <td className="py-4 font-black text-[#4E8294]">{member.totalAttendance}</td>
-                        <td className="py-4">
-                          {member.trend === 'up' ? (
-                            <div className="flex items-center gap-1 text-emerald-500 font-black text-xs">
-                              <ArrowUpRight size={14} /> במגמת עלייה
-                            </div>
-                          ) : member.trend === 'down' ? (
-                            <div className="flex items-center gap-1 text-rose-500 font-black text-xs">
-                              <ArrowDownRight size={14} /> במגמת ירידה
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1 text-slate-400 font-black text-xs">
-                              <Minus size={14} /> יציב
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-4">
-                          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                            member.totalAttendance >= 5 ? 'bg-indigo-50 text-indigo-600' : 
-                            member.totalAttendance >= 2 ? 'bg-[#40E0D0]/10 text-[#006994]' : 
-                            'bg-slate-100 text-slate-400'
-                          }`}>
-                            {member.totalAttendance >= 5 ? 'Regular' : member.totalAttendance >= 2 ? 'Steady' : 'Newbie'}
-                          </span>
-                        </td>
+                        </th>
+                        <th 
+                          className="pb-6 text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-900 transition-colors"
+                          onClick={() => setGritSortConfig(prev => ({ key: 'streak', direction: prev.key === 'streak' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
+                        >
+                          <div className="flex items-center gap-1">
+                            רצף (Streak) <ArrowUpDown size={12} className="opacity-50" />
+                          </div>
+                        </th>
+                        <th 
+                          className="pb-6 text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-900 transition-colors text-center"
+                          onClick={() => setGritSortConfig(prev => ({ key: 'totalAttendance', direction: prev.key === 'totalAttendance' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            סך הכל <ArrowUpDown size={12} className="opacity-50" />
+                          </div>
+                        </th>
+                        <th className="pb-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">מגמה</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {stats.gritLeaderboard.map((member: any) => (
+                        <tr key={member.id} className="group hover:bg-slate-50 transition-colors">
+                          <td className="py-5 pr-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-slate-100 shadow-sm">
+                                <img src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.firstName + ' ' + member.lastName)}&background=006994&color=fff`} className="w-full h-full object-cover" alt="" />
+                              </div>
+                              <span className="font-black text-slate-900 text-lg">{member.firstName} {member.lastName}</span>
+                            </div>
+                          </td>
+                          <td className="py-5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-3xl font-black text-[#006994]">{member.streak}</span>
+                              <span className="text-[10px] font-black text-slate-300 uppercase">סשנים</span>
+                            </div>
+                          </td>
+                          <td className="py-5 font-black text-slate-500 text-center text-lg">{member.totalAttendance}</td>
+                          <td className="py-5 text-center">
+                            <div className="flex justify-center">
+                              {member.trend === 'up' ? (
+                                <ArrowUpRight className="text-emerald-500" size={24} />
+                              ) : member.trend === 'down' ? (
+                                <ArrowDownRight className="text-rose-500" size={24} />
+                              ) : (
+                                <Minus className="text-slate-200" size={24} />
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="py-40 text-center bg-white/40 rounded-[4rem] border-2 border-dashed border-[#006994]/10">
-          <BarChart3 size={64} className="mx-auto mb-8 text-[#006994]/20" />
-          <h3 className="text-3xl font-black text-[#4E8294] mb-4">אין מספיק נתונים לניתוח</h3>
+        <div className="py-40 text-center bg-white rounded-[4rem] border-2 border-dashed border-slate-100">
+          <BarChart3 size={64} className="mx-auto mb-8 text-slate-100" />
+          <h3 className="text-3xl font-black text-slate-900 mb-4">אין מספיק נתונים לניתוח</h3>
           <p className="text-slate-400 font-bold max-w-md mx-auto">
             כדי להציג את דף הניתוח, יש להזין סשנים במערכת החל מתאריך תחילת שנת חבל זוג ({yearConfig?.startDate || 'לא הוגדר'}).
           </p>
@@ -766,6 +808,7 @@ const SessionStatsPage: React.FC = () => {
       )}
     </div>
   );
+
 };
 
 export default SessionStatsPage;
