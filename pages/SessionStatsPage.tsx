@@ -35,6 +35,7 @@ import {
   Legend
 } from 'recharts';
 import Chart from 'react-apexcharts';
+import { Sparkles } from 'lucide-react';
 
 const SessionStatsPage: React.FC = () => {
   const { members, weeklyHistory, yearConfig, isLoading } = useData();
@@ -42,6 +43,33 @@ const SessionStatsPage: React.FC = () => {
   const [gritSearchTerm, setGritSearchTerm] = useState('');
   const [ageView, setAgeView] = useState<'annual' | 'monthly' | 'lastSession'>('annual');
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+
+  // Helper to count Thursdays between two dates
+  const countThursdays = (start: string | Date, end: string | Date) => {
+    if (!start || !end) return 0;
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return 0;
+    
+    let count = 0;
+    const current = new Date(startDate);
+    
+    // Normalize to start of day
+    current.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    // Find first Thursday
+    while (current.getDay() !== 4 && current <= endDate) {
+      current.setDate(current.getDate() + 1);
+    }
+    
+    while (current <= endDate) {
+      count++;
+      current.setDate(current.getDate() + 7);
+    }
+    return count;
+  };
+
   const [gritSortConfig, setGritSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({
     key: 'streak',
     direction: 'desc'
@@ -53,10 +81,17 @@ const SessionStatsPage: React.FC = () => {
     const now = new Date();
     // 1. Filter sessions by Shnat Hevel Zug start date
     const startDate = new Date(yearConfig.startDate);
+    const seenDates = new Set<string>();
     const filteredSessions = weeklyHistory
       .filter(session => {
         const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
-        return sessionDate >= startDate && sessionDate <= now && (session.participantsCount || 0) > 0;
+        const dateKey = sessionDate.toDateString();
+        // Only count unique days with participants within the date range
+        if (sessionDate >= startDate && sessionDate <= now && (session.participantsCount || 0) > 0 && !seenDates.has(dateKey)) {
+          seenDates.add(dateKey);
+          return true;
+        }
+        return false;
       })
       .sort((a, b) => {
         const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
@@ -437,18 +472,100 @@ const SessionStatsPage: React.FC = () => {
             ניתוח עומק של ביצועי הנבחרת, מגמות נוכחות ופילוח גולשים. 🌊
           </p>
 
-          {/* Sea-Time Dashboard Widget - Centered below subtitle */}
-          <div className="relative group pt-4">
-            <div className="absolute inset-0 bg-blue-500/10 blur-2xl group-hover:bg-blue-500/20 transition-all duration-500" />
-            <div className="relative bg-[#F5F7FA] p-8 rounded-[3rem] text-center min-w-[280px] shadow-soft border border-slate-200">
-              <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-2">זמן ים מצטבר (הערכה)</p>
-              <div className="flex flex-col items-center">
-                <span className="text-6xl font-black text-[#2D3748] drop-shadow-sm">
-                  {stats?.totalSeaTimeHours || 0}
-                </span>
-                <span className="text-xl font-black text-[#1A365D] mt-1">שעות גלישה הוענקו</span>
+          {/* Sea-Time & Progress Bar Row */}
+          <div className="flex flex-col md:flex-row gap-8 items-center justify-center pt-4 w-full">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-blue-500/10 blur-2xl group-hover:bg-blue-500/20 transition-all duration-500" />
+              <div className="relative bg-[#F5F7FA] p-8 rounded-[3rem] text-center min-w-[280px] shadow-soft border border-slate-200">
+                <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-2">זמן ים מצטבר (הערכה)</p>
+                <div className="flex flex-col items-center">
+                  <span className="text-6xl font-black text-[#2D3748] drop-shadow-sm">
+                    {stats?.totalSeaTimeHours || 0}
+                  </span>
+                  <span className="text-xl font-black text-[#1A365D] mt-1">שעות גלישה מצטברות</span>
+                </div>
+                <p className="text-[9px] text-[#4A5568]/40 mt-4 font-bold">* מבוסס על הערכה של 90 דק' גלישה למשתתף</p>
               </div>
-              <p className="text-[9px] text-[#4A5568]/40 mt-4 font-bold">* מבוסס על הערכה של 90 דק' גלישה למשתתף</p>
+            </div>
+
+            {/* Yearly Progress Bar Widget */}
+            <div className="relative group w-full max-w-xl">
+              <div className="absolute inset-0 bg-blue-500/5 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500" />
+              <div className="relative bg-[#F5F7FA] p-8 rounded-[3rem] shadow-soft border border-slate-200 flex flex-col w-full">
+                {(() => {
+                  const now = new Date();
+                  const startDate = yearConfig?.startDate || new Date().toISOString();
+                  const endDate = yearConfig?.endDate || new Date(new Date().getFullYear(), 11, 31).toISOString();
+                  
+                  // Potential is the number of Thursdays in the entire year config range
+                  const totalPotential = countThursdays(startDate, endDate);
+                  // Planned to date is the number of Thursdays from start until today (or end of year if today is after)
+                  const plannedToDate = countThursdays(startDate, now < new Date(endDate) ? now : endDate);
+                  
+                  const actualSessions = stats?.totalSessions || 0;
+                  const percentage = totalPotential > 0 ? Math.round((actualSessions / totalPotential) * 100) : 0;
+                  const targetPercent = totalPotential > 0 ? Math.min(100, (plannedToDate / totalPotential) * 100) : 0;
+                  
+                  return (
+                    <>
+                      <div className="flex flex-col items-center mb-6">
+                        <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-2">התקדמות שנתית - חבל זוג</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-3xl font-black text-[#1A365D]">{percentage}%</span>
+                          <span className="text-[10px] font-black text-[#4A5568]/40 uppercase">ביצוע</span>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar Container */}
+                      <div className="relative h-12 w-full bg-slate-200/50 rounded-2xl overflow-visible mb-8 border border-slate-200 shadow-inner">
+                        {/* Percentage Markers */}
+                        <div className="absolute -top-6 left-0 w-full flex justify-between px-1">
+                          {[0, 20, 40, 60, 80, 100].map(p => (
+                            <span key={p} className="text-[8px] font-black text-slate-400">{p}%</span>
+                          ))}
+                        </div>
+
+                        {/* Actual Progress Fill - Growing from Right to Left (RTL) */}
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, percentage)}%` }}
+                          transition={{ duration: 1.5, ease: "easeOut" }}
+                          className="absolute inset-y-0 right-0 bg-gradient-to-l from-blue-400 to-blue-600 rounded-r-2xl shadow-[0_0_15px_rgba(37,99,235,0.3)] z-10"
+                        >
+                          <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.1)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.1)_50%,rgba(255,255,255,0.1)_75%,transparent_75%,transparent)] bg-[length:20px_20px] opacity-20" />
+                        </motion.div>
+
+                        {/* Target Marker (Today's Plan) - Positioned from Right (RTL) */}
+                        <div 
+                          className="absolute inset-y-0 w-1 bg-orange-500 z-20 shadow-[0_0_8px_rgba(249,115,22,0.5)]"
+                          style={{ right: `${targetPercent}%` }}
+                        >
+                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                            <span className="text-[9px] font-black text-orange-600 whitespace-nowrap bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200 shadow-sm">היעד להיום</span>
+                            <div className="w-0.5 h-2 bg-orange-500" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Data Display Row */}
+                      <div className="flex flex-wrap justify-between gap-4 text-[11px] font-bold text-[#4A5568]">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-blue-500" />
+                          <span>ביצוע בפועל: <strong className="text-[#2D3748]">{actualSessions} סשנים</strong></span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-orange-500" />
+                          <span>תכנון עד היום: <strong className="text-[#2D3748]">{plannedToDate} סשנים</strong></span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-slate-300" />
+                          <span>סך הכל שנתי (פוטנציאל): <strong className="text-[#2D3748]">{totalPotential} סשנים</strong></span>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
             </div>
           </div>
         </div>
@@ -456,15 +573,11 @@ const SessionStatsPage: React.FC = () => {
 
       {stats ? (
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-[400px]">
-          {/* Top Stats Row - Using Modern White Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">סך הכל סשנים</p>
-              <p className="text-4xl font-black text-slate-900">{stats.totalSessions}</p>
-            </div>
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ממוצע גולשים לסשן</p>
+          {/* Top Stats Row - Smaller Horizontal Cards */}
+          <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
+            <div className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center aspect-square">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <p className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">ממוצע גולשים</p>
                 <div className="relative">
                   <button 
                     onClick={() => setActiveTooltip(activeTooltip === 'avg' ? null : 'avg')}
@@ -476,7 +589,7 @@ const SessionStatsPage: React.FC = () => {
                         : 'bg-slate-50 border-slate-100'
                     }`}
                   >
-                    <Info size={14} className={`transition-colors ${activeTooltip === 'avg' ? 'text-slate-900' : 'text-slate-300'}`} />
+                    <Info size={10} className={`transition-colors ${activeTooltip === 'avg' ? 'text-slate-900' : 'text-slate-300'}`} />
                   </button>
                   <AnimatePresence>
                     {activeTooltip === 'avg' && (
@@ -484,20 +597,21 @@ const SessionStatsPage: React.FC = () => {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute bottom-full right-0 mb-3 w-56 p-3 bg-slate-900 text-white text-[11px] font-bold rounded-2xl z-50 shadow-2xl border border-white/20 backdrop-blur-md pointer-events-none"
+                        className="absolute bottom-full right-0 mb-3 w-40 p-2 bg-slate-900 text-white text-[9px] font-bold rounded-xl z-50 shadow-2xl border border-white/20 backdrop-blur-md pointer-events-none"
                       >
-                        מספר המשתתפים הממוצע לסשן בודד, מתחילת שנת חבל זוג ועד היום.
+                        ממוצע משתתפים לסשן.
                         <div className="absolute top-full right-3 border-[6px] border-transparent border-t-slate-900"></div>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               </div>
-              <p className="text-4xl font-black text-slate-900">{stats.avgAttendance}</p>
+              <p className="text-2xl md:text-4xl font-black text-slate-900">{stats.avgAttendance}</p>
             </div>
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סך כל הכניסות למים</p>
+
+            <div className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center aspect-square">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <p className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">כניסות למים</p>
                 <div className="relative">
                   <button 
                     onClick={() => setActiveTooltip(activeTooltip === 'total' ? null : 'total')}
@@ -509,7 +623,7 @@ const SessionStatsPage: React.FC = () => {
                         : 'bg-slate-50 border-slate-100'
                     }`}
                   >
-                    <Info size={14} className={`transition-colors ${activeTooltip === 'total' ? 'text-slate-900' : 'text-slate-300'}`} />
+                    <Info size={10} className={`transition-colors ${activeTooltip === 'total' ? 'text-slate-900' : 'text-slate-300'}`} />
                   </button>
                   <AnimatePresence>
                     {activeTooltip === 'total' && (
@@ -517,26 +631,27 @@ const SessionStatsPage: React.FC = () => {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute bottom-full right-0 mb-3 w-56 p-3 bg-slate-900 text-white text-[11px] font-bold rounded-2xl z-50 shadow-2xl border border-white/20 backdrop-blur-md pointer-events-none"
+                        className="absolute bottom-full right-0 mb-3 w-40 p-2 bg-slate-900 text-white text-[9px] font-bold rounded-xl z-50 shadow-2xl border border-white/20 backdrop-blur-md pointer-events-none"
                       >
-                        סך ההשתתפויות המצטבר של כל חברי הנבחרת בכל הסשנים שהתקיימו מתחילת שנת חבל זוג.
+                        סך השתתפויות מצטבר.
                         <div className="absolute top-full right-3 border-[6px] border-transparent border-t-slate-900"></div>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               </div>
-              <p className="text-4xl font-black text-slate-900">{stats.totalAttendance}</p>
+              <p className="text-2xl md:text-4xl font-black text-slate-900">{stats.totalAttendance}</p>
             </div>
-            <div className={`p-8 rounded-[2.5rem] border shadow-sm flex flex-col justify-between ${
+
+            <div className={`p-4 rounded-[2rem] border shadow-sm flex flex-col items-center justify-center text-center aspect-square ${
               stats.globalTrend === 'up' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
               stats.globalTrend === 'down' ? 'bg-rose-50 border-rose-100 text-rose-600' : 
               'bg-white border-slate-100 text-slate-400'
             }`}>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-60">מגמת נוכחות כללית</p>
-              <div className="flex items-center gap-3">
-                {stats.globalTrend === 'up' ? <ArrowUpRight size={32} /> : stats.globalTrend === 'down' ? <ArrowDownRight size={32} /> : <Minus size={32} />}
-                <p className="text-3xl font-black">{stats.trendPercentage}%</p>
+              <p className="text-[8px] md:text-[9px] font-black uppercase tracking-widest opacity-60 mb-2">מגמת נוכחות</p>
+              <div className="flex items-center gap-2">
+                {stats.globalTrend === 'up' ? <ArrowUpRight size={20} /> : stats.globalTrend === 'down' ? <ArrowDownRight size={20} /> : <Minus size={20} />}
+                <p className="text-xl md:text-3xl font-black">{stats.trendPercentage}%</p>
               </div>
             </div>
           </div>

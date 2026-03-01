@@ -3,7 +3,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
-import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp } from 'lucide-react';
+import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp, Skull, TriangleAlert } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getStorageSizeMB } from '../utils/storageStats';
 import StorageDisplay from './StorageDisplay';
@@ -375,46 +375,75 @@ const SystemMonitor: React.FC = () => {
           </div>
         </div>
 
-        {/* Emergency Button - Centered */}
-        <div className="w-full flex justify-center pt-4">
-          <button 
-            onClick={handleButtonClick}
-            className={`relative px-8 py-4 rounded-xl font-black text-sm transition-all shadow-soft border-2 ${
-              isKillSwitchActive || countdown !== null
-                ? 'bg-rose-500 text-white border-rose-600'
-                : 'bg-[#F5F7FA] text-[#2D3748] border-slate-200 hover:bg-slate-200'
-            }`}
-            title={isKillSwitchActive ? "Reconnect to database" : countdown !== null ? "Click to Abort Shutdown" : "Emergency Database Shutdown"}
-          >
-            <div className="relative z-10 flex items-center">
-              {isKillSwitchActive ? (
-                <span>RECONNECT TO DATABASE</span>
-              ) : countdown !== null ? (
-                <span>SHUTTING DOWN IN {countdown}s...</span>
-              ) : (
-                <span>EMERGENCY DATABASE SHUTDOWN</span>
-              )}
-            </div>
+        {/* Emergency Button - Centered Push Button Style */}
+        <div className="w-full flex justify-center pt-8 pb-12">
+          <div className="relative group">
+            {/* Outer Ring/Base of the button */}
+            <div className="absolute -inset-4 bg-slate-200 rounded-full shadow-inner border border-slate-300" />
+            
+            <motion.button 
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.9, y: 4, boxShadow: '0px 5px 10px rgba(0,0,0,0.3)' }}
+              onClick={handleButtonClick}
+              className={`relative w-48 h-48 rounded-full font-black text-xs transition-all duration-300 flex flex-col items-center justify-center p-6 text-center shadow-[0_15px_0_rgb(153,0,0),0_25px_50px_rgba(0,0,0,0.4)] border-4 ${
+                isKillSwitchActive || countdown !== null
+                  ? 'bg-[#FF0000] text-white border-[#CC0000]'
+                  : 'bg-[#FF0000] text-white border-[#CC0000]'
+              }`}
+              style={{ 
+                transformStyle: 'preserve-3d',
+              }}
+              title={isKillSwitchActive ? "Reconnect to database" : countdown !== null ? "Click to Abort Shutdown" : "Emergency Database Shutdown"}
+            >
+              {/* Inner Bezel/Glow */}
+              <div className="absolute inset-2 rounded-full border-2 border-white/20 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent rounded-full pointer-events-none" />
+              
+              <div className="relative z-10 flex flex-col items-center gap-2">
+                {isKillSwitchActive ? (
+                  <>
+                    <RefreshCw size={32} className="animate-spin mb-1" />
+                    <span className="leading-tight uppercase text-[10px]">RECONNECT<br/>DATABASE</span>
+                  </>
+                ) : countdown !== null ? (
+                  <>
+                    <TriangleAlert size={32} className="animate-pulse text-yellow-300 mb-1" />
+                    <span className="leading-tight uppercase text-[10px]">SHUTDOWN<br/>{countdown}s</span>
+                    <Skull size={24} className="animate-bounce mt-1" />
+                  </>
+                ) : (
+                  <>
+                    <TriangleAlert size={40} className="group-hover:scale-110 transition-transform mb-1" />
+                    <span className="leading-tight uppercase text-[10px]">EMERGENCY<br/>SHUTDOWN</span>
+                    <Skull size={32} className="group-hover:rotate-12 transition-transform mt-1" />
+                  </>
+                )}
+              </div>
 
-            {/* Pulse Ring for Active State */}
-            {(isKillSwitchActive || countdown !== null) && (
-              <div className="absolute inset-0 border-4 border-rose-500/30 rounded-xl animate-ping pointer-events-none" />
-            )}
-          </button>
+              {/* Danger Glow for Active State */}
+              {(isKillSwitchActive || countdown !== null) && (
+                <div className="absolute inset-0 bg-white animate-pulse opacity-10 rounded-full" />
+              )}
+            </motion.button>
+          </div>
         </div>
       </div>
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-lg animate-in fade-in">
-          <div className="bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col border-4 border-[var(--tmobile-primary)]" dir="rtl">
-            <div className="bg-[var(--tmobile-primary)] p-8 text-white flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                <ShieldAlert size={32} className="text-white" />
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl animate-in fade-in">
+          <div className="bg-white w-full max-w-md rounded-[3rem] shadow-[0_0_100px_rgba(255,0,0,0.3)] overflow-hidden animate-in zoom-in-95 flex flex-col border-4 border-[#FF0000]" dir="rtl">
+            <div className="bg-[#FF0000] p-8 text-white flex items-center gap-4 relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.3)_0%,transparent_70%)] animate-pulse" />
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl border border-white/30 rotate-3">
+                <Skull size={40} className="text-white animate-pulse" />
               </div>
-              <div>
-                <h4 className="font-black text-xl uppercase tracking-tight">פרוטוקול חירום</h4>
-                <p className="text-xs opacity-70 font-bold">השבתת מסד נתונים מיידית</p>
+              <div className="relative z-10">
+                <h4 className="font-black text-2xl uppercase tracking-tighter flex items-center gap-2">
+                  <TriangleAlert size={24} className="text-yellow-400" />
+                  פרוטוקול חירום
+                </h4>
+                <p className="text-xs opacity-80 font-black uppercase tracking-widest">CRITICAL SYSTEM SHUTDOWN</p>
               </div>
             </div>
             
@@ -423,12 +452,12 @@ const SystemMonitor: React.FC = () => {
                 <p className="text-slate-900 font-black text-lg leading-tight">
                   האם אתה בטוח שברצונך להשבית את מסד הנתונים?
                 </p>
-                <div className="bg-rose-50 p-4 rounded-2xl border border-rose-100 space-y-2">
-                  <p className="text-rose-600 text-sm font-bold flex items-start gap-2">
+                <div className="bg-red-50 p-4 rounded-2xl border border-red-100 space-y-2">
+                  <p className="text-[#FF0000] text-sm font-bold flex items-start gap-2">
                     <AlertCircle size={16} className="mt-0.5 shrink-0" />
                     <span>פעולה זו תנתק את כל המשתמשים המחוברים ותחסום כל גישה למידע באתר.</span>
                   </p>
-                  <p className="text-rose-600 text-sm font-bold flex items-start gap-2">
+                  <p className="text-[#FF0000] text-sm font-bold flex items-start gap-2">
                     <AlertCircle size={16} className="mt-0.5 shrink-0" />
                     <span>האתר יפסיק לתפקד עד שתפעיל מחדש את הגישה.</span>
                   </p>
@@ -441,8 +470,9 @@ const SystemMonitor: React.FC = () => {
                     setShowConfirmModal(false);
                     setCountdown(10);
                   }}
-                  className="flex-1 py-4 bg-[var(--tmobile-primary)] text-white rounded-2xl font-black text-lg hover:opacity-90 transition-all shadow-lg active:scale-95"
+                  className="flex-1 py-4 bg-[#FF0000] text-white rounded-2xl font-black text-lg hover:bg-[#CC0000] transition-all shadow-[0_10px_30px_rgba(255,0,0,0.4)] active:scale-95 flex items-center justify-center gap-2"
                 >
+                  <Skull size={20} />
                   אישור (הפעל טיימר)
                 </button>
                 <button 
@@ -458,7 +488,7 @@ const SystemMonitor: React.FC = () => {
       )}
 
       {liveReads > 1000 && (
-        <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-center gap-4 text-rose-600 animate-pulse">
+        <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center gap-4 text-[#FF0000] animate-pulse">
           <ShieldAlert size={24} />
           <p className="font-black text-sm">⚠️ High Read Traffic detected in this session!</p>
         </div>

@@ -321,7 +321,7 @@ const CommunityAnalytics: React.FC = () => {
 
             {/* Donut Chart Area */}
             <div className="w-full flex-1 relative flex items-center justify-center min-h-[280px]">
-              <svg width="100%" height="100%" viewBox="150 150 700 700" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible max-w-[400px]">
+              <svg width="100%" height="100%" viewBox="50 50 900 900" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible max-w-[420px]">
                 <defs>
                   <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
@@ -380,13 +380,13 @@ const CommunityAnalytics: React.FC = () => {
                     
                     // Callout Line Coordinates
                     const lineStartRadius = radius + strokeWidth / 2 + 10;
-                    const lineMidRadius = radius + strokeWidth / 2 + 80;
+                    const lineMidRadius = radius + strokeWidth / 2 + 60;
                     
                     const sx = centerX + lineStartRadius * Math.cos(rad);
                     const sy = centerY + lineStartRadius * Math.sin(rad);
                     const mx = centerX + lineMidRadius * Math.cos(rad);
                     const my = centerY + lineMidRadius * Math.sin(rad);
-                    const ex = mx + (Math.cos(rad) > 0 ? 50 : -50);
+                    const ex = mx + (Math.cos(rad) > 0 ? 40 : -40);
                     const ey = my;
 
                     const x1 = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
@@ -1073,11 +1073,20 @@ const CommunityAnalytics: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Churn Buckets Section */}
-        <div className="lg:col-span-2 flex flex-row justify-center gap-8 mt-12">
-          <ChurnBucket title="שיעור עזיבה חודשי" percentage={stats.churnRate} />
-          <ChurnBucket title="שיעור עזיבה שנתי" percentage={stats.annualChurnRate} />
-        </div>
+        {/* Churn Buckets Section - Unified Background */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="lg:col-span-2 bg-gradient-to-br from-slate-100 to-slate-200 p-10 rounded-[4rem] border border-slate-300 shadow-xl mt-12 relative overflow-hidden group"
+        >
+          {/* Glossy Shimmer for the whole container */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-30 pointer-events-none" />
+          
+          <div className="flex flex-row justify-center gap-16">
+            <ChurnBucket title="שיעור עזיבה חודשי" percentage={stats.churnRate} />
+            <ChurnBucket title="שיעור עזיבה שנתי" percentage={stats.annualChurnRate} />
+          </div>
+        </motion.div>
 
       </div>
 
@@ -1091,41 +1100,34 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
   const label = isAnnual ? 'שנתי' : 'חודשי';
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex-1 max-w-[280px] bg-gradient-to-br from-slate-100 to-slate-200 p-8 rounded-[3.5rem] border border-slate-300 shadow-xl flex flex-col items-center text-center relative overflow-hidden group"
-    >
-      {/* Glossy Shimmer */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-30 pointer-events-none" />
-      
-      <h3 className="text-[#1A365D] font-black text-sm mb-8 tracking-tight uppercase opacity-40 mix-blend-multiply">
+    <div className="flex-1 max-w-[220px] flex flex-col items-center text-center relative group/bucket">
+      <h3 className="text-[#1A365D] font-black text-[11px] mb-8 tracking-tight uppercase opacity-50 mix-blend-multiply -mt-2">
         {title}
       </h3>
 
-      <div className="relative w-32 h-44 mb-6">
+      <div className="relative w-24 h-32 mb-4">
         {/* Industrial Bucket Handle */}
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-28 h-16 border-[5px] border-slate-400 border-b-0 rounded-t-[4rem] shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-20 h-10 border-[4px] border-slate-400 border-b-0 rounded-t-[3rem] shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
           {/* Welding Mark Left */}
-          <div className="absolute bottom-0 -left-2 w-4 h-4 rounded-full bg-slate-500/30 blur-[1px]" />
+          <div className="absolute bottom-0 -left-1.5 w-3 h-3 rounded-full bg-slate-500/30 blur-[1px]" />
           {/* Welding Mark Right */}
-          <div className="absolute bottom-0 -right-2 w-4 h-4 rounded-full bg-slate-500/30 blur-[1px]" />
+          <div className="absolute bottom-0 -right-1.5 w-3 h-3 rounded-full bg-slate-500/30 blur-[1px]" />
         </div>
         
         {/* Bucket Body - Brushed Metal Render */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-400 via-slate-200 to-slate-400 border-x border-slate-500/30 border-b border-slate-500/50 rounded-b-[2rem] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.2),inset_0_-10px_20px_rgba(0,0,0,0.1)] z-10">
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-400 via-slate-200 to-slate-400 border-x border-slate-500/30 border-b border-slate-500/50 rounded-b-[1.5rem] overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.2),inset_0_-8px_15px_rgba(0,0,0,0.1)] z-10">
           
           {/* Etched Scale (0-100) */}
-          <div className="absolute left-2 top-0 bottom-0 flex flex-col justify-between py-4 opacity-30 pointer-events-none">
+          <div className="absolute left-1.5 top-0 bottom-0 flex flex-col justify-between py-2 opacity-30 pointer-events-none">
             {[100, 75, 50, 25, 0].map(n => (
-              <span key={n} className="text-[8px] font-mono font-bold text-slate-800 leading-none">{n}</span>
+              <span key={n} className="text-[7px] font-mono font-bold text-slate-800 leading-none">{n}</span>
             ))}
           </div>
 
           {/* Etched Label into Metal */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
             <span 
-              className="text-2xl font-black text-slate-600/40 uppercase tracking-widest rotate-[-15deg]"
+              className="text-xl font-black text-slate-600/40 uppercase tracking-widest rotate-[-15deg]"
               style={{ 
                 textShadow: '-1px -1px 1px rgba(255,255,255,0.5), 1px 1px 1px rgba(0,0,0,0.2)',
               }}
@@ -1142,13 +1144,13 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
             className="absolute bottom-0 left-0 w-full bg-gradient-to-b from-blue-500/90 via-blue-600/80 to-blue-800/90 z-10"
           >
             {/* Surface Waves & Reflections */}
-            <div className="absolute -top-2 left-0 w-full h-4 overflow-hidden">
+            <div className="absolute -top-1.5 left-0 w-full h-3 overflow-hidden">
               <motion.div 
-                animate={{ x: [-20, 0, -20] }}
+                animate={{ x: [-15, 0, -15] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="w-[120%] h-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.4),transparent)] blur-[2px]" 
+                className="w-[120%] h-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.4),transparent)] blur-[1.5px]" 
               />
-              <div className="absolute top-0 left-0 w-full h-1 bg-white/30 blur-[1px]" />
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-white/30 blur-[0.5px]" />
             </div>
 
             {/* Internal Reflections on Metal Walls */}
@@ -1156,7 +1158,7 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
             
             {/* Dynamic Bubbles/Turbulence */}
             <div className="absolute inset-0 overflow-hidden">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(3)].map((_, i) => (
                 <motion.div
                   key={i}
                   initial={{ y: '100%', opacity: 0 }}
@@ -1167,7 +1169,7 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
                     delay: Math.random() * 2,
                     ease: "linear"
                   }}
-                  className="absolute w-1 h-1 bg-white/40 rounded-full"
+                  className="absolute w-0.5 h-0.5 bg-white/40 rounded-full"
                   style={{ left: `${20 + Math.random() * 60}%` }}
                 />
               ))}
@@ -1179,23 +1181,22 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
         </div>
       </div>
 
-      <div className="relative z-20 mt-2">
+      <div className="relative z-20 mt-1">
         <div className="relative inline-block">
           <span 
-            className="text-5xl font-black text-slate-800 tracking-tighter"
+            className="text-4xl font-black text-slate-800 tracking-tighter"
             style={{ 
-              textShadow: '0 4px 8px rgba(0,0,0,0.1)',
+              textShadow: '0 3px 6px rgba(0,0,0,0.1)',
             }}
           >
             {percentage}%
           </span>
-          {/* Etched effect for the percentage label on the metal surface if it was part of the bucket */}
-          <div className="absolute -top-12 -right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-             <Sparkles className="w-4 h-4 text-blue-400 animate-pulse" />
+          <div className="absolute -top-8 -right-3 opacity-0 group-hover/bucket:opacity-100 transition-opacity duration-500">
+             <Sparkles className="w-3 h-3 text-blue-400 animate-pulse" />
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
