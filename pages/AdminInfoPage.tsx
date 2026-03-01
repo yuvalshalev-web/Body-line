@@ -51,14 +51,14 @@ const AdminInfoPage: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 font-['Assistant']" dir="rtl">
       {/* Header */}
       <div className="mb-12 text-center md:text-right">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-900 text-[#00FFFF] text-[10px] font-black rounded-full mb-4 shadow-xl">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#F5F7FA] text-[#2D3748] text-[10px] font-black rounded-full mb-4 shadow-soft border border-slate-200">
           <ShieldAlert size={14} />
           מרכז הבקרה "תצפית הים"
         </div>
-        <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
+        <h1 className="text-4xl md:text-5xl font-black text-[#2D3748] tracking-tighter leading-none">
           דופק הקהילה: תמונת מצב
         </h1>
-        <p className="text-slate-400 font-bold mt-3 text-lg">
+        <p className="text-[#4A5568] font-bold mt-3 text-lg">
           ניטור בזמן אמת של פעילות הקהילה והמערכת
         </p>
       </div>

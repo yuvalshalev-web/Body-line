@@ -3,52 +3,44 @@
 :root {
   --primary-font: 'Assistant', sans-serif;
   --accent-blue: #2563eb;
-  --bg-main: #ffffff;
-  --bg-alt: #f8fafc;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
+  --bg-main: #FFFFFF;
+  --bg-alt: #F5F7FA;
+  --text-main: #2D3748;
+  --text-muted: #4A5568;
 
-  /* --- OceanTheme --- */
-  --ocean-bg: #0D3B46;
-  --ocean-pipe-empty: #1B5E6E;
-  --ocean-liquid: #00CED1;
-  --ocean-text-main: #D1E1E4;
-  --ocean-text-dim: #6096A4;
-  --ocean-milestone: #FFFFFF;
-  --ocean-glass: rgba(255, 255, 255, 0.1);
-
-  /* --- SandTheme: Warm & Natural Earth Tones --- */
-  --sand-light: #ECC48B;         /* חול בהיר - לטקסטים מודגשים או רקעים רכים */
-  --sand-medium: #B39365;        /* חול קלאסי - לאלמנטים מבניים משניים */
-  --sand-dark: #684628;          /* אדמה עמוקה - לטקסטים כהים על רקע בהיר */
-  --sand-accent: #A67746;        /* צבע דגש חם - לכפתורים או אייקונים */
-  --sand-shadow: #2E1D0D;        /* צל עמוק מאוד - לניגודיות חזקה */
-  --sand-muted: #9E7E5E;         /* גוון חול מעומעם - למצבי Hover או Disable */
+  /* --- OceanTheme (Updated for Contrast) --- */
+  --ocean-navy: #1A365D;
+  --ocean-deep: #2C5282;
+  --ocean-seafoam: #4FD1C5;
+  --ocean-sky: #63B3ED;
+  --ocean-coral: #4299E1;
   
-  /* --- T-Mobile Theme: Magenta & Pink Tones --- */
-  --tmobile-primary: #ff009f;    /* מגנטה ראשי */
-  --tmobile-secondary: #f063c1;  /* ורוד עמוק */
-  --tmobile-light: #f7c1ea;      /* ורוד בהיר */
-  --tmobile-extra-light: #ffd2fa; /* ורוד רך מאוד */
-  --tmobile-bg: #f2def0;         /* רקע ורדרד עדין */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 32px;
   
-  /* Gold Legend Special */
-  --gold-finish: #D0AB7B;        /* צבע הזהב הסופי לדרגת ה-Legend */
+  --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
 
-  /* --- מבנה וריווחים (Structure) --- */
-  --radius-sm: 8px;    /* לפינות של כפתורים או סמנים */
-  --radius-md: 16px;   /* לפינות של ה-Progress Bar */
-  --radius-lg: 24px;   /* לפינות של הכרטיסים הראשיים (Cards) */
-  
-  --spacing-xs: 4px;   /* ריווח בין אייקון לטקסט */
-  --spacing-sm: 12px;  /* ריווח בתוך רכיבים קטנים */
-  --spacing-md: 20px;  /* ריווח פנימי של כרטיסים (Padding) */
-  --spacing-lg: 32px;  /* ריווח בין כרטיסים שונים */
+.grain-overlay {
+  display: none; /* Removed for clean white look */
+}
 
-  /* --- אפקטים של עומק (Depth) --- */
-  --glow-soft: 0 0 10px rgba(0, 206, 209, 0.3);
-  --glow-intense: 0 0 20px rgba(0, 206, 209, 0.6);
-  --glass-blur: blur(12px);
+.ambient-light {
+  display: none; /* Removed for clean white look */
+}
+
+.ambient-blue {
+  top: -10%;
+  left: -10%;
+  background: radial-gradient(circle, #4facfe 0%, transparent 70%);
+}
+
+.ambient-purple {
+  bottom: -10%;
+  right: -10%;
+  background: radial-gradient(circle, #a855f7 0%, transparent 70%);
 }
 
 body {

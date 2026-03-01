@@ -32,7 +32,7 @@ const SessionDetails: React.FC<SessionDetailsProps> = ({ session, members, onClo
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
-        className="bg-gradient-to-br from-[var(--ocean-bg)] to-[#062c35] w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-white/10 relative"
+        className="bg-gradient-to-br from-[#021626] to-[#010d17] w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-white/10 relative"
         onClick={e => e.stopPropagation()}
         dir="rtl"
       >
@@ -44,7 +44,7 @@ const SessionDetails: React.FC<SessionDetailsProps> = ({ session, members, onClo
         <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-black/20 rounded-full blur-[80px] pointer-events-none" />
 
         {/* Header */}
-        <div className="relative h-48 bg-gradient-to-b from-[var(--ocean-liquid)]/20 to-transparent p-8 flex flex-col justify-end border-b border-white/5">
+        <div className="relative h-48 bg-gradient-to-b from-blue-400/20 to-transparent p-8 flex flex-col justify-end border-b border-white/5">
           <button 
             onClick={onClose}
             className="absolute top-6 left-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all z-20"
@@ -79,7 +79,7 @@ const SessionDetails: React.FC<SessionDetailsProps> = ({ session, members, onClo
 
           <div className="space-y-4">
             <h3 className="text-lg font-black text-white flex items-center gap-2">
-              <Users size={20} className="text-[var(--ocean-liquid)]" />
+              <Users size={20} className="text-blue-400" />
               רשימת משתתפים
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -108,7 +108,7 @@ const SessionDetails: React.FC<SessionDetailsProps> = ({ session, members, onClo
         <div className="p-6 bg-black/20 border-t border-white/5 flex justify-center relative z-10">
           <button 
             onClick={onClose}
-            className="px-12 py-4 bg-[var(--ocean-liquid)] text-[var(--ocean-bg)] rounded-2xl font-black text-lg hover:bg-[var(--ocean-liquid)]/90 transition-all active:scale-95"
+            className="px-12 py-4 bg-blue-400 text-[#021626] rounded-2xl font-black text-lg hover:bg-blue-400/90 transition-all active:scale-95"
           >
             סגור
           </button>

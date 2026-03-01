@@ -408,9 +408,9 @@ const SessionStatsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 bg-[#0f172a] fixed inset-0 z-50">
-        <Loader2 className="animate-spin text-[#00FFFF]" size={40} />
-        <p className="text-white font-black animate-pulse">טוען נתונים...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 bg-[#F5F7FA] fixed inset-0 z-50">
+        <Loader2 className="animate-spin text-[#1A365D]" size={40} />
+        <p className="text-[#2D3748] font-black animate-pulse">טוען נתונים...</p>
       </div>
     );
   }
@@ -424,31 +424,31 @@ const SessionStatsPage: React.FC = () => {
       {/* Unified Header */}
       <header className="mb-16 relative">
         <div className="flex flex-col items-center text-center space-y-6">
-          <div className="header-badge-glass">
-            <Activity size={12} className="text-[#00f2fe]" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#F5F7FA] text-[#2D3748] text-[10px] font-black rounded-full shadow-soft border border-slate-200">
+            <Activity size={12} className="text-[#1A365D]" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Session Dive Analytics</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-black header-title-gradient tracking-tighter leading-none uppercase">
+          <h1 className="text-5xl md:text-7xl font-black text-[#2D3748] tracking-tighter leading-none uppercase">
             צלילה לסשנים
           </h1>
           
-          <p className="header-subtitle max-w-2xl text-xl font-bold">
+          <p className="text-[#4A5568] max-w-2xl text-xl font-bold">
             ניתוח עומק של ביצועי הנבחרת, מגמות נוכחות ופילוח גולשים. 🌊
           </p>
 
           {/* Sea-Time Dashboard Widget - Centered below subtitle */}
           <div className="relative group pt-4">
-            <div className="absolute inset-0 bg-blue-500/20 blur-2xl group-hover:bg-blue-500/30 transition-all duration-500" />
-            <div className="relative health-matrix-glass p-8 rounded-[3rem] text-center min-w-[280px] shadow-2xl border border-white/10">
-              <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">זמן ים מצטבר (הערכה)</p>
+            <div className="absolute inset-0 bg-blue-500/10 blur-2xl group-hover:bg-blue-500/20 transition-all duration-500" />
+            <div className="relative bg-[#F5F7FA] p-8 rounded-[3rem] text-center min-w-[280px] shadow-soft border border-slate-200">
+              <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-2">זמן ים מצטבר (הערכה)</p>
               <div className="flex flex-col items-center">
-                <span className="text-6xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                <span className="text-6xl font-black text-[#2D3748] drop-shadow-sm">
                   {stats?.totalSeaTimeHours || 0}
                 </span>
-                <span className="text-xl font-black text-blue-400 mt-1">שעות גלישה הוענקו</span>
+                <span className="text-xl font-black text-[#1A365D] mt-1">שעות גלישה הוענקו</span>
               </div>
-              <p className="text-[9px] text-white/20 mt-4 font-bold">* מבוסס על הערכה של 90 דק' גלישה למשתתף</p>
+              <p className="text-[9px] text-[#4A5568]/40 mt-4 font-bold">* מבוסס על הערכה של 90 דק' גלישה למשתתף</p>
             </div>
           </div>
         </div>
@@ -544,26 +544,26 @@ const SessionStatsPage: React.FC = () => {
           {/* Main Dashboard Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
-            {/* Gender Impact Card (Right Side) - Using Dark Glass for high contrast */}
+            {/* Gender Impact Card (Right Side) */}
             <div className="lg:col-span-5 space-y-10">
-              <div className="relative p-10 rounded-[3.5rem] overflow-hidden border border-white/10 shadow-2xl health-matrix-glass">
+              <div className="relative p-10 rounded-[3.5rem] overflow-hidden border border-slate-200 shadow-soft bg-[#F5F7FA]">
                 <div className="flex justify-between items-start mb-10">
                   <div>
-                    <h3 className="text-white font-black text-2xl tracking-tighter">פילוח מגדרי ואימפקט</h3>
-                    <p className="text-white/40 text-[10px] uppercase tracking-widest mt-1">תמהיל הקהילה ומדדי התמדה</p>
+                    <h3 className="text-[#2D3748] font-black text-2xl tracking-tighter">פילוח מגדרי ואימפקט</h3>
+                    <p className="text-[#4A5568] text-[10px] uppercase tracking-widest mt-1">תמהיל הקהילה ומדדי התמדה</p>
                   </div>
-                  <div className="p-3 bg-white/5 rounded-2xl text-blue-400">
+                  <div className="p-3 bg-white rounded-2xl text-[#1A365D] shadow-sm border border-slate-100">
                     <PieChartIcon size={24} />
                   </div>
                 </div>
 
                 {/* Stacked Progress Bar */}
                 <div className="mb-12">
-                  <div className="flex justify-between text-[10px] font-black text-white/40 uppercase tracking-widest mb-3">
+                  <div className="flex justify-between text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-3">
                     <span>תמהיל קהילתי</span>
                     <span>{members.length} חברים</span>
                   </div>
-                  <div className="flex h-4 w-full rounded-full overflow-hidden bg-white/5 p-[2px] border border-white/5">
+                  <div className="flex h-4 w-full rounded-full overflow-hidden bg-white p-[2px] border border-slate-200">
                     {stats.genderImpact.map((item, idx) => {
                       const width = (item.count / members.length) * 100;
                       if (width === 0) return null;
@@ -573,7 +573,7 @@ const SessionStatsPage: React.FC = () => {
                           className={`${item.color} h-full transition-all duration-1000`}
                           style={{ 
                             width: `${width}%`,
-                            boxShadow: `0 0 15px ${item.hex}40`
+                            boxShadow: `0 0 10px ${item.hex}20`
                           }}
                         />
                       );
@@ -584,21 +584,21 @@ const SessionStatsPage: React.FC = () => {
                 {/* Detailed Metrics */}
                 <div className="space-y-4">
                   {stats.genderImpact.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-5 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
+                    <div key={idx} className="flex items-center justify-between p-5 rounded-3xl bg-white border border-slate-100 hover:bg-slate-50 transition-all group shadow-sm">
                       <div className="flex items-center gap-4">
-                        <div className={`w-3 h-3 rounded-full ${item.color} shadow-[0_0_10px_currentColor]`} />
+                        <div className={`w-3 h-3 rounded-full ${item.color} shadow-sm`} />
                         <div>
-                          <span className="text-white font-black text-lg block leading-none mb-1">{item.label}</span>
-                          <span className="text-white/30 text-[10px] font-bold uppercase tracking-widest">{item.count} חברי קהילה</span>
+                          <span className="text-[#2D3748] font-black text-lg block leading-none mb-1">{item.label}</span>
+                          <span className="text-[#4A5568] text-[10px] font-bold uppercase tracking-widest">{item.count} חברי קהילה</span>
                         </div>
                       </div>
                       
                       <div className="text-left">
                         <div className="flex flex-col items-end">
-                          <span className={`font-black text-2xl ${item.retention >= 90 ? 'text-emerald-400' : 'text-white'}`}>
+                          <span className={`font-black text-2xl ${item.retention >= 90 ? 'text-emerald-600' : 'text-[#2D3748]'}`}>
                             {item.retention}%
                           </span>
-                          <span className="text-white/20 text-[9px] uppercase font-black tracking-widest">מדד התמדה</span>
+                          <span className="text-[#4A5568]/40 text-[9px] uppercase font-black tracking-widest">מדד התמדה</span>
                         </div>
                       </div>
                     </div>
@@ -606,20 +606,20 @@ const SessionStatsPage: React.FC = () => {
                 </div>
 
                 {/* Impact Insight */}
-                <div className="mt-10 pt-6 border-t border-white/10">
-                  <div className="bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20">
-                    <p className="text-xs text-blue-300 leading-relaxed text-center font-bold">
-                      💡 <strong className="text-white">תובנת אימפקט:</strong> קבוצת הנשים שומרת על אחוזי התמדה גבוהים, מה שמעיד על חיבור עמוק לקהילה למרות הייצוג המספרי הקטן.
+                <div className="mt-10 pt-6 border-t border-slate-200">
+                  <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                    <p className="text-xs text-[#1A365D] leading-relaxed text-center font-bold">
+                      💡 <strong className="text-[#2D3748]">תובנת אימפקט:</strong> קבוצת הנשים שומרת על אחוזי התמדה גבוהים, מה שמעיד על חיבור עמוק לקהילה למרות הייצוג המספרי הקטן.
                     </p>
                   </div>
                 </div>
               </div>
 
               {/* Age & Activity Card - Using White Card */}
-              <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm">
+              <div className="bg-[#F5F7FA] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
                 <div className="flex items-center gap-4 mb-10">
-                  <div className="p-3 bg-slate-50 text-emerald-600 rounded-xl shadow-sm border border-slate-100"><Activity size={20} /></div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tighter">מדדי פעילות לפי גיל</h3>
+                  <div className="p-3 bg-white text-[#38B2AC] rounded-xl shadow-sm border border-slate-100"><Activity size={20} /></div>
+                  <h3 className="text-2xl font-black text-[#2D3748] tracking-tighter">מדדי פעילות לפי גיל</h3>
                 </div>
                 
                 <div className="overflow-hidden rounded-3xl border border-slate-100">
@@ -659,11 +659,11 @@ const SessionStatsPage: React.FC = () => {
             {/* Charts & Pulse (Left Side) - Using White Cards */}
             <div className="lg:col-span-7 space-y-10">
               {/* Pulse Area Chart */}
-              <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm">
+              <div className="bg-[#F5F7FA] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
                 <div className="flex items-center justify-between mb-10">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 bg-slate-50 text-blue-600 rounded-xl shadow-sm border border-slate-100"><TrendingUp size={20} /></div>
-                    <h3 className="text-2xl font-black text-slate-900 tracking-tighter">דופק הסשנים (Pulse)</h3>
+                    <div className="p-3 bg-white text-[#1A365D] rounded-xl shadow-sm border border-slate-100"><TrendingUp size={20} /></div>
+                    <h3 className="text-2xl font-black text-[#2D3748] tracking-tighter">דופק הסשנים (Pulse)</h3>
                   </div>
                 </div>
                 <div className="h-[400px] w-full mt-6">
@@ -671,30 +671,30 @@ const SessionStatsPage: React.FC = () => {
                     <AreaChart data={stats.pulseData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorPulse" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#006994" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#006994" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#1A365D" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#1A365D" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis 
                         dataKey="date" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} 
+                        tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }} 
                       />
                       <YAxis 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} 
+                        tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }} 
                       />
                       <Tooltip 
-                        contentStyle={{ backgroundColor: '#0f172a', borderRadius: '1.5rem', border: 'none', color: '#fff' }}
-                        itemStyle={{ color: '#00FFFF', fontWeight: 900 }}
+                        contentStyle={{ backgroundColor: '#2D3748', borderRadius: '1.5rem', border: 'none', color: '#fff' }}
+                        itemStyle={{ color: '#63B3ED', fontWeight: 900 }}
                       />
                       <Area 
                         type="monotone" 
                         dataKey="count" 
-                        stroke="#006994" 
+                        stroke="#1A365D" 
                         strokeWidth={4} 
                         fillOpacity={1} 
                         fill="url(#colorPulse)" 
@@ -706,34 +706,34 @@ const SessionStatsPage: React.FC = () => {
               </div>
 
               {/* Grit Leaderboard */}
-              <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm">
+              <div className="bg-[#F5F7FA] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 bg-slate-50 text-amber-600 rounded-xl shadow-sm border border-slate-100">
+                    <div className="p-3 bg-white text-[#D69E2E] rounded-xl shadow-sm border border-slate-100">
                       <Award size={20} />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-black text-slate-900 tracking-tighter">מדד נחישות (Grit Leaderboard)</h3>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">טופ 50 גולשים</p>
+                      <h3 className="text-2xl font-black text-[#2D3748] tracking-tighter">מדד נחישות (Grit Leaderboard)</h3>
+                      <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest">טופ 50 גולשים</p>
                     </div>
                   </div>
                   <div className="relative group min-w-[300px]">
-                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                     <input 
                       type="text" 
-                      placeholder="חפש במדד נחישות..." 
+                      placeholder="חפש בממד נחישות..." 
                       value={gritSearchTerm}
                       onChange={e => setGritSearchTerm(e.target.value)}
-                      className="w-full pr-12 pl-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm text-slate-900 outline-none focus:ring-2 ring-blue-500/20 transition-all"
+                      className="w-full pr-12 pl-4 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-sm text-[#2D3748] outline-none focus:ring-2 ring-blue-500/20 transition-all"
                     />
                   </div>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-right">
                     <thead>
-                      <tr className="border-b border-slate-100">
+                      <tr className="border-b border-slate-200">
                         <th 
-                          className="pb-6 text-[10px] font-black text-slate-400 uppercase tracking-widest pr-4 cursor-pointer hover:text-slate-900 transition-colors"
+                          className="pb-6 text-[10px] font-black text-[#4A5568] uppercase tracking-widest pr-4 cursor-pointer hover:text-[#2D3748] transition-colors"
                           onClick={() => setGritSortConfig(prev => ({ key: 'firstName', direction: prev.key === 'firstName' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
                         >
                           <div className="flex items-center gap-1">
@@ -741,7 +741,7 @@ const SessionStatsPage: React.FC = () => {
                           </div>
                         </th>
                         <th 
-                          className="pb-6 text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-900 transition-colors"
+                          className="pb-6 text-[10px] font-black text-[#4A5568] uppercase tracking-widest cursor-pointer hover:text-[#2D3748] transition-colors"
                           onClick={() => setGritSortConfig(prev => ({ key: 'streak', direction: prev.key === 'streak' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
                         >
                           <div className="flex items-center gap-1">
@@ -749,42 +749,42 @@ const SessionStatsPage: React.FC = () => {
                           </div>
                         </th>
                         <th 
-                          className="pb-6 text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-900 transition-colors text-center"
+                          className="pb-6 text-[10px] font-black text-[#4A5568] uppercase tracking-widest cursor-pointer hover:text-[#2D3748] transition-colors text-center"
                           onClick={() => setGritSortConfig(prev => ({ key: 'totalAttendance', direction: prev.key === 'totalAttendance' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
                         >
                           <div className="flex items-center justify-center gap-1">
                             סך הכל <ArrowUpDown size={12} className="opacity-50" />
                           </div>
                         </th>
-                        <th className="pb-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">מגמה</th>
+                        <th className="pb-6 text-[10px] font-black text-[#4A5568] uppercase tracking-widest text-center">מגמה</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-200">
                       {stats.gritLeaderboard.map((member: any) => (
-                        <tr key={member.id} className="group hover:bg-slate-50 transition-colors">
+                        <tr key={member.id} className="group hover:bg-white/50 transition-colors">
                           <td className="py-5 pr-4">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-slate-100 shadow-sm">
-                                <img src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.firstName + ' ' + member.lastName)}&background=006994&color=fff`} className="w-full h-full object-cover" alt="" />
+                              <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-slate-200 shadow-sm">
+                                <img src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.firstName + ' ' + member.lastName)}&background=1A365D&color=fff`} className="w-full h-full object-cover" alt="" />
                               </div>
-                              <span className="font-black text-slate-900 text-lg">{member.firstName} {member.lastName}</span>
+                              <span className="font-black text-[#2D3748] text-lg">{member.firstName} {member.lastName}</span>
                             </div>
                           </td>
                           <td className="py-5">
                             <div className="flex items-center gap-2">
-                              <span className="text-3xl font-black text-[#006994]">{member.streak}</span>
-                              <span className="text-[10px] font-black text-slate-300 uppercase">סשנים</span>
+                              <span className="text-3xl font-black text-[#1A365D]">{member.streak}</span>
+                              <span className="text-[10px] font-black text-[#4A5568] uppercase">סשנים</span>
                             </div>
                           </td>
-                          <td className="py-5 font-black text-slate-500 text-center text-lg">{member.totalAttendance}</td>
+                          <td className="py-5 font-black text-[#4A5568] text-center text-lg">{member.totalAttendance}</td>
                           <td className="py-5 text-center">
                             <div className="flex justify-center">
                               {member.trend === 'up' ? (
-                                <ArrowUpRight className="text-emerald-500" size={24} />
+                                <ArrowUpRight className="text-emerald-600" size={24} />
                               ) : member.trend === 'down' ? (
-                                <ArrowDownRight className="text-rose-500" size={24} />
+                                <ArrowDownRight className="text-rose-600" size={24} />
                               ) : (
-                                <Minus className="text-slate-200" size={24} />
+                                <Minus className="text-slate-300" size={24} />
                               )}
                             </div>
                           </td>

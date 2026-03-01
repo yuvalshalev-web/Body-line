@@ -42,7 +42,7 @@ const StorageDisplay: React.FC = () => {
     <div className="w-full space-y-3" dir="rtl">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-2">
-          <HardDrive size={18} className="text-[#40E0D0]" />
+          <HardDrive size={18} className="text-[#1A365D]" />
         </div>
         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Storage usage</span>
       </div>
@@ -50,12 +50,10 @@ const StorageDisplay: React.FC = () => {
       {/* Progress Bar Container */}
       <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden shadow-inner border border-slate-200/50">
         <div 
-          className="h-full liquid-progress-bar rounded-full breathing-glow"
+          className="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-[#1A365D] to-[#63B3ED]"
           style={{ 
             width: `${percentage}%`, 
-            backgroundColor: getBarColor(),
-            '--glow-color': `${getBarColor()}60`
-          } as any}
+          }}
         />
       </div>
 

@@ -36,7 +36,7 @@ const OceanRing: React.FC<{
   return (
     <div className="flex-1 w-full flex flex-col items-center text-center group/ring">
       <div className="flex items-center gap-[var(--spacing-xs)] mb-6">
-        <div className="text-[var(--ocean-liquid)] group-hover/ring:text-white transition-colors">
+        <div className="text-blue-400 group-hover/ring:text-white transition-colors">
           {icon}
         </div>
         <h3 className="text-[11px] font-black text-white/90 uppercase tracking-[0.15em]">{label}</h3>
@@ -57,7 +57,7 @@ const OceanRing: React.FC<{
             initial={{ y: '100%' }}
             animate={{ y: `${100 - value}%` }}
             transition={{ duration: 2, ease: "easeOut" }}
-            className="absolute inset-0 w-full h-full bg-gradient-to-b from-[var(--ocean-liquid)]/40 via-[var(--ocean-liquid)]/20 to-transparent"
+            className="absolute inset-0 w-full h-full bg-gradient-to-b from-blue-400/40 via-blue-400/20 to-transparent"
           >
             {/* Multi-layered Ripple Effect */}
             <div className="absolute top-0 left-0 w-[400%] h-6 -translate-y-1/2 opacity-40">
@@ -73,8 +73,8 @@ const OceanRing: React.FC<{
         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 relative z-10">
           <defs>
             <linearGradient id={`ocean-grad-${label}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="var(--ocean-liquid)" />
-              <stop offset="100%" stopColor="var(--ocean-bg)" />
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#021626" />
             </linearGradient>
             <filter id="foam-glow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="2" result="blur" />
@@ -88,7 +88,7 @@ const OceanRing: React.FC<{
             cy="50"
             r={radius}
             fill="none"
-            stroke="var(--ocean-pipe-empty)"
+            stroke="rgba(255,255,255,0.1)"
             strokeWidth="3"
             className="opacity-30"
           />
@@ -125,7 +125,7 @@ const OceanRing: React.FC<{
           <motion.span 
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.8 }}
-            className="text-[9px] font-black text-[var(--ocean-liquid)] uppercase tracking-[0.2em] mt-0.5 drop-shadow-sm"
+            className="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] mt-0.5 drop-shadow-sm"
           >
             {getDescriptor(value)}
           </motion.span>
@@ -152,7 +152,7 @@ const StabilityGauge: React.FC<{
   return (
     <div className="flex-1 w-full flex flex-col items-center text-center group/stability">
       <div className="flex items-center gap-[var(--spacing-xs)] mb-6">
-        <div className="text-[var(--ocean-liquid)] group-hover/stability:text-white transition-colors">
+        <div className="text-blue-400 group-hover/stability:text-white transition-colors">
           <Calendar size={18} />
         </div>
         <h3 className="text-[11px] font-black text-white/90 uppercase tracking-[0.15em]">יציבות שנתית {seasonYear}</h3>
@@ -173,7 +173,7 @@ const StabilityGauge: React.FC<{
             initial={{ y: '100%' }}
             animate={{ y: `${100 - percent}%` }}
             transition={{ duration: 2, ease: "easeOut" }}
-            className="absolute inset-0 w-full h-full bg-gradient-to-b from-[var(--ocean-liquid)]/40 via-[var(--ocean-liquid)]/20 to-transparent"
+            className="absolute inset-0 w-full h-full bg-gradient-to-b from-blue-400/40 via-blue-400/20 to-transparent"
           >
             {/* Wave Animation */}
             <div className="absolute top-0 left-0 w-[400%] h-6 -translate-y-1/2 opacity-40">
@@ -187,8 +187,8 @@ const StabilityGauge: React.FC<{
         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 relative z-10">
           <defs>
             <linearGradient id="stability-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="var(--ocean-liquid)" />
-              <stop offset="100%" stopColor="var(--ocean-bg)" />
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#021626" />
             </linearGradient>
           </defs>
 
@@ -198,7 +198,7 @@ const StabilityGauge: React.FC<{
             cy="50"
             r={radius}
             fill="none"
-            stroke="var(--ocean-pipe-empty)"
+            stroke="rgba(255,255,255,0.1)"
             strokeWidth="4"
             strokeDasharray={dashArray}
             className="opacity-30"
@@ -247,8 +247,8 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
   const theme = useMemo(() => {
     if (!data) return null;
     const rankColors: Record<string, { bg: string, glow: string }> = {
-      'Grommet': { bg: 'from-[var(--ocean-bg)] to-[var(--ocean-pipe-empty)]', glow: 'var(--glow-soft)' },
-      'Rookie': { bg: 'from-[var(--ocean-bg)] to-[var(--ocean-pipe-empty)]', glow: 'var(--glow-soft)' },
+      'Grommet': { bg: 'from-[#021626] to-[#010d17]', glow: 'rgba(255,255,255,0.1)' },
+      'Rookie': { bg: 'from-[#021626] to-[#010d17]', glow: 'rgba(255,255,255,0.1)' },
       'Local': { bg: 'from-[#06402b] to-[#065f46]', glow: 'rgba(6, 95, 70, 0.5)' },
       'Pro': { bg: 'from-[#1e1b4b] to-[#312e81]', glow: 'rgba(67, 56, 202, 0.6)' },
       'Legend': { bg: 'from-[#92400e] via-[#b45309] to-[#92400e]', glow: 'rgba(251, 191, 36, 0.8)' }
@@ -267,9 +267,9 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
       });
   }, [weeklyHistory, userId]);
 
-  if (isLoading || !data || !theme) return <div className="p-8 text-center font-black text-[var(--ocean-liquid)] animate-pulse">טוען את הגל שלך...</div>;
+  if (isLoading || !data || !theme) return <div className="p-8 text-center font-black text-blue-400 animate-pulse">טוען את הגל שלך...</div>;
 
-  const COLORS = ['var(--ocean-liquid)', 'var(--ocean-bg)'];
+  const COLORS = ['#60a5fa', '#021626'];
 
   const bgGradient = theme.bg.includes('via-') 
     ? `linear-gradient(135deg, ${theme.bg.split(' ')[0].replace('from-[', '').replace(']', '')}, ${theme.bg.split(' ')[1].replace('via-[', '').replace(']', '')}, ${theme.bg.split(' ')[2].replace('to-[', '').replace(']', '')})`
@@ -339,10 +339,10 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
         {/* Dark Overlay for depth */}
         <div className="absolute inset-0 bg-black/20 pointer-events-none" />
 
-        <div className="relative z-10">
+          <div className="relative z-10">
           <div className="flex flex-col items-center mb-8">
             <div className="flex items-center gap-[var(--spacing-xs)]">
-              <Compass size={18} className="text-[var(--ocean-liquid)]" />
+              <Compass size={18} className="text-blue-400" />
               <h3 className="text-lg font-black text-white">מצפן גלישה</h3>
             </div>
             <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">(לשימוש עתידי)</span>
@@ -360,8 +360,8 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               ]}>
                 <defs>
                   <linearGradient id="radarGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--ocean-liquid)" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="var(--ocean-bg)" stopOpacity={0.3}/>
+                    <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#021626" stopOpacity={0.3}/>
                   </linearGradient>
                 </defs>
                 <PolarGrid gridType="circle" stroke="white" strokeOpacity={0.1} strokeDasharray="3 3" />
@@ -392,7 +392,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                           {payload.value}
                         </text>
                         <foreignObject x={-6} y={-12} width={12} height={12}>
-                          <div className="text-[var(--ocean-liquid)] opacity-60">
+                          <div className="text-blue-400 opacity-60">
                             {item?.icon}
                           </div>
                         </foreignObject>

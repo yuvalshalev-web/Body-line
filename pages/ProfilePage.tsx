@@ -235,7 +235,8 @@ const ProfilePage: React.FC = () => {
                         type="date" 
                         value={formData.birthday || ''} 
                         onChange={e => handleFieldChange('birthday', e.target.value)} 
-                        className="w-full pr-14 pl-6 py-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all" 
+                        onClick={(e) => (e.currentTarget as any).showPicker?.()}
+                        className="w-full pr-14 pl-6 py-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all cursor-pointer" 
                       />
                     </div>
                   </div>

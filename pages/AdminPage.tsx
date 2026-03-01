@@ -4,7 +4,7 @@ import {
   Users, Archive, Mic, Image as ImageIcon, Calendar, Settings, UserCheck, ShieldAlert, Search, 
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
-  Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown
+  Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
@@ -795,6 +795,20 @@ const AdminPage: React.FC = () => {
                       className="w-full p-5 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl font-black text-[#0a0a14] focus:ring-2 ring-[#ff009f]/30 transition-all text-left outline-none"
                       dir="ltr"
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-[#4a002e]/40 uppercase tracking-widest mr-2">תאריך יום הולדת</label>
+                    <div className="relative">
+                      <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#4a002e]/40" />
+                      <input 
+                        type="date"
+                        value={editingMember.birthday || ''}
+                        onChange={(e) => setEditingMember({ ...editingMember, birthday: e.target.value })}
+                        onClick={(e) => (e.currentTarget as any).showPicker?.()}
+                        className="w-full pr-14 pl-6 py-5 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl font-black text-[#0a0a14] focus:ring-2 ring-[#ff009f]/30 transition-all outline-none cursor-pointer"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
