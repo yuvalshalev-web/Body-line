@@ -182,6 +182,32 @@ const CommunityAnalytics: React.FC = () => {
       .slice(0, 4);
 
     const overallRetention = totalMembers > 0 ? Math.round((activeMembers.length / totalMembers) * 100) : 0;
+    const churnedCount = members.filter(m => !m.isActive).length;
+    const churnRate = totalMembers > 0 ? Math.round((churnedCount / totalMembers) * 100) : 0;
+
+    // Annual Churn (Since Hevel HaZog year start - assuming Sept 1st)
+    const currentYear = now.getFullYear();
+    const yearStart = now.getMonth() >= 8 ? new Date(currentYear, 8, 1) : new Date(currentYear - 1, 8, 1);
+    
+    const annualChurned = members.filter(m => !m.isActive && m.joinedAt && new Date(m.joinedAt) >= yearStart).length;
+    const annualTotal = members.filter(m => m.joinedAt && new Date(m.joinedAt) >= yearStart).length;
+    const annualChurnRate = annualTotal > 0 ? Math.round((annualChurned / annualTotal) * 100) : 0;
+
+    // Global Retention Algorithm (3+ sessions in 30 days)
+    const userAttendanceCount = new Map<string, number>();
+    weeklyHistory.forEach(session => {
+      const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+      if (sessionDate >= thirtyDaysAgo) {
+        (session.participantIds || []).forEach((id: string) => {
+          userAttendanceCount.set(id, (userAttendanceCount.get(id) || 0) + 1);
+        });
+      }
+    });
+
+    const retainedUsersCount = activeMembers.filter(m => (userAttendanceCount.get(m.id) || 0) >= 3).length;
+    const globalRetentionIndex = activeMembers.length > 0 
+      ? Math.round((retainedUsersCount / activeMembers.length) * 100) 
+      : 0;
 
     // 5. Gender Cohorts (for Tachometer copy)
     const genderCohorts = [
@@ -230,7 +256,11 @@ const CommunityAnalytics: React.FC = () => {
       cohorts,
       genderCohorts,
       activeCount: activeMembers.length,
-      totalCount: totalMembers
+      totalCount: totalMembers,
+      globalRetentionIndex,
+      churnRate,
+      churnedCount,
+      annualChurnRate
     };
   }, [members, weeklyHistory]);
 
@@ -270,28 +300,28 @@ const CommunityAnalytics: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#F5F7FA] p-6 rounded-[4rem] border border-slate-200 shadow-soft relative overflow-hidden group min-h-[400px] flex flex-col items-center justify-center"
+            className="bg-[#F5F7FA] p-4 rounded-[3rem] border border-slate-200 shadow-soft relative overflow-hidden group min-h-[350px] flex flex-col items-center justify-center"
           >
             {/* Glossy Shimmer Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
             
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2" />
             
-            <div className="w-full flex items-center justify-between mb-6 relative z-10">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600 shadow-sm border border-blue-500/20">
-                  <Sparkles size={28} />
+            <div className="w-full flex items-center justify-between mb-4 relative z-10 px-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 shadow-sm border border-blue-500/20">
+                  <Sparkles size={20} />
                 </div>
                 <div>
-                  <h3 className="text-3xl font-black text-[#2D3748] tracking-tight">התפלגות חברים לפי גיל</h3>
-                  <p className="text-[#4A5568]/60 text-xs font-bold uppercase tracking-[0.3em]">Community Aura • Ocean Analytics</p>
+                  <h3 className="text-xl font-black text-[#2D3748] tracking-tight">התפלגות חברים לפי גיל</h3>
+                  <p className="text-[#4A5568]/60 text-[8px] font-bold uppercase tracking-[0.2em]">Community Aura • Ocean Analytics</p>
                 </div>
               </div>
             </div>
 
             {/* Donut Chart Area */}
-            <div className="w-full flex-1 relative flex items-center justify-center min-h-[350px]">
-              <svg width="100%" height="100%" viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible max-w-[500px]">
+            <div className="w-full flex-1 relative flex items-center justify-center min-h-[280px]">
+              <svg width="100%" height="100%" viewBox="150 150 700 700" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible max-w-[400px]">
                 <defs>
                   <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
@@ -330,10 +360,10 @@ const CommunityAnalytics: React.FC = () => {
                     { label: 'ותיקים', key: 'ותיקים (60+)', color: 'url(#neon-emerald)', glow: '#2B6CB0' }
                   ];
                   const total = stats.activeCount || 1;
-                  const radius = 180;
-                  const strokeWidth = 50;
-                  const centerX = 400;
-                  const centerY = 400;
+                  const radius = 234; // 180 * 1.3
+                  const strokeWidth = 65; // 50 * 1.3
+                  const centerX = 500;
+                  const centerY = 500;
                   
                   return groups.map((g, i) => {
                     const count = stats.ageGroups[g.key as keyof typeof stats.ageGroups] || 0;
@@ -350,13 +380,13 @@ const CommunityAnalytics: React.FC = () => {
                     
                     // Callout Line Coordinates
                     const lineStartRadius = radius + strokeWidth / 2 + 10;
-                    const lineMidRadius = radius + strokeWidth / 2 + 60;
+                    const lineMidRadius = radius + strokeWidth / 2 + 80;
                     
                     const sx = centerX + lineStartRadius * Math.cos(rad);
                     const sy = centerY + lineStartRadius * Math.sin(rad);
                     const mx = centerX + lineMidRadius * Math.cos(rad);
                     const my = centerY + lineMidRadius * Math.sin(rad);
-                    const ex = mx + (Math.cos(rad) > 0 ? 40 : -40);
+                    const ex = mx + (Math.cos(rad) > 0 ? 50 : -50);
                     const ey = my;
 
                     const x1 = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
@@ -416,24 +446,24 @@ const CommunityAnalytics: React.FC = () => {
                           transition={{ duration: 0.5, delay: 1.5 + i * 0.1 }}
                         >
                           <text 
-                            x={ex + (Math.cos(rad) > 0 ? 10 : -10)} 
+                            x={ex + (Math.cos(rad) > 0 ? 12 : -12)} 
                             y={ey} 
                             textAnchor={Math.cos(rad) > 0 ? "start" : "end"} 
                             dominantBaseline="middle" 
                             fill={g.glow} 
-                            className="font-black text-2xl"
-                            style={{ filter: `drop-shadow(0 0 6px ${g.glow}66)` }}
+                            className="font-black text-3xl"
+                            style={{ filter: `drop-shadow(0 0 8px ${g.glow}66)` }}
                           >
                             {Math.round(percentage * 100)}%
                           </text>
                           <text 
-                            x={ex + (Math.cos(rad) > 0 ? 10 : -10)} 
-                            y={ey + 20} 
+                            x={ex + (Math.cos(rad) > 0 ? 12 : -12)} 
+                            y={ey + 28} 
                             textAnchor={Math.cos(rad) > 0 ? "start" : "end"} 
                             dominantBaseline="middle" 
                             fill="#2D3748" 
                             opacity="0.8"
-                            className="font-bold text-sm uppercase tracking-[0.2em]"
+                            className="font-bold text-base uppercase tracking-[0.2em]"
                           >
                             {g.label}
                           </text>
@@ -446,10 +476,10 @@ const CommunityAnalytics: React.FC = () => {
                 {/* Central Core */}
                 <g>
                   {/* Light Inner Circle for Contrast */}
-                  <circle cx="400" cy="400" r="140" fill="white" fillOpacity="0.9" />
+                  <circle cx="500" cy="500" r="182" fill="white" fillOpacity="0.9" />
                   
                   {/* Glass Reflection Overlay */}
-                  <circle cx="400" cy="400" r="180" fill="url(#glass-gradient)" opacity="0.1" pointerEvents="none" />
+                  <circle cx="500" cy="500" r="234" fill="url(#glass-gradient)" opacity="0.1" pointerEvents="none" />
                   <defs>
                     <linearGradient id="glass-gradient" x1="0" y1="0" x2="1" y2="1">
                       <stop offset="0%" stopColor="white" />
@@ -458,19 +488,19 @@ const CommunityAnalytics: React.FC = () => {
                     </linearGradient>
                   </defs>
  
-                  <foreignObject x="275" y="275" width="250" height="250">
+                  <foreignObject x="325" y="325" width="350" height="350">
                     <div className="w-full h-full flex flex-col items-center justify-center text-center">
-                      <span className="text-[#4A5568]/40 text-[10px] font-black uppercase tracking-[0.4em] mb-1">Community Total</span>
+                      <span className="text-[#4A5568]/40 text-xs font-black uppercase tracking-[0.4em] mb-2">Community Total</span>
                       <motion.span 
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="text-[#2D3748] text-7xl font-black tracking-tighter drop-shadow-[0_4px_10px_rgba(0,0,0,0.05)]"
+                        className="text-[#2D3748] text-8xl font-black tracking-tighter drop-shadow-[0_4px_10px_rgba(0,0,0,0.05)]"
                       >
                         {stats.activeCount}
                       </motion.span>
-                      <div className="flex items-center gap-2 mt-2">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-sm" />
-                        <span className="text-[10px] text-blue-600/60 font-black uppercase tracking-[0.2em]">Active Pulse</span>
+                      <div className="flex items-center gap-2 mt-4">
+                        <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse shadow-sm" />
+                        <span className="text-xs text-blue-600/60 font-black uppercase tracking-[0.2em]">Active Pulse</span>
                       </div>
                     </div>
                   </foreignObject>
@@ -486,6 +516,148 @@ const CommunityAnalytics: React.FC = () => {
             transition={{ delay: 0.2 }}
             className="bg-[#F5F7FA] p-10 rounded-[4rem] border border-slate-200 shadow-soft transition-all duration-500 relative overflow-hidden group"
           >
+            {/* Global Retention Index Gauge */}
+            <div className="mb-16 pb-12 border-b border-slate-200/50 relative z-10 bg-[#FAF9F6] rounded-[3rem] p-8 shadow-inner">
+              <div className="flex flex-col items-center text-center space-y-6">
+                <div className="space-y-2">
+                  <h3 className="text-3xl font-black text-[#5D4037] tracking-tighter uppercase">Global Retention Index</h3>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="px-3 py-1 rounded-full bg-[#D2B48C]/10 border border-[#D2B48C]/20">
+                      <span className="text-[10px] font-black text-[#8D6E63] uppercase tracking-widest">מחושב על בסיס כלל חברי הקהילה</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative w-full max-w-[450px] mx-auto flex justify-center items-center backdrop-blur-[12px] rounded-full p-2 border border-white/5 shadow-[0_0_40px_rgba(0,0,0,0.1)]">
+                  <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
+                    <defs>
+                      {/* Outer Metallic Ring Gradient - Sand Theme */}
+                      <linearGradient id="metal-ring-sand" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#E8E2D9" />
+                        <stop offset="50%" stopColor="#D2B48C" />
+                        <stop offset="100%" stopColor="#967969" />
+                      </linearGradient>
+                      
+                      {/* Inner Dial Gradient - Sand Theme */}
+                      <radialGradient id="dial-bg-sand" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                        <stop offset="0%" stopColor="#5D4037" />
+                        <stop offset="100%" stopColor="#2D1B17" />
+                      </radialGradient>
+
+                      {/* Glossy Highlight */}
+                      <linearGradient id="gloss-sand" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
+                        <stop offset="50%" stopColor="rgba(255,255,255,0.05)" />
+                        <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                      </linearGradient>
+
+                      {/* Color Band Gradient - Sand Theme */}
+                      <linearGradient id="color-band-sand" x1="0" y1="200" x2="200" y2="0" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#967969" />
+                        <stop offset="50%" stopColor="#D2B48C" />
+                        <stop offset="100%" stopColor="#E1C16E" />
+                      </linearGradient>
+
+                      <filter id="gauge-glow-sand" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                      </filter>
+                    </defs>
+
+                    {/* Colored Edge Band (270 degrees) */}
+                    <path 
+                      d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
+                      fill="none" 
+                      stroke="url(#color-band-sand)" 
+                      strokeWidth="12" 
+                      strokeLinecap="butt" 
+                      style={{ filter: 'drop-shadow(0px 0px 15px rgba(225, 193, 110, 0.3))' }}
+                    />
+
+                    {/* Glossy Overlay */}
+                    <path 
+                      d="M 8 100 A 92 92 0 0 1 192 100 C 192 145 145 192 100 192 C 55 192 8 145 8 100 Z" 
+                      fill="url(#gloss-sand)" 
+                      clipPath="url(#dial-clip-sand)"
+                    />
+                    <clipPath id="dial-clip-sand">
+                      <circle cx="100" cy="100" r="92" />
+                    </clipPath>
+
+                    {/* Tick Marks and Numbers */}
+                    {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((val) => {
+                      const angle = -45 + (val / 100) * 270;
+                      const rad = (angle * Math.PI) / 180;
+                      const isMajor = val % 20 === 0;
+                      
+                      // Tick marks
+                      const outerR = 82;
+                      const innerR = isMajor ? 70 : 76;
+                      const x1 = 100 - Math.cos(rad) * outerR;
+                      const y1 = 100 - Math.sin(rad) * outerR;
+                      const x2 = 100 - Math.cos(rad) * innerR;
+                      const y2 = 100 - Math.sin(rad) * innerR;
+
+                      // Numbers
+                      const textR = 55;
+                      const tx = 100 - Math.cos(rad) * textR;
+                      const ty = 100 - Math.sin(rad) * textR;
+
+                      return (
+                        <g key={val}>
+                          <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#5D4037" strokeWidth={isMajor ? 2 : 1} opacity="0.2" />
+                          {isMajor && (
+                            <g>
+                              <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="#5D4037" fontSize="10" fontFamily="Arial, sans-serif" fontWeight="bold" opacity="0.6">
+                                {val}%
+                              </text>
+                            </g>
+                          )}
+                        </g>
+                      );
+                    })}
+
+                    {/* Needle */}
+                    <motion.g
+                      initial={{ rotate: -45 }}
+                      animate={{ rotate: -45 + (stats.globalRetentionIndex / 100) * 270 }}
+                      transition={{ 
+                        duration: 2.5, 
+                        ease: [0.34, 1.56, 0.64, 1]
+                      }}
+                    >
+                      <circle cx="100" cy="100" r="90" fill="transparent" stroke="none" />
+                      {/* Dark Needle */}
+                      <polygon 
+                        points="100,96 100,104 15,100" 
+                        fill="#5D4037" 
+                        style={{ filter: `drop-shadow(0px 2px 4px rgba(0,0,0,0.1))` }}
+                      />
+                    </motion.g>
+
+                    {/* Center Pivot */}
+                    <circle cx="100" cy="100" r="12" fill="#5D4037" />
+
+                    {/* Value Text */}
+                    <text x="100" y="175" textAnchor="middle" className="text-4xl font-black fill-[#5D4037] antialiased">
+                      {stats.globalRetentionIndex}%
+                    </text>
+                  </svg>
+                </div>
+
+                <div className="max-w-md mx-auto p-6 rounded-3xl bg-white/60 border border-[#D2B48C]/20 shadow-sm">
+                  <p className="text-[11px] font-bold text-[#5D4037]/80 leading-relaxed italic">
+                    "שיעור התמדה גלובלי מחושב על בסיס כלל חברי הקהילה כקבוצה אחת אחידה. המדד משקף את אחוז המשתמשים שהפגינו נוכחות עקבית (3+ מפגשים) ב-30 הימים האחרונים."
+                  </p>
+                  <div className="mt-4 pt-4 border-t border-[#D2B48C]/20 flex justify-center">
+                    <code className="text-[10px] font-mono text-[#8D6E63] bg-[#FAF9F6] px-3 py-1 rounded-lg">
+                      Global Retention = (Total Retained Users / Total Community Members) × 100
+                    </code>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between mb-12 relative z-10">
               <div>
                 <h3 className="text-[#2D3748] font-black text-xl md:text-2xl tracking-tighter uppercase whitespace-nowrap">שיעור התמדה לפי קבוצות גיל</h3>
@@ -854,48 +1026,10 @@ const CommunityAnalytics: React.FC = () => {
           {/* Glossy Shimmer Effect */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 gap-12">
             
-            {/* Retention Metric */}
-            <div className="flex flex-col items-center justify-center text-center space-y-4 border-l border-slate-200">
-              <div className="relative">
-                <svg className="w-32 h-32 transform -rotate-90">
-                  <circle
-                    cx="64"
-                    cy="64"
-                    r="58"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    fill="transparent"
-                    className="text-slate-200"
-                  />
-                  <motion.circle
-                    cx="64"
-                    cy="64"
-                    r="58"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    fill="transparent"
-                    strokeDasharray={364.4}
-                    initial={{ strokeDashoffset: 364.4 }}
-                    animate={{ strokeDashoffset: 364.4 - (364.4 * stats.overallRetention) / 100 }}
-                    transition={{ duration: 2, ease: "easeOut" }}
-                    className="text-blue-500"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-black text-[#2D3748]">{stats.overallRetention}%</span>
-                  <span className="text-[10px] font-black text-[#4A5568]/60 uppercase tracking-widest">Retention</span>
-                </div>
-              </div>
-              <div>
-                <h4 className="text-lg font-black text-[#2D3748]">חיוניות ושימור</h4>
-                <p className="text-[#4A5568]/60 text-xs font-bold uppercase tracking-wider">מדד בריאות קהילה כללי</p>
-              </div>
-            </div>
-
             {/* Low Pulse List */}
-            <div className="md:col-span-2 space-y-6">
+            <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
@@ -939,10 +1073,129 @@ const CommunityAnalytics: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* Churn Buckets Section */}
+        <div className="lg:col-span-2 flex flex-row justify-center gap-8 mt-12">
+          <ChurnBucket title="שיעור עזיבה חודשי" percentage={stats.churnRate} />
+          <ChurnBucket title="שיעור עזיבה שנתי" percentage={stats.annualChurnRate} />
+        </div>
+
       </div>
 
       </div>
     </div>
+  );
+};
+
+const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, percentage }) => {
+  const isAnnual = title.includes('שנתי');
+  const label = isAnnual ? 'שנתי' : 'חודשי';
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex-1 max-w-[280px] bg-gradient-to-br from-slate-100 to-slate-200 p-8 rounded-[3.5rem] border border-slate-300 shadow-xl flex flex-col items-center text-center relative overflow-hidden group"
+    >
+      {/* Glossy Shimmer */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-30 pointer-events-none" />
+      
+      <h3 className="text-[#1A365D] font-black text-sm mb-8 tracking-tight uppercase opacity-40 mix-blend-multiply">
+        {title}
+      </h3>
+
+      <div className="relative w-32 h-44 mb-6">
+        {/* Industrial Bucket Handle */}
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-28 h-16 border-[5px] border-slate-400 border-b-0 rounded-t-[4rem] shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+          {/* Welding Mark Left */}
+          <div className="absolute bottom-0 -left-2 w-4 h-4 rounded-full bg-slate-500/30 blur-[1px]" />
+          {/* Welding Mark Right */}
+          <div className="absolute bottom-0 -right-2 w-4 h-4 rounded-full bg-slate-500/30 blur-[1px]" />
+        </div>
+        
+        {/* Bucket Body - Brushed Metal Render */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-400 via-slate-200 to-slate-400 border-x border-slate-500/30 border-b border-slate-500/50 rounded-b-[2rem] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.2),inset_0_-10px_20px_rgba(0,0,0,0.1)] z-10">
+          
+          {/* Etched Scale (0-100) */}
+          <div className="absolute left-2 top-0 bottom-0 flex flex-col justify-between py-4 opacity-30 pointer-events-none">
+            {[100, 75, 50, 25, 0].map(n => (
+              <span key={n} className="text-[8px] font-mono font-bold text-slate-800 leading-none">{n}</span>
+            ))}
+          </div>
+
+          {/* Etched Label into Metal */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+            <span 
+              className="text-2xl font-black text-slate-600/40 uppercase tracking-widest rotate-[-15deg]"
+              style={{ 
+                textShadow: '-1px -1px 1px rgba(255,255,255,0.5), 1px 1px 1px rgba(0,0,0,0.2)',
+              }}
+            >
+              {label}
+            </span>
+          </div>
+
+          {/* Turbulent Water */}
+          <motion.div 
+            initial={{ height: 0 }}
+            animate={{ height: `${percentage}%` }}
+            transition={{ duration: 2, ease: "circOut" }}
+            className="absolute bottom-0 left-0 w-full bg-gradient-to-b from-blue-500/90 via-blue-600/80 to-blue-800/90 z-10"
+          >
+            {/* Surface Waves & Reflections */}
+            <div className="absolute -top-2 left-0 w-full h-4 overflow-hidden">
+              <motion.div 
+                animate={{ x: [-20, 0, -20] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="w-[120%] h-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.4),transparent)] blur-[2px]" 
+              />
+              <div className="absolute top-0 left-0 w-full h-1 bg-white/30 blur-[1px]" />
+            </div>
+
+            {/* Internal Reflections on Metal Walls */}
+            <div className="absolute inset-0 opacity-30 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.2)_50%,transparent_100%)] animate-pulse" />
+            
+            {/* Dynamic Bubbles/Turbulence */}
+            <div className="absolute inset-0 overflow-hidden">
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ y: '100%', opacity: 0 }}
+                  animate={{ y: '-20%', opacity: [0, 0.5, 0] }}
+                  transition={{ 
+                    duration: 2 + Math.random() * 2, 
+                    repeat: Infinity, 
+                    delay: Math.random() * 2,
+                    ease: "linear"
+                  }}
+                  className="absolute w-1 h-1 bg-white/40 rounded-full"
+                  style={{ left: `${20 + Math.random() * 60}%` }}
+                />
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Brushed Metal Texture Overlay */}
+          <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-[repeating-linear-gradient(90deg,transparent,transparent_2px,rgba(0,0,0,0.1)_3px)]" />
+        </div>
+      </div>
+
+      <div className="relative z-20 mt-2">
+        <div className="relative inline-block">
+          <span 
+            className="text-5xl font-black text-slate-800 tracking-tighter"
+            style={{ 
+              textShadow: '0 4px 8px rgba(0,0,0,0.1)',
+            }}
+          >
+            {percentage}%
+          </span>
+          {/* Etched effect for the percentage label on the metal surface if it was part of the bucket */}
+          <div className="absolute -top-12 -right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+             <Sparkles className="w-4 h-4 text-blue-400 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
