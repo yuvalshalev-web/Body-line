@@ -20,6 +20,7 @@ interface DataContextType {
   quotes: QuoteItem[];
   weeklyHistory: any[];
   siteAssets: any;
+  siteConfig: { navPosition: 'top' | 'bottom' };
   yearConfig: { startDate: string; endDate: string } | null;
   attendeeIds: string[];
   activeSessionDate: string;
@@ -48,6 +49,7 @@ interface DataContextType {
   batchAddQuotes: (items: Omit<QuoteItem, 'id'>[]) => Promise<void>;
   clearCollection: (collectionName: string) => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
+  updateSiteConfig: (config: Partial<{ navPosition: 'top' | 'bottom' }>) => Promise<void>;
   updateYearConfig: (config: { startDate: string; endDate: string }) => Promise<void>;
   archiveMember: (id: string) => Promise<void>;
 }
@@ -66,6 +68,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
   const [weeklyHistory, setWeeklyHistory] = useState<any[]>([]);
   const [siteAssets, setSiteAssets] = useState<any>({});
+  const [siteConfig, setSiteConfig] = useState<{ navPosition: 'top' | 'bottom' }>({ navPosition: 'top' });
   const [yearConfig, setYearConfig] = useState<{ startDate: string; endDate: string } | null>(null);
   const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
   const [activeSessionDate, setActiveSessionDate] = useState<string>('');
@@ -209,6 +212,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (doc.exists()) setSiteAssets(doc.data());
     }, handleFirestoreError);
 
+    const unsubConfig = onSnapshot(doc(db, 'site_data', 'config'), (doc) => {
+      if (doc.exists()) setSiteConfig(doc.data() as { navPosition: 'top' | 'bottom' });
+    }, handleFirestoreError);
+
     const unsubYearConfig = onSnapshot(doc(db, 'site_data', 'year_config'), (doc) => {
       if (doc.exists()) setYearConfig(doc.data() as { startDate: string; endDate: string });
     }, handleFirestoreError);
@@ -229,7 +236,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     return () => {
       clearTimeout(timeoutId);
-      unsubMembers(); unsubHistory(); unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubAssets(); unsubYearConfig(); unsubAttendees();
+      unsubMembers(); unsubHistory(); unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubAssets(); unsubConfig(); unsubYearConfig(); unsubAttendees();
     };
   }, [handleFirestoreError, dbStatus]);
 
@@ -500,6 +507,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await setDoc(doc(getDb(), 'site_data', 'assets'), assets, { merge: true });
   };
 
+  const updateSiteConfig = async (config: Partial<{ navPosition: 'top' | 'bottom' }>) => {
+    await setDoc(doc(getDb(), 'site_data', 'config'), config, { merge: true });
+  };
+
   const updateYearConfig = async (config: { startDate: string; endDate: string }) => {
     await setDoc(doc(getDb(), 'site_data', 'year_config'), config);
   };
@@ -529,10 +540,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <DataContext.Provider value={{ 
-      members, joinRequests, events, news, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
+      members, joinRequests, events, news, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, deleteNews, toggleSessionAttendance, forceResetSession,
-      finalizeThursdaySession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateYearConfig, archiveMember
+      finalizeThursdaySession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember
     }}>
       {children}
     </DataContext.Provider>

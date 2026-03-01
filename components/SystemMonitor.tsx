@@ -375,54 +375,66 @@ const SystemMonitor: React.FC = () => {
           </div>
         </div>
 
-        {/* Emergency Button - Centered Push Button Style */}
-        <div className="w-full flex justify-center pt-8 pb-12">
+        {/* Emergency Button - Centered Push Button Style (Resized to be ~20% smaller than gauges) */}
+        <div className="w-full flex justify-center pt-4 pb-8">
           <div className="relative group">
             {/* Outer Ring/Base of the button */}
-            <div className="absolute -inset-4 bg-slate-200 rounded-full shadow-inner border border-slate-300" />
+            <div className="absolute -inset-4 bg-slate-300 rounded-full shadow-[inset_0_4px_10px_rgba(0,0,0,0.2),0_10px_20px_rgba(0,0,0,0.1)] border border-slate-400" />
             
             <motion.button 
               whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.9, y: 4, boxShadow: '0px 5px 10px rgba(0,0,0,0.3)' }}
+              whileTap={{ scale: 0.9, y: 8, boxShadow: '0px 2px 5px rgba(0,0,0,0.5)' }}
+              animate={isKillSwitchActive || countdown !== null ? {
+                filter: ["brightness(1)", "brightness(1.8)", "brightness(1)"],
+                scale: [1, 0.95, 1],
+                boxShadow: [
+                  '0_15px_0_rgb(153,0,0),0_25px_50px_rgba(255,0,0,0.5)',
+                  '0_15px_0_rgb(153,0,0),0_40px_80px_rgba(255,0,0,0.8)',
+                  '0_15px_0_rgb(153,0,0),0_25px_50px_rgba(255,0,0,0.5)'
+                ]
+              } : {}}
+              transition={{
+                duration: 0.4,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
               onClick={handleButtonClick}
-              className={`relative w-48 h-48 rounded-full font-black text-xs transition-all duration-300 flex flex-col items-center justify-center p-6 text-center shadow-[0_15px_0_rgb(153,0,0),0_25px_50px_rgba(0,0,0,0.4)] border-4 ${
-                isKillSwitchActive || countdown !== null
-                  ? 'bg-[#FF0000] text-white border-[#CC0000]'
-                  : 'bg-[#FF0000] text-white border-[#CC0000]'
-              }`}
+              className={`relative w-32 h-32 rounded-full font-black text-[9px] transition-all duration-300 flex flex-col items-center justify-center p-4 text-center shadow-[0_15px_0_rgb(153,0,0),0_25px_50px_rgba(0,0,0,0.4)] border-4 border-[#CC0000] bg-[#FF0000] text-white`}
               style={{ 
                 transformStyle: 'preserve-3d',
               }}
               title={isKillSwitchActive ? "Reconnect to database" : countdown !== null ? "Click to Abort Shutdown" : "Emergency Database Shutdown"}
             >
-              {/* Inner Bezel/Glow */}
-              <div className="absolute inset-2 rounded-full border-2 border-white/20 pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent rounded-full pointer-events-none" />
+              {/* Glass Shine Effect */}
+              <div className="absolute top-2 left-4 right-4 h-1/2 bg-gradient-to-b from-white/40 to-transparent rounded-t-full pointer-events-none" />
               
-              <div className="relative z-10 flex flex-col items-center gap-2">
+              {/* Inner Bezel */}
+              <div className="absolute inset-2 rounded-full border-2 border-white/10 pointer-events-none" />
+              
+              <div className="relative z-10 flex flex-col items-center gap-1">
                 {isKillSwitchActive ? (
                   <>
-                    <RefreshCw size={32} className="animate-spin mb-1" />
-                    <span className="leading-tight uppercase text-[10px]">RECONNECT<br/>DATABASE</span>
+                    <RefreshCw size={24} className="animate-spin mb-1" />
+                    <span className="leading-tight uppercase tracking-tighter">RECONNECTING...</span>
                   </>
                 ) : countdown !== null ? (
                   <>
-                    <TriangleAlert size={32} className="animate-pulse text-yellow-300 mb-1" />
-                    <span className="leading-tight uppercase text-[10px]">SHUTDOWN<br/>{countdown}s</span>
-                    <Skull size={24} className="animate-bounce mt-1" />
+                    <TriangleAlert size={24} className="animate-pulse text-yellow-300 mb-1" />
+                    <span className="text-2xl font-black leading-none">{countdown}</span>
+                    <Skull size={20} className="animate-bounce mt-1" />
                   </>
                 ) : (
                   <>
-                    <TriangleAlert size={40} className="group-hover:scale-110 transition-transform mb-1" />
-                    <span className="leading-tight uppercase text-[10px]">EMERGENCY<br/>SHUTDOWN</span>
-                    <Skull size={32} className="group-hover:rotate-12 transition-transform mt-1" />
+                    <TriangleAlert size={28} className="group-hover:scale-110 transition-transform mb-1" />
+                    <span className="leading-tight uppercase font-black tracking-tighter">EMERGENCY<br/>SHUTDOWN</span>
+                    <Skull size={24} className="group-hover:rotate-12 transition-transform mt-1" />
                   </>
                 )}
               </div>
 
-              {/* Danger Glow for Active State */}
+              {/* Intense Danger Glow for Active State */}
               {(isKillSwitchActive || countdown !== null) && (
-                <div className="absolute inset-0 bg-white animate-pulse opacity-10 rounded-full" />
+                <div className="absolute inset-0 bg-white animate-pulse opacity-20 rounded-full" />
               )}
             </motion.button>
           </div>

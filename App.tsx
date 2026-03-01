@@ -81,9 +81,19 @@ const NavLink = React.memo(({
 
 const App: React.FC = () => {
   const { currentUser, logout } = useAuth();
+  const { siteConfig } = useData();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Apply body class for bottom nav padding
+  React.useEffect(() => {
+    if (siteConfig.navPosition === 'bottom') {
+      document.body.classList.add('has-bottom-nav');
+    } else {
+      document.body.classList.remove('has-bottom-nav');
+    }
+  }, [siteConfig.navPosition]);
 
   const handleNavigation = useCallback((path: string, isMobile: boolean) => {
     navigate(path);
@@ -140,7 +150,7 @@ const App: React.FC = () => {
       </div>
 
       {/* Mobile Header */}
-      <header className="md:hidden bg-white border-b border-[var(--sand-medium)]/10 h-16 flex items-center justify-between px-[var(--spacing-md)] sticky top-0 z-[100] shadow-sm">
+      <header className={`md:hidden bg-white border-b border-[var(--sand-medium)]/10 h-16 flex items-center justify-between px-[var(--spacing-md)] sticky top-0 z-[100] shadow-sm ${siteConfig.navPosition === 'bottom' ? 'is-bottom-nav' : ''}`}>
         <div className="flex items-center gap-[var(--spacing-xs)]">
           <div className="w-8 h-8 bg-[var(--sand-accent)] rounded-[var(--radius-sm)] flex items-center justify-center text-white shadow-md">
             <Waves size={20} className="text-[var(--sand-light)]" />
@@ -154,8 +164,8 @@ const App: React.FC = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[110] md:hidden">
-          <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
+        <div className="fixed inset-0 z-[2000] md:hidden">
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" onClick={() => setIsMobileMenuOpen(false)}></div>
           <div className="absolute right-0 top-0 bottom-0 w-72 bg-white shadow-2xl p-6 flex flex-col animate-in slide-in-from-right duration-300">
              <div className="flex items-center gap-4 mb-10 pb-6 border-b border-slate-100">
                {currentUser.avatar ? (
@@ -194,10 +204,43 @@ const App: React.FC = () => {
                   </div>
                 )}
              </nav>
-             <button onClick={handleLogout} className="mt-6 flex items-center gap-4 px-6 py-4 text-rose-500 font-black text-sm rounded-2xl hover:bg-rose-50 transition-all">
-               <LogOut size={20} /> התנתקות
+             <button onClick={handleLogout} className="metal-theme mt-6 flex items-center gap-4 px-6 py-4 text-[var(--metal-davys-gray)] font-black text-sm rounded-2xl hover:bg-[var(--metal-white-smoke)] hover:text-rose-600 transition-all group">
+               <LogOut size={20} className="text-rose-500 group-hover:scale-110 transition-transform" /> התנתקות
              </button>
           </div>
+        </div>
+      )}
+
+      {/* Bottom Navigation (Mobile Only, when active) */}
+      {siteConfig.navPosition === 'bottom' && (
+        <div className="md:hidden bottom-nav-capsule metal-theme">
+          {navItems.slice(0, 4).map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <button 
+                key={item.path}
+                onClick={() => handleNavigation(item.path, true)}
+                className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+              >
+                <div className="icon-wrapper">
+                  <item.icon size={20} />
+                </div>
+                <span>{item.label.split(' ')[0]}</span>
+              </button>
+            );
+          })}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMobileMenuOpen(true);
+            }}
+            className={`bottom-nav-item ${isMobileMenuOpen ? 'active' : ''}`}
+          >
+            <div className="icon-wrapper">
+              <Menu size={20} />
+            </div>
+            <span>תפריט</span>
+          </button>
         </div>
       )}
 
@@ -254,8 +297,8 @@ const App: React.FC = () => {
                 </p>
              </div>
           </div>
-          <button onClick={handleLogout} className="flex items-center gap-4 w-full px-6 py-4 text-[var(--sand-muted)] font-black text-sm rounded-2xl hover:text-rose-500 hover:bg-rose-50 transition-all">
-            <LogOut size={20} /> התנתקות
+          <button onClick={handleLogout} className="metal-theme flex items-center gap-4 w-full px-6 py-4 text-[var(--metal-davys-gray)] font-black text-sm rounded-2xl hover:text-rose-500 hover:bg-[var(--metal-white-smoke)] transition-all group">
+            <LogOut size={20} className="text-rose-500 group-hover:scale-110 transition-transform" /> התנתקות
           </button>
         </div>
       </aside>

@@ -573,11 +573,11 @@ const SessionStatsPage: React.FC = () => {
 
       {stats ? (
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-[400px]">
-          {/* Top Stats Row - Smaller Horizontal Cards */}
-          <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
-            <div className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center aspect-square">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <p className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">ממוצע גולשים</p>
+          {/* Top Stats Row - Refined Horizontal Row */}
+          <div className="flex flex-row gap-4 justify-center items-stretch max-w-4xl mx-auto">
+            <div className="flex-1 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ממוצע גולשים</p>
                 <div className="relative">
                   <button 
                     onClick={() => setActiveTooltip(activeTooltip === 'avg' ? null : 'avg')}
@@ -589,7 +589,7 @@ const SessionStatsPage: React.FC = () => {
                         : 'bg-slate-50 border-slate-100'
                     }`}
                   >
-                    <Info size={10} className={`transition-colors ${activeTooltip === 'avg' ? 'text-slate-900' : 'text-slate-300'}`} />
+                    <Info size={12} className={`transition-colors ${activeTooltip === 'avg' ? 'text-slate-900' : 'text-slate-300'}`} />
                   </button>
                   <AnimatePresence>
                     {activeTooltip === 'avg' && (
@@ -597,21 +597,21 @@ const SessionStatsPage: React.FC = () => {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute bottom-full right-0 mb-3 w-40 p-2 bg-slate-900 text-white text-[9px] font-bold rounded-xl z-50 shadow-2xl border border-white/20 backdrop-blur-md pointer-events-none"
+                        className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-slate-900 text-white text-[10px] font-bold rounded-2xl z-50 shadow-2xl border border-white/20 backdrop-blur-md pointer-events-none"
                       >
-                        ממוצע משתתפים לסשן.
-                        <div className="absolute top-full right-3 border-[6px] border-transparent border-t-slate-900"></div>
+                        ממוצע משתתפים לסשן מתחילת השנה.
+                        <div className="absolute top-full right-4 border-[6px] border-transparent border-t-slate-900"></div>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               </div>
-              <p className="text-2xl md:text-4xl font-black text-slate-900">{stats.avgAttendance}</p>
+              <p className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{stats.avgAttendance}</p>
             </div>
 
-            <div className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center aspect-square">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <p className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">כניסות למים</p>
+            <div className="flex-1 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">כניסות למים</p>
                 <div className="relative">
                   <button 
                     onClick={() => setActiveTooltip(activeTooltip === 'total' ? null : 'total')}
@@ -623,7 +623,7 @@ const SessionStatsPage: React.FC = () => {
                         : 'bg-slate-50 border-slate-100'
                     }`}
                   >
-                    <Info size={10} className={`transition-colors ${activeTooltip === 'total' ? 'text-slate-900' : 'text-slate-300'}`} />
+                    <Info size={12} className={`transition-colors ${activeTooltip === 'total' ? 'text-slate-900' : 'text-slate-300'}`} />
                   </button>
                   <AnimatePresence>
                     {activeTooltip === 'total' && (
@@ -631,27 +631,27 @@ const SessionStatsPage: React.FC = () => {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute bottom-full right-0 mb-3 w-40 p-2 bg-slate-900 text-white text-[9px] font-bold rounded-xl z-50 shadow-2xl border border-white/20 backdrop-blur-md pointer-events-none"
+                        className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-slate-900 text-white text-[10px] font-bold rounded-2xl z-50 shadow-2xl border border-white/20 backdrop-blur-md pointer-events-none"
                       >
-                        סך השתתפויות מצטבר.
-                        <div className="absolute top-full right-3 border-[6px] border-transparent border-t-slate-900"></div>
+                        סך השתתפויות מצטבר של כל חברי הקהילה.
+                        <div className="absolute top-full right-4 border-[6px] border-transparent border-t-slate-900"></div>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               </div>
-              <p className="text-2xl md:text-4xl font-black text-slate-900">{stats.totalAttendance}</p>
+              <p className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{stats.totalAttendance}</p>
             </div>
 
-            <div className={`p-4 rounded-[2rem] border shadow-sm flex flex-col items-center justify-center text-center aspect-square ${
+            <div className={`flex-1 p-6 rounded-[2.5rem] border shadow-sm flex flex-col items-center justify-center text-center ${
               stats.globalTrend === 'up' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
               stats.globalTrend === 'down' ? 'bg-rose-50 border-rose-100 text-rose-600' : 
               'bg-white border-slate-100 text-slate-400'
             }`}>
-              <p className="text-[8px] md:text-[9px] font-black uppercase tracking-widest opacity-60 mb-2">מגמת נוכחות</p>
-              <div className="flex items-center gap-2">
-                {stats.globalTrend === 'up' ? <ArrowUpRight size={20} /> : stats.globalTrend === 'down' ? <ArrowDownRight size={20} /> : <Minus size={20} />}
-                <p className="text-xl md:text-3xl font-black">{stats.trendPercentage}%</p>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-3">מגמת נוכחות</p>
+              <div className="flex items-center gap-3">
+                {stats.globalTrend === 'up' ? <ArrowUpRight size={28} /> : stats.globalTrend === 'down' ? <ArrowDownRight size={28} /> : <Minus size={28} />}
+                <p className="text-3xl md:text-4xl font-black leading-none">{stats.trendPercentage}%</p>
               </div>
             </div>
           </div>

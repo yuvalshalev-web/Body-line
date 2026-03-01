@@ -42,8 +42,8 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
       className="group cursor-pointer relative" 
       onClick={onClick}
     >
-      <div className="member-card-glass p-2 pb-5 transition-all duration-500 group-hover:bg-white/20 group-hover:border-white/40">
-        <div className="aspect-square overflow-hidden bg-slate-50/10 rounded-xl mb-3 border border-white/10">
+      <div className="bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl p-2 pb-5 transition-all duration-500 group-hover:bg-white/60 group-hover:border-white shadow-sm hover:shadow-xl">
+        <div className="aspect-square overflow-hidden bg-slate-200/50 rounded-xl mb-3 border border-white/40">
           {member.avatar ? (
             <img 
               src={member.avatar} 
@@ -51,14 +51,14 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
               alt={`${member.firstName} ${member.lastName}`} 
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-white/20">
+            <div className="w-full h-full flex items-center justify-center text-slate-400">
               <UserCircle size={32} strokeWidth={1} />
             </div>
           )}
         </div>
         <div className="text-center">
-          <p className="text-[10px] font-['Assistant'] font-black text-white truncate px-1 drop-shadow-sm">{member.firstName} {member.lastName}</p>
-          <p className="text-[7px] font-black text-white/40 uppercase tracking-widest mt-0.5">{member.role === 'Admin' ? 'מנהל' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}</p>
+          <p className="text-[10px] font-['Assistant'] font-black text-slate-800 truncate px-1">{member.firstName} {member.lastName}</p>
+          <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{member.role === 'Admin' ? 'מנהל' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}</p>
         </div>
       </div>
     </motion.div>
@@ -167,69 +167,70 @@ const DirectoryPage: React.FC = () => {
   }, [processedMembers]);
 
   return (
-    <div className="min-h-screen bg-[#0D3B46] text-right relative overflow-hidden" dir="rtl">
-      {/* Background Decorative Elements */}
+    <div className="min-h-screen bg-[#FDFBF7] text-right relative overflow-hidden" dir="rtl">
+      {/* Background Decorative Elements - Sand Theme */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#00CED1]/10 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 -right-48 w-[500px] h-[500px] bg-[#00CED1]/5 rounded-full blur-[150px]" />
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#E6D5B8]/30 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 -right-48 w-[500px] h-[500px] bg-[#D4A373]/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-[#E6D5B8]/20 rounded-full blur-[180px]" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         {/* Body-line Standard Header Stack */}
         <div className="flex flex-col items-center text-center mb-10 space-y-4">
           {/* Top Badge */}
-          <div className="header-badge-glass">
-            <Users size={12} className="text-[#00f2fe]" />
+          <div className="bg-white/40 backdrop-blur-md border border-white/60 px-4 py-1 rounded-full inline-flex items-center gap-2 text-[10px] font-black text-slate-500 tracking-widest uppercase shadow-sm">
+            <Users size={12} className="text-[#D4A373]" />
             <span>THE ELITE SQUAD</span>
           </div>
 
           {/* Main Title */}
-          <h1 className="text-5xl md:text-7xl header-title-gradient uppercase tracking-tighter">
+          <h1 className="text-5xl md:text-7xl font-black text-slate-800 uppercase tracking-tighter">
             נבחרת הכוכבים
           </h1>
 
           {/* Subtitle with Emoji context */}
           <div className="flex flex-col items-center gap-6">
-            <p className="header-subtitle max-w-2xl">
+            <p className="text-slate-600 font-medium max-w-2xl text-lg">
               האנשים שעושים את חבל זוג למה שהיא - קהילה של חברים שנפגשים במים 🌊
             </p>
             
-            <div className="flex items-center gap-3 px-6 py-3 bg-white/5 backdrop-blur-md rounded-full border border-white/10 shadow-xl">
-              <Users size={18} className="text-[#00f2fe]" />
-              <span className="text-sm font-black text-white">{activeMembers.length} חברים פעילים</span>
+            <div className="flex items-center gap-3 px-6 py-3 bg-white/40 backdrop-blur-md rounded-full border border-white/60 shadow-sm">
+              <Users size={18} className="text-[#D4A373]" />
+              <span className="text-sm font-black text-slate-700">{activeMembers.length} חברים פעילים</span>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 mb-16 items-center">
           <div className="flex-1 relative group w-full">
-             <Search className="absolute right-5 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-[#00CED1] transition-colors" size={20} />
+             <Search className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#D4A373] transition-colors" size={20} />
              <input 
                type="text" 
                placeholder="חפש חבר בקהילה..." 
-               className="w-full pr-14 pl-6 py-3.5 bg-white/5 backdrop-blur-md border border-white/10 rounded-full font-bold text-white outline-none focus:bg-white/10 focus:ring-4 ring-[#00CED1]/10 transition-all shadow-2xl text-base placeholder:text-white/30"
+               className="w-full pr-14 pl-6 py-3.5 bg-white/40 backdrop-blur-md border border-white/60 rounded-full font-bold text-slate-800 outline-none focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all shadow-sm text-base placeholder:text-slate-400"
                value={searchTerm}
                onChange={e => setSearchTerm(e.target.value)}
              />
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
-            {/* View Mode Toggle - Redesigned with Glassmorphism */}
-            <div className="bg-white/5 backdrop-blur-md p-1 rounded-full border border-white/10 flex items-center shadow-xl relative h-[48px] min-w-[120px]">
+            {/* View Mode Toggle - Sand Theme Glassmorphism */}
+            <div className="bg-white/40 backdrop-blur-md p-1 rounded-full border border-white/60 flex items-center shadow-sm relative h-[48px] min-w-[120px]">
               <motion.div 
                 animate={{ x: viewMode === 'grid' ? '0%' : '100%' }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-[#00CED1]/80 backdrop-blur-sm rounded-full shadow-[inset_0_2px_10px_rgba(255,255,255,0.2),0_4px_15px_rgba(0,206,209,0.3)] border border-white/20"
+                className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-[#D4A373] rounded-full shadow-sm border border-white/20"
               />
               <button 
                 onClick={() => setViewMode('grid')}
-                className={`flex-1 relative z-10 flex items-center justify-center gap-2 px-3 py-1.5 text-[10px] font-black transition-colors ${viewMode === 'grid' ? 'text-white' : 'text-white/40 hover:text-white/60'}`}
+                className={`flex-1 relative z-10 flex items-center justify-center gap-2 px-3 py-1.5 text-[10px] font-black transition-colors ${viewMode === 'grid' ? 'text-white' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Grid
               </button>
               <button 
                 onClick={() => setViewMode('list')}
-                className={`flex-1 relative z-10 flex items-center justify-center gap-2 px-3 py-1.5 text-[10px] font-black transition-colors ${viewMode === 'list' ? 'text-white' : 'text-white/40 hover:text-white/60'}`}
+                className={`flex-1 relative z-10 flex items-center justify-center gap-2 px-3 py-1.5 text-[10px] font-black transition-colors ${viewMode === 'list' ? 'text-white' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 List
               </button>
@@ -238,15 +239,15 @@ const DirectoryPage: React.FC = () => {
             <div className="relative flex-1 md:flex-none">
                <button 
                  onClick={() => setIsSortOpen(!isSortOpen)}
-                 className="w-full md:w-auto h-[48px] px-6 bg-white/5 backdrop-blur-md text-white border border-white/10 rounded-full font-black text-xs flex items-center justify-between gap-4 hover:bg-white/10 transition-all shadow-xl active:scale-95"
+                 className="w-full md:w-auto h-[48px] px-6 bg-white/40 backdrop-blur-md text-slate-700 border border-white/60 rounded-full font-black text-xs flex items-center justify-between gap-4 hover:bg-white/60 transition-all shadow-sm active:scale-95"
                >
                   <span className="uppercase tracking-widest">מיון</span> <ChevronDown size={14} className={isSortOpen ? 'rotate-180 transition-transform' : ''} />
                </button>
                {isSortOpen && (
-                 <div className="absolute top-full left-0 right-0 md:left-auto md:w-56 mt-3 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-4">
-                    <button onClick={() => {setSortBy('name-asc'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] text-white hover:bg-[#00CED1] hover:text-[#0D3B46] transition-all border-b border-white/5">שם (א-ת)</button>
-                    <button onClick={() => {setSortBy('attendance'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] text-white hover:bg-[#00CED1] hover:text-[#0D3B46] transition-all border-b border-white/5">הכי פעילים בסשנים</button>
-                    <button onClick={() => {setSortBy('newest'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] text-white hover:bg-[#00CED1] hover:text-[#0D3B46] transition-all">מצטרפים חדשים</button>
+                 <div className="absolute top-full left-0 right-0 md:left-auto md:w-56 mt-3 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-4">
+                    <button onClick={() => {setSortBy('name-asc'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] text-slate-700 hover:bg-[#D4A373] hover:text-white transition-all border-b border-slate-100">שם (א-ת)</button>
+                    <button onClick={() => {setSortBy('attendance'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] text-slate-700 hover:bg-[#D4A373] hover:text-white transition-all border-b border-slate-100">הכי פעילים בסשנים</button>
+                    <button onClick={() => {setSortBy('newest'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] text-slate-700 hover:bg-[#D4A373] hover:text-white transition-all">מצטרפים חדשים</button>
                  </div>
                )}
             </div>
@@ -257,23 +258,23 @@ const DirectoryPage: React.FC = () => {
           {groupedMembers.Admin.length > 0 && (
             <section>
               <div className="flex items-center gap-4 mb-10">
-                <h3 className="text-xs font-black text-[#00CED1] uppercase tracking-[0.4em] whitespace-nowrap opacity-60">צוות קדמי</h3>
-                <div className="h-px w-full bg-white/10"></div>
+                <h3 className="text-xs font-black text-[#D4A373] uppercase tracking-[0.4em] whitespace-nowrap opacity-80">צוות קדמי</h3>
+                <div className="h-px w-full bg-slate-200"></div>
               </div>
               <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-8" : "space-y-4"}>
                 {groupedMembers.Admin.map((member, idx) => (
                   viewMode === 'grid' ? (
                     <MemberCard key={member.id} member={member} idx={idx} onClick={() => setSelectedMember(member)} />
                   ) : (
-                    <div key={member.id} onClick={() => setSelectedMember(member)} className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex items-center justify-between hover:bg-white/10 cursor-pointer transition-all">
+                    <div key={member.id} onClick={() => setSelectedMember(member)} className="bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/60 flex items-center justify-between hover:bg-white/60 cursor-pointer transition-all shadow-sm">
                       <div className="flex items-center gap-4">
-                        <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover" alt="" />
+                        <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover border border-white/40" alt="" />
                         <div>
-                          <p className="font-black text-white">{member.firstName} {member.lastName}</p>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest">{member.role}</p>
+                          <p className="font-black text-slate-800">{member.firstName} {member.lastName}</p>
+                          <p className="text-[10px] text-slate-400 uppercase tracking-widest">{member.role}</p>
                         </div>
                       </div>
-                      <ChevronDown className="-rotate-90 text-white/20" size={20} />
+                      <ChevronDown className="-rotate-90 text-slate-300" size={20} />
                     </div>
                   )
                 ))}
@@ -284,23 +285,23 @@ const DirectoryPage: React.FC = () => {
           {groupedMembers.Instructor.length > 0 && (
             <section>
               <div className="flex items-center gap-4 mb-10">
-                <h3 className="text-xs font-black text-[#00CED1] uppercase tracking-[0.4em] whitespace-nowrap opacity-60">מדריכים</h3>
-                <div className="h-px w-full bg-white/10"></div>
+                <h3 className="text-xs font-black text-[#D4A373] uppercase tracking-[0.4em] whitespace-nowrap opacity-80">מדריכים</h3>
+                <div className="h-px w-full bg-slate-200"></div>
               </div>
               <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-8" : "space-y-4"}>
                 {groupedMembers.Instructor.map((member, idx) => (
                   viewMode === 'grid' ? (
                     <MemberCard key={member.id} member={member} idx={idx} onClick={() => setSelectedMember(member)} />
                   ) : (
-                    <div key={member.id} onClick={() => setSelectedMember(member)} className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex items-center justify-between hover:bg-white/10 cursor-pointer transition-all">
+                    <div key={member.id} onClick={() => setSelectedMember(member)} className="bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/60 flex items-center justify-between hover:bg-white/60 cursor-pointer transition-all shadow-sm">
                       <div className="flex items-center gap-4">
-                        <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover" alt="" />
+                        <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover border border-white/40" alt="" />
                         <div>
-                          <p className="font-black text-white">{member.firstName} {member.lastName}</p>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest">{member.role}</p>
+                          <p className="font-black text-slate-800">{member.firstName} {member.lastName}</p>
+                          <p className="text-[10px] text-slate-400 uppercase tracking-widest">{member.role}</p>
                         </div>
                       </div>
-                      <ChevronDown className="-rotate-90 text-white/20" size={20} />
+                      <ChevronDown className="-rotate-90 text-slate-300" size={20} />
                     </div>
                   )
                 ))}
@@ -311,23 +312,23 @@ const DirectoryPage: React.FC = () => {
           {groupedMembers.Member.length > 0 && (
             <section>
               <div className="flex items-center gap-4 mb-10">
-                <h3 className="text-xs font-black text-[#00CED1] uppercase tracking-[0.4em] whitespace-nowrap opacity-60">חברי הקהילה</h3>
-                <div className="h-px w-full bg-white/10"></div>
+                <h3 className="text-xs font-black text-[#D4A373] uppercase tracking-[0.4em] whitespace-nowrap opacity-80">חברי הקהילה</h3>
+                <div className="h-px w-full bg-slate-200"></div>
               </div>
               <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-8" : "space-y-4"}>
                 {groupedMembers.Member.map((member, idx) => (
                   viewMode === 'grid' ? (
                     <MemberCard key={member.id} member={member} idx={idx} onClick={() => setSelectedMember(member)} />
                   ) : (
-                    <div key={member.id} onClick={() => setSelectedMember(member)} className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex items-center justify-between hover:bg-white/10 cursor-pointer transition-all">
+                    <div key={member.id} onClick={() => setSelectedMember(member)} className="bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/60 flex items-center justify-between hover:bg-white/60 cursor-pointer transition-all shadow-sm">
                       <div className="flex items-center gap-4">
-                        <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover" alt="" />
+                        <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover border border-white/40" alt="" />
                         <div>
-                          <p className="font-black text-white">{member.firstName} {member.lastName}</p>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest">{member.role}</p>
+                          <p className="font-black text-slate-800">{member.firstName} {member.lastName}</p>
+                          <p className="text-[10px] text-slate-400 uppercase tracking-widest">{member.role}</p>
                         </div>
                       </div>
-                      <ChevronDown className="-rotate-90 text-white/20" size={20} />
+                      <ChevronDown className="-rotate-90 text-slate-300" size={20} />
                     </div>
                   )
                 ))}
@@ -338,70 +339,70 @@ const DirectoryPage: React.FC = () => {
       </div>
 
       {selectedMember && (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-12 bg-slate-950/90 backdrop-blur-xl animate-in fade-in" onClick={() => setSelectedMember(null)}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-12 bg-slate-900/40 backdrop-blur-xl animate-in fade-in" onClick={() => setSelectedMember(null)}>
        <motion.div 
          initial={{ opacity: 0, scale: 0.95, y: 40 }}
          animate={{ opacity: 1, scale: 1, y: 0 }}
-         className="bg-[#0D3B46] w-full max-w-7xl h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[4rem] shadow-2xl overflow-hidden relative flex flex-col md:flex-row border border-white/10" 
+         className="bg-[#FDFBF7] w-full max-w-7xl h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[4rem] shadow-2xl overflow-hidden relative flex flex-col md:flex-row border border-white/60" 
          onClick={e => e.stopPropagation()}
        >
-          <div className="md:w-[40%] relative h-[40vh] md:h-auto overflow-hidden bg-slate-900">
+          <div className="md:w-[40%] relative h-[40vh] md:h-auto overflow-hidden bg-slate-100">
              {selectedMember.avatar ? (
                <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={`${selectedMember.firstName} ${selectedMember.lastName}`} />
              ) : (
-               <div className="w-full h-full flex items-center justify-center text-slate-800">
+               <div className="w-full h-full flex items-center justify-center text-slate-300">
                  <UserCircle size={160} strokeWidth={0.5} />
                </div>
              )}
-             <div className="absolute inset-0 bg-gradient-to-t from-[#0D3B46] via-transparent to-transparent"></div>
+             <div className="absolute inset-0 bg-gradient-to-t from-[#FDFBF7] via-transparent to-transparent"></div>
              <div className="absolute bottom-12 right-12 left-12">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="h-px w-12 bg-[#00CED1]"></div>
-                  <span className="text-[10px] font-black text-[#00CED1] uppercase tracking-[0.4em]">Member Profile</span>
+                  <div className="h-px w-12 bg-[#D4A373]"></div>
+                  <span className="text-[10px] font-black text-[#D4A373] uppercase tracking-[0.4em]">Member Profile</span>
                 </div>
-                <h3 className="text-6xl font-black text-white tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
+                <h3 className="text-6xl font-black text-slate-800 tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
              </div>
           </div>
 
           <div className="flex-1 p-10 md:p-20 overflow-y-auto custom-scrollbar text-right relative">
-            <button onClick={() => setSelectedMember(null)} className="absolute top-10 left-10 p-4 text-white/40 hover:text-white transition-all bg-white/5 hover:bg-white/10 rounded-full z-10"><X size={32} /></button>
+            <button onClick={() => setSelectedMember(null)} className="absolute top-10 left-10 p-4 text-slate-400 hover:text-slate-600 transition-all bg-slate-100 hover:bg-slate-200 rounded-full z-10"><X size={32} /></button>
             
             <div className="max-w-2xl space-y-16">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Role</p>
-                  <p className="text-lg font-black text-white">{selectedMember.role}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</p>
+                  <p className="text-lg font-black text-slate-800">{selectedMember.role}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Sessions</p>
-                  <p className="text-lg font-black text-white">{selectedMember.totalAttendance || 0}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sessions</p>
+                  <p className="text-lg font-black text-slate-800">{selectedMember.totalAttendance || 0}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Joined</p>
-                  <p className="text-lg font-black text-white">{formatDate(selectedMember.joinedAt)}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Joined</p>
+                  <p className="text-lg font-black text-slate-800">{formatDate(selectedMember.joinedAt)}</p>
                 </div>
               </div>
 
               <div className="space-y-6">
-                <p className="text-[10px] font-black text-[#00CED1] uppercase tracking-[0.3em]">About</p>
-                <p className="text-3xl font-bold text-white leading-tight tracking-tight italic">
+                <p className="text-[10px] font-black text-[#D4A373] uppercase tracking-[0.3em]">About</p>
+                <p className="text-3xl font-bold text-slate-700 leading-tight tracking-tight italic">
                   "{selectedMember.bio || 'חבר בקהילת הגולשים של חבל זוג. חולק את התשוקה לים ולגלים.'}"
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-8 bg-white/5 rounded-[2.5rem] border border-white/10 flex items-center gap-6 group hover:bg-white/10 hover:shadow-2xl transition-all duration-500">
-                   <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-white/40 group-hover:text-[#00CED1] shadow-sm transition-colors"><Phone size={24} /></div>
+                <div className="p-8 bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 flex items-center gap-6 group hover:bg-white/60 hover:shadow-xl transition-all duration-500">
+                   <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-[#D4A373] shadow-sm transition-colors"><Phone size={24} /></div>
                    <div>
-                      <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Mobile</p>
-                      <p className="text-xl font-black text-white">{selectedMember.mobile}</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Mobile</p>
+                      <p className="text-xl font-black text-slate-800">{selectedMember.mobile}</p>
                    </div>
                 </div>
-                <div className="p-8 bg-white/5 rounded-[2.5rem] border border-white/10 flex items-center gap-6 group hover:bg-white/10 hover:shadow-2xl transition-all duration-500">
-                   <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-white/40 group-hover:text-[#00CED1] shadow-sm transition-colors"><Mail size={24} /></div>
+                <div className="p-8 bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 flex items-center gap-6 group hover:bg-white/60 hover:shadow-xl transition-all duration-500">
+                   <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-[#D4A373] shadow-sm transition-colors"><Mail size={24} /></div>
                    <div className="overflow-hidden">
-                      <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Email</p>
-                      <p className="text-xl font-black text-white truncate">{selectedMember.email}</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Email</p>
+                      <p className="text-xl font-black text-slate-800 truncate">{selectedMember.email}</p>
                    </div>
                 </div>
               </div>
