@@ -446,6 +446,24 @@ body {
   line-height: 1.1;
 }
 
+.t-mobile-gradient {
+  background: linear-gradient(to right, #4a002e, #ff009f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.t-mobile-gradient {
+  background: linear-gradient(to right, #4a002e 50%, #e20074);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
 .header-subtitle {
   color: #64748b; /* Blue-gray dark */
   font-weight: 400;

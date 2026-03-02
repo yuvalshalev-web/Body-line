@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp } from 'firebase/firestore';
-import { getDb, trackedGetDocs, setDbStatus, db_status } from '../services/firebase';
+import { ref, deleteObject, getMetadata } from 'firebase/storage';
+import { getDb, trackedGetDocs, setDbStatus, db_status, getStorageInstance } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../src/utils/dateUtils';
 import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
 import { hashPassword } from '../utils/crypto';
-import { initializeStorageStats } from '../utils/storageStats';
+import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageStats';
 import { storage } from '../src/utils/storage';
 import { useModal } from './ModalContext';
 
@@ -46,6 +47,7 @@ interface DataContextType {
   addPodcast: (details: Omit<Podcast, 'id'>) => Promise<void>;
   updatePodcast: (podcast: Podcast) => Promise<void>;
   deletePodcast: (id: string) => Promise<void>;
+  deleteGalleryItems: (ids: string[]) => Promise<void>;
   toggleSessionAttendance: (userId: string) => Promise<void>;
   forceResetSession: () => Promise<void>;
   finalizeThursdaySession: () => Promise<void>;
@@ -420,6 +422,32 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await deleteDoc(doc(getDb(), 'podcasts', id));
   };
 
+  const deleteGalleryItems = async (ids: string[]) => {
+    const storage = getStorageInstance();
+    const batch = writeBatch(getDb());
+    let totalSizeDeleted = 0;
+
+    for (const id of ids) {
+      const item = galleryItems.find(g => g.id === id);
+      if (item && item.storagePath) {
+        try {
+          const fileRef = ref(storage, item.storagePath);
+          const metadata = await getMetadata(fileRef);
+          totalSizeDeleted += metadata.size;
+          await deleteObject(fileRef);
+        } catch (error) {
+          console.error(`Failed to delete storage object for item ${id}:`, error);
+        }
+      }
+      batch.delete(doc(getDb(), 'gallery', id));
+    }
+
+    await batch.commit();
+    if (totalSizeDeleted > 0) {
+      await syncStorageOnDelete(totalSizeDeleted);
+    }
+  };
+
   const toggleSessionAttendance = async (userId: string) => {
     const isCurrentlyAttending = attendeeIds.includes(userId);
     const activeSessionRef = doc(getDb(), 'site_data', 'active_session');
@@ -611,7 +639,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <DataContext.Provider value={{ 
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
-      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, toggleSessionAttendance, forceResetSession,
+      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, toggleSessionAttendance, forceResetSession,
       finalizeThursdaySession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember
     }}>
       {children}

@@ -36,7 +36,7 @@ const AdminPage: React.FC = () => {
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
     joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember,
-    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews
+    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems
   } = useData();
 
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE'>('DASHBOARD');
@@ -74,6 +74,9 @@ const AdminPage: React.FC = () => {
   
   // Post Editing State
   const [editingPost, setEditingPost] = useState<any>(null);
+
+  // Gallery Selection State
+  const [selectedGalleryItems, setSelectedGalleryItems] = useState<string[]>([]);
 
   const isSuperAdmin = currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
 
@@ -233,7 +236,7 @@ const AdminPage: React.FC = () => {
           </div>
 
           {/* Main Title */}
-          <h1 className="text-5xl header-title-gradient uppercase tracking-tighter">
+          <h1 className="text-5xl t-mobile-gradient uppercase tracking-tighter">
             מרכז ניהול
           </h1>
 
@@ -719,9 +722,56 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'GALLERY' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+             <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border border-[#ff009f]/10">
+               <div>
+                 <h2 className="text-2xl font-black text-slate-800">ניהול גלריה</h2>
+                 <p className="text-slate-500 font-medium">ניהול ומחיקה של תמונות מהגלריה</p>
+               </div>
+               <div className="flex items-center gap-4">
+                 <div className="bg-[#f2def0] text-[#f063c1] px-4 py-2 rounded-xl font-black text-sm">
+                   {galleryItems.length} תמונות
+                 </div>
+                 {selectedGalleryItems.length > 0 && (
+                   <button 
+                     onClick={() => {
+                       showConfirm({
+                         title: 'מחיקת תמונות',
+                         message: `האם אתה בטוח שברצונך למחוק ${selectedGalleryItems.length === 1 ? 'את התמונה' : 'את התמונות'}?`,
+                         confirmText: 'מחיקה',
+                         cancelText: 'ביטול',
+                         onConfirm: async () => {
+                           try {
+                             await deleteGalleryItems(selectedGalleryItems);
+                             setSelectedGalleryItems([]);
+                             showSuccess('התמונות נמחקו בהצלחה');
+                           } catch (err) {
+                             showError('שגיאה במחיקת התמונות');
+                           }
+                         }
+                       });
+                     }}
+                     className="bg-red-500 text-white px-4 py-2 rounded-xl font-black text-sm hover:bg-red-600 transition-colors flex items-center gap-2"
+                   >
+                     <Trash2 size={16} />
+                     מחק {selectedGalleryItems.length} תמונות
+                   </button>
+                 )}
+               </div>
+             </div>
+
              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                {galleryItems.map(item => (
-                 <div key={item.id} className="aspect-square rounded-2xl overflow-hidden relative group border border-[#ff009f]/5">
+                 <div 
+                   key={item.id} 
+                   className={`aspect-square rounded-2xl overflow-hidden relative group border-2 transition-all cursor-pointer ${
+                     selectedGalleryItems.includes(item.id) ? 'border-[#ff009f] shadow-lg shadow-[#ff009f]/20' : 'border-[#ff009f]/5'
+                   }`}
+                   onClick={() => {
+                     setSelectedGalleryItems(prev => 
+                       prev.includes(item.id) ? prev.filter(id => id !== item.id) : [...prev, item.id]
+                     );
+                   }}
+                 >
                    {item.imageUrl ? (
                      <img src={item.imageUrl} className="w-full h-full object-cover" alt="" />
                    ) : (
@@ -729,12 +779,24 @@ const AdminPage: React.FC = () => {
                        <ImageIcon size={32} />
                      </div>
                    )}
+                   
+                   <div className="absolute top-2 right-2 z-10">
+                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                       selectedGalleryItems.includes(item.id) ? 'bg-[#ff009f] border-[#ff009f] text-white' : 'bg-white/50 border-white/80 text-transparent group-hover:bg-white/80'
+                     }`}>
+                       <Check size={14} strokeWidth={3} />
+                     </div>
+                   </div>
+
                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
                      <button 
-                       onClick={() => window.open(item.imageUrl, '_blank')}
-                       className="p-3 bg-rose-500 text-white rounded-xl shadow-lg hover:bg-rose-600 transition-all"
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         window.open(item.imageUrl, '_blank');
+                       }}
+                       className="p-3 bg-white/20 text-white rounded-xl backdrop-blur-sm hover:bg-white/30 transition-all"
                      >
-                       <Trash2 size={18} />
+                       <ImageIcon size={18} />
                      </button>
                    </div>
                  </div>
@@ -872,19 +934,25 @@ const AdminPage: React.FC = () => {
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                {/* Navigation Position Toggle - Integrated into Shnat Hevel Zug */}
-                <div className="mt-8 pt-8 border-t border-slate-100 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
-                      <LayoutDashboard size={20} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-black text-[#4a002e]">מיקום תפריט הניווט</p>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">החלפה בין תפריט עליון לתחתון</p>
-                    </div>
+            {/* Navigation Position Toggle Widget */}
+            <div className="bg-gradient-to-br from-[#4a002e] to-[#2d001c] p-1 rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                
+                <div className="flex items-center gap-6 relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                    <LayoutDashboard size={32} />
                   </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">מיקום תפריט הניווט</h3>
+                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">החלפה בין תפריט עליון לתחתון</p>
+                  </div>
+                </div>
 
+                <div className="flex items-center gap-4 relative z-10">
                   <div className="theme-switch-container m-0">
                     <span className={`text-[10px] font-black uppercase tracking-widest ${siteConfig.navPosition !== 'floating-bottom' ? 'text-[#ff009f]' : 'text-slate-400'}`}>
                       עליון
