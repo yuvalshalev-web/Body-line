@@ -154,7 +154,7 @@ const SessionStatsPage: React.FC = () => {
     const processedMembers = [];
     for (const member of members) {
       processedUsersCount++;
-      if (processedUsersCount > 150) break; // Safety cap for user mapping
+      if (processedUsersCount > 200) break; // Safety cap for user mapping
 
       const mStats = memberStatsMap[member.id] || { total: 0, firstHalf: 0, secondHalf: 0, streak: 0 };
       
@@ -346,12 +346,13 @@ const SessionStatsPage: React.FC = () => {
     const monthlySeaTimeMinutes = lastMonthSessions.reduce((acc, s) => acc + (s.participantsCount || 0) * 90, 0);
     const monthlySeaTimeHours = Math.round(monthlySeaTimeMinutes / 60);
 
-    // 9. Pulse Data (Full timeline from startDate to lastSessionDate)
+    // 9. Pulse Data (Full timeline from startDate to endDate)
     const pulseData = [];
-    if (filteredSessions.length > 0) {
-      const lastSession = filteredSessions[filteredSessions.length - 1];
-      const lastSessionDate = lastSession.date?.toDate ? lastSession.date.toDate() : new Date(lastSession.date);
-      
+    let currentWeek = 0;
+    let currentMonth = 0;
+    const today = new Date();
+
+    if (filteredSessions.length > 0 && yearConfig) {
       const sessionMap = new Map<string, number>();
       filteredSessions.forEach(s => {
         const d = s.date?.toDate ? s.date.toDate() : new Date(s.date);
@@ -360,16 +361,27 @@ const SessionStatsPage: React.FC = () => {
 
       let iter = new Date(startDate);
       iter.setHours(0, 0, 0, 0);
-      const end = new Date(lastSessionDate);
+      const end = new Date(yearConfig.endDate);
       end.setHours(23, 59, 59, 999);
       
+      // Calculate current status
+      if (today >= startDate && today <= end) {
+        const diffTime = Math.abs(today.getTime() - startDate.getTime());
+        currentWeek = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
+        currentMonth = (today.getFullYear() - startDate.getFullYear()) * 12 + (today.getMonth() - startDate.getMonth()) + 1;
+      }
+
       let safety = 0;
       while (iter <= end && safety < 400) {
-        // We only show Thursdays (day 4) as those are the session days
         if (iter.getDay() === 4) {
+          const count = sessionMap.get(iter.toDateString()) || 0;
           pulseData.push({
             date: iter.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }),
-            count: sessionMap.get(iter.toDateString()) || 0
+            count: count,
+            percentage: members.length > 0 ? Math.round((count / members.length) * 100) : 0,
+            fullDate: iter.toLocaleDateString('he-IL', { month: 'long' }), // Just the month name for title
+            activityMonth: (iter.getFullYear() - startDate.getFullYear()) * 12 + (iter.getMonth() - startDate.getMonth()) + 1,
+            weekNumber: Math.ceil(Math.abs(iter.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 7)) || 1
           });
         }
         iter.setDate(iter.getDate() + 1);
@@ -437,13 +449,16 @@ const SessionStatsPage: React.FC = () => {
       genderImpact,
       totalSeaTimeHours,
       monthlySeaTimeHours,
-      ageActivityData
+      ageActivityData,
+      currentWeek,
+      currentMonth,
+      yearConfig
     };
   }, [weeklyHistory, members, yearConfig, gritSortConfig, gritSearchTerm]);
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 bg-[#F5F7FA] fixed inset-0 z-50">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 bg-[#DDE1E4] fixed inset-0 z-50">
         <Loader2 className="animate-spin text-[#1A365D]" size={40} />
         <p className="text-[#2D3748] font-black animate-pulse">טוען נתונים...</p>
       </div>
@@ -459,7 +474,7 @@ const SessionStatsPage: React.FC = () => {
       {/* Unified Header */}
       <header className="mb-16 relative">
         <div className="flex flex-col items-center text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#F5F7FA] text-[#2D3748] text-[10px] font-black rounded-full shadow-soft border border-slate-200">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#DDE1E4] text-[#2D3748] text-[10px] font-black rounded-full shadow-soft border border-slate-200">
             <Activity size={12} className="text-[#1A365D]" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Session Dive Analytics</span>
           </div>
@@ -476,7 +491,7 @@ const SessionStatsPage: React.FC = () => {
           <div className="flex flex-col md:flex-row gap-8 items-center justify-center pt-4 w-full">
             <div className="relative group">
               <div className="absolute inset-0 bg-blue-500/10 blur-2xl group-hover:bg-blue-500/20 transition-all duration-500" />
-              <div className="relative bg-[#F5F7FA] p-8 rounded-[3rem] text-center min-w-[280px] shadow-soft border border-slate-200">
+              <div className="relative bg-[#DDE1E4] p-8 rounded-[3rem] text-center min-w-[280px] shadow-soft border border-slate-200">
                 <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-2">זמן ים מצטבר (הערכה)</p>
                 <div className="flex flex-col items-center">
                   <span className="text-6xl font-black text-[#2D3748] drop-shadow-sm">
@@ -491,7 +506,7 @@ const SessionStatsPage: React.FC = () => {
             {/* Yearly Progress Bar Widget */}
             <div className="relative group w-full max-w-xl">
               <div className="absolute inset-0 bg-blue-500/5 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500" />
-              <div className="relative bg-[#F5F7FA] p-8 rounded-[3rem] shadow-soft border border-slate-200 flex flex-col w-full">
+              <div className="relative bg-[#DDE1E4] p-8 rounded-[3rem] shadow-soft border border-slate-200 flex flex-col w-full">
                 {(() => {
                   const now = new Date();
                   const startDate = yearConfig?.startDate || new Date().toISOString();
@@ -661,7 +676,7 @@ const SessionStatsPage: React.FC = () => {
             
             {/* Gender Impact Card (Right Side) */}
             <div className="lg:col-span-5 space-y-10">
-              <div className="relative p-10 rounded-[3.5rem] overflow-hidden border border-slate-200 shadow-soft bg-[#F5F7FA]">
+              <div className="relative p-10 rounded-[3.5rem] overflow-hidden border border-slate-200 shadow-soft bg-[#DDE1E4]">
                 <div className="flex justify-between items-start mb-10">
                   <div>
                     <h3 className="text-[#2D3748] font-black text-2xl tracking-tighter">פילוח מגדרי ואימפקט</h3>
@@ -731,7 +746,7 @@ const SessionStatsPage: React.FC = () => {
               </div>
 
               {/* Age & Activity Card - Using White Card */}
-              <div className="bg-[#F5F7FA] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
+              <div className="bg-[#DDE1E4] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
                 <div className="flex items-center gap-4 mb-10">
                   <div className="p-3 bg-white text-[#38B2AC] rounded-xl shadow-sm border border-slate-100"><Activity size={20} /></div>
                   <h3 className="text-2xl font-black text-[#2D3748] tracking-tighter">מדדי פעילות לפי גיל</h3>
@@ -774,16 +789,20 @@ const SessionStatsPage: React.FC = () => {
             {/* Charts & Pulse (Left Side) - Using White Cards */}
             <div className="lg:col-span-7 space-y-10">
               {/* Pulse Area Chart */}
-              <div className="bg-[#F5F7FA] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
-                <div className="flex items-center justify-between mb-10">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-white text-[#1A365D] rounded-xl shadow-sm border border-slate-100"><TrendingUp size={20} /></div>
-                    <h3 className="text-2xl font-black text-[#2D3748] tracking-tighter">דופק הסשנים (Pulse)</h3>
+              <div className="bg-[#DDE1E4] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="p-3 bg-white text-[#1A365D] rounded-xl shadow-sm border border-slate-100">
+                    <Activity size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-[#2D3748] tracking-tighter">דופק הקהילה (Pulse)</h3>
+                    <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest">מגמת נוכחות שבועית</p>
                   </div>
                 </div>
+                
                 <div className="h-[400px] w-full mt-6">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={stats.pulseData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <AreaChart data={stats.pulseData} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
                       <defs>
                         <linearGradient id="colorPulse" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#1A365D" stopOpacity={0.3}/>
@@ -791,24 +810,41 @@ const SessionStatsPage: React.FC = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      
                       <XAxis 
                         dataKey="date" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }} 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }}
+                        minTickGap={30}
                       />
                       <YAxis 
                         axisLine={false} 
                         tickLine={false} 
                         tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }} 
+                        domain={[0, 100]}
+                        ticks={[0, 20, 40, 60, 80, 100]}
+                        tickFormatter={(val) => `${val}%`}
                       />
                       <Tooltip 
-                        contentStyle={{ backgroundColor: '#2D3748', borderRadius: '1.5rem', border: 'none', color: '#fff' }}
-                        itemStyle={{ color: '#63B3ED', fontWeight: 900 }}
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-[#2D3748] p-4 rounded-2xl border-none shadow-xl text-white text-right" dir="rtl">
+                                <p className="text-xs font-black mb-1">{data.fullDate}</p>
+                                <p className="text-sm font-black">
+                                  <span className="text-blue-400">{Math.round(payload[0].value as number)}%</span> נוכחות
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
                       />
                       <Area 
                         type="monotone" 
-                        dataKey="count" 
+                        dataKey="percentage" 
                         stroke="#1A365D" 
                         strokeWidth={4} 
                         fillOpacity={1} 
@@ -821,7 +857,7 @@ const SessionStatsPage: React.FC = () => {
               </div>
 
               {/* Grit Leaderboard */}
-              <div className="bg-[#F5F7FA] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
+              <div className="bg-[#DDE1E4] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-white text-[#D69E2E] rounded-xl shadow-sm border border-slate-100">

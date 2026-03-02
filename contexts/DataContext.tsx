@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { getDb, trackedGetDocs, setDbStatus, db_status } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../src/utils/dateUtils';
-import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise } from '../types';
+import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
 import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats } from '../utils/storageStats';
@@ -14,13 +14,14 @@ interface DataContextType {
   joinRequests: JoinRequest[];
   events: Event[];
   news: NewsItem[];
+  podcasts: Podcast[];
   galleryItems: GalleryItem[];
   glossary: GlossaryTerm[];
   exercises: Exercise[];
   quotes: QuoteItem[];
   weeklyHistory: any[];
   siteAssets: any;
-  siteConfig: { navPosition: 'top' | 'bottom' };
+  siteConfig: { navPosition: 'standard' | 'floating-top' | 'floating-bottom' };
   yearConfig: { startDate: string; endDate: string } | null;
   attendeeIds: string[];
   activeSessionDate: string;
@@ -40,7 +41,11 @@ interface DataContextType {
   updateEvent: (event: Event) => Promise<void>;
   toggleEventAttendance: (eventId: string, userId: string) => Promise<void>;
   addNews: (details: Omit<NewsItem, 'id'>) => Promise<void>;
+  updateNews: (newsItem: NewsItem) => Promise<void>;
   deleteNews: (id: string) => Promise<void>;
+  addPodcast: (details: Omit<Podcast, 'id'>) => Promise<void>;
+  updatePodcast: (podcast: Podcast) => Promise<void>;
+  deletePodcast: (id: string) => Promise<void>;
   toggleSessionAttendance: (userId: string) => Promise<void>;
   forceResetSession: () => Promise<void>;
   finalizeThursdaySession: () => Promise<void>;
@@ -49,9 +54,10 @@ interface DataContextType {
   batchAddQuotes: (items: Omit<QuoteItem, 'id'>[]) => Promise<void>;
   clearCollection: (collectionName: string) => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
-  updateSiteConfig: (config: Partial<{ navPosition: 'top' | 'bottom' }>) => Promise<void>;
+  updateSiteConfig: (config: Partial<{ navPosition: 'standard' | 'floating-top' | 'floating-bottom' }>) => Promise<void>;
   updateYearConfig: (config: { startDate: string; endDate: string }) => Promise<void>;
   archiveMember: (id: string) => Promise<void>;
+  addMember: (member: Omit<Member, 'id'>) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -62,13 +68,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [glossary, setGlossary] = useState<GlossaryTerm[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
   const [weeklyHistory, setWeeklyHistory] = useState<any[]>([]);
   const [siteAssets, setSiteAssets] = useState<any>({});
-  const [siteConfig, setSiteConfig] = useState<{ navPosition: 'top' | 'bottom' }>({ navPosition: 'top' });
+  const [siteConfig, setSiteConfig] = useState<{ navPosition: 'standard' | 'floating-top' | 'floating-bottom' }>(() => {
+    const saved = localStorage.getItem('navPosition');
+    return { navPosition: (saved as any) || 'standard' };
+  });
   const [yearConfig, setYearConfig] = useState<{ startDate: string; endDate: string } | null>(null);
   const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
   const [activeSessionDate, setActiveSessionDate] = useState<string>('');
@@ -204,6 +214,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setNews(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as NewsItem)));
     }, handleFirestoreError);
     
+    const unsubPodcasts = onSnapshot(query(collection(db, 'podcasts'), orderBy('publishedAt', 'desc')), (snapshot) => {
+      setPodcasts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Podcast)));
+    }, handleFirestoreError);
+    
     const unsubGallery = onSnapshot(query(collection(db, 'gallery'), orderBy('timestamp', 'desc'), limit(50)), (snapshot) => {
       setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
     }, handleFirestoreError);
@@ -213,7 +227,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, handleFirestoreError);
 
     const unsubConfig = onSnapshot(doc(db, 'site_data', 'config'), (doc) => {
-      if (doc.exists()) setSiteConfig(doc.data() as { navPosition: 'top' | 'bottom' });
+      if (doc.exists()) setSiteConfig(doc.data() as { navPosition: 'standard' | 'floating-top' | 'floating-bottom' });
     }, handleFirestoreError);
 
     const unsubYearConfig = onSnapshot(doc(db, 'site_data', 'year_config'), (doc) => {
@@ -242,7 +256,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateMember = async (member: Member) => {
     const { id, ...data } = member;
-    await updateDoc(doc(getDb(), 'members', id), data);
+    const db = getDb();
+    
+    // Delta Checking: Only update if data actually changed
+    const existing = members.find(m => m.id === id);
+    if (existing) {
+      const hasChanged = Object.keys(data).some(key => (data as any)[key] !== (existing as any)[key]);
+      if (!hasChanged) {
+        console.log("DataContext: No changes detected for member", id, "- skipping update.");
+        return;
+      }
+    }
+
+    await updateDoc(doc(db, 'members', id), data);
   };
 
   const deleteMember = async (id: string) => {
@@ -372,8 +398,26 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await setDoc(doc(collection(getDb(), 'news')), details);
   };
 
+  const updateNews = async (newsItem: NewsItem) => {
+    const { id, ...data } = newsItem;
+    await updateDoc(doc(getDb(), 'news', id), data);
+  };
+
   const deleteNews = async (id: string) => {
     await deleteDoc(doc(getDb(), 'news', id));
+  };
+
+  const addPodcast = async (details: Omit<Podcast, 'id'>) => {
+    await setDoc(doc(collection(getDb(), 'podcasts')), details);
+  };
+
+  const updatePodcast = async (podcast: Podcast) => {
+    const { id, ...data } = podcast;
+    await updateDoc(doc(getDb(), 'podcasts', id), data);
+  };
+
+  const deletePodcast = async (id: string) => {
+    await deleteDoc(doc(getDb(), 'podcasts', id));
   };
 
   const toggleSessionAttendance = async (userId: string) => {
@@ -436,7 +480,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const batch = writeBatch(db);
     
     // 1. Update totalAttendance for all attendees
+    let updateCount = 0;
     attendees.forEach((uid: string) => {
+      updateCount++;
+      if (updateCount > 200) return; // Safety counter
       const memberRef = doc(db, 'members', uid);
       batch.update(memberRef, { totalAttendance: increment(1) });
     });
@@ -507,7 +554,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await setDoc(doc(getDb(), 'site_data', 'assets'), assets, { merge: true });
   };
 
-  const updateSiteConfig = async (config: Partial<{ navPosition: 'top' | 'bottom' }>) => {
+  const updateSiteConfig = async (config: Partial<{ navPosition: 'standard' | 'floating-top' | 'floating-bottom' }>) => {
+    if (config.navPosition) {
+      localStorage.setItem('navPosition', config.navPosition);
+    }
+    setSiteConfig(prev => ({ ...prev, ...config }));
     await setDoc(doc(getDb(), 'site_data', 'config'), config, { merge: true });
   };
 
@@ -538,12 +589,30 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await batch.commit();
   };
 
+  const addMember = async (memberData: Omit<Member, 'id'>) => {
+    const db = getDb();
+    
+    // Circuit Breaker check
+    if (hasQuotaError || dbStatus === 'OFFLINE') {
+      throw new Error('Database is currently unavailable or quota exceeded.');
+    }
+
+    const membersRef = collection(db, 'members');
+    await addDoc(membersRef, {
+      ...memberData,
+      joinedAt: memberData.joinedAt || getCurrentDateFormatted(),
+      isActive: memberData.isActive !== undefined ? memberData.isActive : true,
+      loginCount: 0,
+      totalAttendance: 0
+    });
+  };
+
   return (
     <DataContext.Provider value={{ 
-      members, joinRequests, events, news, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
+      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
-      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, deleteNews, toggleSessionAttendance, forceResetSession,
-      finalizeThursdaySession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember
+      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, toggleSessionAttendance, forceResetSession,
+      finalizeThursdaySession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember
     }}>
       {children}
     </DataContext.Provider>

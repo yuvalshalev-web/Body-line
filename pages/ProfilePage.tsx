@@ -18,7 +18,8 @@ import {
   AlertCircle,
   Phone,
   Cake,
-  ChevronDown
+  ChevronDown,
+  Key
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,6 +27,8 @@ import { useData } from '../contexts/DataContext';
 import { Member } from '../types';
 import { generateBio } from '../services/geminiService';
 import { processImage } from '../utils/imageProcessor';
+import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
+import { hashPassword } from '../utils/crypto';
 
 const SocialInput = ({ 
   label, name, value, onChange, icon: Icon, placeholder, brandColor, ensureAbsoluteUrl,
@@ -64,6 +67,10 @@ const ProfilePage: React.FC = () => {
   const [isGeneratingBio, setIsGeneratingBio] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [toast, setToast] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
     if (currentUser) setFormData({...currentUser});
@@ -84,13 +91,7 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value;
-    const digits = value.replace(/\D/g, '').slice(0, 10);
-    let formatted = digits;
-    if (digits.length > 3) {
-      formatted = `${digits.slice(0, 3)}-${digits.slice(3)}`;
-    }
-    handleFieldChange('mobile', formatted);
+    handleFieldChange('mobile', formatMobileNumber(e.target.value));
   };
 
   const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,6 +113,13 @@ const ProfilePage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData) return;
+    
+    if (formData.mobile && !validateMobileNumber(formData.mobile)) {
+      setToast({ msg: 'מספר טלפון נייד לא תקין', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
     setIsSaving(true);
     try {
       await updateMember(formData);
@@ -137,6 +145,40 @@ const ProfilePage: React.FC = () => {
     } catch (err) {
       console.error(err);
     } finally { setIsGeneratingBio(false); }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData) return;
+    
+    if (newPassword.length < 6) {
+      setToast({ msg: 'הסיסמה חייבת להכיל לפחות 6 תווים', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setToast({ msg: 'הסיסמאות אינן תואמות', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const hashed = await hashPassword(newPassword);
+      await updateMember({ ...formData, password: hashed });
+      setToast({ msg: 'הסיסמה שונתה בהצלחה', type: 'success' });
+      setShowPasswordModal(false);
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => setToast(null), 3000);
+    } catch (err) {
+      console.error(err);
+      setToast({ msg: 'שגיאה בשינוי הסיסמה', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   return (
@@ -235,7 +277,6 @@ const ProfilePage: React.FC = () => {
                         type="date" 
                         value={formData.birthday || ''} 
                         onChange={e => handleFieldChange('birthday', e.target.value)} 
-                        onClick={(e) => (e.currentTarget as any).showPicker?.()}
                         className="w-full pr-14 pl-6 py-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all cursor-pointer" 
                       />
                     </div>
@@ -327,6 +368,15 @@ const ProfilePage: React.FC = () => {
                </span>
                <div className="absolute inset-0 bg-gradient-to-r from-[#006994] to-[#4E8294] opacity-0 group-hover:opacity-100 transition-opacity"></div>
              </button>
+             
+             <button 
+               type="button" 
+               onClick={() => setShowPasswordModal(true)}
+               className="mt-4 flex items-center gap-2 text-slate-400 hover:text-slate-600 font-bold transition-colors"
+             >
+               <Key size={16} />
+               <span>החלפת סיסמה</span>
+             </button>
           </div>
         </form>
       </div>
@@ -337,6 +387,77 @@ const ProfilePage: React.FC = () => {
           <span className="text-lg">{toast.msg}</span>
         </div>
       )}
+
+      <AnimatePresence>
+        {showPasswordModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+              onClick={() => setShowPasswordModal(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                    <Key className="text-indigo-500" />
+                    החלפת סיסמה
+                  </h3>
+                  <button 
+                    onClick={() => setShowPasswordModal(false)}
+                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <form onSubmit={handlePasswordChange} className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה חדשה</label>
+                    <input 
+                      type="password"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100 focus:bg-white focus:border-indigo-200 transition-all"
+                      placeholder="הזן סיסמה חדשה"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">אימות סיסמה</label>
+                    <input 
+                      type="password"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100 focus:bg-white focus:border-indigo-200 transition-all"
+                      placeholder="הזן שוב את הסיסמה"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+
+                  <button 
+                    type="submit"
+                    disabled={isChangingPassword || !newPassword || !confirmPassword}
+                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isChangingPassword ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                    עדכן סיסמה
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

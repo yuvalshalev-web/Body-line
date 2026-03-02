@@ -4,7 +4,8 @@ import {
   Users, Archive, Mic, Image as ImageIcon, Calendar, Settings, UserCheck, ShieldAlert, Search, 
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
-  Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake
+  Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
+  PanelTop, ArrowUpCircle, ArrowDownCircle, User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
@@ -19,6 +20,7 @@ import { updateStorageStats, syncStorageOnUpload } from '../utils/storageStats';
 import StorageDisplay from '../components/StorageDisplay';
 import EventEditor from '../components/admin/EventEditor';
 import EditMemberForm from '../components/admin/EditMemberForm';
+import PostEditor from '../components/admin/PostEditor';
 
 const ASSET_LABELS: Record<string, string> = {
   habalZugLogo: 'לוגו חבל זוג',
@@ -34,7 +36,7 @@ const AdminPage: React.FC = () => {
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
     joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember,
-    yearConfig, updateYearConfig
+    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews
   } = useData();
 
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE'>('DASHBOARD');
@@ -69,6 +71,9 @@ const AdminPage: React.FC = () => {
 
   // Event Editing State
   const [editingEvent, setEditingEvent] = useState<any>(null);
+  
+  // Post Editing State
+  const [editingPost, setEditingPost] = useState<any>(null);
 
   const isSuperAdmin = currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
 
@@ -610,13 +615,104 @@ const AdminPage: React.FC = () => {
         )}
 
         {activeTab === 'POSTS' && (
-          <div className="py-32 text-center border-2 border-dashed border-[#ff009f]/10 rounded-[4rem] animate-in fade-in">
-             <div className="w-20 h-20 bg-[#f7c1ea]/10 rounded-full flex items-center justify-center mx-auto mb-6 text-[#f063c1]/20">
-                <Mic size={40} />
-             </div>
-             <h3 className="text-2xl font-black text-[#f063c1]/40">ניהול פודקאסטים בקרוב</h3>
-             <p className="text-[#f063c1]/40 font-bold mt-2">כאן תוכלו לנהל את רשימת הפרקים והפודקאסטים</p>
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border border-[#ff009f]/10">
+              <div>
+                <h2 className="text-2xl font-black text-slate-800">ניהול פוסטים</h2>
+                <p className="text-slate-500 font-medium">ניהול ומחיקה של פוסטים שפורסמו על ידי חברי הקהילה</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="bg-[#f2def0] text-[#f063c1] px-4 py-2 rounded-xl font-black text-sm">
+                  {news.length} פוסטים
+                </div>
+                <button 
+                  onClick={() => setEditingPost({})}
+                  className="bg-[#ff009f] text-white px-4 py-2 rounded-xl font-black text-sm hover:bg-[#4a002e] transition-colors flex items-center gap-2"
+                >
+                  <Plus size={16} />
+                  פוסט חדש
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {news.map(item => (
+                <div key={item.id} className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm flex flex-col relative group">
+                  <div className="absolute top-4 left-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => setEditingPost(item)}
+                      className="p-2 bg-indigo-50 text-indigo-500 rounded-xl hover:bg-indigo-500 hover:text-white transition-colors"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        showConfirm({
+                          title: 'מחיקת פוסט',
+                          message: 'האם אתה בטוח שברצונך למחוק את הפוסט?',
+                          confirmText: 'מחיקה',
+                          cancelText: 'ביטול',
+                          onConfirm: async () => {
+                            try {
+                              await deleteNews(item.id);
+                              showSuccess('הפוסט נמחק בהצלחה');
+                            } catch (err) {
+                              showError('שגיאה במחיקת הפוסט');
+                            }
+                          }
+                        });
+                      }}
+                      className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                  
+                  {item.imageUrl && (
+                    <img src={item.imageUrl} className="w-full h-40 object-cover rounded-xl mb-4" alt="" />
+                  )}
+                  <h3 className="font-black text-lg text-slate-800 mb-2">{item.title}</h3>
+                  <p className="text-slate-500 text-sm line-clamp-3 mb-4 flex-1">{item.content}</p>
+                  
+                  <div className="flex items-center gap-3 mt-auto pt-4 border-t border-slate-100">
+                    {item.authorAvatar ? (
+                      <img src={item.authorAvatar} className="w-8 h-8 rounded-full object-cover" alt="" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                        <User size={14} />
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-xs font-black text-slate-700">{item.authorName}</p>
+                      <p className="text-[10px] text-slate-400">{new Date(item.date).toLocaleDateString('he-IL')}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {news.length === 0 && (
+                <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-200 rounded-[3rem]">
+                  <Newspaper className="mx-auto text-slate-300 mb-4" size={48} />
+                  <h3 className="text-xl font-black text-slate-400">אין פוסטים במערכת</h3>
+                </div>
+              )}
+            </div>
           </div>
+        )}
+
+        {editingPost && (
+          <PostEditor
+            post={editingPost}
+            onSave={async (updatedPost) => {
+              if (updatedPost.id) {
+                await updateNews(updatedPost);
+              } else {
+                await addNews(updatedPost);
+              }
+              setEditingPost(null);
+            }}
+            onClose={() => setEditingPost(null)}
+          />
         )}
 
         {activeTab === 'GALLERY' && (
@@ -774,30 +870,39 @@ const AdminPage: React.FC = () => {
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Navigation Position Toggle - Separated Visual Object */}
-            <div className="bg-[var(--metal-white-smoke)] border border-[var(--metal-silver)] p-8 rounded-[3rem] shadow-lg shadow-black/5 flex flex-col md:flex-row md:items-center justify-between gap-6 group/toggle transition-all hover:shadow-xl">
-              <div className="flex items-center gap-6">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all shadow-inner ${siteConfig.navPosition === 'bottom' ? 'bg-[var(--metal-nickel)] text-white' : 'bg-[var(--metal-silver)] text-[var(--metal-davys-gray)]'}`}>
-                  <Settings size={32} />
-                </div>
-                <div>
-                  <h4 className="text-xl font-black text-[var(--metal-davys-gray)] tracking-tight">הפעלת הגדרה מתקדמת</h4>
-                  <p className="text-[10px] font-bold text-[var(--metal-nickel)] uppercase tracking-widest mt-1">שינוי מיקום תפריט הניווט (עליון/תחתון)</p>
-                </div>
-              </div>
+                {/* Navigation Position Toggle - Integrated into Shnat Hevel Zug */}
+                <div className="mt-8 pt-8 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                      <LayoutDashboard size={20} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-[#4a002e]">מיקום תפריט הניווט</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">החלפה בין תפריט עליון לתחתון</p>
+                    </div>
+                  </div>
 
-              <div className="flex items-center gap-4 bg-white/40 p-4 rounded-[2rem] border border-white/60">
-                <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${siteConfig.navPosition === 'top' ? 'text-[var(--metal-davys-gray)]' : 'text-[var(--metal-nickel)]/40'}`}>עליון</span>
-                <button 
-                  onClick={() => updateSiteConfig({ navPosition: siteConfig.navPosition === 'top' ? 'bottom' : 'top' })}
-                  className={`relative w-16 h-8 rounded-full transition-all duration-300 p-1 flex items-center ${siteConfig.navPosition === 'bottom' ? 'bg-[var(--metal-nickel)]' : 'bg-[var(--metal-silver)]'}`}
-                >
-                  <div className={`w-6 h-6 bg-[var(--metal-white-smoke)] rounded-full shadow-md transition-all duration-300 transform ${siteConfig.navPosition === 'bottom' ? '-translate-x-8' : 'translate-x-0'}`} />
-                </button>
-                <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${siteConfig.navPosition === 'bottom' ? 'text-[var(--metal-davys-gray)]' : 'text-[var(--metal-nickel)]/40'}`}>תחתון</span>
+                  <div className="theme-switch-container m-0">
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${siteConfig.navPosition !== 'floating-bottom' ? 'text-[#ff009f]' : 'text-slate-400'}`}>
+                      עליון
+                    </span>
+                    <label className="switch">
+                      <input 
+                        type="checkbox" 
+                        checked={siteConfig.navPosition === 'floating-bottom'} 
+                        onChange={(e) => {
+                          const newPos = e.target.checked ? 'floating-bottom' : 'floating-top';
+                          updateSiteConfig({ navPosition: newPos });
+                        }}
+                      />
+                      <span className="slider"></span>
+                    </label>
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${siteConfig.navPosition === 'floating-bottom' ? 'text-[#ff009f]' : 'text-slate-400'}`}>
+                      תחתון
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 

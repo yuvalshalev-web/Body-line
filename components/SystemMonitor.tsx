@@ -632,14 +632,14 @@ const SystemMonitor: React.FC = () => {
 
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={readHistory}>
+              <LineChart data={readHistory} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis 
                   dataKey="time" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 8, fontWeight: 900, fill: '#4A5568' }} 
-                  interval={2}
+                  tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }}
+                  minTickGap={30}
                 />
                 <YAxis 
                   axisLine={false} 
@@ -652,6 +652,7 @@ const SystemMonitor: React.FC = () => {
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#2D3748', borderRadius: '1rem', border: 'none', color: '#fff' }}
                   itemStyle={{ color: '#63B3ED', fontWeight: 900 }}
+                  formatter={(value: any) => [Math.round(value), 'קריאות']}
                 />
                 <Line 
                   type="monotone" 
@@ -697,7 +698,7 @@ const SystemMonitor: React.FC = () => {
         </div>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={bandwidthData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <AreaChart data={bandwidthData} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
               <defs>
                 <linearGradient id="colorIn" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#1A365D" stopOpacity={0.3}/>
@@ -709,12 +710,18 @@ const SystemMonitor: React.FC = () => {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-              <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }} />
+              <XAxis 
+                dataKey="time" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }}
+                minTickGap={30}
+              />
               <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }} unit="MB" />
               <Tooltip 
                 contentStyle={{ backgroundColor: '#2D3748', borderRadius: '1rem', border: 'none', color: '#fff' }}
                 itemStyle={{ fontWeight: 900 }}
-                formatter={(value: any) => [`${value} MB`]}
+                formatter={(value: any) => [`${Math.round(value)} MB`]}
               />
               <Area type="monotone" dataKey="in" name="Incoming" stroke="#1A365D" strokeWidth={3} fillOpacity={1} fill="url(#colorIn)" />
               <Area type="monotone" dataKey="out" name="Outgoing" stroke="#38B2AC" strokeWidth={3} fillOpacity={1} fill="url(#colorOut)" />

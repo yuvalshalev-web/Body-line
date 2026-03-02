@@ -6,9 +6,10 @@ import { useAuth } from '../contexts/AuthContext';
 import CommunityAnalytics from '../components/CommunityAnalytics';
 import SystemMonitor from '../components/SystemMonitor';
 import SessionStatsPage from './SessionStatsPage';
+import TrendsDashboard from '../components/admin/TrendsDashboard';
 import GlassNavigationBar from '../components/GlassNavigationBar';
 
-type Tab = 'community' | 'system' | 'attendance';
+type Tab = 'community' | 'trends' | 'attendance' | 'system';
 
 const SnorkelIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg 
@@ -35,7 +36,8 @@ const AdminInfoPage: React.FC = () => {
 
   const tabs = [
     { id: 'community', label: 'דופק הקהילה', icon: <TrendingUp size={20} /> },
-    { id: 'attendance', label: 'צוללים לסשנים', icon: <Activity size={20} /> },
+    { id: 'trends', label: 'טרנדים והתמדה', icon: <Activity size={20} /> },
+    { id: 'attendance', label: 'צוללים לסשנים', icon: <Waves size={20} /> },
     { id: 'system', label: 'חדר מכונות', icon: <Server size={20} /> },
   ];
 
@@ -83,6 +85,7 @@ const AdminInfoPage: React.FC = () => {
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
             {activeTab === 'community' && <CommunityAnalytics />}
+            {activeTab === 'trends' && <TrendsDashboard />}
             {activeTab === 'attendance' && <SessionStatsPage />}
             {activeTab === 'system' && <SystemMonitor />}
           </motion.div>

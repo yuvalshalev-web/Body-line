@@ -71,6 +71,16 @@ export interface Event {
   attendeeCount?: number; // Added for analysis
 }
 
+export interface Podcast {
+  id: string;
+  title: string;
+  description: string;
+  audioUrl: string;
+  imageUrl?: string;
+  publishedAt: string;
+  duration?: string;
+}
+
 export interface NewsItem {
   id: string;
   title: string;

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 
 
+import { motion, AnimatePresence } from 'motion/react';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy loaded components
@@ -86,19 +87,51 @@ const App: React.FC = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const toggleMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(prev => !prev);
+  }, []);
+
   // Apply body class for bottom nav padding
   React.useEffect(() => {
-    if (siteConfig.navPosition === 'bottom') {
+    if (siteConfig.navPosition === 'floating-bottom') {
       document.body.classList.add('has-bottom-nav');
     } else {
       document.body.classList.remove('has-bottom-nav');
     }
   }, [siteConfig.navPosition]);
 
-  const handleNavigation = useCallback((path: string, isMobile: boolean) => {
+  const handleNavigation = useCallback((path: string, isMobile: boolean, e?: React.MouseEvent) => {
+    if (navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+    
+    if (e) {
+      const target = e.currentTarget.querySelector('.icon-wrapper') || e.currentTarget;
+      target.classList.add('animate-bounce-click');
+      setTimeout(() => {
+        target.classList.remove('animate-bounce-click');
+      }, 200);
+    }
+
     navigate(path);
     if (isMobile) setIsMobileMenuOpen(false);
   }, [navigate]);
+
+  const toggleMobileMenuWithHaptic = useCallback((e?: React.MouseEvent) => {
+    if (navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+    
+    if (e) {
+      const target = e.currentTarget.querySelector('.icon-wrapper') || e.currentTarget;
+      target.classList.add('animate-bounce-click');
+      setTimeout(() => {
+        target.classList.remove('animate-bounce-click');
+      }, 200);
+    }
+
+    toggleMobileMenu();
+  }, [toggleMobileMenu]);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -126,7 +159,7 @@ const App: React.FC = () => {
   }
 
   const navItems = [
-    { path: '/', icon: Home, label: 'דף הבית' },
+    { path: '/', icon: Home, label: 'בית' },
     { path: '/directory', icon: Users, label: 'נבחרת הכוכבים' },
     { path: '/gallery', icon: ImageIcon, label: 'גלריית תמונות' },
     { path: '/events', icon: Calendar, label: 'אירועים קרובים' },
@@ -150,90 +183,44 @@ const App: React.FC = () => {
       </div>
 
       {/* Mobile Header */}
-      <header className={`md:hidden bg-white border-b border-[var(--sand-medium)]/10 h-16 flex items-center justify-between px-[var(--spacing-md)] sticky top-0 z-[100] shadow-sm ${siteConfig.navPosition === 'bottom' ? 'is-bottom-nav' : ''}`}>
+      <header className={`md:hidden h-16 flex items-center justify-between px-[var(--spacing-md)] transition-all duration-300 ${
+        siteConfig.navPosition === 'standard' ? 'nav-standard sticky top-0 z-[100]' : 
+        siteConfig.navPosition === 'floating-top' ? 'nav-floating-top' : 
+        'nav-floating-bottom'
+      }`}>
         <div className="flex items-center gap-[var(--spacing-xs)]">
           <div className="w-8 h-8 bg-[var(--sand-accent)] rounded-[var(--radius-sm)] flex items-center justify-center text-white shadow-md">
             <Waves size={20} className="text-[var(--sand-light)]" />
           </div>
           <span className="font-black text-[var(--sand-dark)] tracking-tighter">חבל זוג</span>
         </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-[var(--sand-dark)]">
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        <button onClick={(e) => toggleMobileMenuWithHaptic(e)} className="p-2 text-[var(--sand-dark)]">
+          <div className="icon-wrapper">
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </div>
         </button>
       </header>
 
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[2000] md:hidden">
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className="absolute right-0 top-0 bottom-0 w-72 bg-white shadow-2xl p-6 flex flex-col animate-in slide-in-from-right duration-300">
-             <div className="flex items-center gap-4 mb-10 pb-6 border-b border-slate-100">
-               {currentUser.avatar ? (
-                 <img src={currentUser.avatar} className="w-12 h-12 rounded-xl object-cover border border-[var(--sand-medium)]/10" alt="" />
-               ) : (
-                 <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-[var(--sand-muted)] border border-[var(--sand-medium)]/10">
-                   <UserCircle size={24} />
-                 </div>
-               )}
-                <div className="flex-1 overflow-hidden">
-                  <p className="font-black text-[var(--sand-dark)] truncate">{currentUser.firstName} {currentUser.lastName}</p>
-                  <p className="text-[10px] font-black text-[var(--sand-accent)] uppercase tracking-widest">
-                    {currentUser.role === 'Admin' ? 'מנהל' : currentUser.role === 'Instructor' ? 'מדריך' : 'חבר'}
-                  </p>
-                </div>
-             </div>
-             <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
-                {navItems.map(item => (
-                  <NavLink 
-                    key={item.path} 
-                    item={item} 
-                    isActive={location.pathname === item.path}
-                    onClick={() => handleNavigation(item.path, true)}
-                  />
-                ))}
-                {currentUser.role === 'Admin' && (
-                  <div className="pt-6 mt-6 border-t border-slate-100 space-y-2">
-                    {adminNavItems.map(item => (
-                      <NavLink 
-                        key={item.path} 
-                        item={item} 
-                        isActive={location.pathname === item.path}
-                        onClick={() => handleNavigation(item.path, true)}
-                      />
-                    ))}
-                  </div>
-                )}
-             </nav>
-             <button onClick={handleLogout} className="metal-theme mt-6 flex items-center gap-4 px-6 py-4 text-[var(--metal-davys-gray)] font-black text-sm rounded-2xl hover:bg-[var(--metal-white-smoke)] hover:text-rose-600 transition-all group">
-               <LogOut size={20} className="text-rose-500 group-hover:scale-110 transition-transform" /> התנתקות
-             </button>
-          </div>
-        </div>
-      )}
-
       {/* Bottom Navigation (Mobile Only, when active) */}
-      {siteConfig.navPosition === 'bottom' && (
+      {siteConfig.navPosition === 'floating-bottom' && (
         <div className="md:hidden bottom-nav-capsule metal-theme">
-          {navItems.slice(0, 4).map((item) => {
+          {[navItems[0], navItems[1], navItems[2], navItems[3], navItems[6]].map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <button 
                 key={item.path}
-                onClick={() => handleNavigation(item.path, true)}
+                onClick={(e) => handleNavigation(item.path, true, e)}
                 className={`bottom-nav-item ${isActive ? 'active' : ''}`}
               >
                 <div className="icon-wrapper">
                   <item.icon size={20} />
                 </div>
-                <span>{item.label.split(' ')[0]}</span>
+                <span>{item.label === 'כרטיס הגולש שלי' ? 'כרטיס' : item.label.split(' ')[0]}</span>
               </button>
             );
           })}
           <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsMobileMenuOpen(true);
-            }}
+            onClick={(e) => toggleMobileMenuWithHaptic(e)}
             className={`bottom-nav-item ${isMobileMenuOpen ? 'active' : ''}`}
           >
             <div className="icon-wrapper">
@@ -245,7 +232,7 @@ const App: React.FC = () => {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-80 bg-white border-l border-[var(--sand-medium)]/10 sticky top-0 h-screen z-50 p-[var(--spacing-md)] shadow-sm">
+      <aside className="hidden md:flex flex-col w-64 bg-white border-l border-[var(--sand-medium)]/10 sticky top-0 h-screen z-50 p-[var(--spacing-md)] shadow-sm">
         <div className="flex items-center gap-[var(--spacing-xs)] mb-14">
           <div className="w-12 h-12 bg-[var(--sand-accent)] rounded-[var(--radius-md)] flex items-center justify-center text-white shadow-lg shadow-[var(--sand-shadow)]/20">
             <Waves size={28} className="text-[var(--sand-light)]" />
@@ -328,6 +315,79 @@ const App: React.FC = () => {
           </Suspense>
         </ErrorBoundary>
       </main>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-[2000] md:hidden">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" 
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <motion.div 
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className={`absolute right-0 top-0 bottom-0 w-72 bg-white shadow-2xl p-6 flex flex-col z-[2001] ${
+                siteConfig.navPosition !== 'standard' ? 'floating-menu-drawer' : ''
+              }`}
+            >
+               <div className="flex items-center justify-between mb-10 pb-6 border-b border-slate-100">
+                 <div className="flex items-center gap-4 overflow-hidden">
+                   {currentUser.avatar ? (
+                     <img src={currentUser.avatar} className="w-12 h-12 rounded-xl object-cover border border-[var(--sand-medium)]/10" alt="" />
+                   ) : (
+                     <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-[var(--sand-muted)] border border-[var(--sand-medium)]/10">
+                       <UserCircle size={24} />
+                     </div>
+                   )}
+                    <div className="flex-1 overflow-hidden">
+                      <p className="font-black text-[var(--sand-dark)] truncate">{currentUser.firstName} {currentUser.lastName}</p>
+                      <p className="text-[10px] font-black text-[var(--sand-accent)] uppercase tracking-widest">
+                        {currentUser.role === 'Admin' ? 'מנהל' : currentUser.role === 'Instructor' ? 'מדריך' : 'חבר'}
+                      </p>
+                    </div>
+                 </div>
+                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-slate-400 hover:text-rose-500 transition-colors">
+                   <X size={24} />
+                 </button>
+               </div>
+               <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
+                  {navItems.map(item => (
+                    <NavLink 
+                      key={item.path} 
+                      item={item} 
+                      isActive={location.pathname === item.path}
+                      onClick={() => handleNavigation(item.path, true)}
+                    />
+                  ))}
+                  {currentUser.role === 'Admin' && (
+                    <div className="pt-6 mt-6 border-t border-slate-100 space-y-2">
+                      <div className="px-6 mb-2">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">ניהול מערכת</p>
+                      </div>
+                      {adminNavItems.map(item => (
+                        <NavLink 
+                          key={item.path} 
+                          item={item} 
+                          isActive={location.pathname === item.path}
+                          onClick={() => handleNavigation(item.path, true)}
+                        />
+                      ))}
+                    </div>
+                  )}
+               </nav>
+               <button onClick={handleLogout} className="metal-theme mt-6 flex items-center gap-4 px-6 py-4 text-[var(--metal-davys-gray)] font-black text-sm rounded-2xl hover:bg-[var(--metal-white-smoke)] hover:text-rose-600 transition-all group">
+                 <LogOut size={20} className="text-rose-500 group-hover:scale-110 transition-transform" /> התנתקות
+               </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

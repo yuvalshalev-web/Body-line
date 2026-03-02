@@ -18,11 +18,22 @@ import {
   Cake,
   Phone,
   UserCircle,
-  Users
+  Users,
+  Plus,
+  Camera,
+  Sparkles,
+  Loader2,
+  Save,
+  AlertCircle
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
-import { Member } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { Member, Gender } from '../types';
+import { processImage } from '../utils/imageProcessor';
+import { generateBio } from '../services/geminiService';
+import { hashPassword } from '../utils/crypto';
+import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 
 type SortOption = 'name-asc' | 'attendance' | 'newest';
 
@@ -66,7 +77,8 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
 };
 
 const DirectoryPage: React.FC = () => {
-  const { members, siteAssets } = useData();
+  const { members, siteAssets, addMember } = useData();
+  const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -74,6 +86,33 @@ const DirectoryPage: React.FC = () => {
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const [whatsappMessage, setWhatsappMessage] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Add Member State
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [isGeneratingBio, setIsGeneratingBio] = useState(false);
+  const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const [newMemberData, setNewMemberData] = useState<Partial<Member>>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    mobile: '',
+    avatar: '',
+    bio: '',
+    role: 'Member',
+    gender: 'מעדיף/ה לא לציין',
+    isActive: true,
+    birthday: '',
+    instagramUrl: '',
+    facebookUrl: '',
+    linkedinUrl: '',
+    twitterUrl: '',
+    password: ''
+  });
+
+  const isAdmin = currentUser?.role === 'Admin';
 
   // Progress Bar Logic
   React.useEffect(() => {
@@ -195,9 +234,21 @@ const DirectoryPage: React.FC = () => {
               האנשים שעושים את חבל זוג למה שהיא - קהילה של חברים שנפגשים במים 🌊
             </p>
             
-            <div className="flex items-center gap-3 px-6 py-3 bg-white/40 backdrop-blur-md rounded-full border border-white/60 shadow-sm">
-              <Users size={18} className="text-[#D4A373]" />
-              <span className="text-sm font-black text-slate-700">{activeMembers.length} חברים פעילים</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 px-6 py-3 bg-white/40 backdrop-blur-md rounded-full border border-white/60 shadow-sm">
+                <Users size={18} className="text-[#D4A373]" />
+                <span className="text-sm font-black text-slate-700">{activeMembers.length} חברים פעילים</span>
+              </div>
+              
+              {isAdmin && (
+                <button 
+                  onClick={() => setIsAddMemberModalOpen(true)}
+                  className="w-12 h-12 bg-white/40 backdrop-blur-md hover:bg-[#D4A373] hover:text-white rounded-full flex items-center justify-center transition-all shadow-sm border border-white/60 group"
+                  title="הוסף חבר חדש"
+                >
+                  <Plus size={24} className="transition-transform group-hover:rotate-90" />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -448,6 +499,367 @@ const DirectoryPage: React.FC = () => {
        </motion.div>
     </div>
   )}
+
+      {/* Add Member Modal */}
+      <AnimatePresence>
+        {isAddMemberModalOpen && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-12 bg-slate-900/40 backdrop-blur-xl animate-in fade-in" onClick={() => setIsAddMemberModalOpen(false)}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 40 }}
+              className="bg-[#FDFBF7] w-full max-w-7xl h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[4rem] shadow-2xl overflow-hidden relative flex flex-col border border-white/60" 
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="p-8 md:p-12 border-b border-slate-100 flex items-center justify-between bg-white/40 backdrop-blur-md">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-[#D4A373]/10 rounded-2xl flex items-center justify-center text-[#D4A373]">
+                    <Plus size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-800 tracking-tighter">הוספת חבר חדש</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">יצירת פרופיל משתמש ידני</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsAddMemberModalOpen(false)} className="p-3 text-slate-400 hover:text-slate-600 transition-all bg-slate-100 hover:bg-slate-200 rounded-full">
+                  <X size={24} />
+                </button>
+              </div>
+
+              {/* Form Content */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-16">
+                <div className="max-w-5xl mx-auto">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                    {/* Left Column: Avatar & Bio */}
+                    <div className="lg:col-span-4 space-y-8">
+                      <div className="flex flex-col items-center">
+                        <div className="relative group">
+                          <div className="w-48 h-48 rounded-[3rem] border-[10px] border-white overflow-hidden shadow-2xl bg-slate-100 flex items-center justify-center">
+                            {isProcessingImage ? (
+                              <Loader2 className="animate-spin text-[#D4A373]" size={32} />
+                            ) : newMemberData.avatar ? (
+                              <img src={newMemberData.avatar} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <UserCircle size={80} className="text-slate-300" strokeWidth={0.5} />
+                            )}
+                          </div>
+                          <label className="absolute bottom-2 left-2 p-3 bg-[#D4A373] text-white rounded-2xl cursor-pointer hover:bg-[#B88A5B] transition-all shadow-xl">
+                            <Camera size={20} />
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/*" 
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setIsProcessingImage(true);
+                                  try {
+                                    const { dataUrl } = await processImage(file, 600, 0.8);
+                                    setNewMemberData(prev => ({ ...prev, avatar: dataUrl }));
+                                  } catch (err) {
+                                    console.error(err);
+                                  } finally {
+                                    setIsProcessingImage(false);
+                                  }
+                                }
+                              }} 
+                            />
+                          </label>
+                        </div>
+                        <p className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">תמונת פרופיל</p>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center px-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ביוגרפיה</label>
+                          <button 
+                            type="button" 
+                            onClick={async () => {
+                              if (!newMemberData.firstName) return;
+                              setIsGeneratingBio(true);
+                              try {
+                                const bio = await generateBio(`${newMemberData.firstName} ${newMemberData.lastName}`, newMemberData.role || 'Member', newMemberData.bio || '');
+                                setNewMemberData(prev => ({ ...prev, bio }));
+                              } catch (err) {
+                                console.error(err);
+                              } finally {
+                                setIsGeneratingBio(false);
+                              }
+                            }} 
+                            className="text-[10px] font-black text-[#D4A373] flex items-center gap-1.5 hover:bg-[#D4A373]/10 px-3 py-1.5 rounded-lg transition-all border border-[#D4A373]/10"
+                          >
+                            {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} שדרג עם AI
+                          </button>
+                        </div>
+                        <textarea 
+                          value={newMemberData.bio} 
+                          onChange={e => setNewMemberData(prev => ({ ...prev, bio: e.target.value }))}
+                          className="w-full p-6 bg-white/40 backdrop-blur-md rounded-[2rem] font-bold h-64 resize-none outline-none border border-white/60 focus:bg-white/60 transition-all text-sm leading-relaxed shadow-inner" 
+                          placeholder="ספר קצת על החבר החדש..." 
+                        />
+                      </div>
+                    </div>
+
+                    {/* Right Column: Fields */}
+                    <div className="lg:col-span-8 space-y-10">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם פרטי</label>
+                          <input 
+                            type="text" 
+                            value={newMemberData.firstName} 
+                            onChange={e => setNewMemberData(prev => ({ ...prev, firstName: e.target.value }))}
+                            className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black outline-none border border-white/60 focus:bg-white/60 transition-all" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם משפחה</label>
+                          <input 
+                            type="text" 
+                            value={newMemberData.lastName} 
+                            onChange={e => setNewMemberData(prev => ({ ...prev, lastName: e.target.value }))}
+                            className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black outline-none border border-white/60 focus:bg-white/60 transition-all" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">אימייל</label>
+                          <input 
+                            type="email" 
+                            value={newMemberData.email} 
+                            onChange={e => setNewMemberData(prev => ({ ...prev, email: e.target.value }))}
+                            className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black outline-none border border-white/60 focus:bg-white/60 transition-all" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">טלפון נייד</label>
+                          <input 
+                            type="tel" 
+                            value={newMemberData.mobile} 
+                            onChange={e => setNewMemberData(prev => ({ ...prev, mobile: formatMobileNumber(e.target.value) }))}
+                            className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black outline-none border border-white/60 focus:bg-white/60 transition-all" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">תאריך לידה</label>
+                          <div className="relative">
+                            <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                            <input 
+                              type="date" 
+                              value={newMemberData.birthday || ''} 
+                              onChange={e => setNewMemberData(prev => ({ ...prev, birthday: e.target.value }))} 
+                              className="w-full pr-14 pl-6 py-5 bg-white/40 backdrop-blur-md rounded-2xl font-black outline-none border border-white/60 focus:bg-white/60 transition-all cursor-pointer" 
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">תפקיד</label>
+                          <div className="relative">
+                            <button 
+                              type="button"
+                              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                              className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all flex items-center justify-between group"
+                            >
+                              <span>{newMemberData.role === 'Admin' ? 'מנהל' : newMemberData.role === 'Instructor' ? 'מדריך' : 'חבר'}</span>
+                              <ChevronDown size={18} className={`text-slate-300 transition-transform duration-300 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            <AnimatePresence>
+                              {isRoleDropdownOpen && (
+                                <>
+                                  <div className="fixed inset-0 z-[160]" onClick={() => setIsRoleDropdownOpen(false)} />
+                                  <motion.div 
+                                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                    className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-2xl border border-slate-100 rounded-2xl shadow-2xl z-[170] overflow-hidden"
+                                  >
+                                    {(['Member', 'Instructor', 'Admin'] as const).map((r) => (
+                                      <button
+                                        key={r}
+                                        type="button"
+                                        onClick={() => {
+                                          setNewMemberData(prev => ({ ...prev, role: r }));
+                                          setIsRoleDropdownOpen(false);
+                                        }}
+                                        className={`w-full px-6 py-4 text-right font-black transition-all hover:bg-indigo-50 ${
+                                          newMemberData.role === r ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'
+                                        }`}
+                                      >
+                                        {r === 'Admin' ? 'מנהל' : r === 'Instructor' ? 'מדריך' : 'חבר'}
+                                      </button>
+                                    ))}
+                                  </motion.div>
+                                </>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">מגדר</label>
+                          <div className="relative">
+                            <button 
+                              type="button"
+                              onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
+                              className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all flex items-center justify-between group"
+                            >
+                              <span>{newMemberData.gender || 'בחר מגדר'}</span>
+                              <ChevronDown size={18} className={`text-slate-300 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            <AnimatePresence>
+                              {isGenderDropdownOpen && (
+                                <>
+                                  <div className="fixed inset-0 z-[160]" onClick={() => setIsGenderDropdownOpen(false)} />
+                                  <motion.div 
+                                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                    className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-2xl border border-slate-100 rounded-2xl shadow-2xl z-[170] overflow-hidden"
+                                  >
+                                    {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
+                                      <button
+                                        key={g}
+                                        type="button"
+                                        onClick={() => {
+                                          setNewMemberData(prev => ({ ...prev, gender: g }));
+                                          setIsGenderDropdownOpen(false);
+                                        }}
+                                        className={`w-full px-6 py-4 text-right font-black transition-all hover:bg-indigo-50 ${
+                                          newMemberData.gender === g ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'
+                                        }`}
+                                      >
+                                        {g}
+                                      </button>
+                                    ))}
+                                  </motion.div>
+                                </>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה</label>
+                          <div className="flex gap-4">
+                            <input 
+                              type="text" 
+                              value={newMemberData.password || ''} 
+                              onChange={e => setNewMemberData(prev => ({ ...prev, password: e.target.value }))}
+                              placeholder="סיסמה ראשונית"
+                              className="flex-1 p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black outline-none border border-white/60 focus:bg-white/60 transition-all" 
+                            />
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const pass = Math.random().toString(36).slice(-8);
+                                setNewMemberData(prev => ({ ...prev, password: pass }));
+                              }}
+                              className="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black transition-all flex items-center gap-2"
+                            >
+                              <Sparkles size={16} />
+                              ייצר
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] flex items-center gap-3">
+                          <Globe size={14} /> רשתות חברתיות
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">Instagram</label>
+                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.instagramUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, instagramUrl: e.target.value }))} className="w-full p-4 bg-white/40 backdrop-blur-md rounded-xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">Facebook</label>
+                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.facebookUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, facebookUrl: e.target.value }))} className="w-full p-4 bg-white/40 backdrop-blur-md rounded-xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">LinkedIn</label>
+                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.linkedinUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, linkedinUrl: e.target.value }))} className="w-full p-4 bg-white/40 backdrop-blur-md rounded-xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all" />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">X (Twitter)</label>
+                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.twitterUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, twitterUrl: e.target.value }))} className="w-full p-4 bg-white/40 backdrop-blur-md rounded-xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="p-8 md:p-12 border-t border-slate-100 bg-white/40 backdrop-blur-md flex flex-col md:flex-row items-center justify-center gap-4">
+                <button 
+                  onClick={async () => {
+                    if (!newMemberData.firstName || !newMemberData.email) {
+                      alert('נא למלא שם ואימייל לפחות');
+                      return;
+                    }
+                    if (newMemberData.mobile && !validateMobileNumber(newMemberData.mobile)) {
+                      alert('מספר טלפון נייד לא תקין');
+                      return;
+                    }
+                    setIsSaving(true);
+                    try {
+                      // Use provided password or generate one
+                      const finalPass = newMemberData.password || Math.random().toString(36).slice(-8);
+                      const hashed = await hashPassword(finalPass);
+                      
+                      await addMember({
+                        ...newMemberData as Member,
+                        password: hashed,
+                        isTemporary: true,
+                        joinedAt: new Date().toISOString()
+                      });
+                      
+                      alert(`חבר נוסף בהצלחה! סיסמה: ${finalPass}`);
+                      setIsAddMemberModalOpen(false);
+                      setNewMemberData({
+                        firstName: '',
+                        lastName: '',
+                        email: '',
+                        mobile: '',
+                        avatar: '',
+                        bio: '',
+                        role: 'Member',
+                        gender: 'מעדיף/ה לא לציין',
+                        isActive: true,
+                        birthday: '',
+                        instagramUrl: '',
+                        facebookUrl: '',
+                        linkedinUrl: '',
+                        twitterUrl: '',
+                        password: ''
+                      });
+                    } catch (err) {
+                      console.error(err);
+                      alert('שגיאה בהוספת חבר');
+                    } finally {
+                      setIsSaving(false);
+                    }
+                  }}
+                  disabled={isSaving}
+                  className="w-full md:w-auto px-16 py-5 bg-[#D4A373] text-white rounded-2xl font-black text-xl hover:bg-[#B88A5B] transition-all shadow-xl flex items-center justify-center gap-4 disabled:opacity-50"
+                >
+                  {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
+                  שמור חבר חדש
+                </button>
+                <button 
+                  onClick={() => setIsAddMemberModalOpen(false)}
+                  className="w-full md:w-auto px-12 py-5 bg-slate-100 text-slate-600 rounded-2xl font-black text-xl hover:bg-slate-200 transition-all"
+                >
+                  ביטול
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {isWhatsAppModalOpen && selectedMember && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-lg animate-in fade-in" onClick={() => setIsWhatsAppModalOpen(false)}>
           <div className="bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col" onClick={e => e.stopPropagation()}>

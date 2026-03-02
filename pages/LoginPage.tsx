@@ -5,6 +5,7 @@ import { getDb, trackedGetDocs } from '../services/firebase';
 import { Member } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { hashPassword } from '../utils/crypto';
+import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { processImage } from '../utils/imageProcessor';
@@ -163,13 +164,7 @@ const LoginPage: React.FC = () => {
   };
 
   const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value;
-    const digits = value.replace(/\D/g, '').slice(0, 10);
-    let formatted = digits;
-    if (digits.length > 3) {
-      formatted = `${digits.slice(0, 3)}-${digits.slice(3)}`;
-    }
-    setJoinMobile(formatted);
+    setJoinMobile(formatMobileNumber(e.target.value));
     setMobileError('');
   };
 
@@ -194,8 +189,7 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     setError('');
     
-    const mobileRegex = /^05\d{1}-?\d{7}$/;
-    if (!mobileRegex.test(joinMobile)) {
+    if (!validateMobileNumber(joinMobile)) {
       setMobileError('נא להזין מספר נייד תקין (10 ספרות, מתחיל ב-05)');
       setIsLoading(false);
       return;

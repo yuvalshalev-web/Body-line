@@ -1,14 +1,17 @@
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, Camera, UserCircle, ChevronLeft, Save, Archive, Loader2, Cake, Phone, Mail, 
-  ChevronDown, Instagram, Facebook, Music2, Linkedin, Twitter, Globe
+  ChevronDown, Instagram, Facebook, Music2, Linkedin, Twitter, Globe, Key
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Member } from '../../types';
 import { processImage } from '../../utils/imageProcessor';
+import { validateMobileNumber, formatMobileNumber } from '../../utils/validation';
 import { useModal } from '../../contexts/ModalContext';
 import { SUPER_ADMIN_EMAIL } from '../../constants';
+import { hashPassword } from '../../utils/crypto';
 
 interface EditMemberFormProps {
   member: Member;
@@ -24,6 +27,10 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
   const [showRoleWarning, setShowRoleWarning] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const ensureAbsoluteUrl = (url?: string) => {
     if (!url) return '';
@@ -33,6 +40,10 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
   };
 
   const handleSave = async () => {
+    if (editingMember.mobile && !validateMobileNumber(editingMember.mobile)) {
+      showError('מספר טלפון נייד לא תקין');
+      return;
+    }
     setIsProcessing(true);
     try {
       await onSave(editingMember);
@@ -43,6 +54,37 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
       showError('שגיאה בשמירת הנתונים');
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword.length < 6) {
+      showError('הסיסמה חייבת להכיל לפחות 6 תווים');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      showError('הסיסמאות אינן תואמות');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const hashed = await hashPassword(newPassword);
+      const updatedMember = { ...editingMember, password: hashed };
+      setEditingMember(updatedMember);
+      await onSave(updatedMember);
+      showSuccess('הסיסמה שונתה בהצלחה');
+      setShowPasswordModal(false);
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      console.error(err);
+      showError('שגיאה בשינוי הסיסמה');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -315,7 +357,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
             <input 
               type="text"
               value={editingMember.mobile}
-              onChange={(e) => setEditingMember({ ...editingMember, mobile: e.target.value })}
+              onChange={(e) => setEditingMember({ ...editingMember, mobile: formatMobileNumber(e.target.value) })}
               className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all text-left outline-none shadow-sm"
               dir="ltr"
             />
@@ -428,8 +470,93 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               <Archive size={24} /> ארכיון
             </button>
           </div>
+          
+          <div className="flex justify-center mt-4">
+            <button 
+              type="button" 
+              onClick={() => setShowPasswordModal(true)}
+              className="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-bold transition-colors"
+            >
+              <Key size={16} />
+              <span>החלפת סיסמה למשתמש</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {createPortal(
+        <AnimatePresence>
+          {showPasswordModal && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                onClick={() => setShowPasswordModal(false)}
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden"
+              >
+                <div className="p-8">
+                  <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                      <Key className="text-indigo-500" />
+                      החלפת סיסמה
+                    </h3>
+                    <button 
+                      onClick={() => setShowPasswordModal(false)}
+                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handlePasswordChange} className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה חדשה</label>
+                      <input 
+                        type="password"
+                        value={newPassword}
+                        onChange={e => setNewPassword(e.target.value)}
+                        className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100 focus:bg-white focus:border-indigo-200 transition-all"
+                        placeholder="הזן סיסמה חדשה"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">אימות סיסמה</label>
+                      <input 
+                        type="password"
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100 focus:bg-white focus:border-indigo-200 transition-all"
+                        placeholder="הזן שוב את הסיסמה"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+
+                    <button 
+                      type="submit"
+                      disabled={isChangingPassword || !newPassword || !confirmPassword}
+                      className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {isChangingPassword ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                      עדכן סיסמה
+                    </button>
+                  </form>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };
