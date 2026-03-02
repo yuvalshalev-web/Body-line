@@ -638,53 +638,55 @@ const AdminPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {news.map(item => (
                 <div key={item.id} className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm flex flex-col relative group">
-                  <div className="absolute top-4 left-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={() => setEditingPost(item)}
-                      className="p-2 bg-indigo-50 text-indigo-500 rounded-xl hover:bg-indigo-500 hover:text-white transition-colors"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button 
-                      onClick={() => {
-                        showConfirm({
-                          title: 'מחיקת פוסט',
-                          message: 'האם אתה בטוח שברצונך למחוק את הפוסט?',
-                          confirmText: 'מחיקה',
-                          cancelText: 'ביטול',
-                          onConfirm: async () => {
-                            try {
-                              await deleteNews(item.id);
-                              showSuccess('הפוסט נמחק בהצלחה');
-                            } catch (err) {
-                              showError('שגיאה במחיקת הפוסט');
-                            }
-                          }
-                        });
-                      }}
-                      className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                  
                   {item.imageUrl && (
                     <img src={item.imageUrl} className="w-full h-40 object-cover rounded-xl mb-4" alt="" />
                   )}
                   <h3 className="font-black text-lg text-slate-800 mb-2">{item.title}</h3>
                   <p className="text-slate-500 text-sm line-clamp-3 mb-4 flex-1">{item.content}</p>
                   
-                  <div className="flex items-center gap-3 mt-auto pt-4 border-t border-slate-100">
-                    {item.authorAvatar ? (
-                      <img src={item.authorAvatar} className="w-8 h-8 rounded-full object-cover" alt="" />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                        <User size={14} />
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-3">
+                      {item.authorAvatar ? (
+                        <img src={item.authorAvatar} className="w-8 h-8 rounded-full object-cover" alt="" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                          <User size={14} />
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-black text-slate-700">{item.authorName}</p>
+                        <p className="text-[10px] text-slate-400">{new Date(item.date).toLocaleDateString('he-IL')}</p>
                       </div>
-                    )}
-                    <div>
-                      <p className="text-xs font-black text-slate-700">{item.authorName}</p>
-                      <p className="text-[10px] text-slate-400">{new Date(item.date).toLocaleDateString('he-IL')}</p>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setEditingPost(item)}
+                        className="p-2 bg-indigo-50 text-indigo-500 rounded-xl hover:bg-indigo-500 hover:text-white transition-colors"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button 
+                        onClick={() => {
+                          showConfirm({
+                            title: 'מחיקת פוסט',
+                            message: 'האם אתה בטוח שברצונך למחוק את הפוסט?',
+                            confirmText: 'מחיקה',
+                            cancelText: 'ביטול',
+                            onConfirm: async () => {
+                              try {
+                                await deleteNews(item.id);
+                                showSuccess('הפוסט נמחק בהצלחה');
+                              } catch (err) {
+                                showError('שגיאה במחיקת הפוסט');
+                              }
+                            }
+                          });
+                        }}
+                        className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
                 </div>
