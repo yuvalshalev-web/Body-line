@@ -53,7 +53,7 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
       className="group cursor-pointer relative" 
       onClick={onClick}
     >
-      <div className="bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl p-2 pb-5 transition-all duration-500 group-hover:bg-white/60 group-hover:border-white shadow-sm hover:shadow-xl">
+      <div className="bg-white border border-slate-100 rounded-2xl p-2 pb-5 transition-all duration-500 group-hover:bg-slate-50 group-hover:border-slate-200 shadow-sm hover:shadow-xl">
         <div className="aspect-square overflow-hidden bg-slate-200/50 rounded-xl mb-3 border border-white/40">
           {member.avatar ? (
             <img 

@@ -26,19 +26,19 @@ import { motion, AnimatePresence } from 'motion/react';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy loaded components
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage'));
-const DirectoryPage = lazy(() => import('./pages/DirectoryPage'));
-const GalleryPage = lazy(() => import('./pages/GalleryPage'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const AdminPage = lazy(() => import('./pages/AdminPage'));
-const EventsPage = lazy(() => import('./pages/EventsPage'));
-const NewsPage = lazy(() => import('./pages/NewsPage'));
-const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage'));
-const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage'));
-const SurferCardPage = lazy(() => import('./pages/SurferCardPage'));
-const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance'));
-const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage.tsx'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage.tsx'));
+const DirectoryPage = lazy(() => import('./pages/DirectoryPage.tsx'));
+const GalleryPage = lazy(() => import('./pages/GalleryPage.tsx'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage.tsx'));
+const AdminPage = lazy(() => import('./pages/AdminPage.tsx'));
+const EventsPage = lazy(() => import('./pages/EventsPage.tsx'));
+const NewsPage = lazy(() => import('./pages/NewsPage.tsx'));
+const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage.tsx'));
+const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage.tsx'));
+const SurferCardPage = lazy(() => import('./pages/SurferCardPage.tsx'));
+const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance.tsx'));
+const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage.tsx'));
 
 const PageLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">

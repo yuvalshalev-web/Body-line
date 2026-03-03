@@ -33,6 +33,12 @@
   
   --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* --- Sand Theme --- */
+  --sand-light: #F5E6D3;
+  --sand-medium: #E6CCB2;
+  --sand-dark: #DDB892;
+  --sand-deep: #B08968;
 }
 
 body {
@@ -827,22 +833,47 @@ body.has-bottom-nav main {
     box-shadow: 0 2px 8px rgba(64, 224, 208, 0.3);
 }
 
-/* תיקון Progress Bar - כיוון התקדמות משמאל לימין */
+/* --- High-End Glass Tube Progress Bar --- */
 .progress-container {
-    direction: ltr !important; /* קריטי למשחוק */
-    background: rgba(255,255,255,0.1);
-    border-radius: 20px;
-    height: 20px; /* Increased thickness */
+    direction: ltr !important;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    height: 32px;
     position: relative;
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+    box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.5), 0 10px 20px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(8px);
 }
 
 .progress-fill {
-    background: linear-gradient(90deg, #00FBFF, var(--gt-accent));
-    box-shadow: 0 0 20px var(--gt-accent);
-    border-radius: 20px;
+    background: linear-gradient(90deg, var(--ocean-bg), var(--ocean-navy), var(--ocean-deep), var(--ocean-coral));
+    box-shadow: 0 0 20px rgba(26, 54, 93, 0.4);
+    border-radius: 999px;
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    overflow: hidden;
     transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    height: 100%;
+}
+
+/* Glossy Shine Overlay */
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 45%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.25), transparent);
+    border-radius: 999px 999px 0 0;
+    pointer-events: none;
+}
+
+/* Metallic Gold for Trophy */
+.metallic-gold {
+    stroke: #D4AF37;
+    filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.4)) brightness(1.2);
 }
 
 /* Trophy Asset Styling */

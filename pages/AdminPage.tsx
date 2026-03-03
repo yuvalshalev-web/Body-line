@@ -1,5 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
+console.log('AdminPage module loading...');
 import { 
   Users, Archive, Mic, Image as ImageIcon, Calendar, Settings, UserCheck, ShieldAlert, Search, 
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 

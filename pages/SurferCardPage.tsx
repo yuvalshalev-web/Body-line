@@ -28,15 +28,11 @@ const SurferCardPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-[var(--spacing-md)] md:px-[var(--spacing-lg)] py-[var(--spacing-lg)] font-['Assistant']" dir="rtl">
       <div className="mb-[var(--spacing-lg)] text-center md:text-right">
-        <div className="inline-flex items-center gap-[var(--spacing-xs)] px-4 py-1.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full mb-[var(--spacing-xs)] shadow-sm">
-          <Trophy size={14} />
-          כרטיס הגולש המקצועי שלי
-        </div>
         <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
           כרטיס הגולש שלי
         </h1>
         <p className="text-slate-400 font-bold mt-3 text-lg">
-          הפרופיל המקצועי שלך בנבחרת חבל זוג
+          דשבורד ההצלחות שלך
         </p>
       </div>
 
@@ -123,22 +119,24 @@ const SurferCardPage: React.FC = () => {
                     />
                     
                     {/* Trophy Container */}
-                    <div className="w-28 h-28 bg-white/10 rounded-[2.5rem] flex items-center justify-center backdrop-blur-2xl shrink-0 shadow-[20px_20px_40px_rgba(0,0,0,0.4),inset_0_0_20px_rgba(255,255,255,0.05)] border border-white/20 relative z-10 overflow-hidden group">
-                      <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-40" />
+                    <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-2xl shrink-0 shadow-[10px_10px_20px_rgba(0,0,0,0.4),inset_0_0_10px_rgba(255,255,255,0.1)] border border-amber-400/50 relative z-10 overflow-hidden group transform perspective-1000 rotate-y-12">
+                      <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-40" />
                       
                       {/* The Trophy Icon */}
                       <Trophy 
-                        size={72} 
-                        className={`transition-all duration-1000 ${
+                        size={36} 
+                        className={`transition-all duration-1000 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] ${
                           currentRank === 'קלי סלייטר' 
-                            ? 'text-[#FFD700] drop-shadow-[0_0_30px_rgba(255,215,0,1)]' 
-                            : 'text-slate-200 drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]'
+                            ? 'text-[#FFD700] drop-shadow-[0_0_15px_rgba(255,215,0,0.8)]' 
+                            : 'text-slate-200'
                         }`}
-                        strokeWidth={1.2}
+                        strokeWidth={1.5}
+                        color="#D4AF37"
+                        style={{ filter: 'drop-shadow(2px 4px 6px rgba(0,0,0,0.3))' }}
                       />
 
-                      {/* Shine effect - always active for Legend, hover for others */}
-                      <div className={`absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 ${
+                      {/* Shine effect */}
+                      <div className={`absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 ${
                         currentRank === 'קלי סלייטר' ? 'animate-[shine_3s_infinite_ease-in-out]' : 'group-hover:animate-[shine_1.5s_ease-in-out]'
                       }`} />
                     </div>
@@ -162,105 +160,94 @@ const SurferCardPage: React.FC = () => {
 
                 {/* Final 3-Layer Roadmap - Professional Glassmorphism */}
                 <div className="mt-10 mb-10 px-4 max-w-4xl mx-auto">
-                  {/* Progress System Wrapper - Shared Coordinate System */}
-                  <div 
-                    className="progress-container relative w-full overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.5),0_10px_30px_rgba(0,0,0,0.3)]"
-                    style={{ 
-                      '--progress-percent': progressPercent,
-                      '--current-progress': `calc(24px + (var(--progress-percent) / 100) * (100% - 48px))`
-                    } as React.CSSProperties}
-                  >
-                    {/* Tube Highlight (Top) */}
-                    <div className="absolute top-0 inset-x-0 h-[1px] bg-white/30 blur-[0.5px] z-10" />
+                  {/* Parent Container - Wraps both Indicator and Progress Bar */}
+                  <div className="relative w-full pt-10">
                     
-                    {/* Layer 3: 'CURRENT STATUS' Marker */}
-                    <div className="absolute -top-10 inset-x-0 h-10 pointer-events-none">
-                      <motion.div 
-                        key="current-marker"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="absolute flex flex-col items-center"
-                        style={{ left: 'var(--current-progress)', transform: 'translateX(-50%)' }}
-                      >
-                        <span className="text-[9px] font-black text-white uppercase tracking-[0.25em] mb-0.5 drop-shadow-md">
-                          CURRENT STATUS
-                        </span>
-                        <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-[var(--gt-accent)] -mt-[1px]" />
-                      </motion.div>
-                    </div>
-
-                    {/* Clipping Layer for Liquid (Layer 2) */}
-                    <div className="absolute inset-0 overflow-hidden rounded-full">
-                      {/* Progress Liquid */}
+                    {/* Layer 3: 'מיקומך הנוכחי' Marker - Absolute Positioned relative to Parent */}
+                    <motion.div 
+                      key="current-marker"
+                      initial={{ opacity: 0, left: 0 }}
+                      animate={{ 
+                        opacity: 1, 
+                        left: `${progressPercent}%`
+                      }}
+                      transition={{ duration: 2, ease: "circOut" }}
+                      className="absolute top-0 flex flex-col items-center pointer-events-none z-20"
+                      style={{ transform: 'translateX(-50%)' }}
+                    >
+                      <span className="text-[10px] font-black text-white uppercase tracking-widest mb-0.5 drop-shadow-md">
+                        מיקומך הנוכחי
+                      </span>
+                      <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-[var(--gt-accent)]" />
+                    </motion.div>
+                    
+                    {/* Progress Bar Container - Zero-Point Sync */}
+                    <div className="progress-container w-full overflow-hidden">
+                      {/* Progress Liquid - Same percentage as Marker */}
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ 
-                          width: 'var(--current-progress)' 
+                          width: `${progressPercent}%` 
                         }}
                         transition={{ duration: 2, ease: "circOut" }}
-                        className="progress-fill absolute inset-y-0 left-0"
-                      >
-                        {/* Internal Glossy Shine */}
-                        <div className="absolute top-0 inset-x-0 h-[40%] bg-gradient-to-b from-white/40 to-transparent pointer-events-none" />
-                        
-                        {/* Moving Shine Effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 animate-[shine_3s_infinite_ease-in-out] pointer-events-none" />
-                        
-                        {/* Glowing Tip */}
-                        <div className="absolute right-0 inset-y-0 w-[2px] bg-white shadow-[0_0_15px_#fff,0_0_5px_var(--gt-accent)] z-20" />
-                      </motion.div>
-                    </div>
+                        className="h-full rounded-full"
+                        style={{ 
+                          background: 'linear-gradient(90deg, var(--ocean-bg), var(--ocean-navy), var(--ocean-deep), var(--ocean-coral))',
+                          boxShadow: '0 0 20px rgba(0, 242, 254, 0.4)'
+                        }}
+                      />
 
-                    {/* Milestone Nodes (Layer 1 - Inside the tube) */}
-                    <div className="absolute inset-0 flex items-center px-6">
-                      <div className="relative w-full h-full flex items-center">
-                        {userData?.rankThresholds.map((rank, idx) => {
-                          const isCurrent = rank.name === currentRank;
-                          const isPassed = rankIndex > idx;
-                          const totalRanks = userData?.rankThresholds.length || 1;
-                          const percent = (idx / (totalRanks - 1)) * 100;
-                          
-                          return (
-                            <div 
-                              key={rank.name} 
-                              className="absolute top-1/2 -translate-y-1/2"
-                              style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
-                            >
-                              {/* Identical Circle Node */}
-                              <div className={`w-5 h-5 rounded-full transition-all duration-1000 border-2 relative z-20 ${
-                                isCurrent || isPassed
-                                  ? 'bg-[var(--gt-accent)] border-white shadow-[0_0_15px_var(--gt-accent)]' 
-                                  : 'bg-white/5 border-white/20'
-                              }`}>
-                                {/* White Glowing Ring for Active Rank */}
-                                {isCurrent && (
-                                  <div className="absolute inset-[-6px] border-2 border-white/50 rounded-full animate-pulse blur-[1px]" />
-                                )}
+                      {/* Milestone Nodes (Layer 1 - Inside the tube) */}
+                      <div className="absolute inset-0 flex items-center px-0">
+                        <div className="relative w-full h-full flex items-center">
+                          {userData?.rankThresholds.map((rank, idx) => {
+                            const isCurrent = rank.name === currentRank;
+                            const isPassed = rankIndex > idx;
+                            const totalRanks = userData?.rankThresholds.length || 1;
+                            const percent = (idx / (totalRanks - 1)) * 100;
+                            
+                            return (
+                              <div 
+                                key={rank.name} 
+                                className="absolute top-1/2 -translate-y-1/2"
+                                style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
+                              >
+                                {/* Identical Circle Node */}
+                                <div className={`w-3 h-3 rounded-full transition-all duration-1000 border relative z-20 ${
+                                  isCurrent || isPassed
+                                    ? 'bg-white border-white shadow-[0_0_10px_#fff]' 
+                                    : 'bg-white/10 border-white/20'
+                                }`}>
+                                  {isCurrent && (
+                                    <div className="absolute inset-[-4px] border border-white/50 rounded-full animate-pulse blur-[1px]" />
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Offline Overlay (Blur + No Signal) */}
-                    {dbStatus === 'OFFLINE' && (
-                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-[var(--radius-md)]">
-                        <div className="flex items-center gap-2 text-white/70">
-                          <WifiOff size={14} className="animate-pulse" />
-                          <span className="text-[8px] font-black uppercase tracking-widest">No Signal</span>
+                            );
+                          })}
                         </div>
                       </div>
-                    )}
+
+                      {/* Offline Overlay (Blur + No Signal) */}
+                      {dbStatus === 'OFFLINE' && (
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-full">
+                          <div className="flex items-center gap-2 text-white/70">
+                            <WifiOff size={14} className="animate-pulse" />
+                            <span className="text-[8px] font-black uppercase tracking-widest">No Signal</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Labels (Layer 1 - Below the bar) */}
-                  <div className="relative w-full h-8 mt-2 px-6">
+                  <div className="relative w-full h-20 mt-2 px-6">
                     <div className="relative w-full h-full">
                       {userData?.rankThresholds.map((rank, idx) => {
                         const isCurrent = rank.name === currentRank;
                         const totalRanks = userData?.rankThresholds.length || 1;
                         const percent = (idx / (totalRanks - 1)) * 100;
+                        const trophyCount = idx + 1;
                         
                         return (
                           <div 
@@ -268,14 +255,24 @@ const SurferCardPage: React.FC = () => {
                             className="absolute flex flex-col items-center"
                             style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
                           >
-                            <span className={`whitespace-nowrap text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-500 ${
+                            <span className={`whitespace-nowrap text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-500 mb-1 ${
                               isCurrent ? 'text-[var(--gt-accent)] opacity-100 scale-110' : 'text-white/40 opacity-60'
                             }`}>
                               {rank.name}
                             </span>
-                            {rank.name === 'קלי סלייטר' && (
-                              <Trophy size={12} className={`mt-2 ${isCurrent ? 'text-amber-400' : 'text-white/20'}`} />
-                            )}
+                            
+                            {/* Trophy Stack */}
+                            <div className="flex flex-row items-center gap-0.5 mt-1">
+                              {Array.from({ length: trophyCount }).map((_, i) => (
+                                <Trophy 
+                                  key={i}
+                                  size={10} 
+                                  className="text-[#FFD700] drop-shadow-[0_0_5px_rgba(255,215,0,0.8)]"
+                                  fill="#D4AF37"
+                                  strokeWidth={1}
+                                />
+                              ))}
+                            </div>
                           </div>
                         );
                       })}
@@ -288,7 +285,7 @@ const SurferCardPage: React.FC = () => {
                   <div className="rank-stats-grid">
                     <div className="stat-box">
                       <span className="stat-value">{currentRank}</span>
-                      <span className="stat-label">דרגה נוכחית</span>
+                      <span className="stat-label">מעמד נוכחי</span>
                     </div>
                     
                     <div className="stat-divider"></div>

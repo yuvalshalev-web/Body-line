@@ -109,7 +109,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
           </h2>
           <div className="flex flex-wrap gap-2 justify-center md:justify-start">
             <span className="inline-flex px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100 shadow-sm">
-              דרגה: {stats.rank}
+              מעמד: {stats.rank}
             </span>
             <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${
               member.isActive !== false 
@@ -137,42 +137,61 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
           <div className="mt-4 max-w-xs mx-auto md:mx-0" dir="ltr">
             <div className="flex justify-between items-center mb-1">
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">אחוזון גיל</span>
-              <span className="text-[9px] font-black text-[var(--ocean-liquid)]">{Math.round(agePercentile.percentile)}%</span>
             </div>
-            <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden shadow-inner">
+            <div className="progress-container relative w-full mb-8">
               <motion.div 
                 initial={{ width: 0 }}
-                animate={{ width: `${agePercentile.percentile}%` }}
+                animate={{ width: `calc((100% - 8px) * ${agePercentile.percentile / 100})` }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 shadow-[0_0_10px_rgba(37,99,235,0.3)]"
+                className="progress-fill"
+                style={{ background: 'linear-gradient(90deg, var(--sand-deep), var(--sand-light))' }}
               />
+              
+              {/* Floating Marker */}
+              <motion.div
+                initial={{ left: '4px', opacity: 0 }}
+                animate={{ left: `calc(4px + (100% - 8px) * ${agePercentile.percentile / 100})`, opacity: 1 }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="absolute top-0 h-full flex flex-col items-center"
+                style={{ transform: 'translateX(-50%)' }}
+              >
+                <div className="absolute -top-8 flex flex-col items-center">
+                  <span 
+                    className="text-[10px] font-black bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm border border-slate-100 whitespace-nowrap"
+                    style={{ color: `hsl(190, 100%, ${Math.max(15, 50 - (agePercentile.percentile * 0.35))}%)` }}
+                  >
+                    {Math.round(agePercentile.percentile)}%
+                  </span>
+                  <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-slate-200" />
+                </div>
+              </motion.div>
             </div>
-            <p className="text-[10px] text-slate-400 font-bold mt-1 text-left">{agePercentile.label}</p>
+            <p className="text-[10px] text-slate-400 font-bold -mt-4 text-center w-full">{agePercentile.label}</p>
           </div>
         )}
 
         <div className="mt-6 grid grid-cols-3 gap-[var(--spacing-md)]">
           <div className="flex flex-col">
-            <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] justify-center md:justify-start">
-              <Waves size={10} className="text-[var(--ocean-liquid)]" /> סשנים
+            <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] justify-center md:justify-start">
+              <Waves size={13} className="text-[var(--ocean-liquid)]" /> סשנים
             </span>
-            <span className="text-2xl font-black text-[var(--ocean-liquid)] tabular-nums">
+            <span className="text-3xl font-black text-[var(--ocean-liquid)] tabular-nums">
               <Counter value={stats.totalSessions} />
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start">
-              <Flame size={10} className="text-orange-500" /> רצף
+            <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start">
+              <Flame size={13} className="text-orange-500" /> רצף
             </span>
-            <span className="text-2xl font-black text-orange-500 tabular-nums">
+            <span className="text-3xl font-black text-orange-500 tabular-nums">
               <Counter value={stats.streak} />
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start">
-              <Trophy size={10} className="text-amber-500" /> Grit
+            <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start">
+              <Trophy size={13} className="text-amber-500" /> Grit
             </span>
-            <span className="text-2xl font-black text-amber-500 tabular-nums">
+            <span className="text-3xl font-black text-amber-500 tabular-nums">
               <Counter value={Math.round(stats.gritScore)} />
             </span>
           </div>
