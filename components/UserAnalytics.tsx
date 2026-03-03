@@ -271,9 +271,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
   const COLORS = ['#60a5fa', '#021626'];
 
-  const bgGradient = theme.bg.includes('via-') 
-    ? `linear-gradient(135deg, ${theme.bg.split(' ')[0].replace('from-[', '').replace(']', '')}, ${theme.bg.split(' ')[1].replace('via-[', '').replace(']', '')}, ${theme.bg.split(' ')[2].replace('to-[', '').replace(']', '')})`
-    : `linear-gradient(135deg, ${theme.bg.split(' ')[0].replace('from-[', '').replace(']', '')}, ${theme.bg.split(' ')[1].replace('to-[', '').replace(']', '')})`;
+  const bgGradient = '#8D8D8D';
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700 min-h-[400px]" dir="rtl">
