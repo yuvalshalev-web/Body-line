@@ -69,7 +69,7 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
         </div>
         <div className="text-center">
           <p className="text-[10px] font-['Assistant'] font-black text-slate-800 truncate px-1">{member.firstName} {member.lastName}</p>
-          <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{member.role === 'Admin' ? 'מנהל' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}</p>
+          <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}</p>
         </div>
       </div>
     </motion.div>
@@ -267,17 +267,13 @@ const DirectoryPage: React.FC = () => {
 
           <div className="flex items-center gap-3 w-full md:w-auto">
             {/* View Mode Toggle - Turquoise Glassmorphism */}
-            <div className="flex items-center gap-3 bg-white/40 backdrop-blur-md p-2 rounded-full border border-white/60 shadow-sm h-[48px]">
-              <span className={`text-[10px] font-black uppercase tracking-widest ${viewMode === 'grid' ? 'text-[#40E0D0]' : 'text-slate-400'}`}>
-                Grid
-              </span>
+            <div className="gt-toggle-container bg-white/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/60 shadow-sm h-[48px]">
+              <span className={`gt-label label-list ${viewMode === 'list' ? 'active' : ''}`}>LIST</span>
               <div 
-                className={`gt-toggle ${viewMode === 'list' ? 'active' : ''}`}
+                className={`gt-toggle ${viewMode === 'grid' ? 'active' : ''}`}
                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
               />
-              <span className={`text-[10px] font-black uppercase tracking-widest ${viewMode === 'list' ? 'text-[#40E0D0]' : 'text-slate-400'}`}>
-                List
-              </span>
+              <span className={`gt-label label-grid ${viewMode === 'grid' ? 'active' : ''}`}>GRID</span>
             </div>
 
             <div className="relative flex-1 md:flex-none">
@@ -653,7 +649,7 @@ const DirectoryPage: React.FC = () => {
                               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                               className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all flex items-center justify-between group"
                             >
-                              <span>{newMemberData.role === 'Admin' ? 'מנהל' : newMemberData.role === 'Instructor' ? 'מדריך' : 'חבר'}</span>
+                              <span>{newMemberData.role === 'Admin' ? 'רכז' : newMemberData.role === 'Instructor' ? 'מדריך' : 'חבר'}</span>
                               <ChevronDown size={18} className={`text-slate-300 transition-transform duration-300 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
 
@@ -679,7 +675,7 @@ const DirectoryPage: React.FC = () => {
                                           newMemberData.role === r ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'
                                         }`}
                                       >
-                                        {r === 'Admin' ? 'מנהל' : r === 'Instructor' ? 'מדריך' : 'חבר'}
+                                        {r === 'Admin' ? 'רכז' : r === 'Instructor' ? 'מדריך' : 'חבר'}
                                       </button>
                                     ))}
                                   </motion.div>

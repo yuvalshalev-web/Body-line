@@ -172,7 +172,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 {[
                   { id: 'Member', label: 'חבר' },
                   { id: 'Instructor', label: 'מדריך' },
-                  { id: 'Admin', label: 'מנהל' }
+                  { id: 'Admin', label: 'רכז' }
                 ].map((r) => (
                   <button
                     key={r.id}

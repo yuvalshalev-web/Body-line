@@ -36,7 +36,7 @@ const AdminPage: React.FC = () => {
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
     joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember,
-    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems
+    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem
   } = useData();
 
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE'>('DASHBOARD');
@@ -48,6 +48,8 @@ const AdminPage: React.FC = () => {
   const assetFileInputRef = useRef<HTMLInputElement>(null);
   const [replacingAssetKey, setReplacingAssetKey] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
   // לוגיקה לאובייקטים של Turquoise Glassmorphism
   useEffect(() => {
@@ -105,6 +107,25 @@ const AdminPage: React.FC = () => {
             btnPlus.removeEventListener('click', handlePlus);
         });
     });
+
+    // 4. תפעול ה-Color Picker הגלובלי
+    const themeSlider = document.getElementById('global-theme-slider') as HTMLInputElement;
+    const hexDisplay = document.getElementById('hex-display');
+    
+    if (themeSlider && hexDisplay) {
+        const turquoiseColors = ['#E0FFFF','#DDFEFE','#DBFCFD','#D9FBFC','#D6FAFB','#B2F7F2','#AAF3F0','#A2F0EE','#99F0EE','#91EDED','#80EDE7','#77EAE2','#6FE7E0','#66E3E0','#5DE0DD','#4DD3D7','#45D0D4','#3DCACF','#36CCC9','#30D5C8','#28D0C2','#23CDC0','#1CCFC0','#16CBC0','#10C7BD','#00CED1','#00C9CC','#00C6CC','#00C2C9','#00BFCF','#00B3C3','#00AFBF','#009FAA','#009B9F','#009091','#007F85','#007A7F','#00706F','#006D70','#006466','#005D5D','#005555','#004F4F','#004C49','#004644','#004140','#003C3C','#003636','#003131','#002B2B','#004C49'];
+
+        const handleInput = (e: any) => {
+            const index = Math.floor(e.target.value / 100 * (turquoiseColors.length - 1));
+            const newColor = turquoiseColors[index];
+            document.documentElement.style.setProperty('--gt-accent', newColor);
+            hexDisplay.textContent = newColor;
+            (hexDisplay as HTMLElement).style.background = newColor;
+        };
+
+        themeSlider.addEventListener('input', handleInput);
+        cleanupFns.push(() => themeSlider.removeEventListener('input', handleInput));
+    }
 
     return () => cleanupFns.forEach(fn => fn());
   }, [activeTab]);
@@ -179,6 +200,52 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingGallery(true);
+    let successCount = 0;
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // 1. Process image
+        const processed = await processImage(file, 1920, 0.8);
+        
+        // 2. Upload to Storage
+        const storagePath = `gallery/${Date.now()}_${file.name}`;
+        const storageRef = ref(getStorageInstance(), storagePath);
+        await uploadBytes(storageRef, processed.blob);
+        const imageUrl = await getDownloadURL(storageRef);
+        
+        // 3. Add to Firestore
+        await addGalleryItem({
+          imageUrl,
+          storagePath,
+          uploaderId: currentUser?.uid || 'admin',
+          uploaderName: `${currentUser?.firstName || 'רכז'} ${currentUser?.lastName || ''}`.trim(),
+          caption: '',
+          timestamp: null
+        });
+
+        // 4. Update stats
+        await syncStorageOnUpload(processed.blob.size);
+        
+        successCount++;
+      }
+      
+      showSuccess(`הועלו ${successCount} תמונות בהצלחה`);
+    } catch (err) {
+      console.error('Gallery upload error:', err);
+      showError('שגיאה בהעלאת התמונות');
+    } finally {
+      setIsUploadingGallery(false);
+      if (galleryFileInputRef.current) galleryFileInputRef.current.value = '';
+    }
+  };
+
   const handleUpdateAsset = async () => {
     if (!editingAsset) return;
     try {
@@ -239,7 +306,7 @@ const AdminPage: React.FC = () => {
       }
     } catch (err) {
       console.error('AdminPage: Approve error:', err);
-      showError('שגיאה בתהליך האישור. בדוק את החיבור לאינטרנט או את הרשאות המנהל.');
+      showError('שגיאה בתהליך האישור. בדוק את החיבור לאינטרנט או את הרשאות הרכז.');
     } finally {
       setIsProcessing(null);
     }
@@ -297,7 +364,7 @@ const AdminPage: React.FC = () => {
 
           {/* Main Title */}
           <h1 className="text-5xl t-mobile-gradient uppercase tracking-tighter">
-            מרכז ניהול
+            פאנל ניהול
           </h1>
 
           {/* Subtitle with Emoji context */}
@@ -407,6 +474,30 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'REQUESTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            {/* Join Requests Summary Card */}
+            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                
+                <div className="flex items-center gap-6 relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                    <UserCheck size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">בקשות להצטרף</h3>
+                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול ואישור חברים חדשים בקהילה</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4 relative z-10">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-xl border border-amber-100 text-xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    בקשות ממתינות {joinRequests.length}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="relative">
                <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-[#f063c1]/40" />
                <input 
@@ -492,6 +583,57 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'USERS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            {/* Members Summary Card */}
+            {(() => {
+              const stats = {
+                total: members.length,
+                active: members.filter(m => m.isActive !== false).length,
+                suspended: members.filter(m => m.isActive === false).length,
+                instructors: members.filter(m => m.role === 'Instructor').length,
+                coordinators: members.filter(m => m.role === 'Admin').length,
+              };
+              return (
+                <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+                  <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                    <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                    
+                    <div className="flex items-center gap-6 relative z-10">
+                      <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                        <Users size={32} />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">חברים</h3>
+                        <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול וסינון חברי הקהילה</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 relative z-10">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 rounded-xl border border-slate-200 text-xs font-bold">
+                        <span className="w-2 h-2 rounded-full bg-slate-400" />
+                        רשומים {stats.total}
+                      </div>
+                      <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 text-xs font-bold">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        פעילים {stats.active}
+                      </div>
+                      <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-xl border border-amber-100 text-xs font-bold">
+                        <span className="w-2 h-2 rounded-full bg-amber-500" />
+                        מושעים {stats.suspended}
+                      </div>
+                      <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-xs font-bold">
+                        <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                        מדריכים {stats.instructors}
+                      </div>
+                      <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-xl border border-purple-100 text-xs font-bold">
+                        <span className="w-2 h-2 rounded-full bg-purple-500" />
+                        רכזים {stats.coordinators}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {editingMember ? (
               <EditMemberForm
                 member={editingMember}
@@ -555,7 +697,7 @@ const AdminPage: React.FC = () => {
                                   ? 'bg-amber-50 text-amber-600'
                                   : 'bg-[#f7c1ea]/10 text-[#f063c1]/60'
                             }`}>
-                              {member.role === 'Admin' ? 'מנהל' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
+                              {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
                             </span>
                           </td>
                           <td className="px-8 py-6">
@@ -581,6 +723,35 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'ARCHIVE' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            {/* Suspended Members Summary Card */}
+            {(() => {
+              const suspendedCount = members.filter(m => m.isActive === false).length;
+              return (
+                <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+                  <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                    <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                    
+                    <div className="flex items-center gap-6 relative z-10">
+                      <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                        <UserX size={32} />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">חברים מושעים</h3>
+                        <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול משתמשים שהוצאו מהמערכת</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 relative z-10">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-xs font-bold">
+                        <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                        מושעים {suspendedCount}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="bg-white border border-[#ff009f]/5 rounded-[3rem] overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full text-right">
@@ -679,22 +850,35 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'POSTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border border-[#ff009f]/10">
-              <div>
-                <h2 className="text-2xl font-black text-slate-800">ניהול פוסטים</h2>
-                <p className="text-slate-500 font-medium">ניהול ומחיקה של פוסטים שפורסמו על ידי חברי הקהילה</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="bg-[#f2def0] text-[#f063c1] px-4 py-2 rounded-xl font-black text-sm">
-                  {news.length} פוסטים
+            {/* Posts Summary Card */}
+            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                
+                <div className="flex items-center gap-6 relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                    <Newspaper size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">פוסטים</h3>
+                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול ומחיקה של פוסטים בקהילה</p>
+                  </div>
                 </div>
-                <button 
-                  onClick={() => setEditingPost({})}
-                  className="bg-[#ff009f] text-white px-4 py-2 rounded-xl font-black text-sm hover:bg-[#4a002e] transition-colors flex items-center gap-2"
-                >
-                  <Plus size={16} />
-                  פוסט חדש
-                </button>
+
+                <div className="flex flex-wrap items-center gap-4 relative z-10">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                    פוסטים פעילים {news.length}
+                  </div>
+                  
+                  <button 
+                    onClick={() => setEditingPost({})}
+                    className="bg-[#ff009f] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[#4a002e] transition-all shadow-lg shadow-[#ff009f]/20 flex items-center gap-2 active:scale-95"
+                  >
+                    <Plus size={18} />
+                    פוסט חדש
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -782,42 +966,72 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'GALLERY' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-             <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm border border-[#ff009f]/10">
-               <div>
-                 <h2 className="text-2xl font-black text-slate-800">ניהול גלריה</h2>
-                 <p className="text-slate-500 font-medium">ניהול ומחיקה של תמונות מהגלריה</p>
-               </div>
-               <div className="flex items-center gap-4">
-                 <div className="bg-[#f2def0] text-[#f063c1] px-4 py-2 rounded-xl font-black text-sm">
-                   {galleryItems.length} תמונות
-                 </div>
-                 {selectedGalleryItems.length > 0 && (
-                   <button 
-                     onClick={() => {
-                       showConfirm({
-                         title: 'מחיקת תמונות',
-                         message: `האם אתה בטוח שברצונך למחוק ${selectedGalleryItems.length === 1 ? 'את התמונה' : 'את התמונות'}?`,
-                         confirmText: 'מחיקה',
-                         cancelText: 'ביטול',
-                         onConfirm: async () => {
-                           try {
-                             await deleteGalleryItems(selectedGalleryItems);
-                             setSelectedGalleryItems([]);
-                             showSuccess('התמונות נמחקו בהצלחה');
-                           } catch (err) {
-                             showError('שגיאה במחיקת התמונות');
-                           }
-                         }
-                       });
-                     }}
-                     className="bg-red-500 text-white px-4 py-2 rounded-xl font-black text-sm hover:bg-red-600 transition-colors flex items-center gap-2"
-                   >
-                     <Trash2 size={16} />
-                     מחק {selectedGalleryItems.length} תמונות
-                   </button>
-                 )}
-               </div>
-             </div>
+            {/* Gallery Summary Card */}
+            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                
+                <div className="flex items-center gap-6 relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                    <ImageIcon size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">גלריה</h3>
+                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול ומחיקה של תמונות מהגלריה</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4 relative z-10">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                    תמונות בגלריה {galleryItems.length}
+                  </div>
+
+                  <button 
+                    onClick={() => galleryFileInputRef.current?.click()}
+                    disabled={isUploadingGallery}
+                    className="bg-[#ff009f] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[#4a002e] transition-all shadow-lg shadow-[#ff009f]/20 flex items-center gap-2 active:scale-95 disabled:opacity-50"
+                  >
+                    {isUploadingGallery ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
+                    הוספה
+                  </button>
+                  <input 
+                    type="file" 
+                    ref={galleryFileInputRef} 
+                    className="hidden" 
+                    accept="image/*" 
+                    multiple 
+                    onChange={handleGalleryUpload} 
+                  />
+
+                  {selectedGalleryItems.length > 0 && (
+                    <button 
+                      onClick={() => {
+                        showConfirm({
+                          title: 'מחיקת תמונות',
+                          message: `האם אתה בטוח שברצונך למחוק ${selectedGalleryItems.length === 1 ? 'את התמונה' : 'את התמונות'}?`,
+                          confirmText: 'מחיקה',
+                          cancelText: 'ביטול',
+                          onConfirm: async () => {
+                            try {
+                              await deleteGalleryItems(selectedGalleryItems);
+                              setSelectedGalleryItems([]);
+                              showSuccess('התמונות נמחקו בהצלחה');
+                            } catch (err) {
+                              showError('שגיאה במחיקת התמונות');
+                            }
+                          }
+                        });
+                      }}
+                      className="bg-red-500 text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 flex items-center gap-2 active:scale-95"
+                    >
+                      <Trash2 size={18} />
+                      מחק {selectedGalleryItems.length} תמונות
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
 
              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                {galleryItems.map(item => (
@@ -867,23 +1081,36 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'EVENTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#ff009f]/10 rounded-2xl flex items-center justify-center text-[#ff009f]">
-                  <Calendar size={28} />
+            {/* Events Summary Card */}
+            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                
+                <div className="flex items-center gap-6 relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                    <Calendar size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">לוח אירועים</h3>
+                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול לוח הזמנים הקהילתי</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-2xl font-black text-[#4a002e]">ניהול אירועים</h3>
-                  <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest">ניהול לוח הזמנים הקהילתי</p>
+
+                <div className="flex flex-wrap items-center gap-4 relative z-10">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                    אירועים מתוכננים {events.length}
+                  </div>
+                  
+                  <button 
+                    onClick={() => setEditingEvent({})}
+                    className="bg-[#ff009f] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[#4a002e] transition-all shadow-lg shadow-[#ff009f]/20 flex items-center gap-2 active:scale-95"
+                  >
+                    <Plus size={18} />
+                    אירוע חדש
+                  </button>
                 </div>
               </div>
-              <button 
-                onClick={() => setEditingEvent({})}
-                className="px-8 py-4 bg-gradient-to-r from-[#ff009f] to-[#f063c1] text-white rounded-2xl font-black text-sm shadow-lg shadow-[#ff009f]/20 hover:scale-105 transition-all flex items-center gap-3 active:scale-95"
-              >
-                <Plus size={20} />
-                אירוע חדש
-              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -937,7 +1164,7 @@ const AdminPage: React.FC = () => {
         {activeTab === 'SITE' && (
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
             {/* Habal Zug Year Config Widget */}
-            <div className="bg-gradient-to-br from-[#4a002e] to-[#2d001c] p-1 rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
               <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
                 
@@ -998,7 +1225,7 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Navigation Position Toggle Widget */}
-            <div className="bg-gradient-to-br from-[#4a002e] to-[#2d001c] p-1 rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group mb-6">
               <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
                 
@@ -1013,21 +1240,52 @@ const AdminPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 relative z-10">
-                  <div className="flex items-center gap-3">
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${siteConfig.navPosition !== 'floating-bottom' ? 'text-[#ff009f]' : 'text-slate-400'}`}>
+                  <div className="gt-toggle-container">
+                    <span className={`gt-label label-list ${siteConfig.navPosition !== 'floating-bottom' ? 'active' : ''}`}>
                       עליון
                     </span>
                     <div 
-                      className={`gt-toggle ${siteConfig.navPosition === 'floating-bottom' ? 'active' : ''}`}
+                      className={`gt-toggle ${siteConfig.navPosition !== 'floating-bottom' ? 'active' : ''}`}
                       onClick={() => {
                         const newPos = siteConfig.navPosition === 'floating-bottom' ? 'floating-top' : 'floating-bottom';
                         updateSiteConfig({ navPosition: newPos });
                       }}
                     />
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${siteConfig.navPosition === 'floating-bottom' ? 'text-[#ff009f]' : 'text-slate-400'}`}>
+                    <span className={`gt-label label-grid ${siteConfig.navPosition === 'floating-bottom' ? 'active' : ''}`}>
                       תחתון
                     </span>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Global Color Picker Widget */}
+            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group mb-10">
+              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] relative overflow-hidden">
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                
+                <div className="flex justify-between items-center mb-6 relative z-10">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#40E0D0] to-[#00CED1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#40E0D0]/20 group-hover:rotate-6 transition-transform">
+                      <Sparkles size={32} />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">בקר צבע גלובלי</h3>
+                      <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">שינוי גוון הטורקיז בכל האתר</p>
+                    </div>
+                  </div>
+                  <span id="hex-display" className="font-mono bg-[#40E0D0] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg transition-all duration-300 border border-white/20">#40E0D0</span>
+                </div>
+
+                <div className="relative z-10 px-2">
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    defaultValue="50" 
+                    className="gt-slider-input w-full" 
+                    id="global-theme-slider" 
+                  />
                 </div>
               </div>
             </div>
@@ -1125,7 +1383,11 @@ const AdminPage: React.FC = () => {
                   {/* 3. Toggle */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מפסק טורקיז (Toggle)</p>
-                    <div className="gt-toggle" />
+                    <div className="gt-toggle-container">
+                      <div className="gt-toggle" />
+                      <span className="gt-label label-list">LIST</span>
+                      <span className="gt-label label-grid">GRID</span>
+                    </div>
                   </div>
 
                   {/* 4. Segmented Control */}

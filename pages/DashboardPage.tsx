@@ -329,7 +329,7 @@ const DashboardPage: React.FC = () => {
                     )}
                     <div>
                       <p className="font-black text-slate-900">{a.firstName} {a.lastName}</p>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{a.role === 'Admin' ? 'מנהל' : 'חבר'}</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{a.role === 'Admin' ? 'רכז' : 'חבר'}</p>
                     </div>
                   </div>
                 ))}

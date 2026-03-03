@@ -68,7 +68,7 @@ const LoginPage: React.FC = () => {
           email: 'yuval@shalev.org', 
           mobile: '050-0000000',
           avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
-          bio: 'מנהל מערכת', 
+          bio: 'רכז מערכת', 
           role: 'Admin', 
           joinedAt: '01/01/2025', 
           isActive: true,
@@ -95,7 +95,7 @@ const LoginPage: React.FC = () => {
         const memberData = userDoc.data() as Member;
         
         if (memberData.isActive === false) {
-          setError('חשבונך אינו פעיל. פנה למנהל המערכת.');
+          setError('חשבונך אינו פעיל. פנה לרכז המערכת.');
           return;
         }
 

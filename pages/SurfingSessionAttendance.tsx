@@ -642,7 +642,7 @@ const SurfingSessionAttendance: React.FC = () => {
                           isSelected ? 'bg-[#006994] text-white border-[#006994]' : 'bg-white text-[#4E8294] border-slate-100'
                         }`}>
                           <span className="text-[8px] font-black uppercase tracking-tighter whitespace-nowrap">
-                            {user.role === 'Admin' ? 'מנהל' : user.role === 'Instructor' ? 'מדריך' : 'חבר'}
+                            {user.role === 'Admin' ? 'רכז' : user.role === 'Instructor' ? 'מדריך' : 'חבר'}
                           </span>
                         </div>
                       )}

@@ -255,7 +255,7 @@ const App: React.FC = () => {
             <div className="pt-8 mt-8 border-t border-slate-100 space-y-3">
               <div className="flex items-center gap-2 pr-4 mb-4">
                 <ShieldAlert size={14} className="text-slate-400" />
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">מרכז ניהול</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">פאנל ניהול</p>
               </div>
               {adminNavItems.map(item => (
                 <NavLink 
@@ -280,7 +280,7 @@ const App: React.FC = () => {
              <div className="flex-1 overflow-hidden">
                 <p className="font-black text-[var(--sand-dark)] text-sm truncate">{currentUser.firstName} {currentUser.lastName}</p>
                 <p className="text-[9px] font-black text-[var(--sand-accent)] uppercase tracking-widest">
-                  {currentUser.role === 'Admin' ? 'מנהל' : currentUser.role === 'Instructor' ? 'מדריך' : 'חבר'}
+                  {currentUser.role === 'Admin' ? 'רכז' : currentUser.role === 'Instructor' ? 'מדריך' : 'חבר'}
                 </p>
              </div>
           </div>
@@ -348,7 +348,7 @@ const App: React.FC = () => {
                     <div className="flex-1 overflow-hidden">
                       <p className="font-black text-[var(--sand-dark)] truncate">{currentUser.firstName} {currentUser.lastName}</p>
                       <p className="text-[10px] font-black text-[var(--sand-accent)] uppercase tracking-widest">
-                        {currentUser.role === 'Admin' ? 'מנהל' : currentUser.role === 'Instructor' ? 'מדריך' : 'חבר'}
+                        {currentUser.role === 'Admin' ? 'רכז' : currentUser.role === 'Instructor' ? 'מדריך' : 'חבר'}
                       </p>
                     </div>
                  </div>

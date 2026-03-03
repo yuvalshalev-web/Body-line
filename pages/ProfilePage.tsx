@@ -238,7 +238,7 @@ const ProfilePage: React.FC = () => {
             </div>
             <div className="flex-1 mb-4 text-center md:text-right">
                <h3 className="text-4xl font-black text-slate-900 tracking-tight mb-2">{formData.firstName} {formData.lastName}</h3>
-               <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{formData.role === 'Admin' ? 'מנהל מערכת' : 'חבר נבחרת'}</p>
+               <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{formData.role === 'Admin' ? 'רכז מערכת' : 'חבר נבחרת'}</p>
             </div>
           </div>
 

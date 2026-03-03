@@ -44,7 +44,7 @@ const AdminInfoPage: React.FC = () => {
   if (currentUser?.role !== 'Admin') {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-slate-400 font-black uppercase tracking-widest">גישה למנהלים בלבד</p>
+        <p className="text-slate-400 font-black uppercase tracking-widest">גישה לרכזים בלבד</p>
       </div>
     );
   }

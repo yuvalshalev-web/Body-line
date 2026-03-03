@@ -48,6 +48,7 @@ interface DataContextType {
   updatePodcast: (podcast: Podcast) => Promise<void>;
   deletePodcast: (id: string) => Promise<void>;
   deleteGalleryItems: (ids: string[]) => Promise<void>;
+  addGalleryItem: (item: Omit<GalleryItem, 'id'>) => Promise<void>;
   toggleSessionAttendance: (userId: string) => Promise<void>;
   forceResetSession: () => Promise<void>;
   finalizeThursdaySession: () => Promise<void>;
@@ -448,6 +449,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const addGalleryItem = async (item: Omit<GalleryItem, 'id'>) => {
+    const db = getDb();
+    await addDoc(collection(db, 'gallery'), {
+      ...item,
+      timestamp: Timestamp.now()
+    });
+  };
+
   const toggleSessionAttendance = async (userId: string) => {
     const isCurrentlyAttending = attendeeIds.includes(userId);
     const activeSessionRef = doc(getDb(), 'site_data', 'active_session');
@@ -639,7 +648,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <DataContext.Provider value={{ 
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
-      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, toggleSessionAttendance, forceResetSession,
+      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, forceResetSession,
       finalizeThursdaySession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember
     }}>
       {children}

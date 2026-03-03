@@ -525,45 +525,45 @@ body.has-bottom-nav main {
 }
 
 /* 1. Toggle Switch - RTL Resistant Fix */
-.gt-toggle {
+/* תיקון גלובלי לכל המפסקים באתר - עמיד ל-RTL */
+.gt-toggle, [class*="toggle-switch"] { 
     font-size: 16px;
-    width: 3.5em; 
+    direction: ltr !important; 
+    display: flex !important;
+    align-items: center;
+    position: relative;
+    width: 3.5em;
     height: 1.8em;
     background: var(--gt-off-bg);
     border: 1px solid var(--gt-border-soft);
     border-radius: 2em;
     cursor: pointer;
-    display: flex; 
-    align-items: center;
-    padding: 0.2em;
-    transition: all 0.3s ease;
-    /* מנטרל את הפיכת הכיוון של האתר */
-    direction: ltr !important; 
+    transition: 0.3s;
     box-sizing: border-box;
 }
 
-.gt-toggle::before {
+/* הבטחת תנועת העיגול */
+.gt-toggle::before, [class*="toggle-switch"]::before {
     content: "";
+    position: absolute;
+    left: 0.2em; /* תמיד מתחיל מצד שמאל ללא קשר לשפה */
     width: 1.4em;
     height: 1.4em;
     background: #fff;
     border-radius: 50%;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    /* הכפתור תמיד מתחיל בצד שמאל של המפסק */
-    margin-left: 0; 
-    flex-shrink: 0;
 }
 
 /* מצב פעיל - הטורקיז נדלק והעיגול זז ימינה */
-.gt-toggle.active {
+.gt-toggle.active, [class*="toggle-switch"].active {
     background: rgba(64, 224, 208, 0.2);
     border-color: var(--gt-accent);
 }
 
-.gt-toggle.active::before {
-    /* תזוזה קבועה שלא מושפעת מכיוון השפה */
-    margin-left: 1.7em; 
+.gt-toggle.active::before, [class*="toggle-switch"].active::before {
+    /* תנועה ימינה במצב פעיל */
+    transform: translateX(1.7em);
     background: var(--gt-accent);
 }
 
@@ -710,4 +710,34 @@ body.has-bottom-nav main {
     background: rgba(64, 224, 208, 0.2); color: #008b8b;
     display: inline-block;
 }
+
+/* תיקון היפוך תוויות LIST/GRID בעברית */
+.gt-toggle-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8em;
+    /* מכריח את הסדר להיות: LIST משמאל, מפסק באמצע, GRID מימין */
+    direction: ltr !important; 
+}
+
+/* מוודא שהטקסט בתוך התוויות לא מתהפך פנימית */
+.gt-label {
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: #b0b0b0; /* צבע כבוי כברירת מחדל */
+    transition: color 0.3s ease;
+}
+
+/* סידור אלמנטים בתוך הקונטיינר */
+.gt-toggle-container .label-list { order: 1; }
+.gt-toggle-container .gt-toggle { order: 2; }
+.gt-toggle-container .label-grid { order: 3; }
+
+/* הדגשת הטקסט הפעיל בהתאם למצב המפסק */
+.gt-toggle:not(.active) ~ .label-list { color: var(--gt-accent); }
+.gt-toggle.active ~ .label-grid { color: var(--gt-accent); }
+
+
 

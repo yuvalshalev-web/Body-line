@@ -367,7 +367,7 @@ const EventsPage: React.FC = () => {
                   {eventType === 'COMMUNITY' && !canManageCommunityEvents && (
                     <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-center gap-3 text-orange-700 text-[10px] font-black animate-in slide-in-from-top-2">
                       <ShieldAlert size={16} />
-                      <p>רק מנהל או מדריך יכולים ליצור אירוע רשמי של הקהילה.</p>
+                      <p>רק רכז או מדריך יכולים ליצור אירוע רשמי של הקהילה.</p>
                     </div>
                   )}
 
