@@ -593,32 +593,11 @@ const SessionStatsPage: React.FC = () => {
             <div className="flex-1 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ממוצע גולשים</p>
-                <div className="relative">
-                  <button 
-                    onClick={() => setActiveTooltip(activeTooltip === 'avg' ? null : 'avg')}
-                    onMouseEnter={() => setActiveTooltip('avg')}
-                    onMouseLeave={() => setActiveTooltip(null)}
-                    className={`p-1 rounded-full border transition-all cursor-help outline-none ${
-                      activeTooltip === 'avg' 
-                        ? 'bg-slate-100 border-slate-300' 
-                        : 'bg-slate-50 border-slate-100'
-                    }`}
-                  >
-                    <Info size={12} className={`transition-colors ${activeTooltip === 'avg' ? 'text-slate-900' : 'text-slate-300'}`} />
-                  </button>
-                  <AnimatePresence>
-                    {activeTooltip === 'avg' && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-slate-900 text-white text-[10px] font-bold rounded-2xl z-50 shadow-2xl border border-white/20 backdrop-blur-md pointer-events-none"
-                      >
-                        ממוצע משתתפים לסשן מתחילת השנה.
-                        <div className="absolute top-full right-4 border-[6px] border-transparent border-t-slate-900"></div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                <div className="gt-info-wrapper">
+                  <div className="gt-info-icon" style={{ width: '16px', height: '16px', fontSize: '10px' }}>i</div>
+                  <span className="gt-tooltip" style={{ bottom: '180%', width: '200px' }}>
+                    ממוצע משתתפים לסשן מתחילת השנה.
+                  </span>
                 </div>
               </div>
               <p className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{stats.avgAttendance}</p>
@@ -627,32 +606,11 @@ const SessionStatsPage: React.FC = () => {
             <div className="flex-1 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">כניסות למים</p>
-                <div className="relative">
-                  <button 
-                    onClick={() => setActiveTooltip(activeTooltip === 'total' ? null : 'total')}
-                    onMouseEnter={() => setActiveTooltip('total')}
-                    onMouseLeave={() => setActiveTooltip(null)}
-                    className={`p-1 rounded-full border transition-all cursor-help outline-none ${
-                      activeTooltip === 'total' 
-                        ? 'bg-slate-100 border-slate-300' 
-                        : 'bg-slate-50 border-slate-100'
-                    }`}
-                  >
-                    <Info size={12} className={`transition-colors ${activeTooltip === 'total' ? 'text-slate-900' : 'text-slate-300'}`} />
-                  </button>
-                  <AnimatePresence>
-                    {activeTooltip === 'total' && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-slate-900 text-white text-[10px] font-bold rounded-2xl z-50 shadow-2xl border border-white/20 backdrop-blur-md pointer-events-none"
-                      >
-                        סך השתתפויות מצטבר של כל חברי הקהילה.
-                        <div className="absolute top-full right-4 border-[6px] border-transparent border-t-slate-900"></div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                <div className="gt-info-wrapper">
+                  <div className="gt-info-icon" style={{ width: '16px', height: '16px', fontSize: '10px' }}>i</div>
+                  <span className="gt-tooltip" style={{ bottom: '180%', width: '200px' }}>
+                    סך השתתפויות מצטבר של כל חברי הקהילה.
+                  </span>
                 </div>
               </div>
               <p className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{stats.totalAttendance}</p>

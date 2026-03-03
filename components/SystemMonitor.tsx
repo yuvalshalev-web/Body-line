@@ -603,14 +603,13 @@ const SystemMonitor: React.FC = () => {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
               <h3 className="text-lg font-black text-[#2D3748] uppercase tracking-tight">קצב קריאות ממסד הנתונים (Live)</h3>
-              <div className="relative group">
-                <Info size={14} className="text-slate-400 cursor-help hover:text-[#2D3748] transition-colors" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-[#2D3748] text-white text-[11px] font-medium rounded-2xl opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 z-[100] shadow-2xl pointer-events-none text-right leading-relaxed border border-slate-700" dir="rtl">
+              <div className="gt-info-wrapper">
+                <div className="gt-info-icon" style={{ width: '18px', height: '18px', fontSize: '11px' }}>i</div>
+                <span className="gt-tooltip" style={{ bottom: '180%', width: '280px' }}>
                   גרף זה מציג את כמות הבקשות (Requests) שנשלחות למסד הנתונים בזמן אמת, בכל רגע נתון.
                   <br /><br />
                   כל נקודה בגרף מייצגת את מספר המסמכים שנשלפו ב-5 השניות האחרונות. זה עוזר לזהות "פיקים" של פעילות באתר.
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#2D3748]" />
-                </div>
+                </span>
               </div>
             </div>
             

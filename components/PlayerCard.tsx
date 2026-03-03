@@ -63,11 +63,11 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
     let badge = null;
 
     if (percentile <= 10) {
-      badge = 'Grommet';
-      label = 'Grommet: מהצעירים והמבטיחים ביותר בקהילה!';
+      badge = 'פופ-אפיסט';
+      label = 'פופ-אפיסט: מהצעירים והמבטיחים ביותר בקהילה!';
     } else if (percentile >= 90) {
-      badge = 'Legend/Senior';
-      label = 'Legend/Senior: מעמודי התווך המנוסים ביותר שלנו!';
+      badge = 'קלי סלייטר';
+      label = 'קלי סלייטר: מעמודי התווך המנוסים ביותר שלנו!';
     } else if (percentile > 50) {
       label = `גולש מנוסה: אתה בוגר ומנוסה יותר מ-${roundedPercentile}% מהקהילה`;
     } else {
@@ -81,16 +81,16 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   if (!member || !stats) return null;
 
   return (
-    <div className="bg-white p-[var(--spacing-md)] rounded-[var(--radius-lg)] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
+    <div className="p-[var(--spacing-md)] md:p-[var(--spacing-lg)] bg-white rounded-[var(--radius-lg)] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
       {/* Background Accent */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-[var(--ocean-liquid)]/5 rounded-full blur-3xl -z-10" />
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-50 rounded-full blur-3xl -z-10" />
       
       <div className="relative">
-        <div className="w-28 h-28 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl bg-slate-50 rotate-3">
+        <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border-4 border-white shadow-xl bg-slate-50">
           {member.avatar ? (
             <img src={member.avatar} alt="" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-300">
+            <div className="w-full h-full flex items-center justify-center text-slate-200">
               <Star size={48} />
             </div>
           )}
@@ -103,26 +103,28 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
       </div>
 
       <div className="flex-1 text-center md:text-right">
-        <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2">
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-2">
+          <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
             {member.firstName} {member.lastName}
           </h2>
-          <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-            <span className="inline-flex px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+          <div className="flex gap-2 justify-center md:justify-start">
+            <span className="inline-flex px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">
               {stats.rank}
             </span>
-            {agePercentile?.badge && (
-              <span className="inline-flex px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                {agePercentile.badge}
-              </span>
-            )}
+            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+              member.isActive !== false 
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+                : 'bg-rose-50 text-rose-700 border-rose-100'
+            }`}>
+              {member.isActive !== false ? 'פעיל' : 'לא פעיל'}
+            </span>
           </div>
         </div>
         
         <div className="flex items-center justify-center md:justify-start gap-4 text-slate-400 font-bold text-sm">
           <span className="flex items-center gap-1"><Calendar size={14} /> הצטרף ב-{stats.joiningDate}</span>
           <span className="w-1 h-1 bg-slate-200 rounded-full" />
-          <span className="px-2 py-0.5 bg-slate-100 rounded-full text-[10px] uppercase tracking-widest">
+          <span className="px-2 py-0.5 bg-slate-50 rounded-full text-[10px] uppercase tracking-widest border border-slate-100">
             {member.role === 'Admin' ? 'מנהל' : 'חבר'}
           </span>
         </div>
@@ -132,14 +134,14 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
           <div className="mt-4 max-w-xs mx-auto md:mx-0">
             <div className="flex justify-between items-center mb-1">
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">אחוזון גיל</span>
-              <span className="text-[9px] font-black text-[var(--ocean-liquid)]">{Math.round(agePercentile.percentile)}%</span>
+              <span className="text-[9px] font-black text-blue-600">{Math.round(agePercentile.percentile)}%</span>
             </div>
-            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${agePercentile.percentile}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-[var(--ocean-bg)] to-[var(--ocean-liquid)]"
+                className="h-full bg-gradient-to-r from-blue-600 to-cyan-400"
               />
             </div>
             <p className="text-[10px] text-slate-400 font-bold mt-1">{agePercentile.label}</p>
@@ -149,9 +151,9 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
         <div className="mt-6 grid grid-cols-3 gap-[var(--spacing-md)]">
           <div className="flex flex-col">
             <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] justify-center md:justify-start">
-              <Waves size={10} className="text-[var(--ocean-liquid)]" /> סשנים
+              <Waves size={10} className="text-blue-500" /> סשנים
             </span>
-            <span className="text-2xl font-black text-[var(--ocean-liquid)] tabular-nums">
+            <span className="text-2xl font-black text-slate-900 tabular-nums">
               <Counter value={stats.totalSessions} />
             </span>
           </div>

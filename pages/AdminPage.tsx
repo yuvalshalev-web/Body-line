@@ -1163,6 +1163,26 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'SITE' && (
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
+            {/* Design and Settings Section */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="p-4 bg-[#4a002e] text-white rounded-2xl shadow-lg shadow-[#4a002e]/20">
+                  <Settings size={24} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">עיצוב והגדרות</h3>
+                  <p className="text-[#4a002e]/60 font-bold">ניהול פרמטרים עיצוביים והגדרות מערכת מתקדמות</p>
+                </div>
+              </div>
+
+              <div className="bg-rose-50 border border-rose-100 p-6 rounded-[2rem] flex items-start gap-4">
+                <div className="text-2xl">⚠️</div>
+                <p className="text-sm font-bold text-rose-800 leading-relaxed">
+                  זהו דף רגיש! שינויים לא זהירים עלולים לפגוע באתר. אם משעמם לך, עדיף למצוא עיסוק אחר.
+                </p>
+              </div>
+            </div>
+
             {/* Habal Zug Year Config Widget */}
             <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
               <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
@@ -1455,6 +1475,15 @@ const AdminPage: React.FC = () => {
                     <div className="flex gap-2">
                       <span className="gt-badge">פעיל</span>
                       <span className="gt-badge" style={{ background: 'rgba(255, 0, 159, 0.1)', color: '#ff009f' }}>חדש</span>
+                    </div>
+                  </div>
+
+                  {/* 12. Tooltip */}
+                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">אייקון מידע (Tooltip)</p>
+                    <div className="gt-info-wrapper">
+                      <div className="gt-info-icon">i</div>
+                      <span className="gt-tooltip">זהו הסבר קצר שמופיע רק כשמרחפים מעל האייקון!</span>
                     </div>
                   </div>
                 </div>

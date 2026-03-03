@@ -49,15 +49,15 @@ const SurferCardPage: React.FC = () => {
       <div className="mb-10">
         {(() => {
           const rankColors: Record<string, { bg: string, glow: string, trophy: string }> = {
-            'Grommet': { bg: 'from-[var(--ocean-bg)] to-[var(--ocean-pipe-empty)]', glow: 'var(--glow-soft)', trophy: '#E5E7EB' },
-            'Rookie': { bg: 'from-[var(--ocean-bg)] to-[var(--ocean-pipe-empty)]', glow: 'var(--glow-soft)', trophy: '#E5E7EB' },
-            'Local': { bg: 'from-[#06402b] to-[#065f46]', glow: 'rgba(6, 95, 70, 0.5)', trophy: '#E5E7EB' },
-            'Pro': { bg: 'from-[#1e1b4b] to-[#312e81]', glow: 'rgba(67, 56, 202, 0.6)', trophy: '#E5E7EB' },
-            'Legend': { bg: 'from-[#92400e] via-[#b45309] to-[#92400e]', glow: 'rgba(251, 191, 36, 0.8)', trophy: '#FFD700' }
+            'פופ-אפיסט': { bg: 'from-[#021626] to-[#010d17]', glow: 'rgba(0, 242, 254, 0.2)', trophy: '#E5E7EB' },
+            'תופס פינה': { bg: 'from-[#021626] to-[#010d17]', glow: 'rgba(0, 242, 254, 0.2)', trophy: '#E5E7EB' },
+            'ליין-אפיסט': { bg: 'from-[#06402b] to-[#065f46]', glow: 'rgba(6, 95, 70, 0.5)', trophy: '#E5E7EB' },
+            'כריש פטיש': { bg: 'from-[#1e1b4b] to-[#312e81]', glow: 'rgba(67, 56, 202, 0.6)', trophy: '#E5E7EB' },
+            'קלי סלייטר': { bg: 'from-[#92400e] via-[#b45309] to-[#92400e]', glow: 'rgba(251, 191, 36, 0.8)', trophy: '#FFD700' }
           };
 
-          const currentRank = userData?.rank || 'Grommet';
-          const theme = rankColors[currentRank] || rankColors['Grommet'];
+          const currentRank = userData?.rank || 'פופ-אפיסט';
+          const theme = rankColors[currentRank] || rankColors['פופ-אפיסט'];
           const totalSessions = userData?.totalSessions || 0;
           const rankThresholds = userData?.rankThresholds || [];
           const rankIndex = rankThresholds.findIndex(r => r.name === currentRank) ?? 0;
@@ -114,8 +114,8 @@ const SurferCardPage: React.FC = () => {
                       animate={{ 
                         scale: [1, 1.6, 1],
                         opacity: [0.5, 0.9, 0.5],
-                        backgroundColor: currentRank === 'Legend' ? 'rgba(255, 215, 0, 0.6)' : 
-                                       currentRank === 'Pro' ? 'rgba(106, 90, 205, 0.4)' : 
+                        backgroundColor: currentRank === 'קלי סלייטר' ? 'rgba(255, 215, 0, 0.6)' : 
+                                       currentRank === 'כריש פטיש' ? 'rgba(106, 90, 205, 0.4)' : 
                                        'rgba(255, 255, 255, 0.2)'
                       }}
                       transition={{ duration: 4, repeat: Infinity }}
@@ -130,7 +130,7 @@ const SurferCardPage: React.FC = () => {
                       <Trophy 
                         size={72} 
                         className={`transition-all duration-1000 ${
-                          currentRank === 'Legend' 
+                          currentRank === 'קלי סלייטר' 
                             ? 'text-[#FFD700] drop-shadow-[0_0_30px_rgba(255,215,0,1)]' 
                             : 'text-slate-200 drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]'
                         }`}
@@ -139,15 +139,17 @@ const SurferCardPage: React.FC = () => {
 
                       {/* Shine effect - always active for Legend, hover for others */}
                       <div className={`absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 ${
-                        currentRank === 'Legend' ? 'animate-[shine_3s_infinite_ease-in-out]' : 'group-hover:animate-[shine_1.5s_ease-in-out]'
+                        currentRank === 'קלי סלייטר' ? 'animate-[shine_3s_infinite_ease-in-out]' : 'group-hover:animate-[shine_1.5s_ease-in-out]'
                       }`} />
                     </div>
                   </div>
                   
                   <div className="flex-1 text-center md:text-right">
                     <div className="inline-flex items-center gap-2 px-5 py-1.5 bg-black/30 backdrop-blur-md rounded-full mb-5 border border-white/10 shadow-lg">
-                      <div className={`w-2 h-2 rounded-full animate-ping ${currentRank === 'Legend' ? 'bg-yellow-400' : 'bg-white'}`} />
-                      <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/90">אתה נמצא בדרגת {currentRank}</span>
+                      <div className={`w-2 h-2 rounded-full animate-ping ${currentRank === 'קלי סלייטר' ? 'bg-yellow-400' : 'bg-[var(--gt-accent)]'}`} />
+                      <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/90">
+                        אתה נמצא בדרגת <span className="text-[var(--gt-accent)]">{currentRank}</span>
+                      </span>
                     </div>
                     <h3 className="text-4xl md:text-6xl font-black mb-5 leading-none tracking-tighter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
                       הדרך למקצוענות <br className="hidden md:block" /> מתחילה בהתמדה
@@ -158,139 +160,76 @@ const SurferCardPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Final 3-Layer Roadmap - Professional Glassmorphism */}
+                {/* Rank Roadmap Progress Bar */}
                 <div className="mt-10 mb-10 px-4 max-w-4xl mx-auto">
-                  {/* Progress System Wrapper - Shared Coordinate System */}
-                  <div 
-                    className="relative w-full h-8 bg-[var(--ocean-glass)] backdrop-blur-[var(--glass-blur)] rounded-[var(--radius-md)] border border-white/20 shadow-[inset_0_2px_10px_rgba(255,255,255,0.1),0_10px_30px_rgba(0,0,0,0.3)]"
-                    style={{ 
-                      '--progress-percent': progressPercent,
-                      '--current-progress': `calc(24px + (var(--progress-percent) / 100) * (100% - 48px))`
-                    } as React.CSSProperties}
-                  >
+                  <div className="relative h-4 bg-white/10 rounded-full overflow-hidden shadow-inner border border-white/5">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPercent}%` }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="rank-progress-fill absolute inset-y-0 right-0 h-full"
+                    />
                     
-                    {/* Layer 3: 'CURRENT STATUS' Marker (Above the bar, but child of the bar to share coordinates) */}
-                    <div className="absolute -top-10 inset-x-0 h-10 pointer-events-none">
-                      <motion.div 
-                        key="current-marker"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="absolute flex flex-col items-center"
-                        style={{ left: 'var(--current-progress)', transform: 'translateX(-50%)' }}
-                      >
-                        <span className="text-[9px] font-black text-[var(--ocean-bg)] uppercase tracking-[0.25em] mb-0.5 drop-shadow-md">
-                          CURRENT STATUS
-                        </span>
-                        {/* The indicator arrow - physically attached to the bar with negative margin */}
-                        <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-[var(--ocean-milestone)] -mt-[1px]" />
-                      </motion.div>
-                    </div>
-
-                    {/* Clipping Layer for Liquid (Layer 2) */}
-                    <div className="absolute inset-0 overflow-hidden rounded-[var(--radius-md)]">
-                      {/* Progress Liquid */}
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ 
-                          width: 'var(--current-progress)' 
-                        }}
-                        transition={{ duration: 2, ease: "circOut" }}
-                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--ocean-bg)] via-[var(--ocean-pipe-empty)] to-[var(--ocean-liquid)] shadow-[var(--glow-soft)]"
-                      >
-                        {/* Internal Shine */}
-                        <div className="absolute top-0 inset-x-0 h-[1px] bg-white/30 blur-[0.5px]" />
-                      </motion.div>
-                    </div>
-
-                    {/* Milestone Nodes (Layer 1 - Inside the tube) */}
-                    <div className="absolute inset-0 flex items-center px-6">
-                      <div className="relative w-full h-full flex items-center">
-                        {userData?.rankThresholds.map((rank, idx) => {
-                          const isCurrent = rank.name === currentRank;
-                          const isPassed = rankIndex > idx;
-                          const totalRanks = userData?.rankThresholds.length || 1;
-                          const percent = (idx / (totalRanks - 1)) * 100;
-                          
-                          return (
-                            <div 
-                              key={rank.name} 
-                              className="absolute top-1/2 -translate-y-1/2"
-                              style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
-                            >
-                              {/* Identical Circle Node */}
-                              <div className={`w-5 h-5 rounded-full transition-all duration-1000 border-2 relative z-20 ${
-                                isCurrent 
-                                  ? 'bg-[var(--ocean-liquid)] border-[var(--ocean-milestone)] shadow-[var(--glow-intense)]' 
-                                  : (isPassed ? 'bg-[var(--ocean-liquid)] border-[var(--ocean-liquid)] shadow-[var(--glow-soft)]' : 'bg-white/5 border-white/20')
-                              }`}>
-                                {/* White Glowing Ring for Active Rank */}
-                                {isCurrent && (
-                                  <div className="absolute inset-[-6px] border-2 border-white/50 rounded-full animate-pulse blur-[1px]" />
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Offline Overlay (Blur + No Signal) */}
-                    {dbStatus === 'OFFLINE' && (
-                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-[var(--radius-md)]">
-                        <div className="flex items-center gap-2 text-white/70">
-                          <WifiOff size={14} className="animate-pulse" />
-                          <span className="text-[8px] font-black uppercase tracking-widest">No Signal</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Labels (Layer 1 - Below the bar) */}
-                  <div className="relative w-full h-8 mt-2 px-6">
-                    <div className="relative w-full h-full">
+                    {/* Milestone Nodes */}
+                    <div className="absolute inset-0 flex items-center justify-between px-6">
                       {userData?.rankThresholds.map((rank, idx) => {
                         const isCurrent = rank.name === currentRank;
-                        const totalRanks = userData?.rankThresholds.length || 1;
-                        const percent = (idx / (totalRanks - 1)) * 100;
-                        
+                        const isPassed = rankIndex > idx;
                         return (
                           <div 
                             key={rank.name} 
-                            className="absolute flex flex-col items-center"
-                            style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
-                          >
-                            <span className={`whitespace-nowrap text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-500 ${
-                              isCurrent ? 'text-[var(--ocean-text-main)] opacity-100' : 'text-[var(--ocean-text-dim)] opacity-60'
-                            }`}>
-                              {rank.name}
-                            </span>
-                            {rank.name === 'Legend' && (
-                              <Trophy size={12} className={`mt-2 ${isCurrent ? 'text-amber-400' : 'text-white/20'}`} />
-                            )}
-                          </div>
+                            className={`w-3 h-3 rounded-full transition-all duration-500 border-2 ${
+                              isCurrent || isPassed
+                                ? 'bg-white border-white shadow-[0_0_10px_rgba(255,255,255,0.5)]' 
+                                : 'bg-white/20 border-white/10'
+                            }`}
+                          />
                         );
                       })}
                     </div>
                   </div>
+
+                  {/* Labels */}
+                  <div className="flex justify-between mt-3 px-2">
+                    {userData?.rankThresholds.map((rank) => {
+                      const isCurrent = rank.name === currentRank;
+                      return (
+                        <div key={rank.name} className="flex flex-col items-center">
+                          <span className={`text-[10px] font-black tracking-widest uppercase transition-colors duration-500 ${
+                            isCurrent ? 'text-white' : 'text-white/40'
+                          }`}>
+                            {rank.name}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* Clean Bottom Message */}
-                <div className="text-center mt-6">
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="inline-block px-10 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm"
-                  >
-                    <p className="text-lg font-bold text-slate-900">
-                      דרגה נוכחית: <span className="text-slate-900 font-black">{currentRank}</span> 
-                      <span className="text-[var(--ocean-liquid)] text-sm mx-2 font-black drop-shadow-sm">({userData?.totalSessions} סשנים)</span>. 
-                      {userData?.nextRankName ? (
-                        <> נותרו רק <span className="text-[var(--ocean-liquid)] font-black">{userData.sessionsToNextRank}</span> סשנים עד לדרגת <span className="text-slate-500 italic">{userData.nextRankName}</span>!</>
-                      ) : (
-                        <> הגעת לדרגה המקסימלית! אתה אגדה חיה בים. </>
-                      )}
-                    </p>
-                  </motion.div>
+                {/* Data Chips Section */}
+                <div className="rank-stats-container">
+                  <div className="rank-stat-chip">
+                    <span className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">דרגה נוכחית</span>
+                    <span className="text-white font-black text-lg">{currentRank}</span>
+                  </div>
+                  
+                  <div className="w-px h-10 bg-white/10" />
+                  
+                  <div className="rank-stat-chip">
+                    <span className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">
+                      {userData?.nextRankName ? `סשנים לדרגת ${userData.nextRankName}` : 'הגעת לפסגה'}
+                    </span>
+                    <span className="text-[var(--gt-accent)] font-black text-2xl tabular-nums">
+                      {userData?.nextRankName ? userData.sessionsToNextRank : 'MAX'}
+                    </span>
+                  </div>
+
+                  <div className="w-px h-10 bg-white/10" />
+
+                  <div className="rank-stat-chip">
+                    <span className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">סך הכל צברת</span>
+                    <span className="text-white font-black text-lg tabular-nums">{userData?.totalSessions} סשנים</span>
+                  </div>
                 </div>
               </div>
             </motion.div>
