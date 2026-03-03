@@ -266,25 +266,18 @@ const DirectoryPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
-            {/* View Mode Toggle - Sand Theme Glassmorphism */}
-            <div className="bg-white/40 backdrop-blur-md p-1 rounded-full border border-white/60 flex items-center shadow-sm relative h-[48px] min-w-[120px]">
-              <motion.div 
-                animate={{ x: viewMode === 'grid' ? '0%' : '100%' }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-[#D4A373] rounded-full shadow-sm border border-white/20"
-              />
-              <button 
-                onClick={() => setViewMode('grid')}
-                className={`flex-1 relative z-10 flex items-center justify-center gap-2 px-3 py-1.5 text-[10px] font-black transition-colors ${viewMode === 'grid' ? 'text-white' : 'text-slate-500 hover:text-slate-700'}`}
-              >
+            {/* View Mode Toggle - Turquoise Glassmorphism */}
+            <div className="flex items-center gap-3 bg-white/40 backdrop-blur-md p-2 rounded-full border border-white/60 shadow-sm h-[48px]">
+              <span className={`text-[10px] font-black uppercase tracking-widest ${viewMode === 'grid' ? 'text-[#40E0D0]' : 'text-slate-400'}`}>
                 Grid
-              </button>
-              <button 
-                onClick={() => setViewMode('list')}
-                className={`flex-1 relative z-10 flex items-center justify-center gap-2 px-3 py-1.5 text-[10px] font-black transition-colors ${viewMode === 'list' ? 'text-white' : 'text-slate-500 hover:text-slate-700'}`}
-              >
+              </span>
+              <div 
+                className={`gt-toggle ${viewMode === 'list' ? 'active' : ''}`}
+                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              />
+              <span className={`text-[10px] font-black uppercase tracking-widest ${viewMode === 'list' ? 'text-[#40E0D0]' : 'text-slate-400'}`}>
                 List
-              </button>
+              </span>
             </div>
 
             <div className="relative flex-1 md:flex-none">

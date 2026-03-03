@@ -97,7 +97,12 @@ export const initializeStorageStats = async () => {
       });
       console.log("✅ Storage stats initialized with 11,450,000 bytes");
     }
-  } catch (error) {
-    console.error("❌ Error initializing storage stats:", error);
+  } catch (error: any) {
+    // If it's a connection error, just log a warning instead of a scary error
+    if (error?.code === 'unavailable' || error?.message?.includes('offline')) {
+      console.warn("⚠️ Storage stats initialization deferred: Client is offline.");
+    } else {
+      console.error("❌ Error initializing storage stats:", error);
+    }
   }
 };

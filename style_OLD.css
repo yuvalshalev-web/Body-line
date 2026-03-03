@@ -23,12 +23,123 @@
   --shadow-md: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
+.grain-overlay {
+  display: none; /* Removed for clean white look */
+}
+
+.ambient-light {
+  display: none; /* Removed for clean white look */
+}
+
+.ambient-blue {
+  top: -10%;
+  left: -10%;
+  background: radial-gradient(circle, #4facfe 0%, transparent 70%);
+}
+
+.ambient-purple {
+  bottom: -10%;
+  right: -10%;
+  background: radial-gradient(circle, #a855f7 0%, transparent 70%);
+}
+
 body {
   font-family: var(--primary-font);
   background-color: var(--bg-main);
   color: var(--text-main);
   letter-spacing: -0.01em;
 }
+
+/* --- Rolling Toggle Custom Styles --- */
+.rolling-toggle-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.rolling-toggle-checkbox {
+  display: none !important;
+}
+
+.rolling-toggle-bg {
+  height: 100px;
+  width: 200px;
+  background: rgba(43, 43, 43, 1);
+  position: relative;
+  border-radius: 50px;
+  box-shadow: 0 0 2px rgba(43,43,43,1);
+  transition: 400ms all ease-in-out 50ms;
+}
+
+.rolling-toggle-ball {
+  height: 80px;
+  width: 80px;
+  background: rgba(255, 255, 255, 1);
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  cursor: pointer;
+  border-radius: 50px;
+  transition: 400ms all ease-in-out 50ms;
+  backface-visibility: hidden;
+}
+
+.rolling-toggle-ball::before,
+.rolling-toggle-ball::after {
+  content: '';
+  position: absolute;
+  background: rgba(43,43,43,1);
+  border-radius: 5px;
+  transition: 400ms all ease-in-out 50ms;
+}
+
+/* X State (Unchecked) */
+.rolling-toggle-ball::before {
+  height: 60px;
+  width: 5px;
+  top: calc(50% - 30px);
+  left: calc(50% - 2.5px);
+  transform: rotate(45deg);
+}
+
+.rolling-toggle-ball::after {
+  height: 5px;
+  width: 60px;
+  top: calc(50% - 2.5px);
+  left: calc(50% - 30px);
+  transform: rotate(45deg);
+}
+
+/* Checked State - Green Background */
+.rolling-toggle-checkbox:checked + .rolling-toggle-bg {
+  background: rgba(73,168,68,1);
+  box-shadow: 0 0 2px rgba(73,168,68,1);
+}
+
+/* Checked State - Ball rolls to the right */
+.rolling-toggle-checkbox:checked + .rolling-toggle-bg .rolling-toggle-ball {
+  left: 110px;
+  transform: rotate(360deg);
+}
+
+/* Checked State - Checkmark symbols */
+.rolling-toggle-checkbox:checked + .rolling-toggle-bg .rolling-toggle-ball::before {
+  height: 50px;
+  top: calc(55% - 25px);
+  left: calc(60% - 2.5px);
+  background: rgba(73,168,68,1);
+}
+
+.rolling-toggle-checkbox:checked + .rolling-toggle-bg .rolling-toggle-ball::after {
+  width: 25px; /* Adjusted from user's 20px to look more like a V */
+  height: 5px;
+  top: calc(85% - 25px);
+  left: calc(20% - 2.5px);
+  background: rgba(73,168,68,1);
+}
+
+/* --- End of Rolling Toggle --- */
 
 .modern-card {
   background: white;
@@ -166,6 +277,29 @@ body {
   50% { transform: scale(1.02); opacity: 1; }
 }
 
+.health-matrix-glass {
+  background: rgba(15, 15, 25, 0.7);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.glass-gauge-container {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(25px);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
 .gauge-ring-fill {
   fill: none;
   stroke-width: 10;
@@ -246,6 +380,23 @@ body {
 .gauge-res { --gauge-color: #f2994a; }
 .gauge-err { --gauge-color: #ff003c; }
 
+/* --- Glassmorphism for Member Cards --- */
+.member-card-glass {
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07) !important;
+  transition: all 0.3s ease !important;
+}
+
+.member-card-glass:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-4px) !important;
+}
+
 /* --- Global Progress Bar --- */
 #global-progress-container {
   position: fixed;
@@ -266,6 +417,24 @@ body {
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 5px var(--ocean-liquid);
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+}
+
+/* --- Body-line Global Header Standards --- */
+.header-badge-glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
 }
 
 .header-title-gradient {
@@ -422,6 +591,49 @@ header.nav-floating-bottom {
   border-left: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+/* Segmented Control Styles */
+.segmented-control {
+  display: flex;
+  background: var(--metal-white-smoke);
+  padding: 4px;
+  border-radius: 1.5rem;
+  border: 1px solid var(--metal-silver);
+  position: relative;
+  overflow: hidden;
+}
+
+.segmented-control-option {
+  flex: 1;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--metal-davys-gray);
+  border-radius: 1.2rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.segmented-control-option.active {
+  color: #ffffff;
+}
+
+.segmented-control-slider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  right: 4px; /* Start from right for RTL */
+  background: var(--metal-nickel);
+  border-radius: 1.2rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
 /* Bottom Navigation Styles */
 .bottom-nav-capsule {
   position: fixed;
@@ -508,15 +720,74 @@ header {
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
 }
 
+/* Metal Theme Toggle Switch */
+.theme-switch-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 15px 0;
+  font-family: sans-serif;
+  color: var(--metal-davys-gray);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--metal-silver); /* מצב כבוי */
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--metal-white-smoke); /* כפתור ההזזה */
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* מצב פעיל - ON */
+input:checked + .slider {
+  background-color: var(--metal-nickel); 
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+/* אפקט Hover עדין */
+.slider:hover {
+  filter: brightness(0.95);
+}
+
 /* Ensure main content has padding when bottom nav is active */
 body.has-bottom-nav main {
   padding-bottom: 100px !important;
 }
 
-/* ============================================================
-   TURQUOISE GLASSMORPHISM SYSTEM (gt-)
-   ============================================================ */
-
+/* --- משתני ליבה מעודכנים לניראות מקסימלית --- */
 :root {
     --gt-accent: #40E0D0;
     --gt-off-bg: #f0f0f0; /* אפור נירוסטה עדין למניעת היעלמות על לבן */
@@ -524,48 +795,19 @@ body.has-bottom-nav main {
     --gt-blur: blur(12px);
 }
 
-/* 1. Toggle Switch - RTL Resistant Fix */
+/* 1. Toggle Switch */
 .gt-toggle {
-    font-size: 16px;
-    width: 3.5em; 
-    height: 1.8em;
-    background: var(--gt-off-bg);
-    border: 1px solid var(--gt-border-soft);
-    border-radius: 2em;
-    cursor: pointer;
-    display: flex; 
-    align-items: center;
-    padding: 0.2em;
-    transition: all 0.3s ease;
-    /* מנטרל את הפיכת הכיוון של האתר */
-    direction: ltr !important; 
-    box-sizing: border-box;
+    font-size: 16px; width: 3.5em; height: 1.8em;
+    background: var(--gt-off-bg); border: 1px solid var(--gt-border-soft);
+    border-radius: 2em; position: relative; cursor: pointer;
+    display: inline-flex; align-items: center; padding: 0.2em; transition: 0.3s;
 }
-
+.gt-toggle.active { background: rgba(64, 224, 208, 0.2); border-color: var(--gt-accent); }
 .gt-toggle::before {
-    content: "";
-    width: 1.4em;
-    height: 1.4em;
-    background: #fff;
-    border-radius: 50%;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    /* הכפתור תמיד מתחיל בצד שמאל של המפסק */
-    margin-left: 0; 
-    flex-shrink: 0;
+    content: ""; width: 1.4em; height: 1.4em; background: #fff;
+    border-radius: 50%; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
-/* מצב פעיל - הטורקיז נדלק והעיגול זז ימינה */
-.gt-toggle.active {
-    background: rgba(64, 224, 208, 0.2);
-    border-color: var(--gt-accent);
-}
-
-.gt-toggle.active::before {
-    /* תזוזה קבועה שלא מושפעת מכיוון השפה */
-    margin-left: 1.7em; 
-    background: var(--gt-accent);
-}
+.gt-toggle.active::before { transform: translateX(1.7em); background: var(--gt-accent); }
 
 /* 2. Segmented Control */
 .gt-segmented {
@@ -576,50 +818,16 @@ body.has-bottom-nav main {
 .gt-segment-item { padding: 0.5em 1.2em; border-radius: 0.6em; color: #555; cursor: pointer; transition: 0.3s; }
 .gt-segment-item.active { background: var(--gt-accent); color: #fff; box-shadow: 0 2px 8px rgba(64, 224, 208, 0.3); }
 
-/* 3. Slider (Range Input) */
-.gt-slider-input {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 0.6em;
-    background: var(--gt-off-bg);
-    border: 1px solid var(--gt-border-soft);
-    border-radius: 1em;
-    outline: none;
-    cursor: pointer;
+/* 3. Slider */
+.gt-slider {
+    font-size: 16px; width: 12em; height: 0.6em;
+    background: var(--gt-off-bg); border: 1px solid var(--gt-border-soft);
+    border-radius: 1em; position: relative;
 }
-
-/* Thumb */
-.gt-slider-input::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 1.4em;
-    height: 1.4em;
-    background: var(--gt-accent);
-    border-radius: 50%;
+.gt-slider-thumb {
+    width: 1.4em; height: 1.4em; background: var(--gt-accent);
+    border-radius: 50%; position: absolute; top: 50%; transform: translateY(-50%);
     box-shadow: 0 2px 6px rgba(64, 224, 208, 0.4);
-    border: 2px solid #fff;
-    transition: 0.2s;
-}
-
-.gt-slider-input::-webkit-slider-thumb:hover {
-    transform: scale(1.1);
-    background: #36c9ba;
-}
-
-.gt-slider-input::-moz-range-thumb {
-    width: 1.4em;
-    height: 1.4em;
-    background: var(--gt-accent);
-    border-radius: 50%;
-    box-shadow: 0 2px 6px rgba(64, 224, 208, 0.4);
-    border: 2px solid #fff;
-    transition: 0.2s;
-}
-
-.gt-slider-input::-moz-range-thumb:hover {
-    transform: scale(1.1);
-    background: #36c9ba;
 }
 
 /* 4. Stepper */
@@ -628,86 +836,5 @@ body.has-bottom-nav main {
     background: var(--gt-off-bg); border: 1px solid var(--gt-border-soft);
     border-radius: 0.6em; overflow: hidden;
 }
-.gt-step-btn { padding: 0.5em 1em; color: var(--gt-accent); cursor: pointer; font-weight: bold; background: rgba(255,255,255,0.5); transition: 0.2s; }
-.gt-step-btn:hover { background: rgba(255,255,255,0.8); }
-.gt-step-btn:active { transform: scale(0.9); }
-.gt-step-val { padding: 0 1em; color: #333; min-width: 2em; text-align: center; }
-
-/* 5. Buttons */
-.gt-btn-primary {
-    background: var(--gt-accent);
-    color: white;
-    padding: 0.8em 2em;
-    border-radius: 1em;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    box-shadow: 0 4px 15px rgba(64, 224, 208, 0.4);
-    transition: 0.3s;
-    border: none;
-    cursor: pointer;
-}
-.gt-btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(64, 224, 208, 0.6);
-}
-
-.gt-btn-glass {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: var(--gt-blur);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #4a002e;
-    padding: 0.8em 2em;
-    border-radius: 1em;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    transition: 0.3s;
-    cursor: pointer;
-}
-.gt-btn-glass:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: var(--gt-accent);
-}
-
-/* --- אובייקטים חדשים (7-11) --- */
-
-/* 7. שדה טקסט (Input Field) */
-.gt-input {
-    font-size: 16px; padding: 0.8em 1em;
-    background: var(--gt-off-bg); border: 1px solid var(--gt-border-soft);
-    border-radius: 0.6em; color: #333; width: 100%; outline: none; transition: 0.3s;
-}
-.gt-input:focus { border-color: var(--gt-accent); box-shadow: 0 0 0 3px rgba(64, 224, 208, 0.1); }
-
-/* 8. תפריט בחירה (Select/Dropdown) */
-.gt-select {
-    font-size: 16px; padding: 0.8em 1em;
-    background: var(--gt-off-bg); border: 1px solid var(--gt-border-soft);
-    border-radius: 0.6em; color: #333; appearance: none; cursor: pointer;
-    width: 100%;
-}
-
-/* 9. צ'קבוקס (Checkbox) */
-.gt-checkbox {
-    width: 1.2em; height: 1.2em; cursor: pointer;
-    accent-color: var(--gt-accent);
-}
-
-/* 10. כרטיס זכוכית (Card/Container) */
-.gt-card {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: var(--gt-blur); -webkit-backdrop-filter: var(--gt-blur);
-    border: 1px solid var(--gt-border-soft);
-    border-radius: 1.2em; padding: 1.5em;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-}
-
-/* 11. תווית סטטוס (Badge/Tag) */
-.gt-badge {
-    font-size: 12px; padding: 0.3em 0.8em;
-    border-radius: 2em; font-weight: bold; text-transform: uppercase;
-    background: rgba(64, 224, 208, 0.2); color: #008b8b;
-    display: inline-block;
-}
-
+.gt-step-btn { padding: 0.5em 1em; color: var(--gt-accent); cursor: pointer; font-weight: bold; background: rgba(255,255,255,0.5); }
+.gt-step-val { padding: 0 1em; color: #333; }

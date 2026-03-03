@@ -1,11 +1,11 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Users, Archive, Mic, Image as ImageIcon, Calendar, Settings, UserCheck, ShieldAlert, Search, 
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
-  PanelTop, ArrowUpCircle, ArrowDownCircle, User
+  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
@@ -48,6 +48,66 @@ const AdminPage: React.FC = () => {
   const assetFileInputRef = useRef<HTMLInputElement>(null);
   const [replacingAssetKey, setReplacingAssetKey] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+
+  // לוגיקה לאובייקטים של Turquoise Glassmorphism
+  useEffect(() => {
+    if (activeTab !== 'SITE') return;
+
+    const cleanupFns: (() => void)[] = [];
+
+    // 1. תפעול ה-Toggle (הדלקה/כיבוי)
+    const toggles = document.querySelectorAll('.gt-toggle');
+    toggles.forEach(toggle => {
+        const handleClick = () => toggle.classList.toggle('active');
+        toggle.addEventListener('click', handleClick);
+        cleanupFns.push(() => toggle.removeEventListener('click', handleClick));
+    });
+
+    // 2. תפעול ה-Segmented Control (מעבר בין אפשרויות)
+    const segmentedContainers = document.querySelectorAll('.gt-segmented');
+    segmentedContainers.forEach(container => {
+        const items = container.querySelectorAll('.gt-segment-item');
+        items.forEach(item => {
+            const handleClick = () => {
+                items.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            };
+            item.addEventListener('click', handleClick);
+            cleanupFns.push(() => item.removeEventListener('click', handleClick));
+        });
+    });
+
+    // 3. תפעול ה-Stepper (פלוס/מינוס)
+    const steppers = document.querySelectorAll('.gt-stepper');
+    steppers.forEach(stepper => {
+        const valDisplay = stepper.querySelector('.gt-step-val');
+        const btnMinus = stepper.querySelector('.minus');
+        const btnPlus = stepper.querySelector('.plus');
+        
+        if (!valDisplay || !btnMinus || !btnPlus) return;
+
+        let count = parseInt(valDisplay.textContent || '0') || 0;
+
+        const handleMinus = () => {
+            count--;
+            valDisplay.textContent = count.toString();
+        };
+        
+        const handlePlus = () => {
+            count++;
+            valDisplay.textContent = count.toString();
+        };
+
+        btnMinus.addEventListener('click', handleMinus);
+        btnPlus.addEventListener('click', handlePlus);
+        cleanupFns.push(() => {
+            btnMinus.removeEventListener('click', handleMinus);
+            btnPlus.removeEventListener('click', handlePlus);
+        });
+    });
+
+    return () => cleanupFns.forEach(fn => fn());
+  }, [activeTab]);
   
   // Year Config State
   const [isEditingYear, setIsEditingYear] = useState(false);
@@ -953,21 +1013,17 @@ const AdminPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 relative z-10">
-                  <div className="theme-switch-container m-0">
+                  <div className="flex items-center gap-3">
                     <span className={`text-[10px] font-black uppercase tracking-widest ${siteConfig.navPosition !== 'floating-bottom' ? 'text-[#ff009f]' : 'text-slate-400'}`}>
                       עליון
                     </span>
-                    <label className="switch">
-                      <input 
-                        type="checkbox" 
-                        checked={siteConfig.navPosition === 'floating-bottom'} 
-                        onChange={(e) => {
-                          const newPos = e.target.checked ? 'floating-bottom' : 'floating-top';
-                          updateSiteConfig({ navPosition: newPos });
-                        }}
-                      />
-                      <span className="slider"></span>
-                    </label>
+                    <div 
+                      className={`gt-toggle ${siteConfig.navPosition === 'floating-bottom' ? 'active' : ''}`}
+                      onClick={() => {
+                        const newPos = siteConfig.navPosition === 'floating-bottom' ? 'floating-top' : 'floating-bottom';
+                        updateSiteConfig({ navPosition: newPos });
+                      }}
+                    />
                     <span className={`text-[10px] font-black uppercase tracking-widest ${siteConfig.navPosition === 'floating-bottom' ? 'text-[#ff009f]' : 'text-slate-400'}`}>
                       תחתון
                     </span>
@@ -1041,6 +1097,105 @@ const AdminPage: React.FC = () => {
                       </div>
                    </div>
                 ))}
+              </div>
+
+              {/* Visual Component Gallery - Turquoise Glassmorphism */}
+              <div className="mt-16 pt-16 border-t border-[#ff009f]/10">
+                <div className="flex items-center gap-4 mb-10">
+                  <div className="p-4 bg-[#40E0D0] text-white rounded-2xl shadow-lg shadow-[#40E0D0]/20"><Sparkles size={24} /></div>
+                  <div>
+                    <h3 className="text-2xl font-black text-[#4a002e]">גלריית רכיבים ויזואלית</h3>
+                    <p className="text-[#40E0D0] font-bold">Turquoise Glassmorphism Component System</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {/* 1. Primary Button */}
+                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">כפתור ראשי</p>
+                    <button className="gt-btn-primary">לחץ כאן</button>
+                  </div>
+
+                  {/* 2. Glass Button */}
+                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">כפתור זכוכית</p>
+                    <button className="gt-btn-glass">כפתור שקוף</button>
+                  </div>
+
+                  {/* 3. Toggle */}
+                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מפסק טורקיז (Toggle)</p>
+                    <div className="gt-toggle" />
+                  </div>
+
+                  {/* 4. Segmented Control */}
+                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">בקר מקטעים (Segmented)</p>
+                    <div className="gt-segmented">
+                      <div className="gt-segment-item active">LIST</div>
+                      <div className="gt-segment-item">GRID</div>
+                    </div>
+                  </div>
+
+                  {/* 5. Real Slider */}
+                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סליידר אמיתי</p>
+                    <input type="range" className="gt-slider-input w-full" defaultValue="50" />
+                  </div>
+
+                  {/* 6. Stepper */}
+                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מונה (Stepper)</p>
+                    <div className="gt-stepper">
+                      <div className="gt-step-btn minus">-</div>
+                      <div className="gt-step-val">10</div>
+                      <div className="gt-step-btn plus">+</div>
+                    </div>
+                  </div>
+
+                  {/* 7. Input Field */}
+                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">שדה טקסט (Input)</p>
+                    <input type="text" className="gt-input" placeholder="הקלד כאן..." />
+                  </div>
+
+                  {/* 8. Select/Dropdown */}
+                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">תפריט בחירה (Select)</p>
+                    <select className="gt-select">
+                      <option>אופציה 1</option>
+                      <option>אופציה 2</option>
+                      <option>אופציה 3</option>
+                    </select>
+                  </div>
+
+                  {/* 9. Checkbox */}
+                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">צ'קבוקס (Checkbox)</p>
+                    <div className="flex items-center gap-2">
+                      <input type="checkbox" className="gt-checkbox" id="gt-check-demo" />
+                      <label htmlFor="gt-check-demo" className="text-xs font-bold text-slate-500">בחר אותי</label>
+                    </div>
+                  </div>
+
+                  {/* 10. Sample Card */}
+                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">כרטיס לדוגמה (Card)</p>
+                    <div className="gt-card w-full">
+                      <h4 className="font-black text-[#4a002e] mb-2">כותרת כרטיס</h4>
+                      <p className="text-[10px] text-slate-500">זהו כרטיס זכוכית מעוצב עם אפקט טשטוש עדין.</p>
+                    </div>
+                  </div>
+
+                  {/* 11. Status Badge */}
+                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">תווית סטטוס (Badge)</p>
+                    <div className="flex gap-2">
+                      <span className="gt-badge">פעיל</span>
+                      <span className="gt-badge" style={{ background: 'rgba(255, 0, 159, 0.1)', color: '#ff009f' }}>חדש</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
