@@ -82,7 +82,35 @@ const OceanRing: React.FC<{
           </motion.div>
         </div>
 
-        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 relative z-10">
+        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 relative z-10 drop-shadow-[0_6px_12px_rgba(0,0,0,0.4)]">
+          <defs>
+            <filter id="ring-3d" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="blur" />
+              <feOffset in="blur" dx="1.5" dy="1.5" result="offsetBlur" />
+              <feSpecularLighting in="blur" surfaceScale="6" specularConstant="1" specularExponent="25" lightingColor="#ffffff" result="specOut">
+                <fePointLight x="-5000" y="-10000" z="20000" />
+              </feSpecularLighting>
+              <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut" />
+              <feComposite in="SourceGraphic" in2="specOut" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litGraphic" />
+            </filter>
+            <linearGradient id="glass-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="white" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="white" stopOpacity="0.05" />
+            </linearGradient>
+          </defs>
+
+          {/* Continuous Glass Tube Background (360°) */}
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+            stroke="#1a3c6e"
+            strokeWidth="4"
+            className="opacity-10"
+            filter="url(#ring-3d)"
+          />
+
           {/* Progress Segments with Background Track */}
           {[...Array(12)].map((_, i) => {
             const segmentStartPercent = i * (100 / 12);
@@ -90,7 +118,7 @@ const OceanRing: React.FC<{
             
             return (
               <React.Fragment key={i}>
-                {/* Background Segment (Navy) */}
+                {/* Background Segment (Navy Glass Slot) - Now with 3D Effect */}
                 <circle
                   cx="50"
                   cy="50"
@@ -100,6 +128,8 @@ const OceanRing: React.FC<{
                   strokeWidth="4"
                   strokeDasharray={dashArray}
                   transform={`rotate(${i * 30}, 50, 50)`}
+                  filter="url(#ring-3d)"
+                  className="opacity-30"
                 />
                 {/* Filled Segment (Palette) */}
                 {segmentProgress > 0 && (
@@ -109,10 +139,11 @@ const OceanRing: React.FC<{
                     r={radius}
                     fill="none"
                     stroke={OCEAN_PALETTE[i]}
-                    strokeWidth="5"
-                    strokeLinecap="butt"
+                    strokeWidth="5.5"
+                    strokeLinecap="round"
                     strokeDasharray={`${segmentProgress * segmentLengthInUnits} ${circumference}`}
                     transform={`rotate(${i * 30}, 50, 50)`}
+                    filter="url(#ring-3d)"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5, delay: i * 0.05 }}
@@ -121,6 +152,26 @@ const OceanRing: React.FC<{
               </React.Fragment>
             );
           })}
+          
+          {/* Enhanced Glass Gloss Overlay System */}
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+            stroke="url(#glass-grad)"
+            strokeWidth="1.5"
+            className="pointer-events-none"
+          />
+          <circle
+            cx="50"
+            cy="50"
+            r={radius + 2}
+            fill="none"
+            stroke="rgba(255,255,255,0.05)"
+            strokeWidth="0.5"
+            className="pointer-events-none"
+          />
         </svg>
 
         {/* Central Text Overlay */}
@@ -187,7 +238,35 @@ const StabilityGauge: React.FC<{
           </motion.div>
         </div>
 
-        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 relative z-10">
+        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 relative z-10 drop-shadow-[0_6px_12px_rgba(0,0,0,0.4)]">
+          <defs>
+            <filter id="ring-3d-stability" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="blur" />
+              <feOffset in="blur" dx="1.5" dy="1.5" result="offsetBlur" />
+              <feSpecularLighting in="blur" surfaceScale="6" specularConstant="1" specularExponent="25" lightingColor="#ffffff" result="specOut">
+                <fePointLight x="-5000" y="-10000" z="20000" />
+              </feSpecularLighting>
+              <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut" />
+              <feComposite in="SourceGraphic" in2="specOut" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litGraphic" />
+            </filter>
+            <linearGradient id="glass-grad-stability" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="white" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="white" stopOpacity="0.05" />
+            </linearGradient>
+          </defs>
+
+          {/* Continuous Glass Tube Background (360°) */}
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+            stroke="#1a3c6e"
+            strokeWidth="4"
+            className="opacity-10"
+            filter="url(#ring-3d-stability)"
+          />
+
           {/* Progress Segments with Background Track */}
           {[...Array(12)].map((_, i) => {
             const segmentStartPercent = i * (100 / 12);
@@ -195,7 +274,7 @@ const StabilityGauge: React.FC<{
             
             return (
               <React.Fragment key={i}>
-                {/* Background Segment (Navy) */}
+                {/* Background Segment (Navy Glass Slot) - Now with 3D Effect */}
                 <circle
                   cx="50"
                   cy="50"
@@ -205,6 +284,8 @@ const StabilityGauge: React.FC<{
                   strokeWidth="4"
                   strokeDasharray={dashArray}
                   transform={`rotate(${i * 30}, 50, 50)`}
+                  filter="url(#ring-3d-stability)"
+                  className="opacity-30"
                 />
                 {/* Filled Segment (Palette) */}
                 {segmentProgress > 0 && (
@@ -214,10 +295,11 @@ const StabilityGauge: React.FC<{
                     r={radius}
                     fill="none"
                     stroke={OCEAN_PALETTE[i]}
-                    strokeWidth="5"
-                    strokeLinecap="butt"
+                    strokeWidth="5.5"
+                    strokeLinecap="round"
                     strokeDasharray={`${segmentProgress * segmentLengthInUnits} ${circumference}`}
                     transform={`rotate(${i * 30}, 50, 50)`}
+                    filter="url(#ring-3d-stability)"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5, delay: i * 0.05 }}
@@ -226,6 +308,26 @@ const StabilityGauge: React.FC<{
               </React.Fragment>
             );
           })}
+
+          {/* Enhanced Glass Gloss Overlay System */}
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+            stroke="url(#glass-grad-stability)"
+            strokeWidth="1.5"
+            className="pointer-events-none"
+          />
+          <circle
+            cx="50"
+            cy="50"
+            r={radius + 2}
+            fill="none"
+            stroke="rgba(255,255,255,0.05)"
+            strokeWidth="0.5"
+            className="pointer-events-none"
+          />
         </svg>
 
         {/* Central Text Overlay */}

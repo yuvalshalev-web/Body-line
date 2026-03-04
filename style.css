@@ -674,12 +674,29 @@ body.has-bottom-nav main {
 
 /* 2. Segmented Control */
 .gt-segmented {
-    font-size: 16px; display: inline-flex; padding: 0.3em;
-    background: var(--gt-off-bg); border: 1px solid var(--gt-border-soft);
-    border-radius: 0.8em; backdrop-filter: var(--gt-blur);
+    font-size: 16px; 
+    display: inline-flex; 
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.2); 
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px; 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
-.gt-segment-item { padding: 0.5em 1.2em; border-radius: 0.6em; color: #555; cursor: pointer; transition: 0.3s; }
-.gt-segment-item.active { background: var(--gt-accent); color: #fff; box-shadow: 0 2px 8px rgba(64, 224, 208, 0.3); }
+.gt-segment-item { 
+    padding: 8px 16px; 
+    border-radius: 999px; 
+    color: #64748b; 
+    cursor: pointer; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    background: transparent;
+}
+.gt-segment-item.active { 
+    background: var(--gt-accent); 
+    color: #fff; 
+    box-shadow: 0 4px 12px rgba(64, 224, 208, 0.4); 
+}
 
 /* 3. Slider (Range Input) */
 .gt-slider-input {

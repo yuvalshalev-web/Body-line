@@ -24,7 +24,9 @@ import {
   Sparkles,
   Loader2,
   Save,
-  AlertCircle
+  AlertCircle,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
@@ -266,14 +268,22 @@ const DirectoryPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
-            {/* View Mode Toggle - Turquoise Glassmorphism */}
-            <div className="gt-toggle-container bg-white/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/60 shadow-sm h-[48px]">
-              <span className={`gt-label label-list ${viewMode === 'list' ? 'active' : ''}`}>LIST</span>
-              <div 
-                className={`gt-toggle ${viewMode === 'grid' ? 'active' : ''}`}
-                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              />
-              <span className={`gt-label label-grid ${viewMode === 'grid' ? 'active' : ''}`}>GRID</span>
+            {/* View Mode Segmented Control - Turquoise Glassmorphism */}
+            <div className="gt-segmented bg-white/40 backdrop-blur-md border border-white/60 shadow-sm h-[48px] items-center">
+              <button 
+                onClick={() => setViewMode('grid')}
+                className={`gt-segment-item flex items-center gap-2 ${viewMode === 'grid' ? 'active' : ''} text-[10px] font-black uppercase tracking-widest`}
+              >
+                <LayoutGrid size={14} />
+                <span className="hidden sm:inline">Grid</span>
+              </button>
+              <button 
+                onClick={() => setViewMode('list')}
+                className={`gt-segment-item flex items-center gap-2 ${viewMode === 'list' ? 'active' : ''} text-[10px] font-black uppercase tracking-widest`}
+              >
+                <List size={14} />
+                <span className="hidden sm:inline">List</span>
+              </button>
             </div>
 
             <div className="relative flex-1 md:flex-none">
