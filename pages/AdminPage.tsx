@@ -1,5 +1,5 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-console.log('AdminPage module loading...');
 import { 
   Users, Archive, Mic, Image as ImageIcon, Calendar, Settings, UserCheck, ShieldAlert, Search, 
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 
@@ -888,7 +888,7 @@ const AdminPage: React.FC = () => {
                   {item.imageUrl && (
                     <img src={item.imageUrl} className="w-full h-40 object-cover rounded-xl mb-4" alt="" />
                   )}
-                  <h3 className="font-black text-lg text-slate-800 mb-2">{item.title}</h3>
+                  <h3 className="font-black text-lg text-[#2B2B2E] mb-2">{item.title}</h3>
                   <p className="text-slate-500 text-sm line-clamp-3 mb-4 flex-1">{item.content}</p>
                   
                   <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">

@@ -28,7 +28,7 @@ const SurferCardPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-[var(--spacing-md)] md:px-[var(--spacing-lg)] py-[var(--spacing-lg)] font-['Assistant']" dir="rtl">
       <div className="mb-[var(--spacing-lg)] text-center md:text-right">
-        <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
+        <h1 className="text-4xl md:text-5xl font-black text-[#2B2B2E] tracking-tighter leading-none">
           כרטיס הגולש שלי
         </h1>
         <p className="text-slate-400 font-bold mt-3 text-lg">
@@ -89,14 +89,13 @@ const SurferCardPage: React.FC = () => {
 
           return (
             <motion.div 
-              animate={{ background: `linear-gradient(135deg, ${theme.bg.split(' ')[1].replace('from-[', '').replace(']', '')}, ${theme.bg.split(' ')[theme.bg.split(' ').length-1].replace('to-[', '').replace(']', '')})` }}
-              className={`p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] text-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-1000 overflow-hidden relative border border-white/10`}
+              className="p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] bg-[#FDFBF7] text-[#2B2B2E] shadow-sm transition-all duration-1000 overflow-hidden relative border border-slate-100"
             >
               {/* Neumorphic Inner Shadow Overlay */}
-              <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(255,255,255,0.1)] pointer-events-none rounded-[var(--radius-lg)]" />
+              <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[var(--radius-lg)]" />
               
-              {/* Dark Overlay for depth */}
-              <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+              {/* Subtle background elements */}
+              <div className="absolute -right-20 -top-20 w-96 h-96 bg-slate-200/20 rounded-full blur-[120px] pointer-events-none" />
               
               {/* Decorative background elements */}
               <div className="absolute -right-20 -top-20 w-96 h-96 bg-white/5 rounded-full blur-[120px] pointer-events-none animate-pulse" />
@@ -149,11 +148,12 @@ const SurferCardPage: React.FC = () => {
                         אתה נמצא בדרגת <span className="text-[var(--gt-accent)]">{currentRank}</span>
                       </span>
                     </div>
-                    <h3 className="text-4xl md:text-6xl font-black mb-5 leading-none tracking-tighter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
-                      הדרך למקצוענות <br className="hidden md:block" /> מתחילה בהתמדה
+                    <h3 className="text-2xl md:text-[38px] font-black mb-5 leading-none tracking-tighter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] text-[#2B2B2E]">
+                      אנחנו לא מודדים הישגים. <br className="hidden md:block" /> אנחנו חוגגים נוכחות.
                     </h3>
-                    <p className="font-bold text-white/80 text-xl md:text-2xl leading-relaxed max-w-2xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
-                      התמדה היא המפתח לשיפור בים. ככל שתגיע ליותר סשנים, כך תעלה בדירוג הקהילה ותפתח יכולות חדשות.
+                    <p className="font-bold text-[#333333] text-sm md:text-lg leading-relaxed max-w-2xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
+                      גולשים נבנים מהתמדה, והים מתגמל מתמידים.<br />
+                      ככל שתגיע ליותר סשנים, תתקדם במסע שלך ותפתח עוד ועוד אפשרויות חדשות.
                     </p>
                   </div>
                 </div>
@@ -175,7 +175,7 @@ const SurferCardPage: React.FC = () => {
                       className="absolute top-0 flex flex-col items-center pointer-events-none z-20"
                       style={{ transform: 'translateX(-50%)' }}
                     >
-                      <span className="text-[10px] font-black text-white uppercase tracking-widest mb-0.5 drop-shadow-md">
+                      <span className="text-[10px] font-black text-[#2B2B2E] uppercase tracking-widest mb-0.5 drop-shadow-md">
                         מיקומך הנוכחי
                       </span>
                       <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-[var(--gt-accent)]" />
@@ -256,7 +256,7 @@ const SurferCardPage: React.FC = () => {
                             style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
                           >
                             <span className={`whitespace-nowrap text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-500 mb-1 ${
-                              isCurrent ? 'text-[var(--gt-accent)] opacity-100 scale-110' : 'text-white/40 opacity-60'
+                              isCurrent ? 'text-[var(--gt-accent)] opacity-100 scale-110' : 'text-[#2B2B2E] opacity-60'
                             }`}>
                               {rank.name}
                             </span>
@@ -295,7 +295,7 @@ const SurferCardPage: React.FC = () => {
                         {userData?.nextRankName ? userData.sessionsToNextRank : 'MAX'}
                       </span>
                       <span className="stat-label">
-                        {userData?.nextRankName ? `סשנים לדרגת ${userData.nextRankName}` : 'הגעת לפסגה'}
+                        {userData?.nextRankName ? `סשנים למעמד ${userData.nextRankName}` : 'הגעת לפסגה'}
                       </span>
                     </div>
                   </div>

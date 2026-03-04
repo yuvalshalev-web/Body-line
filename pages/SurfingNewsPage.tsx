@@ -248,7 +248,7 @@ const SurfingNewsPage: React.FC = () => {
                 <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8 text-slate-200">
                   <Newspaper size={48} />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900">לא נמצאו כתבות</h3>
+                <h3 className="text-2xl font-black text-[#2B2B2E]">לא נמצאו כתבות</h3>
                 <p className="text-slate-400 mt-2 font-medium">נסה לרענן את העמוד בעוד מספר דקות.</p>
               </div>
             )}

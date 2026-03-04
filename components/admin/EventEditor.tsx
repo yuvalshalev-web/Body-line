@@ -74,7 +74,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
         className="bg-[#FDFBF7] w-full max-w-2xl rounded-[3rem] shadow-2xl p-10 max-h-[90vh] overflow-y-auto border border-white/60"
       >
         <div className="flex items-center justify-between mb-8">
-          <h3 className="text-3xl font-black text-slate-800">עריכת אירוע</h3>
+          <h3 className="text-3xl font-black text-[#2B2B2E]">עריכת אירוע</h3>
           <button onClick={onClose} className="p-3 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-400 hover:text-rose-500 transition-all active:scale-95">
             <X size={24} />
           </button>
@@ -87,7 +87,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
+              className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
               placeholder="הכנס כותרת..."
             />
           </div>
@@ -97,7 +97,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
             <textarea 
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all h-32 resize-none shadow-sm"
+              className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all h-32 resize-none shadow-sm"
               placeholder="תאר את האירוע..."
             />
           </div>
@@ -109,7 +109,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
+                className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
               />
             </div>
             <div className="space-y-2">
@@ -118,7 +118,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
                 type="time"
                 value={form.time}
                 onChange={(e) => setForm({ ...form, time: e.target.value })}
-                className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
+                className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
               />
             </div>
           </div>
@@ -153,7 +153,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
               type="text"
               value={form.location}
               onChange={(e) => setForm({ ...form, location: e.target.value })}
-              className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
+              className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
               placeholder="איפה זה קורה?"
             />
           </div>
@@ -167,7 +167,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
                   <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                     <button 
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-8 py-4 bg-white text-slate-800 rounded-2xl font-black text-sm shadow-2xl flex items-center gap-3 active:scale-95 hover:bg-[#D4A373] hover:text-white transition-all"
+                      className="px-8 py-4 bg-white text-[#2B2B2E] rounded-2xl font-black text-sm shadow-2xl flex items-center gap-3 active:scale-95 hover:bg-[#D4A373] hover:text-white transition-all"
                     >
                       <Camera size={20} />
                       החלפת תמונת רקע

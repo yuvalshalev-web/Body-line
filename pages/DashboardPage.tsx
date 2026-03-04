@@ -234,7 +234,7 @@ const DashboardPage: React.FC = () => {
         ].map((card, i) => (
           <Link key={i} to={card.path} target={card.external ? "_blank" : undefined} className={`p-[var(--spacing-md)] rounded-[var(--radius-lg)] border border-slate-100 hover:shadow-xl transition-all flex flex-col items-center text-center ${card.color}`}>
             <card.icon size={28} className="mb-[var(--spacing-sm)]" />
-            <p className="text-3xl font-black text-slate-900 mb-1">{card.value}</p>
+            <p className="text-3xl font-black text-[#2B2B2E] mb-1">{card.value}</p>
             <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{card.label}</p>
           </Link>
         ))}
@@ -263,7 +263,7 @@ const DashboardPage: React.FC = () => {
                   <Calendar size={12} />
                   {randomPost.date}
                 </div>
-                <h4 className="text-xl font-black text-slate-900 mb-4 group-hover:text-rose-600 transition-colors line-clamp-2">{randomPost.title}</h4>
+                <h4 className="text-xl font-black text-[#2B2B2E] mb-4 group-hover:text-rose-600 transition-colors line-clamp-2">{randomPost.title}</h4>
                 <p className="text-slate-500 font-bold text-sm line-clamp-3 mb-6">{randomPost.content}</p>
                 <div className="mt-auto flex items-center gap-3">
                   {randomPost.authorAvatar ? (
@@ -293,7 +293,7 @@ const DashboardPage: React.FC = () => {
            </div>
            {randomQuotes.map((item, idx) => (
              <div key={idx} className="p-10 bg-slate-50 rounded-[2.5rem] transition-all animate-in fade-in">
-               <p className="text-2xl font-black text-slate-900 leading-tight italic">"{item.text}"</p>
+               <p className="text-2xl font-black text-[#2B2B2E] leading-tight italic">"{item.text}"</p>
                <p className="text-lg font-bold text-slate-400 italic mt-6">— {item.author}</p>
              </div>
            ))}
@@ -306,7 +306,7 @@ const DashboardPage: React.FC = () => {
            </div>
            {randomGlossary.map((item, idx) => (
              <div key={idx} className="p-10 bg-slate-50 rounded-[2.5rem] transition-all animate-in fade-in">
-               <h4 className="text-4xl font-black text-slate-900 mb-4" dir="ltr">{item.term}</h4>
+               <h4 className="text-4xl font-black text-[#2B2B2E] mb-4" dir="ltr">{item.term}</h4>
                <p className="text-xl font-bold text-slate-500 italic border-r-4 border-sky-100 pr-6">{item.definition}</p>
              </div>
            ))}
@@ -328,7 +328,7 @@ const DashboardPage: React.FC = () => {
                       </div>
                     )}
                     <div>
-                      <p className="font-black text-slate-900">{a.firstName} {a.lastName}</p>
+                      <p className="font-black text-[#2B2B2E]">{a.firstName} {a.lastName}</p>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{a.role === 'Admin' ? 'רכז' : 'חבר'}</p>
                     </div>
                   </div>

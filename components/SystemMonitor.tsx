@@ -320,7 +320,7 @@ const SystemMonitor: React.FC = () => {
         </PieChart>
       </ResponsiveContainer>
       <div className="absolute inset-0 flex flex-col items-center justify-center pt-10">
-        <span className="text-3xl font-black text-slate-900 tabular-nums">{value}%</span>
+        <span className="text-3xl font-black text-[#2B2B2E] tabular-nums">{value}%</span>
         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
         {sublabel && <span className="text-[8px] text-slate-300 mt-1">{sublabel}</span>}
       </div>
@@ -461,7 +461,7 @@ const SystemMonitor: React.FC = () => {
             
             <div className="p-8 space-y-6">
               <div className="space-y-4">
-                <p className="text-slate-900 font-black text-lg leading-tight">
+                <p className="text-[#2B2B2E] font-black text-lg leading-tight">
                   האם אתה בטוח שברצונך להשבית את מסד הנתונים?
                 </p>
                 <div className="bg-red-50 p-4 rounded-2xl border border-red-100 space-y-2">

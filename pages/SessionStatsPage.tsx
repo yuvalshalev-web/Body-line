@@ -600,7 +600,7 @@ const SessionStatsPage: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <p className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{stats.avgAttendance}</p>
+              <p className="text-4xl md:text-5xl font-black text-[#2B2B2E] leading-none">{stats.avgAttendance}</p>
             </div>
 
             <div className="flex-1 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
@@ -613,7 +613,7 @@ const SessionStatsPage: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <p className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{stats.totalAttendance}</p>
+              <p className="text-4xl md:text-5xl font-black text-[#2B2B2E] leading-none">{stats.totalAttendance}</p>
             </div>
 
             <div className={`flex-1 p-6 rounded-[2.5rem] border shadow-sm flex flex-col items-center justify-center text-center ${
@@ -724,7 +724,7 @@ const SessionStatsPage: React.FC = () => {
                       {stats.ageActivityData.map((row, idx) => (
                         <tr key={idx} className="hover:bg-slate-50 transition-colors">
                           <td className="p-5">
-                            <span className="text-sm font-black text-slate-900">{row.label}</span>
+                            <span className="text-sm font-black text-[#2B2B2E]">{row.label}</span>
                           </td>
                           <td className="p-5 text-center">
                             <span className={`text-sm font-black ${row.lastSession >= 80 ? 'text-emerald-600' : 'text-slate-500'}`}>{row.lastSession}%</span>
@@ -909,7 +909,7 @@ const SessionStatsPage: React.FC = () => {
       ) : (
         <div className="py-40 text-center bg-white rounded-[4rem] border-2 border-dashed border-slate-100">
           <BarChart3 size={64} className="mx-auto mb-8 text-slate-100" />
-          <h3 className="text-3xl font-black text-slate-900 mb-4">אין מספיק נתונים לניתוח</h3>
+          <h3 className="text-3xl font-black text-[#2B2B2E] mb-4">אין מספיק נתונים לניתוח</h3>
           <p className="text-slate-400 font-bold max-w-md mx-auto">
             כדי להציג את דף הניתוח, יש להזין סשנים במערכת החל מתאריך תחילת שנת חבל זוג ({yearConfig?.startDate || 'לא הוגדר'}).
           </p>

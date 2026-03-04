@@ -68,7 +68,7 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
           )}
         </div>
         <div className="text-center">
-          <p className="text-[10px] font-['Assistant'] font-black text-slate-800 truncate px-1">{member.firstName} {member.lastName}</p>
+          <p className="text-[10px] font-['Assistant'] font-black text-[#2B2B2E] truncate px-1">{member.firstName} {member.lastName}</p>
           <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}</p>
         </div>
       </div>
@@ -224,7 +224,7 @@ const DirectoryPage: React.FC = () => {
           </div>
 
           {/* Main Title */}
-          <h1 className="text-5xl md:text-7xl font-black text-slate-800 uppercase tracking-tighter">
+          <h1 className="text-5xl md:text-7xl font-black text-[#2B2B2E] uppercase tracking-tighter">
             נבחרת הכוכבים
           </h1>
 
@@ -259,7 +259,7 @@ const DirectoryPage: React.FC = () => {
              <input 
                type="text" 
                placeholder="חפש חבר בקהילה..." 
-               className="w-full pr-14 pl-6 py-3.5 bg-white/40 backdrop-blur-md border border-white/60 rounded-full font-bold text-slate-800 outline-none focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all shadow-sm text-base placeholder:text-slate-400"
+               className="w-full pr-14 pl-6 py-3.5 bg-white/40 backdrop-blur-md border border-white/60 rounded-full font-bold text-[#2B2B2E] outline-none focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all shadow-sm text-base placeholder:text-slate-400"
                value={searchTerm}
                onChange={e => setSearchTerm(e.target.value)}
              />
@@ -310,7 +310,7 @@ const DirectoryPage: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover border border-white/40" alt="" />
                         <div>
-                          <p className="font-black text-slate-800">{member.firstName} {member.lastName}</p>
+                          <p className="font-black text-[#2B2B2E]">{member.firstName} {member.lastName}</p>
                           <p className="text-[10px] text-slate-400 uppercase tracking-widest">{member.role}</p>
                         </div>
                       </div>
@@ -337,7 +337,7 @@ const DirectoryPage: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover border border-white/40" alt="" />
                         <div>
-                          <p className="font-black text-slate-800">{member.firstName} {member.lastName}</p>
+                          <p className="font-black text-[#2B2B2E]">{member.firstName} {member.lastName}</p>
                           <p className="text-[10px] text-slate-400 uppercase tracking-widest">{member.role}</p>
                         </div>
                       </div>
@@ -364,7 +364,7 @@ const DirectoryPage: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover border border-white/40" alt="" />
                         <div>
-                          <p className="font-black text-slate-800">{member.firstName} {member.lastName}</p>
+                          <p className="font-black text-[#2B2B2E]">{member.firstName} {member.lastName}</p>
                           <p className="text-[10px] text-slate-400 uppercase tracking-widest">{member.role}</p>
                         </div>
                       </div>
@@ -400,7 +400,7 @@ const DirectoryPage: React.FC = () => {
                   <div className="h-px w-12 bg-[#D4A373]"></div>
                   <span className="text-[10px] font-black text-[#D4A373] uppercase tracking-[0.4em]">Member Profile</span>
                 </div>
-                <h3 className="text-6xl font-black text-slate-800 tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
+                <h3 className="text-6xl font-black text-[#2B2B2E] tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
              </div>
           </div>
 
@@ -411,15 +411,15 @@ const DirectoryPage: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</p>
-                  <p className="text-lg font-black text-slate-800">{selectedMember.role}</p>
+                  <p className="text-lg font-black text-[#2B2B2E]">{selectedMember.role}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sessions</p>
-                  <p className="text-lg font-black text-slate-800">{selectedMember.totalAttendance || 0}</p>
+                  <p className="text-lg font-black text-[#2B2B2E]">{selectedMember.totalAttendance || 0}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Joined</p>
-                  <p className="text-lg font-black text-slate-800">{formatDate(selectedMember.joinedAt)}</p>
+                  <p className="text-lg font-black text-[#2B2B2E]">{formatDate(selectedMember.joinedAt)}</p>
                 </div>
               </div>
 
@@ -435,14 +435,14 @@ const DirectoryPage: React.FC = () => {
                    <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-[#D4A373] shadow-sm transition-colors"><Phone size={24} /></div>
                    <div>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Mobile</p>
-                      <p className="text-xl font-black text-slate-800">{selectedMember.mobile}</p>
+                      <p className="text-xl font-black text-[#2B2B2E]">{selectedMember.mobile}</p>
                    </div>
                 </div>
                 <div className="p-8 bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 flex items-center gap-6 group hover:bg-white/60 hover:shadow-xl transition-all duration-500">
                    <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-[#D4A373] shadow-sm transition-colors"><Mail size={24} /></div>
                    <div className="overflow-hidden">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Email</p>
-                      <p className="text-xl font-black text-slate-800 truncate">{selectedMember.email}</p>
+                      <p className="text-xl font-black text-[#2B2B2E] truncate">{selectedMember.email}</p>
                    </div>
                 </div>
               </div>
@@ -507,7 +507,7 @@ const DirectoryPage: React.FC = () => {
                     <Plus size={24} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-slate-800 tracking-tighter">הוספת חבר חדש</h3>
+                    <h3 className="text-2xl font-black text-[#2B2B2E] tracking-tighter">הוספת חבר חדש</h3>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">יצירת פרופיל משתמש ידני</p>
                   </div>
                 </div>

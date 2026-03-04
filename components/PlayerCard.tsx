@@ -51,10 +51,13 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
     const allAges = members
       .map(m => m.birthday ? calculateAge(m.birthday) : null)
       .filter((age): age is number => age !== null)
-      .sort((a, b) => a - b);
+      .sort((a, b) => a - b); // Sorted youngest to oldest
 
     if (allAges.length === 0) return null;
 
+    // Find index of user's age. 
+    // If index is 0, they are the youngest (0th percentile).
+    // If index is length-1, they are the oldest (100th percentile).
     const index = allAges.indexOf(userAge);
     const percentile = (index / (allAges.length - 1)) * 100;
     const roundedPercentile = Math.round(percentile);
@@ -74,14 +77,14 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
       label = `גולש צעיר: יש לך עוד המון גלים לכבוש, אתה צעיר יותר מ-${100 - roundedPercentile}% מהקהילה`;
     }
 
-    return { percentile, label, badge };
+    return { percentile, roundedPercentile, label, badge };
   }, [member, members]);
 
   if (isLoading) return <div className="p-4 bg-white rounded-2xl border border-slate-100 animate-pulse">טוען...</div>;
   if (!member || !stats) return null;
 
   return (
-    <div className="bg-white p-[var(--spacing-md)] rounded-[var(--radius-lg)] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
+    <div className="bg-[#FDFBF7] p-[var(--spacing-md)] rounded-[var(--radius-lg)] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
       {/* Background Accent */}
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-[var(--ocean-liquid)]/5 rounded-full blur-3xl -z-10" />
       
@@ -104,9 +107,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
       <div className="flex-1 text-center md:text-right">
         <div className="flex flex-col gap-2 mb-3">
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-3xl font-black text-[#2B2B2E] tracking-tight">
             {member.firstName} {member.lastName}
           </h2>
+          <div className="flex items-center justify-center md:justify-start gap-4 text-slate-400 font-bold text-sm mb-1">
+            <span className="flex items-center gap-1"><Calendar size={14} /> הצטרף ב-{stats.joiningDate}</span>
+          </div>
           <div className="flex flex-wrap gap-2 justify-center md:justify-start">
             <span className="inline-flex px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100 shadow-sm">
               מעמד: {stats.rank}
@@ -123,50 +129,67 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             </span>
           </div>
         </div>
-        
-        <div className="flex items-center justify-center md:justify-start gap-4 text-slate-400 font-bold text-sm">
-          <span className="flex items-center gap-1"><Calendar size={14} /> הצטרף ב-{stats.joiningDate}</span>
-          <span className="w-1 h-1 bg-slate-200 rounded-full" />
-          <span className="px-2 py-0.5 bg-slate-100 rounded-full text-[10px] uppercase tracking-widest">
-            {member.role === 'Admin' ? 'מנהל' : 'חבר'}
-          </span>
-        </div>
 
         {/* Age Percentile Indicator */}
         {agePercentile && (
-          <div className="mt-4 max-w-xs mx-auto md:mx-0" dir="ltr">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">אחוזון גיל</span>
-            </div>
-            <div className="progress-container relative w-full mb-8">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `calc((100% - 8px) * ${agePercentile.percentile / 100})` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                className="progress-fill"
-                style={{ background: 'linear-gradient(90deg, var(--sand-deep), var(--sand-light))' }}
-              />
+          <div className="mt-2 max-w-xs mx-auto md:mx-0 flex flex-col items-center md:items-start" dir="ltr">
+            {/* New Age Gimmick Container */}
+            <div 
+              className="age-gimmick-card w-full max-w-[310px] mx-auto md:mx-0" 
+              dir="rtl"
+              onClick={(e) => {
+                const dot = e.currentTarget.querySelector('.user-pulse-dot');
+                if (dot) {
+                  dot.classList.remove('bounce-animation');
+                  void (dot as HTMLElement).offsetWidth; // Trigger reflow
+                  dot.classList.add('bounce-animation');
+                }
+              }}
+            >
+              <div id="funny-title" style={{ fontSize: '15px', color: '#8b795e', marginBottom: '5px', fontWeight: 700 }}>
+                מדד ה-Vintage 🍷
+              </div>
               
-              {/* Floating Marker */}
-              <motion.div
-                initial={{ left: '4px', opacity: 0 }}
-                animate={{ left: `calc(4px + (100% - 8px) * ${agePercentile.percentile / 100})`, opacity: 1 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                className="absolute top-0 h-full flex flex-col items-center"
-                style={{ transform: 'translateX(-50%)' }}
-              >
-                <div className="absolute -top-8 flex flex-col items-center">
-                  <span 
-                    className="text-[10px] font-black bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm border border-slate-100 whitespace-nowrap"
-                    style={{ color: `hsl(190, 100%, ${Math.max(15, 50 - (agePercentile.percentile * 0.35))}%)` }}
-                  >
-                    {Math.round(agePercentile.percentile)}%
+              <div className="indicator-wrapper">
+                <span id="startIcon" className="endpoint-icon">👓</span>
+                <div className="age-line-container">
+                  <span id="centerIcon" className="center-icon">
+                    {member.gender === 'נקבה' ? '👑' : '🐂'}
                   </span>
-                  <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-slate-200" />
+                  <div 
+                    id="userDot" 
+                    className="user-pulse-dot"
+                    style={{ 
+                      left: `${agePercentile.roundedPercentile}%`,
+                      background: member.gender === 'נקבה' 
+                        ? (agePercentile.roundedPercentile < 25 ? '#fefae0' : agePercentile.roundedPercentile < 50 ? '#faedcd' : agePercentile.roundedPercentile <= 60 ? '#d4a373' : '#ccd5ae')
+                        : '#d4a373'
+                    }}
+                  ></div>
                 </div>
-              </motion.div>
+                <span id="endIcon" className="endpoint-icon">
+                  {member.gender === 'נקבה' ? '🐥' : '🍼'}
+                </span>
+              </div>
+              
+              <div id="dynamicComment" className="dynamic-comment">
+                {(() => {
+                  const p = agePercentile.roundedPercentile;
+                  if (member.gender === 'נקבה') {
+                    if (p < 25) return <span>עוד לא התייבש לך החלב על השפתיים, <strong>אפרוחית</strong>! 🐥</span>;
+                    if (p < 50) return <span>את <strong>פרגית</strong> צעירה, תהני! 🐔</span>;
+                    if (p <= 60) return <span>מזל טוב, את <strong>מלכת הלול</strong>! 👑✨</span>;
+                    return <span><strong>מגה גלופלקס</strong>, לקחת? 🦯</span>;
+                  } else {
+                    if (p < 25) return <span>עוד לא התייבש לך החלב על השפתיים 🍼</span>;
+                    if (p < 50) return <span>אתה <strong>עגל צעיר</strong>, תהנה 🐮</span>;
+                    if (p <= 60) return <span>מזל טוב, אתה <strong>שור אמיתי</strong>! 🐂</span>;
+                    return <span><strong>מגה גלופלקס</strong>, לקחת? 🦯</span>;
+                  }
+                })()}
+              </div>
+              <div style={{ fontSize: '9px', opacity: 0.5, marginTop: '10px' }}>(לחצי עליי לסיבוב דאווין)</div>
             </div>
-            <p className="text-[10px] text-slate-400 font-bold -mt-4 text-center w-full">{agePercentile.label}</p>
           </div>
         )}
 

@@ -180,7 +180,7 @@ const TrendsDashboard: React.FC = () => {
               <Activity size={24} />
             </div>
             <div>
-              <h3 className="text-xl font-black text-slate-800 tracking-tight">דשבורד טרנדים והתמדה</h3>
+              <h3 className="text-xl font-black text-[#2B2B2E] tracking-tight">דשבורד טרנדים והתמדה</h3>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ניתוח שנת חבל זוג • 7 קבוצות מיקוד</p>
             </div>
           </div>
@@ -324,7 +324,7 @@ const TrendsDashboard: React.FC = () => {
             {groups.map(group => (
               <div key={group.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-soft h-[250px] flex flex-col">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">{group.label}</h4>
+                  <h4 className="text-xs font-black text-[#2B2B2E] uppercase tracking-widest">{group.label}</h4>
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.color }} />
                 </div>
                 <div className="flex-1">

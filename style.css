@@ -98,6 +98,91 @@ body {
   100% { box-shadow: 0 0 0 0 rgba(64, 224, 208, 0); }
 }
 
+/* עיצוב המיכל (Glassmorphism) */
+.age-gimmick-card {
+  width: 310px;
+  padding: 15px;
+  background: rgba(245, 245, 220, 0.15);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 10px 30px rgba(139, 121, 94, 0.2);
+  text-align: center;
+  color: #5d5747;
+  font-family: system-ui, -apple-system, sans-serif;
+  direction: rtl;
+  cursor: pointer; /* מסמן שניתן ללחוץ */
+  user-select: none;
+  transition: transform 0.2s;
+}
+
+.age-gimmick-card:active {
+  transform: scale(0.98); /* תחושת לחיצה על כל הכרטיס */
+}
+
+/* שורת האינדיקטור עם האייקונים */
+.indicator-wrapper {
+  display: flex;
+  align-items: center;
+  margin: 15px 0;
+}
+
+.endpoint-icon {
+  font-size: 18px;
+  opacity: 0.8;
+}
+
+.age-line-container {
+  flex-grow: 1;
+  height: 5px;
+  background: rgba(139, 121, 94, 0.2);
+  margin: 0 15px;
+  position: relative;
+  border-radius: 10px;
+}
+
+.center-icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  z-index: 1;
+}
+
+/* הנקודה המנצנצת */
+.user-pulse-dot {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  z-index: 2;
+  transition: left 1s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s;
+  box-shadow: 0 0 10px rgba(212, 163, 115, 0.5);
+}
+
+/* אנימציית הקפיצה (תופעל ע"י JS) */
+.bounce-animation {
+  animation: dotBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes dotBounce {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  30% { transform: translate(-50%, -50%) scale(1.6); }
+  50% { transform: translate(-50%, -50%) scale(0.8); }
+}
+
+.dynamic-comment {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #6b6354;
+  min-height: 20px;
+}
+
 .animate-pulse-turquoise {
   animation: pulse-turquoise 2s infinite;
 }
@@ -688,7 +773,73 @@ body.has-bottom-nav main {
     border-color: var(--gt-accent);
 }
 
-/* --- אובייקטים חדשים (7-11) --- */
+/* --- שדרוג ה-Radar Chart למראה 3D ו-Glassmorphism (Sand Theme) --- */
+
+/* 1. מכולה ראשית - הוספת עומק ופרוספקטיבה (3D Perspective) */
+.radar-chart-container {
+    display: block !important;
+    position: relative !important;
+    padding: 40px !important;
+    border-radius: 30px !important;
+    
+    /* אפקט Glassmorphism */
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px);
+    border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
+    
+    /* אפקט עומק (3D) */
+    perspective: 1200px !important;
+    transform: rotateX(15deg) rotateY(-8deg) !important;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4) !important;
+    
+    transition: transform 0.6s ease;
+}
+
+/* 2. הרקע של הגרף - אפקט Glassmorphism */
+.radar-grid-lines-background {
+    background: rgba(245, 230, 211, 0.2); /* Sand light with transparency */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 1px solid rgba(176, 137, 104, 0.2); /* Sand deep with transparency */
+    box-shadow: 0 8px 32px 0 rgba(176, 137, 104, 0.15);
+    
+    /* אפקט תלת-מימדי - הטיה קלה */
+    transform: rotateX(10deg) rotateY(-5deg);
+    transition: transform 0.3s ease;
+}
+
+/* אפקט Hover - הגרף 'מזדקר' כשעוברים מעליו */
+.radar-grid-lines-background:hover {
+    transform: rotateX(0deg) rotateY(0deg) translateZ(10px);
+}
+
+/* 3. אזור הנתונים המלא (הצורה הפנימית) - שדרוג למראה 'זוהר' */
+.radar-chart-area {
+    fill: rgba(176, 137, 104, 0.2); /* Sand deep transparent */
+    stroke: #B08968; /* Sand deep */
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 8px rgba(176, 137, 104, 0.5));
+    
+    /* הפיכת הצורה לתלת-מימדית */
+    transform: translateZ(20px);
+}
+
+/* 4. קווי הרשת הפנימיים - עדינים יותר */
+.radar-grid-lines {
+    stroke: rgba(176, 137, 104, 0.3); /* Sand deep transparent */
+    stroke-dasharray: 5;
+}
+
+/* 5. הנקודות בפינות (Data Markers) - נקודות אור */
+.radar-chart-vertex {
+    fill: #F5E6D3; /* Sand light */
+    stroke: #B08968; /* Sand deep */
+    stroke-width: 2px;
+    r: 5px;
+    filter: drop-shadow(0 0 5px rgba(176, 137, 104, 0.6));
+}
 
 /* 7. שדה טקסט (Input Field) */
 .gt-input {
@@ -782,7 +933,7 @@ body.has-bottom-nav main {
     border-radius: 10px;
     padding: 10px;
     position: absolute;
-    z-index: 100;
+    z-index: 9999;
     bottom: 140%; /* מרחק מהאייקון */
     left: 50%;
     transform: translateX(-50%);
@@ -796,6 +947,20 @@ body.has-bottom-nav main {
 .gt-info-wrapper:hover .gt-tooltip {
     visibility: visible;
     animation: tooltipFadeIn 0.3s ease-out forwards;
+}
+
+.gauge-container {
+    position: relative;
+}
+
+.gauge-container::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border: 8px dashed #1d3557; /* צבע כחול כהה לשנתות */
+    border-radius: 50%;
+    pointer-events: none;
+    box-sizing: border-box;
 }
 
 /* הוספת חץ קטן בתחתית ה-Tooltip */

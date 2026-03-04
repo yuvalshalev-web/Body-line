@@ -239,7 +239,7 @@ const EventsPage: React.FC = () => {
                 </div>
               </div>
               <div className="p-8 flex-1 flex flex-col">
-                <h3 className="text-2xl font-black text-slate-900 mb-4 group-hover:text-rose-600 transition-colors">{event.title}</h3>
+                <h3 className="text-2xl font-black text-[#2B2B2E] mb-4 group-hover:text-rose-600 transition-colors">{event.title}</h3>
                 <p className="text-slate-500 font-bold text-sm mb-8 line-clamp-3">{event.description}</p>
                 <div className="space-y-4 mb-8">
                   <div className="flex items-center gap-3 text-slate-600">

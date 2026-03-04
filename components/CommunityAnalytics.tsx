@@ -1120,7 +1120,7 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
           {/* Etched Scale (0-100) */}
           <div className="absolute left-1.5 top-0 bottom-0 flex flex-col justify-between py-2 opacity-30 pointer-events-none">
             {[100, 75, 50, 25, 0].map(n => (
-              <span key={n} className="text-[7px] font-mono font-bold text-slate-800 leading-none">{n}</span>
+              <span key={n} className="text-[7px] font-mono font-bold text-[#2B2B2E] leading-none">{n}</span>
             ))}
           </div>
 
@@ -1184,7 +1184,7 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
       <div className="relative z-20 mt-1">
         <div className="relative inline-block">
           <span 
-            className="text-4xl font-black text-slate-800 tracking-tighter"
+            className="text-4xl font-black text-[#2B2B2E] tracking-tighter"
             style={{ 
               textShadow: '0 3px 6px rgba(0,0,0,0.1)',
             }}

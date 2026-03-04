@@ -100,7 +100,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
       <div className="flex flex-col items-center text-center mb-12 space-y-4">
         <button 
           onClick={onClose}
-          className="absolute top-8 right-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black transition-all group"
+          className="absolute top-8 right-8 flex items-center gap-2 text-slate-400 hover:text-[#2B2B2E] font-black transition-all group"
         >
           <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" /> 
           <span>חזרה</span>
@@ -111,7 +111,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           <span>USER PROFILE</span>
         </div>
 
-        <h1 className="text-4xl md:text-5xl font-black text-slate-800 uppercase tracking-tighter">
+        <h1 className="text-4xl md:text-5xl font-black text-[#2B2B2E] uppercase tracking-tighter">
           עריכת משתמש
         </h1>
 
@@ -217,7 +217,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
             }`}>
               <div className="flex flex-col gap-4">
                 <div className="flex justify-between items-center">
-                  <h3 className={`font-black text-sm transition-colors ${editingMember.isActive !== false ? 'text-slate-800' : 'text-rose-600'}`}>
+                  <h3 className={`font-black text-sm transition-colors ${editingMember.isActive !== false ? 'text-[#2B2B2E]' : 'text-rose-600'}`}>
                     סטטוס חשבון במערכת
                   </h3>
                   <span className={`text-[9px] px-3 py-1 rounded-full uppercase tracking-widest font-black ${
@@ -282,7 +282,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="text"
               value={editingMember.firstName || ''}
               onChange={(e) => setEditingMember({ ...editingMember, firstName: e.target.value })}
-              className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none shadow-sm"
+              className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none shadow-sm"
             />
           </div>
 
@@ -292,7 +292,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="text"
               value={editingMember.lastName || ''}
               onChange={(e) => setEditingMember({ ...editingMember, lastName: e.target.value })}
-              className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none shadow-sm"
+              className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none shadow-sm"
             />
           </div>
 
@@ -302,7 +302,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="email"
               value={editingMember.email}
               onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
-              className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none shadow-sm"
+              className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none shadow-sm"
             />
           </div>
         </div>
@@ -314,7 +314,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               <button 
                 type="button"
                 onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none flex items-center justify-between group shadow-sm"
+                className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none flex items-center justify-between group shadow-sm"
               >
                 <span>{editingMember.gender || 'בחר מגדר'}</span>
                 <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
@@ -358,7 +358,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="text"
               value={editingMember.mobile}
               onChange={(e) => setEditingMember({ ...editingMember, mobile: formatMobileNumber(e.target.value) })}
-              className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all text-left outline-none shadow-sm"
+              className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all text-left outline-none shadow-sm"
               dir="ltr"
             />
           </div>
@@ -371,7 +371,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 type="date"
                 value={editingMember.birthday || ''}
                 onChange={(e) => setEditingMember({ ...editingMember, birthday: e.target.value })}
-                className="w-full pr-14 pl-6 py-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none cursor-pointer shadow-sm"
+                className="w-full pr-14 pl-6 py-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none cursor-pointer shadow-sm"
               />
             </div>
           </div>
@@ -382,14 +382,14 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           <textarea 
             value={editingMember.bio}
             onChange={(e) => setEditingMember({ ...editingMember, bio: e.target.value })}
-            className="w-full p-6 bg-white/40 backdrop-blur-md border border-white/60 rounded-[2rem] font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all min-h-[120px] outline-none shadow-sm"
+            className="w-full p-6 bg-white/40 backdrop-blur-md border border-white/60 rounded-[2rem] font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all min-h-[120px] outline-none shadow-sm"
             placeholder="ספר קצת על עצמך..."
           />
         </div>
 
         {/* Social Networks */}
         <div className="md:col-span-2 pt-12 border-t border-white/60">
-          <h4 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-3">
+          <h4 className="text-xl font-black text-[#2B2B2E] mb-8 flex items-center gap-3">
             <Globe size={20} className="text-[#D4A373]" />
             רשתות חברתיות
           </h4>
@@ -412,7 +412,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                   value={(editingMember as any)[social.id] || ''}
                   onChange={(e) => setEditingMember({ ...editingMember, [social.id]: e.target.value })}
                   placeholder={social.placeholder}
-                  className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-slate-800 focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all text-left outline-none shadow-sm"
+                  className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all text-left outline-none shadow-sm"
                   dir="ltr"
                 />
               </div>
@@ -465,7 +465,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 });
               }}
               disabled={isProcessing}
-              className="flex-1 py-6 bg-white/40 backdrop-blur-md border border-white/60 text-slate-600 hover:text-slate-800 hover:bg-white/60 rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 shadow-lg"
+              className="flex-1 py-6 bg-white/40 backdrop-blur-md border border-white/60 text-slate-600 hover:text-[#2B2B2E] hover:bg-white/60 rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 shadow-lg"
             >
               <Archive size={24} /> ארכיון
             </button>
@@ -475,7 +475,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
             <button 
               type="button" 
               onClick={() => setShowPasswordModal(true)}
-              className="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-bold transition-colors"
+              className="flex items-center gap-2 text-slate-500 hover:text-[#2B2B2E] font-bold transition-colors"
             >
               <Key size={16} />
               <span>החלפת סיסמה למשתמש</span>
@@ -503,7 +503,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               >
                 <div className="p-8">
                   <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                    <h3 className="text-2xl font-black text-[#2B2B2E] flex items-center gap-3">
                       <Key className="text-indigo-500" />
                       החלפת סיסמה
                     </h3>

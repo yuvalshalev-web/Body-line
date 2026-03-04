@@ -29,7 +29,7 @@ const SurfQuoteWidget: React.FC = () => {
         </div>
 
         <div className={`transition-all duration-500 transform ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
-          <h3 className="text-3xl md:text-4xl font-black text-slate-900 leading-tight italic font-['Frank_Ruhl_Libre'] tracking-tight">
+          <h3 className="text-3xl md:text-4xl font-black text-[#2B2B2E] leading-tight italic font-['Frank_Ruhl_Libre'] tracking-tight">
             "{quote.text}"
           </h3>
           <div className="flex items-center justify-center gap-4 mt-8">
@@ -42,7 +42,7 @@ const SurfQuoteWidget: React.FC = () => {
         <div className="pt-6">
           <button 
             onClick={handleRefresh}
-            className="group/btn flex items-center gap-3 px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs shadow-lg hover:shadow-xl hover:bg-slate-50 transition-all active:scale-95"
+            className="group/btn flex items-center gap-3 px-8 py-4 bg-white text-[#2B2B2E] rounded-2xl font-black text-xs shadow-lg hover:shadow-xl hover:bg-slate-50 transition-all active:scale-95"
           >
             <RefreshCw 
               size={18} 

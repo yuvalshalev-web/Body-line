@@ -184,7 +184,7 @@ const GalleryPage: React.FC = () => {
               ) : (
                 <Loader2 className="animate-spin text-indigo-500" size={24} />
               )}
-              <span className={`font-black ${errorMsg ? 'text-rose-700' : 'text-slate-900'}`}>
+              <span className={`font-black ${errorMsg ? 'text-rose-700' : 'text-[#2B2B2E]'}`}>
                 {errorMsg || uploadStatus}
               </span>
             </div>

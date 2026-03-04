@@ -237,7 +237,7 @@ const ProfilePage: React.FC = () => {
               </label>
             </div>
             <div className="flex-1 mb-4 text-center md:text-right">
-               <h3 className="text-4xl font-black text-slate-900 tracking-tight mb-2">{formData.firstName} {formData.lastName}</h3>
+               <h3 className="text-4xl font-black text-[#2B2B2E] tracking-tight mb-2">{formData.firstName} {formData.lastName}</h3>
                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{formData.role === 'Admin' ? 'רכז מערכת' : 'חבר נבחרת'}</p>
             </div>
           </div>
@@ -406,7 +406,7 @@ const ProfilePage: React.FC = () => {
             >
               <div className="p-8">
                 <div className="flex justify-between items-center mb-8">
-                  <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                  <h3 className="text-2xl font-black text-[#2B2B2E] flex items-center gap-3">
                     <Key className="text-indigo-500" />
                     החלפת סיסמה
                   </h3>

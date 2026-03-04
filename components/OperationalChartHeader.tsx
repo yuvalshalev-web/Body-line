@@ -31,7 +31,7 @@ const OperationalChartHeader: React.FC<OperationalChartHeaderProps> = ({
               {isActive ? 'פעיל' : 'לא פעיל'}
             </span>
           </div>
-          <h3 className="text-lg font-black text-slate-800 tracking-tight">
+          <h3 className="text-lg font-black text-[#2B2B2E] tracking-tight">
             טווח: {startDate} — {endDate}
           </h3>
         </div>
@@ -57,7 +57,7 @@ const OperationalChartHeader: React.FC<OperationalChartHeaderProps> = ({
         </div>
         <div>
           <p className="text-xs font-medium text-slate-600 leading-relaxed">
-            <span className="font-black text-slate-800">מקרא:</span> חודש (n) מציין את חודש הפעילות מתחילת השנה התפעולית. 
+            <span className="font-black text-[#2B2B2E]">מקרא:</span> חודש (n) מציין את חודש הפעילות מתחילת השנה התפעולית. 
             הציר מציג חודשים יחסיים לנוחות השוואה תפעולית ודיוק בביצועים.
           </p>
         </div>

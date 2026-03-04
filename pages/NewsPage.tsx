@@ -164,7 +164,7 @@ const NewsPage: React.FC = () => {
                 <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle2 size={48} className="text-emerald-500" />
                 </div>
-                <h3 className="text-4xl font-black text-slate-900">פורסם!</h3>
+                <h3 className="text-4xl font-black text-[#2B2B2E]">פורסם!</h3>
               </div>
             ) : (
               <form onSubmit={handlePostSubmit} className="space-y-6">

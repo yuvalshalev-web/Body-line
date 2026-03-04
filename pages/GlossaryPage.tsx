@@ -102,7 +102,7 @@ const GlossaryPage: React.FC = () => {
               <Sparkles className="text-indigo-100 group-hover:text-indigo-500 transition-colors" size={20} />
             </div>
 
-            <h3 className="text-3xl font-black text-slate-900 mb-6 group-hover:text-sky-600 transition-colors leading-tight">
+            <h3 className="text-3xl font-black text-[#2B2B2E] mb-6 group-hover:text-sky-600 transition-colors leading-tight">
               {item.term}
             </h3>
 
@@ -123,7 +123,7 @@ const GlossaryPage: React.FC = () => {
             <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center mb-8 text-slate-200 shadow-xl">
               <Search size={48} />
             </div>
-            <h3 className="text-3xl font-black text-slate-900 mb-2">לא מצאנו את המונח הזה...</h3>
+            <h3 className="text-3xl font-black text-[#2B2B2E] mb-2">לא מצאנו את המונח הזה...</h3>
             <p className="text-slate-400 font-bold italic">אולי הוא עוד לא נכנס לליין-אפ שלנו.</p>
           </div>
         )}
