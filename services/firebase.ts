@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore, getDocs, Query, QuerySnapshot } from 'firebase/firestore';
+import { getFirestore, getDocs, Query, QuerySnapshot } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { trackBandwidth } from '../utils/bandwidthTracker';
 
@@ -15,9 +15,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true,
-});
+const db = getFirestore(app);
 
 const auth = getAuth(app);
 const storage = getStorage(app);

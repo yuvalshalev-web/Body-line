@@ -719,9 +719,51 @@ body.has-bottom-nav main {
   padding-bottom: 100px !important;
 }
 
-/* ============================================================
-   TURQUOISE GLASSMORPHISM SYSTEM (gt-)
-   ============================================================ */
+/* Darts Board Styles */
+.darts-wrapper {
+    background: radial-gradient(circle, #001d3d 0%, #000814 100%); /* רקע עמוק כמו הים */
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px); /* אפקט זכוכית */
+    display: inline-block;
+    color: #fff;
+    font-family: 'Assistant', sans-serif;
+}
+
+/* כותרת הלוח */
+.darts-wrapper h4 {
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #00fbff; /* צבע ניאון גלישתי */
+    text-shadow: 0 0 10px rgba(0, 251, 255, 0.5);
+}
+
+/* ה-Canvas עצמו */
+#dartsBoard {
+    cursor: crosshair;
+    filter: drop-shadow(0 0 15px rgba(0, 123, 255, 0.3));
+}
+
+/* תווית הצפה (Tooltip) מעוצבת */
+#darts-tooltip {
+    background: rgba(0, 8, 20, 0.9);
+    border: 1px solid #00fbff;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 0 15px rgba(0, 251, 255, 0.3);
+    font-weight: 600;
+    transition: all 0.1s ease-out;
+}
+
+/* אפקט הילה לחבר חדש - אנימציה */
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+}
 
 :root {
     --gt-accent: #40E0D0;

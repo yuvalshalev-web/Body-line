@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { 
   LineChart, 
   Line, 
@@ -19,14 +19,150 @@ import { useData } from '../../contexts/DataContext';
 import { Activity, LayoutGrid, Maximize2 } from 'lucide-react';
 import { getOperationalXAxisProps } from '../../src/utils/chartHelpers';
 import OperationalChartHeader from '../OperationalChartHeader';
+import { calculateDistance } from '../../utils/distanceCalculator';
 
 const TrendsDashboard: React.FC = () => {
-  const { members, weeklyHistory, yearConfig } = useData();
+  const { members, weeklyHistory, yearConfig, siteAssets, siteConfig } = useData();
   const [viewMode, setViewMode] = useState<'unified' | 'split'>(() => {
     const saved = localStorage.getItem('trendsViewMode');
     return (saved as any) || 'unified';
   });
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!members || members.length === 0 || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const maxRadius = 140; // רדיוס הטבעת החיצונית
+
+    // Home Break Coords
+    const homeLat = siteConfig.home_break?.lat;
+    const homeLng = siteConfig.home_break?.lng;
+
+    // Load Logo
+    const logoImg = new Image();
+    logoImg.src = siteAssets?.logo || 'https://cdn-icons-png.flaticon.com/512/3144/3144456.png'; // Fallback to a generic surf icon if no logo
+
+    const render = () => {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1. ציור הטבעות (המרחקים)
+      const rings = [
+          { r: maxRadius, color: '#f1f3f5', label: '20+ ק"מ' }, // חיצונית
+          { r: maxRadius * 0.7, color: '#dee2e6', label: '10 ק"מ' },
+          { r: maxRadius * 0.4, color: '#ced4da', label: '5 ק"מ' },
+          { r: maxRadius * 0.15, color: 'transparent', label: 'Local' } // בולזאיי - שקוף כי נשים לוגו
+      ];
+
+      rings.forEach(ring => {
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, ring.r, 0, Math.PI * 2);
+          ctx.fillStyle = ring.color;
+          ctx.fill();
+          ctx.strokeStyle = '#fff';
+          ctx.stroke();
+      });
+
+      // Draw Logo in center
+      if (logoImg.complete) {
+        const logoSize = 40;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(logoImg, centerX - logoSize / 2, centerY - logoSize / 2, logoSize, logoSize);
+        ctx.restore();
+        
+        // Logo border
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
+        ctx.strokeStyle = '#007bff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        // Fallback blue dot if logo not loaded
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, maxRadius * 0.15, 0, Math.PI * 2);
+        ctx.fillStyle = '#007bff';
+        ctx.fill();
+      }
+
+      // 2. ציור חברי הקהילה כנקודות
+      const membersWithCanvasPos = members.map((member, index) => {
+          let distance = 0;
+          if (homeLat && homeLng && member.lat && member.lng) {
+            distance = calculateDistance(homeLat, homeLng, member.lat, member.lng);
+          } else {
+            // Mock distance if no real address data
+            distance = member.distance || (Math.random() * 30);
+          }
+          
+          const distanceLimit = 30;
+          let relativeRadius = (distance / distanceLimit) * maxRadius;
+          
+          // Ensure points are outside the logo area but inside the board
+          const minRadius = 25; 
+          if (relativeRadius < minRadius) relativeRadius = minRadius + (Math.random() * 5);
+          if (relativeRadius > maxRadius) relativeRadius = maxRadius - 5;
+
+          // זווית רנדומלית כדי שהנקודות לא יהיו אחת על השניה
+          const angle = (index * 137.5) * (Math.PI / 180); 
+
+          const x = centerX + relativeRadius * Math.cos(angle);
+          const y = centerY + relativeRadius * Math.sin(angle);
+
+          ctx.beginPath();
+          ctx.arc(x, y, 5, 0, Math.PI * 2);
+          ctx.fillStyle = '#ff3e00'; // צבע הנקודה
+          ctx.fill();
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          return { ...member, canvasX: x, canvasY: y, calculatedDistance: distance };
+      });
+
+      // 3. הוספת אינטראקציה (נגיעה/עכבר)
+      const handleMouseMove = (e: MouseEvent) => {
+          const rect = canvas.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+          const tooltip = tooltipRef.current;
+          
+          if (!tooltip) return;
+
+          let found = false;
+          membersWithCanvasPos.forEach(m => {
+              const dist = Math.sqrt((mouseX - m.canvasX)**2 + (mouseY - m.canvasY)**2);
+              if (dist < 7) {
+                  tooltip.style.display = 'block';
+                  tooltip.style.left = mouseX + 10 + 'px';
+                  tooltip.style.top = mouseY + 10 + 'px';
+                  tooltip.innerText = `${m.firstName} ${m.lastName}\n${m.calculatedDistance.toFixed(2)} ק"מ מהחוף`;
+                  found = true;
+              }
+          });
+          if (!found) tooltip.style.display = 'none';
+      };
+
+      canvas.onmousemove = handleMouseMove as any;
+    };
+
+    logoImg.onload = render;
+    render(); // Initial render
+
+    return () => {
+      canvas.onmousemove = null;
+    };
+  }, [members, siteAssets, siteConfig]);
 
   const handleViewToggle = () => {
     const next = viewMode === 'unified' ? 'split' : 'unified';
@@ -414,6 +550,16 @@ const TrendsDashboard: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Community Radius Widget */}
+      <div className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-soft flex flex-col items-center">
+        <h3 className="text-xl font-black text-[#2B2B2E] tracking-tight mb-6 w-full text-right">רדיוס הקהילה</h3>
+        <div className="w-[350px] relative darts-wrapper flex flex-col items-center">
+          <h4 className="text-center mb-4">פיזור גיאוגרפי</h4>
+          <canvas ref={canvasRef} id="dartsBoard" width="350" height="350" className="rounded-full" />
+          <div id="darts-tooltip" ref={tooltipRef} className="absolute hidden pointer-events-none z-50 whitespace-pre-line text-sm text-center"></div>
+        </div>
+      </div>
     </div>
   );
 };

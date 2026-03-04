@@ -91,6 +91,13 @@ const App: React.FC = () => {
     setIsMobileMenuOpen(prev => !prev);
   }, []);
 
+  // Apply global color
+  React.useEffect(() => {
+    if (siteConfig.globalColor) {
+      document.documentElement.style.setProperty('--gt-accent', siteConfig.globalColor);
+    }
+  }, [siteConfig.globalColor]);
+
   // Apply body class for bottom nav padding
   React.useEffect(() => {
     if (siteConfig.navPosition === 'floating-bottom') {

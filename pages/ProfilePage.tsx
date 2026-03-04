@@ -75,6 +75,13 @@ const ProfilePage: React.FC = () => {
   const [isPlaceSelected, setIsPlaceSelected] = useState(false);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
+  
+  // Hidden fields refs
+  const cityRef = useRef<HTMLInputElement>(null);
+  const streetRef = useRef<HTMLInputElement>(null);
+  const houseNumRef = useRef<HTMLInputElement>(null);
+  const latRef = useRef<HTMLInputElement>(null);
+  const lngRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (currentUser && !formData) {
@@ -114,8 +121,32 @@ const ProfilePage: React.FC = () => {
           }
           
           if (currentUser) {
+            // Populate hidden fields
+            const addressComponents = place.address_components || [];
+            const city = addressComponents.find(c => c.types.includes('locality'))?.long_name || '';
+            const street = addressComponents.find(c => c.types.includes('route'))?.long_name || '';
+            const houseNum = addressComponents.find(c => c.types.includes('street_number'))?.long_name || '';
+            const lat = place.geometry?.location?.lat() || 0;
+            const lng = place.geometry?.location?.lng() || 0;
+
+            const fields = [
+              { ref: cityRef, value: city },
+              { ref: streetRef, value: street },
+              { ref: houseNumRef, value: houseNum },
+              { ref: latRef, value: lat.toString() },
+              { ref: lngRef, value: lng.toString() }
+            ];
+
+            fields.forEach(({ ref, value }) => {
+              if (ref.current) {
+                ref.current.value = value;
+                // Dispatch input event to trigger React state/form validation
+                ref.current.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+            });
+
             updateMemberAddress(currentUser.id, place).then(addressData => {
-              setFormData(prev => prev ? { ...prev, ...addressData } : null);
+              setFormData(prev => prev ? { ...prev, ...addressData, city, street, house_num: houseNum, lat, lng } : null);
               setToast({ msg: 'הכתובת עודכנה בהצלחה!', type: 'success' });
               setTimeout(() => setToast(null), 3000);
             }).catch(err => {
@@ -417,6 +448,7 @@ const ProfilePage: React.FC = () => {
                       <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
                       <input 
                         type="text" 
+                        id="address-input"
                         ref={addressInputRef}
                         defaultValue={currentUser?.full_address || ''} 
                         onChange={(e) => {
@@ -429,6 +461,11 @@ const ProfilePage: React.FC = () => {
                         autoComplete="off"
                       />
                     </div>
+                    <input type="hidden" id="city" ref={cityRef} />
+                    <input type="hidden" id="street" ref={streetRef} />
+                    <input type="hidden" id="house_num" ref={houseNumRef} />
+                    <input type="hidden" id="lat" ref={latRef} />
+                    <input type="hidden" id="lng" ref={lngRef} />
                     <p className="text-[10px] text-slate-400 pr-3 font-bold">חובה לבחור את הכתובת מתוך הרשימה שנפתחת כדי שנוכל לחשב מרחק מהמועדון.</p>
                   </div>
                 </div>

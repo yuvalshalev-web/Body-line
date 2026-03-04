@@ -214,22 +214,19 @@ const AdminPage: React.FC = () => {
     });
 
     // 4. תפעול ה-Color Picker הגלובלי
-    const themeSlider = document.getElementById('global-theme-slider') as HTMLInputElement;
+    const colorPicker = document.getElementById('global-theme-color-picker') as HTMLInputElement;
     const hexDisplay = document.getElementById('hex-display');
     
-    if (themeSlider && hexDisplay) {
-        const turquoiseColors = ['#E0FFFF','#DDFEFE','#DBFCFD','#D9FBFC','#D6FAFB','#B2F7F2','#AAF3F0','#A2F0EE','#99F0EE','#91EDED','#80EDE7','#77EAE2','#6FE7E0','#66E3E0','#5DE0DD','#4DD3D7','#45D0D4','#3DCACF','#36CCC9','#30D5C8','#28D0C2','#23CDC0','#1CCFC0','#16CBC0','#10C7BD','#00CED1','#00C9CC','#00C6CC','#00C2C9','#00BFCF','#00B3C3','#00AFBF','#009FAA','#009B9F','#009091','#007F85','#007A7F','#00706F','#006D70','#006466','#005D5D','#005555','#004F4F','#004C49','#004644','#004140','#003C3C','#003636','#003131','#002B2B','#004C49'];
-
+    if (colorPicker && hexDisplay) {
         const handleInput = (e: any) => {
-            const index = Math.floor(e.target.value / 100 * (turquoiseColors.length - 1));
-            const newColor = turquoiseColors[index];
+            const newColor = e.target.value;
             document.documentElement.style.setProperty('--gt-accent', newColor);
-            hexDisplay.textContent = newColor;
+            hexDisplay.textContent = newColor.toUpperCase();
             (hexDisplay as HTMLElement).style.background = newColor;
         };
 
-        themeSlider.addEventListener('input', handleInput);
-        cleanupFns.push(() => themeSlider.removeEventListener('input', handleInput));
+        colorPicker.addEventListener('input', handleInput);
+        cleanupFns.push(() => colorPicker.removeEventListener('input', handleInput));
     }
 
     return () => cleanupFns.forEach(fn => fn());
@@ -1492,32 +1489,29 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Global Color Picker Widget */}
-            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group mb-10">
-              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] relative overflow-hidden">
+            <div className="bg-[#4a002e] p-[2px] rounded-3xl shadow-2xl shadow-[#ff009f]/10 group mb-6 inline-block">
+              <div className="bg-white/95 backdrop-blur-xl p-4 rounded-[1.8rem] relative overflow-hidden flex items-center gap-6">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
                 
-                <div className="flex justify-between items-center mb-6 relative z-10">
-                  <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#40E0D0] to-[#00CED1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#40E0D0]/20 group-hover:rotate-6 transition-transform">
-                      <Sparkles size={32} />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">בקר צבע גלובלי</h3>
-                      <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">שינוי גוון הטורקיז בכל האתר</p>
-                    </div>
-                  </div>
-                  <span id="hex-display" className="font-mono bg-[#40E0D0] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg transition-all duration-300 border border-white/20">#40E0D0</span>
+                <div>
+                  <h3 className="text-lg font-black text-[#4a002e] tracking-tight">בקר צבע גלובלי</h3>
+                  <p className="text-[9px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-0.5">שינוי גוון הטורקיז</p>
                 </div>
 
-                <div className="relative z-10 px-2">
+                <div className="relative">
                   <input 
-                    type="range" 
-                    min="0" 
-                    max="100" 
-                    defaultValue="50" 
-                    className="gt-slider-input w-full" 
-                    id="global-theme-slider" 
+                    type="color" 
+                    value={siteConfig.globalColor || '#40E0D0'} 
+                    onChange={(e) => {
+                      const newColor = e.target.value;
+                      document.documentElement.style.setProperty('--gt-accent', newColor);
+                      updateSiteConfig({ globalColor: newColor });
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
+                  <div className="w-12 h-12 rounded-xl shadow-lg border-2 border-white flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" style={{ backgroundColor: siteConfig.globalColor || '#40E0D0' }}>
+                    <img src="https://cdn-icons-png.flaticon.com/512/2921/2921226.png" alt="Color Picker" className="w-7 h-7" />
+                  </div>
                 </div>
               </div>
             </div>

@@ -87,6 +87,7 @@ interface DataContextType {
   updateSiteConfig: (config: Partial<{ 
     navPosition: 'standard' | 'floating-top' | 'floating-bottom',
     home_break: any,
+    globalColor: string,
     h1Styles: any
   }>) => Promise<void>;
   updateYearConfig: (config: { startDate: string; endDate: string }) => Promise<void>;
@@ -111,6 +112,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [siteAssets, setSiteAssets] = useState<any>({});
   const [siteConfig, setSiteConfig] = useState<{ 
     navPosition: 'standard' | 'floating-top' | 'floating-bottom',
+    home_break?: any,
+    globalColor?: string,
     h1Styles?: {
       fontSize: string;
       color: string;
@@ -645,6 +648,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updateSiteConfig = async (config: Partial<{ 
     navPosition: 'standard' | 'floating-top' | 'floating-bottom',
     home_break: any,
+    globalColor: string,
     h1Styles: any
   }>) => {
     if (config.navPosition) {
