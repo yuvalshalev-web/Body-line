@@ -1312,7 +1312,7 @@ const AdminPage: React.FC = () => {
 
             {/* H1 Ultra Design Studio Widget */}
             <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group mb-10">
-              <div className="bg-white/95 backdrop-blur-xl p-10 rounded-[2.8rem] relative overflow-hidden">
+              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 mb-10 relative z-10">
@@ -1327,8 +1327,8 @@ const AdminPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
                   {/* Preview Area */}
-                  <div className="flex flex-col items-center justify-center p-6 bg-slate-50/50 rounded-[2rem] min-h-[200px] border border-slate-100 relative overflow-hidden">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 relative z-10">תצוגה מקדימה</p>
+                  <div className="flex flex-col items-center justify-center p-4 bg-transparent rounded-[2rem] min-h-[160px] border border-slate-100 relative overflow-hidden">
+                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2 relative z-10">תצוגה מקדימה</p>
                     <h1 className="main-page-title m-0 relative z-10">כותרת אולטרה</h1>
                   </div>
 
