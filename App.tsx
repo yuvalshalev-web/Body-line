@@ -114,7 +114,7 @@ const App: React.FC = () => {
     }
 
     navigate(path);
-    if (isMobile) setIsMobileMenuOpen(false);
+    setIsMobileMenuOpen(false);
   }, [navigate]);
 
   const toggleMobileMenuWithHaptic = useCallback((e?: React.MouseEvent) => {
@@ -135,6 +135,7 @@ const App: React.FC = () => {
 
   const handleLogout = useCallback(() => {
     logout();
+    setIsMobileMenuOpen(false);
     navigate('/');
   }, [logout, navigate]);
 
@@ -182,8 +183,8 @@ const App: React.FC = () => {
         <div id="global-progress-bar"></div>
       </div>
 
-      {/* Mobile Header */}
-      <header className={`md:hidden h-16 flex items-center justify-between px-[var(--spacing-md)] transition-all duration-300 ${
+      {/* Mobile Header (Visible on all screens, but menu button hidden when floating-bottom is active) */}
+      <header className={`h-16 flex items-center justify-between px-[var(--spacing-md)] transition-all duration-300 ${
         siteConfig.navPosition === 'standard' ? 'nav-standard sticky top-0 z-[100]' : 
         siteConfig.navPosition === 'floating-top' ? 'nav-floating-top' : 
         'nav-floating-bottom'
@@ -194,16 +195,18 @@ const App: React.FC = () => {
           </div>
           <span className="font-black text-[var(--sand-dark)] tracking-tighter">חבל זוג</span>
         </div>
-        <button onClick={(e) => toggleMobileMenuWithHaptic(e)} className="p-2 text-[var(--sand-dark)]">
-          <div className="icon-wrapper">
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </div>
-        </button>
+        {siteConfig.navPosition !== 'floating-bottom' && (
+          <button onClick={(e) => toggleMobileMenuWithHaptic(e)} className="p-2 text-[var(--sand-dark)]">
+            <div className="icon-wrapper">
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </div>
+          </button>
+        )}
       </header>
 
-      {/* Bottom Navigation (Mobile Only, when active) */}
+      {/* Bottom Navigation (Visible on all screens when floating-bottom is active) */}
       {siteConfig.navPosition === 'floating-bottom' && (
-        <div className="md:hidden bottom-nav-capsule metal-theme">
+        <div className="bottom-nav-capsule metal-theme">
           {[navItems[0], navItems[1], navItems[2], navItems[3], navItems[6]].map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -231,8 +234,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-l border-[var(--sand-medium)]/10 sticky top-0 h-screen z-50 p-[var(--spacing-md)] shadow-sm">
+      {/* Desktop Sidebar (Hidden when floating-bottom is active) */}
+      <aside className={`${siteConfig.navPosition === 'floating-bottom' ? 'hidden' : 'hidden md:flex'} flex-col w-64 bg-white border-l border-[var(--sand-medium)]/10 sticky top-0 h-screen z-50 p-[var(--spacing-md)] shadow-sm`}>
         <div className="flex items-center gap-[var(--spacing-xs)] mb-14">
           <div className="w-12 h-12 bg-[var(--sand-accent)] rounded-[var(--radius-md)] flex items-center justify-center text-white shadow-lg shadow-[var(--sand-shadow)]/20">
             <Waves size={28} className="text-[var(--sand-light)]" />
@@ -316,10 +319,10 @@ const App: React.FC = () => {
         </ErrorBoundary>
       </main>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay (Visible on all screens when open) */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-[2000] md:hidden">
+          <div className="fixed inset-0 z-[2000]">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

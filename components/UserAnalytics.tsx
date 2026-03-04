@@ -11,13 +11,35 @@ import { calculateUserStats } from '../src/utils/analytics';
 import RadarChart from './RadarChart';
 import SessionDetails from './SessionDetails';
 
+const OCEAN_PALETTE = [
+  '#0284c7', // 0 (12 o'clock)
+  '#0369a1', // 1
+  '#075985', // 2
+  '#0c4a6e', // 3
+  '#1e40af', // 4
+  '#172554', // 5 (5 o'clock) - Darkest
+  '#f0f9ff', // 6 (6 o'clock) - Lightest
+  '#e0f2fe', // 7
+  '#bae6fd', // 8
+  '#7dd3fc', // 9
+  '#38bdf8', // 10
+  '#0ea5e9', // 11
+];
+
+const getOceanWaterGradient = (percent: number) => {
+  if (percent >= 90) return 'from-blue-900/60 via-blue-800/40 to-blue-700/20';
+  if (percent >= 75) return 'from-blue-700/60 via-blue-600/40 to-blue-500/20';
+  if (percent >= 50) return 'from-blue-500/60 via-blue-400/40 to-blue-300/20';
+  if (percent >= 25) return 'from-blue-400/60 via-blue-300/40 to-blue-200/20';
+  return 'from-blue-200/60 via-blue-100/40 to-blue-50/20';
+};
+
 const OceanRing: React.FC<{  
   value: number; 
   label: string; 
-  color: string; 
   icon: React.ReactNode;
   tooltip: string;
-}> = ({ value, label, color, icon, tooltip }) => {
+}> = ({ value, label, icon, tooltip }) => {
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
   
@@ -26,16 +48,8 @@ const OceanRing: React.FC<{
   const segmentLength = (360 / 12) - segmentGap;
   const dashArray = `${(segmentLength / 360) * circumference} ${(segmentGap / 360) * circumference}`;
   
-  const strokeDashoffset = circumference - (value / 100) * circumference;
+  const segmentLengthInUnits = (segmentLength / 360) * circumference;
   
-  const getDescriptor = (val: number) => {
-    if (val >= 90) return 'קלי סלייטר';
-    if (val >= 75) return 'כריש פטיש';
-    if (val >= 50) return 'ליין-אפיסט';
-    if (val >= 25) return 'תופס פינה';
-    return 'פופ-אפיסט';
-  };
-
   return (
     <div className="flex-1 w-full flex flex-col items-center text-center group/ring">
       <div className="flex items-center gap-[var(--spacing-xs)] mb-6">
@@ -57,7 +71,7 @@ const OceanRing: React.FC<{
             initial={{ y: '100%' }}
             animate={{ y: `${100 - value}%` }}
             transition={{ duration: 2, ease: "easeOut" }}
-            className="absolute inset-0 w-full h-full bg-gradient-to-b from-blue-500/60 via-blue-400/40 to-blue-300/20"
+            className={`absolute inset-0 w-full h-full bg-gradient-to-b ${getOceanWaterGradient(value)}`}
           >
             {/* Wave Animation */}
             <div className="absolute top-0 left-0 w-[400%] h-6 -translate-y-1/2 opacity-60">
@@ -69,43 +83,44 @@ const OceanRing: React.FC<{
         </div>
 
         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 relative z-10">
-          <defs>
-            <linearGradient id={`ocean-grad-${label}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#60a5fa" />
-              <stop offset="100%" stopColor="#021626" />
-            </linearGradient>
-          </defs>
-
-          {/* Background Track */}
-          <circle
-            cx="50"
-            cy="50"
-            r={radius}
-            fill="none"
-            stroke="rgba(255,255,255,0.1)"
-            strokeWidth="4"
-            strokeDasharray={dashArray}
-            className="opacity-30"
-          />
-
-          {/* Progress Arc */}
-          <motion.circle
-            cx="50"
-            cy="50"
-            r={radius}
-            fill="none"
-            stroke={`url(#ocean-grad-${label})`}
-            strokeWidth="5"
-            strokeLinecap="butt"
-            strokeDasharray={dashArray}
-            strokeDashoffset={circumference}
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset: circumference - (value / 100) * circumference }}
-            transition={{ 
-              duration: 2, 
-              ease: "easeOut" 
-            }}
-          />
+          {/* Progress Segments with Background Track */}
+          {[...Array(12)].map((_, i) => {
+            const segmentStartPercent = i * (100 / 12);
+            const segmentProgress = Math.min(1, Math.max(0, (value - segmentStartPercent) / (100 / 12)));
+            
+            return (
+              <React.Fragment key={i}>
+                {/* Background Segment (Navy) */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  fill="none"
+                  stroke="#1a3c6e"
+                  strokeWidth="4"
+                  strokeDasharray={dashArray}
+                  transform={`rotate(${i * 30}, 50, 50)`}
+                />
+                {/* Filled Segment (Palette) */}
+                {segmentProgress > 0 && (
+                  <motion.circle
+                    cx="50"
+                    cy="50"
+                    r={radius}
+                    fill="none"
+                    stroke={OCEAN_PALETTE[i]}
+                    strokeWidth="5"
+                    strokeLinecap="butt"
+                    strokeDasharray={`${segmentProgress * segmentLengthInUnits} ${circumference}`}
+                    transform={`rotate(${i * 30}, 50, 50)`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
         </svg>
 
         {/* Central Text Overlay */}
@@ -116,13 +131,6 @@ const OceanRing: React.FC<{
             className="text-3xl font-black text-[#334155] tabular-nums tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
           >
             {value}%
-          </motion.span>
-          <motion.span 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.8 }}
-            className="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] mt-0.5 drop-shadow-sm"
-          >
-            {getDescriptor(value)}
           </motion.span>
         </div>
       </div>
@@ -143,6 +151,7 @@ const StabilityGauge: React.FC<{
   const segmentGap = 2; // degrees
   const segmentLength = (360 / 12) - segmentGap;
   const dashArray = `${(segmentLength / 360) * circumference} ${(segmentGap / 360) * circumference}`;
+  const segmentLengthInUnits = (segmentLength / 360) * circumference;
 
   return (
     <div className="flex-1 w-full flex flex-col items-center text-center group/stability">
@@ -167,7 +176,7 @@ const StabilityGauge: React.FC<{
             initial={{ y: '100%' }}
             animate={{ y: `${100 - percent}%` }}
             transition={{ duration: 2, ease: "easeOut" }}
-            className="absolute inset-0 w-full h-full bg-gradient-to-b from-blue-500/60 via-blue-400/40 to-blue-300/20"
+            className={`absolute inset-0 w-full h-full bg-gradient-to-b ${getOceanWaterGradient(percent)}`}
           >
             {/* Wave Animation */}
             <div className="absolute top-0 left-0 w-[400%] h-6 -translate-y-1/2 opacity-60">
@@ -179,45 +188,55 @@ const StabilityGauge: React.FC<{
         </div>
 
         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 relative z-10">
-          <defs>
-            <linearGradient id="stability-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#60a5fa" />
-              <stop offset="100%" stopColor="#021626" />
-            </linearGradient>
-          </defs>
-
-          {/* Background Segmented Track */}
-          <circle
-            cx="50"
-            cy="50"
-            r={radius}
-            fill="none"
-            stroke="rgba(255,255,255,0.1)"
-            strokeWidth="4"
-            strokeDasharray={dashArray}
-            className="opacity-30"
-          />
-
-          {/* Progress Segmented Arc */}
-          <motion.circle
-            cx="50"
-            cy="50"
-            r={radius}
-            fill="none"
-            stroke="url(#stability-grad)"
-            strokeWidth="5"
-            strokeLinecap="butt"
-            strokeDasharray={dashArray}
-            strokeDashoffset={circumference}
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset: circumference - (percent / 100) * circumference }}
-            transition={{ duration: 2, ease: "easeOut" }}
-          />
+          {/* Progress Segments with Background Track */}
+          {[...Array(12)].map((_, i) => {
+            const segmentStartPercent = i * (100 / 12);
+            const segmentProgress = Math.min(1, Math.max(0, (percent - segmentStartPercent) / (100 / 12)));
+            
+            return (
+              <React.Fragment key={i}>
+                {/* Background Segment (Navy) */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  fill="none"
+                  stroke="#1a3c6e"
+                  strokeWidth="4"
+                  strokeDasharray={dashArray}
+                  transform={`rotate(${i * 30}, 50, 50)`}
+                />
+                {/* Filled Segment (Palette) */}
+                {segmentProgress > 0 && (
+                  <motion.circle
+                    cx="50"
+                    cy="50"
+                    r={radius}
+                    fill="none"
+                    stroke={OCEAN_PALETTE[i]}
+                    strokeWidth="5"
+                    strokeLinecap="butt"
+                    strokeDasharray={`${segmentProgress * segmentLengthInUnits} ${circumference}`}
+                    transform={`rotate(${i * 30}, 50, 50)`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
         </svg>
 
-        {/* Central Text */}
+        {/* Central Text Overlay */}
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none">
-          <span className="text-3xl font-black text-[#334155] tabular-nums tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{percent}%</span>
+          <motion.span 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-3xl font-black text-[#334155] tabular-nums tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+          >
+            {percent}%
+          </motion.span>
         </div>
       </div>
       
@@ -286,7 +305,6 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
           <OceanRing 
             value={data.percentile}
             label="מד התמדה יחסי"
-            color="url(#ocean-grad-מד התמדה יחסי)"
             icon={<Target size={18} />}
             tooltip="מדד זה משווה את כמות האימונים שלך לשאר חברי הנבחרת. ציון 90% אומר שאתה מתאמן יותר מ-90% מהחברים."
           />
@@ -294,7 +312,6 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
           <OceanRing 
             value={data.attendancePercent}
             label="מד התמדה אישי"
-            color="url(#ocean-grad-מד התמדה אישי)"
             icon={<Waves size={18} />}
             tooltip="אחוז ההגעה שלך למפגשי הים מתוך כלל המפגשים שהתקיימו מתחילת השנה. זהו המדד האישי שלך לעמידה ביעדים."
           />
@@ -302,7 +319,6 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
           <OceanRing 
             value={data.progress[1].value}
             label="מעורבות חברתית"
-            color="url(#ocean-grad-מעורבות חברתית)"
             icon={<Users size={18} />}
             tooltip="מדד המציג את אחוז ההשתתפות שלך באירועים חברתיים וקהילתיים. להיות חלק מהנבחרת זה גם מעבר לים!"
           />

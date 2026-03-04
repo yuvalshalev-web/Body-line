@@ -512,10 +512,12 @@ header.nav-floating-top {
 }
 
 header.nav-floating-bottom {
-  transform: translateY(100px);
-  opacity: 0;
-  pointer-events: none;
-  position: absolute;
+  @media (max-width: 768px) {
+    transform: translateY(100px);
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+  }
 }
 
 .floating-menu-drawer {
