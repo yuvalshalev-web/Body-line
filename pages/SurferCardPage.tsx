@@ -28,7 +28,7 @@ const SurferCardPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-[var(--spacing-md)] md:px-[var(--spacing-lg)] py-[var(--spacing-lg)] font-['Assistant']" dir="rtl">
       <div className="mb-[var(--spacing-lg)] text-center md:text-right">
-        <h1 className="text-4xl md:text-5xl font-black text-[#2B2B2E] tracking-tighter leading-none">
+        <h1 className="main-page-title">
           כרטיס הגולש שלי
         </h1>
         <p className="text-slate-400 font-bold mt-3 text-lg">

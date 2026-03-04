@@ -479,7 +479,7 @@ const SessionStatsPage: React.FC = () => {
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Session Dive Analytics</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-black text-[#2D3748] tracking-tighter leading-none uppercase">
+          <h1 className="main-page-title">
             צלילה לסשנים
           </h1>
           

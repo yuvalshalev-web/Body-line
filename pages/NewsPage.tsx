@@ -99,7 +99,7 @@ const NewsPage: React.FC = () => {
         </div>
 
         {/* Main Title */}
-        <h1 className="text-5xl header-title-gradient uppercase tracking-tighter">
+        <h1 className="main-page-title">
           פוסטים מהנבחרת
         </h1>
 

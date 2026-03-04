@@ -363,7 +363,7 @@ const AdminPage: React.FC = () => {
           </div>
 
           {/* Main Title */}
-          <h1 className="text-5xl t-mobile-gradient uppercase tracking-tighter">
+          <h1 className="main-page-title">
             פאנל ניהול
           </h1>
 
@@ -1306,6 +1306,208 @@ const AdminPage: React.FC = () => {
                     className="gt-slider-input w-full" 
                     id="global-theme-slider" 
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* H1 Ultra Design Studio Widget */}
+            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group mb-10">
+              <div className="bg-white/95 backdrop-blur-xl p-10 rounded-[2.8rem] relative overflow-hidden">
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                
+                <div className="flex items-center gap-6 mb-10 relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#6366f1] to-[#a855f7] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#6366f1]/20 group-hover:rotate-6 transition-transform">
+                    <Sparkles size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">H1 Ultra Design Studio</h3>
+                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">סטודיו מתקדם לעיצוב כותרות אולטרה-מודרניות</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
+                  {/* Preview Area */}
+                  <div className="flex flex-col items-center justify-center p-6 bg-slate-50/50 rounded-[2rem] min-h-[200px] border border-slate-100 relative overflow-hidden">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 relative z-10">תצוגה מקדימה</p>
+                    <h1 className="main-page-title m-0 relative z-10">כותרת אולטרה</h1>
+                  </div>
+
+                  {/* Controls Area */}
+                  <div className="space-y-6 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
+                    {/* Basic Typography */}
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center px-1">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">גודל פונט</label>
+                          <span className="text-xs font-black text-[#6366f1]">{siteConfig.h1Styles?.fontSize || '50px'}</span>
+                        </div>
+                        <input 
+                          type="range" min="20" max="120" 
+                          value={parseInt(siteConfig.h1Styles?.fontSize || '50')}
+                          onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, fontSize: e.target.value + 'px' } })}
+                          className="gt-slider-input w-full" 
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center px-1">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ריווח אותיות</label>
+                          <span className="text-xs font-black text-[#6366f1]">{siteConfig.h1Styles?.letterSpacing || '0'}px</span>
+                        </div>
+                        <input 
+                          type="range" min="-5" max="20" 
+                          value={parseInt(siteConfig.h1Styles?.letterSpacing || '0')}
+                          onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, letterSpacing: e.target.value + 'px' } })}
+                          className="gt-slider-input w-full" 
+                        />
+                      </div>
+                    </div>
+
+                    {/* Gradient Colors */}
+                    <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block text-center">צבע 1</label>
+                        <input 
+                          type="color" 
+                          value={siteConfig.h1Styles?.color1 || '#ffffff'}
+                          onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, color1: e.target.value } })}
+                          className="w-full h-10 rounded-lg cursor-pointer bg-transparent border-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block text-center">צבע 2</label>
+                        <input 
+                          type="color" 
+                          value={siteConfig.h1Styles?.color2 || '#ffffff'}
+                          onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, color2: e.target.value } })}
+                          className="w-full h-10 rounded-lg cursor-pointer bg-transparent border-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block text-center">זווית ({siteConfig.h1Styles?.gradAngle || '90'}°)</label>
+                        <input 
+                          type="range" min="0" max="360" 
+                          value={parseInt(siteConfig.h1Styles?.gradAngle || '90')}
+                          onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, gradAngle: e.target.value } })}
+                          className="gt-slider-input w-full" 
+                        />
+                      </div>
+                    </div>
+
+                    {/* Stroke & Glow */}
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">קו מתאר (Stroke)</label>
+                        <div className="flex items-center gap-3 mb-3">
+                          <input 
+                            type="color" 
+                            value={siteConfig.h1Styles?.strokeColor || '#ffffff'}
+                            onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, strokeColor: e.target.value } })}
+                            className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-none"
+                          />
+                          <input 
+                            type="range" min="0" max="10" 
+                            value={parseInt(siteConfig.h1Styles?.strokeWidth || '0')}
+                            onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, strokeWidth: e.target.value } })}
+                            className="gt-slider-input flex-1" 
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">הילה (Glow)</label>
+                        <div className="flex items-center gap-3 mb-3">
+                          <input 
+                            type="color" 
+                            value={siteConfig.h1Styles?.glowColor || '#ffffff'}
+                            onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, glowColor: e.target.value } })}
+                            className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-none"
+                          />
+                          <input 
+                            type="range" min="0" max="50" 
+                            value={parseInt(siteConfig.h1Styles?.glowSize || '0')}
+                            onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, glowSize: e.target.value } })}
+                            className="gt-slider-input flex-1" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Glassmorphism Controls */}
+                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-6">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">אפקט Glassmorphism</label>
+                        <button 
+                          onClick={() => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, showGlass: siteConfig.h1Styles?.showGlass === false ? true : false } })}
+                          className={`px-6 py-2 rounded-xl font-black text-xs transition-all ${
+                            siteConfig.h1Styles?.showGlass !== false ? 'bg-[#6366f1] text-white' : 'bg-slate-200 text-slate-500'
+                          }`}
+                        >
+                          {siteConfig.h1Styles?.showGlass !== false ? 'פעיל' : 'כבוי'}
+                        </button>
+                      </div>
+                      
+                      {siteConfig.h1Styles?.showGlass !== false && (
+                        <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-200">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center px-1">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">טשטוש</label>
+                              <span className="text-xs font-black text-[#6366f1]">{siteConfig.h1Styles?.glassBlur || '10'}px</span>
+                            </div>
+                            <input 
+                              type="range" min="0" max="30" 
+                              value={parseInt(siteConfig.h1Styles?.glassBlur || '10')}
+                              onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, glassBlur: e.target.value } })}
+                              className="gt-slider-input w-full" 
+                            />
+                          </div>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center px-1">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">שקיפות</label>
+                              <span className="text-xs font-black text-[#6366f1]">{Math.round(parseFloat(siteConfig.h1Styles?.glassOpacity || '0.1') * 100)}%</span>
+                            </div>
+                            <input 
+                              type="range" min="0" max="100" 
+                              value={parseFloat(siteConfig.h1Styles?.glassOpacity || '0.1') * 100}
+                              onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, glassOpacity: (parseInt(e.target.value) / 100).toString() } })}
+                              className="gt-slider-input w-full" 
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Final Adjustments */}
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">סוג פונט</label>
+                        <select 
+                          className="gt-select w-full"
+                          value={siteConfig.h1Styles?.fontFamily || "'Assistant', sans-serif"}
+                          onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, fontFamily: e.target.value } })}
+                        >
+                          <option value="'Assistant', sans-serif">Assistant</option>
+                          <option value="'Inter', sans-serif">Inter</option>
+                          <option value="'Heebo', sans-serif">Heebo</option>
+                          <option value="'Rubik', sans-serif">Rubik</option>
+                          <option value="'Varela Round', sans-serif">Varela Round</option>
+                          <option value="'Secular One', sans-serif">Secular One</option>
+                        </select>
+                      </div>
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">יישור</label>
+                        <div className="gt-segmented">
+                          {['right', 'center', 'left'].map(id => (
+                            <button 
+                              key={id}
+                              onClick={() => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, align: id } })}
+                              className={`gt-segment-item ${siteConfig.h1Styles?.align === id || (!siteConfig.h1Styles?.align && id === 'center') ? 'active' : ''}`}
+                            >
+                              {id === 'right' ? 'ימין' : id === 'center' ? 'מרכז' : 'שמאל'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

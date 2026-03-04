@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700;900&family=Heebo:wght@300;400;600;700;900&family=Rubik:wght@300;400;600;700;900&family=Varela+Round&family=Secular+One&display=swap');
 
 :root {
   --primary-font: 'Assistant', sans-serif;
@@ -39,6 +40,115 @@
   --sand-medium: #E6CCB2;
   --sand-dark: #DDB892;
   --sand-deep: #B08968;
+
+  /* --- Page Title System --- */
+  --h1-font-family: 'Assistant', sans-serif;
+  --h1-font-size: 2.5rem;
+  --h1-color: #ffffff;
+  --h1-align: center;
+  --h1-weight: 900;
+  --h1-letter-spacing: 0px;
+  
+  /* Gradient & Stroke */
+  --h1-color-1: #ffffff;
+  --h1-color-2: #ffffff;
+  --h1-grad-angle: 90deg;
+  --h1-stroke-width: 0px;
+  --h1-stroke-color: #ffffff;
+  
+  /* Glow */
+  --h1-glow-size: 0px;
+  --h1-glow-color: #ffffff;
+  
+  /* אפקטים מתקדמים */
+  --h1-glass-blur: 12px;
+  --h1-glass-bg: rgba(255, 255, 255, 0.1);
+  --h1-glass-border: 1px solid rgba(255, 255, 255, 0.2);
+  --h1-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.main-page-title {
+  /* טיפוגרפיה */
+  font-family: var(--h1-font-family);
+  font-size: var(--h1-font-size);
+  text-align: var(--h1-align);
+  font-weight: var(--h1-weight);
+  letter-spacing: var(--h1-letter-spacing);
+  
+  /* מיקום וריווח */
+  margin: 20px auto;
+  padding: 1.5rem 3rem;
+  width: fit-content;
+  min-width: 50%;
+  
+  /* אפקט Gradient לטקסט */
+  background: linear-gradient(var(--h1-grad-angle), var(--h1-color-1), var(--h1-color-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  /* אפקט Stroke (קו מתאר) */
+  -webkit-text-stroke: var(--h1-stroke-width) var(--h1-stroke-color);
+  
+  /* אפקט Glow */
+  filter: drop-shadow(0 0 var(--h1-glow-size) var(--h1-glow-color));
+
+  /* שכבת ה-Glassmorphism (באמצעות pseudo-element כדי לא להפריע ל-background-clip: text) */
+  position: relative;
+  z-index: 1;
+}
+
+.main-page-title::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--h1-glass-bg);
+  backdrop-filter: blur(var(--h1-glass-blur));
+  -webkit-backdrop-filter: blur(var(--h1-glass-blur));
+  border: var(--h1-glass-border);
+  border-radius: 20px;
+  box-shadow: var(--h1-glass-shadow);
+  transition: all 0.3s ease;
+}
+
+/* כותרת עמוד הבית - ניהול ידני בלבד */
+.home-page-title {
+  font-family: 'Assistant', sans-serif;
+  font-size: 5rem;
+  font-weight: 900;
+  text-align: center;
+  margin: 20px auto;
+  padding: 1.5rem 4rem;
+  width: fit-content;
+  position: relative;
+  z-index: 1;
+  
+  /* טקסט לבן נקי עם הילה עדינה */
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  letter-spacing: -2px;
+}
+
+.home-page-title::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 768px) {
+  .home-page-title {
+    font-size: 3rem;
+    padding: 1rem 2rem;
+    letter-spacing: -1px;
+  }
 }
 
 body {

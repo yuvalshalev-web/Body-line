@@ -22,7 +22,27 @@ interface DataContextType {
   quotes: QuoteItem[];
   weeklyHistory: any[];
   siteAssets: any;
-  siteConfig: { navPosition: 'standard' | 'floating-top' | 'floating-bottom' };
+  siteConfig: { 
+    navPosition: 'standard' | 'floating-top' | 'floating-bottom',
+    h1Styles?: {
+      fontSize: string;
+      color: string;
+      align: string;
+      weight: string;
+      glassBlur: string;
+      glassOpacity: string;
+      fontFamily?: string;
+      showGlass?: boolean;
+      letterSpacing?: string;
+      color1?: string;
+      color2?: string;
+      gradAngle?: string;
+      strokeWidth?: string;
+      strokeColor?: string;
+      glowSize?: string;
+      glowColor?: string;
+    }
+  };
   yearConfig: { startDate: string; endDate: string } | null;
   attendeeIds: string[];
   activeSessionDate: string;
@@ -57,7 +77,10 @@ interface DataContextType {
   batchAddQuotes: (items: Omit<QuoteItem, 'id'>[]) => Promise<void>;
   clearCollection: (collectionName: string) => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
-  updateSiteConfig: (config: Partial<{ navPosition: 'standard' | 'floating-top' | 'floating-bottom' }>) => Promise<void>;
+  updateSiteConfig: (config: Partial<{ 
+    navPosition: 'standard' | 'floating-top' | 'floating-bottom',
+    h1Styles: any
+  }>) => Promise<void>;
   updateYearConfig: (config: { startDate: string; endDate: string }) => Promise<void>;
   archiveMember: (id: string) => Promise<void>;
   addMember: (member: Omit<Member, 'id'>) => Promise<void>;
@@ -78,7 +101,27 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
   const [weeklyHistory, setWeeklyHistory] = useState<any[]>([]);
   const [siteAssets, setSiteAssets] = useState<any>({});
-  const [siteConfig, setSiteConfig] = useState<{ navPosition: 'standard' | 'floating-top' | 'floating-bottom' }>(() => {
+  const [siteConfig, setSiteConfig] = useState<{ 
+    navPosition: 'standard' | 'floating-top' | 'floating-bottom',
+    h1Styles?: {
+      fontSize: string;
+      color: string;
+      align: string;
+      weight: string;
+      glassBlur: string;
+      glassOpacity: string;
+      fontFamily?: string;
+      showGlass?: boolean;
+      letterSpacing?: string;
+      color1?: string;
+      color2?: string;
+      gradAngle?: string;
+      strokeWidth?: string;
+      strokeColor?: string;
+      glowSize?: string;
+      glowColor?: string;
+    }
+  }>(() => {
     const saved = localStorage.getItem('navPosition');
     return { navPosition: (saved as any) || 'standard' };
   });
@@ -230,7 +273,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, handleFirestoreError);
 
     const unsubConfig = onSnapshot(doc(db, 'site_data', 'config'), (doc) => {
-      if (doc.exists()) setSiteConfig(doc.data() as { navPosition: 'standard' | 'floating-top' | 'floating-bottom' });
+      if (doc.exists()) setSiteConfig(doc.data() as any);
     }, handleFirestoreError);
 
     const unsubYearConfig = onSnapshot(doc(db, 'site_data', 'year_config'), (doc) => {
@@ -591,7 +634,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await setDoc(doc(getDb(), 'site_data', 'assets'), assets, { merge: true });
   };
 
-  const updateSiteConfig = async (config: Partial<{ navPosition: 'standard' | 'floating-top' | 'floating-bottom' }>) => {
+  const updateSiteConfig = async (config: Partial<{ 
+    navPosition: 'standard' | 'floating-top' | 'floating-bottom',
+    h1Styles: any
+  }>) => {
     if (config.navPosition) {
       localStorage.setItem('navPosition', config.navPosition);
     }

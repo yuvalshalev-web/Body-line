@@ -159,7 +159,7 @@ const DashboardPage: React.FC = () => {
            <p className="text-white/60 font-medium italic text-sm md:text-base mb-6 max-w-2xl tracking-wide">
              "A day will come that is like no other... and nothing that happens after will ever be the same."
            </p>
-           <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-tight md:leading-none mb-4" style={{ color: brandColor }}>יום חמישי הגדול</h2>
+           <h1 className="home-page-title">יום חמישי הגדול</h1>
            
            <div className="mb-8 space-y-2">
              <p className="text-lg md:text-xl font-bold text-white/60">נכנסים למים בעוד...</p>

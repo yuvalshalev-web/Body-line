@@ -149,6 +149,46 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Apply H1 Global Styles
+  React.useEffect(() => {
+    if (siteConfig.h1Styles) {
+      const { 
+        fontSize, color, align, weight, glassBlur, glassOpacity, fontFamily, showGlass,
+        letterSpacing, color1, color2, gradAngle, strokeWidth, strokeColor, glowSize, glowColor
+      } = siteConfig.h1Styles;
+      const root = document.documentElement;
+      if (fontSize) root.style.setProperty('--h1-font-size', fontSize);
+      if (color) root.style.setProperty('--h1-color', color);
+      if (align) root.style.setProperty('--h1-align', align);
+      if (weight) root.style.setProperty('--h1-weight', weight);
+      if (fontFamily) root.style.setProperty('--h1-font-family', fontFamily);
+      if (letterSpacing) root.style.setProperty('--h1-letter-spacing', letterSpacing);
+      
+      // Gradient & Stroke
+      if (color1) root.style.setProperty('--h1-color-1', color1);
+      if (color2) root.style.setProperty('--h1-color-2', color2);
+      if (gradAngle) root.style.setProperty('--h1-grad-angle', `${gradAngle}deg`);
+      if (strokeWidth) root.style.setProperty('--h1-stroke-width', `${strokeWidth}px`);
+      if (strokeColor) root.style.setProperty('--h1-stroke-color', strokeColor);
+      
+      // Glow
+      if (glowSize) root.style.setProperty('--h1-glow-size', `${glowSize}px`);
+      if (glowColor) root.style.setProperty('--h1-glow-color', glowColor);
+      
+      if (showGlass === false) {
+        root.style.setProperty('--h1-glass-blur', '0px');
+        root.style.setProperty('--h1-glass-bg', 'transparent');
+        root.style.setProperty('--h1-glass-border', 'none');
+        root.style.setProperty('--h1-glass-shadow', 'none');
+      } else {
+        root.style.setProperty('--h1-glass-blur', `${glassBlur || '10'}px`);
+        root.style.setProperty('--h1-glass-bg', `rgba(255, 255, 255, ${glassOpacity || '0.2'})`);
+        root.style.setProperty('--h1-glass-border', '1px solid rgba(255, 255, 255, 0.2)');
+        root.style.setProperty('--h1-glass-shadow', '0 8px 32px rgba(0, 0, 0, 0.2)');
+      }
+    }
+  }, [siteConfig.h1Styles]);
+
   if (!currentUser) {
     return (
       <Suspense fallback={<PageLoader />}>

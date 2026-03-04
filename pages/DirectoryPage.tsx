@@ -226,7 +226,7 @@ const DirectoryPage: React.FC = () => {
           </div>
 
           {/* Main Title */}
-          <h1 className="text-5xl md:text-7xl font-black text-[#2B2B2E] uppercase tracking-tighter">
+          <h1 className="main-page-title">
             נבחרת הכוכבים
           </h1>
 

@@ -417,10 +417,10 @@ const SurfingSessionAttendance: React.FC = () => {
             <UsersIcon size={12} /> 
             {view === 'history' && !editingHistorySession ? 'ארכיון סשנים' : (editingHistorySession ? 'עריכת סשן היסטורי' : 'סנכרון נוכחות שבועי')}
           </div>
-          <h2 className="text-3xl md:text-4xl font-black text-[#006994] tracking-tighter">
+          <h1 className="main-page-title">
             {view === 'history' && !editingHistorySession ? 'ארכיון סשנים: יום חמישי הגדול' : 
              (editingHistorySession ? `עריכה: ${formatDate(editingHistorySession.date)}` : 'סנכרון נוכחות שבועי')}
-          </h2>
+          </h1>
           <p className="text-[#4E8294] font-bold mt-2">
             {view === 'history' && !editingHistorySession ? 'היסטוריית גלישה ונוכחות לאורך זמן 🌊' : 'סמן את כל הגולשים שיצאו מהמים 🌊'}
           </p>

@@ -28,29 +28,26 @@ const GlossaryPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white text-right animate-in fade-in duration-700 pb-20" dir="rtl">
-      {/* Header Section */}
-      <header className="relative w-full rounded-[3.5rem] bg-gradient-to-br from-slate-900 to-indigo-950 p-12 md:p-16 overflow-hidden shadow-2xl mb-12">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-sky-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl"></div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="text-center md:text-right">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-sky-300 text-[10px] font-black uppercase tracking-[0.2em] mb-6 backdrop-blur-md border border-white/10">
-              <BookOpen size={14} />
-              The Surfer's Encyclopedia
-            </div>
-            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-4 italic">
-              מילון הגלישה
-            </h2>
-            <p className="text-sky-100/60 font-bold text-lg max-w-xl">
-              כל המושגים, הסלנג והטכנולוגיה שמאחורי עולם הגלישה. דבר בשפה של הים.
-            </p>
-          </div>
-          <div className="hidden md:block">
-            <Waves className="text-sky-500/20 animate-pulse" size={160} />
-          </div>
+      {/* Body-line Standard Header Stack */}
+      <div className="flex flex-col items-center text-center mb-10 space-y-4 pt-10">
+        {/* Top Badge */}
+        <div className="header-badge-glass">
+          <BookOpen size={12} className="text-[#00f2fe]" />
+          <span>THE SURFER'S ENCYCLOPEDIA</span>
         </div>
-      </header>
+
+        {/* Main Title */}
+        <h1 className="main-page-title">
+          מילון הגלישה
+        </h1>
+
+        {/* Subtitle with Emoji context */}
+        <div className="flex flex-col items-center gap-6">
+          <p className="header-subtitle max-w-2xl">
+            כל המושגים, הסלנג והטכנולוגיה שמאחורי עולם הגלישה. דבר בשפה של הים 🌊
+          </p>
+        </div>
+      </div>
 
       {/* Search & Filters */}
       <section className="sticky top-20 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-100 py-8 mb-12">

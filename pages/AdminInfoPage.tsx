@@ -57,7 +57,7 @@ const AdminInfoPage: React.FC = () => {
           <ShieldAlert size={14} />
           מרכז הבקרה "תצפית הים"
         </div>
-        <h1 className="text-4xl md:text-5xl font-black text-[#2D3748] tracking-tighter leading-none">
+        <h1 className="main-page-title">
           דופק הקהילה: תמונת מצב
         </h1>
         <p className="text-[#4A5568] font-bold mt-3 text-lg">
