@@ -24,6 +24,13 @@ interface DataContextType {
   siteAssets: any;
   siteConfig: { 
     navPosition: 'standard' | 'floating-top' | 'floating-bottom',
+    home_break?: {
+      formatted: string;
+      lat: number | null;
+      lng: number | null;
+      city: string;
+      street: string;
+    },
     h1Styles?: {
       fontSize: string;
       color: string;
@@ -79,6 +86,7 @@ interface DataContextType {
   updateSiteAssets: (assets: any) => Promise<void>;
   updateSiteConfig: (config: Partial<{ 
     navPosition: 'standard' | 'floating-top' | 'floating-bottom',
+    home_break: any,
     h1Styles: any
   }>) => Promise<void>;
   updateYearConfig: (config: { startDate: string; endDate: string }) => Promise<void>;
@@ -636,6 +644,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateSiteConfig = async (config: Partial<{ 
     navPosition: 'standard' | 'floating-top' | 'floating-bottom',
+    home_break: any,
     h1Styles: any
   }>) => {
     if (config.navPosition) {

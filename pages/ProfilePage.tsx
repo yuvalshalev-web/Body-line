@@ -29,6 +29,7 @@ import { generateBio } from '../services/geminiService';
 import { processImage } from '../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { hashPassword } from '../utils/crypto';
+import { updateMemberAddress } from '../utils/googlePlaces';
 
 const SocialInput = ({ 
   label, name, value, onChange, icon: Icon, placeholder, brandColor, ensureAbsoluteUrl,
@@ -71,9 +72,87 @@ const ProfilePage: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isPlaceSelected, setIsPlaceSelected] = useState(false);
+  const addressInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
 
   useEffect(() => {
-    if (currentUser) setFormData({...currentUser});
+    if (currentUser && !formData) {
+      setFormData({...currentUser});
+      if (currentUser.full_address && addressInputRef.current) {
+        addressInputRef.current.value = currentUser.full_address;
+        setIsPlaceSelected(true);
+      }
+    }
+  }, [currentUser?.id]); // Only run on initial load or user change
+
+  useEffect(() => {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.warn("VITE_GOOGLE_MAPS_API_KEY is missing. Google Maps autocomplete will not work.");
+      return;
+    }
+
+    const initAutocomplete = () => {
+      if (addressInputRef.current && window.google && !autocompleteRef.current) {
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+          componentRestrictions: { country: "il" },
+          fields: ["address_components", "geometry", "formatted_address"]
+        });
+
+        autocompleteRef.current.addListener('place_changed', () => {
+          const place = autocompleteRef.current.getPlace();
+          
+          if (!place.geometry) {
+            setIsPlaceSelected(false);
+            return;
+          }
+
+          setIsPlaceSelected(true);
+          if (addressInputRef.current) {
+            addressInputRef.current.value = place.formatted_address || '';
+          }
+          
+          if (currentUser) {
+            updateMemberAddress(currentUser.id, place).then(addressData => {
+              setFormData(prev => prev ? { ...prev, ...addressData } : null);
+              setToast({ msg: 'הכתובת עודכנה בהצלחה!', type: 'success' });
+              setTimeout(() => setToast(null), 3000);
+            }).catch(err => {
+              console.error(err);
+              setToast({ msg: 'שגיאה בעדכון הכתובת', type: 'error' });
+              setTimeout(() => setToast(null), 3000);
+            });
+          }
+        });
+      }
+    };
+
+    // Global error handler for Google Maps API
+    (window as any).gm_authFailure = () => {
+      console.error("Google Maps API authentication/authorization failed.");
+      setToast({ 
+        msg: 'שגיאת הרשאות במפות גוגל. יש לוודא שה-Places API וה-Maps JavaScript API מופעלים ב-Google Cloud.', 
+        type: 'error' 
+      });
+      setTimeout(() => setToast(null), 6000);
+    };
+
+    if (window.google) {
+      initAutocomplete();
+    } else {
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=he&region=IL`;
+        script.async = true;
+        script.defer = true;
+        script.onload = initAutocomplete;
+        document.head.appendChild(script);
+      } else {
+        existingScript.addEventListener('load', initAutocomplete);
+      }
+    }
   }, [currentUser]);
 
   if (!formData) return null;
@@ -117,6 +196,13 @@ const ProfilePage: React.FC = () => {
     if (formData.mobile && !validateMobileNumber(formData.mobile)) {
       setToast({ msg: 'מספר טלפון נייד לא תקין', type: 'error' });
       setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
+    if (!isPlaceSelected) {
+      setToast({ msg: 'יש לבחור כתובת מתוך רשימת ההצעות של גוגל בלבד', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
+      addressInputRef.current?.focus();
       return;
     }
 
@@ -324,6 +410,26 @@ const ProfilePage: React.FC = () => {
                         )}
                       </AnimatePresence>
                     </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">כתובת מגורים (חובה)</label>
+                    <div className="relative">
+                      <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                      <input 
+                        type="text" 
+                        ref={addressInputRef}
+                        defaultValue={currentUser?.full_address || ''} 
+                        onChange={(e) => {
+                          setIsPlaceSelected(false);
+                          setIsDirty(true);
+                        }} 
+                        placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
+                        className="w-full pr-14 pl-6 py-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all" 
+                        required
+                        autoComplete="off"
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-400 pr-3 font-bold">חובה לבחור את הכתובת מתוך הרשימה שנפתחת כדי שנוכל לחשב מרחק מהמועדון.</p>
                   </div>
                 </div>
               </section>

@@ -5,7 +5,7 @@ import {
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
-  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Sparkles
+  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Sparkles, Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
@@ -17,6 +17,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getStorageInstance } from '../services/firebase';
 import { processImage } from '../utils/imageProcessor';
 import { updateStorageStats, syncStorageOnUpload } from '../utils/storageStats';
+import { extractAddressData } from '../utils/googlePlaces';
 import StorageDisplay from '../components/StorageDisplay';
 import EventEditor from '../components/admin/EventEditor';
 import EditMemberForm from '../components/admin/EditMemberForm';
@@ -50,6 +51,110 @@ const AdminPage: React.FC = () => {
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Home Break State
+  const [isPlaceSelected, setIsPlaceSelected] = useState(!!siteConfig.home_break?.formatted);
+  const [hasConfirmedHomeBreakEdit, setHasConfirmedHomeBreakEdit] = useState(false);
+  const addressInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
+  const selectedPlaceRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (activeTab !== 'SITE') return;
+
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.warn("VITE_GOOGLE_MAPS_API_KEY is missing. Google Maps autocomplete will not work.");
+      return;
+    }
+
+    const initAutocomplete = () => {
+      // הגנה משופרת: בודקים שכל שרשרת האובייקטים קיימת לפני הגישה אליהם
+      if (
+        addressInputRef.current && 
+        window.google?.maps?.places?.Autocomplete && 
+        !autocompleteRef.current
+      ) {
+        try {
+          autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+            componentRestrictions: { country: "il" },
+            fields: ["address_components", "geometry", "formatted_address"]
+          });
+
+          autocompleteRef.current.addListener("place_changed", () => {
+            const place = autocompleteRef.current.getPlace();
+            
+            if (!place.geometry) {
+              if (place.name && window.google?.maps?.Geocoder) {
+                const geocoder = new window.google.maps.Geocoder();
+                geocoder.geocode({ address: place.name + ', Israel' }, (results, status) => {
+                  if (status === 'OK' && results && results[0]) {
+                    setIsPlaceSelected(true);
+                    selectedPlaceRef.current = results[0];
+                    if (addressInputRef.current) {
+                      addressInputRef.current.value = results[0].formatted_address || results[0].name || '';
+                    }
+                  } else {
+                    setIsPlaceSelected(false);
+                    selectedPlaceRef.current = null;
+                  }
+                });
+              } else {
+                setIsPlaceSelected(false);
+                selectedPlaceRef.current = null;
+              }
+              return;
+            }
+
+            setIsPlaceSelected(true);
+            selectedPlaceRef.current = place;
+            if (addressInputRef.current) {
+              addressInputRef.current.value = place.formatted_address || place.name || '';
+            }
+          });
+        } catch (e) {
+          console.error("Failed to initialize Autocomplete:", e);
+        }
+      }
+    };
+
+    // Global error handler for Google Maps API
+    (window as any).gm_authFailure = () => {
+      console.error("Google Maps API authentication/authorization failed.");
+      showError('שגיאת הרשאות במפות גוגל. יש לוודא שה-Places API וה-Maps JavaScript API מופעלים ב-Google Cloud.');
+    };
+
+    // בדיקה אם גוגל כבר נטען, אם לא - נטען את הסקריפט
+    if (window.google?.maps?.places) {
+      initAutocomplete();
+    } else {
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=he&region=IL`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          setTimeout(initAutocomplete, 100);
+        };
+        document.head.appendChild(script);
+      } else {
+        existingScript.addEventListener('load', () => {
+          setTimeout(initAutocomplete, 100);
+        });
+        
+        // במקרה שהסקריפט כבר נטען אבל האובייקטים עדיין לא זמינים
+        const checkGoogleInterval = setInterval(() => {
+          if (window.google?.maps?.places) {
+            initAutocomplete();
+            clearInterval(checkGoogleInterval);
+          }
+        }, 500);
+        
+        return () => clearInterval(checkGoogleInterval);
+      }
+    }
+  }, [activeTab]);
 
   // לוגיקה לאובייקטים של Turquoise Glassmorphism
   useEffect(() => {
@@ -1244,6 +1349,114 @@ const AdminPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Home Break Config Widget */}
+            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group mb-6">
+              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                
+                <div className="flex items-center gap-6 relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                    <MapPin size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">חוף הבית</h3>
+                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">עוגן לחישוב מרחקים גיאוגרפים</p>
+                  </div>
+                </div>
+
+                <div className="flex-1 max-w-xl relative z-10 space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">כתובת</label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input 
+                        type="text" 
+                        ref={addressInputRef}
+                        defaultValue={siteConfig.home_break?.formatted || ''} 
+                        readOnly={!hasConfirmedHomeBreakEdit}
+                        onClick={() => {
+                          if (!hasConfirmedHomeBreakEdit) {
+                            showConfirm({
+                              title: 'שינוי חוף הבית',
+                              message: 'השאר את החוף במקומו, לטובת השלווה של כולנו.',
+                              confirmText: 'המשך לשינוי',
+                              cancelText: 'חזור אחורה',
+                              onConfirm: () => {
+                                setHasConfirmedHomeBreakEdit(true);
+                                setTimeout(() => addressInputRef.current?.focus(), 100);
+                              },
+                              onCancel: () => {}
+                            });
+                          }
+                        }}
+                        onChange={(e) => {
+                          setIsPlaceSelected(false);
+                          selectedPlaceRef.current = null;
+                        }} 
+                        placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
+                        className={`w-full pr-14 pl-6 py-5 rounded-2xl font-black outline-none border transition-all text-[#4a002e] ${hasConfirmedHomeBreakEdit ? 'bg-white border-[#ff009f]/50 shadow-lg shadow-[#ff009f]/10' : 'bg-slate-50 border-slate-50 cursor-pointer hover:bg-slate-100'}`}
+                        autoComplete="off"
+                      />
+                    </div>
+                    {hasConfirmedHomeBreakEdit && (
+                      <button 
+                        onClick={async () => {
+                          const currentValue = addressInputRef.current?.value || '';
+                          if (currentValue.trim() === '') {
+                            try {
+                              await updateSiteConfig({ home_break: null });
+                              showSuccess('כתובת חוף הבית נמחקה בהצלחה!');
+                              setHasConfirmedHomeBreakEdit(false);
+                            } catch (err) {
+                              console.error(err);
+                              showError('שגיאה בעדכון הכתובת');
+                            }
+                          } else if (isPlaceSelected && selectedPlaceRef.current) {
+                            try {
+                              const addressData = extractAddressData(selectedPlaceRef.current);
+                              await updateSiteConfig({ home_break: addressData });
+                              showSuccess('כתובת חוף הבית עודכנה בהצלחה!');
+                              setHasConfirmedHomeBreakEdit(false);
+                            } catch (err) {
+                              console.error(err);
+                              showError('שגיאה בעדכון הכתובת');
+                            }
+                          } else {
+                            if (window.google?.maps?.Geocoder) {
+                              const geocoder = new window.google.maps.Geocoder();
+                              geocoder.geocode({ address: currentValue + ', Israel' }, async (results, status) => {
+                                if (status === 'OK' && results && results[0]) {
+                                  try {
+                                    const addressData = extractAddressData(results[0]);
+                                    await updateSiteConfig({ home_break: addressData });
+                                    showSuccess('כתובת חוף הבית עודכנה בהצלחה!');
+                                    setHasConfirmedHomeBreakEdit(false);
+                                    if (addressInputRef.current) {
+                                      addressInputRef.current.value = results[0].formatted_address;
+                                    }
+                                  } catch (err) {
+                                    console.error(err);
+                                    showError('שגיאה בעדכון הכתובת');
+                                  }
+                                } else {
+                                  showError('לא הצלחנו למצוא את הכתובת המבוקשת. אנא בחר מהרשימה.');
+                                }
+                              });
+                            } else {
+                              showError('שירות המפות אינו זמין כרגע.');
+                            }
+                          }
+                        }}
+                        className="bg-[#ff009f] text-white px-8 rounded-2xl font-black hover:bg-[#d60085] transition-colors shadow-lg shadow-[#ff009f]/20 whitespace-nowrap"
+                      >
+                        שמור
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Navigation Position Toggle Widget */}
             <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group mb-6">
               <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
@@ -1260,20 +1473,19 @@ const AdminPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 relative z-10">
-                  <div className="gt-toggle-container">
-                    <span className={`gt-label label-list ${siteConfig.navPosition !== 'floating-bottom' ? 'active' : ''}`}>
-                      עליון
-                    </span>
+                  <div className="gt-segmented">
                     <div 
-                      className={`gt-toggle ${siteConfig.navPosition !== 'floating-bottom' ? 'active' : ''}`}
-                      onClick={() => {
-                        const newPos = siteConfig.navPosition === 'floating-bottom' ? 'floating-top' : 'floating-bottom';
-                        updateSiteConfig({ navPosition: newPos });
-                      }}
-                    />
-                    <span className={`gt-label label-grid ${siteConfig.navPosition === 'floating-bottom' ? 'active' : ''}`}>
+                      className={`gt-segment-item ${siteConfig.navPosition !== 'floating-bottom' ? 'active' : ''}`}
+                      onClick={() => updateSiteConfig({ navPosition: 'floating-top' })}
+                    >
+                      עליון
+                    </div>
+                    <div 
+                      className={`gt-segment-item ${siteConfig.navPosition === 'floating-bottom' ? 'active' : ''}`}
+                      onClick={() => updateSiteConfig({ navPosition: 'floating-bottom' })}
+                    >
                       תחתון
-                    </span>
+                    </div>
                   </div>
                 </div>
               </div>

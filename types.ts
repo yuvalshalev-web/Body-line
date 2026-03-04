@@ -1,4 +1,10 @@
 
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
 export type Gender = 'זכר' | 'נקבה' | 'מעדיף/ה לא לציין';
 
 export interface Member {
@@ -25,6 +31,13 @@ export interface Member {
   loginCount?: number; // Added for analytics
   birthday?: string; // YYYY-MM-DD
   gender?: Gender;
+  street_name?: string;
+  house_number?: string;
+  city?: string;
+  country?: string;
+  lat?: number;
+  lng?: number;
+  full_address?: string;
 }
 
 export interface JoinRequest {

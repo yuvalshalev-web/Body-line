@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, Camera, UserCircle, ChevronLeft, Save, Archive, Loader2, Cake, Phone, Mail, 
@@ -12,6 +12,7 @@ import { validateMobileNumber, formatMobileNumber } from '../../utils/validation
 import { useModal } from '../../contexts/ModalContext';
 import { SUPER_ADMIN_EMAIL } from '../../constants';
 import { hashPassword } from '../../utils/crypto';
+import { updateMemberAddress } from '../../utils/googlePlaces';
 
 interface EditMemberFormProps {
   member: Member;
@@ -31,6 +32,70 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isPlaceSelected, setIsPlaceSelected] = useState(!!member.full_address);
+  const addressInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
+
+  useEffect(() => {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.warn("VITE_GOOGLE_MAPS_API_KEY is missing. Google Maps autocomplete will not work.");
+      return;
+    }
+
+    const initAutocomplete = () => {
+      if (addressInputRef.current && window.google && !autocompleteRef.current) {
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+          componentRestrictions: { country: "il" },
+          fields: ["address_components", "geometry", "formatted_address"]
+        });
+
+        autocompleteRef.current.addListener('place_changed', () => {
+          const place = autocompleteRef.current.getPlace();
+          
+          if (!place.geometry) {
+            setIsPlaceSelected(false);
+            return;
+          }
+
+          setIsPlaceSelected(true);
+          if (addressInputRef.current) {
+            addressInputRef.current.value = place.formatted_address || '';
+          }
+          
+          updateMemberAddress(editingMember.id, place).then(addressData => {
+            setEditingMember(prev => ({ ...prev, ...addressData }));
+            showSuccess('הכתובת עודכנה בהצלחה!');
+          }).catch(err => {
+            console.error(err);
+            showError('שגיאה בעדכון הכתובת');
+          });
+        });
+      }
+    };
+
+    // Global error handler for Google Maps API
+    (window as any).gm_authFailure = () => {
+      console.error("Google Maps API authentication/authorization failed.");
+      showError('שגיאת הרשאות במפות גוגל. יש לוודא שה-Places API וה-Maps JavaScript API מופעלים ב-Google Cloud.');
+    };
+
+    if (window.google) {
+      initAutocomplete();
+    } else {
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=he&region=IL`;
+        script.async = true;
+        script.defer = true;
+        script.onload = initAutocomplete;
+        document.head.appendChild(script);
+      } else {
+        existingScript.addEventListener('load', initAutocomplete);
+      }
+    }
+  }, [editingMember.id]);
 
   const ensureAbsoluteUrl = (url?: string) => {
     if (!url) return '';
@@ -44,6 +109,13 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
       showError('מספר טלפון נייד לא תקין');
       return;
     }
+
+    if (!isPlaceSelected && addressInputRef.current?.value) {
+      showError('יש לבחור כתובת מתוך רשימת ההצעות של גוגל בלבד');
+      addressInputRef.current?.focus();
+      return;
+    }
+
     setIsProcessing(true);
     try {
       await onSave(editingMember);
@@ -372,6 +444,22 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 value={editingMember.birthday || ''}
                 onChange={(e) => setEditingMember({ ...editingMember, birthday: e.target.value })}
                 className="w-full pr-14 pl-6 py-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none cursor-pointer shadow-sm"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">כתובת מגורים</label>
+            <div className="relative">
+              <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input 
+                type="text" 
+                ref={addressInputRef}
+                defaultValue={editingMember.full_address || ''} 
+                onChange={() => setIsPlaceSelected(false)} 
+                placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
+                className="w-full pr-14 pl-6 py-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none shadow-sm" 
+                autoComplete="off"
               />
             </div>
           </div>

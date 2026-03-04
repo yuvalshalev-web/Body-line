@@ -6,8 +6,8 @@ interface ModalOptions {
   title?: string;
   message: string;
   type?: 'alert' | 'confirm' | 'success' | 'error';
-  onConfirm?: () => void;
-  onCancel?: () => void;
+  onConfirm?: () => void | Promise<void>;
+  onCancel?: () => void | Promise<void>;
   confirmText?: string;
   cancelText?: string;
 }
@@ -58,14 +58,16 @@ export const ModalProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setIsOpen(true);
   }, []);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    console.log('handleConfirm called, options:', options);
     setIsOpen(false);
-    if (options?.onConfirm) options.onConfirm();
+    if (options?.onConfirm) await options.onConfirm();
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
+    console.log('handleCancel called, options:', options);
     setIsOpen(false);
-    if (options?.onCancel) options.onCancel();
+    if (options?.onCancel) await options.onCancel();
   };
 
   return (
