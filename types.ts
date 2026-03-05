@@ -38,6 +38,7 @@ export interface Member {
   lat?: number;
   lng?: number;
   full_address?: string;
+  distance?: number;
 }
 
 export interface JoinRequest {

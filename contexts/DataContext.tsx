@@ -31,6 +31,7 @@ interface DataContextType {
       city: string;
       street: string;
     },
+    globalColor?: string,
     h1Styles?: {
       fontSize: string;
       color: string;

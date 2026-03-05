@@ -721,14 +721,10 @@ body.has-bottom-nav main {
 
 /* Darts Board Styles */
 .darts-wrapper {
-    background: radial-gradient(circle, #001d3d 0%, #000814 100%); /* רקע עמוק כמו הים */
-    border-radius: 20px;
-    padding: 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px); /* אפקט זכוכית */
-    display: inline-block;
-    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #2B2B2E;
     font-family: 'Assistant', sans-serif;
 }
 

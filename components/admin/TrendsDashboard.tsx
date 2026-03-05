@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../../contexts/DataContext';
-import { Activity, LayoutGrid, Maximize2 } from 'lucide-react';
+import { Activity, LayoutGrid, Maximize2, TrendingUp, Heart, Sparkles } from 'lucide-react';
 import { getOperationalXAxisProps } from '../../src/utils/chartHelpers';
 import OperationalChartHeader from '../OperationalChartHeader';
 import { calculateDistance } from '../../utils/distanceCalculator';
@@ -40,7 +40,7 @@ const TrendsDashboard: React.FC = () => {
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const maxRadius = 140; // רדיוס הטבעת החיצונית
+    const maxRadius = 182; // רדיוס הטבעת החיצונית (הוגדל ב-30% מ-140)
 
     // Home Break Coords
     const homeLat = siteConfig.home_break?.lat;
@@ -48,7 +48,7 @@ const TrendsDashboard: React.FC = () => {
 
     // Load Logo
     const logoImg = new Image();
-    logoImg.src = siteAssets?.logo || 'https://cdn-icons-png.flaticon.com/512/3144/3144456.png'; // Fallback to a generic surf icon if no logo
+    logoImg.src = 'https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/site_assets%2FextraLogo_1771271649909?alt=media';
 
     const render = () => {
       // Clear canvas
@@ -119,10 +119,22 @@ const TrendsDashboard: React.FC = () => {
           const x = centerX + relativeRadius * Math.cos(angle);
           const y = centerY + relativeRadius * Math.sin(angle);
 
+          // הוספת אנימציית "Pop" למשתמש האחרון
+          let radius = 5;
+          if (index === members.length - 1) {
+            radius = 8; // הגדלה זמנית
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = "#00fbff";
+          } else {
+            ctx.shadowBlur = 0;
+          }
+
           ctx.beginPath();
-          ctx.arc(x, y, 5, 0, Math.PI * 2);
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          
           ctx.fillStyle = '#ff3e00'; // צבע הנקודה
           ctx.fill();
+          ctx.shadowBlur = 0; // Reset shadow
           ctx.strokeStyle = '#fff';
           ctx.lineWidth = 1;
           ctx.stroke();
@@ -146,7 +158,19 @@ const TrendsDashboard: React.FC = () => {
                   tooltip.style.display = 'block';
                   tooltip.style.left = mouseX + 10 + 'px';
                   tooltip.style.top = mouseY + 10 + 'px';
-                  tooltip.innerText = `${m.firstName} ${m.lastName}\n${m.calculatedDistance.toFixed(2)} ק"מ מהחוף`;
+                  tooltip.style.padding = '8px';
+                  tooltip.style.background = 'white';
+                  tooltip.style.borderRadius = '12px';
+                  tooltip.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                  tooltip.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <img src="${m.avatar || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" />
+                      <div style="text-align: right;">
+                        <div style="font-weight: bold; color: #333;">${m.firstName} ${m.lastName}</div>
+                        <div style="font-size: 12px; color: #666;">${m.calculatedDistance.toFixed(2)} ק"מ מהחוף</div>
+                      </div>
+                    </div>
+                  `;
                   found = true;
               }
           });
@@ -267,6 +291,114 @@ const TrendsDashboard: React.FC = () => {
     return { currentWeek, currentMonth };
   }, [yearConfig]);
 
+  const persistenceStats = useMemo(() => {
+    if (!members.length || !weeklyHistory.length) return [];
+
+    const last8Sessions = weeklyHistory.slice(0, 8);
+    const sessionCount = last8Sessions.length;
+
+    return groups.map(group => {
+      const groupMembers = members.filter(m => {
+        if (group.id === 'male') return m.gender === 'זכר';
+        if (group.id === 'female') return m.gender === 'נקבה';
+        if (group.id === 'other') return !m.gender || m.gender === 'מעדיף/ה לא לציין';
+        
+        const birthDate = m.birthday ? new Date(m.birthday) : null;
+        if (!birthDate) return false;
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+        if (group.id === 'age1') return age >= 18 && age <= 25;
+        if (group.id === 'age2') return age >= 26 && age <= 40;
+        if (group.id === 'age3') return age >= 41 && age <= 60;
+        if (group.id === 'age4') return age > 60;
+        return false;
+      });
+
+      const potentialAttendance = groupMembers.length * sessionCount;
+      const actualAttendance = last8Sessions.reduce((sum, session) => {
+        const attendees = session.participantIds || [];
+        const groupAttendees = attendees.filter((id: string) => 
+          groupMembers.some(m => m.id === id)
+        ).length;
+        return sum + groupAttendees;
+      }, 0);
+
+      const retention = potentialAttendance > 0 
+        ? Math.round((actualAttendance / potentialAttendance) * 100) 
+        : 0;
+
+      return {
+        ...group,
+        retention,
+        count: groupMembers.length
+      };
+    });
+  }, [members, weeklyHistory, groups]);
+
+  const PersistenceGauge = ({ value, label, color, count }: { value: number, label: string, color: string, count: number }) => {
+    const isHigh = value >= 80;
+    const isLow = value < 50;
+
+    return (
+      <div className="flex flex-col items-center relative group/gauge w-full max-w-[200px]">
+        <div className="relative w-full aspect-square flex justify-center items-center backdrop-blur-[12px] rounded-full p-2 border border-white/5 shadow-[0_0_20px_rgba(0,0,0,0.05)]">
+          <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
+            <defs>
+              <linearGradient id={`metal-ring-${label}`} x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#E2E8F0" />
+                <stop offset="50%" stopColor="#94A3B8" />
+                <stop offset="100%" stopColor="#475569" />
+              </linearGradient>
+              <linearGradient id={`color-band-${label}`} x1="0" y1="200" x2="200" y2="0" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#1A365D" />
+                <stop offset="50%" stopColor={color} />
+                <stop offset="100%" stopColor="#63B3ED" />
+              </linearGradient>
+            </defs>
+
+            <path 
+              d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
+              fill="none" 
+              stroke={`url(#color-band-${label})`} 
+              strokeWidth="10" 
+              strokeLinecap="round" 
+              opacity="0.8"
+            />
+
+            {[0, 25, 50, 75, 100].map((val) => {
+              const angle = -45 + (val / 100) * 270;
+              const rad = (angle * Math.PI) / 180;
+              const x1 = 100 - Math.cos(rad) * 82;
+              const y1 = 100 - Math.sin(rad) * 82;
+              const x2 = 100 - Math.cos(rad) * 72;
+              const y2 = 100 - Math.sin(rad) * 72;
+              return <line key={val} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#4A5568" strokeWidth="2" opacity="0.2" />;
+            })}
+
+            <motion.g
+              initial={{ rotate: -45 }}
+              animate={{ rotate: -45 + (value / 100) * 270 }}
+              transition={{ duration: 2, ease: "easeOut" }}
+            >
+              <polygon points="100,98 100,102 25,100" fill="#2D3748" />
+            </motion.g>
+            <circle cx="100" cy="100" r="8" fill="#2D3748" />
+            <text x="100" y="150" textAnchor="middle" className="text-2xl font-black fill-[#2D3748]">{value}%</text>
+          </svg>
+        </div>
+        <div className="mt-3 text-center">
+          <p className="text-[10px] font-black text-[#2B2B2E] uppercase tracking-widest mb-1">{label}</p>
+          <div className="flex flex-col items-center gap-1">
+            {isLow && <span className="text-[7px] bg-red-500/10 text-red-500 px-2 py-0.5 rounded-full font-black">LOW PULSE</span>}
+            {isHigh && <span className="text-[7px] bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full font-black">PEAK FLOW</span>}
+            {!isLow && !isHigh && <span className="text-[7px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full font-black">STABLE</span>}
+            <span className="text-[8px] font-bold text-slate-400">{count} חברים</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -322,21 +454,27 @@ const TrendsDashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="theme-switch-container m-0">
-              <span className={`text-[10px] font-black uppercase tracking-widest ${viewMode === 'unified' ? 'text-indigo-600' : 'text-slate-400'}`}>
+            <div className="flex bg-slate-100 p-1 rounded-full">
+              <button
+                onClick={() => setViewMode('unified')}
+                className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                  viewMode === 'unified' 
+                    ? 'bg-white text-indigo-600 shadow-sm' 
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
                 גרף מאוחד
-              </span>
-              <label className="switch">
-                <input 
-                  type="checkbox" 
-                  checked={viewMode === 'split'} 
-                  onChange={handleViewToggle}
-                />
-                <span className="slider"></span>
-              </label>
-              <span className={`text-[10px] font-black uppercase tracking-widest ${viewMode === 'split' ? 'text-indigo-600' : 'text-slate-400'}`}>
+              </button>
+              <button
+                onClick={() => setViewMode('split')}
+                className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                  viewMode === 'split' 
+                    ? 'bg-white text-indigo-600 shadow-sm' 
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
                 גרף מפוצל
-              </span>
+              </button>
             </div>
           </div>
         </div>
@@ -551,12 +689,52 @@ const TrendsDashboard: React.FC = () => {
         )}
       </AnimatePresence>
 
+      {/* Persistence Gauges Section */}
+      <div className="bg-white p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600">
+              <TrendingUp size={24} />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-[#2B2B2E] tracking-tight">מדדי התמדה נוכחיים</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">מבוסס על 8 המפגשים האחרונים</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+            <Sparkles size={14} className="text-amber-500" />
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Real-time Vitality</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-8">
+          {persistenceStats.map((stat, idx) => (
+            <motion.div
+              key={stat.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+            >
+              <PersistenceGauge 
+                value={stat.retention} 
+                label={stat.label} 
+                color={stat.color} 
+                count={stat.count}
+              />
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
       {/* Community Radius Widget */}
       <div className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-soft flex flex-col items-center">
-        <h3 className="text-xl font-black text-[#2B2B2E] tracking-tight mb-6 w-full text-right">רדיוס הקהילה</h3>
-        <div className="w-[350px] relative darts-wrapper flex flex-col items-center">
+        <div className="flex items-center gap-2 mb-6 w-full text-right">
+            <h3 className="text-xl font-black text-[#2B2B2E] tracking-tight">רדיוס הקהילה</h3>
+            <Activity className="w-5 h-5 text-[#2B2B2E]" />
+        </div>
+        <div className="w-[450px] relative darts-wrapper flex flex-col items-center">
           <h4 className="text-center mb-4">פיזור גיאוגרפי</h4>
-          <canvas ref={canvasRef} id="dartsBoard" width="350" height="350" className="rounded-full" />
+          <canvas ref={canvasRef} id="dartsBoard" width="450" height="450" className="rounded-full" />
           <div id="darts-tooltip" ref={tooltipRef} className="absolute hidden pointer-events-none z-50 whitespace-pre-line text-sm text-center"></div>
         </div>
       </div>
