@@ -225,7 +225,7 @@ const DashboardPage: React.FC = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[var(--spacing-md)]">
         {[
-          { label: 'נבחרת הכוכבים', value: activeMembers.length, icon: Users, path: '/directory', color: 'bg-emerald-50 text-emerald-600' },
+          { label: 'נבחרת הגלישה', value: activeMembers.length, icon: Users, path: '/directory', color: 'bg-emerald-50 text-emerald-600' },
           { label: 'תמונות', value: galleryItems.length, icon: ImageIcon, path: '/gallery', color: 'bg-rose-50 text-rose-600' },
           { label: 'אירועים', value: events.length, icon: Calendar, path: '/events', color: 'bg-indigo-50 text-indigo-600' },
           { label: 'פוסטים', value: news.length, icon: Newspaper, path: '/posts', color: 'bg-amber-50 text-amber-600' },

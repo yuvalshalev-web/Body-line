@@ -196,28 +196,18 @@ const EventsPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {events.map((event) => {
+        {events.filter(e => {
+          const eventDate = new Date(`${e.date}T${e.time || '00:00'}`);
+          return eventDate >= new Date();
+        }).map((event) => {
           const isAttending = currentUser ? (event.attendees || []).includes(currentUser.id) : false;
           const isProcessing = processingId === event.id;
           
-          const eventDate = new Date(`${event.date}T${event.time || '00:00'}`);
-          const isPastEvent = eventDate < new Date();
-          
-          const canDelete = !isPastEvent && (isAdmin || (currentUser && event.creatorId === currentUser.id));
-          const canEdit = !isPastEvent && (isAdmin || (currentUser && event.creatorId === currentUser.id));
+          const canDelete = isAdmin || (currentUser && event.creatorId === currentUser.id);
+          const canEdit = isAdmin || (currentUser && event.creatorId === currentUser.id);
 
           return (
-            <div key={event.id} className={`group bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden transition-all duration-500 flex flex-col relative ${isPastEvent ? 'opacity-60 grayscale hover:grayscale-0 hover:opacity-100' : 'hover:shadow-2xl'}`}>
-              
-              {/* Past Event Watermark */}
-              {isPastEvent && (
-                <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
-                  <div className="transform -rotate-12 border-4 border-slate-800/20 text-slate-800/20 text-6xl font-black uppercase tracking-widest px-8 py-4 rounded-3xl backdrop-blur-sm">
-                    הסתיים
-                  </div>
-                </div>
-              )}
-
+            <div key={event.id} className="group bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col relative">
               <div className="absolute top-6 left-6 flex gap-2 z-20">
                 {canEdit && (
                   <div className="flex gap-2">
@@ -278,21 +268,14 @@ const EventsPage: React.FC = () => {
                     </span>
                   </div>
                 </div>
-                {!isPastEvent && (
-                  <button 
-                    onClick={() => handleToggleAttendance(event.id)}
-                    disabled={isProcessing}
-                    className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all ${isAttending ? 'bg-rose-600 text-white' : 'bg-[#006994] text-white hover:bg-[#4E8294]'}`}
-                  >
-                    {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-[#00FFFF]" />}
-                    {isAttending ? 'מבטל הגעה' : 'אני מגיע/ה'}
-                  </button>
-                )}
-                {isPastEvent && (
-                   <div className="w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 bg-slate-100 text-slate-400 cursor-not-allowed">
-                     האירוע הסתיים
-                   </div>
-                )}
+                <button 
+                  onClick={() => handleToggleAttendance(event.id)}
+                  disabled={isProcessing}
+                  className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all ${isAttending ? 'bg-rose-600 text-white' : 'bg-[#006994] text-white hover:bg-[#4E8294]'}`}
+                >
+                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-[#00FFFF]" />}
+                  {isAttending ? 'מבטל הגעה' : 'אני מגיע/ה'}
+                </button>
               </div>
             </div>
           );

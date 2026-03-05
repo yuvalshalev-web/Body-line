@@ -1226,49 +1226,73 @@ const AdminPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {events.map(event => (
-                <div key={event.id} className="bg-white border border-[#ff009f]/5 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-[#ff009f]/5 transition-all flex items-center justify-between group">
-                  <div className="flex items-center gap-6">
-                    <div className="bg-[#ff009f]/10 text-[#ff009f] p-4 rounded-2xl flex items-center justify-center font-black min-w-max">
-                      <span className="text-sm whitespace-nowrap tabular-nums">{formatDate(event.date)}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <h4 className="text-xl font-black text-[#4a002e] mb-1">{event.title}</h4>
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs font-bold text-[#f063c1]/60">{event.location}</p>
-                        <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider ${
-                          event.type === 'COMMUNITY' ? 'bg-[#ff009f] text-white' : 
-                          event.type === 'INSTRUCTOR' ? 'bg-amber-500 text-white' : 
-                          'bg-[#f7c1ea]/10 text-[#f063c1]/60'
-                        }`}>
-                          {event.type === 'COMMUNITY' ? 'קהילה' : event.type === 'INSTRUCTOR' ? 'מדריך' : 'חבר'}
-                        </span>
+              {events.map(event => {
+                const eventDate = new Date(`${event.date}T${event.time || '00:00'}`);
+                const isPastEvent = eventDate < new Date();
+
+                return (
+                  <div key={event.id} className={`bg-white border border-[#ff009f]/5 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-[#ff009f]/5 transition-all flex items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
+                    
+                    {isPastEvent && (
+                      <div className="absolute -right-12 top-6 transform rotate-45 bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest px-12 py-1 shadow-sm z-10">
+                        הסתיים
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-6">
+                      <div className={`p-4 rounded-2xl flex items-center justify-center font-black min-w-max ${isPastEvent ? 'bg-slate-100 text-slate-400' : 'bg-[#ff009f]/10 text-[#ff009f]'}`}>
+                        <span className="text-sm whitespace-nowrap tabular-nums">{formatDate(event.date)}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <h4 className={`text-xl font-black mb-1 ${isPastEvent ? 'text-slate-500 line-through decoration-slate-300' : 'text-[#4a002e]'}`}>{event.title}</h4>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-bold text-[#f063c1]/60">{event.location}</p>
+                          <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider ${
+                            event.type === 'COMMUNITY' ? 'bg-[#ff009f] text-white' : 
+                            event.type === 'INSTRUCTOR' ? 'bg-amber-500 text-white' : 
+                            'bg-[#f7c1ea]/10 text-[#f063c1]/60'
+                          }`}>
+                            {event.type === 'COMMUNITY' ? 'קהילה' : event.type === 'INSTRUCTOR' ? 'מדריך' : 'חבר'}
+                          </span>
+                        </div>
                       </div>
                     </div>
+                    <div className="flex gap-2">
+                      {!isPastEvent && (
+                        <button 
+                          onClick={() => handleEditEvent(event)}
+                          className="p-4 bg-[#f7c1ea]/10 text-[#f063c1] rounded-2xl hover:bg-[#ff009f] hover:text-white transition-all"
+                          title="עריכת אירוע"
+                        >
+                          <Pencil size={20} />
+                        </button>
+                      )}
+                      {!isPastEvent && (
+                        <button 
+                          onClick={() => {
+                            showConfirm({
+                              message: 'האם למחוק אירוע זה?',
+                              onConfirm: () => deleteEvent(event.id)
+                            });
+                          }}
+                          className="p-4 bg-rose-50 text-rose-400 rounded-2xl hover:bg-rose-500 hover:text-white transition-all"
+                          title="מחיקת אירוע"
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      )}
+                      {isPastEvent && (
+                         <button 
+                          className="p-4 bg-slate-50 text-slate-300 rounded-2xl cursor-not-allowed"
+                          title="לא ניתן לערוך אירוע שהסתיים"
+                        >
+                          <Archive size={20} />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => handleEditEvent(event)}
-                      className="p-4 bg-[#f7c1ea]/10 text-[#f063c1] rounded-2xl hover:bg-[#ff009f] hover:text-white transition-all"
-                      title="עריכת אירוע"
-                    >
-                      <Pencil size={20} />
-                    </button>
-                    <button 
-                      onClick={() => {
-                        showConfirm({
-                          message: 'האם למחוק אירוע זה?',
-                          onConfirm: () => deleteEvent(event.id)
-                        });
-                      }}
-                      className="p-4 bg-rose-50 text-rose-400 rounded-2xl hover:bg-rose-500 hover:text-white transition-all"
-                      title="מחיקת אירוע"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

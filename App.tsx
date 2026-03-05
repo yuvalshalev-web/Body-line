@@ -210,7 +210,7 @@ const App: React.FC = () => {
 
   const navItems = [
     { path: '/', icon: Home, label: 'בית' },
-    { path: '/directory', icon: Users, label: 'נבחרת הכוכבים' },
+    { path: '/directory', icon: Users, label: 'נבחרת הגלישה' },
     { path: '/gallery', icon: ImageIcon, label: 'גלריית תמונות' },
     { path: '/events', icon: Calendar, label: 'אירועים קרובים' },
     { path: '/posts', icon: Newspaper, label: 'פוסטים ועדכונים' },

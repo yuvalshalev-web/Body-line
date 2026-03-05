@@ -924,88 +924,165 @@ const CommunityAnalytics: React.FC = () => {
 
 const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, percentage }) => {
   const isAnnual = title.includes('שנתי');
-  const label = isAnnual ? 'שנתי' : 'חודשי';
+  
+  // Surfboard specs based on user request - Rusty Moby Fish / SD
+  const boardSpecs = {
+    brand: "Rusty",
+    model: "Moby Fish / SD",
+    length: "6'0",
+    volume: 32.5,
+    material: "PU/Polyester",
+    tailType: "Squash/Swallow",
+    color: "White",
+    logo: "Black R-Dot",
+    hasTractionPad: false
+  };
+
+  // Calculate fill color based on percentage (Green -> Yellow -> Red)
+  const getFillColor = (p: number) => {
+    if (p <= 20) return '#10B981'; // Green for low churn
+    if (p <= 50) return '#F59E0B'; // Yellow/Orange for medium churn
+    return '#EF4444'; // Red for high churn
+  };
+
+  const fillColor = getFillColor(percentage);
 
   return (
-    <div className="flex-1 max-w-[220px] flex flex-col items-center text-center relative group/bucket">
+    <div className="flex-1 max-w-[220px] flex flex-col items-center text-center relative group/surfboard">
       <h3 className="text-[#1A365D] font-black text-[11px] mb-8 tracking-tight uppercase opacity-50 mix-blend-multiply -mt-2">
         {title}
       </h3>
 
-      <div className="relative w-24 h-32 mb-4">
-        {/* Industrial Bucket Handle */}
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-20 h-10 border-[4px] border-slate-400 border-b-0 rounded-t-[3rem] shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
-          {/* Welding Mark Left */}
-          <div className="absolute bottom-0 -left-1.5 w-3 h-3 rounded-full bg-slate-500/30 blur-[1px]" />
-          {/* Welding Mark Right */}
-          <div className="absolute bottom-0 -right-1.5 w-3 h-3 rounded-full bg-slate-500/30 blur-[1px]" />
-        </div>
-        
-        {/* Bucket Body - Brushed Metal Render */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-400 via-slate-200 to-slate-400 border-x border-slate-500/30 border-b border-slate-500/50 rounded-b-[1.5rem] overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.2),inset_0_-8px_15px_rgba(0,0,0,0.1)] z-10">
-          
-          {/* Etched Scale (0-100) */}
-          <div className="absolute left-1.5 top-0 bottom-0 flex flex-col justify-between py-2 opacity-30 pointer-events-none">
-            {[100, 75, 50, 25, 0].map(n => (
-              <span key={n} className="text-[7px] font-mono font-bold text-[#2B2B2E] leading-none">{n}</span>
-            ))}
-          </div>
+      <div className="relative w-32 h-64 mb-4 perspective-1000">
+        <motion.div 
+          initial={{ rotateY: 0 }}
+          whileHover={{ rotateY: 180 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+          className="w-full h-full relative preserve-3d cursor-pointer"
+        >
+          {/* Front Side - The Surfboard Design */}
+          <div className="absolute inset-0 backface-hidden">
+            {/* Surfboard Shape */}
+            <div className="w-full h-full relative">
+              <svg viewBox="0 0 100 300" className="w-full h-full drop-shadow-xl">
+                <defs>
+                  <linearGradient id={`board-gradient-${isAnnual ? 'annual' : 'monthly'}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#f8f9fa" />
+                    <stop offset="50%" stopColor="#ffffff" />
+                    <stop offset="100%" stopColor="#e9ecef" />
+                  </linearGradient>
+                  
+                  {/* Stringer (Wood strip down the middle) */}
+                  <linearGradient id="stringer-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#d4a373" />
+                    <stop offset="50%" stopColor="#faedcd" />
+                    <stop offset="100%" stopColor="#d4a373" />
+                  </linearGradient>
+                </defs>
 
-          {/* Etched Label into Metal */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-            <span 
-              className="text-xl font-black text-slate-600/40 uppercase tracking-widest rotate-[-15deg]"
-              style={{ 
-                textShadow: '-1px -1px 1px rgba(255,255,255,0.5), 1px 1px 1px rgba(0,0,0,0.2)',
-              }}
-            >
-              {label}
-            </span>
-          </div>
-
-          {/* Turbulent Water */}
-          <motion.div 
-            initial={{ height: 0 }}
-            animate={{ height: `${percentage}%` }}
-            transition={{ duration: 2, ease: "circOut" }}
-            className="absolute bottom-0 left-0 w-full bg-gradient-to-b from-blue-500/90 via-blue-600/80 to-blue-800/90 z-10"
-          >
-            {/* Surface Waves & Reflections */}
-            <div className="absolute -top-1.5 left-0 w-full h-3 overflow-hidden">
-              <motion.div 
-                animate={{ x: [-15, 0, -15] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="w-[120%] h-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.4),transparent)] blur-[1.5px]" 
-              />
-              <div className="absolute top-0 left-0 w-full h-0.5 bg-white/30 blur-[0.5px]" />
-            </div>
-
-            {/* Internal Reflections on Metal Walls */}
-            <div className="absolute inset-0 opacity-30 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.2)_50%,transparent_100%)] animate-pulse" />
-            
-            {/* Dynamic Bubbles/Turbulence */}
-            <div className="absolute inset-0 overflow-hidden">
-              {[...Array(3)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ y: '100%', opacity: 0 }}
-                  animate={{ y: '-20%', opacity: [0, 0.5, 0] }}
-                  transition={{ 
-                    duration: 2 + Math.random() * 2, 
-                    repeat: Infinity, 
-                    delay: Math.random() * 2,
-                    ease: "linear"
-                  }}
-                  className="absolute w-0.5 h-0.5 bg-white/40 rounded-full"
-                  style={{ left: `${20 + Math.random() * 60}%` }}
+                {/* Board Body - Fish/Hybrid Shape */}
+                <path 
+                  d="M50,5 C75,5 95,60 95,150 C95,240 85,290 50,290 C15,290 5,240 5,150 C5,60 25,5 50,5 Z" 
+                  fill={`url(#board-gradient-${isAnnual ? 'annual' : 'monthly'})`}
+                  stroke="#e2e8f0"
+                  strokeWidth="1"
                 />
-              ))}
-            </div>
-          </motion.div>
 
-          {/* Brushed Metal Texture Overlay */}
-          <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-[repeating-linear-gradient(90deg,transparent,transparent_2px,rgba(0,0,0,0.1)_3px)]" />
-        </div>
+                {/* Stringer */}
+                <rect x="49" y="5" width="2" height="285" fill="url(#stringer-gradient)" opacity="0.8" />
+
+                {/* Rusty Logo (R-Dot style) */}
+                <g transform="translate(50, 80) scale(0.15)">
+                  <circle cx="0" cy="0" r="40" fill="#000000" />
+                  <text x="0" y="10" textAnchor="middle" fill="white" fontSize="40" fontWeight="bold" fontFamily="Arial">R</text>
+                </g>
+
+                {/* Model Name */}
+                <text x="50" y="180" textAnchor="middle" fontSize="6" fontFamily="Arial" fill="#cbd5e0" letterSpacing="1" transform="rotate(-90 50 180)">
+                  {boardSpecs.model.toUpperCase()}
+                </text>
+
+                {/* Dynamic Fill Level (Churn Visualization) */}
+                <clipPath id={`board-clip-${isAnnual ? 'annual' : 'monthly'}`}>
+                  <path d="M50,5 C75,5 95,60 95,150 C95,240 85,290 50,290 C15,290 5,240 5,150 C5,60 25,5 50,5 Z" />
+                </clipPath>
+                
+                <g clipPath={`url(#board-clip-${isAnnual ? 'annual' : 'monthly'})`}>
+                  <motion.rect 
+                    initial={{ y: 300 }}
+                    animate={{ y: 300 - (percentage * 3) }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    x="0" 
+                    width="100" 
+                    height="300" 
+                    fill={fillColor} 
+                    opacity="0.3"
+                  />
+                  {/* Liquid Top Line */}
+                  <motion.line 
+                    initial={{ y1: 300, y2: 300 }}
+                    animate={{ y1: 300 - (percentage * 3), y2: 300 - (percentage * 3) }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    x1="0" 
+                    x2="100" 
+                    stroke={fillColor} 
+                    strokeWidth="2" 
+                    opacity="0.8"
+                  />
+                </g>
+
+                {/* Traction Pad (Tail Pad) */}
+                {boardSpecs.hasTractionPad && (
+                  <g transform="translate(50, 260)" opacity="0.8">
+                    <rect x="-15" y="0" width="30" height="20" rx="2" fill="#1a202c" />
+                    <rect x="-15" y="0" width="30" height="20" rx="2" fill="url(#stringer-gradient)" opacity="0.2" />
+                    {/* Grid texture */}
+                    <path d="M-15,5 L15,5 M-15,10 L15,10 M-15,15 L15,15" stroke="white" strokeWidth="0.5" opacity="0.3" />
+                    <path d="M-5,0 L-5,20 M5,0 L5,20" stroke="white" strokeWidth="0.5" opacity="0.3" />
+                  </g>
+                )}
+              </svg>
+            </div>
+          </div>
+
+          {/* Back Side - Specs & Details */}
+          <div className="absolute inset-0 backface-hidden rotate-y-180 bg-white rounded-[3rem] shadow-xl border border-slate-100 p-4 flex flex-col items-center justify-center transform scale-x-[-1]">
+            <div className="text-center space-y-2">
+              <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest border-b border-slate-100 pb-2 mb-2">
+                Board Specs
+              </h4>
+              <div className="space-y-1 text-[9px] font-mono text-slate-500 text-left w-full px-2">
+                <div className="flex justify-between">
+                  <span>Model:</span>
+                  <span className="font-bold text-slate-700">{boardSpecs.model}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Dims:</span>
+                  <span className="font-bold text-slate-700">{boardSpecs.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Vol:</span>
+                  <span className="font-bold text-slate-700">{boardSpecs.volume}L</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Tail:</span>
+                  <span className="font-bold text-slate-700">{boardSpecs.tailType}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Const:</span>
+                  <span className="font-bold text-slate-700">PU/Poly</span>
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-2 border-t border-slate-100 w-full">
+                <div className="text-[8px] uppercase tracking-widest text-slate-400 mb-1">Churn Level</div>
+                <div className="text-2xl font-black" style={{ color: fillColor }}>
+                  {percentage}%
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       <div className="relative z-20 mt-1">
@@ -1018,7 +1095,7 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
           >
             {percentage}%
           </span>
-          <div className="absolute -top-8 -right-3 opacity-0 group-hover/bucket:opacity-100 transition-opacity duration-500">
+          <div className="absolute -top-8 -right-3 opacity-0 group-hover/surfboard:opacity-100 transition-opacity duration-500">
              <Sparkles className="w-3 h-3 text-blue-400 animate-pulse" />
           </div>
         </div>

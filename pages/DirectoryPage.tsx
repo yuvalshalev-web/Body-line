@@ -219,15 +219,9 @@ const DirectoryPage: React.FC = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         {/* Body-line Standard Header Stack */}
         <div className="flex flex-col items-center text-center mb-10 space-y-4">
-          {/* Top Badge */}
-          <div className="bg-white/40 backdrop-blur-md border border-white/60 px-4 py-1 rounded-full inline-flex items-center gap-2 text-[10px] font-black text-slate-500 tracking-widest uppercase shadow-sm">
-            <Users size={12} className="text-[#D4A373]" />
-            <span>THE ELITE SQUAD</span>
-          </div>
-
           {/* Main Title */}
           <h1 className="main-page-title">
-            נבחרת הכוכבים
+            נבחרת הגלישה
           </h1>
 
           {/* Subtitle with Emoji context */}

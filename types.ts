@@ -28,6 +28,7 @@ export interface Member {
   twitterUrl?: string; // Added for X support
   websiteUrl?: string;
   totalAttendance?: number; // Lifetime count of sessions attended
+  eventAttendanceCount?: number; // Lifetime count of events attended
   loginCount?: number; // Added for analytics
   birthday?: string; // YYYY-MM-DD
   gender?: Gender;
