@@ -530,74 +530,89 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
+  const addRolloverLog = async (action: string, status: 'success' | 'failed', details: string) => {
+    const db = getDb();
+    await addDoc(collection(db, 'rollover_logs'), {
+      action,
+      status,
+      details,
+      timestamp: new Date().toISOString()
+    });
+  };
+
   const finalizeThursdaySession = async () => {
     const db = getDb();
     const sessionRef = doc(db, 'site_data', 'active_session');
-    const sessionSnap = await getDoc(sessionRef);
     
-    if (!sessionSnap.exists()) return;
-    
-    const data = sessionSnap.data() as any;
-    const attendees = data.attendees || [];
-    const sessionDateStr = data.date;
+    try {
+      const sessionSnap = await getDoc(sessionRef);
+      if (!sessionSnap.exists()) {
+        await addRolloverLog('finalizeThursdaySession', 'failed', 'Active session not found');
+        return;
+      }
+      
+      const data = sessionSnap.data() as any;
+      const attendees = data.attendees || [];
+      const sessionDateStr = data.date;
 
-    if (!sessionDateStr) return;
-    const sessionDate = new Date(sessionDateStr);
+      if (!sessionDateStr) {
+        await addRolloverLog('finalizeThursdaySession', 'failed', 'Session date missing');
+        return;
+      }
+      const sessionDate = new Date(sessionDateStr);
 
-    // Idempotency check: Has this session already been archived?
-    // Use the already fetched weeklyHistory from state if possible, or a limited query
-    const alreadyExists = weeklyHistory.some(d => {
-      const dDate = d.date?.toDate ? d.date.toDate() : new Date(d.date);
-      return dDate.toDateString() === sessionDate.toDateString();
-    });
+      // Idempotency check
+      const alreadyExists = weeklyHistory.some(d => {
+        const dDate = d.date?.toDate ? d.date.toDate() : new Date(d.date);
+        return dDate.toDateString() === sessionDate.toDateString();
+      });
 
-    if (alreadyExists) {
+      if (alreadyExists) {
+        await addRolloverLog('finalizeThursdaySession', 'success', 'Session already archived (idempotent)');
+        const nextThurs = getNextThursday();
+        await updateDoc(sessionRef, { attendees: [], date: nextThurs });
+        return;
+      }
+
+      if (attendees.length === 0) {
+        await addRolloverLog('finalizeThursdaySession', 'success', 'No attendees, resetting session');
+        const nextThurs = getNextThursday();
+        await updateDoc(sessionRef, { attendees: [], date: nextThurs });
+        return;
+      }
+
+      const batch = writeBatch(db);
+      
+      // 1. Update totalAttendance
+      attendees.forEach((uid: string) => {
+        const memberRef = doc(db, 'members', uid);
+        batch.update(memberRef, { totalAttendance: increment(1) });
+      });
+
+      // 2. Create weekly_history entry
+      const historyRef = doc(collection(db, 'weekly_history'));
+      batch.set(historyRef, {
+        date: Timestamp.fromDate(sessionDate),
+        participantsCount: attendees.length,
+        participantIds: attendees,
+        timestamp: new Date().toISOString(),
+        instructorName: 'מדריך חבל זוג'
+      });
+
+      // 3. Reset active session
       const nextThurs = getNextThursday();
-      await updateDoc(sessionRef, {
+      batch.update(sessionRef, {
         attendees: [],
         date: nextThurs
       });
-      return;
+
+      await batch.commit();
+      await addRolloverLog('finalizeThursdaySession', 'success', `Archived session with ${attendees.length} attendees`);
+    } catch (error: any) {
+      console.error("Finalize session error:", error);
+      await addRolloverLog('finalizeThursdaySession', 'failed', error.message);
+      throw error;
     }
-
-    if (attendees.length === 0) {
-      const nextThurs = getNextThursday();
-      await updateDoc(sessionRef, {
-        attendees: [],
-        date: nextThurs
-      });
-      return;
-    }
-
-    const batch = writeBatch(db);
-    
-    // 1. Update totalAttendance for all attendees
-    let updateCount = 0;
-    attendees.forEach((uid: string) => {
-      updateCount++;
-      if (updateCount > 200) return; // Safety counter
-      const memberRef = doc(db, 'members', uid);
-      batch.update(memberRef, { totalAttendance: increment(1) });
-    });
-
-    // 2. Create weekly_history entry
-    const historyRef = doc(collection(db, 'weekly_history'));
-    batch.set(historyRef, {
-      date: Timestamp.fromDate(sessionDate),
-      participantsCount: attendees.length,
-      participantIds: attendees,
-      timestamp: new Date().toISOString(),
-      instructorName: 'מדריך חבל זוג'
-    });
-
-    // 3. Reset active session
-    const nextThurs = getNextThursday();
-    batch.update(sessionRef, {
-      attendees: [],
-      date: nextThurs
-    });
-
-    await batch.commit();
   };
 
   const batchAddGlossary = async (items: Omit<GlossaryTerm, 'id'>[]) => {

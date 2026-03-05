@@ -489,6 +489,38 @@ const LoginPage: React.FC = () => {
             </form>
           )}
         </div>
+
+        {/* Logos at the bottom */}
+        <div className="mt-12 flex items-center justify-center gap-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-700">
+          {(siteAssets?.atalefLogo || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Flogo%2Fatalef-logo.png?alt=media") && (
+            <a 
+              href="https://www.atalef.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="group transition-all duration-500 hover:scale-110"
+            >
+              <img 
+                src={siteAssets?.atalefLogo || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Flogo%2Fatalef-logo.png?alt=media"} 
+                alt="עמותת העטלף" 
+                className="h-14 w-auto opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0 group-hover:brightness-125 transition-all duration-500 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]" 
+              />
+            </a>
+          )}
+          {(siteAssets?.reefLogo || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Flogo%2Freef-logo.jpeg?alt=media") && (
+            <a 
+              href="https://www.reefseacenter.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="group transition-all duration-500 hover:scale-110"
+            >
+              <img 
+                src={siteAssets?.reefLogo || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Flogo%2Freef-logo.jpeg?alt=media"} 
+                alt="מועדון ריף" 
+                className="h-14 w-auto opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0 group-hover:brightness-125 transition-all duration-500 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]" 
+              />
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );
