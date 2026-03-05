@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
-import { Flame, Trophy, Calendar, Crown, Star, Waves } from 'lucide-react';
+import { Flame, Trophy, Calendar, Crown, Star, Waves, Info } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { calculateUserStats } from '../src/utils/analytics';
 
@@ -23,6 +23,7 @@ const Counter = ({ value, duration = 2 }: { value: number; duration?: number }) 
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   const { members, weeklyHistory, yearConfig, isLoading } = useData();
+  const [showPopup, setShowPopup] = useState(false);
 
   const member = useMemo(() => {
     return members.find(m => m.id === userId);
@@ -137,21 +138,14 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             <div 
               className="age-gimmick-card w-full max-w-[310px] mx-auto md:mx-0" 
               dir="rtl"
-              onClick={(e) => {
-                const dot = e.currentTarget.querySelector('.user-pulse-dot');
-                if (dot) {
-                  dot.classList.remove('bounce-animation');
-                  void (dot as HTMLElement).offsetWidth; // Trigger reflow
-                  dot.classList.add('bounce-animation');
-                }
-              }}
+              onClick={() => setShowPopup(true)}
             >
               <div id="funny-title" style={{ fontSize: '15px', color: '#8b795e', marginBottom: '5px', fontWeight: 700 }}>
                 מדד ה-Vintage 🍷
               </div>
               
               <div className="indicator-wrapper">
-                <span id="startIcon" className="endpoint-icon">👓</span>
+                <span id="startIcon" className="endpoint-icon">🐢</span>
                 <div className="age-line-container">
                   <span id="centerIcon" className="center-icon">
                     {member.gender === 'נקבה' ? '👑' : '🐂'}
@@ -179,43 +173,86 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
                     if (p < 25) return <span>עוד לא התייבש לך החלב על השפתיים, <strong>אפרוחית</strong>! 🐥</span>;
                     if (p < 50) return <span>את <strong>פרגית</strong> צעירה, תהני! 🐔</span>;
                     if (p <= 60) return <span>מזל טוב, את <strong>מלכת הלול</strong>! 👑✨</span>;
-                    return <span><strong>מגה גלופלקס</strong>, לקחת? 🦯</span>;
+                    return <span><strong>צב מנוסה</strong>, מגה גלופלקס לקחת? 🐢</span>;
                   } else {
                     if (p < 25) return <span>עוד לא התייבש לך החלב על השפתיים 🍼</span>;
                     if (p < 50) return <span>אתה <strong>עגל צעיר</strong>, תהנה 🐮</span>;
                     if (p <= 60) return <span>מזל טוב, אתה <strong>שור אמיתי</strong>! 🐂</span>;
-                    return <span><strong>מגה גלופלקס</strong>, לקחת? 🦯</span>;
+                    return <span><strong>צב מנוסה</strong>, מגה גלופלקס לקחת? 🐢</span>;
                   }
                 })()}
               </div>
               <div style={{ fontSize: '9px', opacity: 0.5, marginTop: '10px' }}>(לחצי עליי לסיבוב דאווין)</div>
             </div>
+
+            {/* Popup Modal */}
+            {showPopup && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" onClick={() => setShowPopup(false)}>
+                <div className="bg-white p-6 rounded-2xl shadow-xl max-w-xs w-full text-center" onClick={e => e.stopPropagation()}>
+                  <h2 className="text-xl font-black text-[#006994] mb-3">
+                    סיבוב דאווין {(() => {
+                      const p = agePercentile.roundedPercentile;
+                      if (member.gender === 'נקבה') {
+                        if (p < 25) return '🐥';
+                        if (p < 50) return '🐔';
+                        if (p <= 60) return '👑';
+                        return '🐢';
+                      } else {
+                        if (p < 25) return '🍼';
+                        if (p < 50) return '🐮';
+                        if (p <= 60) return '🐂';
+                        return '🐢';
+                      }
+                    })()}
+                  </h2>
+                  <p className="text-md font-bold text-slate-700">הגעת לאחוזון גיל {agePercentile.roundedPercentile}%</p>
+                  <button 
+                    className="mt-4 px-5 py-1.5 bg-[#006994] text-white rounded-full font-bold text-sm"
+                    onClick={() => setShowPopup(false)}
+                  >
+                    סגור
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         <div className="mt-6 grid grid-cols-3 gap-[var(--spacing-md)]">
-          <div className="flex flex-col">
-            <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] justify-center md:justify-start">
+          <div className="flex flex-col group relative">
+            <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] justify-center md:justify-start cursor-help">
               <Waves size={13} className="text-[var(--ocean-liquid)]" /> סשנים
+              <Info size={12} className="text-slate-400" />
+              <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-10">
+                מספר הסשנים הכולל שביצעת עד כה.
+              </div>
             </span>
-            <span className="text-3xl font-black text-[var(--ocean-liquid)] tabular-nums">
+            <span className="text-3xl font-black text-[var(--ocean-deep)] tabular-nums">
               <Counter value={stats.totalSessions} />
             </span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start">
-              <Flame size={13} className="text-orange-500" /> רצף
+          <div className="flex flex-col group relative">
+            <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start cursor-help">
+              <Flame size={13} className="text-[var(--ocean-navy)]" /> רצף
+              <Info size={12} className="text-slate-400" />
+              <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-10">
+                מספר השבועות הרצופים בהם נרשמה פעילות.
+              </div>
             </span>
-            <span className="text-3xl font-black text-orange-500 tabular-nums">
+            <span className="text-3xl font-black text-[var(--ocean-navy)] tabular-nums">
               <Counter value={stats.streak} />
             </span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start">
-              <Trophy size={13} className="text-amber-500" /> Grit
+          <div className="flex flex-col group relative">
+            <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start cursor-help">
+              <Trophy size={13} className="text-[var(--ocean-deep)]" /> Grit
+              <Info size={12} className="text-slate-400" />
+              <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-10">
+                זהו מדד ה"נחישות" שלך. הוא בודק כמה אתה מתמיד. הוא משלב את כמות הסשנים שעשית עם העקביות שלך (הרצף). העקביות חשובה יותר מהכמות.
+              </div>
             </span>
-            <span className="text-3xl font-black text-amber-500 tabular-nums">
-              <Counter value={Math.round(stats.gritScore)} />
+            <span className="text-3xl font-black text-[var(--ocean-deep)] tabular-nums">
+              <Counter value={Math.round(stats.gritScore)} />%
             </span>
           </div>
         </div>

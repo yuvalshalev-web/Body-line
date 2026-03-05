@@ -55,11 +55,15 @@ export const calculateUserStats = (
 
   const totalSessions = userSessions.length;
 
-  // Calculate Social Attendance
-  const socialEvents = events.filter(e => e.type === 'COMMUNITY');
-  const userSocialAttendance = socialEvents.filter(e => e.attendees?.includes(userId)).length;
-  const totalSocialEvents = socialEvents.length;
-  const socialPercent = totalSocialEvents > 0 ? Math.round((userSocialAttendance / totalSocialEvents) * 100) : 100;
+  // Calculate Social Attendance (Only past events)
+  const now = new Date();
+  const pastSocialEvents = events.filter(e => {
+    const eventDate = e.date?.toDate ? e.date.toDate() : new Date(e.date);
+    return e.type === 'COMMUNITY' && eventDate < now;
+  });
+  const userSocialAttendance = pastSocialEvents.filter(e => e.attendees?.includes(userId)).length;
+  const totalSocialEvents = pastSocialEvents.length;
+  const socialPercent = totalSocialEvents > 0 ? Math.round((userSocialAttendance / totalSocialEvents) * 100) : 0;
   
   // Calculate Streak (consecutive weeks)
   // Sort history by date desc
@@ -129,7 +133,6 @@ export const calculateUserStats = (
     : 100;
 
   // Yearly Stability Calculation (based on Shnat Hevel Zug)
-  const now = new Date();
   const seasonStart = yearConfig?.startDate ? new Date(yearConfig.startDate) : new Date('2026-01-01');
   const seasonEnd = yearConfig?.endDate ? new Date(yearConfig.endDate) : new Date('2026-12-31');
   

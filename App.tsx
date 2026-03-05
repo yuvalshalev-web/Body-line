@@ -215,7 +215,7 @@ const App: React.FC = () => {
     { path: '/events', icon: Calendar, label: 'אירועים קרובים' },
     { path: '/posts', icon: Newspaper, label: 'פוסטים ועדכונים' },
     { path: '/world-news', icon: Globe, label: 'חדשות מהעולם' },
-    { path: '/surfer-card', icon: Trophy, label: 'כרטיס הגולש שלי' },
+    { path: '/surfer-card', icon: Trophy, label: 'דשבורד' },
     { path: '/profile', icon: UserCircle, label: 'פרופיל אישי' }
   ];
 
@@ -268,7 +268,7 @@ const App: React.FC = () => {
                 <div className="icon-wrapper">
                   <item.icon size={20} />
                 </div>
-                <span>{item.label === 'כרטיס הגולש שלי' ? 'כרטיס' : item.label.split(' ')[0]}</span>
+                <span>{item.label === 'דשבורד' ? 'דשבורד' : item.label.split(' ')[0]}</span>
               </button>
             );
           })}

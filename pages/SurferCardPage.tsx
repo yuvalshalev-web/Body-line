@@ -29,11 +29,8 @@ const SurferCardPage: React.FC = () => {
     <div className="max-w-7xl mx-auto px-[var(--spacing-md)] md:px-[var(--spacing-lg)] py-[var(--spacing-lg)] font-['Assistant']" dir="rtl">
       <div className="mb-[var(--spacing-lg)] text-center md:text-right">
         <h1 className="main-page-title">
-          כרטיס הגולש שלי
+          דשבורד הגולש שלי
         </h1>
-        <p className="text-slate-400 font-bold mt-3 text-lg">
-          דשבורד ההצלחות שלך
-        </p>
       </div>
 
       {/* The Professional Player Card */}

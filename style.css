@@ -714,9 +714,33 @@ header {
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
 }
 
-/* Ensure main content has padding when bottom nav is active */
-body.has-bottom-nav main {
-  padding-bottom: 100px !important;
+/* Surfer Card Animation Styles */
+.animate-shake {
+    display: inline-block;
+    animation: shake 0.5s infinite;
+}
+
+.animate-crawl {
+    display: inline-block;
+    animation: crawl 3s ease-in-out infinite;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px) rotate(-5deg); }
+    75% { transform: translateX(2px) rotate(5deg); }
+}
+
+@keyframes crawl {
+    0%, 100% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+}
+
+.percentile-text {
+    font-size: 1.5rem;
+    color: #2d3436;
+    display: block;
+    margin-top: 5px;
 }
 
 /* Darts Board Styles */

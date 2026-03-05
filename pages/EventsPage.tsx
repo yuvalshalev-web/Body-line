@@ -199,12 +199,27 @@ const EventsPage: React.FC = () => {
         {events.map((event) => {
           const isAttending = currentUser ? (event.attendees || []).includes(currentUser.id) : false;
           const isProcessing = processingId === event.id;
-          const canDelete = isAdmin || (currentUser && event.creatorId === currentUser.id);
+          
+          const eventDate = new Date(`${event.date}T${event.time || '00:00'}`);
+          const isPastEvent = eventDate < new Date();
+          
+          const canDelete = !isPastEvent && (isAdmin || (currentUser && event.creatorId === currentUser.id));
+          const canEdit = !isPastEvent && (isAdmin || (currentUser && event.creatorId === currentUser.id));
 
           return (
-            <div key={event.id} className="group bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col relative">
+            <div key={event.id} className={`group bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden transition-all duration-500 flex flex-col relative ${isPastEvent ? 'opacity-60 grayscale hover:grayscale-0 hover:opacity-100' : 'hover:shadow-2xl'}`}>
+              
+              {/* Past Event Watermark */}
+              {isPastEvent && (
+                <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
+                  <div className="transform -rotate-12 border-4 border-slate-800/20 text-slate-800/20 text-6xl font-black uppercase tracking-widest px-8 py-4 rounded-3xl backdrop-blur-sm">
+                    הסתיים
+                  </div>
+                </div>
+              )}
+
               <div className="absolute top-6 left-6 flex gap-2 z-20">
-                {(currentUser && (event.creatorId === currentUser.id || currentUser.email === SUPER_ADMIN_EMAIL || currentUser.email === 'yuval@shalev.io')) && (
+                {canEdit && (
                   <div className="flex gap-2">
                     <button 
                       onClick={() => handleEdit(event)} 
@@ -213,13 +228,15 @@ const EventsPage: React.FC = () => {
                     >
                       <Pencil size={18} />
                     </button>
-                    <button 
-                      onClick={() => handleDelete(event.id)} 
-                      title="מחיקת אירוע"
-                      className="p-3 bg-white text-red-500 border border-slate-200 rounded-2xl shadow-xl hover:bg-red-50 transition-all active:scale-90 flex items-center justify-center"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {canDelete && (
+                      <button 
+                        onClick={() => handleDelete(event.id)} 
+                        title="מחיקת אירוע"
+                        className="p-3 bg-white text-red-500 border border-slate-200 rounded-2xl shadow-xl hover:bg-red-50 transition-all active:scale-90 flex items-center justify-center"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -238,7 +255,7 @@ const EventsPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="p-8 flex-1 flex flex-col">
+              <div className="p-8 flex-1 flex flex-col relative z-20">
                 <h3 className="text-2xl font-black text-[#2B2B2E] mb-4 group-hover:text-rose-600 transition-colors">{event.title}</h3>
                 <p className="text-slate-500 font-bold text-sm mb-8 line-clamp-3">{event.description}</p>
                 <div className="space-y-4 mb-8">
@@ -261,14 +278,21 @@ const EventsPage: React.FC = () => {
                     </span>
                   </div>
                 </div>
-                <button 
-                  onClick={() => handleToggleAttendance(event.id)}
-                  disabled={isProcessing}
-                  className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all ${isAttending ? 'bg-rose-600 text-white' : 'bg-[#006994] text-white hover:bg-[#4E8294]'}`}
-                >
-                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-[#00FFFF]" />}
-                  {isAttending ? 'מבטל הגעה' : 'אני מגיע/ה'}
-                </button>
+                {!isPastEvent && (
+                  <button 
+                    onClick={() => handleToggleAttendance(event.id)}
+                    disabled={isProcessing}
+                    className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all ${isAttending ? 'bg-rose-600 text-white' : 'bg-[#006994] text-white hover:bg-[#4E8294]'}`}
+                  >
+                    {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-[#00FFFF]" />}
+                    {isAttending ? 'מבטל הגעה' : 'אני מגיע/ה'}
+                  </button>
+                )}
+                {isPastEvent && (
+                   <div className="w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 bg-slate-100 text-slate-400 cursor-not-allowed">
+                     האירוע הסתיים
+                   </div>
+                )}
               </div>
             </div>
           );
