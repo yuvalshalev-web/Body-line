@@ -191,112 +191,109 @@ const SurfingSessionAttendance: React.FC = () => {
   };
 
   const handleFinalConfirm = async () => {
-    if (confirmedIds.size === 0) {
+    if (confirmedIds.size === 0 && !editingHistorySession) {
       showAlert('נא לבחור לפחות משתתף אחד');
       return;
     }
 
-    setIsSaving(true);
-    try {
-      const db = getDb();
+    const performSave = async () => {
+      setIsSaving(true);
+      try {
+        const db = getDb();
+        if (editingHistorySession) {
+          const batch = writeBatch(db);
+          const newParticipants = Array.from(confirmedIds);
+          const oldParticipants = editingHistorySession.participantIds || [];
+          
+          const membersRef = collection(db, 'members');
+          const historyRef = collection(db, 'weekly_history');
 
-      if (editingHistorySession) {
-        showConfirm({
-          message: "שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות. האם אתה בטוח שברצונך לעדכן את הרישום?",
-          onConfirm: async () => {
-            try {
-              setIsSaving(true);
-              const batch = writeBatch(db);
-              const newParticipants = Array.from(confirmedIds);
-              const oldParticipants = editingHistorySession.participantIds || [];
-              
-              const membersRef = collection(db, 'members');
-              const historyRef = collection(db, 'weekly_history');
+          // Find added and removed members to sync totalAttendance
+          const added = newParticipants.filter(id => !oldParticipants.includes(id));
+          const removed = oldParticipants.filter(id => !newParticipants.includes(id));
+          
+          added.forEach((uid: string) => {
+            batch.update(doc(membersRef, uid), { totalAttendance: increment(1) });
+          });
+          removed.forEach((uid: string) => {
+            batch.update(doc(membersRef, uid), { totalAttendance: increment(-1) });
+          });
 
-              // Find added and removed members to sync totalAttendance
-              const added = newParticipants.filter(id => !oldParticipants.includes(id));
-              const removed = oldParticipants.filter(id => !newParticipants.includes(id));
-              
-              added.forEach((uid: string) => {
-                batch.update(doc(membersRef, uid), { totalAttendance: increment(1) });
-              });
-              removed.forEach((uid: string) => {
-                batch.update(doc(membersRef, uid), { totalAttendance: increment(-1) });
-              });
-
-              // Robust date handling for Firestore Timestamp
-              let finalDate;
-              try {
-                if (editingHistorySession.date && typeof editingHistorySession.date.toDate === 'function') {
-                  finalDate = editingHistorySession.date;
-                } else if (editingHistorySession.date instanceof Date) {
-                  finalDate = Timestamp.fromDate(editingHistorySession.date);
-                } else if (editingHistorySession.date && editingHistorySession.date.seconds) {
-                  finalDate = new Timestamp(editingHistorySession.date.seconds, editingHistorySession.date.nanoseconds || 0);
-                } else {
-                  finalDate = Timestamp.fromDate(new Date(editingHistorySession.date));
-                }
-              } catch (e) {
-                finalDate = Timestamp.now();
-              }
-
-              const sessionData = {
-                participantIds: newParticipants,
-                participantsCount: newParticipants.length,
-                updatedAt: serverTimestamp(),
-                date: finalDate,
-                instructorName: editingHistorySession.instructorName || 'מדריך חבל זוג'
-              };
-
-              if (editingHistorySession.id) {
-                batch.update(doc(historyRef, editingHistorySession.id), sessionData);
-              } else {
-                const newDocRef = doc(historyRef);
-                batch.set(newDocRef, {
-                  ...sessionData,
-                  createdAt: serverTimestamp()
-                });
-              }
-              
-              await batch.commit();
-              showSuccess('נשמר בהצלחה');
-              setEditingHistorySession(null);
-              setConfirmedIds(new Set());
-              navigate('/admin');
-            } catch (error: any) {
-              console.error("Error saving history:", error);
-              showError('שגיאה בשמירת הנתונים: ' + (error.message || 'שגיאה לא ידועה'));
-            } finally {
-              setIsSaving(false);
+          // Robust date handling for Firestore Timestamp
+          let finalDate;
+          try {
+            if (editingHistorySession.date && typeof editingHistorySession.date.toDate === 'function') {
+              finalDate = editingHistorySession.date;
+            } else if (editingHistorySession.date instanceof Date) {
+              finalDate = Timestamp.fromDate(editingHistorySession.date);
+            } else if (editingHistorySession.date && editingHistorySession.date.seconds) {
+              finalDate = new Timestamp(editingHistorySession.date.seconds, editingHistorySession.date.nanoseconds || 0);
+            } else {
+              finalDate = Timestamp.fromDate(new Date(editingHistorySession.date));
             }
-          },
-          onCancel: () => setIsSaving(false)
-        });
-      } else {
-        // Current session finalize
-        showConfirm({
-          message: `האם לאשר סופית נוכחות של ${confirmedIds.size} גולשים?`,
-          onConfirm: async () => {
-            try {
-              setIsSaving(true);
-              await finalizeThursdaySession();
-              showSuccess('נשמר בהצלחה');
-              setConfirmedIds(new Set());
-              navigate('/admin');
-            } catch (error: any) {
-              console.error("Error finalizing session:", error);
-              showError('שגיאה בשמירת הנתונים: ' + (error.message || 'שגיאה לא ידועה'));
-            } finally {
-              setIsSaving(false);
-            }
-          },
-          onCancel: () => setIsSaving(false)
-        });
+          } catch (e) {
+            finalDate = Timestamp.now();
+          }
+
+          const sessionData = {
+            participantIds: newParticipants,
+            participantsCount: newParticipants.length,
+            updatedAt: serverTimestamp(),
+            date: finalDate,
+            instructorName: editingHistorySession.instructorName || 'מדריך חבל זוג'
+          };
+
+          if (editingHistorySession.id) {
+            batch.update(doc(historyRef, editingHistorySession.id), sessionData);
+          } else {
+            const newDocRef = doc(historyRef);
+            batch.set(newDocRef, {
+              ...sessionData,
+              createdAt: serverTimestamp()
+            });
+          }
+          
+          await batch.commit();
+          showSuccess('נשמר בהצלחה');
+          setEditingHistorySession(null);
+          setConfirmedIds(new Set());
+          navigate('/admin');
+        } else {
+          // Current session finalize
+          await finalizeThursdaySession();
+          showSuccess('נשמר בהצלחה');
+          setConfirmedIds(new Set());
+          navigate('/admin');
+        }
+      } catch (error: any) {
+        console.error("Error saving session:", error);
+        showError('שגיאה בשמירת הנתונים: ' + (error.message || 'שגיאה לא ידועה'));
+      } finally {
+        setIsSaving(false);
       }
-    } catch (error: any) {
-      console.error("Error saving session:", error);
-      showError('שגיאה בשמירת הנתונים: ' + (error.message || 'שגיאה לא ידועה'));
-      setIsSaving(false);
+    };
+
+    if (confirmedIds.size === 0 && editingHistorySession) {
+      showConfirm({
+        title: 'ביטול סשן',
+        message: 'מספר המשתתפים אופס.\nהמשך הפעולה יבטל את הסשן.',
+        confirmText: 'בטל סשן',
+        cancelText: 'חזרה',
+        onConfirm: performSave
+      });
+      return;
+    }
+
+    if (editingHistorySession) {
+      showConfirm({
+        message: "שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות. האם אתה בטוח שברצונך לעדכן את הרישום?",
+        onConfirm: performSave
+      });
+    } else {
+      showConfirm({
+        message: `האם לאשר סופית נוכחות של ${confirmedIds.size} גולשים?`,
+        onConfirm: performSave
+      });
     }
   };
 
@@ -448,7 +445,7 @@ const SurfingSessionAttendance: React.FC = () => {
             
             <button 
               onClick={handleFinalConfirm}
-              disabled={isSaving || confirmedIds.size === 0}
+              disabled={isSaving || (confirmedIds.size === 0 && !editingHistorySession)}
               className="px-8 py-4 bg-[#006994] text-white rounded-2xl font-black text-sm shadow-xl shadow-[#006994]/20 hover:bg-[#60DD8E] hover:text-[#006994] transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group min-w-[160px] justify-center"
             >
               {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} className="group-hover:scale-110 transition-transform" />}

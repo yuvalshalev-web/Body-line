@@ -2,6 +2,10 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
+import cron from "node-cron";
+import { finalizeThursdaySession as finalizeThursdaySessionService } from "./services/rolloverService.js";
+import { getDb } from "./services/firebase.js";
+import { collection, query, getDocs, orderBy, limit } from "firebase/firestore";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,6 +13,27 @@ const __dirname = path.dirname(__filename);
 async function startServer() {
   const app = express();
   const PORT = 3000;
+
+  // Cron job: Every Thursday at 07:01
+  cron.schedule('1 7 * * 4', async () => {
+    console.log('Running scheduled Rollover...');
+    const db = getDb();
+    
+    // Fetch weeklyHistory and yearConfig for the service
+    const historySnap = await getDocs(query(collection(db, 'weekly_history'), orderBy('timestamp', 'desc'), limit(100)));
+    const weeklyHistory = historySnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    
+    const configSnap = await getDocs(collection(db, 'site_config'));
+    const configData = configSnap.docs[0]?.data() as any;
+    const yearConfig = configData?.yearConfig || null;
+
+    try {
+      await finalizeThursdaySessionService(weeklyHistory, yearConfig);
+      console.log('Rollover completed successfully.');
+    } catch (e) {
+      console.error('Rollover failed:', e);
+    }
+  });
 
   app.use(express.json());
 

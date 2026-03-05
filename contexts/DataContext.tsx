@@ -9,6 +9,7 @@ import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageStats';
 import { storage } from '../src/utils/storage';
 import { useModal } from './ModalContext';
+import { finalizeThursdaySession as finalizeThursdaySessionService } from '../services/rolloverService';
 
 interface DataContextType {
   members: Member[];
@@ -541,78 +542,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const finalizeThursdaySession = async () => {
-    const db = getDb();
-    const sessionRef = doc(db, 'site_data', 'active_session');
-    
-    try {
-      const sessionSnap = await getDoc(sessionRef);
-      if (!sessionSnap.exists()) {
-        await addRolloverLog('finalizeThursdaySession', 'failed', 'Active session not found');
-        return;
-      }
-      
-      const data = sessionSnap.data() as any;
-      const attendees = data.attendees || [];
-      const sessionDateStr = data.date;
-
-      if (!sessionDateStr) {
-        await addRolloverLog('finalizeThursdaySession', 'failed', 'Session date missing');
-        return;
-      }
-      const sessionDate = new Date(sessionDateStr);
-
-      // Idempotency check
-      const alreadyExists = weeklyHistory.some(d => {
-        const dDate = d.date?.toDate ? d.date.toDate() : new Date(d.date);
-        return dDate.toDateString() === sessionDate.toDateString();
-      });
-
-      if (alreadyExists) {
-        await addRolloverLog('finalizeThursdaySession', 'success', 'Session already archived (idempotent)');
-        const nextThurs = getNextThursday();
-        await updateDoc(sessionRef, { attendees: [], date: nextThurs });
-        return;
-      }
-
-      if (attendees.length === 0) {
-        await addRolloverLog('finalizeThursdaySession', 'success', 'No attendees, resetting session');
-        const nextThurs = getNextThursday();
-        await updateDoc(sessionRef, { attendees: [], date: nextThurs });
-        return;
-      }
-
-      const batch = writeBatch(db);
-      
-      // 1. Update totalAttendance
-      attendees.forEach((uid: string) => {
-        const memberRef = doc(db, 'members', uid);
-        batch.update(memberRef, { totalAttendance: increment(1) });
-      });
-
-      // 2. Create weekly_history entry
-      const historyRef = doc(collection(db, 'weekly_history'));
-      batch.set(historyRef, {
-        date: Timestamp.fromDate(sessionDate),
-        participantsCount: attendees.length,
-        participantIds: attendees,
-        timestamp: new Date().toISOString(),
-        instructorName: 'מדריך חבל זוג'
-      });
-
-      // 3. Reset active session
-      const nextThurs = getNextThursday();
-      batch.update(sessionRef, {
-        attendees: [],
-        date: nextThurs
-      });
-
-      await batch.commit();
-      await addRolloverLog('finalizeThursdaySession', 'success', `Archived session with ${attendees.length} attendees`);
-    } catch (error: any) {
-      console.error("Finalize session error:", error);
-      await addRolloverLog('finalizeThursdaySession', 'failed', error.message);
-      throw error;
-    }
+    await finalizeThursdaySessionService(weeklyHistory, yearConfig);
   };
 
   const batchAddGlossary = async (items: Omit<GlossaryTerm, 'id'>[]) => {

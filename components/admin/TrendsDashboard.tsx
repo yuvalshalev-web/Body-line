@@ -144,20 +144,24 @@ const TrendsDashboard: React.FC = () => {
 
       // 3. הוספת אינטראקציה (נגיעה/עכבר)
       const handleMouseMove = (e: MouseEvent) => {
-          const rect = canvas.getBoundingClientRect();
-          const mouseX = e.clientX - rect.left;
-          const mouseY = e.clientY - rect.top;
+          const mouseX = e.offsetX;
+          const mouseY = e.offsetY;
           const tooltip = tooltipRef.current;
           
           if (!tooltip) return;
+
+          // Get visual coordinates relative to the container for the tooltip
+          const containerRect = canvas.parentElement?.getBoundingClientRect();
+          const visualX = containerRect ? e.clientX - containerRect.left : e.offsetX;
+          const visualY = containerRect ? e.clientY - containerRect.top : e.offsetY;
 
           let found = false;
           membersWithCanvasPos.forEach(m => {
               const dist = Math.sqrt((mouseX - m.canvasX)**2 + (mouseY - m.canvasY)**2);
               if (dist < 7) {
                   tooltip.style.display = 'block';
-                  tooltip.style.left = mouseX + 10 + 'px';
-                  tooltip.style.top = mouseY + 10 + 'px';
+                  tooltip.style.left = visualX + 10 + 'px';
+                  tooltip.style.top = visualY + 10 + 'px';
                   tooltip.style.padding = '8px';
                   tooltip.style.background = 'white';
                   tooltip.style.borderRadius = '12px';
@@ -168,6 +172,7 @@ const TrendsDashboard: React.FC = () => {
                       <div style="text-align: right;">
                         <div style="font-weight: bold; color: #333;">${m.firstName} ${m.lastName}</div>
                         <div style="font-size: 12px; color: #666;">${m.calculatedDistance.toFixed(2)} ק"מ מהחוף</div>
+                        <div style="font-size: 11px; color: #888; margin-top: 4px; font-weight: 600;">כתובת: [ ${m.full_address || m.city || 'לא צוינה'} ]</div>
                       </div>
                     </div>
                   `;
@@ -734,7 +739,7 @@ const TrendsDashboard: React.FC = () => {
         </div>
         <div className="w-[450px] relative darts-wrapper flex flex-col items-center">
           <h4 className="text-center mb-4">פיזור גיאוגרפי</h4>
-          <canvas ref={canvasRef} id="dartsBoard" width="450" height="450" className="rounded-full" />
+          <canvas ref={canvasRef} id="dartsBoard" width="450" height="450" className="rounded-full rotate-slow" />
           <div id="darts-tooltip" ref={tooltipRef} className="absolute hidden pointer-events-none z-50 whitespace-pre-line text-sm text-center"></div>
         </div>
       </div>

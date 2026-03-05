@@ -7,7 +7,8 @@ import {
   UserCheck,
   UserMinus,
   Heart,
-  Sparkles
+  Sparkles,
+  Waves
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useData } from '../contexts/DataContext';
@@ -421,7 +422,7 @@ const CommunityAnalytics: React.FC = () => {
                           transition={{ duration: 1.5, ease: "easeOut", delay: i * 0.1 }}
                           className="cursor-pointer hover:brightness-125 transition-all"
                         />
-                        
+
                         {/* Callout Line */}
                         <g>
                           {/* Anchor Dot */}
@@ -490,6 +491,7 @@ const CommunityAnalytics: React.FC = () => {
  
                   <foreignObject x="325" y="325" width="350" height="350">
                     <div className="w-full h-full flex flex-col items-center justify-center text-center">
+                      <Waves size={48} className="text-[#2D3748] logo-pulse mb-2" />
                       <span className="text-[#4A5568]/40 text-xs font-black uppercase tracking-[0.4em] mb-2">Community Total</span>
                       <motion.span 
                         initial={{ scale: 0.8, opacity: 0 }}
@@ -505,7 +507,9 @@ const CommunityAnalytics: React.FC = () => {
                     </div>
                   </foreignObject>
                 </g>
+
               </svg>
+
             </div>
           </motion.div>
 

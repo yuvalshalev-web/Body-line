@@ -5,8 +5,9 @@ import {
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
-  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Sparkles, Globe
+  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Sparkles, Globe, Activity
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,6 +34,7 @@ const ASSET_LABELS: Record<string, string> = {
 };
 
 const AdminPage: React.FC = () => {
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
@@ -489,6 +491,7 @@ const AdminPage: React.FC = () => {
                 { id: 'GALLERY', label: 'גלריה', icon: ImageIcon },
                 { id: 'EVENTS', label: 'אירועים', icon: Calendar },
                 { id: 'REQUESTS', label: 'בקשות', icon: UserCheck, count: joinRequests.length },
+                { id: 'ROLLOVER', label: 'דו"ח יום חמישי', icon: Activity },
                 { id: 'SITE', label: 'הגדרות', icon: Settings }
               ].map((tab) => (
                 <button 
@@ -546,10 +549,17 @@ const AdminPage: React.FC = () => {
                   { id: 'POSTS', label: 'פוסטים', desc: 'ניהול תכני האתר', icon: Newspaper, color: 'bg-[#f2def0]' },
                   { id: 'SITE', label: 'הגדרות אתר', desc: 'לוגואים, רקעים ונכסים', icon: Settings, color: 'bg-[#4a002e]' },
                   { id: 'ARCHIVE', label: 'ארכיון משתמשים', desc: 'ניהול חברים שהושעו', icon: Archive, color: 'bg-[#f063c1]' },
+                  { id: 'ROLLOVER', label: 'דו"ח יום חמישי', desc: 'ארכיון סשנים שבועי וסיכום נוכחות', icon: Activity, color: 'bg-[#00d4ff]' },
                 ].map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id as any)}
+                    onClick={() => {
+                      if (item.id === 'ROLLOVER') {
+                        navigate('/admin-rollover');
+                      } else {
+                        setActiveTab(item.id as any);
+                      }
+                    }}
                     className="group bg-white p-8 rounded-[2.5rem] border border-[#ff009f]/5 shadow-sm hover:shadow-2xl hover:shadow-[#ff009f]/10 transition-all duration-500 text-right relative overflow-hidden"
                   >
                     <div className={`absolute top-0 left-0 w-2 h-full ${item.color} opacity-20 group-hover:opacity-100 transition-opacity`} />
@@ -564,7 +574,7 @@ const AdminPage: React.FC = () => {
                       )}
                     </div>
                     <h3 className="text-xl font-black text-[#4a002e] mb-2 group-hover:text-[#ff009f] transition-colors">{item.label}</h3>
-                    <p className="text-xs font-black text-[#f063c1]/60 uppercase tracking-widest">{item.desc}</p>
+                    <p className="text-xs font-black text-[#4a002e]/70 uppercase tracking-widest">{item.desc}</p>
                     
                     <div className="mt-8 flex items-center gap-2 text-[#ff009f] text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
                       כניסה לניהול <ArrowLeft size={12} />

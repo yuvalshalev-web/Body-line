@@ -18,7 +18,8 @@ import {
   BarChart3,
   Loader2,
   ShieldAlert,
-  Trophy
+  Trophy,
+  Activity
 } from 'lucide-react';
 
 
@@ -36,6 +37,7 @@ const EventsPage = lazy(() => import('./pages/EventsPage.tsx'));
 const NewsPage = lazy(() => import('./pages/NewsPage.tsx'));
 const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage.tsx'));
 const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage.tsx'));
+const AdminRolloverReport = lazy(() => import('./pages/AdminRolloverReport.tsx'));
 const SurferCardPage = lazy(() => import('./pages/SurferCardPage.tsx'));
 const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance.tsx'));
 const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage.tsx'));
@@ -220,7 +222,8 @@ const App: React.FC = () => {
   const adminNavItems = [
     { path: '/admin', icon: Settings, label: 'פאנל ניהול' },
     { path: '/admin-info', icon: BarChart3, label: 'דופק חבל זוג' },
-    { path: '/attendance', icon: Users, label: 'סנכרון נוכחות' }
+    { path: '/attendance', icon: Users, label: 'סנכרון נוכחות' },
+    { path: '/admin-rollover', icon: Activity, label: 'דו"ח יום חמישי' }
   ];
 
   return (
@@ -357,6 +360,7 @@ const App: React.FC = () => {
                 <>
                   <Route path="/admin" element={<AdminPage />} />
                   <Route path="/admin-info" element={<AdminInfoPage />} />
+                  <Route path="/admin-rollover" element={<AdminRolloverReport />} />
                   <Route path="/attendance" element={<SurfingSessionAttendance />} />
                 </>
               )}

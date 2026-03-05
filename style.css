@@ -895,22 +895,28 @@ body.has-bottom-nav main {
 .gt-step-val { padding: 0 1em; color: #333; min-width: 2em; text-align: center; }
 
 /* 5. Buttons */
-.gt-btn-primary {
-    background: var(--gt-accent);
-    color: white;
-    padding: 0.8em 2em;
-    border-radius: 1em;
-    font-weight: 800;
+.btn-primary {
+    background: #E20074;
+    color: #FFFFFF;
+    padding: 0.5em 1.5em;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 0.85rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    box-shadow: 0 4px 15px rgba(64, 224, 208, 0.4);
-    transition: 0.3s;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
     border: none;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(226, 0, 116, 0.2);
 }
-.gt-btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(64, 224, 208, 0.6);
+
+.btn-primary:hover {
+    background: #C20064;
+    box-shadow: 0 4px 12px rgba(226, 0, 116, 0.3);
+    transform: translateY(-1px);
 }
 
 .gt-btn-glass {
@@ -1282,9 +1288,26 @@ body.has-bottom-nav main {
     border: 1px solid rgba(0,0,0,0.02);
 }
 
+
 .accent-text {
     color: #008b8b;
 }
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.rotate-slow {
+  animation: rotate-slow 120s linear infinite;
+}
+@keyframes pulse-glow {
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8)); transform: scale(1.05); }
+}
+.logo-pulse {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
 
 
 

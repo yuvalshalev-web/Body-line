@@ -82,6 +82,8 @@ const SessionStatsPage: React.FC = () => {
     // 1. Filter sessions by Shnat Hevel Zug start date
     const startDate = new Date(yearConfig.startDate);
     const seenDates = new Set<string>();
+    const cancelledDates = new Set<string>();
+    
     const filteredSessions = weeklyHistory
       .filter(session => {
         const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
@@ -99,7 +101,19 @@ const SessionStatsPage: React.FC = () => {
         return dateA.getTime() - dateB.getTime();
       });
 
-    if (filteredSessions.length === 0) return null;
+    const cancelledSessionsCount = weeklyHistory.filter(session => {
+      const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+      const dateKey = sessionDate.toDateString();
+      return (
+        sessionDate >= startDate && 
+        sessionDate <= now && 
+        (session.participantsCount || 0) === 0 &&
+        !seenDates.has(dateKey) &&
+        !cancelledDates.has(dateKey)
+      ) ? (cancelledDates.add(dateKey), true) : false;
+    }).length;
+
+    if (filteredSessions.length === 0 && cancelledSessionsCount === 0) return null;
 
     // 2. Attendance Trend (First Half vs Second Half)
     const midPoint = Math.ceil(filteredSessions.length / 2);
@@ -452,6 +466,7 @@ const SessionStatsPage: React.FC = () => {
       ageActivityData,
       currentWeek,
       currentMonth,
+      cancelledSessionsCount,
       yearConfig
     };
   }, [weeklyHistory, members, yearConfig, gritSortConfig, gritSearchTerm]);
@@ -567,6 +582,10 @@ const SessionStatsPage: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-blue-500" />
                           <span>ביצוע בפועל: <strong className="text-[#2D3748]">{actualSessions} סשנים</strong></span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-rose-400" />
+                          <span>סשנים שבוטלו: <strong className="text-[#2D3748]">{stats?.cancelledSessionsCount || 0} סשנים</strong></span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-orange-500" />
