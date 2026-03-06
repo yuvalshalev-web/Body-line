@@ -176,7 +176,10 @@ const App: React.FC = () => {
       // Gradient & Stroke
       if (color1) root.style.setProperty('--h1-color-1', color1);
       if (color2) root.style.setProperty('--h1-color-2', color2);
-      if (gradAngle) root.style.setProperty('--h1-grad-angle', `${gradAngle}deg`);
+      if (gradAngle) {
+        const angle = gradAngle.toString().replace('deg', '');
+        root.style.setProperty('--h1-grad-angle', `${angle}deg`);
+      }
       if (strokeWidth) root.style.setProperty('--h1-stroke-width', `${strokeWidth}px`);
       if (strokeColor) root.style.setProperty('--h1-stroke-color', strokeColor);
       

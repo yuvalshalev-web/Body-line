@@ -922,6 +922,81 @@ const CommunityAnalytics: React.FC = () => {
   );
 };
 
+const Astrodeck = () => {
+  const [padColor, setPadColor] = useState('#ffffff');
+  const [transform, setTransform] = useState('rotateY(0deg) rotateX(0deg)');
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+    const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+    setTransform(`rotateY(${xAxis}deg) rotateX(${yAxis}deg)`);
+  };
+
+  const handleMouseLeave = () => {
+    setTransform('rotateY(0deg) rotateX(0deg)');
+  };
+
+  return (
+    <div className="flex flex-col justify-center items-center p-8 bg-[#e8e8e8] rounded-[4rem] mt-12 overflow-hidden relative" style={{ perspective: '1000px', minHeight: '600px' }}>
+      <div className="mb-8 bg-white px-6 py-4 rounded-full shadow-md flex gap-4 z-10 items-center">
+        <span className="font-bold text-sm">בחר צבע:</span>
+        <button className="w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer hover:scale-125 transition-transform" style={{ background: 'white' }} onClick={() => setPadColor('#ffffff')} />
+        <button className="w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer hover:scale-125 transition-transform" style={{ background: '#222' }} onClick={() => setPadColor('#222222')} />
+        <button className="w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer hover:scale-125 transition-transform" style={{ background: '#0047ab' }} onClick={() => setPadColor('#0047ab')} />
+        <button className="w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer hover:scale-125 transition-transform" style={{ background: '#e67e22' }} onClick={() => setPadColor('#e67e22')} />
+      </div>
+
+      <div 
+        className="flex gap-3 transition-transform duration-100 ease-out" 
+        style={{ transformStyle: 'preserve-3d', transform }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        <style>{`
+          .pad-piece {
+            position: relative;
+            background-color: ${padColor};
+            background-image: 
+              linear-gradient(135deg, rgba(0,0,0,0.08) 25%, transparent 25%), 
+              linear-gradient(225deg, rgba(0,0,0,0.08) 25%, transparent 25%), 
+              linear-gradient(45deg, rgba(0,0,0,0.08) 25%, transparent 25%), 
+              linear-gradient(315deg, rgba(0,0,0,0.08) 25%, transparent 25%);
+            background-position: 8px 0, 8px 0, 0 0, 0 0;
+            background-size: 16px 16px;
+            box-shadow: 5px 15px 35px rgba(0,0,0,0.1);
+            transition: background-color 0.4s;
+          }
+          .hex {
+            width: 26px; height: 15px; background: #d11234; position: relative;
+          }
+          .hex::before { content: ""; position: absolute; bottom: 100%; border-bottom: 7.5px solid #d11234; border-left: 13px solid transparent; border-right: 13px solid transparent; }
+          .hex::after { content: ""; position: absolute; top: 100%; border-top: 7.5px solid #d11234; border-left: 13px solid transparent; border-right: 13px solid transparent; }
+          .hex.yellow { background: #f8cc36; }
+          .hex.yellow::before { border-bottom-color: #f8cc36; }
+          .hex.yellow::after { border-top-color: #f8cc36; }
+        `}</style>
+        
+        <div className="pad-piece w-[120px] h-[450px]" style={{ borderRadius: '10px 40px 15px 60px' }}>
+          <div className="absolute top-10 left-8 scale-80">
+            <div className="flex gap-1 justify-center mb-0.5"><div className="hex"></div></div>
+            <div className="flex gap-1 justify-center mb-0.5"><div className="hex"></div><div className="hex yellow"></div></div>
+          </div>
+        </div>
+
+        <div className="pad-piece w-[150px] h-[480px] -mt-[15px] flex flex-col items-center" style={{ borderRadius: '15px 15px 80px 80px' }}>
+          <div className="mt-[100px] w-[60%] flex flex-col gap-2.5">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="h-3 bg-black/5 rounded shadow-[inset_1px_2px_4px_rgba(0,0,0,0.2)] w-full"></div>
+            ))}
+          </div>
+        </div>
+
+        <div className="pad-piece w-[120px] h-[450px]" style={{ borderRadius: '40px 10px 60px 15px' }}></div>
+      </div>
+    </div>
+  );
+};
+
 const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, percentage }) => {
   const isAnnual = title.includes('שנתי');
   

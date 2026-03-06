@@ -167,8 +167,8 @@ const GalleryPage: React.FC = () => {
             >
               {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />}
               <span>{isUploading ? 'מעבד תמונות...' : 'העלאת תמונות'}</span>
-              <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileUpload} />
             </button>
+            <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileUpload} />
           </div>
         </div>
       </div>
