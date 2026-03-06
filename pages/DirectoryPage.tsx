@@ -216,38 +216,38 @@ const DirectoryPage: React.FC = () => {
         <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-[#E6D5B8]/20 rounded-full blur-[180px]" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
-        {/* Body-line Standard Header Stack */}
-        <div className="surfboard-hero-container mb-10 space-y-4">
-          {/* Main Title */}
-          <h1 className="main-page-title">
-            נבחרת הגלישה
-          </h1>
+      <div className="surfboard-hero-container mb-10 space-y-4">
+        {/* Main Title */}
+        <h1 className="main-page-title">
+          נבחרת הגלישה
+        </h1>
+      </div>
 
-          {/* Subtitle with Emoji context */}
-          <div className="flex flex-col items-center gap-6">
-            <p className="text-slate-600 font-medium max-w-2xl text-lg">
-              האנשים שעושים את חבל זוג למה שהיא - קהילה של חברים שנפגשים במים 🌊
-            </p>
-            
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3 px-6 py-3 bg-white/40 backdrop-blur-md rounded-full border border-white/60 shadow-sm">
-                <Users size={18} className="text-[#D4A373]" />
-                <span className="text-sm font-black text-slate-700">{activeMembers.length} חברים פעילים</span>
-              </div>
-              
-              {isAdmin && (
-                <button 
-                  onClick={() => setIsAddMemberModalOpen(true)}
-                  className="w-12 h-12 bg-white/40 backdrop-blur-md hover:bg-[#D4A373] hover:text-white rounded-full flex items-center justify-center transition-all shadow-sm border border-white/60 group"
-                  title="הוסף חבר חדש"
-                >
-                  <Plus size={24} className="transition-transform group-hover:rotate-90" />
-                </button>
-              )}
-            </div>
+      {/* Subtitle with Emoji context */}
+      <div className="flex flex-col items-center gap-6 mb-12">
+        <p className="text-slate-600 font-medium max-w-2xl text-lg text-center">
+          האנשים שעושים את חבל זוג למה שהיא - קהילה של חברים שנפגשים במים 🌊
+        </p>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 px-6 py-3 bg-white/40 backdrop-blur-md rounded-full border border-white/60 shadow-sm">
+            <Users size={18} className="text-[#D4A373]" />
+            <span className="text-sm font-black text-slate-700">{activeMembers.length} חברים פעילים</span>
           </div>
+          
+          {isAdmin && (
+            <button 
+              onClick={() => setIsAddMemberModalOpen(true)}
+              className="w-12 h-12 bg-white/40 backdrop-blur-md hover:bg-[#D4A373] hover:text-white rounded-full flex items-center justify-center transition-all shadow-sm border border-white/60 group"
+              title="הוסף חבר חדש"
+            >
+              <Plus size={24} className="transition-transform group-hover:rotate-90" />
+            </button>
+          )}
         </div>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
 
         <div className="flex flex-col md:flex-row gap-4 mb-16 items-center">
           <div className="flex-1 relative group w-full">
