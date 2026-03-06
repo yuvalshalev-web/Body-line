@@ -51,7 +51,7 @@ const SurfingSessionAttendance: React.FC = () => {
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [view, setView] = useState<'current' | 'history'>('current');
+  const [view, setView] = useState<'current' | 'history'>('history');
   const [history, setHistory] = useState<SessionHistory[]>([]);
   const [editingHistorySession, setEditingHistorySession] = useState<SessionHistory | null>(null);
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
@@ -124,7 +124,7 @@ const SurfingSessionAttendance: React.FC = () => {
     const db = getDb();
     
     // 1. Fetch History
-    const historyQuery = query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(20));
+    const historyQuery = query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200));
     const unsubHistory = onSnapshot(historyQuery, (snapshot) => {
       const historyList = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -298,8 +298,62 @@ const SurfingSessionAttendance: React.FC = () => {
     }
   };
 
+  const timelineSessions = useMemo(() => {
+    const today = new Date();
+    const nextThursday = new Date(today);
+    // Find the next Thursday (including today if today is Thursday)
+    while (nextThursday.getDay() !== 4) {
+      nextThursday.setDate(nextThursday.getDate() + 1);
+    }
+
+    // Check if this next Thursday is already in history
+    const historyDates = history.map(s => {
+      const d = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
+      return d.toDateString();
+    });
+    
+    const isAlreadyInHistory = historyDates.includes(nextThursday.toDateString());
+
+    let list = [...history];
+    
+    if (!isAlreadyInHistory) {
+      // Add a virtual "Upcoming" session
+      list.unshift({
+        id: 'upcoming',
+        date: Timestamp.fromDate(nextThursday),
+        participantsCount: 0,
+        participantIds: [],
+        instructorName: 'מדריך חבל זוג',
+        isUpcoming: true
+      } as any);
+    } else {
+      // Mark the one in history as upcoming if it's the same date
+      list = list.map(s => {
+        const d = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
+        if (d.toDateString() === nextThursday.toDateString()) {
+          return { ...s, isUpcoming: true };
+        }
+        return s;
+      });
+    }
+
+    return list.sort((a, b) => {
+      const da = a.date instanceof Timestamp ? a.date.toDate() : new Date(a.date);
+      const db = b.date instanceof Timestamp ? b.date.toDate() : new Date(b.date);
+      return db.getTime() - da.getTime();
+    });
+  }, [history]);
+
   const loadHistorySession = (session: SessionHistory) => {
-    setEditingHistorySession(session);
+    // If it's the virtual upcoming session, treat it as a new session for that date
+    if (session.id === 'upcoming') {
+      setEditingHistorySession({
+        ...session,
+        id: '' // Clear the virtual ID so it's treated as new on save
+      });
+    } else {
+      setEditingHistorySession(session);
+    }
     setConfirmedIds(new Set(session.participantIds));
     setView('current');
     setShowHistoryDropdown(false);
@@ -414,7 +468,7 @@ const SurfingSessionAttendance: React.FC = () => {
           <div className="surfboard-hero-container">
             <h1 className="main-page-title">
               {view === 'history' && !editingHistorySession ? 'ארכיון סשנים: יום חמישי הגדול' : 
-               (editingHistorySession ? `עריכה: ${formatDate(editingHistorySession.date)}` : 'סנכרון נוכחות שבועי')}
+               (editingHistorySession ? `עריכה: ${formatDate(editingHistorySession.date)}` : 'יומן נוכחות')}
             </h1>
             <p className="text-[#4E8294] font-bold mt-2">
               {view === 'history' && !editingHistorySession ? 'היסטוריית גלישה ונוכחות לאורך זמן 🌊' : 'סמן את כל הגולשים שיצאו מהמים 🌊'}
@@ -448,6 +502,7 @@ const SurfingSessionAttendance: React.FC = () => {
           onSelectHistory={handleSelectHistoryDate}
           historyDates={dropdownDates}
           formatDate={formatDate}
+          showSave={view === 'current'}
         />
 
       {view === 'current' ? (
@@ -558,71 +613,110 @@ const SurfingSessionAttendance: React.FC = () => {
           <div className="absolute right-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#006994] via-[#006994]/20 to-transparent"></div>
           
           <div className="space-y-8 pr-16">
-            {history
-              .filter(s => (s.participantsCount || 0) > 0)
-              .map((session, idx) => (
-              <motion.div 
-                key={session.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                onClick={() => loadHistorySession(session)}
-                className="relative group cursor-pointer"
-              >
-                {/* Timeline Dot */}
-                <div className="absolute -right-[2.15rem] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-4 border-[#006994] z-10 group-hover:scale-150 transition-transform"></div>
-                
-                <div className="bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] p-8 rounded-[16px] border border-[rgba(255,255,255,0.2)] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col md:flex-row md:items-center justify-between gap-8">
-                  <div className="flex items-center gap-8">
-                    <div className="text-right">
-                      <p className="text-[10px] font-black text-[#4E8294] uppercase tracking-widest mb-1">תאריך הסשן</p>
-                      <h3 className="text-3xl font-black text-[#006994] tracking-tighter">{formatDate(session.date)}</h3>
-                    </div>
+            {timelineSessions
+              .map((session, idx) => {
+                const isUpcoming = (session as any).isUpcoming;
+                const isGrayedOut = (session.participantsCount || 0) === 0 && !isUpcoming;
+                return (
+                  <motion.div 
+                    key={session.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    onClick={() => loadHistorySession(session)}
+                    className={`relative group cursor-pointer ${isGrayedOut ? 'grayscale opacity-60' : ''}`}
+                  >
+                    {/* Timeline Dot */}
+                    <div className={`absolute -right-[2.15rem] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-4 z-10 group-hover:scale-150 transition-transform ${
+                      isUpcoming ? 'border-emerald-500' : (isGrayedOut ? 'border-slate-400' : 'border-[#006994]')
+                    }`}></div>
                     
-                    <div className="h-12 w-px bg-slate-100 hidden md:block"></div>
-                    
-                    <div>
-                      <p className="text-[10px] font-black text-[#4E8294] uppercase tracking-widest mb-1">מדריך</p>
-                      <div className="flex items-center gap-2 text-[#006994] font-black">
-                        <UserIcon size={16} />
-                        <span>{session.instructorName || 'מדריך חבל זוג'}</span>
+                    <div className={`${
+                      isUpcoming 
+                        ? 'bg-emerald-50/40 border-emerald-200/60 shadow-emerald-100/20' 
+                        : (isGrayedOut ? 'bg-slate-50/50 border-slate-200' : 'bg-[rgba(255,255,255,0.1)] border-[rgba(255,255,255,0.2)]')
+                    } backdrop-blur-[12px] p-8 rounded-[16px] border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col md:flex-row md:items-center justify-between gap-8`}>
+                      <div className="flex items-center gap-8">
+                        <div className="text-right">
+                          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${
+                            isUpcoming ? 'text-emerald-600' : (isGrayedOut ? 'text-slate-400' : 'text-[#4E8294]')
+                          }`}>
+                            {isUpcoming ? 'סשן קרוב (יום חמישי)' : (isGrayedOut ? 'סשן בוטל / 0 משתתפים' : 'תאריך הסשן')}
+                          </p>
+                          <h3 className={`text-3xl font-black tracking-tighter ${
+                            isUpcoming ? 'text-emerald-700' : (isGrayedOut ? 'text-slate-500' : 'text-[#006994]')
+                          }`}>{formatDate(session.date)}</h3>
+                        </div>
+                        
+                        <div className={`h-12 w-px hidden md:block ${
+                          isUpcoming ? 'bg-emerald-200' : (isGrayedOut ? 'bg-slate-200' : 'bg-slate-100')
+                        }`}></div>
+                        
+                        <div>
+                          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${
+                            isUpcoming ? 'text-emerald-600' : (isGrayedOut ? 'text-slate-400' : 'text-[#4E8294]')
+                          }`}>מדריך</p>
+                          <div className={`flex items-center gap-2 font-black ${
+                            isUpcoming ? 'text-emerald-700' : (isGrayedOut ? 'text-slate-500' : 'text-[#006994]')
+                          }`}>
+                            <UserIcon size={16} />
+                            <span>{session.instructorName || 'מדריך חבל זוג'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between md:justify-end gap-8">
+                        <div className="flex -space-x-3 space-x-reverse">
+                          {session.participantIds.length > 0 ? (
+                            session.participantIds.slice(0, 3).map((uid, i) => {
+                              const user = globalMembers.find(u => u.id === uid);
+                              return (
+                                <div key={i} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-slate-100 shadow-sm">
+                                  <img 
+                                    src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent((user?.firstName || '') + ' ' + (user?.lastName || ''))}&background=006994&color=fff`} 
+                                    className="w-full h-full object-cover"
+                                    alt=""
+                                  />
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className={`w-10 h-10 rounded-full border-2 border-white flex items-center justify-center shadow-sm ${
+                              isUpcoming ? 'bg-emerald-100 text-emerald-600' : (isGrayedOut ? 'bg-slate-100 text-slate-300' : 'bg-slate-100 text-slate-400')
+                            }`}>
+                              <UsersIcon size={16} />
+                            </div>
+                          )}
+                          {session.participantsCount > 3 && (
+                            <div className={`w-10 h-10 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-black shadow-sm ${
+                              isUpcoming ? 'bg-emerald-200 text-emerald-700' : 'bg-[#00FFFF] text-[#006994]'
+                            }`}>
+                              +{session.participantsCount - 3}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="text-left">
+                          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${
+                            isUpcoming ? 'text-emerald-600' : (isGrayedOut ? 'text-slate-400' : 'text-[#4E8294]')
+                          }`}>משתתפים</p>
+                          <p className={`text-2xl font-black ${
+                            isUpcoming ? 'text-emerald-700' : (isGrayedOut ? 'text-slate-500' : 'text-[#006994]')
+                          }`}>{session.participantsCount}</p>
+                        </div>
+
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${
+                          isUpcoming 
+                            ? 'bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200' 
+                            : (isGrayedOut ? 'bg-slate-100 text-slate-400 group-hover:bg-slate-200' : 'bg-slate-50 text-[#006994] group-hover:bg-[#00FFFF] group-hover:text-[#006994]')
+                        }`}>
+                          <ChevronRight size={24} className="rotate-180" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between md:justify-end gap-8">
-                    <div className="flex -space-x-3 space-x-reverse">
-                      {session.participantIds.slice(0, 3).map((uid, i) => {
-                        const user = globalMembers.find(u => u.id === uid);
-                        return (
-                          <div key={i} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-slate-100 shadow-sm">
-                            <img 
-                              src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent((user?.firstName || '') + ' ' + (user?.lastName || ''))}&background=006994&color=fff`} 
-                              className="w-full h-full object-cover"
-                              alt=""
-                            />
-                          </div>
-                        );
-                      })}
-                      {session.participantsCount > 3 && (
-                        <div className="w-10 h-10 rounded-full border-2 border-white bg-[#00FFFF] flex items-center justify-center text-[#006994] text-[10px] font-black shadow-sm">
-                          +{session.participantsCount - 3}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="text-left">
-                      <p className="text-[10px] font-black text-[#4E8294] uppercase tracking-widest mb-1">משתתפים</p>
-                      <p className="text-2xl font-black text-[#006994]">{session.participantsCount}</p>
-                    </div>
-
-                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-[#006994] group-hover:bg-[#00FFFF] group-hover:text-[#006994] transition-colors">
-                      <ChevronRight size={24} className="rotate-180" />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                  </motion.div>
+                );
+              })}
 
             {history.length === 0 && (
               <div className="py-20 text-center bg-white/40 rounded-[3rem] border-2 border-dashed border-[#006994]/10">

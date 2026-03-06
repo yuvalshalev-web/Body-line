@@ -71,20 +71,15 @@ export const finalizeThursdaySession = async (weeklyHistory: any[], yearConfig: 
       return;
     }
 
-    if (attendees.length === 0) {
-      await addRolloverLog('finalizeThursdaySession', 'success', 'No attendees, resetting session');
-      const nextThurs = getNextThursday();
-      await updateDoc(sessionRef, { attendees: [], date: nextThurs });
-      return;
-    }
-
     const batch = writeBatch(db);
     
     // 1. Update totalAttendance
-    attendees.forEach((uid: string) => {
-      const memberRef = doc(db, 'members', uid);
-      batch.update(memberRef, { totalAttendance: increment(1) });
-    });
+    if (attendees.length > 0) {
+      attendees.forEach((uid: string) => {
+        const memberRef = doc(db, 'members', uid);
+        batch.update(memberRef, { totalAttendance: increment(1) });
+      });
+    }
 
     // 2. Create weekly_history entry
     const historyRef = doc(collection(db, 'weekly_history'));
