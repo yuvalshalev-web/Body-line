@@ -52,7 +52,7 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ scale: 1.02, zIndex: 10 }}
       transition={{ delay: idx * 0.02, type: 'spring', stiffness: 300 }}
-      className="group cursor-pointer relative" 
+      className="group cursor-pointer relative z-10" 
       onClick={onClick}
     >
       <div className="bg-white border border-slate-100 rounded-2xl p-2 pb-5 transition-all duration-500 group-hover:bg-slate-50 group-hover:border-slate-200 shadow-sm hover:shadow-xl">
@@ -310,7 +310,7 @@ const DirectoryPage: React.FC = () => {
                   viewMode === 'grid' ? (
                     <MemberCard key={member.id} member={member} idx={idx} onClick={() => setSelectedMember(member)} />
                   ) : (
-                    <div key={member.id} onClick={() => setSelectedMember(member)} className="bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/60 flex items-center justify-between hover:bg-white/60 cursor-pointer transition-all shadow-sm">
+                    <div key={member.id} onClick={() => setSelectedMember(member)} className="bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/60 flex items-center justify-between hover:bg-white/60 cursor-pointer transition-all shadow-sm relative z-10">
                       <div className="flex items-center gap-4">
                         <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover border border-white/40" alt="" />
                         <div>
@@ -337,7 +337,7 @@ const DirectoryPage: React.FC = () => {
                   viewMode === 'grid' ? (
                     <MemberCard key={member.id} member={member} idx={idx} onClick={() => setSelectedMember(member)} />
                   ) : (
-                    <div key={member.id} onClick={() => setSelectedMember(member)} className="bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/60 flex items-center justify-between hover:bg-white/60 cursor-pointer transition-all shadow-sm">
+                    <div key={member.id} onClick={() => setSelectedMember(member)} className="bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/60 flex items-center justify-between hover:bg-white/60 cursor-pointer transition-all shadow-sm relative z-10">
                       <div className="flex items-center gap-4">
                         <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover border border-white/40" alt="" />
                         <div>
@@ -364,7 +364,7 @@ const DirectoryPage: React.FC = () => {
                   viewMode === 'grid' ? (
                     <MemberCard key={member.id} member={member} idx={idx} onClick={() => setSelectedMember(member)} />
                   ) : (
-                    <div key={member.id} onClick={() => setSelectedMember(member)} className="bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/60 flex items-center justify-between hover:bg-white/60 cursor-pointer transition-all shadow-sm">
+                    <div key={member.id} onClick={() => setSelectedMember(member)} className="bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/60 flex items-center justify-between hover:bg-white/60 cursor-pointer transition-all shadow-sm relative z-10">
                       <div className="flex items-center gap-4">
                         <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover border border-white/40" alt="" />
                         <div>
@@ -380,120 +380,126 @@ const DirectoryPage: React.FC = () => {
             </section>
           )}
         </div>
-      </div>
-
-      {selectedMember && (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-12 bg-slate-900/40 backdrop-blur-xl animate-in fade-in" onClick={() => setSelectedMember(null)}>
-       <motion.div 
+        {selectedMember && (
+           <motion.div 
          initial={{ opacity: 0, scale: 0.95, y: 40 }}
          animate={{ opacity: 1, scale: 1, y: 0 }}
-         className="bg-[#FDFBF7] w-full max-w-7xl h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[4rem] shadow-2xl overflow-hidden relative flex flex-col md:flex-row border border-white/60" 
+         className="bg-[#FDFBF7] w-full max-w-5xl max-h-[95vh] rounded-none md:rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col md:flex-row border border-white/60 m-0 md:m-4" 
          onClick={e => e.stopPropagation()}
        >
-          <div className="md:w-[40%] relative h-[40vh] md:h-auto overflow-hidden bg-slate-100">
+          <div className="md:w-[40%] relative h-[30vh] md:h-auto overflow-hidden bg-slate-100 flex-shrink-0">
              {selectedMember.avatar ? (
                <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={`${selectedMember.firstName} ${selectedMember.lastName}`} />
              ) : (
                <div className="w-full h-full flex items-center justify-center text-slate-300">
-                 <UserCircle size={160} strokeWidth={0.5} />
+                 <UserCircle size={120} strokeWidth={0.5} />
                </div>
              )}
              <div className="absolute inset-0 bg-gradient-to-t from-[#FDFBF7] via-transparent to-transparent"></div>
-             <div className="absolute bottom-12 right-12 left-12">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-px w-12 bg-[#D4A373]"></div>
-                  <span className="text-[10px] font-black text-[#D4A373] uppercase tracking-[0.4em]">Member Profile</span>
+             <div className="absolute bottom-8 right-8 left-8">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-px w-8 bg-[#D4A373]"></div>
+                  <span className="text-[9px] font-black text-[#D4A373] uppercase tracking-[0.3em]">Profile</span>
                 </div>
-                <h3 className="text-6xl font-black text-[#2B2B2E] tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
+                <h3 className="text-4xl md:text-5xl font-black text-[#2B2B2E] tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
              </div>
           </div>
 
-          <div className="flex-1 p-10 md:p-20 overflow-y-auto custom-scrollbar text-right relative">
-            <button onClick={() => setSelectedMember(null)} className="absolute top-10 left-10 p-4 text-slate-400 hover:text-slate-600 transition-all bg-slate-100 hover:bg-slate-200 rounded-full z-10"><X size={32} /></button>
+          <div className="flex-1 p-6 md:p-12 overflow-y-auto custom-scrollbar text-right relative">
+            <button onClick={() => setSelectedMember(null)} className="absolute top-6 left-6 p-2 text-slate-400 hover:text-slate-600 transition-all bg-slate-100 hover:bg-slate-200 rounded-full z-10"><X size={20} /></button>
             
-            <div className="max-w-2xl space-y-16">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</p>
-                  <p className="text-lg font-black text-[#2B2B2E]">{selectedMember.role}</p>
+            <div className="max-w-xl mx-auto space-y-10">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1 text-center bg-white/50 p-3 rounded-2xl">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Role</p>
+                  <p className="font-black text-[#2B2B2E] text-sm">{selectedMember.role}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sessions</p>
-                  <p className="text-lg font-black text-[#2B2B2E]">{selectedMember.totalAttendance || 0}</p>
+                <div className="space-y-1 text-center bg-white/50 p-3 rounded-2xl">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sessions</p>
+                  <p className="font-black text-[#2B2B2E] text-sm">{selectedMember.totalAttendance || 0}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Joined</p>
-                  <p className="text-lg font-black text-[#2B2B2E]">{formatDate(selectedMember.joinedAt)}</p>
+                <div className="space-y-1 text-center bg-white/50 p-3 rounded-2xl">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Joined</p>
+                  <p className="font-black text-[#2B2B2E] text-sm">{formatDate(selectedMember.joinedAt)}</p>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <p className="text-[10px] font-black text-[#D4A373] uppercase tracking-[0.3em]">About</p>
-                <p className="text-3xl font-bold text-slate-700 leading-tight tracking-tight italic">
+              <div className="space-y-3">
+                <p className="text-[9px] font-black text-[#D4A373] uppercase tracking-[0.3em]">About</p>
+                <p className="text-lg font-bold text-slate-700 leading-snug tracking-tight italic">
                   "{selectedMember.bio || 'חבר בקהילת הגולשים של חבל זוג. חולק את התשוקה לים ולגלים.'}"
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-8 bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 flex items-center gap-6 group hover:bg-white/60 hover:shadow-xl transition-all duration-500">
-                   <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-[#D4A373] shadow-sm transition-colors"><Phone size={24} /></div>
-                   <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Mobile</p>
-                      <p className="text-xl font-black text-[#2B2B2E]">{selectedMember.mobile}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-5 bg-white/50 backdrop-blur-md rounded-2xl border border-white/60 flex items-center gap-4">
+                   <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400"><Phone size={18} /></div>
+                   <div className="overflow-hidden">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Mobile</p>
+                      <p className="font-black text-[#2B2B2E] text-sm">{selectedMember.mobile}</p>
                    </div>
                 </div>
-                <div className="p-8 bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 flex items-center gap-6 group hover:bg-white/60 hover:shadow-xl transition-all duration-500">
-                   <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-[#D4A373] shadow-sm transition-colors"><Mail size={24} /></div>
+                <div className="p-5 bg-white/50 backdrop-blur-md rounded-2xl border border-white/60 flex items-center gap-4">
+                   <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400"><Mail size={18} /></div>
                    <div className="overflow-hidden">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Email</p>
-                      <p className="text-xl font-black text-[#2B2B2E] truncate">{selectedMember.email}</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Email</p>
+                      <p className="font-black text-[#2B2B2E] text-sm truncate">{selectedMember.email}</p>
                    </div>
                 </div>
               </div>
 
               <motion.button 
                 onClick={() => openWhatsAppModal(selectedMember.firstName, selectedMember.lastName)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-8 bg-[#25D366] text-white rounded-[2.5rem] font-black text-2xl shadow-2xl flex items-center justify-center gap-6 group relative overflow-hidden"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className="w-full py-5 bg-[#25D366] text-white rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-4"
               >
-                <WhatsAppIcon className="w-10 h-10" />
+                <WhatsAppIcon className="w-6 h-6" />
                 <span>Open WhatsApp Chat</span>
-                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
               </motion.button>
 
-              <div className="space-y-8">
-                <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] text-center">Social Connect</p>
-                <div className="flex justify-center gap-6">
-                  {selectedMember.instagramUrl && (
-                    <a href={ensureAbsoluteUrl(selectedMember.instagramUrl)} target="_blank" rel="noopener noreferrer" className="w-16 h-16 bg-white/5 text-white/40 rounded-2xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all hover:shadow-xl hover:-translate-y-1 border border-white/10">
-                      <Instagram size={28} />
-                    </a>
-                  )}
-                  {selectedMember.facebookUrl && (
-                    <a href={ensureAbsoluteUrl(selectedMember.facebookUrl)} target="_blank" rel="noopener noreferrer" className="w-16 h-16 bg-white/5 text-white/40 rounded-2xl flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all hover:shadow-xl hover:-translate-y-1 border border-white/10">
-                      <Facebook size={28} />
-                    </a>
-                  )}
-                  {selectedMember.tiktokUrl && (
-                    <a href={ensureAbsoluteUrl(selectedMember.tiktokUrl)} target="_blank" rel="noopener noreferrer" className="w-16 h-16 bg-white/5 text-white/40 rounded-2xl flex items-center justify-center hover:bg-black hover:text-white transition-all hover:shadow-xl hover:-translate-y-1 border border-white/10">
-                      <Music2 size={28} />
-                    </a>
-                  )}
-                  {selectedMember.linkedinUrl && (
-                    <a href={ensureAbsoluteUrl(selectedMember.linkedinUrl)} target="_blank" rel="noopener noreferrer" className="w-16 h-16 bg-white/5 text-white/40 rounded-2xl flex items-center justify-center hover:bg-[#00CED1] hover:text-white transition-all hover:shadow-xl hover:-translate-y-1 border border-white/10">
-                      <Linkedin size={28} />
-                    </a>
-                  )}
+              <div className="space-y-4">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] text-center">Social Connect</p>
+                <div className="flex justify-center gap-4">
+                  <a 
+                    href={selectedMember.instagramUrl ? ensureAbsoluteUrl(selectedMember.instagramUrl) : '#'} 
+                    target={selectedMember.instagramUrl ? "_blank" : undefined} 
+                    rel="noopener noreferrer" 
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all hover:shadow-lg hover:-translate-y-0.5 border border-white/10 ${selectedMember.instagramUrl ? 'bg-white/5 text-rose-500 hover:bg-rose-500 hover:text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
+                  >
+                    <Instagram size={20} />
+                  </a>
+                  <a 
+                    href={selectedMember.facebookUrl ? ensureAbsoluteUrl(selectedMember.facebookUrl) : '#'} 
+                    target={selectedMember.facebookUrl ? "_blank" : undefined} 
+                    rel="noopener noreferrer" 
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all hover:shadow-lg hover:-translate-y-0.5 border border-white/10 ${selectedMember.facebookUrl ? 'bg-white/5 text-blue-600 hover:bg-blue-600 hover:text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
+                  >
+                    <Facebook size={20} />
+                  </a>
+                  <a 
+                    href={selectedMember.tiktokUrl ? ensureAbsoluteUrl(selectedMember.tiktokUrl) : '#'} 
+                    target={selectedMember.tiktokUrl ? "_blank" : undefined} 
+                    rel="noopener noreferrer" 
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all hover:shadow-lg hover:-translate-y-0.5 border border-white/10 ${selectedMember.tiktokUrl ? 'bg-white/5 text-black hover:bg-black hover:text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
+                  >
+                    <Music2 size={20} />
+                  </a>
+                  <a 
+                    href={selectedMember.linkedinUrl ? ensureAbsoluteUrl(selectedMember.linkedinUrl) : '#'} 
+                    target={selectedMember.linkedinUrl ? "_blank" : undefined} 
+                    rel="noopener noreferrer" 
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all hover:shadow-lg hover:-translate-y-0.5 border border-white/10 ${selectedMember.linkedinUrl ? 'bg-white/5 text-[#00CED1] hover:bg-[#00CED1] hover:text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
+                  >
+                    <Linkedin size={20} />
+                  </a>
                 </div>
               </div>
             </div>
           </div>
        </motion.div>
+    )}
     </div>
-  )}
-
-      {/* Add Member Modal */}
       <AnimatePresence>
         {isAddMemberModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-12 bg-slate-900/40 backdrop-blur-xl animate-in fade-in" onClick={() => setIsAddMemberModalOpen(false)}>

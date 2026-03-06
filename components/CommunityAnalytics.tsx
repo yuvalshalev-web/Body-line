@@ -999,13 +999,13 @@ export const Astrodeck = ({ label, value, icon: Icon, path, external, color }: {
             </defs>
 
             <path d="M 135 38 Q 80 45 40 60 C 30 150 60 250 100 320 C 120 360 160 380 185 380 L 185 330 C 185 300 135 300 135 250 Z" 
-                  fill="url(#diamond)" filter="url(#inner-shadow)" stroke="#f0f0f0" strokeWidth="1" />
+                  fill="url(#diamond)" filter="url(#inner-shadow)" stroke="#cbd5e1" strokeWidth="1" />
 
             <path d="M 145 35 Q 200 20 255 35 L 245 250 C 245 290 155 290 155 250 Z" 
-                  fill="url(#diamond)" filter="url(#inner-shadow)" stroke="#f0f0f0" strokeWidth="1" />
+                  fill="url(#diamond)" filter="url(#inner-shadow)" stroke="#cbd5e1" strokeWidth="1" />
 
             <path d="M 265 38 Q 320 45 360 60 C 370 150 340 250 300 320 C 280 360 240 380 215 380 L 215 330 C 215 300 265 300 265 250 Z" 
-                  fill="url(#diamond)" filter="url(#inner-shadow)" stroke="#f0f0f0" strokeWidth="1" />
+                  fill="url(#diamond)" filter="url(#inner-shadow)" stroke="#cbd5e1" strokeWidth="1" />
 
             <g fill="#d4d4d4" filter="url(#inner-shadow)">
               <rect x="170" y="80" width="60" height="6" rx="3" />

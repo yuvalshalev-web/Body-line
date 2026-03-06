@@ -59,7 +59,7 @@ export const calculateUserStats = (
   const now = new Date();
   const pastSocialEvents = events.filter(e => {
     const eventDate = e.date?.toDate ? e.date.toDate() : new Date(e.date);
-    return e.type === 'COMMUNITY' && eventDate < now;
+    return (e.type === 'COMMUNITY' || e.type === 'MEMBER') && eventDate < now;
   });
   const userSocialAttendance = pastSocialEvents.filter(e => e.attendees?.includes(userId)).length;
   const totalSocialEvents = pastSocialEvents.length;

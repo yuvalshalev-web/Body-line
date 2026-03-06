@@ -85,7 +85,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   if (!member || !stats) return null;
 
   return (
-    <div className="bg-[#FDFBF7] p-[var(--spacing-md)] rounded-[var(--radius-lg)] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
+    <div className="bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] border border-[rgba(255,255,255,0.2)] p-[var(--spacing-md)] rounded-[16px] shadow-sm flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
       {/* Background Accent */}
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-[var(--ocean-liquid)]/5 rounded-full blur-3xl -z-10" />
       

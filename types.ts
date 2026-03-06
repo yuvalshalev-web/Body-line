@@ -18,6 +18,7 @@ export interface Member {
   bio: string;
   role: 'Member' | 'Instructor' | 'Admin';
   joinedAt: string;
+  deactivatedAt?: any;
   isActive?: boolean; // true = active, false = inactive
   password?: string;
   isTemporary?: boolean;

@@ -1364,6 +1364,64 @@ header {
   animation: pulse-glow 3s ease-in-out infinite;
 }
 
+/* --- Global Glassmorphism Design Language --- */
+.glass-container, .glass-card, .glass-modal, .modern-card, .player-card, .age-gimmick-card {
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 16px !important;
+  color: #1A365D !important; /* Deep blue for high contrast */
+}
+
+.dark-bg .glass-container, .dark-bg .glass-card, .dark-bg .glass-modal, .dark-bg .modern-card, .dark-bg .player-card, .dark-bg .age-gimmick-card {
+    color: #ffffff !important; /* Pure white for dark backgrounds */
+}
+
+/* Buttons */
+.glass-btn, button {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.glass-btn:hover, button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Modals */
+.glass-modal-overlay {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.glass-modal {
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* Progress Bars */
+.glass-progress-track {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.glass-progress-fill {
+  background: #00f2fe; /* Glowing solid fill */
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.8);
+  height: 100%;
+  border-radius: 16px;
+}
+
+
 
 
 

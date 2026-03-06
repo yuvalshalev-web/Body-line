@@ -32,21 +32,21 @@ const MemberTable: React.FC<MemberTableProps> = ({
   });
 
   return (
-    <div className="bg-white border border-[#ff009f]/5 rounded-[3rem] overflow-hidden shadow-sm">
+    <div className="bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] border border-[rgba(255,255,255,0.2)] rounded-[16px] overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-right">
-          <thead className="bg-[#f7c1ea]/10 border-b border-[#ff009f]/5">
+          <thead className="bg-[rgba(255,255,255,0.05)] border-b border-[rgba(255,255,255,0.1)]">
             <tr>
-              <th className="px-8 py-6 text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest">
+              <th className="px-8 py-6 text-[10px] font-black text-white/60 uppercase tracking-widest">
                 {isArchive ? 'משתמש מושעה' : 'משתמש'}
               </th>
-              <th className="px-8 py-6 text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest">סטטוס</th>
-              <th className="px-8 py-6 text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest text-center">פעולות</th>
+              <th className="px-8 py-6 text-[10px] font-black text-white/60 uppercase tracking-widest">סטטוס</th>
+              <th className="px-8 py-6 text-[10px] font-black text-white/60 uppercase tracking-widest text-center">פעולות</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#f7c1ea]/10">
+          <tbody className="divide-y divide-[rgba(255,255,255,0.1)]">
             {sortedMembers.map(member => (
-              <tr key={member.id} className="hover:bg-[#f7c1ea]/10 transition-all group">
+              <tr key={member.id} className="hover:bg-[rgba(255,255,255,0.05)] transition-all group">
                 <td className="px-8 py-6">
                   <div className="flex items-center gap-4">
                     {member.avatar ? (
