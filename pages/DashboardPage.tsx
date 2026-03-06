@@ -241,92 +241,92 @@ const DashboardPage: React.FC = () => {
       <section className="space-y-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-4 bg-slate-950 text-white rounded-2xl shadow-lg"><Newspaper size={24} /></div>
-            <h3 className="text-3xl font-black text-slate-950 tracking-tight">פוסטים אחרונים</h3>
+            <div className="p-4 glass-effect text-white rounded-2xl shadow-lg"><Newspaper size={24} /></div>
+            <h3 className="text-3xl font-black glass-text-primary tracking-tight">פוסטים אחרונים</h3>
           </div>
-          <Link to="/posts" className="text-slate-400 font-black text-xs uppercase tracking-widest hover:text-slate-950 transition-colors">צפה בהכל</Link>
+          <Link to="/posts" className="glass-text-secondary font-black text-xs uppercase tracking-widest hover:text-slate-950 transition-colors">צפה בהכל</Link>
         </div>
         
         <div className="max-w-xl mx-auto">
           {randomPost ? (
-            <Link to="/posts" className={`group bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col ${isRefreshingPost ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+            <Link to="/posts" className={`group glass-panel overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col ${isRefreshingPost ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
               {randomPost.imageUrl && (
                 <div className="aspect-video overflow-hidden">
                   <img src={randomPost.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
                 </div>
               )}
               <div className="p-8 flex-1 flex flex-col">
-                <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
+                <div className="flex items-center gap-2 text-[10px] font-black glass-text-secondary uppercase tracking-widest mb-4">
                   <Calendar size={12} />
                   {randomPost.date}
                 </div>
-                <h4 className="text-xl font-black text-[#2B2B2E] mb-4 group-hover:text-rose-600 transition-colors line-clamp-2">{randomPost.title}</h4>
-                <p className="text-slate-500 font-bold text-sm line-clamp-3 mb-6">{randomPost.content}</p>
+                <h4 className="text-xl font-black glass-text-primary mb-4 group-hover:text-rose-600 transition-colors line-clamp-2">{randomPost.title}</h4>
+                <p className="glass-text-secondary font-bold text-sm line-clamp-3 mb-6">{randomPost.content}</p>
                 <div className="mt-auto flex items-center gap-3">
                   {randomPost.authorAvatar ? (
                     <img src={randomPost.authorAvatar} className="w-6 h-6 rounded-full object-cover" alt="" />
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-slate-400">
+                    <div className="w-6 h-6 rounded-full glass-effect flex items-center justify-center text-slate-400">
                       <UserCircle size={12} />
                     </div>
                   )}
-                  <span className="text-[10px] font-black text-slate-400">{randomPost.authorName}</span>
+                  <span className="text-[10px] font-black glass-text-secondary">{randomPost.authorName}</span>
                 </div>
               </div>
             </Link>
           ) : (
-            <div className="py-20 text-center bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-100">
-              <p className="text-slate-400 font-bold">אין פוסטים להצגה</p>
+            <div className="py-20 text-center glass-panel border-2 border-dashed border-white/20">
+              <p className="glass-text-secondary font-bold">אין פוסטים להצגה</p>
             </div>
           )}
         </div>
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <section className="bg-white rounded-[3.5rem] border border-slate-100 p-12 shadow-sm relative min-h-[400px]">
+        <section className="glass-panel p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-amber-50 text-amber-600 rounded-2xl shadow-inner"><Quote size={24} /></div>
-              <h3 className="text-2xl font-black text-slate-950">חוכמת הליין-אפ</h3>
+              <div className="p-4 bg-amber-500/20 text-amber-600 rounded-2xl shadow-inner"><Quote size={24} /></div>
+              <h3 className="text-2xl font-black glass-text-primary">חוכמת הליין-אפ</h3>
            </div>
            {randomQuotes.map((item, idx) => (
-             <div key={idx} className="p-10 bg-slate-50 rounded-[2.5rem] transition-all animate-in fade-in">
-               <p className="text-2xl font-black text-[#2B2B2E] leading-tight italic">"{item.text}"</p>
-               <p className="text-lg font-bold text-slate-400 italic mt-6">— {item.author}</p>
+             <div key={idx} className="p-10 glass-effect rounded-[2.5rem] transition-all animate-in fade-in">
+               <p className="text-2xl font-black glass-text-primary leading-tight italic">"{item.text}"</p>
+               <p className="text-lg font-bold glass-text-secondary italic mt-6">— {item.author}</p>
              </div>
            ))}
         </section>
 
-        <section className="bg-white rounded-[3.5rem] border border-slate-100 p-12 shadow-sm relative min-h-[400px]">
+        <section className="glass-panel p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-sky-50 text-sky-600 rounded-2xl shadow-inner"><BookOpen size={24} /></div>
-              <h3 className="text-2xl font-black text-slate-950">מילון מונחים</h3>
+              <div className="p-4 bg-sky-500/20 text-sky-600 rounded-2xl shadow-inner"><BookOpen size={24} /></div>
+              <h3 className="text-2xl font-black glass-text-primary">מילון מונחים</h3>
            </div>
            {randomGlossary.map((item, idx) => (
-             <div key={idx} className="p-10 bg-slate-50 rounded-[2.5rem] transition-all animate-in fade-in">
-               <h4 className="text-4xl font-black text-[#2B2B2E] mb-4" dir="ltr">{item.term}</h4>
-               <p className="text-xl font-bold text-slate-500 italic border-r-4 border-sky-100 pr-6">{item.definition}</p>
+             <div key={idx} className="p-10 glass-effect rounded-[2.5rem] transition-all animate-in fade-in">
+               <h4 className="text-4xl font-black glass-text-primary mb-4" dir="ltr">{item.term}</h4>
+               <p className="text-xl font-bold glass-text-secondary italic border-r-4 border-sky-500/30 pr-6">{item.definition}</p>
              </div>
            ))}
         </section>
       </div>
 
       {showAttendees && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-md" onClick={() => setShowAttendees(false)}>
-           <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl p-10 animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-              <h3 className="text-3xl font-black mb-8">נבחרת הסשן</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 modal-overlay" onClick={() => setShowAttendees(false)}>
+           <div className="modal-content w-full max-w-lg p-10 animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+              <h3 className="text-3xl font-black mb-8 glass-text-primary">נבחרת הסשן</h3>
               <div className="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar">
                 {attendees.map(a => (
-                  <div key={a.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
+                  <div key={a.id} className="flex items-center gap-4 p-4 glass-effect rounded-2xl">
                     {a.avatar ? (
                       <img src={a.avatar} className="w-12 h-12 rounded-xl object-cover" alt="" loading="lazy" />
                     ) : (
-                      <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-slate-400">
+                      <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-slate-400">
                         <UserCircle size={24} />
                       </div>
                     )}
                     <div>
-                      <p className="font-black text-[#2B2B2E]">{a.firstName} {a.lastName}</p>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{a.role === 'Admin' ? 'רכז' : 'חבר'}</p>
+                      <p className="font-black glass-text-primary">{a.firstName} {a.lastName}</p>
+                      <p className="text-[10px] font-black glass-text-secondary uppercase tracking-widest">{a.role === 'Admin' ? 'רכז' : 'חבר'}</p>
                     </div>
                   </div>
                 ))}

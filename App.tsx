@@ -230,7 +230,7 @@ const App: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row-reverse font-['Assistant']" dir="rtl">
+    <div className="min-h-screen flex flex-col md:flex-row-reverse font-['Assistant']" dir="rtl">
       {/* Global Progress Bar */}
       <div id="global-progress-container">
         <div id="global-progress-bar"></div>
@@ -288,7 +288,7 @@ const App: React.FC = () => {
       )}
 
       {/* Desktop Sidebar (Hidden when floating-bottom is active) */}
-      <aside className={`${siteConfig.navPosition === 'floating-bottom' ? 'hidden' : 'hidden md:flex'} flex-col w-64 bg-white border-l border-[var(--sand-medium)]/10 sticky top-0 h-screen z-50 p-[var(--spacing-md)] shadow-sm`}>
+      <aside className={`${siteConfig.navPosition === 'floating-bottom' ? 'hidden' : 'hidden md:flex'} flex-col w-64 glass-effect border-l border-[var(--sand-medium)]/10 sticky top-0 h-screen z-50 p-[var(--spacing-md)] shadow-sm`}>
         <div className="flex items-center gap-[var(--spacing-xs)] mb-14">
           <div className="w-12 h-12 bg-[var(--sand-accent)] rounded-[var(--radius-md)] flex items-center justify-center text-white shadow-lg shadow-[var(--sand-shadow)]/20">
             <Waves size={28} className="text-[var(--sand-light)]" />
@@ -347,7 +347,7 @@ const App: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto bg-slate-50">
+      <main className="flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto">
         <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -389,7 +389,7 @@ const App: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className={`absolute right-0 top-0 bottom-0 w-72 bg-white shadow-2xl p-6 flex flex-col z-[2001] ${
+              className={`absolute right-0 top-0 bottom-0 w-72 glass-effect shadow-2xl p-6 flex flex-col z-[2001] ${
                 siteConfig.navPosition !== 'standard' ? 'floating-menu-drawer' : ''
               }`}
             >

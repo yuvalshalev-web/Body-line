@@ -799,6 +799,129 @@ header {
     filter: drop-shadow(0 0 15px rgba(0, 123, 255, 0.3));
 }
 
+/* 
+   ==========================================================================
+   GLOBAL GLASSMORPHISM DESIGN SYSTEM (APPENDED)
+   ==========================================================================
+*/
+
+/* 1. Global Background & Body */
+body {
+    /* Gradient background to enhance glass effect */
+    background: linear-gradient(135deg, #e0e7ff 0%, #f3f4f6 100%);
+    min-height: 100vh;
+    background-attachment: fixed;
+}
+
+/* 2. Glass Containers & Cards */
+.glass-effect, .glass-panel {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1) !important;
+}
+
+/* Update modern-card specifically */
+.modern-card {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 3. Modals */
+.modal-overlay {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* 4. Buttons */
+.btn-glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    color: var(--text-main);
+    transition: all 0.3s ease;
+}
+
+.btn-glass:hover {
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* 5. Progress Bars */
+.glass-progress-track {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.glass-progress-fill {
+    background: linear-gradient(90deg, var(--ocean-liquid), #ffffff);
+    box-shadow: 0 0 15px var(--ocean-liquid);
+}
+
+/* 6. Typography High Contrast */
+.glass-text-primary {
+    color: #1e1b4b; /* Deep Indigo */
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.glass-text-secondary {
+    color: #334155; /* Slate 700 */
+}
+
+/* 7. Sidebar & Header Overrides */
+aside.bg-white {
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.floating-menu-drawer {
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(25px) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Ensure main content background is transparent to show body gradient */
+main.bg-slate-50 {
+    background-color: transparent !important;
+}
+
+/* Scrollbar styling for glass feel */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+
 /* תווית הצפה (Tooltip) מעוצבת */
 #darts-tooltip {
     background: rgba(0, 8, 20, 0.9);

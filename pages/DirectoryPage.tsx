@@ -55,8 +55,8 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
       className="group cursor-pointer relative z-10" 
       onClick={onClick}
     >
-      <div className="bg-white border border-slate-100 rounded-2xl p-2 pb-5 transition-all duration-500 group-hover:bg-slate-50 group-hover:border-slate-200 shadow-sm hover:shadow-xl">
-        <div className="aspect-square overflow-hidden bg-slate-200/50 rounded-xl mb-3 border border-white/40">
+      <div className="glass-panel p-2 pb-5 transition-all duration-500 hover:border-white/40 shadow-sm hover:shadow-xl">
+        <div className="aspect-square overflow-hidden glass-effect rounded-xl mb-3 border border-white/10">
           {member.avatar ? (
             <img 
               src={member.avatar} 
@@ -70,8 +70,8 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
           )}
         </div>
         <div className="text-center">
-          <p className="text-[10px] font-['Assistant'] font-black text-[#2B2B2E] truncate px-1">{member.firstName} {member.lastName}</p>
-          <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}</p>
+          <p className="text-[10px] font-['Assistant'] font-black glass-text-primary truncate px-1">{member.firstName} {member.lastName}</p>
+          <p className="text-[7px] font-black glass-text-secondary uppercase tracking-widest mt-0.5">{member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}</p>
         </div>
       </div>
     </motion.div>
@@ -208,12 +208,12 @@ const DirectoryPage: React.FC = () => {
   }, [processedMembers]);
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-right relative overflow-hidden" dir="rtl">
-      {/* Background Decorative Elements - Sand Theme */}
+    <div className="min-h-screen text-right relative overflow-hidden" dir="rtl">
+      {/* Background Decorative Elements - Subtle Glass Theme */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#E6D5B8]/30 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 -right-48 w-[500px] h-[500px] bg-[#D4A373]/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-[#E6D5B8]/20 rounded-full blur-[180px]" />
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-white/10 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 -right-48 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-rose-500/10 rounded-full blur-[180px]" />
       </div>
 
       <div className="surfboard-hero-container mb-6 space-y-2">
@@ -225,20 +225,20 @@ const DirectoryPage: React.FC = () => {
 
       {/* Subtitle with Emoji context */}
       <div className="flex flex-col items-center gap-4 mb-8">
-        <p className="text-slate-600 font-medium max-w-2xl text-lg text-center">
+        <p className="glass-text-secondary font-medium max-w-2xl text-lg text-center">
           האנשים שעושים את חבל זוג למה שהיא - קהילה של חברים שנפגשים במים 🌊
         </p>
         
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 px-6 py-3 bg-white/40 backdrop-blur-md rounded-full border border-white/60 shadow-sm">
+          <div className="flex items-center gap-3 px-6 py-3 glass-effect rounded-full shadow-sm">
             <Users size={18} className="text-[#D4A373]" />
-            <span className="text-sm font-black text-slate-700">{activeMembers.length} חברים פעילים</span>
+            <span className="text-sm font-black glass-text-primary">{activeMembers.length} חברים פעילים</span>
           </div>
           
           {isAdmin && (
             <button 
               onClick={() => setIsAddMemberModalOpen(true)}
-              className="w-12 h-12 bg-white/40 backdrop-blur-md hover:bg-[#D4A373] hover:text-white rounded-full flex items-center justify-center transition-all shadow-sm border border-white/60 group"
+              className="w-12 h-12 glass-effect hover:bg-[#D4A373] hover:text-white rounded-full flex items-center justify-center transition-all shadow-sm group"
               title="הוסף חבר חדש"
             >
               <Plus size={24} className="transition-transform group-hover:rotate-90" />
@@ -255,7 +255,7 @@ const DirectoryPage: React.FC = () => {
              <input 
                type="text" 
                placeholder="חפש חבר בקהילה..." 
-               className="w-full pr-14 pl-6 py-3.5 bg-white/40 backdrop-blur-md border border-white/60 rounded-full font-bold text-[#2B2B2E] outline-none focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all shadow-sm text-base placeholder:text-slate-400"
+               className="w-full pr-14 pl-6 py-3.5 glass-effect rounded-full font-bold glass-text-primary outline-none focus:bg-white/10 focus:ring-4 ring-[#D4A373]/10 transition-all shadow-sm text-base placeholder:text-slate-400"
                value={searchTerm}
                onChange={e => setSearchTerm(e.target.value)}
              />
@@ -263,7 +263,7 @@ const DirectoryPage: React.FC = () => {
 
           <div className="flex items-center gap-3 w-full md:w-auto">
             {/* View Mode Segmented Control - Turquoise Glassmorphism */}
-            <div className="gt-segmented bg-white/40 backdrop-blur-md border border-white/60 shadow-sm h-[48px] items-center">
+            <div className="gt-segmented glass-effect shadow-sm h-[48px] items-center">
               <button 
                 onClick={() => setViewMode('grid')}
                 className={`gt-segment-item flex items-center gap-2 ${viewMode === 'grid' ? 'active' : ''} text-[10px] font-black uppercase tracking-widest`}
@@ -283,15 +283,15 @@ const DirectoryPage: React.FC = () => {
             <div className="relative flex-1 md:flex-none">
                <button 
                  onClick={() => setIsSortOpen(!isSortOpen)}
-                 className="w-full md:w-auto h-[48px] px-6 bg-white/40 backdrop-blur-md text-slate-700 border border-white/60 rounded-full font-black text-xs flex items-center justify-between gap-4 hover:bg-white/60 transition-all shadow-sm active:scale-95"
+                 className="w-full md:w-auto h-[48px] px-6 glass-effect glass-text-primary rounded-full font-black text-xs flex items-center justify-between gap-4 hover:bg-white/10 transition-all shadow-sm active:scale-95"
                >
                   <span className="uppercase tracking-widest">מיון</span> <ChevronDown size={14} className={isSortOpen ? 'rotate-180 transition-transform' : ''} />
                </button>
                {isSortOpen && (
-                 <div className="absolute top-full left-0 right-0 md:left-auto md:w-56 mt-3 bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-4">
-                    <button onClick={() => {setSortBy('name-asc'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] text-slate-700 hover:bg-[#D4A373] hover:text-white transition-all border-b border-slate-100">שם (א-ת)</button>
-                    <button onClick={() => {setSortBy('attendance'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] text-slate-700 hover:bg-[#D4A373] hover:text-white transition-all border-b border-slate-100">הכי פעילים בסשנים</button>
-                    <button onClick={() => {setSortBy('newest'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] text-slate-700 hover:bg-[#D4A373] hover:text-white transition-all">מצטרפים חדשים</button>
+                 <div className="absolute top-full left-0 right-0 md:left-auto md:w-56 mt-3 glass-panel z-50 overflow-hidden animate-in fade-in slide-in-from-top-4">
+                    <button onClick={() => {setSortBy('name-asc'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] glass-text-primary hover:bg-[#D4A373] hover:text-white transition-all border-b border-white/10">שם (א-ת)</button>
+                    <button onClick={() => {setSortBy('attendance'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] glass-text-primary hover:bg-[#D4A373] hover:text-white transition-all border-b border-white/10">הכי פעילים בסשנים</button>
+                    <button onClick={() => {setSortBy('newest'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] glass-text-primary hover:bg-[#D4A373] hover:text-white transition-all">מצטרפים חדשים</button>
                  </div>
                )}
             </div>
@@ -384,7 +384,7 @@ const DirectoryPage: React.FC = () => {
            <motion.div 
          initial={{ opacity: 0, scale: 0.95, y: 40 }}
          animate={{ opacity: 1, scale: 1, y: 0 }}
-         className="bg-[#FDFBF7] w-full max-w-5xl max-h-[95vh] rounded-none md:rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col md:flex-row border border-white/60 m-0 md:m-4" 
+         className="modal-content w-full max-w-5xl max-h-[95vh] rounded-none md:rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col md:flex-row m-0 md:m-4" 
          onClick={e => e.stopPropagation()}
        >
           <div className="md:w-[40%] relative h-[30vh] md:h-auto overflow-hidden bg-slate-100 flex-shrink-0">
@@ -395,55 +395,55 @@ const DirectoryPage: React.FC = () => {
                  <UserCircle size={120} strokeWidth={0.5} />
                </div>
              )}
-             <div className="absolute inset-0 bg-gradient-to-t from-[#FDFBF7] via-transparent to-transparent"></div>
+             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
              <div className="absolute bottom-8 right-8 left-8">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="h-px w-8 bg-[#D4A373]"></div>
                   <span className="text-[9px] font-black text-[#D4A373] uppercase tracking-[0.3em]">Profile</span>
                 </div>
-                <h3 className="text-4xl md:text-5xl font-black text-[#2B2B2E] tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
+                <h3 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
              </div>
           </div>
 
-          <div className="flex-1 p-6 md:p-12 overflow-y-auto custom-scrollbar text-right relative">
-            <button onClick={() => setSelectedMember(null)} className="absolute top-6 left-6 p-2 text-slate-400 hover:text-slate-600 transition-all bg-slate-100 hover:bg-slate-200 rounded-full z-10"><X size={20} /></button>
+          <div className="flex-1 p-6 md:p-12 overflow-y-auto custom-scrollbar text-right relative glass-panel">
+            <button onClick={() => setSelectedMember(null)} className="absolute top-6 left-6 p-2 text-slate-400 hover:text-slate-600 transition-all glass-effect hover:bg-white/20 rounded-full z-10"><X size={20} /></button>
             
             <div className="max-w-xl mx-auto space-y-10">
               <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-1 text-center bg-white/50 p-3 rounded-2xl">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Role</p>
-                  <p className="font-black text-[#2B2B2E] text-sm">{selectedMember.role}</p>
+                <div className="space-y-1 text-center glass-effect p-3 rounded-2xl">
+                  <p className="text-[9px] font-black glass-text-secondary uppercase tracking-widest">Role</p>
+                  <p className="font-black glass-text-primary text-sm">{selectedMember.role}</p>
                 </div>
-                <div className="space-y-1 text-center bg-white/50 p-3 rounded-2xl">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sessions</p>
-                  <p className="font-black text-[#2B2B2E] text-sm">{selectedMember.totalAttendance || 0}</p>
+                <div className="space-y-1 text-center glass-effect p-3 rounded-2xl">
+                  <p className="text-[9px] font-black glass-text-secondary uppercase tracking-widest">Sessions</p>
+                  <p className="font-black glass-text-primary text-sm">{selectedMember.totalAttendance || 0}</p>
                 </div>
-                <div className="space-y-1 text-center bg-white/50 p-3 rounded-2xl">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Joined</p>
-                  <p className="font-black text-[#2B2B2E] text-sm">{formatDate(selectedMember.joinedAt)}</p>
+                <div className="space-y-1 text-center glass-effect p-3 rounded-2xl">
+                  <p className="text-[9px] font-black glass-text-secondary uppercase tracking-widest">Joined</p>
+                  <p className="font-black glass-text-primary text-sm">{formatDate(selectedMember.joinedAt)}</p>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <p className="text-[9px] font-black text-[#D4A373] uppercase tracking-[0.3em]">About</p>
-                <p className="text-lg font-bold text-slate-700 leading-snug tracking-tight italic">
+                <p className="text-lg font-bold glass-text-secondary leading-snug tracking-tight italic">
                   "{selectedMember.bio || 'חבר בקהילת הגולשים של חבל זוג. חולק את התשוקה לים ולגלים.'}"
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-5 bg-white/50 backdrop-blur-md rounded-2xl border border-white/60 flex items-center gap-4">
-                   <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400"><Phone size={18} /></div>
+                <div className="p-5 glass-effect rounded-2xl flex items-center gap-4">
+                   <div className="w-10 h-10 glass-effect rounded-xl flex items-center justify-center text-slate-400"><Phone size={18} /></div>
                    <div className="overflow-hidden">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Mobile</p>
-                      <p className="font-black text-[#2B2B2E] text-sm">{selectedMember.mobile}</p>
+                      <p className="text-[9px] font-black glass-text-secondary uppercase tracking-widest mb-0.5">Mobile</p>
+                      <p className="font-black glass-text-primary text-sm">{selectedMember.mobile}</p>
                    </div>
                 </div>
-                <div className="p-5 bg-white/50 backdrop-blur-md rounded-2xl border border-white/60 flex items-center gap-4">
-                   <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400"><Mail size={18} /></div>
+                <div className="p-5 glass-effect rounded-2xl flex items-center gap-4">
+                   <div className="w-10 h-10 glass-effect rounded-xl flex items-center justify-center text-slate-400"><Mail size={18} /></div>
                    <div className="overflow-hidden">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Email</p>
-                      <p className="font-black text-[#2B2B2E] text-sm truncate">{selectedMember.email}</p>
+                      <p className="text-[9px] font-black glass-text-secondary uppercase tracking-widest mb-0.5">Email</p>
+                      <p className="font-black glass-text-primary text-sm truncate">{selectedMember.email}</p>
                    </div>
                 </div>
               </div>
@@ -502,26 +502,26 @@ const DirectoryPage: React.FC = () => {
     </div>
       <AnimatePresence>
         {isAddMemberModalOpen && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-12 bg-slate-900/40 backdrop-blur-xl animate-in fade-in" onClick={() => setIsAddMemberModalOpen(false)}>
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-12 modal-overlay animate-in fade-in" onClick={() => setIsAddMemberModalOpen(false)}>
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 40 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 40 }}
-              className="bg-[#FDFBF7] w-full max-w-7xl h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[4rem] shadow-2xl overflow-hidden relative flex flex-col border border-white/60" 
+              className="modal-content w-full max-w-7xl h-full md:h-auto md:max-h-[90vh] rounded-none md:rounded-[4rem] shadow-2xl overflow-hidden relative flex flex-col" 
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="p-8 md:p-12 border-b border-slate-100 flex items-center justify-between bg-white/40 backdrop-blur-md">
+              <div className="p-8 md:p-12 border-b border-white/10 flex items-center justify-between glass-effect">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-[#D4A373]/10 rounded-2xl flex items-center justify-center text-[#D4A373]">
                     <Plus size={24} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[#2B2B2E] tracking-tighter">הוספת חבר חדש</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">יצירת פרופיל משתמש ידני</p>
+                    <h3 className="text-2xl font-black glass-text-primary tracking-tighter">הוספת חבר חדש</h3>
+                    <p className="text-[10px] font-black glass-text-secondary uppercase tracking-widest">יצירת פרופיל משתמש ידני</p>
                   </div>
                 </div>
-                <button onClick={() => setIsAddMemberModalOpen(false)} className="p-3 text-slate-400 hover:text-slate-600 transition-all bg-slate-100 hover:bg-slate-200 rounded-full">
+                <button onClick={() => setIsAddMemberModalOpen(false)} className="p-3 text-slate-400 hover:text-slate-600 transition-all glass-effect hover:bg-white/20 rounded-full">
                   <X size={24} />
                 </button>
               </div>
@@ -534,7 +534,7 @@ const DirectoryPage: React.FC = () => {
                     <div className="lg:col-span-4 space-y-8">
                       <div className="flex flex-col items-center">
                         <div className="relative group">
-                          <div className="w-48 h-48 rounded-[3rem] border-[10px] border-white overflow-hidden shadow-2xl bg-slate-100 flex items-center justify-center">
+                          <div className="w-48 h-48 rounded-[3rem] border-[10px] border-white/10 overflow-hidden shadow-2xl glass-panel flex items-center justify-center">
                             {isProcessingImage ? (
                               <Loader2 className="animate-spin text-[#D4A373]" size={32} />
                             ) : newMemberData.avatar ? (
@@ -566,12 +566,12 @@ const DirectoryPage: React.FC = () => {
                             />
                           </label>
                         </div>
-                        <p className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">תמונת פרופיל</p>
+                        <p className="mt-4 text-[10px] font-black glass-text-secondary uppercase tracking-widest">תמונת פרופיל</p>
                       </div>
 
                       <div className="space-y-4">
                         <div className="flex justify-between items-center px-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ביוגרפיה</label>
+                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest">ביוגרפיה</label>
                           <button 
                             type="button" 
                             onClick={async () => {
@@ -594,7 +594,7 @@ const DirectoryPage: React.FC = () => {
                         <textarea 
                           value={newMemberData.bio} 
                           onChange={e => setNewMemberData(prev => ({ ...prev, bio: e.target.value }))}
-                          className="w-full p-6 bg-white/40 backdrop-blur-md rounded-[2rem] font-bold h-64 resize-none outline-none border border-white/60 focus:bg-white/60 transition-all text-sm leading-relaxed shadow-inner" 
+                          className="w-full p-6 glass-effect rounded-[2rem] font-bold h-64 resize-none outline-none focus:bg-white/10 transition-all text-sm leading-relaxed shadow-inner glass-text-primary" 
                           placeholder="ספר קצת על החבר החדש..." 
                         />
                       </div>
@@ -604,39 +604,39 @@ const DirectoryPage: React.FC = () => {
                     <div className="lg:col-span-8 space-y-10">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם פרטי</label>
+                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">שם פרטי</label>
                           <input 
                             type="text" 
                             value={newMemberData.firstName} 
                             onChange={e => setNewMemberData(prev => ({ ...prev, firstName: e.target.value }))}
-                            className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black outline-none border border-white/60 focus:bg-white/60 transition-all" 
+                            className="w-full p-5 glass-effect rounded-2xl font-black outline-none focus:bg-white/10 transition-all glass-text-primary" 
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם משפחה</label>
+                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">שם משפחה</label>
                           <input 
                             type="text" 
                             value={newMemberData.lastName} 
                             onChange={e => setNewMemberData(prev => ({ ...prev, lastName: e.target.value }))}
-                            className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black outline-none border border-white/60 focus:bg-white/60 transition-all" 
+                            className="w-full p-5 glass-effect rounded-2xl font-black outline-none focus:bg-white/10 transition-all glass-text-primary" 
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">אימייל</label>
+                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">אימייל</label>
                           <input 
                             type="email" 
                             value={newMemberData.email} 
                             onChange={e => setNewMemberData(prev => ({ ...prev, email: e.target.value }))}
-                            className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black outline-none border border-white/60 focus:bg-white/60 transition-all" 
+                            className="w-full p-5 glass-effect rounded-2xl font-black outline-none focus:bg-white/10 transition-all glass-text-primary" 
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">טלפון נייד</label>
+                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">טלפון נייד</label>
                           <input 
                             type="tel" 
                             value={newMemberData.mobile} 
                             onChange={e => setNewMemberData(prev => ({ ...prev, mobile: formatMobileNumber(e.target.value) }))}
-                            className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black outline-none border border-white/60 focus:bg-white/60 transition-all" 
+                            className="w-full p-5 glass-effect rounded-2xl font-black outline-none focus:bg-white/10 transition-all glass-text-primary" 
                           />
                         </div>
                         <div className="space-y-2">

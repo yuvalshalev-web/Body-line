@@ -261,19 +261,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       storage.set('cached_history_v3', hData, 2 / 60); // 2 mins cache
     }, handleFirestoreError);
 
-    const unsubRequests = onSnapshot(collection(db, 'joinRequests'), (snapshot) => {
+    const unsubRequests = onSnapshot(query(collection(db, 'joinRequests'), limit(200)), (snapshot) => {
       setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
     }, handleFirestoreError);
     
-    const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date', 'desc')), (snapshot) => {
+    const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
       setEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event)));
     }, handleFirestoreError);
     
-    const unsubNews = onSnapshot(query(collection(db, 'news'), orderBy('date', 'desc')), (snapshot) => {
+    const unsubNews = onSnapshot(query(collection(db, 'news'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
       setNews(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as NewsItem)));
     }, handleFirestoreError);
     
-    const unsubPodcasts = onSnapshot(query(collection(db, 'podcasts'), orderBy('publishedAt', 'desc')), (snapshot) => {
+    const unsubPodcasts = onSnapshot(query(collection(db, 'podcasts'), orderBy('publishedAt', 'desc'), limit(200)), (snapshot) => {
       setPodcasts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Podcast)));
     }, handleFirestoreError);
     
@@ -498,11 +498,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const deleteGalleryItems = async (ids: string[]) => {
+    if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
     const storage = getStorageInstance();
     const batch = writeBatch(getDb());
     let totalSizeDeleted = 0;
+    let count = 0;
 
     for (const id of ids) {
+      if (count >= 200) break;
+      count++;
       const item = galleryItems.find(g => g.id === id);
       if (item && item.storagePath) {
         try {
@@ -564,9 +568,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const batchAddGlossary = async (items: Omit<GlossaryTerm, 'id'>[]) => {
+    if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
     const db = getDb();
     const batch = writeBatch(db);
-    items.forEach(item => {
+    items.slice(0, 200).forEach(item => {
       const newDocRef = doc(collection(db, 'glossary'));
       batch.set(newDocRef, item);
     });
@@ -575,9 +580,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const batchAddExercises = async (items: Omit<Exercise, 'id'>[]) => {
+    if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
     const db = getDb();
     const batch = writeBatch(db);
-    items.forEach(item => {
+    items.slice(0, 200).forEach(item => {
       const newDocRef = doc(collection(db, 'exercises'));
       batch.set(newDocRef, item);
     });
@@ -586,9 +592,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const batchAddQuotes = async (items: Omit<QuoteItem, 'id'>[]) => {
+    if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
     const db = getDb();
     const batch = writeBatch(db);
-    items.forEach(item => {
+    items.slice(0, 200).forEach(item => {
       const newDocRef = doc(collection(db, 'quotes'));
       batch.set(newDocRef, item);
     });
@@ -627,6 +634,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const archiveMember = async (id: string) => {
+    if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
     const db = getDb();
     const batch = writeBatch(db);
     
@@ -639,8 +647,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     batch.update(activeSessionRef, { attendees: arrayRemove(id) });
     
     // 3. Remove from all future events
+    let count = 0;
     events.forEach(event => {
+      if (count >= 200) return;
       if (event.attendees && event.attendees.includes(id)) {
+        count++;
         const eventRef = doc(db, 'events', event.id);
         batch.update(eventRef, { attendees: arrayRemove(id) });
       }
