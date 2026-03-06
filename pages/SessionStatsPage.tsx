@@ -487,13 +487,8 @@ const SessionStatsPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto font-['Assistant'] pb-20 relative" dir="rtl">
       {/* Unified Header */}
-      <header className="mb-16 relative">
-        <div className="surfboard-hero-container space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#DDE1E4] text-[#2D3748] text-[10px] font-black rounded-full shadow-soft border border-slate-200">
-            <Activity size={12} className="text-[#1A365D]" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Session Dive Analytics</span>
-          </div>
-          
+      <header className="mb-8 relative">
+        <div className="surfboard-hero-container space-y-2">
           <h1 className="main-page-title">
             צלילה לסשנים
           </h1>
@@ -501,109 +496,109 @@ const SessionStatsPage: React.FC = () => {
           <p className="text-[#4A5568] max-w-2xl text-xl font-bold">
             ניתוח עומק של ביצועי הנבחרת, מגמות נוכחות ופילוח גולשים. 🌊
           </p>
-
-          {/* Sea-Time & Progress Bar Row */}
-          <div className="flex flex-col md:flex-row gap-8 items-center justify-center pt-4 w-full">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-blue-500/10 blur-2xl group-hover:bg-blue-500/20 transition-all duration-500" />
-              <div className="relative bg-[#DDE1E4] p-8 rounded-[3rem] text-center min-w-[280px] shadow-soft border border-slate-200">
-                <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-2">זמן ים מצטבר (הערכה)</p>
-                <div className="flex flex-col items-center">
-                  <span className="text-6xl font-black text-[#2D3748] drop-shadow-sm">
-                    {stats?.totalSeaTimeHours || 0}
-                  </span>
-                  <span className="text-xl font-black text-[#1A365D] mt-1">שעות גלישה מצטברות</span>
-                </div>
-                <p className="text-[9px] text-[#4A5568]/40 mt-4 font-bold">* מבוסס על הערכה של 90 דק' גלישה למשתתף</p>
-              </div>
-            </div>
-
-            {/* Yearly Progress Bar Widget */}
-            <div className="relative group w-full max-w-xl">
-              <div className="absolute inset-0 bg-blue-500/5 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500" />
-              <div className="relative bg-[#DDE1E4] p-8 rounded-[3rem] shadow-soft border border-slate-200 flex flex-col w-full">
-                {(() => {
-                  const now = new Date();
-                  const startDate = yearConfig?.startDate || new Date().toISOString();
-                  const endDate = yearConfig?.endDate || new Date(new Date().getFullYear(), 11, 31).toISOString();
-                  
-                  // Potential is the number of Thursdays in the entire year config range
-                  const totalPotential = countThursdays(startDate, endDate);
-                  // Planned to date is the number of Thursdays from start until today (or end of year if today is after)
-                  const plannedToDate = countThursdays(startDate, now < new Date(endDate) ? now : endDate);
-                  
-                  const actualSessions = stats?.totalSessions || 0;
-                  const percentage = totalPotential > 0 ? Math.round((actualSessions / totalPotential) * 100) : 0;
-                  const targetPercent = totalPotential > 0 ? Math.min(100, (plannedToDate / totalPotential) * 100) : 0;
-                  
-                  return (
-                    <>
-                      <div className="flex flex-col items-center mb-6">
-                        <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-2">התקדמות שנתית - חבל זוג</p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-3xl font-black text-[#1A365D]">{percentage}%</span>
-                          <span className="text-[10px] font-black text-[#4A5568]/40 uppercase">ביצוע</span>
-                        </div>
-                      </div>
-
-                      {/* Progress Bar Container */}
-                      <div className="relative h-12 w-full bg-slate-200/50 rounded-2xl overflow-visible mb-8 border border-slate-200 shadow-inner">
-                        {/* Percentage Markers */}
-                        <div className="absolute -top-6 left-0 w-full flex justify-between px-1">
-                          {[0, 20, 40, 60, 80, 100].map(p => (
-                            <span key={p} className="text-[8px] font-black text-slate-400">{p}%</span>
-                          ))}
-                        </div>
-
-                        {/* Actual Progress Fill - Growing from Right to Left (RTL) */}
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min(100, percentage)}%` }}
-                          transition={{ duration: 1.5, ease: "easeOut" }}
-                          className="absolute inset-y-0 right-0 bg-gradient-to-l from-blue-400 to-blue-600 rounded-r-2xl shadow-[0_0_15px_rgba(37,99,235,0.3)] z-10"
-                        >
-                          <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.1)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.1)_50%,rgba(255,255,255,0.1)_75%,transparent_75%,transparent)] bg-[length:20px_20px] opacity-20" />
-                        </motion.div>
-
-                        {/* Target Marker (Today's Plan) - Positioned from Right (RTL) */}
-                        <div 
-                          className="absolute inset-y-0 w-1 bg-orange-500 z-20 shadow-[0_0_8px_rgba(249,115,22,0.5)]"
-                          style={{ right: `${targetPercent}%` }}
-                        >
-                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                            <span className="text-[9px] font-black text-orange-600 whitespace-nowrap bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200 shadow-sm">היעד להיום</span>
-                            <div className="w-0.5 h-2 bg-orange-500" />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Data Display Row */}
-                      <div className="flex flex-wrap justify-between gap-4 text-[11px] font-bold text-[#4A5568]">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-blue-500" />
-                          <span>ביצוע בפועל: <strong className="text-[#2D3748]">{actualSessions} סשנים</strong></span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-rose-400" />
-                          <span>סשנים שבוטלו: <strong className="text-[#2D3748]">{stats?.cancelledSessionsCount || 0} סשנים</strong></span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-orange-500" />
-                          <span>תכנון עד היום: <strong className="text-[#2D3748]">{plannedToDate} סשנים</strong></span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-slate-300" />
-                          <span>סך הכל שנתי (פוטנציאל): <strong className="text-[#2D3748]">{totalPotential} סשנים</strong></span>
-                        </div>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
-          </div>
         </div>
       </header>
+
+      {/* Sea-Time & Progress Bar Row */}
+      <div className="flex flex-col md:flex-row gap-8 items-center justify-center mb-12 w-full">
+        <div className="relative group">
+          <div className="absolute inset-0 bg-blue-500/10 blur-2xl group-hover:bg-blue-500/20 transition-all duration-500" />
+          <div className="relative bg-[#DDE1E4] p-8 rounded-[3rem] text-center min-w-[280px] shadow-soft border border-slate-200">
+            <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-2">זמן ים מצטבר (הערכה)</p>
+            <div className="flex flex-col items-center">
+              <span className="text-6xl font-black text-[#2D3748] drop-shadow-sm">
+                {stats?.totalSeaTimeHours || 0}
+              </span>
+              <span className="text-xl font-black text-[#1A365D] mt-1">שעות גלישה מצטברות</span>
+            </div>
+            <p className="text-[9px] text-[#4A5568]/40 mt-4 font-bold">* מבוסס על הערכה של 90 דק' גלישה למשתתף</p>
+          </div>
+        </div>
+
+        {/* Yearly Progress Bar Widget */}
+        <div className="relative group w-full max-w-xl">
+          <div className="absolute inset-0 bg-blue-500/5 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500" />
+          <div className="relative bg-[#DDE1E4] p-8 rounded-[3rem] shadow-soft border border-slate-200 flex flex-col w-full">
+            {(() => {
+              const now = new Date();
+              const startDate = yearConfig?.startDate || new Date().toISOString();
+              const endDate = yearConfig?.endDate || new Date(new Date().getFullYear(), 11, 31).toISOString();
+              
+              // Potential is the number of Thursdays in the entire year config range
+              const totalPotential = countThursdays(startDate, endDate);
+              // Planned to date is the number of Thursdays from start until today (or end of year if today is after)
+              const plannedToDate = countThursdays(startDate, now < new Date(endDate) ? now : endDate);
+              
+              const actualSessions = stats?.totalSessions || 0;
+              const percentage = totalPotential > 0 ? Math.round((actualSessions / totalPotential) * 100) : 0;
+              const targetPercent = totalPotential > 0 ? Math.min(100, (plannedToDate / totalPotential) * 100) : 0;
+              
+              return (
+                <>
+                  <div className="flex flex-col items-center mb-6">
+                    <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-2">התקדמות שנתית - חבל זוג</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-3xl font-black text-[#1A365D]">{percentage}%</span>
+                      <span className="text-[10px] font-black text-[#4A5568]/40 uppercase">ביצוע</span>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar Container */}
+                  <div className="relative h-12 w-full bg-slate-200/50 rounded-2xl overflow-visible mb-8 border border-slate-200 shadow-inner">
+                    {/* Percentage Markers */}
+                    <div className="absolute -top-6 left-0 w-full flex justify-between px-1">
+                      {[0, 20, 40, 60, 80, 100].map(p => (
+                        <span key={p} className="text-[8px] font-black text-slate-400">{p}%</span>
+                      ))}
+                    </div>
+
+                    {/* Actual Progress Fill - Growing from Right to Left (RTL) */}
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, percentage)}%` }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="absolute inset-y-0 right-0 bg-gradient-to-l from-blue-400 to-blue-600 rounded-r-2xl shadow-[0_0_15px_rgba(37,99,235,0.3)] z-10"
+                    >
+                      <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.1)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.1)_50%,rgba(255,255,255,0.1)_75%,transparent_75%,transparent)] bg-[length:20px_20px] opacity-20" />
+                    </motion.div>
+
+                    {/* Target Marker (Today's Plan) - Positioned from Right (RTL) */}
+                    <div 
+                      className="absolute inset-y-0 w-1 bg-orange-500 z-20 shadow-[0_0_8px_rgba(249,115,22,0.5)]"
+                      style={{ right: `${targetPercent}%` }}
+                    >
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                        <span className="text-[9px] font-black text-orange-600 whitespace-nowrap bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200 shadow-sm">היעד להיום</span>
+                        <div className="w-0.5 h-2 bg-orange-500" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Data Display Row */}
+                  <div className="flex flex-wrap justify-between gap-4 text-[11px] font-bold text-[#4A5568]">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span>ביצוע בפועל: <strong className="text-[#2D3748]">{actualSessions} סשנים</strong></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-rose-400" />
+                      <span>סשנים שבוטלו: <strong className="text-[#2D3748]">{stats?.cancelledSessionsCount || 0} סשנים</strong></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-orange-500" />
+                      <span>תכנון עד היום: <strong className="text-[#2D3748]">{plannedToDate} סשנים</strong></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-slate-300" />
+                      <span>סך הכל שנתי (פוטנציאל): <strong className="text-[#2D3748]">{totalPotential} סשנים</strong></span>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      </div>
 
       {stats ? (
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-[400px]">

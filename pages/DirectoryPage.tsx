@@ -216,7 +216,7 @@ const DirectoryPage: React.FC = () => {
         <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-[#E6D5B8]/20 rounded-full blur-[180px]" />
       </div>
 
-      <div className="surfboard-hero-container mb-10 space-y-4">
+      <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}
         <h1 className="main-page-title">
           נבחרת הגלישה
@@ -224,7 +224,7 @@ const DirectoryPage: React.FC = () => {
       </div>
 
       {/* Subtitle with Emoji context */}
-      <div className="flex flex-col items-center gap-6 mb-12">
+      <div className="flex flex-col items-center gap-4 mb-8">
         <p className="text-slate-600 font-medium max-w-2xl text-lg text-center">
           האנשים שעושים את חבל זוג למה שהיא - קהילה של חברים שנפגשים במים 🌊
         </p>
@@ -247,7 +247,7 @@ const DirectoryPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-6">
 
         <div className="flex flex-col md:flex-row gap-4 mb-16 items-center">
           <div className="flex-1 relative group w-full">

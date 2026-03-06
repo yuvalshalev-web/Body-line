@@ -459,20 +459,14 @@ const AdminPage: React.FC = () => {
     <div className="relative min-h-screen bg-[#f2def0]/30 text-right space-y-12 pb-20 pt-8" dir="rtl">
       <div className="max-w-7xl mx-auto">
         {/* Body-line Standard Header Stack */}
-        <div className="surfboard-hero-container mb-10 space-y-4">
-          {/* Top Badge */}
-          <div className="header-badge-glass">
-            <ShieldAlert size={12} className="text-[#ff009f]" />
-            <span>ADMIN CONTROL CENTER</span>
-          </div>
-
+        <div className="surfboard-hero-container mb-6 space-y-2">
           {/* Main Title */}
           <h1 className="main-page-title">
             פאנל ניהול
           </h1>
 
           {/* Subtitle with Emoji context */}
-          <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-col items-center gap-4">
             <p className="header-subtitle max-w-2xl">
               ניהול משתמשים, בקשות הצטרפות והגדרות מערכת מתקדמות 🛡️
             </p>

@@ -165,8 +165,34 @@ const CommunityAnalytics: React.FC = () => {
     const totalWomen = members.filter(m => m.gender === 'נקבה').length;
     const activeWomen = activeMembers.filter(m => m.gender === 'נקבה').length;
     const femaleRetention = totalWomen > 0 ? Math.round((activeWomen / totalWomen) * 100) : 100;
+    const overallRetention = totalMembers > 0 ? Math.round((activeMembers.length / totalMembers) * 100) : 0;
+    const churnedCount = members.filter(m => m.isActive === false).length;
 
     // 3. Churn & Low Pulse
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    // Members who were active at the start of the month (or joined during the month)
+    const activeAtStartOfMonth = members.filter(m => {
+      if (m.isActive) return true;
+      if (!m.deactivatedAt) return true; // Fallback for members suspended before tracking
+      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : new Date(m.deactivatedAt);
+      return dDate >= startOfCurrentMonth;
+    });
+    
+    // Members who are currently inactive AND were deactivated THIS month
+    const churnedThisMonth = members.filter(m => {
+      if (m.isActive) return false;
+      if (!m.deactivatedAt) return true; // Fallback
+      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : new Date(m.deactivatedAt);
+      return dDate >= startOfCurrentMonth;
+    });
+    
+    console.log("DEBUG: activeAtStartOfMonth:", activeAtStartOfMonth.length, "churnedThisMonth:", churnedThisMonth.length);
+    
+    const churnRate = activeAtStartOfMonth.length > 0 
+      ? parseFloat(((churnedThisMonth.length / activeAtStartOfMonth.length) * 100).toFixed(1)) 
+      : 0;
+
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -182,17 +208,29 @@ const CommunityAnalytics: React.FC = () => {
       .filter(m => !recentSessionParticipants.has(m.id))
       .slice(0, 4);
 
-    const overallRetention = totalMembers > 0 ? Math.round((activeMembers.length / totalMembers) * 100) : 0;
-    const churnedCount = members.filter(m => !m.isActive).length;
-    const churnRate = totalMembers > 0 ? Math.round((churnedCount / totalMembers) * 100) : 0;
-
     // Annual Churn (Since Hevel HaZog year start - assuming Sept 1st)
     const currentYear = now.getFullYear();
     const yearStart = now.getMonth() >= 8 ? new Date(currentYear, 8, 1) : new Date(currentYear - 1, 8, 1);
     
-    const annualChurned = members.filter(m => !m.isActive && m.joinedAt && new Date(m.joinedAt) >= yearStart).length;
-    const annualTotal = members.filter(m => m.joinedAt && new Date(m.joinedAt) >= yearStart).length;
-    const annualChurnRate = annualTotal > 0 ? Math.round((annualChurned / annualTotal) * 100) : 0;
+    // Annual churned: currently inactive AND deactivated since yearStart
+    const annualChurned = members.filter(m => {
+      if (m.isActive) return false;
+      if (!m.deactivatedAt) return true; // Fallback
+      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : new Date(m.deactivatedAt);
+      return dDate >= yearStart;
+    }).length;
+    
+    // Annual total: currently active OR deactivated since yearStart
+    const annualTotal = members.filter(m => {
+      if (m.isActive) return true;
+      if (!m.deactivatedAt) return true; // Fallback
+      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : new Date(m.deactivatedAt);
+      return dDate >= yearStart;
+    }).length;
+    
+    console.log("DEBUG: annualChurned:", annualChurned, "annualTotal:", annualTotal);
+    
+    const annualChurnRate = annualTotal > 0 ? parseFloat(((annualChurned / annualTotal) * 100).toFixed(1)) : 0;
 
     // Global Retention Algorithm (3+ sessions in 30 days)
     const userAttendanceCount = new Map<string, number>();
@@ -285,7 +323,7 @@ const CommunityAnalytics: React.FC = () => {
         </div>
 
         <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200 tracking-tighter leading-none uppercase drop-shadow-2xl">
-          דופק הקהילה: תמונת מצב
+          הקהילה במספרים
         </h1>
 
         <p className="max-w-2xl text-xl font-bold text-blue-200/70">

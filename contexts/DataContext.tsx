@@ -336,7 +336,25 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const toggleStatus = async (id: string) => {
     const member = members.find(m => m.id === id);
-    if (member) await updateDoc(doc(getDb(), 'members', id), { isActive: !member.isActive });
+    if (!member) return;
+
+    const db = getDb();
+    const batch = writeBatch(db);
+    const memberRef = doc(db, 'members', id);
+    const activeSessionRef = doc(db, 'site_data', 'active_session');
+    
+    const nextIsActive = !member.isActive;
+    const updateData: any = { isActive: nextIsActive };
+    
+    if (!nextIsActive) {
+      updateData.deactivatedAt = new Date().toISOString();
+      batch.update(activeSessionRef, { attendees: arrayRemove(id) });
+    } else {
+      updateData.deactivatedAt = null;
+    }
+    
+    batch.update(memberRef, updateData);
+    await batch.commit();
   };
 
   const toggleRole = async (id: string, requesterEmail?: string) => {

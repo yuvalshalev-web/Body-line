@@ -408,12 +408,8 @@ const SurfingSessionAttendance: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto font-['Assistant']" dir="rtl">
       {/* Header Section - Now at the very top */}
-      <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="surfboard-hero-container">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#006994] text-[#00FFFF] text-[10px] font-black rounded-full mb-4 shadow-lg shadow-[#006994]/20">
-            <UsersIcon size={12} /> 
-            {view === 'history' && !editingHistorySession ? 'ארכיון סשנים' : (editingHistorySession ? 'עריכת סשן היסטורי' : 'סנכרון נוכחות שבועי')}
-          </div>
           <h1 className="main-page-title">
             {view === 'history' && !editingHistorySession ? 'ארכיון סשנים: יום חמישי הגדול' : 
              (editingHistorySession ? `עריכה: ${formatDate(editingHistorySession.date)}` : 'סנכרון נוכחות שבועי')}

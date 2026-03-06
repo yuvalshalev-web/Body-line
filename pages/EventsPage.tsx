@@ -165,20 +165,14 @@ const EventsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white text-right animate-in fade-in duration-700" dir="rtl">
       {/* Body-line Standard Header Stack */}
-      <div className="surfboard-hero-container mb-10 space-y-4">
-        {/* Top Badge */}
-        <div className="header-badge-glass">
-          <Calendar size={12} className="text-[#00f2fe]" />
-          <span>COMMUNITY EVENTS</span>
-        </div>
-
+      <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}
         <h1 className="main-page-title">
           אירועים קרובים
         </h1>
 
         {/* Subtitle with Emoji context */}
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-4">
           <p className="header-subtitle max-w-2xl">
             מפגשים, חוויות ורגעים שקורים מחוץ למים • {events.length} אירועים 🗓️
           </p>
