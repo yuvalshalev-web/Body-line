@@ -32,7 +32,7 @@ const StorageUsageMonitor: React.FC = () => {
   }, []); // מערך תלויות ריק - הבלם הכי חשוב למניעת לולאות
 
   return (
-    <div className="p-4 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-sm mt-4" dir="rtl">
+    <div className="p-4 glass-panel !rounded-2xl mt-4" dir="rtl">
       <h3 className="text-sm font-black text-[#2B2B2E] mb-2">סטטוס אחסון (Blaze Safe Mode)</h3>
       <div className="flex items-center justify-between">
         <p className="text-xs font-bold text-slate-600">גודל בשימוש: <strong className="text-[#006994]">{sizeMB} MB</strong></p>

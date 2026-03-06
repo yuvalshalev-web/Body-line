@@ -107,7 +107,7 @@ const CircularRing: React.FC<CircularRingProps> = ({
 
   return (
     <div className={`flex flex-col items-center justify-center p-4 ${animateClass || ''}`}>
-      <div className="glass-gauge-container">
+      <div className="relative w-40 h-40 flex items-center justify-center glass-panel !rounded-full p-4 shadow-inner">
         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
           <defs>
             <linearGradient id={`grad-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -507,7 +507,7 @@ const SystemMonitor: React.FC = () => {
       )}
 
       {/* Health-Check Matrix (2x2 Grid) */}
-      <div className={`${designMode === 'neon' ? 'dashboard-container-neon' : 'bg-[#F5F7FA] border border-slate-200 rounded-[3rem] p-12'} mb-12 shadow-soft relative`}>
+      <div className={`${designMode === 'neon' ? 'dashboard-container-neon' : 'glass-panel !rounded-[3rem] p-12'} mb-12 relative`}>
         {/* Design Toggle */}
         <button 
           onClick={() => setDesignMode(prev => prev === 'classic' ? 'neon' : 'classic')}
@@ -598,7 +598,7 @@ const SystemMonitor: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-8">
         {/* Reads per Minute Chart */}
-        <div className="bg-[#F5F7FA] p-8 rounded-[3rem] border border-slate-200 shadow-soft relative overflow-hidden">
+        <div className="glass-panel p-8 !rounded-[3rem] relative overflow-hidden">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
@@ -677,7 +677,7 @@ const SystemMonitor: React.FC = () => {
       </div>
 
       {/* Traffic Area Chart */}
-      <div className="bg-[#F5F7FA] p-8 rounded-[3rem] border border-slate-200 shadow-soft">
+      <div className="glass-panel p-8 !rounded-[3rem]">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-black text-[#2D3748] uppercase tracking-tight">תנועת רשת (24 שעות - MB)</h3>
           <div className="flex gap-4">

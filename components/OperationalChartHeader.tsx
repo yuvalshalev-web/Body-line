@@ -51,8 +51,8 @@ const OperationalChartHeader: React.FC<OperationalChartHeaderProps> = ({
         )}
       </div>
 
-      <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-start gap-3">
-        <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-200 text-slate-400">
+      <div className="glass-panel p-4 !rounded-2xl flex items-start gap-3">
+        <div className="p-2 bg-white/10 rounded-xl shadow-sm border border-white/20 text-slate-400">
           <Info size={16} />
         </div>
         <div>

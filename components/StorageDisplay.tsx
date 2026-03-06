@@ -48,9 +48,9 @@ const StorageDisplay: React.FC = () => {
       </div>
 
       {/* Progress Bar Container */}
-      <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden shadow-inner border border-slate-200/50">
+      <div className="w-full glass-progress-track h-3">
         <div 
-          className="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-[#1A365D] to-[#63B3ED]"
+          className="h-full glass-progress-fill transition-all duration-1000"
           style={{ 
             width: `${percentage}%`, 
           }}

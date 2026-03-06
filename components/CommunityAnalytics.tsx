@@ -340,7 +340,7 @@ const CommunityAnalytics: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white/10 backdrop-blur-xl p-8 rounded-2xl border border-white/20 shadow-2xl relative overflow-hidden group min-h-[450px] flex flex-col items-center justify-center"
+            className="glass-panel p-8 relative overflow-hidden group min-h-[450px] flex flex-col items-center justify-center"
           >
             {/* Glossy Shimmer Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
@@ -557,7 +557,7 @@ const CommunityAnalytics: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-[#2D3748] p-10 rounded-[4rem] border border-white/10 shadow-2xl transition-all duration-500 relative overflow-hidden group"
+            className="glass-panel p-10 rounded-[4rem] !bg-[#2D3748] transition-all duration-500 relative overflow-hidden group"
           >
             {/* Glossy Shimmer Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
@@ -711,7 +711,7 @@ const CommunityAnalytics: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-2 bg-white/10 backdrop-blur-xl p-10 rounded-2xl border border-white/20 shadow-2xl transition-all duration-500 relative overflow-hidden group"
+          className="lg:col-span-2 glass-panel p-10 transition-all duration-500 relative overflow-hidden group"
         >
           {/* Glossy Shimmer Effect */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
@@ -887,7 +887,7 @@ const CommunityAnalytics: React.FC = () => {
         {/* Churn & Retention Card */}
         <motion.div 
           whileHover={{ scale: 1.005 }}
-          className="bg-white/10 backdrop-blur-xl p-10 rounded-2xl border border-white/20 shadow-2xl transition-all duration-500 relative overflow-hidden group lg:col-span-2"
+          className="glass-panel p-10 !rounded-2xl transition-all duration-500 relative overflow-hidden group lg:col-span-2"
         >
           {/* Glossy Shimmer Effect */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
@@ -943,7 +943,7 @@ const CommunityAnalytics: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-2 bg-gradient-to-br from-slate-100 to-slate-200 p-10 rounded-[4rem] border border-slate-300 shadow-xl mt-12 relative overflow-hidden group"
+          className="lg:col-span-2 glass-panel p-10 !rounded-[4rem] mt-12 relative overflow-hidden group"
         >
           {/* Glossy Shimmer for the whole container */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-30 pointer-events-none" />

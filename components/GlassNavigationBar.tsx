@@ -15,7 +15,7 @@ interface GlassNavigationBarProps {
 
 const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId, onChange }) => {
   return (
-    <div className="relative p-2 rounded-[2rem] overflow-hidden border border-slate-200 shadow-soft flex w-full max-w-4xl mx-auto bg-[#F5F7FA]">
+    <div className="relative p-2 !rounded-[2rem] overflow-hidden glass-panel flex w-full max-w-4xl mx-auto">
       {items.map((item) => {
         const isActive = activeId === item.id;
         return (

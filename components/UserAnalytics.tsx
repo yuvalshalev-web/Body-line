@@ -65,7 +65,7 @@ const OceanRing: React.FC<{
 
       <div className="relative w-full max-w-[170px] aspect-square flex items-center justify-center">
         {/* Aquarium Container - Glassy Refined */}
-        <div className="absolute inset-[12%] rounded-full overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]">
+        <div className="absolute inset-[12%] rounded-full overflow-hidden glass-panel !bg-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]">
           {/* Deep Sea Water */}
           <motion.div 
             initial={{ y: '100%' }}
@@ -221,7 +221,7 @@ const StabilityGauge: React.FC<{
 
       <div className="relative w-full max-w-[170px] aspect-square flex items-center justify-center">
         {/* Aquarium Container - Glassy Refined */}
-        <div className="absolute inset-[12%] rounded-full overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]">
+        <div className="absolute inset-[12%] rounded-full overflow-hidden glass-panel !bg-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]">
           {/* Deep Sea Water */}
           <motion.div 
             initial={{ y: '100%' }}
@@ -392,8 +392,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
     <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700 min-h-[400px]" dir="rtl">
       {/* Unified Modern Dashboard - Dynamic Premium Style matching Surfer Card */}
       <motion.div 
-        style={{ background: bgGradient }}
-        className="p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] border border-slate-100 shadow-sm relative overflow-hidden transition-all duration-1000"
+        className="glass-panel p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] relative overflow-hidden transition-all duration-1000"
       >
         {/* Neumorphic Inner Shadow Overlay */}
         <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[var(--radius-lg)]" />
@@ -437,8 +436,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
       {/* Surf Compass (Radar Chart) - Future Use - Dynamic Premium Style */}
       <motion.div 
-        style={{ background: bgGradient }}
-        className="p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] border border-slate-100 shadow-sm relative overflow-hidden transition-all duration-1000"
+        className="glass-panel p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] relative overflow-hidden transition-all duration-1000"
       >
         {/* Neumorphic Inner Shadow Overlay */}
         <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[var(--radius-lg)]" />
@@ -466,8 +464,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
       {/* Session History - Collapsible Dropbox Style - Dynamic Premium Style */}
       <motion.div 
-        style={{ background: bgGradient }}
-        className="rounded-[var(--radius-lg)] border border-slate-100 shadow-sm relative overflow-hidden transition-all duration-1000"
+        className="glass-panel rounded-[var(--radius-lg)] relative overflow-hidden transition-all duration-1000"
         onMouseLeave={() => setIsHistoryOpen(false)}
       >
         {/* Neumorphic Inner Shadow Overlay */}
@@ -476,7 +473,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
         <button 
           onClick={() => setIsHistoryOpen(!isHistoryOpen)}
           onMouseEnter={() => setIsHistoryOpen(true)}
-          className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors group relative z-10"
+          className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/10 transition-colors group relative z-10"
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-slate-100 rounded-[var(--radius-sm)] flex items-center justify-center text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600 transition-all">

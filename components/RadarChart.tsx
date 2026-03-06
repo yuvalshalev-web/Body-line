@@ -109,7 +109,7 @@ const RadarChart: React.FC = () => {
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-4 text-white">
-      <div className="chart-wrap bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-1 shadow-2xl transform transition-transform hover:scale-105" style={{ perspective: '1200px', transform: 'rotateX(10deg) rotateY(-2deg)' }}>
+      <div className="chart-wrap glass-panel !rounded-3xl p-1 transform transition-transform hover:scale-105" style={{ perspective: '1200px', transform: 'rotateX(10deg) rotateY(-2deg)' }}>
         <svg ref={svgRef} id="radar" width="468" height="468" viewBox="0 0 520 520"></svg>
       </div>
 

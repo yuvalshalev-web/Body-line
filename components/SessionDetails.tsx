@@ -32,7 +32,7 @@ const SessionDetails: React.FC<SessionDetailsProps> = ({ session, members, onClo
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
-        className="bg-gradient-to-br from-[#021626] to-[#010d17] w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-white/10 relative"
+        className="modal-content w-full max-w-2xl !rounded-[3rem] flex flex-col max-h-[90vh] relative"
         onClick={e => e.stopPropagation()}
         dir="rtl"
       >

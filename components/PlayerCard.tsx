@@ -85,7 +85,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   if (!member || !stats) return null;
 
   return (
-    <div className="bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] border border-[rgba(255,255,255,0.2)] p-[var(--spacing-md)] rounded-[16px] shadow-sm flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
+    <div className="glass-panel p-[var(--spacing-md)] flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
       {/* Background Accent */}
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-[var(--ocean-liquid)]/5 rounded-full blur-3xl -z-10" />
       
@@ -188,7 +188,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             {/* Popup Modal */}
             {showPopup && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" onClick={() => setShowPopup(false)}>
-                <div className="bg-white p-6 rounded-2xl shadow-xl max-w-xs w-full text-center" onClick={e => e.stopPropagation()}>
+                <div className="modal-content p-6 max-w-xs w-full text-center" onClick={e => e.stopPropagation()}>
                   <h2 className="text-xl font-black text-[#006994] mb-3">
                     סיבוב דאווין {(() => {
                       const p = agePercentile.roundedPercentile;

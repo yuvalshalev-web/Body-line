@@ -16,7 +16,7 @@ const SurfQuoteWidget: React.FC = () => {
   };
 
   return (
-    <section className="relative w-full overflow-hidden bg-gradient-to-br from-sky-50 to-indigo-50 rounded-[3.5rem] border border-white shadow-xl p-12 md:p-16 group">
+    <section className="relative w-full overflow-hidden glass-panel !rounded-[3.5rem] p-12 md:p-16 group">
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-500/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl"></div>
@@ -42,7 +42,7 @@ const SurfQuoteWidget: React.FC = () => {
         <div className="pt-6">
           <button 
             onClick={handleRefresh}
-            className="group/btn flex items-center gap-3 px-8 py-4 bg-white text-[#2B2B2E] rounded-2xl font-black text-xs shadow-lg hover:shadow-xl hover:bg-slate-50 transition-all active:scale-95"
+            className="group/btn flex items-center gap-3 px-8 py-4 glass-btn text-[#2B2B2E] !rounded-2xl font-black text-xs shadow-lg hover:shadow-xl transition-all active:scale-95"
           >
             <RefreshCw 
               size={18} 

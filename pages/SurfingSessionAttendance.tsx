@@ -23,6 +23,7 @@ import { Users as UsersIcon, Check, Save, Search, Loader2, ChevronRight, History
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { useModal } from '../contexts/ModalContext';
+import FloatingSessionHeader from '../components/FloatingSessionHeader';
 
 interface User {
   id: string;
@@ -407,153 +408,52 @@ const SurfingSessionAttendance: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto font-['Assistant']" dir="rtl">
-      {/* Header Section - Now at the very top */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="surfboard-hero-container">
-          <h1 className="main-page-title">
-            {view === 'history' && !editingHistorySession ? 'ארכיון סשנים: יום חמישי הגדול' : 
-             (editingHistorySession ? `עריכה: ${formatDate(editingHistorySession.date)}` : 'סנכרון נוכחות שבועי')}
-          </h1>
-          <p className="text-[#4E8294] font-bold mt-2">
-            {view === 'history' && !editingHistorySession ? 'היסטוריית גלישה ונוכחות לאורך זמן 🌊' : 'סמן את כל הגולשים שיצאו מהמים 🌊'}
-          </p>
-          
+      <div className="mt-20">
+        {/* Title and Cancel Button */}
+        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="surfboard-hero-container">
+            <h1 className="main-page-title">
+              {view === 'history' && !editingHistorySession ? 'ארכיון סשנים: יום חמישי הגדול' : 
+               (editingHistorySession ? `עריכה: ${formatDate(editingHistorySession.date)}` : 'סנכרון נוכחות שבועי')}
+            </h1>
+            <p className="text-[#4E8294] font-bold mt-2">
+              {view === 'history' && !editingHistorySession ? 'היסטוריית גלישה ונוכחות לאורך זמן 🌊' : 'סמן את כל הגולשים שיצאו מהמים 🌊'}
+            </p>
+            
+            {editingHistorySession && (
+              <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 text-amber-800 animate-pulse">
+                <AlertTriangle className="shrink-0 mt-0.5" size={20} />
+                <p className="text-sm font-bold leading-relaxed">
+                  שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות.
+                </p>
+              </div>
+            )}
+          </div>
+
+
           {editingHistorySession && (
-            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 text-amber-800 animate-pulse">
-              <AlertTriangle className="shrink-0 mt-0.5" size={20} />
-              <p className="text-sm font-bold leading-relaxed">
-                שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות.
-              </p>
-            </div>
+            <button 
+              onClick={() => { setView('history'); setEditingHistorySession(null); }}
+              className="px-6 py-4 bg-slate-100 text-[#4E8294] rounded-2xl font-black text-sm hover:bg-slate-200 transition-all flex items-center gap-2"
+            >
+              <ArrowRight size={18} /> ביטול
+            </button>
           )}
         </div>
 
-        {(view === 'current' || editingHistorySession) && (
-          <div className="flex items-center gap-4">
-            {editingHistorySession && (
-              <button 
-                onClick={() => { setView('history'); setEditingHistorySession(null); }}
-                className="px-6 py-4 bg-slate-100 text-[#4E8294] rounded-2xl font-black text-sm hover:bg-slate-200 transition-all flex items-center gap-2"
-              >
-                <ArrowRight size={18} /> ביטול
-              </button>
-            )}
-            
-            <button 
-              onClick={handleFinalConfirm}
-              disabled={isSaving || (confirmedIds.size === 0 && !editingHistorySession)}
-              className="px-8 py-4 bg-[#006994] text-white rounded-2xl font-black text-sm shadow-xl shadow-[#006994]/20 hover:bg-[#60DD8E] hover:text-[#006994] transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group min-w-[160px] justify-center"
-            >
-              {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} className="group-hover:scale-110 transition-transform" />}
-              {editingHistorySession ? 'עדכון סשן' : 'שמירה'}
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* View Toggle & History Dropdown */}
-      <div className="flex justify-center mb-12 relative">
-        <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-[#006994]/10 flex gap-2">
-          <div className="relative">
-            <button 
-              onClick={() => setShowManualDatePicker(!showManualDatePicker)}
-              className={`px-6 py-2.5 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${view === 'current' && !editingHistorySession ? 'bg-[#006994] text-white shadow-lg' : 'text-[#4E8294] hover:bg-slate-50'}`}
-            >
-              <CalendarIcon size={16} />
-              צור סשן ידנית
-            </button>
-
-            <AnimatePresence>
-              {showManualDatePicker && (
-                <>
-                  <div className="fixed inset-0 z-[90]" onClick={() => setShowManualDatePicker(false)} />
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute top-full right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 p-6 z-[100]"
-                  >
-                    <p className="text-[10px] font-black text-[#4E8294] uppercase tracking-widest mb-4">בחר תאריך לסשן (כולל 2025)</p>
-                    <input 
-                      type="date" 
-                      min="2025-01-01"
-                      max="2026-12-31"
-                      className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl font-black text-[#006994] outline-none focus:ring-2 ring-[#00FFFF]/30 mb-4"
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          handleSelectHistoryDate(new Date(e.target.value));
-                        }
-                      }}
-                    />
-                    <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold italic">
-                      <AlertTriangle size={12} />
-                      <span>בחירת תאריך תפתח סשן חדש או תטען קיים</span>
-                    </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-          
-          <div className="relative">
-            <button 
-              onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
-              className={`px-6 py-2.5 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${view === 'history' || editingHistorySession ? 'bg-[#006994] text-white shadow-lg' : 'text-[#4E8294] hover:bg-slate-50'}`}
-            >
-              <History size={16} />
-              היסטוריית סשנים
-              <ChevronRight size={16} className={`transition-transform ${showHistoryDropdown ? 'rotate-90' : '-rotate-90'}`} />
-            </button>
-
-            <AnimatePresence>
-              {showHistoryDropdown && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-[90]" 
-                    onClick={() => setShowHistoryDropdown(false)}
-                  />
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-[100] max-h-80 overflow-y-auto"
-                  >
-                    <div className="px-4 py-2 border-bottom border-slate-50 mb-2">
-                      <p className="text-[10px] font-black text-[#4E8294] uppercase tracking-widest">בחר תאריך (ימי חמישי וסשנים קיימים)</p>
-                    </div>
-                    {dropdownDates.map((date, idx) => {
-                      const isExisting = history.some(s => {
-                        const sDate = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
-                        return sDate.toDateString() === date.toDateString();
-                      });
-
-                      return (
-                        <button
-                          key={idx}
-                          onClick={() => handleSelectHistoryDate(date)}
-                          className="w-full px-4 py-3 text-right hover:bg-[#00FFFF]/10 transition-colors flex items-center justify-between group"
-                        >
-                          <span className="font-bold text-[#006994]">{formatDate(date)}</span>
-                          {isExisting ? (
-                            <span className="text-[8px] font-black bg-[#00FFFF] text-[#006994] px-2 py-0.5 rounded-full uppercase">קיים</span>
-                          ) : (
-                            <span className="text-[8px] font-black bg-slate-100 text-slate-400 px-2 py-0.5 rounded-full uppercase">חדש</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
+        <FloatingSessionHeader 
+          onSave={handleFinalConfirm}
+          isSaving={isSaving}
+          onCreateNewSession={() => setShowManualDatePicker(!showManualDatePicker)}
+          onSelectHistory={handleSelectHistoryDate}
+          historyDates={dropdownDates}
+          formatDate={formatDate}
+        />
 
       {view === 'current' ? (
         <>
           {/* Dynamic Section Title & Stats */}
-          <div className="flex items-center justify-between gap-4 mb-10 bg-white/40 p-6 rounded-[2.5rem] border border-[#006994]/5">
+          <div className="flex items-center justify-between gap-4 mb-10 bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] p-6 rounded-[16px] border border-[rgba(255,255,255,0.2)]">
             {/* Header Text */}
             <div className="text-right">
               <h3 className="text-xl md:text-2xl font-black text-[#006994] tracking-tight">
@@ -565,24 +465,24 @@ const SurfingSessionAttendance: React.FC = () => {
             </div>
 
             {/* Stats Widget */}
-            <div className="bg-white px-4 py-2 md:px-6 md:py-3 rounded-2xl border border-[#006994]/10 shadow-sm flex items-center gap-3 shrink-0">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-[#00FFFF]/10 rounded-full flex items-center justify-center text-[#006994]">
+            <div className="bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] px-4 py-2 md:px-6 md:py-3 rounded-[16px] border border-[rgba(255,255,255,0.2)] shadow-sm flex items-center gap-3 shrink-0">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-cyan-100 rounded-full flex items-center justify-center text-sky-800">
                 <UsersIcon size={18} />
               </div>
               <div>
-                <p className="text-[8px] md:text-[10px] font-black text-[#4E8294] uppercase tracking-widest leading-none mb-1">סה"כ נוכחים</p>
-                <p className="text-lg md:text-xl font-black text-[#006994] leading-none">{confirmedIds.size}</p>
+                <p className="text-[8px] md:text-[10px] font-black text-sky-600 uppercase tracking-widest leading-none mb-1">סה"כ נוכחים</p>
+                <p className="text-lg md:text-xl font-black text-sky-800 leading-none">{confirmedIds.size}</p>
               </div>
             </div>
           </div>
 
           {/* Search Bar */}
           <div className="relative mb-10 group">
-            <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-[#006994]/40 group-focus-within:text-[#006994] transition-colors" />
+            <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-sky-800/40 group-focus-within:text-sky-800 transition-colors" />
             <input 
               type="text" 
               placeholder="חפש גולש ברשימה..." 
-              className="w-full pr-16 pl-6 py-6 bg-white rounded-[2.5rem] border border-[#006994]/10 font-black focus:ring-4 ring-[#00FFFF]/20 shadow-sm outline-none transition-all text-lg"
+              className="w-full pr-16 pl-6 py-6 bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] rounded-[16px] border border-[rgba(255,255,255,0.2)] font-black focus:ring-4 ring-cyan-200/20 shadow-sm outline-none transition-all text-lg"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
@@ -601,15 +501,15 @@ const SurfingSessionAttendance: React.FC = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     onClick={() => toggleUser(user.id)}
-                    className={`relative cursor-pointer group rounded-[2.5rem] p-4 transition-all duration-500 flex flex-col items-center border ${
+                    className={`relative cursor-pointer group rounded-[16px] p-4 transition-all duration-500 flex flex-col items-center border backdrop-blur-[12px] ${
                       isSelected 
-                        ? 'bg-[#60DD8E]/5 shadow-2xl shadow-[#006994]/5 border-[#60DD8E]/40' 
-                        : 'bg-white/40 border-transparent hover:bg-white hover:shadow-xl hover:border-[#006994]/5'
+                        ? 'bg-teal-100 shadow-2xl shadow-sky-800/5 border-teal-300/40' 
+                        : 'bg-[rgba(255,255,255,0.1)] border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.2)] hover:shadow-xl'
                     }`}
                   >
                     <div className="relative mb-4">
                       <div className={`w-24 h-24 rounded-[2rem] overflow-hidden border transition-all duration-500 ${
-                        isSelected ? 'border-[#60DD8E] scale-105 shadow-lg shadow-[#60DD8E]/10' : 'border-white grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100'
+                        isSelected ? 'border-teal-300 scale-105 shadow-lg shadow-teal-300/10' : 'border-white grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100'
                       }`}>
                         <img 
                           src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName + ' ' + user.lastName)}&background=006994&color=fff`} 
@@ -624,7 +524,7 @@ const SurfingSessionAttendance: React.FC = () => {
                       
                       {/* Selection Checkmark - Top Right */}
                       <div className={`absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center border border-white shadow-md z-10 transition-all duration-500 ${
-                        isSelected ? 'bg-[#60DD8E] text-[#006994] scale-110 rotate-0' : 'bg-white text-slate-200 scale-0 rotate-45'
+                        isSelected ? 'bg-teal-300 text-sky-800 scale-110 rotate-0' : 'bg-white text-slate-200 scale-0 rotate-45'
                       }`}>
                         <CheckCircle2 size={18} strokeWidth={2.5} />
                       </div>
@@ -632,7 +532,7 @@ const SurfingSessionAttendance: React.FC = () => {
                       {/* Role Badge */}
                       {user.role && (
                         <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full shadow-sm border transition-all ${
-                          isSelected ? 'bg-[#006994] text-white border-[#006994]' : 'bg-white text-[#4E8294] border-slate-100'
+                          isSelected ? 'bg-sky-800 text-white border-sky-800' : 'bg-white text-sky-600 border-slate-100'
                         }`}>
                           <span className="text-[8px] font-black uppercase tracking-tighter whitespace-nowrap">
                             {user.role === 'Admin' ? 'רכז' : user.role === 'Instructor' ? 'מדריך' : 'חבר'}
@@ -642,7 +542,7 @@ const SurfingSessionAttendance: React.FC = () => {
                     </div>
 
                     <span className={`text-sm font-black text-center transition-colors mt-1 ${
-                      isSelected ? 'text-[#006994]' : 'text-[#4E8294]'
+                      isSelected ? 'text-sky-800' : 'text-sky-600'
                     }`}>
                       {user.firstName} {user.lastName}
                     </span>
@@ -672,7 +572,7 @@ const SurfingSessionAttendance: React.FC = () => {
                 {/* Timeline Dot */}
                 <div className="absolute -right-[2.15rem] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-4 border-[#006994] z-10 group-hover:scale-150 transition-transform"></div>
                 
-                <div className="bg-white p-8 rounded-[2.5rem] border border-[#006994]/10 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col md:flex-row md:items-center justify-between gap-8">
+                <div className="bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] p-8 rounded-[16px] border border-[rgba(255,255,255,0.2)] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col md:flex-row md:items-center justify-between gap-8">
                   <div className="flex items-center gap-8">
                     <div className="text-right">
                       <p className="text-[10px] font-black text-[#4E8294] uppercase tracking-widest mb-1">תאריך הסשן</p>
@@ -739,6 +639,7 @@ const SurfingSessionAttendance: React.FC = () => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };

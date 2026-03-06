@@ -24,9 +24,14 @@
   --ocean-milestone: #ffffff;
   --ocean-text-main: #ffffff;
   --ocean-text-dim: rgba(255, 255, 255, 0.5);
-  --glass-blur: 16px;
-  --glow-soft: 0 0 20px rgba(0, 242, 254, 0.3);
-  --glow-intense: 0 0 30px rgba(0, 242, 254, 0.8), 0 0 10px rgba(255, 255, 255, 0.5);
+  /* --- Global Glassmorphism Design Language (Body-line Standards) --- */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-blur: 12px;
+  --glass-border: 1px solid rgba(255, 255, 255, 0.2);
+  --glass-radius: 16px;
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  --glass-text: #ffffff;
+  --glass-text-dark: #1e293b;
   
   --radius-sm: 8px;
   --radius-md: 16px;
@@ -182,10 +187,43 @@ body {
 }
 
 .modern-card {
-  background: white;
-  border: 1px solid #f1f5f9;
-  border-radius: 2rem;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s ease;
+}
+
+.glass-effect {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-button {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 10px 20px;
+  color: white;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.glass-button:active {
+  transform: scale(0.98);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -322,17 +360,18 @@ body {
 
 /* Player Card Styles */
 .player-card {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: var(--glass-border);
+    border-radius: var(--glass-radius);
+    box-shadow: var(--glass-shadow);
     padding: 25px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     display: flex;
     align-items: center;
     gap: 30px;
     color: white;
     margin-bottom: 30px;
-    backdrop-filter: blur(10px);
 }
 
 .stat-badge {
@@ -815,22 +854,22 @@ body {
 
 /* 2. Glass Containers & Cards */
 .glass-effect, .glass-panel {
-    background: rgba(255, 255, 255, 0.1) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1) !important;
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(var(--glass-blur)) !important;
+    -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+    border: var(--glass-border) !important;
+    border-radius: var(--glass-radius) !important;
+    box-shadow: var(--glass-shadow) !important;
 }
 
 /* Update modern-card specifically */
 .modern-card {
-    background: rgba(255, 255, 255, 0.25) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05) !important;
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(var(--glass-blur)) !important;
+    -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+    border: var(--glass-border) !important;
+    border-radius: var(--glass-radius) !important;
+    box-shadow: var(--glass-shadow) !important;
 }
 
 /* 3. Modals */
@@ -840,26 +879,26 @@ body {
 }
 
 .modal-content {
-    background: rgba(255, 255, 255, 0.15) !important;
+    background: var(--glass-bg) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border: var(--glass-border) !important;
     border-radius: 20px !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    box-shadow: var(--glass-shadow) !important;
 }
 
 /* 4. Buttons */
 .btn-glass {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--glass-bg);
     backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-    color: var(--text-main);
+    border: var(--glass-border);
+    border-radius: var(--glass-radius);
+    color: var(--glass-text);
     transition: all 0.3s ease;
 }
 
 .btn-glass:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.2);
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
@@ -878,12 +917,14 @@ body {
 
 /* 6. Typography High Contrast */
 .glass-text-primary {
-    color: #1e1b4b; /* Deep Indigo */
+    color: var(--glass-text-dark);
+    font-weight: 700;
     text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .glass-text-secondary {
-    color: #334155; /* Slate 700 */
+    color: #475569; /* Slate 600 */
+    font-weight: 500;
 }
 
 /* 7. Sidebar & Header Overrides */
