@@ -17,6 +17,7 @@ import {
   Newspaper,
   UserCircle
 } from 'lucide-react';
+import { Astrodeck } from '../components/CommunityAnalytics';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { SURF_QUOTES } from '../data/surfQuotes';
@@ -225,18 +226,14 @@ const DashboardPage: React.FC = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[var(--spacing-md)]">
         {[
-          { label: 'נבחרת הגלישה', value: activeMembers.length, icon: Users, path: '/directory', color: 'bg-emerald-50 text-emerald-600' },
-          { label: 'תמונות', value: galleryItems.length, icon: ImageIcon, path: '/gallery', color: 'bg-rose-50 text-rose-600' },
-          { label: 'אירועים', value: events.length, icon: Calendar, path: '/events', color: 'bg-indigo-50 text-indigo-600' },
-          { label: 'פוסטים', value: news.length, icon: Newspaper, path: '/posts', color: 'bg-amber-50 text-amber-600' },
-          { label: 'תחזית גלים', value: 'GoSurf', icon: Waves, path: 'https://gosurf.co.il', external: true, color: 'bg-sky-50 text-sky-600' },
-          { label: 'BeachCam', value: 'Live', icon: Video, path: 'https://beachcam.co.il', external: true, color: 'bg-violet-50 text-violet-600' }
+          { label: 'נבחרת הגלישה', value: activeMembers.length, icon: Users, path: '/directory', color: 'text-emerald-600' },
+          { label: 'תמונות', value: galleryItems.length, icon: ImageIcon, path: '/gallery', color: 'text-rose-600' },
+          { label: 'אירועים', value: events.length, icon: Calendar, path: '/events', color: 'text-indigo-600' },
+          { label: 'פוסטים', value: news.length, icon: Newspaper, path: '/posts', color: 'text-amber-600' },
+          { label: 'תחזית גלים', value: 'GoSurf', icon: Waves, path: 'https://gosurf.co.il', external: true, color: 'text-sky-600' },
+          { label: 'BeachCam', value: 'Live', icon: Video, path: 'https://beachcam.co.il', external: true, color: 'text-violet-600' }
         ].map((card, i) => (
-          <Link key={i} to={card.path} target={card.external ? "_blank" : undefined} className={`p-[var(--spacing-md)] rounded-[var(--radius-lg)] border border-slate-100 hover:shadow-xl transition-all flex flex-col items-center text-center ${card.color}`}>
-            <card.icon size={28} className="mb-[var(--spacing-sm)]" />
-            <p className="text-3xl font-black text-[#2B2B2E] mb-1">{card.value}</p>
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{card.label}</p>
-          </Link>
+          <Astrodeck key={i} {...card} />
         ))}
       </div>
 

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Users, 
   TrendingUp, 
@@ -960,78 +961,81 @@ const CommunityAnalytics: React.FC = () => {
   );
 };
 
-const Astrodeck = () => {
-  const [padColor, setPadColor] = useState('#ffffff');
-  const [transform, setTransform] = useState('rotateY(0deg) rotateX(0deg)');
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
-    const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
-    setTransform(`rotateY(${xAxis}deg) rotateX(${yAxis}deg)`);
-  };
-
-  const handleMouseLeave = () => {
-    setTransform('rotateY(0deg) rotateX(0deg)');
-  };
-
+export const Astrodeck = ({ label, value, icon: Icon, path, external, color }: { 
+  label: string; 
+  value: string | number; 
+  icon: any; 
+  path: string; 
+  external?: boolean;
+  color: string;
+}) => {
   return (
-    <div className="flex flex-col justify-center items-center p-8 bg-[#e8e8e8] rounded-[4rem] mt-12 overflow-hidden relative" style={{ perspective: '1000px', minHeight: '600px' }}>
-      <div className="mb-8 bg-white px-6 py-4 rounded-full shadow-md flex gap-4 z-10 items-center">
-        <span className="font-bold text-sm">בחר צבע:</span>
-        <button className="w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer hover:scale-125 transition-transform" style={{ background: 'white' }} onClick={() => setPadColor('#ffffff')} />
-        <button className="w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer hover:scale-125 transition-transform" style={{ background: '#222' }} onClick={() => setPadColor('#222222')} />
-        <button className="w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer hover:scale-125 transition-transform" style={{ background: '#0047ab' }} onClick={() => setPadColor('#0047ab')} />
-        <button className="w-8 h-8 rounded-full border-2 border-gray-200 cursor-pointer hover:scale-125 transition-transform" style={{ background: '#e67e22' }} onClick={() => setPadColor('#e67e22')} />
-      </div>
-
-      <div 
-        className="flex gap-3 transition-transform duration-100 ease-out" 
-        style={{ transformStyle: 'preserve-3d', transform }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      >
-        <style>{`
-          .pad-piece {
-            position: relative;
-            background-color: ${padColor};
-            background-image: 
-              linear-gradient(135deg, rgba(0,0,0,0.08) 25%, transparent 25%), 
-              linear-gradient(225deg, rgba(0,0,0,0.08) 25%, transparent 25%), 
-              linear-gradient(45deg, rgba(0,0,0,0.08) 25%, transparent 25%), 
-              linear-gradient(315deg, rgba(0,0,0,0.08) 25%, transparent 25%);
-            background-position: 8px 0, 8px 0, 0 0, 0 0;
-            background-size: 16px 16px;
-            box-shadow: 5px 15px 35px rgba(0,0,0,0.1);
-            transition: background-color 0.4s;
-          }
-          .hex {
-            width: 26px; height: 15px; background: #d11234; position: relative;
-          }
-          .hex::before { content: ""; position: absolute; bottom: 100%; border-bottom: 7.5px solid #d11234; border-left: 13px solid transparent; border-right: 13px solid transparent; }
-          .hex::after { content: ""; position: absolute; top: 100%; border-top: 7.5px solid #d11234; border-left: 13px solid transparent; border-right: 13px solid transparent; }
-          .hex.yellow { background: #f8cc36; }
-          .hex.yellow::before { border-bottom-color: #f8cc36; }
-          .hex.yellow::after { border-top-color: #f8cc36; }
-        `}</style>
+    <Link 
+      to={path} 
+      target={external ? "_blank" : undefined} 
+      className="block h-full group"
+    >
+      <div className="relative w-full aspect-square max-w-[220px] mx-auto flex items-center justify-center transition-transform duration-300 group-hover:scale-105 group-hover:-translate-y-2">
         
-        <div className="pad-piece w-[120px] h-[450px]" style={{ borderRadius: '10px 40px 15px 60px' }}>
-          <div className="absolute top-10 left-8 scale-80">
-            <div className="flex gap-1 justify-center mb-0.5"><div className="hex"></div></div>
-            <div className="flex gap-1 justify-center mb-0.5"><div className="hex"></div><div className="hex yellow"></div></div>
-          </div>
+        {/* SVG Background */}
+        <div className="absolute inset-0 w-full h-full">
+          <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-xl">
+            <defs>
+              <pattern id="diamond" x="0" y="0" width="30" height="16" patternUnits="userSpaceOnUse">
+                <path d="M15 0 L30 8 L15 16 L0 8 Z" fill="#ffffff" stroke="#f0f0f0" strokeWidth="1"/>
+                <path d="M15 0 L30 8 L15 8 L0 0 Z" fill="#ffffff"/>
+                <path d="M0 8 L15 16 L30 8 L15 8 Z" fill="#f8f8f8"/>
+                <path d="M0 8 L15 0 L15 16 Z" fill="#fdfdfd"/>
+              </pattern>
+              
+              <filter id="inner-shadow">
+                <feOffset dx="0" dy="0"/>
+                <feGaussianBlur stdDeviation="4" result="offset-blur"/>
+                <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse"/>
+                <feFlood floodColor="black" floodOpacity="0.15" result="color"/>
+                <feComposite operator="in" in="color" in2="inverse" result="shadow"/>
+                <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
+              </filter>
+            </defs>
+
+            <path d="M 135 38 Q 80 45 40 60 C 30 150 60 250 100 320 C 120 360 160 380 185 380 L 185 330 C 185 300 135 300 135 250 Z" 
+                  fill="url(#diamond)" filter="url(#inner-shadow)" stroke="#f0f0f0" strokeWidth="1" />
+
+            <path d="M 145 35 Q 200 20 255 35 L 245 250 C 245 290 155 290 155 250 Z" 
+                  fill="url(#diamond)" filter="url(#inner-shadow)" stroke="#f0f0f0" strokeWidth="1" />
+
+            <path d="M 265 38 Q 320 45 360 60 C 370 150 340 250 300 320 C 280 360 240 380 215 380 L 215 330 C 215 300 265 300 265 250 Z" 
+                  fill="url(#diamond)" filter="url(#inner-shadow)" stroke="#f0f0f0" strokeWidth="1" />
+
+            <g fill="#d4d4d4" filter="url(#inner-shadow)">
+              <rect x="170" y="80" width="60" height="6" rx="3" />
+              <rect x="170" y="100" width="60" height="6" rx="3" />
+              <rect x="170" y="120" width="60" height="6" rx="3" />
+              <rect x="170" y="140" width="60" height="6" rx="3" />
+              <rect x="170" y="160" width="60" height="6" rx="3" />
+              <rect x="170" y="180" width="60" height="6" rx="3" />
+              <rect x="170" y="200" width="60" height="6" rx="3" />
+              <rect x="170" y="220" width="60" height="6" rx="3" />
+              <rect x="170" y="240" width="60" height="6" rx="3" />
+            </g>
+
+            <g transform="translate(60, 65) scale(0.8)">
+              <path d="M 20 0 L 35 8 L 35 25 L 20 33 L 5 25 L 5 8 Z" fill="#b80028" stroke="#8a001e" strokeWidth="1" />
+              <path d="M 6 27 L 21 35 L 21 52 L 6 60 L -9 52 L -9 35 Z" fill="#d4c12a" stroke="#a3941d" strokeWidth="1" />
+              <path d="M 34 27 L 49 35 L 49 52 L 34 60 L 19 52 L 19 35 Z" fill="#e01a22" stroke="#a81118" strokeWidth="1" />
+            </g>
+          </svg>
         </div>
 
-        <div className="pad-piece w-[150px] h-[480px] -mt-[15px] flex flex-col items-center" style={{ borderRadius: '15px 15px 80px 80px' }}>
-          <div className="mt-[100px] w-[60%] flex flex-col gap-2.5">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="h-3 bg-black/5 rounded shadow-[inset_1px_2px_4px_rgba(0,0,0,0.2)] w-full"></div>
-            ))}
-          </div>
+        {/* Content overlay - now transparent */}
+        <div className="relative z-10 flex flex-col items-center justify-center p-4">
+          <Icon size={32} className={`mb-1 ${color}`} />
+          <p className="text-4xl font-black text-slate-900 mb-0 leading-none drop-shadow-sm">{value}</p>
+          <p className="text-[11px] font-black uppercase tracking-widest text-slate-700 mt-1 drop-shadow-sm">{label}</p>
         </div>
-
-        <div className="pad-piece w-[120px] h-[450px]" style={{ borderRadius: '40px 10px 60px 15px' }}></div>
+        
       </div>
-    </div>
+    </Link>
   );
 };
 
