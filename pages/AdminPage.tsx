@@ -459,7 +459,7 @@ const AdminPage: React.FC = () => {
     <div className="relative min-h-screen bg-[#f2def0]/30 text-right space-y-12 pb-20 pt-8" dir="rtl">
       <div className="max-w-7xl mx-auto">
         {/* Body-line Standard Header Stack */}
-        <div className="flex flex-col items-center text-center mb-10 space-y-4">
+        <div className="surfboard-hero-container mb-10 space-y-4">
           {/* Top Badge */}
           <div className="header-badge-glass">
             <ShieldAlert size={12} className="text-[#ff009f]" />
@@ -1569,7 +1569,9 @@ const AdminPage: React.FC = () => {
                   {/* Preview Area */}
                   <div className="flex flex-col items-center justify-center p-4 bg-transparent rounded-[2rem] min-h-[160px] border border-slate-100 relative overflow-hidden">
                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2 relative z-10">תצוגה מקדימה</p>
-                    <h1 className="main-page-title m-0 relative z-10">כותרת אולטרה</h1>
+                    <div className="surfboard-hero-container" style={{ minHeight: 'auto', padding: '20px 0' }}>
+                      <h1 className="main-page-title m-0 relative z-10">כותרת אולטרה</h1>
+                    </div>
                   </div>
 
                   {/* Controls Area */}

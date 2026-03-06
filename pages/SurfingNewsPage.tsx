@@ -150,7 +150,7 @@ const SurfingNewsPage: React.FC = () => {
     <div className="relative min-h-screen -m-6 p-6 md:-m-12 md:p-12 overflow-hidden bg-white text-right">
       <div className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* Body-line Standard Header Stack */}
-        <div className="flex flex-col items-center text-center mb-10 space-y-4">
+        <div className="surfboard-hero-container mb-10 space-y-4">
           {/* Top Badge */}
           <div className="header-badge-glass">
             <Globe size={12} className="text-[#00f2fe]" />

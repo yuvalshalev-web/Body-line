@@ -488,7 +488,7 @@ const SessionStatsPage: React.FC = () => {
     <div className="max-w-7xl mx-auto font-['Assistant'] pb-20 relative" dir="rtl">
       {/* Unified Header */}
       <header className="mb-16 relative">
-        <div className="flex flex-col items-center text-center space-y-6">
+        <div className="surfboard-hero-container space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#DDE1E4] text-[#2D3748] text-[10px] font-black rounded-full shadow-soft border border-slate-200">
             <Activity size={12} className="text-[#1A365D]" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Session Dive Analytics</span>

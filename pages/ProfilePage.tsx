@@ -301,7 +301,7 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto py-10 text-right animate-in fade-in" dir="rtl">
       {/* Body-line Standard Header Stack */}
-      <div className="flex flex-col items-center text-center mb-10 space-y-4">
+      <div className="surfboard-hero-container mb-10 space-y-4">
         {/* Top Badge */}
         <div className="header-badge-glass">
           <User size={12} className="text-[#00f2fe]" />

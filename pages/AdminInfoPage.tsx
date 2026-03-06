@@ -52,7 +52,7 @@ const AdminInfoPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 font-['Assistant']" dir="rtl">
       {/* Header */}
-      <div className="mb-12 text-center md:text-right">
+      <div className="surfboard-hero-container mb-12 text-center md:text-right">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#F5F7FA] text-[#2D3748] text-[10px] font-black rounded-full mb-4 shadow-soft border border-slate-200">
           <ShieldAlert size={14} />
           מרכז הבקרה "תצפית הים"

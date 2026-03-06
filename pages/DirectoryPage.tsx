@@ -218,7 +218,7 @@ const DirectoryPage: React.FC = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         {/* Body-line Standard Header Stack */}
-        <div className="flex flex-col items-center text-center mb-10 space-y-4">
+        <div className="surfboard-hero-container mb-10 space-y-4">
           {/* Main Title */}
           <h1 className="main-page-title">
             נבחרת הגלישה
