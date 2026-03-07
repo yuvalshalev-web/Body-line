@@ -14,9 +14,11 @@ import {
 import { motion } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { parseDate } from '../src/utils/dateUtils';
+import { getMemberDistanceBins } from '../src/utils/geocoding';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const CommunityAnalytics: React.FC = () => {
-  const { members, weeklyHistory, isLoading } = useData();
+  const { members, weeklyHistory, siteConfig, isLoading } = useData();
 
   const stats = useMemo(() => {
     if (!members.length) return null;
@@ -24,6 +26,51 @@ const CommunityAnalytics: React.FC = () => {
     const activeMembers = members.filter(m => m.isActive);
     const totalMembers = members.length;
     
+    // Distance Distribution (Operational & Bins)
+    const homeLat = siteConfig.home_break?.lat || 32.1624;
+    const homeLng = siteConfig.home_break?.lng || 34.8447;
+    
+    let nearCount = 0;
+    let mediumCount = 0;
+    let farCount = 0;
+
+    const binDefinitions = [
+      { label: '0-10', min: 0, max: 10, color: '#e5e0d5' },
+      { label: '11-20', min: 11, max: 20, color: '#dbd5c5' },
+      { label: '21-30', min: 21, max: 30, color: '#d1cab5' },
+      { label: '31-40', min: 31, max: 40, color: '#c7bfa5' },
+      { label: '41-50', min: 41, max: 50, color: '#bdb495' },
+      { label: '51-60', min: 51, max: 60, color: '#b3a985' },
+      { label: '61-70', min: 61, max: 70, color: '#a99e75' },
+      { label: '71-80', min: 71, max: 80, color: '#9f9365' },
+      { label: '81-90', min: 81, max: 90, color: '#958855' },
+      { label: '91-100+', min: 91, max: Infinity, color: '#8b7d45' },
+    ];
+
+    const binCounts = binDefinitions.map(b => ({ ...b, count: 0 }));
+
+    activeMembers.forEach(member => {
+      // Simple distance calculation for analytics (Euclidean approximation is fine for these ranges)
+      if (member.lat && member.lng) {
+        const dLat = (member.lat - homeLat) * 111;
+        const dLng = (member.lng - homeLng) * 111 * Math.cos(homeLat * Math.PI / 180);
+        const distanceKm = Math.sqrt(dLat * dLat + dLng * dLng);
+
+        if (distanceKm <= 20) nearCount++;
+        else if (distanceKm <= 100) mediumCount++;
+        else farCount++;
+
+        const binIndex = binDefinitions.findIndex(b => distanceKm >= b.min && distanceKm <= b.max);
+        if (binIndex !== -1) {
+          binCounts[binIndex].count++;
+        } else if (distanceKm > 100) {
+          binCounts[9].count++;
+        }
+      }
+    });
+
+    const distanceData = binCounts.map(b => ({ label: b.label, count: b.count, color: b.color }));
+
     // 1. Demographics
     const now = new Date();
     const calculateAge = (birthday?: string) => {
@@ -300,9 +347,13 @@ const CommunityAnalytics: React.FC = () => {
       globalRetentionIndex,
       churnRate,
       churnedCount,
-      annualChurnRate
+      annualChurnRate,
+      near: nearCount,
+      medium: mediumCount,
+      far: farCount,
+      distanceData
     };
-  }, [members, weeklyHistory]);
+  }, [members, weeklyHistory, siteConfig]);
 
   if (isLoading || !stats) {
     return (
@@ -335,12 +386,13 @@ const CommunityAnalytics: React.FC = () => {
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* Community Aura Card (Replaces Demographics) */}
-        <div className="space-y-8">
+      {/* Top Row: Age Distribution + Distance Distribution */}
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Age Distribution Card */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="glass-panel p-8 relative overflow-hidden group min-h-[450px] flex flex-col items-center justify-center"
+            className="glass-panel p-8 relative overflow-hidden group min-h-[550px] flex flex-col items-center justify-center"
           >
             {/* Glossy Shimmer Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
@@ -349,19 +401,19 @@ const CommunityAnalytics: React.FC = () => {
             
             <div className="w-full flex items-center justify-between mb-8 relative z-10 px-2">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-white shadow-inner border border-white/20">
+                <div className="w-12 h-12 rounded-xl bg-slate-900/5 flex items-center justify-center text-slate-900 shadow-inner border border-slate-900/10">
                   <Sparkles size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-white tracking-tight">התפלגות חברים לפי גיל</h3>
-                  <p className="text-white/40 text-[8px] font-bold uppercase tracking-[0.3em]">Community Aura • Ocean Analytics</p>
+                  <h3 className="text-xl font-black glass-text-primary tracking-tight">התפלגות חברים לפי גיל</h3>
+                  <p className="glass-text-secondary text-[8px] font-bold uppercase tracking-[0.3em]">Community Aura • Ocean Analytics</p>
                 </div>
               </div>
             </div>
 
             {/* Donut Chart Area */}
-            <div className="w-full flex-1 relative flex items-center justify-center min-h-[280px]">
-              <svg width="100%" height="100%" viewBox="50 50 900 900" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible max-w-[420px]">
+            <div className="w-full flex-1 relative flex items-center justify-center min-h-[350px]">
+              <svg width="100%" height="100%" viewBox="50 50 900 900" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible max-w-[400px]">
                 <defs>
                   <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
@@ -400,8 +452,8 @@ const CommunityAnalytics: React.FC = () => {
                     { label: 'ותיקים', key: 'ותיקים (60+)', color: 'url(#neon-emerald)', glow: '#2B6CB0' }
                   ];
                   const total = stats.activeCount || 1;
-                  const radius = 234; // 180 * 1.3
-                  const strokeWidth = 65; // 50 * 1.3
+                  const radius = 280; 
+                  const strokeWidth = 85; 
                   const centerX = 500;
                   const centerY = 500;
                   
@@ -419,14 +471,14 @@ const CommunityAnalytics: React.FC = () => {
                     const rad = (midAngle * Math.PI) / 180;
                     
                     // Callout Line Coordinates
-                    const lineStartRadius = radius + strokeWidth / 2 + 10;
-                    const lineMidRadius = radius + strokeWidth / 2 + 60;
+                    const lineStartRadius = radius + strokeWidth / 2 + 5;
+                    const lineMidRadius = radius + strokeWidth / 2 + 35;
                     
                     const sx = centerX + lineStartRadius * Math.cos(rad);
                     const sy = centerY + lineStartRadius * Math.sin(rad);
                     const mx = centerX + lineMidRadius * Math.cos(rad);
                     const my = centerY + lineMidRadius * Math.sin(rad);
-                    const ex = mx + (Math.cos(rad) > 0 ? 40 : -40);
+                    const ex = mx + (Math.cos(rad) > 0 ? 30 : -30);
                     const ey = my;
 
                     const x1 = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
@@ -486,7 +538,7 @@ const CommunityAnalytics: React.FC = () => {
                           transition={{ duration: 0.5, delay: 1.5 + i * 0.1 }}
                         >
                           <text 
-                            x={ex + (Math.cos(rad) > 0 ? 12 : -12)} 
+                            x={ex + (Math.cos(rad) > 0 ? 10 : -10)} 
                             y={ey} 
                             textAnchor={Math.cos(rad) > 0 ? "start" : "end"} 
                             dominantBaseline="middle" 
@@ -497,7 +549,7 @@ const CommunityAnalytics: React.FC = () => {
                             {Math.round(percentage * 100)}%
                           </text>
                           <text 
-                            x={ex + (Math.cos(rad) > 0 ? 12 : -12)} 
+                            x={ex + (Math.cos(rad) > 0 ? 10 : -10)} 
                             y={ey + 28} 
                             textAnchor={Math.cos(rad) > 0 ? "start" : "end"} 
                             dominantBaseline="middle" 
@@ -516,10 +568,10 @@ const CommunityAnalytics: React.FC = () => {
                 {/* Central Core */}
                 <g>
                   {/* Light Inner Circle for Contrast */}
-                  <circle cx="500" cy="500" r="182" fill="white" fillOpacity="0.9" />
+                  <circle cx="500" cy="500" r="230" fill="white" fillOpacity="0.9" />
                   
                   {/* Glass Reflection Overlay */}
-                  <circle cx="500" cy="500" r="234" fill="url(#glass-gradient)" opacity="0.1" pointerEvents="none" />
+                  <circle cx="500" cy="500" r="280" fill="url(#glass-gradient)" opacity="0.1" pointerEvents="none" />
                   <defs>
                     <linearGradient id="glass-gradient" x1="0" y1="0" x2="1" y2="1">
                       <stop offset="0%" stopColor="white" />
@@ -528,7 +580,7 @@ const CommunityAnalytics: React.FC = () => {
                     </linearGradient>
                   </defs>
  
-                  <foreignObject x="325" y="325" width="350" height="350">
+                  <foreignObject x="280" y="280" width="440" height="440">
                     <div className="w-full h-full flex flex-col items-center justify-center text-center">
                       <Waves size={48} className="text-[#2D3748] logo-pulse mb-2" />
                       <span className="text-[#4A5568]/40 text-xs font-black uppercase tracking-[0.4em] mb-2">Community Total</span>
@@ -546,30 +598,115 @@ const CommunityAnalytics: React.FC = () => {
                     </div>
                   </foreignObject>
                 </g>
-
               </svg>
-
             </div>
           </motion.div>
 
-          {/* Vitality Retention Card - Tachometer Gauges */}
+          {/* Distance Distribution Card */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="glass-panel p-10 rounded-[4rem] !bg-[#2D3748] transition-all duration-500 relative overflow-hidden group"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="glass-panel p-8 flex flex-col min-h-[550px] relative overflow-hidden group"
           >
+            {/* Glossy Shimmer Effect */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+            
+            {/* Background Glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+
+            <div className="flex items-center gap-3 mb-8 relative z-10">
+              <div className="w-12 h-12 rounded-xl bg-slate-900/5 flex items-center justify-center text-slate-900 shadow-inner border border-slate-900/10">
+                <Activity size={24} />
+              </div>
+              <div>
+                <h3 className="text-xl font-black glass-text-primary tracking-tight">פיזור גיאוגרפי של החברים</h3>
+                <p className="glass-text-secondary text-[8px] font-bold uppercase tracking-[0.3em]">Distance Distribution • Ocean Analytics</p>
+              </div>
+            </div>
+
+            <div className="flex-1 w-full min-h-[300px] relative z-10">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.distanceData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+                  <XAxis 
+                    dataKey="label" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'rgba(0,0,0,0.5)', fontSize: 12, fontWeight: 700 }}
+                    dy={10}
+                  />
+                  <YAxis hide />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="glass-effect p-3 rounded-xl border border-white/20 shadow-2xl">
+                            <p className="text-xs font-black glass-text-primary mb-1">{payload[0].payload.label} ק"מ</p>
+                            <p className="text-lg font-black text-blue-600">{payload[0].value} <span className="text-[10px] opacity-60">חברים</span></p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar dataKey="count" radius={[10, 10, 0, 0]} barSize={40}>
+                    {stats.distanceData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.color} 
+                        fillOpacity={0.8}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="mt-6 grid grid-cols-3 gap-4 relative z-10">
+              <div className="p-4 rounded-2xl bg-white/40 backdrop-blur-md border border-white/20 shadow-sm group/stat hover:bg-white/60 transition-all">
+                <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1 opacity-70">טווח קרוב (0-20)</p>
+                <p className="text-xl font-black text-emerald-800 flex items-baseline gap-1">
+                  {stats.near}
+                  <span className="text-[10px] font-bold opacity-40">חברים</span>
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl bg-white/40 backdrop-blur-md border border-white/20 shadow-sm group/stat hover:bg-white/60 transition-all">
+                <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1 opacity-70">טווח איזורי (21-100)</p>
+                <p className="text-xl font-black text-amber-800 flex items-baseline gap-1">
+                  {stats.medium}
+                  <span className="text-[10px] font-bold opacity-40">חברים</span>
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl bg-white/40 backdrop-blur-md border border-white/20 shadow-sm group/stat hover:bg-white/60 transition-all">
+                <p className="text-[10px] font-black text-red-700 uppercase tracking-widest mb-1 opacity-70">טווח רחוק (100+)</p>
+                <p className="text-xl font-black text-red-800 flex items-baseline gap-1">
+                  {stats.far}
+                  <span className="text-[10px] font-bold opacity-40">חברים</span>
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Vitality Retention Card - Tachometer Gauges */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="glass-panel p-10 rounded-[4rem] !bg-[#2D3748] transition-all duration-500 relative overflow-hidden group"
+        >
             {/* Glossy Shimmer Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
 
             <div className="flex items-center justify-between mb-12 relative z-10">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white/80 shadow-inner">
+                <div className="w-12 h-12 rounded-2xl bg-slate-900/5 flex items-center justify-center text-slate-900 shadow-inner border border-slate-900/10">
                   <Activity size={24} />
                 </div>
                 <div>
-                  <h3 className="text-white font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי קבוצות גיל</h3>
-                  <p className="text-white/40 text-[10px] tracking-[0.3em] mt-1 font-black uppercase">SESSION VITALITY METRICS-8</p>
+                  <h3 className="glass-text-primary font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי קבוצות גיל</h3>
+                  <p className="glass-text-secondary text-[10px] tracking-[0.3em] mt-1 font-black uppercase">SESSION VITALITY METRICS-8</p>
                 </div>
               </div>
             </div>
@@ -706,7 +843,6 @@ const CommunityAnalytics: React.FC = () => {
               </div>
             </div>
           </motion.div>
-        </div>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -718,12 +854,12 @@ const CommunityAnalytics: React.FC = () => {
           
           <div className="flex items-center justify-between mb-12 relative z-10">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white/80 shadow-inner">
+              <div className="w-12 h-12 rounded-2xl bg-slate-900/5 flex items-center justify-center text-slate-900 shadow-inner border border-slate-900/10">
                 <Heart size={24} />
               </div>
               <div>
-                <h3 className="text-white font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי מגדר</h3>
-                <p className="text-white/40 text-[10px] tracking-[0.3em] mt-1 font-black uppercase">COMMUNITY INSIGHTS • GENDER DYNAMICS</p>
+                <h3 className="glass-text-primary font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי מגדר</h3>
+                <p className="glass-text-secondary text-[10px] tracking-[0.3em] mt-1 font-black uppercase">COMMUNITY INSIGHTS • GENDER DYNAMICS</p>
               </div>
             </div>
           </div>
@@ -898,12 +1034,12 @@ const CommunityAnalytics: React.FC = () => {
             <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white/80">
+                  <div className="w-10 h-10 rounded-xl bg-slate-900/5 flex items-center justify-center text-slate-900 shadow-inner border border-slate-900/10">
                     <UserMinus size={20} />
                   </div>
-                  <h4 className="text-xl font-black text-white">דופק נמוך (בסיכון נטישה)</h4>
+                  <h4 className="text-xl font-black glass-text-primary tracking-tight">דופק נמוך (בסיכון נטישה)</h4>
                 </div>
-                <span className="text-[10px] font-black text-white uppercase tracking-widest bg-white/10 px-4 py-1.5 rounded-full border border-white/20">
+                <span className="text-[10px] font-black glass-text-secondary uppercase tracking-widest bg-slate-900/5 px-4 py-1.5 rounded-full border border-slate-900/10 shadow-sm">
                   לא נראו מעל 30 יום
                 </span>
               </div>
@@ -1066,7 +1202,7 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
 
   return (
     <div className="flex-1 max-w-[220px] flex flex-col items-center text-center relative group/surfboard">
-      <h3 className="text-[#1A365D] font-black text-[11px] mb-8 tracking-tight uppercase opacity-50 mix-blend-multiply -mt-2">
+      <h3 className="glass-text-secondary font-black text-[11px] mb-8 tracking-tight uppercase -mt-2">
         {title}
       </h3>
 

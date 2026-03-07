@@ -100,7 +100,7 @@ const SurferCardPage: React.FC = () => {
 
           return (
             <motion.div 
-              className="p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] bg-[#FDFBF7] text-[#2B2B2E] shadow-sm transition-all duration-1000 overflow-hidden relative border border-slate-100"
+              className="p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] bg-[#FDFBF7] text-[#2B2B2E] shadow-sm transition-all duration-1000 relative border border-slate-100"
             >
               {/* Neumorphic Inner Shadow Overlay */}
               <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[var(--radius-lg)]" />
@@ -153,12 +153,6 @@ const SurferCardPage: React.FC = () => {
                   </div>
                   
                   <div className="flex-1 text-center md:text-right">
-                    <div className="inline-flex items-center gap-2 px-5 py-1.5 bg-black/30 backdrop-blur-md rounded-full mb-5 border border-white/10 shadow-lg">
-                      <div className={`w-2 h-2 rounded-full animate-ping ${currentRank === 'קלי סלייטר' ? 'bg-yellow-400' : 'bg-[var(--gt-accent)]'}`} />
-                      <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/90">
-                        אתה נמצא בדרגת <span className="text-[var(--gt-accent)]">{currentRank}</span>
-                      </span>
-                    </div>
                     <h3 className="text-2xl md:text-[38px] font-black mb-5 leading-none tracking-tighter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] text-[#2B2B2E]">
                       אנחנו לא מודדים הישגים. <br className="hidden md:block" /> אנחנו חוגגים נוכחות.
                     </h3>
@@ -170,72 +164,96 @@ const SurferCardPage: React.FC = () => {
                 </div>
 
                 {/* Final 3-Layer Roadmap - Professional Glassmorphism */}
-                <div className="mt-10 mb-10 px-4 max-w-4xl mx-auto">
+                <div className="mt-10 mb-10 px-8 max-w-4xl mx-auto">
                   {/* Parent Container - Wraps both Indicator and Progress Bar */}
                   <div className="relative w-full pt-10">
                     
-                    {/* Layer 3: 'מיקומך הנוכחי' Marker - Absolute Positioned relative to Parent */}
-                    <motion.div 
-                      key="current-marker"
-                      initial={{ opacity: 0, left: 0 }}
-                      animate={{ 
-                        opacity: 1, 
-                        left: `${progressPercent}%`
-                      }}
-                      transition={{ duration: 2, ease: "circOut" }}
-                      className="absolute top-0 flex flex-col items-center pointer-events-none z-20"
-                      style={{ transform: 'translateX(-50%)' }}
-                    >
-                      <span className="text-[10px] font-black text-[#2B2B2E] uppercase tracking-widest mb-0.5 drop-shadow-md">
-                        מיקומך הנוכחי
-                      </span>
-                      <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[6px] border-t-[var(--gt-accent)]" />
-                    </motion.div>
-                    
                     {/* Progress Bar Container - Zero-Point Sync */}
-                    <div className="progress-container w-full overflow-hidden">
-                      {/* Progress Liquid - Same percentage as Marker */}
+                    <div className="progress-container w-full px-4 mt-12">
+                      {/* Layer 3: 'מיקומך הנוכחי' Marker - Positioned above the bar */}
                       <motion.div 
-                        initial={{ width: 0 }}
+                        key="current-marker"
+                        initial={{ opacity: 0, left: 0 }}
                         animate={{ 
-                          width: `${progressPercent}%` 
+                          opacity: 1, 
+                          left: `${progressPercent}%`
                         }}
                         transition={{ duration: 2, ease: "circOut" }}
-                        className="h-full rounded-full"
-                        style={{ 
-                          background: 'linear-gradient(90deg, var(--ocean-1), var(--ocean-2), var(--ocean-3), var(--ocean-4), var(--ocean-5))',
-                          boxShadow: '0 0 20px rgba(0, 242, 254, 0.4)'
-                        }}
-                      />
+                        className="absolute top-[-50px] flex flex-col items-center pointer-events-none z-[60]"
+                        style={{ transform: 'translateX(-50%)' }}
+                      >
+                        <div className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-200 shadow-sm mb-1">
+                          <span className="text-[10px] font-black text-[#2B2B2E] uppercase tracking-widest whitespace-nowrap">
+                            מיקומך הנוכחי
+                          </span>
+                        </div>
+                        <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[10px] border-t-[var(--gt-accent)] drop-shadow-sm" />
+                      </motion.div>
 
-                      {/* Milestone Nodes (Layer 1 - Inside the tube) */}
-                      <div className="absolute inset-0 flex items-center px-0">
-                        <div className="relative w-full h-full flex items-center">
-                          {userData?.rankThresholds.map((rank, idx) => {
-                            const isCurrent = rank.name === currentRank;
-                            const isPassed = rankIndex > idx;
-                            const totalRanks = userData?.rankThresholds.length || 1;
-                            const percent = (idx / (totalRanks - 1)) * 100;
-                            
-                            return (
-                              <div 
-                                key={rank.name} 
-                                className="absolute top-1/2 -translate-y-1/2"
-                                style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
-                              >
-                                {/* Identical Circle Node */}
-                                <div className={`w-3 h-3 rounded-full transition-all duration-1000 border relative z-20 ${
-                                  isCurrent || isPassed
-                                    ? 'bg-white border-white shadow-[0_0_10px_#fff]' 
-                                    : 'bg-white/10 border-white/20'
-                                }`}>
-                                  {isCurrent && (
-                                    <div className="absolute inset-[-4px] border border-white/50 rounded-full animate-pulse blur-[1px]" />
-                                  )}
+                      <div className="relative w-full h-full flex items-center">
+                        {/* Progress Liquid - Same percentage as Marker */}
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ 
+                            width: `${progressPercent}%` 
+                          }}
+                          transition={{ duration: 2, ease: "circOut" }}
+                          className="h-[20px] rounded-full relative z-10 opacity-60 backdrop-blur-[4px] overflow-hidden"
+                          style={{ 
+                            background: 'linear-gradient(90deg, #00F2FE 0%, #4FACFE 50%, #00F2FE 100%)',
+                            boxShadow: '0 0 25px rgba(79, 172, 254, 0.4), inset 0 2px 4px rgba(255,255,255,0.3)',
+                            border: '1px solid rgba(255, 255, 255, 0.4)'
+                          }}
+                        >
+                          {/* Shimmer Effect Overlay */}
+                          <motion.div 
+                            animate={{ 
+                              x: ['-100%', '200%']
+                            }}
+                            transition={{ 
+                              duration: 3, 
+                              repeat: Infinity, 
+                              ease: "linear" 
+                            }}
+                            className="absolute inset-0 w-1/2 h-full skew-x-[-20deg]"
+                            style={{
+                              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)'
+                            }}
+                          />
+
+                          {/* Top Highlight (3D Glass Look) */}
+                          <div className="absolute top-0 left-0 right-0 h-[30%] bg-white/20 blur-[1px]" />
+                        </motion.div>
+  
+                        {/* Milestone Nodes (Layer 1 - Inside the tube) */}
+                        <div className="absolute inset-0 flex items-center z-50">
+                          <div className="relative w-full h-full flex items-center">
+                            {userData?.rankThresholds.map((rank, idx) => {
+                              const isCurrent = rank.name === currentRank;
+                              const isPassed = rankIndex > idx;
+                              const totalRanks = userData?.rankThresholds.length || 1;
+                              const percent = (idx / (totalRanks - 1)) * 100;
+                              
+                              return (
+                                <div 
+                                  key={rank.name} 
+                                  className="absolute top-1/2 -translate-y-1/2"
+                                  style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
+                                >
+                                  {/* Identical Circle Node */}
+                                  <div className={`w-4 h-4 rounded-full transition-all duration-1000 border-2 relative ${
+                                    isCurrent || isPassed
+                                      ? 'bg-white border-white shadow-[0_0_15px_#fff]' 
+                                      : 'bg-slate-800/50 border-white/30'
+                                  }`}>
+                                    {isCurrent && (
+                                      <div className="absolute inset-[-6px] border-2 border-white/60 rounded-full animate-pulse blur-[1px]" />
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
 
@@ -252,7 +270,7 @@ const SurferCardPage: React.FC = () => {
                   </div>
 
                   {/* Labels (Layer 1 - Below the bar) */}
-                  <div className="relative w-full h-20 mt-2 px-6">
+                  <div className="relative w-full h-20 mt-2 px-4">
                     <div className="relative w-full h-full">
                       {userData?.rankThresholds.map((rank, idx) => {
                         const isCurrent = rank.name === currentRank;
@@ -292,7 +310,20 @@ const SurferCardPage: React.FC = () => {
                 </div>
 
                 {/* Stats Grid - Moved from PlayerCard */}
-                <div className="mt-12 grid grid-cols-2 md:grid-cols-3 gap-[var(--spacing-md)] border-t border-slate-100 pt-8">
+                <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-[var(--spacing-md)] border-t border-slate-100 pt-8">
+                  <div className="flex flex-col group relative items-center">
+                    <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
+                      <Crown size={13} className="text-amber-500" /> מעמד
+                      <Info size={12} className="text-slate-400" />
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-50">
+                        הדרגה הנוכחית שלך בנבחרת.
+                      </div>
+                    </span>
+                    <span className="text-xl md:text-2xl font-black text-amber-600 truncate max-w-full px-2">
+                      {currentRank}
+                    </span>
+                  </div>
+
                   <div className="flex flex-col group relative items-center">
                     <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
                       <Waves size={13} className="text-[var(--ocean-4)]" /> סשנים

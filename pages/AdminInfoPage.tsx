@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { TrendingUp, Waves, Server, ShieldAlert, Users, Activity } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CommunityAnalytics from '../components/CommunityAnalytics';
+import CommunityHeatMap from '../components/CommunityHeatMap';
 import SystemMonitor from '../components/SystemMonitor';
 import SessionStatsPage from './SessionStatsPage';
 import TrendsDashboard from '../components/admin/TrendsDashboard';
@@ -80,7 +81,12 @@ const AdminInfoPage: React.FC = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            {activeTab === 'community' && <CommunityAnalytics />}
+            {activeTab === 'community' && (
+              <div className="space-y-12">
+                <CommunityAnalytics />
+                <CommunityHeatMap />
+              </div>
+            )}
             {activeTab === 'trends' && <TrendsDashboard />}
             {activeTab === 'attendance' && <SessionStatsPage />}
             {activeTab === 'system' && <SystemMonitor />}
