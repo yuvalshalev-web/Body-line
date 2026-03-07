@@ -3,9 +3,23 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import PlayerCard from '../components/PlayerCard';
 import UserAnalytics from '../components/UserAnalytics';
-import { Trophy, Waves, Target, Crown, WifiOff } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Trophy, Waves, Target, Crown, WifiOff, Flame, Info } from 'lucide-react';
+import { motion, useMotionValue, useTransform, animate } from 'motion/react';
+import { useState, useEffect } from 'react';
 import { calculateUserStats } from '../src/utils/analytics';
+
+const Counter = ({ value, duration = 2 }: { value: number; duration?: number }) => {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (latest) => Math.round(latest));
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    const controls = animate(count, value, { duration });
+    return rounded.onChange((v) => setDisplayValue(v));
+  }, [value, duration]);
+
+  return <>{displayValue}</>;
+};
 
 const SurferCardPage: React.FC = () => {
   const { currentUser } = useAuth();
@@ -277,30 +291,45 @@ const SurferCardPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Gamified Rank Footer */}
-                <div className="rank-footer shadow-sm overflow-hidden">
-                  <div className="rank-stats-grid">
-                    <div className="stat-box">
-                      <span className="stat-value">{currentRank}</span>
-                      <span className="stat-label">מעמד נוכחי</span>
-                    </div>
-                    
-                    <div className="stat-divider"></div>
-                    
-                    <div className="stat-box">
-                      <span className="stat-value highlight">
-                        {userData?.nextRankName ? userData.sessionsToNextRank : 'MAX'}
-                      </span>
-                      <span className="stat-label">
-                        {userData?.nextRankName ? `סשנים למעמד ${userData.nextRankName}` : 'הגעת לפסגה'}
-                      </span>
-                    </div>
+                {/* Stats Grid - Moved from PlayerCard */}
+                <div className="mt-12 grid grid-cols-2 md:grid-cols-3 gap-[var(--spacing-md)] border-t border-slate-100 pt-8">
+                  <div className="flex flex-col group relative items-center">
+                    <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
+                      <Waves size={13} className="text-[var(--ocean-4)]" /> סשנים
+                      <Info size={12} className="text-slate-400" />
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-50">
+                        מספר הסשנים הכולל שהשתתפת בהם עד כה.
+                      </div>
+                    </span>
+                    <span className="text-3xl font-black text-[var(--ocean-2)] tabular-nums">
+                      <Counter value={userData?.totalSessions || 0} />
+                    </span>
                   </div>
 
-                  <div className="rank-summary-bar">
-                    <p className="text-[12px] font-bold text-slate-500">
-                      סך הכל צברת <strong className="accent-text font-black">{userData?.totalSessions} סשנים</strong> מתחילת העונה
-                    </p>
+                  <div className="flex flex-col group relative items-center">
+                    <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
+                      <Target size={13} className="text-emerald-500" /> {userData?.nextRankName ? `סשנים ל${userData.nextRankName}` : 'הגעת לפסגה'}
+                      <Info size={12} className="text-slate-400" />
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-50">
+                        {userData?.nextRankName ? `מספר הסשנים שנותרו עד למעמד ${userData.nextRankName}` : 'כל הכבוד! הגעת למעמד הגבוה ביותר.'}
+                      </div>
+                    </span>
+                    <span className="text-3xl font-black text-emerald-600 tabular-nums">
+                      {userData?.nextRankName ? <Counter value={userData.sessionsToNextRank} /> : 'MAX'}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col group relative items-center">
+                    <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 cursor-help">
+                      <Flame size={13} className="text-[var(--ocean-1)]" /> רצף
+                      <Info size={12} className="text-slate-400" />
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-50">
+                        מספר השבועות הרצופים בהם הגעת לסשן.
+                      </div>
+                    </span>
+                    <span className="text-3xl font-black text-[var(--ocean-1)] tabular-nums">
+                      <Counter value={userData?.streak || 0} />
+                    </span>
                   </div>
                 </div>
               </div>

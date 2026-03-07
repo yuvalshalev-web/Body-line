@@ -1216,13 +1216,6 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
                       <rect x="170" y="220" width="60" height="6" rx="3" />
                       <rect x="170" y="240" width="60" height="6" rx="3" />
                     </g>
-
-                    {/* Al Merrick Logo on Pad - Black for contrast on beige */}
-                    <g transform="translate(60, 65) scale(0.8)">
-                      <path d="M 20 0 L 35 8 L 35 25 L 20 33 L 5 25 L 5 8 Z" fill="#000" />
-                      <path d="M 6 27 L 21 35 L 21 52 L 6 60 L -9 52 L -9 35 Z" fill="#000" />
-                      <path d="M 34 27 L 49 35 L 49 52 L 34 60 L 19 52 L 19 35 Z" fill="#000" />
-                    </g>
                   </g>
                 )}
               </svg>

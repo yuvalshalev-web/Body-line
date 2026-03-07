@@ -34,143 +34,228 @@ const getOceanWaterGradient = (percent: number) => {
   return 'from-blue-200/60 via-blue-100/40 to-blue-50/20';
 };
 
-const OceanRing: React.FC<{  
-  value: number; 
-  label: string; 
+const AstrodeckGauge: React.FC<{
+  value: number;
+  label: string;
   icon: React.ReactNode;
   tooltip: string;
-}> = ({ value, label, icon, tooltip }) => {
-  const radius = 42;
-  const circumference = 2 * Math.PI * radius;
-  
-  // 12 segments for months
-  const segmentGap = 2; // degrees
-  const segmentLength = (360 / 12) - segmentGap;
-  const dashArray = `${(segmentLength / 360) * circumference} ${(segmentGap / 360) * circumference}`;
-  
-  const segmentLengthInUnits = (segmentLength / 360) * circumference;
-  
+  footer?: React.ReactNode;
+  isGrit?: boolean;
+}> = ({ value, label, icon, tooltip, footer, isGrit }) => {
+  const padPath = "M 135 38 Q 80 45 40 60 C 30 150 60 250 100 320 C 120 360 160 380 185 380 L 185 330 C 185 300 135 300 135 250 Z M 145 35 Q 200 20 255 35 L 245 250 C 245 290 155 290 155 250 Z M 265 38 Q 320 45 360 60 C 370 150 340 250 300 320 C 280 360 240 380 215 380 L 215 330 C 215 300 265 300 265 250 Z";
+
   return (
-    <div className="flex-1 w-full flex flex-col items-center text-center group/ring">
-      <div className="flex items-center gap-[var(--spacing-xs)] mb-6">
-        <div className="text-blue-400 group-hover/ring:text-white transition-colors">
+    <div className={`flex-1 w-full flex flex-col items-center text-center group/pad ${isGrit ? 'relative' : ''}`}>
+      
+      <div className="flex items-center gap-2 mb-6">
+        <div className={`${isGrit ? 'text-blue-700' : 'text-blue-400'} group-hover/pad:text-white transition-colors`}>
           {icon}
         </div>
-        <h3 className="text-[11px] font-black text-[#2B2B2E] uppercase tracking-[0.15em]">{label}</h3>
-        <div className="gt-info-wrapper mr-4">
-          <div className="gt-info-icon" style={{ width: '16px', height: '16px', fontSize: '10px' }}>i</div>
-          <span className="gt-tooltip" style={{ bottom: '180%', width: '220px' }}>{tooltip}</span>
+        <h3 className={`text-[11px] font-black uppercase tracking-[0.15em] ${isGrit ? 'text-blue-900' : 'text-[#2B2B2E]'}`}>{label}</h3>
+        <div className="gt-info-wrapper">
+          <Info size={14} className="text-[#2B2B2E]/30 hover:text-[#2B2B2E] transition-colors" />
+          <span className="gt-tooltip" style={{ bottom: '160%', width: '200px' }}>{tooltip}</span>
         </div>
       </div>
 
       <div className="relative w-full max-w-[170px] aspect-square flex items-center justify-center">
-        {/* Aquarium Container - Glassy Refined */}
-        <div className="absolute inset-[12%] rounded-full overflow-hidden glass-panel !bg-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]">
-          {/* Deep Sea Water */}
-          <motion.div 
-            initial={{ y: '100%' }}
-            animate={{ y: `${100 - value}%` }}
-            transition={{ duration: 2, ease: "easeOut" }}
-            className={`absolute inset-0 w-full h-full bg-gradient-to-b ${getOceanWaterGradient(value)}`}
-          >
-            {/* Wave Animation */}
-            <div className="absolute top-0 left-0 w-[400%] h-6 -translate-y-1/2 opacity-60">
-              <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full animate-[ripple_3s_infinite_linear]">
-                <path d="M0 10 Q 12.5 18 25 10 T 50 10 T 75 10 T 100 10 V 20 H 0 Z" fill="white" />
-              </svg>
-            </div>
-          </motion.div>
-        </div>
-
-        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 relative z-10 drop-shadow-[0_6px_12px_rgba(0,0,0,0.4)]">
+        {isGrit && (
+          <div className="absolute inset-0 bg-blue-400/10 blur-[40px] rounded-full animate-pulse pointer-events-none" />
+        )}
+        
+        <svg viewBox="0 0 400 400" className="w-full h-full drop-shadow-[0_10px_20px_rgba(0,0,0,0.2)] relative z-10">
           <defs>
-            <filter id="ring-3d" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="blur" />
-              <feOffset in="blur" dx="1.5" dy="1.5" result="offsetBlur" />
-              <feSpecularLighting in="blur" surfaceScale="6" specularConstant="1" specularExponent="25" lightingColor="#ffffff" result="specOut">
-                <fePointLight x="-5000" y="-10000" z="20000" />
-              </feSpecularLighting>
-              <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut" />
-              <feComposite in="SourceGraphic" in2="specOut" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litGraphic" />
-            </filter>
-            <linearGradient id="glass-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <pattern id="diamond-pad-gauge" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+              <rect width="16" height="16" fill="#f8fafc" />
+              <path d="M8 2 L14 8 L8 14 L2 8 Z" fill="#f1f5f9" />
+              <circle cx="8" cy="8" r="2" fill="#e2e8f0" />
+            </pattern>
+            
+            <clipPath id="pad-clip-gauge">
+              <path d={padPath} />
+            </clipPath>
+
+            <linearGradient id={isGrit ? "grit-liquid-grad" : "ocean-liquid-grad-gauge"} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={isGrit ? "#0369a1" : "#38bdf8"} />
+              <stop offset="100%" stopColor={isGrit ? "#0c4a6e" : "#0284c7"} />
+            </linearGradient>
+
+            <linearGradient id="glass-shine-gauge" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="white" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="white" stopOpacity="0.1" />
               <stop offset="100%" stopColor="white" stopOpacity="0.05" />
             </linearGradient>
+
+            <linearGradient id="surface-shimmer-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="white" stopOpacity="0" />
+              <stop offset="50%" stopColor="white" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="white" stopOpacity="0" />
+            </linearGradient>
+
+            <filter id="pad-shadow-gauge">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.2" />
+            </filter>
           </defs>
 
-          {/* Continuous Glass Tube Background (360°) */}
-          <circle
-            cx="50"
-            cy="50"
-            r={radius}
-            fill="none"
-            stroke="#1a3c6e"
-            strokeWidth="4"
-            className="opacity-10"
-            filter="url(#ring-3d)"
+          {/* Background Pad */}
+          <path 
+            d={padPath} 
+            fill="url(#diamond-pad-gauge)" 
+            stroke={isGrit ? "#075985" : "#e2e8f0"} 
+            strokeWidth={isGrit ? "1.5" : "1"}
+            filter="url(#pad-shadow-gauge)"
           />
 
-          {/* Progress Segments with Background Track */}
-          {[...Array(12)].map((_, i) => {
-            const segmentStartPercent = i * (100 / 12);
-            const segmentProgress = Math.min(1, Math.max(0, (value - segmentStartPercent) / (100 / 12)));
+          {/* Water Filling Effect */}
+          <g clipPath="url(#pad-clip-gauge)">
+            <motion.rect
+              initial={{ y: 400 }}
+              animate={{ y: 400 - (value * 4) }}
+              transition={{ duration: 2, ease: "circOut" }}
+              x="0"
+              y="0"
+              width="400"
+              height="400"
+              fill={`url(#${isGrit ? 'grit-liquid-grad' : 'ocean-liquid-grad-gauge'})`}
+              className="opacity-70"
+            />
             
-            return (
-              <React.Fragment key={i}>
-                {/* Background Segment (Navy Glass Slot) - Now with 3D Effect */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r={radius}
-                  fill="none"
-                  stroke="#1a3c6e"
-                  strokeWidth="4"
-                  strokeDasharray={dashArray}
-                  transform={`rotate(${i * 30}, 50, 50)`}
-                  filter="url(#ring-3d)"
-                  className="opacity-30"
+            {/* Animated Wave Top */}
+            <motion.g
+              initial={{ y: 400 }}
+              animate={{ y: 400 - (value * 4) }}
+              transition={{ duration: 2, ease: "circOut" }}
+            >
+              <svg x="-200" y="-15" width="800" height="30" viewBox="0 0 200 30" preserveAspectRatio="none" className="animate-[ripple_2s_infinite_linear]">
+                <path 
+                  d="M0 15 Q 25 0 50 15 T 100 15 T 150 15 T 200 15 V 30 H 0 Z" 
+                  fill={isGrit ? "#0ea5e9" : "#7dd3fc"} 
+                  opacity="0.6" 
                 />
-                {/* Filled Segment (Palette) */}
-                {segmentProgress > 0 && (
+              </svg>
+              
+              {/* Sparkles / Glimmer Effect */}
+              {[...Array(12)].map((_, i) => (
+                <g key={i}>
                   <motion.circle
-                    cx="50"
-                    cy="50"
-                    r={radius}
-                    fill="none"
-                    stroke={OCEAN_PALETTE[i]}
-                    strokeWidth="5.5"
-                    strokeLinecap="round"
-                    strokeDasharray={`${segmentProgress * segmentLengthInUnits} ${circumference}`}
-                    transform={`rotate(${i * 30}, 50, 50)`}
-                    filter="url(#ring-3d)"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                    cx={30 + (i * 30) + (Math.random() * 20)}
+                    cy={-5 + (Math.random() * 10)}
+                    r={1 + Math.random() * 2}
+                    fill="white"
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ 
+                      opacity: [0, 1, 0],
+                      scale: [0, 1.5, 0],
+                    }}
+                    transition={{
+                      duration: 1 + Math.random() * 1.5,
+                      repeat: Infinity,
+                      delay: i * 0.2,
+                      ease: "easeInOut"
+                    }}
                   />
-                )}
-              </React.Fragment>
-            );
-          })}
+                  {/* Glint Cross */}
+                  {i % 3 === 0 && (
+                    <motion.g
+                      initial={{ opacity: 0, rotate: 0 }}
+                      animate={{ 
+                        opacity: [0, 0.8, 0],
+                        rotate: [0, 90],
+                        scale: [0.5, 1.2, 0.5]
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        delay: i * 0.2,
+                      }}
+                      style={{ originX: `${30 + (i * 30) + 10}px`, originY: '0px' }}
+                    >
+                      <line x1={30 + (i * 30) + 5} y1="0" x2={30 + (i * 30) + 15} y2="0" stroke="white" strokeWidth="0.5" />
+                      <line x1={30 + (i * 30) + 10} y1="-5" x2={30 + (i * 30) + 10} y2="5" stroke="white" strokeWidth="0.5" />
+                    </motion.g>
+                  )}
+                </g>
+              ))}
+              
+              {/* Surface Sweep Shimmer */}
+              <motion.rect
+                x="-400"
+                y="-10"
+                width="400"
+                height="20"
+                fill="url(#surface-shimmer-grad)"
+                animate={{ x: [ -400, 800 ] }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "linear",
+                  delay: 1
+                }}
+              />
+
+              {/* Horizontal Shimmer Lines on Surface */}
+              {[...Array(3)].map((_, i) => (
+                <motion.rect
+                  key={`shimmer-${i}`}
+                  x={100 + (i * 80)}
+                  y={-2}
+                  width={40}
+                  height={1.5}
+                  rx={0.75}
+                  fill="white"
+                  initial={{ opacity: 0, x: 0 }}
+                  animate={{ 
+                    opacity: [0, 0.4, 0],
+                    x: [0, 60]
+                  }}
+                  transition={{
+                    duration: 3 + i,
+                    repeat: Infinity,
+                    delay: i * 1,
+                    ease: "linear"
+                  }}
+                />
+              ))}
+            </motion.g>
+          </g>
+
+          {/* Glassmorphism Overlay - Shine & Depth */}
+          <path 
+            d={padPath} 
+            fill="url(#glass-shine-gauge)" 
+            className="pointer-events-none"
+            opacity="0.4"
+          />
           
-          {/* Enhanced Glass Gloss Overlay System */}
-          <circle
-            cx="50"
-            cy="50"
-            r={radius}
-            fill="none"
-            stroke="url(#glass-grad)"
-            strokeWidth="1.5"
+          <path 
+            d={padPath} 
+            fill="none" 
+            stroke="white" 
+            strokeWidth="1.5" 
+            strokeOpacity="0.3"
             className="pointer-events-none"
           />
-          <circle
-            cx="50"
-            cy="50"
-            r={radius + 2}
-            fill="none"
-            stroke="rgba(255,255,255,0.05)"
-            strokeWidth="0.5"
-            className="pointer-events-none"
+
+          {/* Grip Bars Overlay */}
+          <g fill="#94a3b8" opacity="0.2" pointerEvents="none">
+            <rect x="170" y="80" width="60" height="6" rx="3" />
+            <rect x="170" y="100" width="60" height="6" rx="3" />
+            <rect x="170" y="120" width="60" height="6" rx="3" />
+            <rect x="170" y="140" width="60" height="6" rx="3" />
+            <rect x="170" y="160" width="60" height="6" rx="3" />
+            <rect x="170" y="180" width="60" height="6" rx="3" />
+            <rect x="170" y="200" width="60" height="6" rx="3" />
+            <rect x="170" y="220" width="60" height="6" rx="3" />
+            <rect x="170" y="240" width="60" height="6" rx="3" />
+          </g>
+          
+          {/* Pad Outline for definition */}
+          <path 
+            d={padPath} 
+            fill="none" 
+            stroke="#cbd5e1" 
+            strokeWidth="1" 
+            opacity="0.5"
           />
         </svg>
 
@@ -179,172 +264,13 @@ const OceanRing: React.FC<{
           <motion.span 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-3xl font-black text-[#334155] tabular-nums tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+            className="text-3xl font-black text-[#334155] tabular-nums tracking-tighter drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]"
           >
             {value}%
           </motion.span>
         </div>
       </div>
-    </div>
-  );
-};
-
-const StabilityGauge: React.FC<{ 
-  percent: number; 
-  activeWeeks: number; 
-  totalWeeks: number;
-  seasonYear: string;
-}> = ({ percent, activeWeeks, totalWeeks, seasonYear }) => {
-  const radius = 42;
-  const circumference = 2 * Math.PI * radius;
-  
-  // 12 segments for months
-  const segmentGap = 2; // degrees
-  const segmentLength = (360 / 12) - segmentGap;
-  const dashArray = `${(segmentLength / 360) * circumference} ${(segmentGap / 360) * circumference}`;
-  const segmentLengthInUnits = (segmentLength / 360) * circumference;
-
-  return (
-    <div className="flex-1 w-full flex flex-col items-center text-center group/stability">
-      <div className="flex items-center gap-[var(--spacing-xs)] mb-6">
-        <div className="text-blue-400 group-hover/stability:text-white transition-colors">
-          <Calendar size={18} />
-        </div>
-        <h3 className="text-[11px] font-black text-[#2B2B2E] uppercase tracking-[0.15em]">יציבות שנתית {seasonYear}</h3>
-        <div className="gt-info-wrapper mr-4">
-          <div className="gt-info-icon" style={{ width: '16px', height: '16px', fontSize: '10px' }}>i</div>
-          <span className="gt-tooltip" style={{ bottom: '180%', width: '220px' }}>
-            מדד העקביות שלך. הוא בודק בכמה שבועות היית פעיל (לפחות פעם אחת) מתוך כלל השבועות שחלפו מתחילת עונת {seasonYear}. דילוג על שבועות מוריד את הציון.
-          </span>
-        </div>
-      </div>
-
-      <div className="relative w-full max-w-[170px] aspect-square flex items-center justify-center">
-        {/* Aquarium Container - Glassy Refined */}
-        <div className="absolute inset-[12%] rounded-full overflow-hidden glass-panel !bg-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]">
-          {/* Deep Sea Water */}
-          <motion.div 
-            initial={{ y: '100%' }}
-            animate={{ y: `${100 - percent}%` }}
-            transition={{ duration: 2, ease: "easeOut" }}
-            className={`absolute inset-0 w-full h-full bg-gradient-to-b ${getOceanWaterGradient(percent)}`}
-          >
-            {/* Wave Animation */}
-            <div className="absolute top-0 left-0 w-[400%] h-6 -translate-y-1/2 opacity-60">
-              <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full animate-[ripple_3s_infinite_linear]">
-                <path d="M0 10 Q 12.5 18 25 10 T 50 10 T 75 10 T 100 10 V 20 H 0 Z" fill="white" />
-              </svg>
-            </div>
-          </motion.div>
-        </div>
-
-        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 relative z-10 drop-shadow-[0_6px_12px_rgba(0,0,0,0.4)]">
-          <defs>
-            <filter id="ring-3d-stability" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="blur" />
-              <feOffset in="blur" dx="1.5" dy="1.5" result="offsetBlur" />
-              <feSpecularLighting in="blur" surfaceScale="6" specularConstant="1" specularExponent="25" lightingColor="#ffffff" result="specOut">
-                <fePointLight x="-5000" y="-10000" z="20000" />
-              </feSpecularLighting>
-              <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut" />
-              <feComposite in="SourceGraphic" in2="specOut" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litGraphic" />
-            </filter>
-            <linearGradient id="glass-grad-stability" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="white" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="white" stopOpacity="0.05" />
-            </linearGradient>
-          </defs>
-
-          {/* Continuous Glass Tube Background (360°) */}
-          <circle
-            cx="50"
-            cy="50"
-            r={radius}
-            fill="none"
-            stroke="#1a3c6e"
-            strokeWidth="4"
-            className="opacity-10"
-            filter="url(#ring-3d-stability)"
-          />
-
-          {/* Progress Segments with Background Track */}
-          {[...Array(12)].map((_, i) => {
-            const segmentStartPercent = i * (100 / 12);
-            const segmentProgress = Math.min(1, Math.max(0, (percent - segmentStartPercent) / (100 / 12)));
-            
-            return (
-              <React.Fragment key={i}>
-                {/* Background Segment (Navy Glass Slot) - Now with 3D Effect */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r={radius}
-                  fill="none"
-                  stroke="#1a3c6e"
-                  strokeWidth="4"
-                  strokeDasharray={dashArray}
-                  transform={`rotate(${i * 30}, 50, 50)`}
-                  filter="url(#ring-3d-stability)"
-                  className="opacity-30"
-                />
-                {/* Filled Segment (Palette) */}
-                {segmentProgress > 0 && (
-                  <motion.circle
-                    cx="50"
-                    cy="50"
-                    r={radius}
-                    fill="none"
-                    stroke={OCEAN_PALETTE[i]}
-                    strokeWidth="5.5"
-                    strokeLinecap="round"
-                    strokeDasharray={`${segmentProgress * segmentLengthInUnits} ${circumference}`}
-                    transform={`rotate(${i * 30}, 50, 50)`}
-                    filter="url(#ring-3d-stability)"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: i * 0.05 }}
-                  />
-                )}
-              </React.Fragment>
-            );
-          })}
-
-          {/* Enhanced Glass Gloss Overlay System */}
-          <circle
-            cx="50"
-            cy="50"
-            r={radius}
-            fill="none"
-            stroke="url(#glass-grad-stability)"
-            strokeWidth="1.5"
-            className="pointer-events-none"
-          />
-          <circle
-            cx="50"
-            cy="50"
-            r={radius + 2}
-            fill="none"
-            stroke="rgba(255,255,255,0.05)"
-            strokeWidth="0.5"
-            className="pointer-events-none"
-          />
-        </svg>
-
-        {/* Central Text Overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none">
-          <motion.span 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-3xl font-black text-[#334155] tabular-nums tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-          >
-            {percent}%
-          </motion.span>
-        </div>
-      </div>
-      
-      <p className="mt-4 text-[10px] font-bold text-white/40">
-        היית פעיל ב-{activeWeeks} מתוך {totalWeeks} שבועות השנה.
-      </p>
+      {footer}
     </div>
   );
 };
@@ -392,7 +318,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
     <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700 min-h-[400px]" dir="rtl">
       {/* Unified Modern Dashboard - Dynamic Premium Style matching Surfer Card */}
       <motion.div 
-        className="glass-panel p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] relative overflow-hidden transition-all duration-1000"
+        className="glass-panel p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] relative transition-all duration-1000"
       >
         {/* Neumorphic Inner Shadow Overlay */}
         <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[var(--radius-lg)]" />
@@ -401,35 +327,59 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
         <div className="absolute -right-20 -top-20 w-96 h-96 bg-slate-200/20 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-slate-200/10 rounded-full blur-[100px] pointer-events-none" />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 items-start justify-between gap-[var(--spacing-md)] md:gap-[var(--spacing-lg)] relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 items-center justify-center gap-8 md:gap-4 relative z-10">
           
-          <OceanRing 
-            value={data.percentile}
-            label="מד התמדה יחסי"
-            icon={<Target size={18} />}
-            tooltip="מדד זה משווה את כמות האימונים שלך לשאר חברי הנבחרת. ציון 90% אומר שאתה מתאמן יותר מ-90% מהחברים."
-          />
+          {/* Left Column */}
+          <div className="flex flex-col gap-12 md:gap-20">
+            <AstrodeckGauge 
+              value={data.attendancePercent}
+              label="מד התמדה אישי"
+              icon={<Waves size={18} />}
+              tooltip="כמה פעמים הגעת מתוך כל האימונים שהיו מתחילת השנה."
+            />
 
-          <OceanRing 
-            value={data.attendancePercent}
-            label="מד התמדה אישי"
-            icon={<Waves size={18} />}
-            tooltip="אחוז ההגעה שלך למפגשי הים מתוך כלל המפגשים שהתקיימו מתחילת השנה. זהו המדד האישי שלך לעמידה ביעדים."
-          />
+            <AstrodeckGauge 
+              value={data.yearlyStability.percent}
+              label={`יציבות שנתית ${yearConfig?.startDate ? new Date(yearConfig.startDate).getFullYear().toString() : '2026'}`}
+              icon={<Calendar size={18} />}
+              tooltip="מדד הבודק כמה שבועות היית פעיל ברצף מתחילת העונה."
+              footer={
+                <p className="mt-4 text-[10px] font-bold text-white/40">
+                  היית פעיל ב-{data.yearlyStability.activeWeeks} מתוך {data.yearlyStability.totalWeeks} שבועות השנה.
+                </p>
+              }
+            />
+          </div>
 
-          <OceanRing 
-            value={data.progress[1].value}
-            label="מעורבות חברתית"
-            icon={<Users size={18} />}
-            tooltip="מדד המציג את אחוז ההשתתפות שלך באירועים חברתיים וקהילתיים. להיות חלק מהנבחרת זה גם מעבר לים!"
-          />
+          {/* Center Column - Grit */}
+          <div className="flex justify-center py-8 md:py-0">
+            <div className="scale-110 md:scale-125 transform transition-transform duration-500">
+              <AstrodeckGauge 
+                value={Math.round(data.gritScore)}
+                label="מד נחישות Grit"
+                icon={<Trophy size={18} />}
+                tooltip="זהו מדד ה'נחישות' שלך. הוא בודק כמה אתה מתמיד. הוא משלב את כמות הסשנים שעשית עם העקביות שלך (הרצף). העקביות חשובה יותר מהכמות."
+                isGrit={true}
+              />
+            </div>
+          </div>
 
-          <StabilityGauge 
-            percent={data.yearlyStability.percent}
-            activeWeeks={data.yearlyStability.activeWeeks}
-            totalWeeks={data.yearlyStability.totalWeeks}
-            seasonYear={yearConfig?.startDate ? new Date(yearConfig.startDate).getFullYear().toString() : '2026'}
-          />
+          {/* Right Column */}
+          <div className="flex flex-col gap-12 md:gap-20">
+            <AstrodeckGauge 
+              value={data.percentile}
+              label="מד התמדה יחסי"
+              icon={<Target size={18} />}
+              tooltip="איפה אתה עומד ביחס לכל שאר המתאמנים בנבחרת."
+            />
+
+            <AstrodeckGauge 
+              value={data.progress[1].value}
+              label="מעורבות חברתית"
+              icon={<Users size={18} />}
+              tooltip="השתתפות באירועים ופעילויות קהילתיות מעבר לים."
+            />
+          </div>
 
         </div>
       </motion.div>

@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
-import { Flame, Trophy, Calendar, Crown, Star, Waves, Info } from 'lucide-react';
+import { Calendar, Crown, Star } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { calculateUserStats } from '../src/utils/analytics';
 
@@ -8,22 +8,11 @@ interface PlayerCardProps {
   userId: string;
 }
 
-const Counter = ({ value, duration = 2 }: { value: number; duration?: number }) => {
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, (latest) => Math.round(latest));
-  const [displayValue, setDisplayValue] = useState(0);
-
-  useEffect(() => {
-    const controls = animate(count, value, { duration });
-    return rounded.onChange((v) => setDisplayValue(v));
-  }, [value, duration]);
-
-  return <>{displayValue}</>;
-};
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
-  const { members, weeklyHistory, yearConfig, isLoading } = useData();
+  const { members, weeklyHistory, yearConfig, siteConfig, isLoading } = useData();
   const [showPopup, setShowPopup] = useState(false);
+  const [showDriftPopup, setShowDriftPopup] = useState(false);
 
   const member = useMemo(() => {
     return members.find(m => m.id === userId);
@@ -81,6 +70,43 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
     return { percentile, roundedPercentile, label, badge };
   }, [member, members]);
 
+  const driftPercentile = useMemo(() => {
+    const homeBreak = siteConfig?.home_break;
+    if (!homeBreak?.lat || !homeBreak?.lng || !member?.lat || !member?.lng || members.length === 0) return null;
+
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+      const R = 6371; // Radius of the earth in km
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLon = (lon2 - lon1) * (Math.PI / 180);
+      const a = 
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    const userDistance = calculateDistance(member.lat, member.lng, homeBreak.lat, homeBreak.lng);
+    
+    const allDistances = members
+      .filter(m => m.lat && m.lng)
+      .map(m => calculateDistance(m.lat!, m.lng!, homeBreak.lat!, homeBreak.lng!))
+      .sort((a, b) => a - b); // Sorted closest to farthest
+
+    if (allDistances.length === 0) return null;
+
+    // Find index of user's distance. 
+    // If index is 0, they are the closest (0th percentile).
+    const index = allDistances.indexOf(userDistance);
+    const percentile = (index / (allDistances.length - 1)) * 100;
+    const roundedPercentile = Math.round(percentile);
+    const distanceKm = userDistance.toFixed(1);
+
+    let label = `מדד הסחף: אתה נמצא במרחק של ${distanceKm} ק"מ מהחוף`;
+    
+    return { percentile, roundedPercentile, distanceKm, label };
+  }, [member, members, siteConfig]);
+
   if (isLoading) return <div className="p-4 bg-white rounded-2xl border border-slate-100 animate-pulse">טוען...</div>;
   if (!member || !stats) return null;
 
@@ -131,130 +157,154 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
           </div>
         </div>
 
-        {/* Age Percentile Indicator */}
-        {agePercentile && (
-          <div className="mt-2 max-w-xs mx-auto md:mx-0 flex flex-col items-center md:items-start" dir="ltr">
-            {/* New Age Gimmick Container */}
-            <div 
-              className="age-gimmick-card w-full max-w-[310px] mx-auto md:mx-0" 
-              dir="rtl"
-              onClick={() => setShowPopup(true)}
-            >
-              <div id="funny-title" style={{ fontSize: '15px', color: '#8b795e', marginBottom: '5px', fontWeight: 700 }}>
-                מדד ה-Vintage 🍷
-              </div>
-              
-              <div className="indicator-wrapper">
-                <span id="startIcon" className="endpoint-icon">🐢</span>
-                <div className="age-line-container">
-                  <span id="centerIcon" className="center-icon">
-                    {member.gender === 'נקבה' ? '👑' : '🐂'}
-                  </span>
-                  <div 
-                    id="userDot" 
-                    className="user-pulse-dot"
-                    style={{ 
-                      left: `${agePercentile.roundedPercentile}%`,
-                      background: member.gender === 'נקבה' 
-                        ? (agePercentile.roundedPercentile < 25 ? '#fefae0' : agePercentile.roundedPercentile < 50 ? '#faedcd' : agePercentile.roundedPercentile <= 60 ? '#d4a373' : '#ccd5ae')
-                        : '#d4a373'
-                    }}
-                  ></div>
+        {/* Metrics Row */}
+        <div className="mt-2 flex flex-row flex-wrap items-start justify-center md:justify-start gap-4" dir="ltr">
+          {/* Drift Metric */}
+          {driftPercentile && (
+            <div className="flex flex-col items-start">
+              <div 
+                className="age-gimmick-card w-full max-w-[310px]" 
+                dir="rtl"
+                onClick={() => setShowDriftPopup(true)}
+              >
+                <div id="drift-title" style={{ fontSize: '15px', color: '#006994', marginBottom: '5px', fontWeight: 700 }}>
+                  מדד ה-Drift (סחף) 🌊
                 </div>
-                <span id="endIcon" className="endpoint-icon">
-                  {member.gender === 'נקבה' ? '🐥' : '🍼'}
-                </span>
+                
+                <div className="indicator-wrapper">
+                  <span className="endpoint-icon">🪐</span>
+                  <div className="age-line-container">
+                    <span className="center-icon">🏄‍♂️</span>
+                    <div 
+                      className="user-pulse-dot"
+                      style={{ 
+                        left: `${driftPercentile.roundedPercentile}%`,
+                        background: '#006994'
+                      }}
+                    ></div>
+                  </div>
+                  <span className="endpoint-icon">📍</span>
+                </div>
+                
+                <div className="dynamic-comment">
+                  {driftPercentile.roundedPercentile < 20 ? (
+                    <span>אתה <strong>מקומי אמיתי</strong>! רק {driftPercentile.distanceKm} ק"מ מהחוף. 🪐</span>
+                  ) : driftPercentile.roundedPercentile > 80 ? (
+                    <span>וואו, איזה <strong>סחף</strong>! {driftPercentile.distanceKm} ק"מ? כבוד על ההתמדה! 🚗</span>
+                  ) : (
+                    <span>מרחק מהחוף: <strong>{driftPercentile.distanceKm} ק"מ</strong>. אתה קרוב יותר מ-{100 - driftPercentile.roundedPercentile}% מהקהילה.</span>
+                  )}
+                </div>
+                <div style={{ fontSize: '9px', opacity: 0.5, marginTop: '10px' }}>(לחץ עליי לסיבוב דאווין)</div>
               </div>
-              
-              <div id="dynamicComment" className="dynamic-comment">
-                {(() => {
-                  const p = agePercentile.roundedPercentile;
-                  if (member.gender === 'נקבה') {
-                    if (p < 25) return <span>עוד לא התייבש לך החלב על השפתיים, <strong>אפרוחית</strong>! 🐥</span>;
-                    if (p < 50) return <span>את <strong>פרגית</strong> צעירה, תהני! 🐔</span>;
-                    if (p <= 60) return <span>מזל טוב, את <strong>מלכת הלול</strong>! 👑✨</span>;
-                    return <span><strong>צב מנוסה</strong>, מגה גלופלקס לקחת? 🐢</span>;
-                  } else {
-                    if (p < 25) return <span>עוד לא התייבש לך החלב על השפתיים 🍼</span>;
-                    if (p < 50) return <span>אתה <strong>עגל צעיר</strong>, תהנה 🐮</span>;
-                    if (p <= 60) return <span>מזל טוב, אתה <strong>שור אמיתי</strong>! 🐂</span>;
-                    return <span><strong>צב מנוסה</strong>, מגה גלופלקס לקחת? 🐢</span>;
-                  }
-                })()}
-              </div>
-              <div style={{ fontSize: '9px', opacity: 0.5, marginTop: '10px' }}>(לחצי עליי לסיבוב דאווין)</div>
+
+              {/* Drift Popup Modal */}
+              {showDriftPopup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" onClick={() => setShowDriftPopup(false)}>
+                  <div className="modal-content p-6 max-w-xs w-full text-center" onClick={e => e.stopPropagation()}>
+                    <h2 className="text-xl font-black text-[#006994] mb-3">
+                      סיבוב דאווין 🌊
+                    </h2>
+                    <p className="text-md font-bold text-slate-700">מרחק מהבית: {driftPercentile.distanceKm} ק"מ</p>
+                    <p className="text-sm text-slate-500 mt-1">אתה באחוזון ה-{driftPercentile.roundedPercentile} של המרחק מהחוף</p>
+                    <button 
+                      className="mt-4 px-5 py-1.5 bg-[#006994] text-white rounded-full font-bold text-sm"
+                      onClick={() => setShowDriftPopup(false)}
+                    >
+                      סגור
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
+          )}
 
-            {/* Popup Modal */}
-            {showPopup && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" onClick={() => setShowPopup(false)}>
-                <div className="modal-content p-6 max-w-xs w-full text-center" onClick={e => e.stopPropagation()}>
-                  <h2 className="text-xl font-black text-[#006994] mb-3">
-                    סיבוב דאווין {(() => {
-                      const p = agePercentile.roundedPercentile;
-                      if (member.gender === 'נקבה') {
-                        if (p < 25) return '🐥';
-                        if (p < 50) return '🐔';
-                        if (p <= 60) return '👑';
-                        return '🐢';
-                      } else {
-                        if (p < 25) return '🍼';
-                        if (p < 50) return '🐮';
-                        if (p <= 60) return '🐂';
-                        return '🐢';
-                      }
-                    })()}
-                  </h2>
-                  <p className="text-md font-bold text-slate-700">הגעת לאחוזון גיל {agePercentile.roundedPercentile}%</p>
-                  <button 
-                    className="mt-4 px-5 py-1.5 bg-[#006994] text-white rounded-full font-bold text-sm"
-                    onClick={() => setShowPopup(false)}
-                  >
-                    סגור
-                  </button>
+          {/* Age Percentile Indicator (Vintage) */}
+          {agePercentile && (
+            <div className="flex flex-col items-start">
+              {/* New Age Gimmick Container */}
+              <div 
+                className="age-gimmick-card w-full max-w-[310px]" 
+                dir="rtl"
+                onClick={() => setShowPopup(true)}
+              >
+                <div id="funny-title" style={{ fontSize: '15px', color: '#8b795e', marginBottom: '5px', fontWeight: 700 }}>
+                  מדד ה-Vintage 🍷
                 </div>
+                
+                <div className="indicator-wrapper">
+                  <span id="startIcon" className="endpoint-icon">🐢</span>
+                  <div className="age-line-container">
+                    <span id="centerIcon" className="center-icon">
+                      {member.gender === 'נקבה' ? '👑' : '🐂'}
+                    </span>
+                    <div 
+                      id="userDot" 
+                      className="user-pulse-dot"
+                      style={{ 
+                        left: `${agePercentile.roundedPercentile}%`,
+                        background: member.gender === 'נקבה' 
+                          ? (agePercentile.roundedPercentile < 25 ? '#fefae0' : agePercentile.roundedPercentile < 50 ? '#faedcd' : agePercentile.roundedPercentile <= 60 ? '#d4a373' : '#ccd5ae')
+                          : '#d4a373'
+                      }}
+                    ></div>
+                  </div>
+                  <span id="endIcon" className="endpoint-icon">
+                    {member.gender === 'נקבה' ? '🐥' : '🍼'}
+                  </span>
+                </div>
+                
+                <div id="dynamicComment" className="dynamic-comment">
+                  {(() => {
+                    const p = agePercentile.roundedPercentile;
+                    if (member.gender === 'נקבה') {
+                      if (p < 25) return <span>עוד לא התייבש לך החלב על השפתיים, <strong>אפרוחית</strong>! 🐥</span>;
+                      if (p < 50) return <span>את <strong>פרגית</strong> צעירה, תהני! 🐔</span>;
+                      if (p <= 60) return <span>מזל טוב, את <strong>מלכת הלול</strong>! 👑✨</span>;
+                      return <span><strong>צב מנוסה</strong>, מגה גלופלקס לקחת? 🐢</span>;
+                    } else {
+                      if (p < 25) return <span>עוד לא התייבש לך החלב על השפתיים 🍼</span>;
+                      if (p < 50) return <span>אתה <strong>עגל צעיר</strong>, תהנה 🐮</span>;
+                      if (p <= 60) return <span>מזל טוב, אתה <strong>שור אמיתי</strong>! 🐂</span>;
+                      return <span><strong>צב מנוסה</strong>, מגה גלופלקס לקחת? 🐢</span>;
+                    }
+                  })()}
+                </div>
+                <div style={{ fontSize: '9px', opacity: 0.5, marginTop: '10px' }}>(לחצי עליי לסיבוב דאווין)</div>
               </div>
-            )}
-          </div>
-        )}
 
-        <div className="mt-6 grid grid-cols-3 gap-[var(--spacing-md)]">
-          <div className="flex flex-col group relative">
-            <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] justify-center md:justify-start cursor-help">
-              <Waves size={13} className="text-[var(--ocean-4)]" /> סשנים
-              <Info size={12} className="text-slate-400" />
-              <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-10">
-                מספר הסשנים הכולל שביצעת עד כה.
-              </div>
-            </span>
-            <span className="text-3xl font-black text-[var(--ocean-2)] tabular-nums">
-              <Counter value={stats.totalSessions} />
-            </span>
-          </div>
-          <div className="flex flex-col group relative">
-            <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start cursor-help">
-              <Flame size={13} className="text-[var(--ocean-1)]" /> רצף
-              <Info size={12} className="text-slate-400" />
-              <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-10">
-                מספר השבועות הרצופים בהם נרשמה פעילות.
-              </div>
-            </span>
-            <span className="text-3xl font-black text-[var(--ocean-1)] tabular-nums">
-              <Counter value={stats.streak} />
-            </span>
-          </div>
-          <div className="flex flex-col group relative">
-            <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start cursor-help">
-              <Trophy size={13} className="text-[var(--ocean-2)]" /> Grit
-              <Info size={12} className="text-slate-400" />
-              <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-10">
-                זהו מדד ה"נחישות" שלך. הוא בודק כמה אתה מתמיד. הוא משלב את כמות הסשנים שעשית עם העקביות שלך (הרצף). העקביות חשובה יותר מהכמות.
-              </div>
-            </span>
-            <span className="text-3xl font-black text-[var(--ocean-2)] tabular-nums">
-              <Counter value={Math.round(stats.gritScore)} />%
-            </span>
-          </div>
+              {/* Popup Modal */}
+              {showPopup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" onClick={() => setShowPopup(false)}>
+                  <div className="modal-content p-6 max-w-xs w-full text-center" onClick={e => e.stopPropagation()}>
+                    <h2 className="text-xl font-black text-[#006994] mb-3">
+                      סיבוב דאווין {(() => {
+                        const p = agePercentile.roundedPercentile;
+                        if (member.gender === 'נקבה') {
+                          if (p < 25) return '🐥';
+                          if (p < 50) return '🐔';
+                          if (p <= 60) return '👑';
+                          return '🐢';
+                        } else {
+                          if (p < 25) return '🍼';
+                          if (p < 50) return '🐮';
+                          if (p <= 60) return '🐂';
+                          return '🐢';
+                        }
+                      })()}
+                    </h2>
+                    <p className="text-md font-bold text-slate-700">הגעת לאחוזון גיל {agePercentile.roundedPercentile}%</p>
+                    <button 
+                      className="mt-4 px-5 py-1.5 bg-[#006994] text-white rounded-full font-bold text-sm"
+                      onClick={() => setShowPopup(false)}
+                    >
+                      סגור
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
