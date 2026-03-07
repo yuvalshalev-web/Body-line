@@ -1,4 +1,24 @@
 @import "tailwindcss";
+
+@theme {
+  --color-tm-magenta: #ff009f;
+  --color-tm-pink: #f063c1;
+  --color-tm-light-pink: #f7c1ea;
+  --color-tm-extra-light: #ffd2fa;
+  --color-tm-mist: #f2def0;
+
+  --color-ocean-1: #00426a;
+  --color-ocean-2: #0071a1;
+  --color-ocean-3: #368cb0;
+  --color-ocean-4: #31aac1;
+  --color-ocean-5: #3dbbd3;
+  --color-ocean-6: #99ccff;
+  --color-ocean-7: #baddff;
+  --color-ocean-8: #d0e7ff;
+  --color-ocean-9: #f0f8ff;
+  --color-ocean-10: #ffffff;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700;900&family=Heebo:wght@300;400;600;700;900&family=Rubik:wght@300;400;600;700;900&family=Varela+Round&family=Secular+One&display=swap');
 
 :root {
@@ -9,12 +29,17 @@
   --text-main: #2D3748;
   --text-muted: #4A5568;
 
-  /* --- OceanTheme (Updated for Contrast) --- */
-  --ocean-navy: #1A365D;
-  --ocean-deep: #2C5282;
-  --ocean-seafoam: #4FD1C5;
-  --ocean-sky: #63B3ED;
-  --ocean-coral: #4299E1;
+  /* --- Ocean Combined Palette (Sorted Dark to Light) --- */
+  --ocean-1: #00426a; /* כחול צי עמוק (Waves) */
+  --ocean-2: #0071a1; /* כחול אוקיינוס (Waves) */
+  --ocean-3: #368cb0; /* כחול ים תיכון (Waves) */
+  --ocean-4: #31aac1; /* טורקיז בינוני (Waves) */
+  --ocean-5: #3dbbd3; /* טורקיז בהיר (Waves) */
+  --ocean-6: #99ccff; /* תכלת רך (Blue) */
+  --ocean-7: #baddff; /* תכלת שמיים (Blue) */
+  --ocean-8: #d0e7ff; /* תכלת בהיר מאוד (Blue) */
+  --ocean-9: #f0f8ff; /* לבן-תכלת Alice Blue (Blue) */
+  --ocean-10: #ffffff; /* לבן טהור (Blue) */
 
   /* --- Ocean Glassmorphism System --- */
   --ocean-bg: #021626;
@@ -48,6 +73,13 @@
   --sand-accent: #D4A373;
   --sand-shadow: #432818;
   --sand-muted: #8B7E74;
+
+  /* --- T-Mobile Theme --- */
+  --t-mobile-magenta: #ff009f;
+  --t-mobile-pink: #f063c1;
+  --t-mobile-light-pink: #f7c1ea;
+  --t-mobile-extra-light: #ffd2fa;
+  --t-mobile-mist: #f2def0;
 
   /* --- Page Title System --- */
   --h1-font-family: 'Assistant', sans-serif;
@@ -556,16 +588,7 @@ body {
 }
 
 .t-mobile-gradient {
-  background: linear-gradient(to right, #4a002e, #ff009f);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-weight: 800;
-  line-height: 1.1;
-}
-
-.t-mobile-gradient {
-  background: linear-gradient(to right, #4a002e 50%, #e20074);
+  background: linear-gradient(to right, var(--t-mobile-magenta), var(--t-mobile-pink));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -691,14 +714,14 @@ header {
 
 /* T-Mobile Theme */
 .t-mobile-light {
-  background-color: #fce4f1;
+  background-color: var(--t-mobile-mist);
 }
 .t-mobile-strong {
-  background-color: #E20074;
+  background-color: var(--t-mobile-magenta);
   color: white;
 }
 .t-mobile-text-strong {
-  color: #E20074;
+  color: var(--t-mobile-magenta);
 }
 
 /* Surfer Card Animation Styles */
@@ -1032,7 +1055,7 @@ main.bg-slate-50 {
 
 /* 5. Buttons */
 .btn-primary {
-    background: #E20074;
+    background: var(--t-mobile-magenta);
     color: #FFFFFF;
     padding: 0.5em 1.5em;
     border-radius: 100px;
@@ -1046,12 +1069,12 @@ main.bg-slate-50 {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(226, 0, 116, 0.2);
+    box-shadow: 0 2px 8px rgba(255, 0, 159, 0.2);
 }
 
 .btn-primary:hover {
-    background: #C20064;
-    box-shadow: 0 4px 12px rgba(226, 0, 116, 0.3);
+    background: var(--t-mobile-pink);
+    box-shadow: 0 4px 12px rgba(255, 0, 159, 0.3);
     transform: translateY(-1px);
 }
 
@@ -1059,7 +1082,7 @@ main.bg-slate-50 {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: var(--gt-blur);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #4a002e;
+    color: var(--t-mobile-magenta);
     padding: 0.8em 2em;
     border-radius: 1em;
     font-weight: 800;
@@ -1311,8 +1334,8 @@ main.bg-slate-50 {
 }
 
 .progress-fill {
-    background: linear-gradient(90deg, var(--ocean-bg), var(--ocean-navy), var(--ocean-deep), var(--ocean-coral));
-    box-shadow: 0 0 20px rgba(26, 54, 93, 0.4);
+    background: linear-gradient(90deg, var(--ocean-1), var(--ocean-2), var(--ocean-3), var(--ocean-4), var(--ocean-5));
+    box-shadow: 0 0 20px rgba(0, 66, 106, 0.4);
     border-radius: 999px;
     position: absolute;
     top: 4px;
@@ -1499,6 +1522,99 @@ main.bg-slate-50 {
   box-shadow: 0 0 10px rgba(0, 242, 254, 0.8);
   height: 100%;
   border-radius: 16px;
+}
+
+/* --- Color Catalog Styles --- */
+#color-catalog {
+    margin-top: 40px;
+    padding: 20px;
+    background: white;
+    border-radius: 2rem;
+    border: 1px solid rgba(255, 0, 159, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+#color-catalog h2 {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--t-mobile-magenta);
+    margin-bottom: 20px;
+    text-align: right;
+}
+
+#palettes-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    direction: rtl;
+}
+
+.palette-group {
+    border: 1px solid #eee;
+    border-radius: 1.5rem;
+    padding: 20px;
+    background: #fff;
+    flex: 1;
+    min-width: 300px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+.palette-group h3 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--t-mobile-magenta);
+    margin-bottom: 15px;
+    border-bottom: 2px solid var(--t-mobile-light-pink);
+    padding-bottom: 8px;
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.color-card {
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 10px;
+    border-radius: 1rem;
+    background: #fafafa;
+}
+
+.color-card:hover {
+    transform: translateY(-5px);
+    background: #fff;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.color-swatch {
+    height: 80px;
+    width: 100%;
+    border-radius: 0.8rem;
+    border: 1px solid rgba(0,0,0,0.05);
+    margin-bottom: 8px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.color-hex {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #666;
+    display: block;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.color-var-name {
+    font-size: 9px;
+    color: #999;
+    display: block;
+    margin-top: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
 

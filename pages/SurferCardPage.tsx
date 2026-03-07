@@ -189,7 +189,7 @@ const SurferCardPage: React.FC = () => {
                         transition={{ duration: 2, ease: "circOut" }}
                         className="h-full rounded-full"
                         style={{ 
-                          background: 'linear-gradient(90deg, var(--ocean-bg), var(--ocean-navy), var(--ocean-deep), var(--ocean-coral))',
+                          background: 'linear-gradient(90deg, var(--ocean-1), var(--ocean-2), var(--ocean-3), var(--ocean-4), var(--ocean-5))',
                           boxShadow: '0 0 20px rgba(0, 242, 254, 0.4)'
                         }}
                       />

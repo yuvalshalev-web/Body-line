@@ -205,7 +205,7 @@ const App: React.FC = () => {
   const adminNavItems = [
     { path: '/admin', icon: Settings, label: 'פאנל ניהול' },
     { path: '/admin-info', icon: BarChart3, label: 'דופק חבל זוג' },
-    { path: '/attendance', icon: Users, label: 'יומן נוכחות' },
+    { path: '/attendance', icon: Users, label: 'יומן סשנים' },
     { path: '/admin-rollover', icon: Activity, label: 'דו"ח יום חמישי' }
   ];
 

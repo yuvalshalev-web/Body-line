@@ -256,6 +256,99 @@ const AdminPage: React.FC = () => {
 
   // Event Editing State
   const [editingEvent, setEditingEvent] = useState<any>(null);
+
+  // Color Catalog Logic
+  useEffect(() => {
+    if (activeTab !== 'SITE') return;
+
+    const generateColorCatalog = () => {
+      const container = document.getElementById('palettes-container');
+      if (!container) return;
+      
+      container.innerHTML = ''; // Clear existing
+
+      const themes = [
+        { 
+          name: 'פלטת Ocean', 
+          variables: [
+            '--ocean-1', '--ocean-2', '--ocean-3', '--ocean-4', '--ocean-5',
+            '--ocean-6', '--ocean-7', '--ocean-8', '--ocean-9', '--ocean-10',
+            '--ocean-bg', '--ocean-liquid'
+          ] 
+        },
+        { 
+          name: 'פלטת Sand', 
+          variables: [
+            '--sand-light', '--sand-medium', '--sand-dark', '--sand-deep', '--sand-accent'
+          ] 
+        },
+        {
+          name: 'פלטת T-Mobile',
+          variables: [
+            '--t-mobile-magenta', '--t-mobile-pink', '--t-mobile-light-pink', 
+            '--t-mobile-extra-light', '--t-mobile-mist'
+          ]
+        },
+        {
+          name: 'צבעי מערכת ו-Glassmorphism',
+          variables: [
+            '--accent-blue', '--bg-main', '--bg-alt', '--text-main', '--text-muted',
+            '--glass-bg', '--glass-text', '--glass-text-dark'
+          ]
+        }
+      ];
+
+      themes.forEach(theme => {
+        const group = document.createElement('div');
+        group.className = 'palette-group';
+        group.innerHTML = `<h3>${theme.name}</h3>`;
+        
+        const grid = document.createElement('div');
+        grid.className = 'color-grid';
+
+        theme.variables.forEach(v => {
+          const value = getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+          if (value) {
+            const card = document.createElement('div');
+            card.className = 'color-card';
+            
+            card.innerHTML = `
+              <div class="color-swatch" style="background-color: var(${v})"></div>
+              <span class="color-hex">${value}</span>
+              <span class="color-var-name">${v}</span>
+            `;
+
+            card.onclick = async () => {
+              try {
+                await navigator.clipboard.writeText(value);
+                const hexSpan = card.querySelector('.color-hex') as HTMLElement;
+                const originalText = hexSpan.innerText;
+                hexSpan.innerText = "הועתק! ✅";
+                hexSpan.style.color = "#ff009f";
+                setTimeout(() => { 
+                  hexSpan.innerText = originalText; 
+                  hexSpan.style.color = "#666";
+                }, 1500);
+              } catch (err) {
+                console.error('שגיאה בהעתקה:', err);
+              }
+            };
+
+            grid.appendChild(card);
+          }
+        });
+
+        if (grid.children.length > 0) {
+          group.appendChild(grid);
+          container.appendChild(group);
+        }
+      });
+    };
+
+    // Run after a short delay to ensure CSS is applied
+    const timer = setTimeout(generateColorCatalog, 500);
+    return () => clearTimeout(timer);
+  }, [activeTab]);
   
   // Post Editing State
   const [editingPost, setEditingPost] = useState<any>(null);
@@ -1730,6 +1823,25 @@ const AdminPage: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Color Catalog Section */}
+            <section id="color-catalog" className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="p-4 bg-gradient-to-br from-[#ff009f] to-[#f063c1] text-white rounded-2xl shadow-lg">
+                        <Sparkles size={24} />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-black text-[#4a002e] m-0">קטלוג פלטות צבעים</h2>
+                        <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול ויזואלי של צבעי המערכת (לחיצה להעתקה)</p>
+                    </div>
+                </div>
+                <div id="palettes-container">
+                    {/* Will be populated by useEffect */}
+                    <div className="flex items-center justify-center w-full py-12">
+                        <Loader2 className="animate-spin text-[#ff009f]" size={32} />
+                    </div>
+                </div>
+            </section>
 
             <div className="bg-white border border-[#ff009f]/10 rounded-[4rem] p-12 shadow-sm">
              <div className="flex items-center justify-between mb-10">

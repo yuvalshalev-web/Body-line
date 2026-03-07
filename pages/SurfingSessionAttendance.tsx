@@ -465,7 +465,7 @@ const SurfingSessionAttendance: React.FC = () => {
         <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="surfboard-hero-container">
             <h1 className="main-page-title">
-              {view === 'history' ? 'יומן סשנים' : 'יומן נוכחות'}
+              יומן סשנים
             </h1>
             <p className="text-[#4E8294] font-bold mt-2">
               {view === 'history' ? 'היסטוריית גלישה ונוכחות לאורך זמן 🌊' : 'סמן את כל הגולשים שיצאו מהמים 🌊'}

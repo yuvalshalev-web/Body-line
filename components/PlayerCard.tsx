@@ -221,37 +221,37 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
         <div className="mt-6 grid grid-cols-3 gap-[var(--spacing-md)]">
           <div className="flex flex-col group relative">
             <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] justify-center md:justify-start cursor-help">
-              <Waves size={13} className="text-[var(--ocean-liquid)]" /> סשנים
+              <Waves size={13} className="text-[var(--ocean-4)]" /> סשנים
               <Info size={12} className="text-slate-400" />
               <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-10">
                 מספר הסשנים הכולל שביצעת עד כה.
               </div>
             </span>
-            <span className="text-3xl font-black text-[var(--ocean-deep)] tabular-nums">
+            <span className="text-3xl font-black text-[var(--ocean-2)] tabular-nums">
               <Counter value={stats.totalSessions} />
             </span>
           </div>
           <div className="flex flex-col group relative">
             <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start cursor-help">
-              <Flame size={13} className="text-[var(--ocean-navy)]" /> רצף
+              <Flame size={13} className="text-[var(--ocean-1)]" /> רצף
               <Info size={12} className="text-slate-400" />
               <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-10">
                 מספר השבועות הרצופים בהם נרשמה פעילות.
               </div>
             </span>
-            <span className="text-3xl font-black text-[var(--ocean-navy)] tabular-nums">
+            <span className="text-3xl font-black text-[var(--ocean-1)] tabular-nums">
               <Counter value={stats.streak} />
             </span>
           </div>
           <div className="flex flex-col group relative">
             <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 justify-center md:justify-start cursor-help">
-              <Trophy size={13} className="text-[var(--ocean-deep)]" /> Grit
+              <Trophy size={13} className="text-[var(--ocean-2)]" /> Grit
               <Info size={12} className="text-slate-400" />
               <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-10">
                 זהו מדד ה"נחישות" שלך. הוא בודק כמה אתה מתמיד. הוא משלב את כמות הסשנים שעשית עם העקביות שלך (הרצף). העקביות חשובה יותר מהכמות.
               </div>
             </span>
-            <span className="text-3xl font-black text-[var(--ocean-deep)] tabular-nums">
+            <span className="text-3xl font-black text-[var(--ocean-2)] tabular-nums">
               <Counter value={Math.round(stats.gritScore)} />%
             </span>
           </div>
