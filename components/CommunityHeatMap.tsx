@@ -41,29 +41,44 @@ const CommunityHeatMap: React.FC = () => {
   });
 
   const initHeatMap = () => {
-    if (!mapRef.current || mapInstance.current) return;
+    if (!mapRef.current) return;
 
     // Center on "חוף הבית" (Home Beach)
     const homeLat = siteConfig.home_break?.lat || 32.1624;
     const homeLng = siteConfig.home_break?.lng || 34.8447;
     const homeLatLng = L.latLng(homeLat, homeLng);
 
-    // Initialize map
-    mapInstance.current = L.map(mapRef.current, {
-      center: [homeLat, homeLng],
-      zoom: 11,
-      zoomControl: true,
-      scrollWheelZoom: true
-    });
+    if (!mapInstance.current) {
+      // Initialize map
+      mapInstance.current = L.map(mapRef.current, {
+        center: [homeLat, homeLng],
+        zoom: 11,
+        zoomControl: true,
+        scrollWheelZoom: true
+      });
 
-    // Add tile layer (OpenStreetMap)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(mapInstance.current);
+      // Add tile layer (OpenStreetMap)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(mapInstance.current);
+
+      // Force a resize check
+      setTimeout(() => {
+        if (mapInstance.current) {
+          mapInstance.current.invalidateSize();
+        }
+      }, 100);
+    }
+
+    // Clear existing layers except tiles
+    mapInstance.current.eachLayer((layer: any) => {
+      if (layer instanceof L.Circle || (L.HeatLayer && layer instanceof L.HeatLayer)) {
+        mapInstance.current.removeLayer(layer);
+      }
+    });
 
     // Prepare data for heatmap and stats
     const activeMembers = members.filter(m => m.isActive !== false);
-    
     const heatPoints: [number, number, number][] = [];
     
     let nearCount = 0;
@@ -117,11 +132,11 @@ const CommunityHeatMap: React.FC = () => {
       bins: binCounts.map(b => ({ label: b.label, count: b.count, color: b.color }))
     });
 
-    // Focus on 25km radius by default
-    const focusCircle = L.circle([homeLat, homeLng], { radius: 25000 });
-    mapInstance.current.fitBounds(focusCircle.getBounds(), { padding: [20, 20] });
+    // Add home marker
+    console.log('L object:', L);
+    L.marker([homeLat, homeLng]).addTo(mapInstance.current).bindPopup('חוף הבית');
 
-    // Add distance circles (only 25km and 100km as requested)
+    // Add distance circles
     const circles = [
       { radius: 25000, color: '#10b981', dashArray: null }, // 25km - Green
       { radius: 100000, color: '#f59e0b', dashArray: '10, 10' } // 100km - Orange
@@ -139,10 +154,13 @@ const CommunityHeatMap: React.FC = () => {
     });
 
     // Add heatmap layer
-    if (L.heatLayer) {
+    console.log('Heatmap points:', heatPoints);
+    console.log('Number of heat points:', heatPoints.length);
+    console.log('L.heatLayer available:', !!L.heatLayer);
+    if (L.heatLayer && heatPoints.length > 0) {
       L.heatLayer(heatPoints, {
-        radius: 25,
-        blur: 15,
+        radius: 40,
+        blur: 20,
         maxZoom: 17,
         gradient: {
           0.2: 'blue',
@@ -151,6 +169,17 @@ const CommunityHeatMap: React.FC = () => {
           1.0: 'red'
         }
       }).addTo(mapInstance.current);
+    } else {
+      console.warn('Heatmap layer not added: L.heatLayer is', L.heatLayer, 'heatPoints length is', heatPoints.length);
+    }
+
+    // Adjust view to fit data or default radius
+    if (heatPoints.length > 0) {
+      const bounds = L.latLngBounds(heatPoints.map(p => [p[0], p[1]]));
+      mapInstance.current.fitBounds(bounds.pad(0.1));
+    } else {
+      const focusCircle = L.circle([homeLat, homeLng], { radius: 25000 });
+      mapInstance.current.fitBounds(focusCircle.getBounds(), { padding: [20, 20] });
     }
   };
 
@@ -210,11 +239,11 @@ const CommunityHeatMap: React.FC = () => {
 
       <div className="flex flex-col gap-8 flex-1">
         {/* Map Container - Full Width */}
-        <div className="rounded-[2rem] overflow-hidden border border-white/10 shadow-inner relative min-h-[500px]">
+        <div className="rounded-[2rem] overflow-hidden border border-white/10 shadow-inner relative h-[600px]">
           <div 
             ref={mapRef} 
             className="w-full h-full z-0"
-            style={{ background: '#f0f0f0' }}
+            style={{ background: '#f0f0f0', minHeight: '600px' }}
           />
           
           {/* Stats Overlay on Map */}

@@ -694,7 +694,7 @@ const CommunityAnalytics: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass-panel p-10 rounded-[4rem] !bg-[#2D3748] transition-all duration-500 relative overflow-hidden group"
+          className="glass-panel p-10 rounded-[4rem] transition-all duration-500 relative overflow-hidden group"
         >
             {/* Glossy Shimmer Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
@@ -784,21 +784,27 @@ const CommunityAnalytics: React.FC = () => {
 
                         {/* Needle */}
                         <motion.g
-                          initial={{ rotate: -45 }}
-                          animate={{ rotate: -45 + (group.retention / 100) * 270 }}
+                          initial={{ rotate: -135 }}
+                          animate={{ rotate: -135 + (group.retention / 100) * 270 }}
+                          style={{ 
+                            transformOrigin: "100px 100px"
+                          }}
                           transition={{ 
                             duration: 2.5, 
                             ease: [0.34, 1.56, 0.64, 1],
                             delay: idx * 0.1 
                           }}
                         >
+                          <circle cx="100" cy="100" r="100" fill="none" />
                           <polygon 
-                            points="100,98 100,102 25,100" 
-                            fill="white" 
-                            style={{ filter: 'drop-shadow(0px 0px 8px rgba(255,255,255,0.4))' }}
+                            points="98,100 102,100 100,10" 
+                            fill="white"
+                            style={{ 
+                              filter: 'drop-shadow(0px 0px 8px rgba(255,255,255,0.4))'
+                            }}
                           />
                         </motion.g>
-
+                        
                         {/* Center Pivot */}
                         <circle cx="100" cy="100" r="8" fill="white" />
                         <circle cx="100" cy="100" r="4" fill="#1A202C" />
@@ -968,25 +974,29 @@ const CommunityAnalytics: React.FC = () => {
 
                       {/* Classic Needle */}
                       <motion.g
-                        initial={{ rotate: -45 }}
-                        animate={{ rotate: -45 + (group.value / 100) * 270 }}
+                        initial={{ rotate: -225 }}
+                        animate={{ rotate: -225 + (group.value / 100) * 270 }}
+                        style={{ 
+                          transformOrigin: "100px 100px"
+                        }}
                         transition={{ 
                           duration: 2.5, 
                           ease: [0.34, 1.56, 0.64, 1],
                           delay: idx * 0.1 
                         }}
                       >
-                        <circle cx="100" cy="100" r="90" fill="transparent" stroke="none" />
-                        {/* Dark Needle */}
+                        <circle cx="100" cy="100" r="100" fill="none" />
                         <polygon 
-                          points="100,96 100,104 15,100" 
-                          fill="#2D3748" 
-                          style={{ filter: `drop-shadow(0px 2px 4px rgba(0,0,0,0.1))` }}
+                          points="100,98 100,102 180,100" 
+                          fill="#2D3748"
+                          style={{ 
+                            filter: `drop-shadow(0px 2px 4px rgba(0,0,0,0.1))`
+                          }}
                         />
                       </motion.g>
 
                       {/* Center Pivot */}
-                      <circle cx="100" cy="100" r="12" fill="#2D3748" />
+                      <circle cx="100" cy="100" r="6" fill="#2D3748" />
 
                       {/* Text Elements */}
                       <text x="100" y="155" textAnchor="middle" dominantBaseline="middle" fill="#2D3748" fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="14" className="antialiased">{group.label}</text>
@@ -1055,8 +1065,8 @@ const CommunityAnalytics: React.FC = () => {
                           className="w-12 h-12 rounded-full border-2 border-white/20 shadow-inner"
                         />
                         <div>
-                          <p className="text-base font-black text-white">{member.firstName} {member.lastName}</p>
-                          <p className="text-[10px] font-bold text-white/40 italic">פעם אחרונה: {member.joinedAt}</p>
+                          <p className="text-base font-black text-black">{member.firstName} {member.lastName}</p>
+                          <p className="text-[10px] font-bold text-black/60 italic">פעם אחרונה: {member.joinedAt}</p>
                         </div>
                       </div>
                       <button className="p-3 rounded-xl bg-white/10 text-white/50 opacity-0 group-hover/item:opacity-100 transition-all hover:bg-white/20 hover:text-white">
