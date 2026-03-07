@@ -15,7 +15,7 @@ const Counter = ({ value, duration = 2 }: { value: number; duration?: number }) 
 
   useEffect(() => {
     const controls = animate(count, value, { duration });
-    return rounded.onChange((v) => setDisplayValue(v));
+    return rounded.on("change", (v) => setDisplayValue(v));
   }, [value, duration]);
 
   return <>{displayValue}</>;

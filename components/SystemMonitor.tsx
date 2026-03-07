@@ -153,6 +153,23 @@ const CircularRing: React.FC<CircularRingProps> = ({
               filter: isHigh ? 'brightness(1.1) saturate(120%)' : `url(#glow-${id})`
             }}
           />
+
+          {/* Glassmorphism Overlay - Lens Effect */}
+          <defs>
+            <radialGradient id={`glass-lens-${id}`} cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+              <stop offset="0%" stopColor="white" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="white" stopOpacity="0.05" />
+              <stop offset="100%" stopColor="white" stopOpacity="0.0" />
+            </radialGradient>
+          </defs>
+          <circle
+            cx="50"
+            cy="50"
+            r={radius + 5}
+            fill={`url(#glass-lens-${id})`}
+            className="pointer-events-none"
+            opacity="0.6"
+          />
         </svg>
         
         <div className="absolute inset-0 flex items-center justify-center flex-col">

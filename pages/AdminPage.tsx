@@ -549,7 +549,7 @@ const AdminPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#f2def0]/30 text-right space-y-12 pb-20 pt-8" dir="rtl">
+    <div className="relative min-h-screen bg-[var(--aqua-mist)]/20 text-right space-y-12 pb-20 pt-8" dir="rtl">
       <div className="max-w-7xl mx-auto">
         {/* Body-line Standard Header Stack */}
         <div className="surfboard-hero-container mb-6 space-y-2">
@@ -569,7 +569,7 @@ const AdminPage: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-12 items-start">
           {/* Sidebar Navigation - Sleek Icon Grid */}
           <aside className="w-full lg:w-24 flex-shrink-0 lg:sticky lg:top-8 z-40">
-            <nav className="bg-white/80 backdrop-blur-xl p-3 rounded-[2rem] border border-[#ff009f]/10 flex lg:flex-col gap-3 shadow-2xl shadow-[#ff009f]/5 overflow-x-auto lg:overflow-x-visible no-scrollbar">
+            <nav className="bg-white/80 backdrop-blur-xl p-3 rounded-[2rem] border border-[var(--vibrant-cyan)]/20 flex lg:flex-col gap-3 shadow-2xl shadow-[var(--turquoise-teal)]/10 overflow-x-auto lg:overflow-x-visible no-scrollbar">
               {[
                 { id: 'DASHBOARD', label: 'ראשי', icon: LayoutDashboard },
                 { id: 'USERS', label: 'משתמשים', icon: Users },
@@ -586,29 +586,29 @@ const AdminPage: React.FC = () => {
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`flex-shrink-0 w-14 h-14 lg:w-16 lg:h-16 flex flex-col items-center justify-center rounded-2xl font-black transition-all duration-500 group relative ${
                     activeTab === tab.id 
-                      ? 'text-white shadow-xl shadow-[#ff009f]/30 scale-110' 
-                      : 'text-[#f063c1] hover:bg-[#f7c1ea]/20'
+                      ? 'text-white shadow-xl shadow-[var(--vibrant-cyan)]/40 scale-110' 
+                      : 'text-[var(--turquoise-teal)] hover:bg-[var(--aqua-mist)]/30'
                   }`}
                 >
                   {activeTab === tab.id && (
                     <motion.div 
                       layoutId="activeTabBg"
-                      className="absolute inset-0 bg-gradient-to-br from-[#ff009f] to-[#f063c1] z-0 rounded-2xl" 
+                      className="absolute inset-0 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] z-0 rounded-2xl" 
                     />
                   )}
                   <div className="relative z-10 flex flex-col items-center">
                     <tab.icon size={22} className={`transition-transform duration-500 ${activeTab === tab.id ? 'scale-110' : 'group-hover:scale-125'}`} />
                     
                     {/* Hover Label - Only visible on hover or if active */}
-                    <div className={`absolute top-full mt-2 lg:mt-0 lg:right-full lg:mr-4 px-3 py-1.5 bg-[#4a002e] text-white text-[10px] rounded-lg whitespace-nowrap opacity-0 pointer-events-none transition-all duration-300 transform lg:translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 z-50 shadow-xl`}>
+                    <div className={`absolute top-full mt-2 lg:mt-0 lg:right-full lg:mr-4 px-3 py-1.5 bg-[var(--deep-teal-sea)] text-white text-[10px] rounded-lg whitespace-nowrap opacity-0 pointer-events-none transition-all duration-300 transform lg:translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 z-50 shadow-xl`}>
                       {tab.label}
-                      <div className="absolute top-1/2 -translate-y-1/2 -right-1 border-4 border-transparent border-l-[#4a002e] hidden lg:block" />
+                      <div className="absolute top-1/2 -translate-y-1/2 -right-1 border-4 border-transparent border-l-[var(--deep-teal-sea)] hidden lg:block" />
                     </div>
                   </div>
 
                   {tab.count !== undefined && tab.count > 0 && (
                     <span className={`absolute -top-1 -right-1 z-20 w-5 h-5 flex items-center justify-center rounded-full text-[8px] font-black border-2 border-white ${
-                      activeTab === tab.id ? 'bg-[#ffd2fa] text-[#ff009f]' : 'bg-rose-500 text-white'
+                      activeTab === tab.id ? 'bg-[var(--sunshine-yellow)] text-[var(--deep-teal-sea)]' : 'bg-[var(--electric-red-pink)] text-white'
                     }`}>
                       {tab.count}
                     </span>
@@ -629,14 +629,14 @@ const AdminPage: React.FC = () => {
             {activeTab === 'DASHBOARD' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
                 {[
-                  { id: 'USERS', label: 'ניהול משתמשים', desc: `${members.length} חברים רשומים`, icon: Users, color: 'bg-[#ff009f]' },
-                  { id: 'REQUESTS', label: 'בקשות הצטרפות', desc: `${joinRequests.length} ממתינים לאישור`, icon: UserCheck, color: 'bg-[#f063c1]', count: joinRequests.length },
-                  { id: 'EVENTS', label: 'ניהול אירועים', desc: `${events.length} אירועים בלוח`, icon: Calendar, color: 'bg-[#f7c1ea]' },
-                  { id: 'GALLERY', label: 'גלריית תמונות', desc: `${galleryItems.length} פריטים במדיה`, icon: ImageIcon, color: 'bg-[#ffd2fa]' },
-                  { id: 'POSTS', label: 'פוסטים', desc: 'ניהול תכני האתר', icon: Newspaper, color: 'bg-[#f2def0]' },
-                  { id: 'SITE', label: 'הגדרות אתר', desc: 'לוגואים, רקעים ונכסים', icon: Settings, color: 'bg-[#4a002e]' },
-                  { id: 'ARCHIVE', label: 'ארכיון משתמשים', desc: 'ניהול חברים שהושעו', icon: Archive, color: 'bg-[#f063c1]' },
-                  { id: 'ROLLOVER', label: 'דו"ח יום חמישי', desc: 'ארכיון סשנים שבועי וסיכום נוכחות', icon: Activity, color: 'bg-[#00d4ff]' },
+                  { id: 'USERS', label: 'ניהול משתמשים', desc: `${members.length} חברים רשומים`, icon: Users, color: 'bg-[var(--turquoise-teal)]' },
+                  { id: 'REQUESTS', label: 'בקשות הצטרפות', desc: `${joinRequests.length} ממתינים לאישור`, icon: UserCheck, color: 'bg-[var(--electric-red-pink)]', count: joinRequests.length },
+                  { id: 'EVENTS', label: 'ניהול אירועים', desc: `${events.length} אירועים בלוח`, icon: Calendar, color: 'bg-[var(--vibrant-cyan)]' },
+                  { id: 'GALLERY', label: 'גלריית תמונות', desc: `${galleryItems.length} פריטים במדיה`, icon: ImageIcon, color: 'bg-[var(--sunshine-yellow)]' },
+                  { id: 'POSTS', label: 'פוסטים', desc: 'ניהול תכני האתר', icon: Newspaper, color: 'bg-[var(--sun-bleached)]' },
+                  { id: 'SITE', label: 'הגדרות אתר', desc: 'לוגואים, רקעים ונכסים', icon: Settings, color: 'bg-[var(--deep-teal-sea)]' },
+                  { id: 'ARCHIVE', label: 'ארכיון משתמשים', desc: 'ניהול חברים שהושעו', icon: Archive, color: 'bg-[var(--deep-magenta)]' },
+                  { id: 'ROLLOVER', label: 'דו"ח יום חמישי', desc: 'ארכיון סשנים שבועי וסיכום נוכחות', icon: Activity, color: 'bg-[var(--turquoise-teal)]' },
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -647,23 +647,23 @@ const AdminPage: React.FC = () => {
                         setActiveTab(item.id as any);
                       }
                     }}
-                    className="group bg-white p-8 rounded-[2.5rem] border border-[#ff009f]/5 shadow-sm hover:shadow-2xl hover:shadow-[#ff009f]/10 transition-all duration-500 text-right relative overflow-hidden"
+                    className="group bg-white p-8 rounded-[2.5rem] border border-[var(--vibrant-cyan)]/10 shadow-sm hover:shadow-2xl hover:shadow-[var(--turquoise-teal)]/10 transition-all duration-500 text-right relative overflow-hidden"
                   >
                     <div className={`absolute top-0 left-0 w-2 h-full ${item.color} opacity-20 group-hover:opacity-100 transition-opacity`} />
                     <div className="flex items-start justify-between mb-6">
-                      <div className={`p-4 rounded-2xl ${item.color} ${item.color === 'bg-[#ffd2fa]' || item.color === 'bg-[#f2def0]' ? 'text-[#4a002e]' : 'text-white'} shadow-lg group-hover:scale-110 transition-transform duration-500`}>
+                      <div className={`p-4 rounded-2xl ${item.color} ${item.color === 'bg-[var(--sunshine-yellow)]' || item.color === 'bg-[var(--sun-bleached)]' ? 'text-[var(--deep-teal-sea)]' : 'text-white'} shadow-lg group-hover:scale-110 transition-transform duration-500`}>
                         <item.icon size={28} />
                       </div>
                       {item.count !== undefined && item.count > 0 && (
-                        <div className="bg-rose-500 text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse">
+                        <div className="bg-[var(--electric-red-pink)] text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse">
                           {item.count} חדש
                         </div>
                       )}
                     </div>
-                    <h3 className="text-xl font-black text-[#4a002e] mb-2 group-hover:text-[#ff009f] transition-colors">{item.label}</h3>
-                    <p className="text-xs font-black text-[#4a002e]/70 uppercase tracking-widest">{item.desc}</p>
+                    <h3 className="text-xl font-black text-[var(--deep-teal-sea)] mb-2 group-hover:text-[var(--turquoise-teal)] transition-colors">{item.label}</h3>
+                    <p className="text-xs font-black text-[var(--deep-teal-sea)]/70 uppercase tracking-widest">{item.desc}</p>
                     
-                    <div className="mt-8 flex items-center gap-2 text-[#ff009f] text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+                    <div className="mt-8 flex items-center gap-2 text-[var(--turquoise-teal)] text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
                       כניסה לניהול <ArrowLeft size={12} />
                     </div>
                   </button>
@@ -674,17 +674,17 @@ const AdminPage: React.FC = () => {
         {activeTab === 'REQUESTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Join Requests Summary Card */}
-            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
               <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
                     <UserCheck size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">בקשות להצטרף</h3>
-                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול ואישור חברים חדשים בקהילה</p>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">בקשות להצטרף</h3>
+                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ואישור חברים חדשים בקהילה</p>
                   </div>
                 </div>
 
@@ -698,11 +698,11 @@ const AdminPage: React.FC = () => {
             </div>
 
             <div className="relative">
-               <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-[#f063c1]/40" />
+               <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-[var(--turquoise-teal)]/40" />
                <input 
                  type="text" 
                  placeholder="חיפוש לפי שם או אימייל..." 
-                 className="w-full pr-16 pl-6 py-6 bg-[#f7c1ea]/10 rounded-[2.5rem] border-none font-black focus:ring-2 ring-[#ff009f]/30 shadow-sm"
+                 className="w-full pr-16 pl-6 py-6 bg-[var(--aqua-mist)]/10 rounded-[2.5rem] border-none font-black focus:ring-2 ring-[var(--vibrant-cyan)]/30 shadow-sm"
                  value={searchTerm}
                  onChange={e => setSearchTerm(e.target.value)}
                />
@@ -711,18 +711,18 @@ const AdminPage: React.FC = () => {
             {filteredRequests.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredRequests.map(req => (
-                  <div key={req.id} className={`bg-white border border-[#ff009f]/5 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-[#ff009f]/5 transition-all group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50' : ''}`}>
+                  <div key={req.id} className={`bg-white border border-[var(--vibrant-cyan)]/5 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-[var(--vibrant-cyan)]/5 transition-all group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50' : ''}`}>
                     <div className="flex items-start gap-5 mb-8">
                        {req.avatar ? (
                          <img src={req.avatar} className="w-16 h-16 rounded-2xl object-cover shadow-md" alt="" />
                        ) : (
-                         <div className="w-16 h-16 rounded-2xl bg-[#f7c1ea]/20 flex items-center justify-center text-[#ff009f] shadow-md">
+                         <div className="w-16 h-16 rounded-2xl bg-[var(--aqua-mist)]/20 flex items-center justify-center text-[var(--vibrant-cyan)] shadow-md">
                            <UserCircle size={32} />
                          </div>
                        )}
                        <div>
-                          <h4 className="text-xl font-black text-[#4a002e] mb-1">{req.firstName} {req.lastName}</h4>
-                          <div className="flex items-center gap-2 text-[#f063c1]/60 font-bold text-[10px] uppercase tracking-widest">
+                          <h4 className="text-xl font-black text-[var(--deep-teal-sea)] mb-1">{req.firstName} {req.lastName}</h4>
+                          <div className="flex items-center gap-2 text-[var(--turquoise-teal)]/60 font-bold text-[10px] uppercase tracking-widest">
                              <Calendar size={12} />
                              {new Date(req.requestedAt).toLocaleDateString('he-IL')}
                           </div>
@@ -730,15 +730,15 @@ const AdminPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-4 flex-1">
-                       <div className="flex items-center gap-3 p-3 bg-[#f7c1ea]/10 rounded-xl">
-                          <Mail size={14} className="text-[#f063c1]/60" />
+                       <div className="flex items-center gap-3 p-3 bg-[var(--aqua-mist)]/10 rounded-xl">
+                          <Mail size={14} className="text-[var(--turquoise-teal)]/60" />
                           <span className="text-xs font-black truncate">{req.email}</span>
                        </div>
-                       <div className="flex items-center gap-3 p-3 bg-[#f7c1ea]/10 rounded-xl">
-                          <Phone size={14} className="text-[#f063c1]/60" />
+                       <div className="flex items-center gap-3 p-3 bg-[var(--aqua-mist)]/10 rounded-xl">
+                          <Phone size={14} className="text-[var(--turquoise-teal)]/60" />
                           <span className="text-xs font-black">{req.mobile}</span>
                        </div>
-                       <div className="flex items-center gap-3 p-3 bg-[#f063c1]/10 text-[#ff009f] rounded-xl">
+                       <div className="flex items-center gap-3 p-3 bg-[var(--turquoise-teal)]/10 text-[var(--vibrant-cyan)] rounded-xl">
                           <MapPin size={14} />
                           <span className="text-xs font-black">{(req as any).group || 'הרצליה'}</span>
                        </div>
@@ -750,9 +750,9 @@ const AdminPage: React.FC = () => {
                            handleApprove(req.id);
                          }}
                          disabled={isProcessing === req.id}
-                         className="flex-1 py-4 bg-[#ff009f] text-white rounded-2xl font-black text-sm hover:bg-[#4a002e] transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
+                         className="flex-1 py-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl font-black text-sm hover:bg-[var(--deep-teal-sea)] transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
                        >
-                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserCheck size={20} className="text-[#ffd2fa]" />}
+                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserCheck size={20} className="text-[var(--water-highlight)]" />}
                          אשר הצטרפות
                        </button>
                        <button 
@@ -770,11 +770,11 @@ const AdminPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="py-32 text-center border-2 border-dashed border-[#ff009f]/10 rounded-[4rem]">
-                 <div className="w-20 h-20 bg-[#f7c1ea]/20 rounded-full flex items-center justify-center mx-auto mb-6 text-[#f063c1]/20">
+              <div className="py-32 text-center border-2 border-dashed border-[var(--vibrant-cyan)]/10 rounded-[4rem]">
+                 <div className="w-20 h-20 bg-[var(--aqua-mist)]/20 rounded-full flex items-center justify-center mx-auto mb-6 text-[var(--turquoise-teal)]/20">
                     <UserCheck size={40} />
                  </div>
-                 <h3 className="text-2xl font-black text-[#f063c1]/40">אין בקשות הצטרפות ממתינות</h3>
+                 <h3 className="text-2xl font-black text-[var(--turquoise-teal)]/40">אין בקשות הצטרפות ממתינות</h3>
               </div>
             )}
           </div>
@@ -792,17 +792,17 @@ const AdminPage: React.FC = () => {
                 coordinators: members.filter(m => m.role === 'Admin').length,
               };
               return (
-                <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+                <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
                   <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                    <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                    <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                     
                     <div className="flex items-center gap-6 relative z-10">
-                      <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                      <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
                         <Users size={32} />
                       </div>
                       <div>
-                        <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">חברים</h3>
-                        <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול וסינון חברי הקהילה</p>
+                        <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">חברים</h3>
+                        <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול וסינון חברי הקהילה</p>
                       </div>
                     </div>
 
@@ -849,17 +849,17 @@ const AdminPage: React.FC = () => {
                 onClose={() => setEditingMember(null)}
               />
             ) : (
-              <div className="bg-white border border-[#ff009f]/5 rounded-[3rem] overflow-hidden shadow-sm">
+              <div className="bg-white border border-[var(--vibrant-cyan)]/5 rounded-[3rem] overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-right">
-                    <thead className="bg-[#f7c1ea]/10 border-b border-[#ff009f]/5">
+                    <thead className="bg-[var(--aqua-mist)]/10 border-b border-[var(--vibrant-cyan)]/5">
                       <tr>
-                        <th className="px-8 py-6 text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest">משתמש</th>
-                        <th className="px-8 py-6 text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest">סטטוס</th>
-                        <th className="px-8 py-6 text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest text-center">עריכה</th>
+                        <th className="px-8 py-6 text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">משתמש</th>
+                        <th className="px-8 py-6 text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">סטטוס</th>
+                        <th className="px-8 py-6 text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest text-center">עריכה</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#f7c1ea]/20">
+                    <tbody className="divide-y divide-[var(--aqua-mist)]/20">
                       {members.filter(m => m.isActive !== false).sort((a, b) => {
                         const aLast = a.lastName || '';
                         const bLast = b.lastName || '';
@@ -872,29 +872,29 @@ const AdminPage: React.FC = () => {
                         }
                         return aFirst.localeCompare(bFirst, 'he');
                       }).map(member => (
-                        <tr key={member.id} className="hover:bg-[#f7c1ea]/10 transition-all group">
+                        <tr key={member.id} className="hover:bg-[var(--aqua-mist)]/10 transition-all group">
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-4">
                               {member.avatar ? (
                                 <img src={member.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm" alt="" />
                               ) : (
-                                <div className="w-12 h-12 rounded-xl bg-[#f7c1ea]/20 flex items-center justify-center text-[#f063c1]/40">
+                                <div className="w-12 h-12 rounded-xl bg-[var(--aqua-mist)]/20 flex items-center justify-center text-[var(--turquoise-teal)]/40">
                                   <UserCircle size={24} />
                                 </div>
                               )}
                               <div>
-                                <h4 className="font-black text-[#4a002e]">{member.firstName} {member.lastName}</h4>
-                                <p className="text-[10px] text-[#f063c1]/60 font-black truncate max-w-[150px]">{member.email}</p>
+                                <h4 className="font-black text-[var(--deep-teal-sea)]">{member.firstName} {member.lastName}</h4>
+                                <p className="text-[10px] text-[var(--turquoise-teal)]/60 font-black truncate max-w-[150px]">{member.email}</p>
                               </div>
                             </div>
                           </td>
                           <td className="px-8 py-6">
                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
                               member.role === 'Admin' 
-                                ? 'bg-[#ff009f]/10 text-[#ff009f]' 
+                                ? 'bg-[var(--vibrant-cyan)]/10 text-[var(--vibrant-cyan)]' 
                                 : member.role === 'Instructor'
                                   ? 'bg-amber-50 text-amber-600'
-                                  : 'bg-[#f7c1ea]/10 text-[#f063c1]/60'
+                                  : 'bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)]/60'
                             }`}>
                               {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
                             </span>
@@ -903,7 +903,7 @@ const AdminPage: React.FC = () => {
                             <div className="flex items-center justify-center">
                               <button 
                                 onClick={() => setEditingMember(member)}
-                                className="w-10 h-10 bg-white border border-[#ff009f]/10 rounded-xl flex items-center justify-center text-[#f063c1]/40 hover:text-[#ff009f] hover:border-[#ff009f]/30 hover:shadow-lg transition-all"
+                                className="w-10 h-10 bg-white border border-[var(--vibrant-cyan)]/10 rounded-xl flex items-center justify-center text-[var(--turquoise-teal)]/40 hover:text-[var(--vibrant-cyan)] hover:border-[var(--vibrant-cyan)]/30 hover:shadow-lg transition-all"
                                 title="עריכת משתמש"
                               >
                                 <Pencil size={18} />
@@ -926,17 +926,17 @@ const AdminPage: React.FC = () => {
             {(() => {
               const suspendedCount = members.filter(m => m.isActive === false).length;
               return (
-                <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+                <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
                   <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                    <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                    <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                     
                     <div className="flex items-center gap-6 relative z-10">
-                      <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                      <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
                         <UserX size={32} />
                       </div>
                       <div>
-                        <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">חברים מושעים</h3>
-                        <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול משתמשים שהוצאו מהמערכת</p>
+                        <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">חברים מושעים</h3>
+                        <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול משתמשים שהוצאו מהמערכת</p>
                       </div>
                     </div>
 
@@ -951,17 +951,17 @@ const AdminPage: React.FC = () => {
               );
             })()}
 
-            <div className="bg-white border border-[#ff009f]/5 rounded-[3rem] overflow-hidden shadow-sm">
+            <div className="bg-white border border-[var(--vibrant-cyan)]/5 rounded-[3rem] overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full text-right">
-                  <thead className="bg-[#f7c1ea]/10 border-b border-[#ff009f]/5">
+                  <thead className="bg-[var(--aqua-mist)]/10 border-b border-[var(--vibrant-cyan)]/5">
                     <tr>
-                      <th className="px-8 py-6 text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest">משתמש מושעה</th>
-                      <th className="px-8 py-6 text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest">תפקיד</th>
-                      <th className="px-8 py-6 text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest text-center">פעולות</th>
+                      <th className="px-8 py-6 text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">משתמש מושעה</th>
+                      <th className="px-8 py-6 text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">תפקיד</th>
+                      <th className="px-8 py-6 text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest text-center">פעולות</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#f7c1ea]/10">
+                  <tbody className="divide-y divide-[var(--aqua-mist)]/10">
                     {members.filter(m => m.isActive === false).sort((a, b) => {
                       const aLast = a.lastName || '';
                       const bLast = b.lastName || '';
@@ -974,7 +974,7 @@ const AdminPage: React.FC = () => {
                       }
                       return aFirst.localeCompare(bFirst, 'he');
                     }).map(member => (
-                      <tr key={member.id} className="hover:bg-[#f7c1ea]/10 transition-all group">
+                      <tr key={member.id} className="hover:bg-[var(--aqua-mist)]/10 transition-all group">
                         <td className="px-8 py-6">
                           <div className="flex items-center gap-4">
                             {member.avatar ? (
@@ -986,20 +986,20 @@ const AdminPage: React.FC = () => {
                               />
                             ) : (
                               <div 
-                                className="w-12 h-12 rounded-xl bg-[#f7c1ea]/20 flex items-center justify-center text-[#f063c1]/20 cursor-pointer hover:bg-[#f7c1ea]/30 transition-colors"
+                                className="w-12 h-12 rounded-xl bg-[var(--aqua-mist)]/20 flex items-center justify-center text-[var(--turquoise-teal)]/20 cursor-pointer hover:bg-[var(--aqua-mist)]/30 transition-colors"
                                 onClick={() => setEditingMember(member)}
                               >
                                 <UserCircle size={24} />
                               </div>
                             )}
                             <div>
-                              <h4 className="font-black text-[#f063c1]/40">{member.firstName} {member.lastName}</h4>
-                              <p className="text-[10px] text-[#f063c1]/20 font-black truncate max-w-[150px]">{member.email}</p>
+                              <h4 className="font-black text-[var(--turquoise-teal)]/40">{member.firstName} {member.lastName}</h4>
+                              <p className="text-[10px] text-[var(--turquoise-teal)]/20 font-black truncate max-w-[150px]">{member.email}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-8 py-6">
-                          <span className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-[#f7c1ea]/10 text-[#f063c1]/40">
+                          <span className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)]/40">
                             {member.role === 'Admin' ? 'מנהל' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
                           </span>
                         </td>
@@ -1007,7 +1007,7 @@ const AdminPage: React.FC = () => {
                           <div className="flex items-center justify-center gap-2">
                             <button 
                               onClick={() => setEditingMember(member)}
-                              className="w-10 h-10 bg-white border border-[#ff009f]/10 rounded-xl flex items-center justify-center text-[#f063c1]/40 hover:text-[#ff009f] hover:border-[#ff009f]/30 hover:shadow-lg transition-all"
+                              className="w-10 h-10 bg-white border border-[var(--vibrant-cyan)]/10 rounded-xl flex items-center justify-center text-[var(--turquoise-teal)]/40 hover:text-[var(--vibrant-cyan)] hover:border-[var(--vibrant-cyan)]/30 hover:shadow-lg transition-all"
                               title="עריכה"
                             >
                               <Pencil size={18} />
@@ -1026,7 +1026,7 @@ const AdminPage: React.FC = () => {
                                   }
                                 });
                               }}
-                              className="w-10 h-10 bg-white border border-[#ff009f]/10 rounded-xl flex items-center justify-center text-[#f063c1]/40 hover:text-[#ff009f] hover:border-[#ff009f]/30 hover:shadow-lg transition-all"
+                              className="w-10 h-10 bg-white border border-[var(--vibrant-cyan)]/10 rounded-xl flex items-center justify-center text-[var(--turquoise-teal)]/40 hover:text-[var(--vibrant-cyan)] hover:border-[var(--vibrant-cyan)]/30 hover:shadow-lg transition-all"
                               title="החזר לפעילות"
                             >
                               <RefreshCw size={18} />
@@ -1037,7 +1037,7 @@ const AdminPage: React.FC = () => {
                     ))}
                     {members.filter(m => m.isActive === false).length === 0 && (
                       <tr>
-                        <td colSpan={3} className="px-8 py-12 text-center text-[#f063c1]/40 font-black">אין משתמשים בארכיון</td>
+                        <td colSpan={3} className="px-8 py-12 text-center text-[var(--turquoise-teal)]/40 font-black">אין משתמשים בארכיון</td>
                       </tr>
                     )}
                   </tbody>
@@ -1050,17 +1050,17 @@ const AdminPage: React.FC = () => {
         {activeTab === 'POSTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Posts Summary Card */}
-            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
               <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
                     <Newspaper size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">פוסטים</h3>
-                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול ומחיקה של פוסטים בקהילה</p>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">פוסטים</h3>
+                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ומחיקה של פוסטים בקהילה</p>
                   </div>
                 </div>
 
@@ -1072,7 +1072,7 @@ const AdminPage: React.FC = () => {
                   
                   <button 
                     onClick={() => setEditingPost({})}
-                    className="bg-[#ff009f] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[#4a002e] transition-all shadow-lg shadow-[#ff009f]/20 flex items-center gap-2 active:scale-95"
+                    className="bg-[var(--vibrant-cyan)] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[var(--deep-teal-sea)] transition-all shadow-lg shadow-[var(--vibrant-cyan)]/20 flex items-center gap-2 active:scale-95"
                   >
                     <Plus size={18} />
                     פוסט חדש
@@ -1166,17 +1166,17 @@ const AdminPage: React.FC = () => {
         {activeTab === 'GALLERY' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Gallery Summary Card */}
-            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
               <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
                     <ImageIcon size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">גלריה</h3>
-                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול ומחיקה של תמונות מהגלריה</p>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">גלריה</h3>
+                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ומחיקה של תמונות מהגלריה</p>
                   </div>
                 </div>
 
@@ -1189,7 +1189,7 @@ const AdminPage: React.FC = () => {
                   <button 
                     onClick={() => galleryFileInputRef.current?.click()}
                     disabled={isUploadingGallery}
-                    className="bg-[#ff009f] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[#4a002e] transition-all shadow-lg shadow-[#ff009f]/20 flex items-center gap-2 active:scale-95 disabled:opacity-50"
+                    className="bg-[var(--vibrant-cyan)] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[var(--deep-teal-sea)] transition-all shadow-lg shadow-[var(--vibrant-cyan)]/20 flex items-center gap-2 active:scale-95 disabled:opacity-50"
                   >
                     {isUploadingGallery ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
                     הוספה
@@ -1281,17 +1281,17 @@ const AdminPage: React.FC = () => {
         {activeTab === 'EVENTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Events Summary Card */}
-            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
               <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
                     <Calendar size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">לוח אירועים</h3>
-                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול לוח הזמנים הקהילתי</p>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">לוח אירועים</h3>
+                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול לוח הזמנים הקהילתי</p>
                   </div>
                 </div>
 
@@ -1303,7 +1303,7 @@ const AdminPage: React.FC = () => {
                   
                   <button 
                     onClick={() => setEditingEvent({})}
-                    className="bg-[#ff009f] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[#4a002e] transition-all shadow-lg shadow-[#ff009f]/20 flex items-center gap-2 active:scale-95"
+                    className="bg-[var(--vibrant-cyan)] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[var(--deep-teal-sea)] transition-all shadow-lg shadow-[var(--vibrant-cyan)]/20 flex items-center gap-2 active:scale-95"
                   >
                     <Plus size={18} />
                     אירוע חדש
@@ -1318,7 +1318,7 @@ const AdminPage: React.FC = () => {
                 const isPastEvent = eventDate < new Date();
 
                 return (
-                  <div key={event.id} className={`bg-white border border-[#ff009f]/5 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-[#ff009f]/5 transition-all flex items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
+                  <div key={event.id} className={`bg-white border border-[var(--vibrant-cyan)]/5 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-[var(--vibrant-cyan)]/5 transition-all flex items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
                     
                     {isPastEvent && (
                       <div className="absolute -right-12 top-6 transform rotate-45 bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest px-12 py-1 shadow-sm z-10">
@@ -1327,17 +1327,17 @@ const AdminPage: React.FC = () => {
                     )}
 
                     <div className="flex items-center gap-6">
-                      <div className={`p-4 rounded-2xl flex items-center justify-center font-black min-w-max ${isPastEvent ? 'bg-slate-100 text-slate-400' : 'bg-[#ff009f]/10 text-[#ff009f]'}`}>
+                      <div className={`p-4 rounded-2xl flex items-center justify-center font-black min-w-max ${isPastEvent ? 'bg-slate-100 text-slate-400' : 'bg-[var(--vibrant-cyan)]/10 text-[var(--vibrant-cyan)]'}`}>
                         <span className="text-sm whitespace-nowrap tabular-nums">{formatDate(event.date)}</span>
                       </div>
                       <div className="flex flex-col">
-                        <h4 className={`text-xl font-black mb-1 ${isPastEvent ? 'text-slate-500 line-through decoration-slate-300' : 'text-[#4a002e]'}`}>{event.title}</h4>
+                        <h4 className={`text-xl font-black mb-1 ${isPastEvent ? 'text-slate-500 line-through decoration-slate-300' : 'text-[var(--deep-teal-sea)]'}`}>{event.title}</h4>
                         <div className="flex items-center gap-2">
-                          <p className="text-xs font-bold text-[#f063c1]/60">{event.location}</p>
+                          <p className="text-xs font-bold text-[var(--turquoise-teal)]/60">{event.location}</p>
                           <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider ${
-                            event.type === 'COMMUNITY' ? 'bg-[#ff009f] text-white' : 
+                            event.type === 'COMMUNITY' ? 'bg-[var(--vibrant-cyan)] text-white' : 
                             event.type === 'INSTRUCTOR' ? 'bg-amber-500 text-white' : 
-                            'bg-[#f7c1ea]/10 text-[#f063c1]/60'
+                            'bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)]/60'
                           }`}>
                             {event.type === 'COMMUNITY' ? 'קהילה' : event.type === 'INSTRUCTOR' ? 'מדריך' : 'חבר'}
                           </span>
@@ -1348,7 +1348,7 @@ const AdminPage: React.FC = () => {
                       {!isPastEvent && (
                         <button 
                           onClick={() => handleEditEvent(event)}
-                          className="p-4 bg-[#f7c1ea]/10 text-[#f063c1] rounded-2xl hover:bg-[#ff009f] hover:text-white transition-all"
+                          className="p-4 bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)] rounded-2xl hover:bg-[var(--vibrant-cyan)] hover:text-white transition-all"
                           title="עריכת אירוע"
                         >
                           <Pencil size={20} />
@@ -1389,12 +1389,12 @@ const AdminPage: React.FC = () => {
             {/* Design and Settings Section */}
             <div className="space-y-8">
               <div className="flex items-center gap-4">
-                <div className="p-4 bg-[#4a002e] text-white rounded-2xl shadow-lg shadow-[#4a002e]/20">
+                <div className="p-4 bg-[var(--deep-teal-sea)] text-white rounded-2xl shadow-lg shadow-[var(--deep-teal-sea)]/20">
                   <Settings size={24} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">עיצוב והגדרות</h3>
-                  <p className="text-[#4a002e]/60 font-bold">ניהול פרמטרים עיצוביים והגדרות מערכת מתקדמות</p>
+                  <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">עיצוב והגדרות</h3>
+                  <p className="text-[var(--deep-teal-sea)]/60 font-bold">ניהול פרמטרים עיצוביים והגדרות מערכת מתקדמות</p>
                 </div>
               </div>
 
@@ -1407,19 +1407,19 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Habal Zug Year Config Widget */}
-            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group">
+            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group">
               <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
                     <Calendar size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">שנת חבל זוג</h3>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">שנת חבל זוג</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest">תקופה פעילה כעת</p>
+                      <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">תקופה פעילה כעת</p>
                     </div>
                   </div>
                 </div>
@@ -1432,32 +1432,32 @@ const AdminPage: React.FC = () => {
                     <div className="text-right">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-1">
                         תחילת שנת פעילות
-                        <Calendar size={10} className="text-[#ff009f] opacity-0 group-hover/dates:opacity-100 transition-opacity" />
+                        <Calendar size={10} className="text-[var(--vibrant-cyan)] opacity-0 group-hover/dates:opacity-100 transition-opacity" />
                       </p>
-                      <p className="text-base font-black text-[#4a002e] tabular-nums">{formatDate(yearConfig?.startDate || '---')}</p>
+                      <p className="text-base font-black text-[var(--deep-teal-sea)] tabular-nums">{formatDate(yearConfig?.startDate || '---')}</p>
                     </div>
                     <div className="w-px h-8 bg-slate-200 mx-2" />
                     <div className="text-right">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-1">
                         סיום שנת פעילות
-                        <Calendar size={10} className="text-[#ff009f] opacity-0 group-hover/dates:opacity-100 transition-opacity" />
+                        <Calendar size={10} className="text-[var(--vibrant-cyan)] opacity-0 group-hover/dates:opacity-100 transition-opacity" />
                       </p>
-                      <p className="text-base font-black text-[#4a002e] tabular-nums">{formatDate(yearConfig?.endDate || '---')}</p>
+                      <p className="text-base font-black text-[var(--deep-teal-sea)] tabular-nums">{formatDate(yearConfig?.endDate || '---')}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-6">
                     <div className="text-center">
-                      <p className="text-[9px] font-black text-[#f063c1] uppercase tracking-widest mb-1">שבועות שחלפו</p>
+                      <p className="text-[9px] font-black text-[var(--turquoise-teal)] uppercase tracking-widest mb-1">שבועות שחלפו</p>
                       <div className="flex items-baseline gap-1 justify-center">
-                        <span className="text-4xl font-black text-[#ff009f] tabular-nums">{calculateWeeks(yearConfig?.startDate || '')}</span>
+                        <span className="text-4xl font-black text-[var(--vibrant-cyan)] tabular-nums">{calculateWeeks(yearConfig?.startDate || '')}</span>
                         <span className="text-[10px] font-black text-slate-400">/ 52</span>
                       </div>
                     </div>
 
                     <button 
                       onClick={() => setIsEditingYear(true)}
-                      className="w-14 h-14 bg-[#4a002e] text-white rounded-2xl flex items-center justify-center hover:bg-[#ff009f] transition-all shadow-xl shadow-[#4a002e]/10 active:scale-90"
+                      className="w-14 h-14 bg-[var(--deep-teal-sea)] text-white rounded-2xl flex items-center justify-center hover:bg-[var(--vibrant-cyan)] transition-all shadow-xl shadow-[var(--deep-teal-sea)]/10 active:scale-90"
                       title="עריכת הגדרות שנה"
                     >
                       <Settings size={24} />
@@ -1468,17 +1468,17 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Home Break Config Widget */}
-            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group mb-6">
+            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-6">
               <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
                     <MapPin size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">חוף הבית</h3>
-                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">עוגן לחישוב מרחקים גיאוגרפים</p>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">חוף הבית</h3>
+                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">עוגן לחישוב מרחקים גיאוגרפים</p>
                   </div>
                 </div>
 
@@ -1512,7 +1512,7 @@ const AdminPage: React.FC = () => {
                           selectedPlaceRef.current = null;
                         }} 
                         placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
-                        className={`w-full pr-14 pl-6 py-5 rounded-2xl font-black outline-none border transition-all text-[#4a002e] ${hasConfirmedHomeBreakEdit ? 'bg-white border-[#ff009f]/50 shadow-lg shadow-[#ff009f]/10' : 'bg-slate-50 border-slate-50 cursor-pointer hover:bg-slate-100'}`}
+                        className={`w-full pr-14 pl-6 py-5 rounded-2xl font-black outline-none border transition-all text-[var(--deep-teal-sea)] ${hasConfirmedHomeBreakEdit ? 'bg-white border-[var(--vibrant-cyan)]/50 shadow-lg shadow-[var(--vibrant-cyan)]/10' : 'bg-slate-50 border-slate-50 cursor-pointer hover:bg-slate-100'}`}
                         autoComplete="off"
                       />
                     </div>
@@ -1565,7 +1565,7 @@ const AdminPage: React.FC = () => {
                             }
                           }
                         }}
-                        className="bg-[#ff009f] text-white px-8 rounded-2xl font-black hover:bg-[#d60085] transition-colors shadow-lg shadow-[#ff009f]/20 whitespace-nowrap"
+                        className="bg-[var(--vibrant-cyan)] text-white px-8 rounded-2xl font-black hover:bg-[var(--turquoise-teal)] transition-colors shadow-lg shadow-[var(--vibrant-cyan)]/20 whitespace-nowrap"
                       >
                         שמור
                       </button>
@@ -1576,30 +1576,30 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Navigation Position Toggle Widget */}
-            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group mb-6">
+            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-6">
               <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#ff009f] to-[#f063c1] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff009f]/20 group-hover:rotate-6 transition-transform">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
                     <LayoutDashboard size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">מיקום תפריט הניווט</h3>
-                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">החלפה בין תפריט עליון לתחתון</p>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">מיקום תפריט הניווט</h3>
+                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">החלפה בין תפריט עליון לתחתון</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Global Color Picker Widget */}
-            <div className="bg-[#4a002e] p-[2px] rounded-3xl shadow-2xl shadow-[#ff009f]/10 group mb-6 inline-block">
+            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-3xl shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-6 inline-block">
               <div className="bg-white/95 backdrop-blur-xl p-4 rounded-[1.8rem] relative overflow-hidden flex items-center gap-6">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div>
-                  <h3 className="text-lg font-black text-[#4a002e] tracking-tight">בקר צבע גלובלי</h3>
-                  <p className="text-[9px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-0.5">שינוי גוון הטורקיז</p>
+                  <h3 className="text-lg font-black text-[var(--deep-teal-sea)] tracking-tight">בקר צבע גלובלי</h3>
+                  <p className="text-[9px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-0.5">שינוי גוון הטורקיז</p>
                 </div>
 
                 <div className="relative">
@@ -1621,17 +1621,17 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* H1 Ultra Design Studio Widget */}
-            <div className="bg-[#4a002e] p-[2px] rounded-[3rem] shadow-2xl shadow-[#ff009f]/10 group mb-10">
+            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-10">
               <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#ff009f]/5 rounded-full blur-3xl group-hover:bg-[#ff009f]/10 transition-colors" />
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 mb-10 relative z-10">
                   <div className="w-16 h-16 bg-gradient-to-br from-[#6366f1] to-[#a855f7] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#6366f1]/20 group-hover:rotate-6 transition-transform">
                     <Sparkles size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[#4a002e] tracking-tight">H1 Ultra Design Studio</h3>
-                    <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">סטודיו מתקדם לעיצוב כותרות אולטרה-מודרניות</p>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">H1 Ultra Design Studio</h3>
+                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">סטודיו מתקדם לעיצוב כותרות אולטרה-מודרניות</p>
                   </div>
                 </div>
 
@@ -1827,34 +1827,34 @@ const AdminPage: React.FC = () => {
             {/* Color Catalog Section */}
             <section id="color-catalog" className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="flex items-center gap-4 mb-8">
-                    <div className="p-4 bg-gradient-to-br from-[#ff009f] to-[#f063c1] text-white rounded-2xl shadow-lg">
+                    <div className="p-4 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] text-white rounded-2xl shadow-lg">
                         <Sparkles size={24} />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-[#4a002e] m-0">קטלוג פלטות צבעים</h2>
-                        <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">ניהול ויזואלי של צבעי המערכת (לחיצה להעתקה)</p>
+                        <h2 className="text-2xl font-black text-[var(--deep-teal-sea)] m-0">קטלוג פלטות צבעים</h2>
+                        <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ויזואלי של צבעי המערכת (לחיצה להעתקה)</p>
                     </div>
                 </div>
                 <div id="palettes-container">
                     {/* Will be populated by useEffect */}
                     <div className="flex items-center justify-center w-full py-12">
-                        <Loader2 className="animate-spin text-[#ff009f]" size={32} />
+                        <Loader2 className="animate-spin text-[var(--vibrant-cyan)]" size={32} />
                     </div>
                 </div>
             </section>
 
-            <div className="bg-white border border-[#ff009f]/10 rounded-[4rem] p-12 shadow-sm">
+            <div className="bg-white border border-[var(--vibrant-cyan)]/10 rounded-[4rem] p-12 shadow-sm">
              <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-4">
-                   <div className="p-4 bg-[#ff009f] text-white rounded-2xl shadow-lg"><RotateCcw size={24} /></div>
+                   <div className="p-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl shadow-lg"><RotateCcw size={24} /></div>
                    <div>
-                      <h3 className="text-2xl font-black text-[#4a002e]">הגדרות ונכסי אתר</h3>
-                      <p className="text-[#f063c1]/60 font-bold">צפייה ועדכון הנכסים הוויזואליים של המערכת</p>
+                      <h3 className="text-2xl font-black text-[var(--deep-teal-sea)]">הגדרות ונכסי אתר</h3>
+                      <p className="text-[var(--turquoise-teal)]/60 font-bold">צפייה ועדכון הנכסים הוויזואליים של המערכת</p>
                    </div>
                 </div>
                 <button 
                   onClick={resetAssets}
-                  className="px-6 py-3 bg-[#f7c1ea]/10 text-[#ff009f] rounded-2xl font-black text-xs hover:bg-[#f7c1ea]/20 transition-all flex items-center gap-2 active:scale-95"
+                  className="px-6 py-3 bg-[var(--aqua-mist)]/10 text-[var(--vibrant-cyan)] rounded-2xl font-black text-xs hover:bg-[var(--aqua-mist)]/20 transition-all flex items-center gap-2 active:scale-95"
                 >
                   <RotateCcw size={14} />
                   איפוס לברירת מחדל
@@ -1863,13 +1863,13 @@ const AdminPage: React.FC = () => {
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {Object.entries(siteAssets || {}).map(([key, value]: [string, any]) => (
-                   <div key={key} className="p-6 bg-[#f7c1ea]/10 rounded-[2rem] border border-[#ff009f]/5 flex items-center justify-between group">
+                   <div key={key} className="p-6 bg-[var(--aqua-mist)]/10 rounded-[2rem] border border-[var(--vibrant-cyan)]/5 flex items-center justify-between group">
                       <div className="flex items-center gap-4">
-                         <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center overflow-hidden shadow-sm border border-[#ff009f]/10 relative group/avatar">
+                         <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center overflow-hidden shadow-sm border border-[var(--vibrant-cyan)]/10 relative group/avatar">
                             {typeof value === 'string' && value.startsWith('http') ? (
                                <img src={value} className="w-full h-full object-contain p-2" alt="" />
                             ) : (
-                               <span className="text-[#f063c1]/40 font-black text-[10px] uppercase">{key.slice(0, 2)}</span>
+                               <span className="text-[var(--turquoise-teal)]/40 font-black text-[10px] uppercase">{key.slice(0, 2)}</span>
                             )}
                             
                             <button 
@@ -1878,7 +1878,7 @@ const AdminPage: React.FC = () => {
                                 assetFileInputRef.current?.click();
                               }}
                               disabled={isUploadingAsset === key}
-                              className="absolute inset-0 bg-[#4a002e]/40 text-white flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-all disabled:opacity-100"
+                              className="absolute inset-0 bg-[var(--deep-teal-sea)]/40 text-white flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-all disabled:opacity-100"
                             >
                               {isUploadingAsset === key ? (
                                 <Loader2 size={20} className="animate-spin" />
@@ -1888,20 +1888,20 @@ const AdminPage: React.FC = () => {
                             </button>
                          </div>
                          <div>
-                            <p className="text-[10px] font-black text-[#ff009f] uppercase tracking-widest mb-1">{key}</p>
-                            <h4 className="text-lg font-black text-[#4a002e]">{ASSET_LABELS[key] || key}</h4>
-                            <p className="text-[10px] font-bold text-[#f063c1]/40 truncate max-w-[180px]">{typeof value === 'string' ? value : 'נתון מורכב'}</p>
+                            <p className="text-[10px] font-black text-[var(--vibrant-cyan)] uppercase tracking-widest mb-1">{key}</p>
+                            <h4 className="text-lg font-black text-[var(--deep-teal-sea)]">{ASSET_LABELS[key] || key}</h4>
+                            <p className="text-[10px] font-bold text-[var(--turquoise-teal)]/40 truncate max-w-[180px]">{typeof value === 'string' ? value : 'נתון מורכב'}</p>
                          </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button 
                           onClick={() => setEditingAsset({ key, value: typeof value === 'string' ? value : '' })}
-                          className="p-2 text-[#f063c1]/20 hover:text-[#ff009f] opacity-0 group-hover:opacity-100 transition-all"
+                          className="p-2 text-[var(--turquoise-teal)]/20 hover:text-[var(--vibrant-cyan)] opacity-0 group-hover:opacity-100 transition-all"
                         >
                           <Settings size={16} />
                         </button>
                         {typeof value === 'string' && value.startsWith('http') && (
-                          <a href={value} target="_blank" rel="noreferrer" className="p-2 text-[#f063c1]/20 hover:text-[#4a002e] opacity-0 group-hover:opacity-100 transition-all">
+                          <a href={value} target="_blank" rel="noreferrer" className="p-2 text-[var(--turquoise-teal)]/20 hover:text-[var(--deep-teal-sea)] opacity-0 group-hover:opacity-100 transition-all">
                             <ExternalLink size={16} />
                           </a>
                         )}
@@ -1911,12 +1911,12 @@ const AdminPage: React.FC = () => {
               </div>
 
               {/* Visual Component Gallery - Turquoise Glassmorphism */}
-              <div className="mt-16 pt-16 border-t border-[#ff009f]/10">
+              <div className="mt-16 pt-16 border-t border-[var(--vibrant-cyan)]/10">
                 <div className="flex items-center gap-4 mb-10">
-                  <div className="p-4 bg-[#40E0D0] text-white rounded-2xl shadow-lg shadow-[#40E0D0]/20"><Sparkles size={24} /></div>
+                  <div className="p-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl shadow-lg shadow-[var(--vibrant-cyan)]/20"><Sparkles size={24} /></div>
                   <div>
-                    <h3 className="text-2xl font-black text-[#4a002e]">גלריית רכיבים ויזואלית</h3>
-                    <p className="text-[#40E0D0] font-bold">Turquoise Glassmorphism Component System</p>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)]">גלריית רכיבים ויזואלית</h3>
+                    <p className="text-[var(--vibrant-cyan)] font-bold">Turquoise Glassmorphism Component System</p>
                   </div>
                 </div>
 
@@ -1997,7 +1997,7 @@ const AdminPage: React.FC = () => {
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">כרטיס לדוגמה (Card)</p>
                     <div className="gt-card w-full">
-                      <h4 className="font-black text-[#4a002e] mb-2">כותרת כרטיס</h4>
+                      <h4 className="font-black text-[var(--deep-teal-sea)] mb-2">כותרת כרטיס</h4>
                       <p className="text-[10px] text-slate-500">זהו כרטיס זכוכית מעוצב עם אפקט טשטוש עדין.</p>
                     </div>
                   </div>
@@ -2036,25 +2036,25 @@ const AdminPage: React.FC = () => {
 
       {/* Edit Asset Modal */}
       {editingAsset && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-[#4a002e]/60 backdrop-blur-md animate-in fade-in">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-[var(--deep-teal-sea)]/60 backdrop-blur-md animate-in fade-in">
           <div className="bg-white w-full max-w-lg rounded-[3.5rem] shadow-2xl p-10 animate-in zoom-in-95">
-            <h3 className="text-2xl font-black text-[#4a002e] mb-2">עדכון נכס: {editingAsset.key}</h3>
-            <p className="text-[#f063c1]/60 font-bold text-sm mb-8">הזן כתובת URL חדשה עבור הנכס</p>
+            <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] mb-2">עדכון נכס: {editingAsset.key}</h3>
+            <p className="text-[var(--turquoise-teal)]/60 font-bold text-sm mb-8">הזן כתובת URL חדשה עבור הנכס</p>
             
             <div className="space-y-6 mb-10">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-4">כתובת URL</label>
+                <label className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mr-4">כתובת URL</label>
                 <input 
                   type="text"
                   value={editingAsset.value}
                   onChange={(e) => setEditingAsset({ ...editingAsset, value: e.target.value })}
-                  className="w-full bg-[#f7c1ea]/10 border border-[#ff009f]/5 rounded-2xl px-6 py-4 font-bold text-[#4a002e] focus:ring-2 focus:ring-[#ff009f] outline-none transition-all"
+                  className="w-full bg-[var(--aqua-mist)]/10 border border-[var(--vibrant-cyan)]/5 rounded-2xl px-6 py-4 font-bold text-[var(--deep-teal-sea)] focus:ring-2 focus:ring-[var(--vibrant-cyan)] outline-none transition-all"
                   placeholder="https://..."
                 />
               </div>
               
               {editingAsset.value.startsWith('http') && (
-                <div className="aspect-video rounded-2xl overflow-hidden border border-[#ff009f]/10 bg-[#f7c1ea]/10">
+                <div className="aspect-video rounded-2xl overflow-hidden border border-[var(--vibrant-cyan)]/10 bg-[var(--aqua-mist)]/10">
                   <img src={editingAsset.value} className="w-full h-full object-contain" alt="Preview" />
                 </div>
               )}
@@ -2063,13 +2063,13 @@ const AdminPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <button 
                 onClick={() => setEditingAsset(null)}
-                className="py-4 bg-[#f2def0] text-[#ff009f] rounded-2xl font-black text-sm hover:bg-[#ffd2fa] transition-all"
+                className="py-4 bg-[var(--sun-bleached)] text-[var(--deep-teal-sea)] rounded-2xl font-black text-sm hover:bg-[var(--sunshine-yellow)]/20 transition-all"
               >
                 ביטול
               </button>
               <button 
                 onClick={handleUpdateAsset}
-                className="py-4 bg-[#ff009f] text-white rounded-2xl font-black text-sm shadow-lg hover:bg-[#4a002e] transition-all"
+                className="py-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl font-black text-sm shadow-lg hover:bg-[var(--deep-teal-sea)] transition-all"
               >
                 עדכון נכס
               </button>
@@ -2176,26 +2176,26 @@ const AdminPage: React.FC = () => {
            <div className="bg-white w-full max-w-md rounded-[3.5rem] shadow-2xl p-10 md:p-14 text-center animate-in zoom-in-95 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff009f]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
               
-              <div className="w-20 h-20 bg-[#ff009f] text-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-[#ff009f]/10">
+              <div className="w-20 h-20 bg-[var(--vibrant-cyan)] text-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-[var(--vibrant-cyan)]/10">
                  <CheckCircle2 size={40} />
               </div>
               
-              <h3 className="text-3xl font-black text-[#4a002e] mb-4">חבר/ה חדש/ה בנבחרת!</h3>
-              <p className="text-[#f063c1]/60 font-bold text-lg mb-10 leading-relaxed">
-                הבקשה של <span className="text-[#ff009f]">{approvedUser.firstName} {approvedUser.lastName}</span> אושרה.
+              <h3 className="text-3xl font-black text-[var(--deep-teal-sea)] mb-4">חבר/ה חדש/ה בנבחרת!</h3>
+              <p className="text-[var(--turquoise-teal)]/60 font-bold text-lg mb-10 leading-relaxed">
+                הבקשה של <span className="text-[var(--vibrant-cyan)]">{approvedUser.firstName} {approvedUser.lastName}</span> אושרה.
                 נא לשלוח לו/ה את פרטי הגישה:
               </p>
               
-              <div className="bg-[#f7c1ea]/10 rounded-[2rem] p-8 mb-6 border border-[#ff009f]/5 relative group">
+              <div className="bg-[var(--aqua-mist)]/10 rounded-[2rem] p-8 mb-6 border border-[var(--vibrant-cyan)]/5 relative group">
                  <div className="space-y-4">
                     <div className="flex justify-between items-center text-right">
-                       <span className="text-[10px] font-black text-[#f063c1]/40 uppercase tracking-widest">שם משתמש</span>
-                       <span className="font-black text-[#4a002e]">{approvedUser.email}</span>
+                       <span className="text-[10px] font-black text-[var(--turquoise-teal)]/40 uppercase tracking-widest">שם משתמש</span>
+                       <span className="font-black text-[var(--deep-teal-sea)]">{approvedUser.email}</span>
                     </div>
-                    <div className="h-px bg-[#ff009f]/10"></div>
+                    <div className="h-px bg-[var(--vibrant-cyan)]/10"></div>
                     <div className="flex justify-between items-center text-right">
-                       <span className="text-[10px] font-black text-[#f063c1]/40 uppercase tracking-widest">סיסמה זמנית</span>
-                       <span className="font-black text-[#ff009f] text-xl tracking-wider select-all">{approvedUser.tempPassword}</span>
+                       <span className="text-[10px] font-black text-[var(--turquoise-teal)]/40 uppercase tracking-widest">סיסמה זמנית</span>
+                       <span className="font-black text-[var(--vibrant-cyan)] text-xl tracking-wider select-all">{approvedUser.tempPassword}</span>
                     </div>
                  </div>
               </div>
@@ -2203,7 +2203,7 @@ const AdminPage: React.FC = () => {
               <div className="grid grid-cols-1 gap-3 mb-10">
                  <button 
                    onClick={() => openWhatsApp(approvedUser.mobile, `${approvedUser.firstName} ${approvedUser.lastName}`, approvedUser.email, approvedUser.tempPassword)}
-                   className="w-full py-4 bg-[#ff009f] text-white rounded-2xl font-black text-sm shadow-lg hover:bg-[#4a002e] transition-all flex items-center justify-center gap-3"
+                   className="w-full py-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl font-black text-sm shadow-lg hover:bg-[var(--deep-teal-sea)] transition-all flex items-center justify-center gap-3"
                  >
                    <MessageCircle size={20} />
                    שלח בוואטסאפ
@@ -2213,7 +2213,7 @@ const AdminPage: React.FC = () => {
                      navigator.clipboard.writeText(formatWhatsAppMessage(`${approvedUser.firstName} ${approvedUser.lastName}`, approvedUser.email, approvedUser.tempPassword));
                      showSuccess('הודעת ההצטרפות הועתקה ללוח');
                    }}
-                   className="w-full py-4 bg-[#f7c1ea]/20 text-[#ff009f] rounded-2xl font-black text-sm hover:bg-[#f7c1ea]/30 transition-all flex items-center justify-center gap-3"
+                   className="w-full py-4 bg-[var(--aqua-mist)]/20 text-[var(--vibrant-cyan)] rounded-2xl font-black text-sm hover:bg-[var(--aqua-mist)]/30 transition-all flex items-center justify-center gap-3"
                  >
                    <Copy size={18} />
                    העתק הודעה ללוח
@@ -2222,7 +2222,7 @@ const AdminPage: React.FC = () => {
               
               <button 
                 onClick={() => setApprovedUser(null)} 
-                className="w-full py-5 bg-[#4a002e] text-white rounded-[2rem] font-black text-lg shadow-xl hover:bg-[#ff009f] transition-all"
+                className="w-full py-5 bg-[var(--deep-teal-sea)] text-white rounded-[2rem] font-black text-lg shadow-xl hover:bg-[var(--vibrant-cyan)] transition-all"
               >
                 סגור פאנל
               </button>

@@ -64,6 +64,18 @@ const RadarChart: React.FC = () => {
       t.textContent = String(val);
     });
 
+    // Add Glassmorphism Defs
+    const defs = el("defs", {}, svg);
+    const lens = el("radialGradient", { id: "radar-glass-lens", cx: "50%", cy: "50%", r: "60%", fx: "30%", fy: "30%" }, defs);
+    el("stop", { offset: "0%", "stop-color": "white", "stop-opacity": "0.4" }, lens);
+    el("stop", { offset: "70%", "stop-color": "white", "stop-opacity": "0.05" }, lens);
+    el("stop", { offset: "100%", "stop-color": "white", "stop-opacity": "0.0" }, lens);
+
+    const shine = el("linearGradient", { id: "radar-glass-shine", x1: "0%", y1: "0%", x2: "100%", y2: "100%" }, defs);
+    el("stop", { offset: "0%", "stop-color": "white", "stop-opacity": "0.3" }, shine);
+    el("stop", { offset: "50%", "stop-color": "white", "stop-opacity": "0.05" }, shine);
+    el("stop", { offset: "100%", "stop-color": "white", "stop-opacity": "0.0" }, shine);
+
     Object.entries(data).forEach(([month, values]) => {
       if (!activeMonths.has(month)) return;
       const pts = axes.map((ax, i) => polar(angle(i), (values[ax] ?? 0) / MAX * R));
@@ -82,6 +94,11 @@ const RadarChart: React.FC = () => {
         el("circle", { cx: p.x, cy: p.y, r: 3.5, fill: colors[month].stroke, stroke: "#1a1a2e", "stroke-width": 1.5 });
       });
     });
+
+    // Add Glassmorphism Overlays
+    el("circle", { cx: CX, cy: CY, r: R + 20, fill: "url(#radar-glass-lens)", opacity: 0.8, "pointer-events": "none" });
+    el("circle", { cx: CX, cy: CY, r: R + 20, fill: "url(#radar-glass-shine)", opacity: 0.6, "pointer-events": "none" });
+    el("circle", { cx: CX, cy: CY, r: R + 20, fill: "none", stroke: "white", "stroke-width": 2, "stroke-opacity": 0.3, "pointer-events": "none" });
 
     axes.forEach((axis, i) => {
       const a = angle(i);

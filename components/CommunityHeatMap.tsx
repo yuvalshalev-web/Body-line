@@ -11,6 +11,7 @@ import {
   ResponsiveContainer, 
   Cell 
 } from 'recharts';
+import { ShieldAlert } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { getCoordinates } from '../src/utils/geocoding';
 
@@ -121,7 +122,7 @@ const CommunityHeatMap: React.FC = () => {
         }
 
         // [lat, lng, intensity]
-        heatPoints.push([coords[0], coords[1], 0.5]);
+        heatPoints.push([coords[0], coords[1], 0.8]); // Increased intensity from 0.5 to 0.8
       }
     });
 
@@ -133,44 +134,53 @@ const CommunityHeatMap: React.FC = () => {
     });
 
     // Add home marker
-    console.log('L object:', L);
     L.marker([homeLat, homeLng]).addTo(mapInstance.current).bindPopup('חוף הבית');
 
-    // Add distance circles
-    const circles = [
-      { radius: 25000, color: '#10b981', dashArray: null }, // 25km - Green
-      { radius: 100000, color: '#f59e0b', dashArray: '10, 10' } // 100km - Orange
-    ];
-
-    circles.forEach(c => {
+    // Add distance circles every 10km up to 100km
+    for (let i = 1; i <= 10; i++) {
+      const radius = i * 10000; // 10km, 20km, ...
+      const distanceKm = i * 10;
+      
       L.circle([homeLat, homeLng], {
-        radius: c.radius,
-        color: c.color,
+        radius: radius,
+        color: distanceKm <= 20 ? '#10b981' : (distanceKm <= 60 ? '#f59e0b' : '#ef4444'),
         fill: false,
-        weight: 2,
-        dashArray: c.dashArray,
+        weight: 1,
+        dashArray: i % 2 === 0 ? null : '5, 5',
+        opacity: 0.4 - (i * 0.03), // Outer rings are more subtle
         interactive: false
       }).addTo(mapInstance.current);
-    });
+    }
 
     // Add heatmap layer
-    console.log('Heatmap points:', heatPoints);
-    console.log('Number of heat points:', heatPoints.length);
-    console.log('L.heatLayer available:', !!L.heatLayer);
-    if (L.heatLayer && heatPoints.length > 0) {
-      L.heatLayer(heatPoints, {
-        radius: 40,
+    const heatLayerFn = (L as any).heatLayer;
+    
+    if (heatLayerFn && heatPoints.length > 0) {
+      heatLayerFn(heatPoints, {
+        radius: 45, // Increased radius
         blur: 20,
-        maxZoom: 17,
+        maxZoom: 10,
+        max: 1.0,
         gradient: {
-          0.2: 'blue',
-          0.4: 'green',
-          0.6: 'yellow',
-          1.0: 'red'
+          0.4: '#3b82f6', // blue
+          0.6: '#10b981', // green
+          0.8: '#f59e0b', // yellow/orange
+          1.0: '#ef4444'  // red
         }
       }).addTo(mapInstance.current);
-    } else {
-      console.warn('Heatmap layer not added: L.heatLayer is', L.heatLayer, 'heatPoints length is', heatPoints.length);
+    } else if (heatPoints.length > 0) {
+      // Fallback: Add glowing pulses for each point if heatmap fails
+      heatPoints.forEach(p => {
+        L.circleMarker([p[0], p[1]], {
+          radius: 12,
+          fillColor: '#3b82f6',
+          color: '#fff',
+          weight: 2,
+          opacity: 0.8,
+          fillOpacity: 0.4,
+          className: 'pulse-marker'
+        }).addTo(mapInstance.current);
+      });
     }
 
     // Adjust view to fit data or default radius
@@ -182,6 +192,8 @@ const CommunityHeatMap: React.FC = () => {
       mapInstance.current.fitBounds(focusCircle.getBounds(), { padding: [20, 20] });
     }
   };
+
+  const hasNoPoints = members.length > 0 && stats.bins.reduce((a, b) => a + b.count, 0) === 0;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -246,6 +258,18 @@ const CommunityHeatMap: React.FC = () => {
             style={{ background: '#f0f0f0', minHeight: '600px' }}
           />
           
+          {hasNoPoints && (
+            <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+              <div className="glass-panel p-6 text-center max-w-xs">
+                <ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+                <h4 className="text-lg font-black glass-text-primary mb-2">לא נמצאו נתוני מיקום</h4>
+                <p className="text-xs glass-text-secondary leading-relaxed">
+                  כדי להציג את מפת החום, יש לוודא שלחברי הקהילה מוגדרת עיר מגורים תקינה בטבלת החברים.
+                </p>
+              </div>
+            </div>
+          )}
+          
           {/* Stats Overlay on Map */}
           <div className="absolute bottom-4 left-4 z-[1000]">
             <div className="glass-effect p-4 rounded-2xl border border-white/20 shadow-xl backdrop-blur-xl">
@@ -254,6 +278,37 @@ const CommunityHeatMap: React.FC = () => {
                 <span className="text-[10px] font-black glass-text-primary uppercase tracking-widest">זמינות מיידית</span>
               </div>
               <p className="text-xl font-black glass-text-primary">{stats.near} <span className="text-xs font-normal opacity-50">חברים</span></p>
+              {/* Debug Info */}
+              <div className="mt-2 pt-2 border-t border-white/10">
+                <p className="text-[8px] font-bold glass-text-secondary uppercase tracking-tighter">
+                  Mapped: {stats.near + stats.medium + stats.far} Members • Points: {stats.bins.reduce((a, b) => a + b.count, 0)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Heatmap Color Legend */}
+          <div className="absolute bottom-4 right-4 z-[1000]">
+            <div className="glass-effect p-4 rounded-2xl border border-white/20 shadow-xl backdrop-blur-xl flex flex-col gap-3">
+              <span className="text-[10px] font-black glass-text-primary uppercase tracking-widest mb-1">צפיפות חברים</span>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full bg-[#ef4444] shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
+                  <span className="text-[10px] font-bold glass-text-secondary">גבוהה מאוד</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full bg-[#f59e0b] shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+                  <span className="text-[10px] font-bold glass-text-secondary">גבוהה</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full bg-[#10b981] shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                  <span className="text-[10px] font-bold glass-text-secondary">בינונית</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full bg-[#3b82f6] shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                  <span className="text-[10px] font-bold glass-text-secondary">נמוכה</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

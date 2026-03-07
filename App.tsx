@@ -28,20 +28,20 @@ import ErrorBoundary from './components/ErrorBoundary';
 import FloatingMenu from './components/FloatingMenu';
 
 // Lazy loaded components
-const LoginPage = lazy(() => import('./pages/LoginPage.tsx'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage.tsx'));
-const DirectoryPage = lazy(() => import('./pages/DirectoryPage.tsx'));
-const GalleryPage = lazy(() => import('./pages/GalleryPage.tsx'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage.tsx'));
-const AdminPage = lazy(() => import('./pages/AdminPage.tsx'));
-const EventsPage = lazy(() => import('./pages/EventsPage.tsx'));
-const NewsPage = lazy(() => import('./pages/NewsPage.tsx'));
-const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage.tsx'));
-const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage.tsx'));
-const AdminRolloverReport = lazy(() => import('./pages/AdminRolloverReport.tsx'));
-const SurferCardPage = lazy(() => import('./pages/SurferCardPage.tsx'));
-const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance.tsx'));
-const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage.tsx'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const DirectoryPage = lazy(() => import('./pages/DirectoryPage'));
+const GalleryPage = lazy(() => import('./pages/GalleryPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
+const EventsPage = lazy(() => import('./pages/EventsPage'));
+const NewsPage = lazy(() => import('./pages/NewsPage'));
+const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage'));
+const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage'));
+const AdminRolloverReport = lazy(() => import('./pages/AdminRolloverReport'));
+const SurferCardPage = lazy(() => import('./pages/SurferCardPage'));
+const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance'));
+const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage'));
 
 const PageLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -52,36 +52,91 @@ const PageLoader = () => (
   </div>
 );
 
-const NavLink = React.memo(({ 
+const SignpostLink = React.memo(({ 
   item, 
   isActive, 
-  onClick 
+  onClick,
+  index
 }: { 
   item: any, 
   isActive: boolean, 
-  onClick: () => void 
-}) => (
-  <button
-    onClick={onClick}
-    className={`flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-sm transition-all group w-full text-right relative overflow-hidden ${
-      isActive 
-        ? 'text-white shadow-lg shadow-[var(--sand-shadow)]/20 translate-x-1' 
-        : 'text-[var(--sand-dark)] hover:bg-[var(--sand-light)]/10 hover:text-[var(--sand-accent)]'
-    }`}
-  >
-    {isActive && (
-      <div className="absolute inset-0 bg-gradient-to-r from-[var(--sand-accent)] to-[var(--sand-medium)] z-0" />
-    )}
-    <div className="relative z-10 flex items-center gap-4 w-full">
-      <item.icon 
-        size={20} 
-        className={isActive ? 'text-[var(--sand-light)]' : 'text-[var(--sand-muted)] opacity-60 group-hover:opacity-100 group-hover:text-[var(--sand-accent)] transition-colors'} 
-      />
-      <span className="flex-1">{item.label}</span>
-      {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[var(--sand-light)] animate-pulse shadow-[0_0_8px_var(--sand-light)]" />}
-    </div>
-  </button>
-));
+  onClick: () => void,
+  index: number
+}) => {
+  const colors = [
+    'bg-[#FF6B6B]', // Red
+    'bg-[#4ECDC4]', // Teal
+    'bg-[#FFE66D]', // Yellow
+    'bg-[#FF9F43]', // Orange
+    'bg-[#1DD1A1]', // Green
+    'bg-[#54A0FF]', // Blue
+    'bg-[#5F27CD]', // Purple
+    'bg-[#EE5253]', // Rose
+  ];
+  
+  const rotations = [-3, 2, -1, 3, -2, 1];
+  const color = colors[index % colors.length];
+  const rotation = rotations[index % rotations.length];
+  const isRight = index % 2 === 0;
+
+  return (
+    <motion.div
+      initial={{ x: isRight ? 100 : -100, opacity: 0, rotate: rotation - 10 }}
+      animate={{ x: 0, opacity: 1, rotate: rotation }}
+      transition={{ 
+        delay: index * 0.05, 
+        type: 'spring', 
+        damping: 12, 
+        stiffness: 100 
+      }}
+      whileHover={{ scale: 1.05, rotate: rotation * 1.5 }}
+      whileTap={{ scale: 0.95 }}
+      style={{ rotate: rotation }}
+      className="relative my-2 w-full group cursor-pointer"
+      onClick={onClick}
+    >
+      {/* The Sign Shape */}
+      <div className={`
+        relative py-3 px-8 shadow-xl transition-all duration-300
+        ${color} ${isActive ? 'ring-4 ring-white ring-inset' : 'opacity-90 group-hover:opacity-100'}
+        ${isRight 
+          ? 'rounded-l-lg rounded-r-[40px] pr-12' 
+          : 'rounded-r-lg rounded-l-[40px] pl-12'}
+        border-2 border-black/10
+      `}>
+        {/* Wood Texture Overlay */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none" 
+             style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.1) 21px)', mixBlendMode: 'overlay' }} />
+        
+        <div className={`flex items-center gap-3 relative z-10 ${isRight ? 'justify-start' : 'justify-end flex-row-reverse'}`}>
+          <item.icon 
+            size={22} 
+            className={`${isActive ? 'text-white' : 'text-black/60'} drop-shadow-md`} 
+          />
+          <span className={`
+            text-lg font-[900] tracking-tight
+            ${isActive ? 'text-white' : 'text-black/80'}
+            drop-shadow-[0_1px_1px_rgba(255,255,255,0.3)]
+          `}>
+            {item.label}
+          </span>
+        </div>
+
+        {/* Arrow Tip for Signpost Look */}
+        <div className={`
+          absolute top-0 bottom-0 w-8 bg-inherit border-y-2 border-black/10
+          ${isRight ? 'right-0 rounded-r-full' : 'left-0 rounded-l-full'}
+        `} />
+      </div>
+
+      {/* Nails */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-12 pointer-events-none opacity-40">
+        <div className="w-2 h-2 rounded-full bg-slate-800 shadow-inner" />
+        <div className="w-2 h-2 rounded-full bg-slate-800 shadow-inner" />
+      </div>
+    </motion.div>
+  );
+});
 
 const App: React.FC = () => {
   const { currentUser, logout } = useAuth();
@@ -209,8 +264,29 @@ const App: React.FC = () => {
     { path: '/admin-rollover', icon: Activity, label: 'דו"ח יום חמישי' }
   ];
 
+  const isDirectoryPage = location.pathname === '/directory';
+
   return (
-    <div className="min-h-screen flex flex-col font-['Assistant'] bg-[#F8F9FB]" dir="rtl">
+    <div className="min-h-screen flex flex-col font-['Assistant'] relative" dir="rtl">
+      {/* Global Wallpaper for Directory Page */}
+      <AnimatePresence>
+        {isDirectoryPage && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.15 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-0 pointer-events-none"
+            style={{
+              backgroundImage: 'url("https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fsurfers_hut.jpg?alt=media")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              filter: 'brightness(0.9) contrast(1.05)'
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Global Progress Bar */}
       <div id="global-progress-container">
         <div id="global-progress-bar"></div>
@@ -245,33 +321,63 @@ const App: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[300px] bg-[var(--sand-light)]/95 backdrop-blur-2xl z-[10002] shadow-2xl flex flex-col border-l border-white/20"
+              className="fixed top-0 right-0 bottom-0 w-[320px] bg-[#f8f1e5] z-[10002] shadow-2xl flex flex-col overflow-hidden"
+              style={{
+                backgroundImage: 'url("https://www.transparenttextures.com/patterns/sandpaper.png")',
+              }}
             >
-              {/* Drawer Header */}
-              <div className="p-8 pb-4 flex items-center justify-between border-b border-[var(--sand-medium)]/20">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[var(--sand-accent)] flex items-center justify-center text-white shadow-lg">
-                    <Waves size={24} />
+              {/* The Pole */}
+              <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-8 bg-[#8d6e63] shadow-[inset_-4px_0_8px_rgba(0,0,0,0.3),inset_4px_0_8px_rgba(255,255,255,0.1)] z-0">
+                <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.2) 41px)' }} />
+              </div>
+
+              {/* Crazy Seagull Decoration */}
+              <motion.div 
+                animate={{ 
+                  y: [0, -5, 0],
+                  rotate: [0, 2, -2, 0]
+                }}
+                transition={{ repeat: Infinity, duration: 4 }}
+                className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+              >
+                <div className="relative">
+                  <span className="text-4xl">🐦</span>
+                  <div className="absolute -top-4 -right-4 bg-white px-2 py-1 rounded-full text-[10px] font-bold shadow-sm border border-slate-100 rotate-12">
+                    MINE!
                   </div>
-                  <span className="text-xl font-black text-[var(--sand-deep)] tracking-tight">Body-line</span>
+                </div>
+              </motion.div>
+
+              {/* Drawer Header */}
+              <div className="p-8 pt-16 pb-4 flex items-center justify-between relative z-10">
+                <div className="flex flex-col items-center w-full gap-2">
+                  <div className="w-16 h-16 rounded-full bg-white shadow-xl flex items-center justify-center text-[var(--sand-accent)] border-4 border-[#8d6e63] relative overflow-hidden group">
+                    <Waves size={32} className="group-hover:animate-bounce" />
+                    <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-sky-400/30 backdrop-blur-sm" />
+                  </div>
+                  <span className="text-2xl font-black text-[#5d4037] tracking-tighter drop-shadow-sm">Body-line</span>
                 </div>
                 <button 
                   onClick={() => setIsDrawerOpen(false)}
-                  className="p-2 rounded-xl hover:bg-[var(--sand-medium)]/20 text-[var(--sand-dark)] transition-colors"
+                  className="absolute top-6 right-6 p-2 rounded-full bg-white/50 hover:bg-white text-[#5d4037] transition-all shadow-sm"
                 >
                   <X size={20} />
                 </button>
               </div>
 
               {/* Navigation Items */}
-              <div className="flex-1 px-4 py-6 flex flex-col gap-2 overflow-y-auto">
-                <div className="mb-4 px-4">
-                  <span className="text-[10px] font-black text-[var(--sand-muted)] uppercase tracking-widest">ניווט ראשי</span>
+              <div className="flex-1 px-4 py-8 flex flex-col gap-1 overflow-y-auto relative z-10 custom-scrollbar">
+                <div className="mb-6 text-center">
+                  <span className="px-4 py-1 bg-[#d4a373] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-sm">
+                    בחר יעד
+                  </span>
                 </div>
-                {navItems.map((item) => (
-                  <NavLink 
+                
+                {navItems.map((item, idx) => (
+                  <SignpostLink 
                     key={item.path}
                     item={item}
+                    index={idx}
                     isActive={location.pathname === item.path}
                     onClick={() => handleNavigation(item.path)}
                   />
@@ -279,13 +385,16 @@ const App: React.FC = () => {
 
                 {currentUser.role === 'Admin' && (
                   <>
-                    <div className="mt-8 mb-4 px-4">
-                      <span className="text-[10px] font-black text-[var(--sand-muted)] uppercase tracking-widest">ניהול מערכת</span>
+                    <div className="mt-12 mb-6 text-center">
+                      <span className="px-4 py-1 bg-slate-700 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-sm">
+                        אזור מנהלים
+                      </span>
                     </div>
-                    {adminNavItems.map((item) => (
-                      <NavLink 
+                    {adminNavItems.map((item, idx) => (
+                      <SignpostLink 
                         key={item.path}
                         item={item}
+                        index={idx + navItems.length}
                         isActive={location.pathname === item.path}
                         onClick={() => handleNavigation(item.path)}
                       />
@@ -295,9 +404,21 @@ const App: React.FC = () => {
               </div>
 
               {/* Profile Section */}
-              <div className="p-6 bg-[var(--sand-medium)]/10 border-t border-[var(--sand-medium)]/20">
-                <div className="flex items-center gap-4 mb-6 px-2">
-                  <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white shadow-md">
+              <div className="p-6 bg-white/40 backdrop-blur-md border-t border-[#8d6e63]/20 relative z-10">
+                {/* Sand and Sea effect at bottom */}
+                <div className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-0 overflow-hidden">
+                  <motion.div 
+                    animate={{ x: [-20, 20, -20] }}
+                    transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+                    className="absolute bottom-4 left-[-20%] w-[140%] h-8 bg-sky-400/20 rounded-[100%] blur-md" 
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-[#f4d03f]/40 blur-sm" />
+                  <span className="absolute bottom-1 left-4 text-xl">🐚</span>
+                  <span className="absolute bottom-2 right-8 text-xl rotate-12">⭐</span>
+                </div>
+
+                <div className="flex items-center gap-4 mb-6 px-2 relative z-10">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-lg ring-2 ring-[#d4a373]">
                     <img 
                       src={currentUser.avatar || `https://ui-avatars.com/api/?name=${currentUser.firstName}+${currentUser.lastName}&background=D4A373&color=fff`} 
                       alt={`${currentUser.firstName} ${currentUser.lastName}`}
@@ -306,17 +427,17 @@ const App: React.FC = () => {
                     />
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-black text-sm text-[var(--sand-deep)]">{currentUser.firstName} {currentUser.lastName}</span>
-                    <span className="text-[10px] font-bold text-[var(--sand-muted)] uppercase tracking-widest">{currentUser.role}</span>
+                    <span className="font-black text-sm text-[#5d4037]">{currentUser.firstName} {currentUser.lastName}</span>
+                    <span className="text-[10px] font-bold text-[#8d6e63] uppercase tracking-widest">{currentUser.role}</span>
                   </div>
                 </div>
 
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl bg-rose-50 text-rose-600 font-black text-sm hover:bg-rose-100 transition-all group"
+                  className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-full bg-[#8d6e63] text-white font-black text-sm hover:bg-[#5d4037] transition-all shadow-lg group"
                 >
                   <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
-                  <span>התנתקות מהמערכת</span>
+                  <span>עזוב את החוף</span>
                 </button>
               </div>
             </motion.div>
@@ -326,7 +447,7 @@ const App: React.FC = () => {
 
       {/* Main Content Area */}
       <FloatingMenu onOpenDrawer={() => setIsDrawerOpen(true)} />
-      <main className="flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto pb-32">
+      <main className="flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto pb-32 relative z-10">
         <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>
             <Routes>

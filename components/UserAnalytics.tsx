@@ -80,10 +80,16 @@ const AstrodeckGauge: React.FC<{
               <stop offset="100%" stopColor={isGrit ? "#0c4a6e" : "#0284c7"} />
             </linearGradient>
 
-            <linearGradient id="glass-shine-gauge" x1="0%" y1="0%" x2="100%" y2="100%">
+            <radialGradient id="glass-lens-gauge" cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
               <stop offset="0%" stopColor="white" stopOpacity="0.4" />
-              <stop offset="50%" stopColor="white" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="white" stopOpacity="0.05" />
+              <stop offset="70%" stopColor="white" stopOpacity="0.05" />
+              <stop offset="100%" stopColor="white" stopOpacity="0.0" />
+            </radialGradient>
+
+            <linearGradient id="glass-shine-gauge" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="white" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="white" stopOpacity="0.05" />
+              <stop offset="100%" stopColor="white" stopOpacity="0.0" />
             </linearGradient>
 
             <linearGradient id="surface-shimmer-grad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -219,20 +225,26 @@ const AstrodeckGauge: React.FC<{
             </motion.g>
           </g>
 
-          {/* Glassmorphism Overlay - Shine & Depth */}
+          {/* Glassmorphism Overlay - Lens Effect & Shine */}
+          <path 
+            d={padPath} 
+            fill="url(#glass-lens-gauge)" 
+            className="pointer-events-none"
+            opacity="0.8"
+          />
           <path 
             d={padPath} 
             fill="url(#glass-shine-gauge)" 
             className="pointer-events-none"
-            opacity="0.4"
+            opacity="0.6"
           />
           
           <path 
             d={padPath} 
             fill="none" 
             stroke="white" 
-            strokeWidth="1.5" 
-            strokeOpacity="0.3"
+            strokeWidth="2" 
+            strokeOpacity="0.4"
             className="pointer-events-none"
           />
 

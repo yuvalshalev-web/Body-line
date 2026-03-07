@@ -1624,6 +1624,43 @@ main.bg-slate-50 {
     text-transform: uppercase;
 }
 
+@keyframes pulse-ring {
+  0% { transform: scale(0.33); opacity: 1; }
+  80%, 100% { opacity: 0; }
+}
+
+.pulse-marker {
+  animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+}
+
+/* --- Surfer Theme --- */
+
+:root {
+    /* Surfer Theme - Extended (12 Shades) */
+    --vibrant-cyan: #00D9E6;    /* המים הבהירים */
+    --turquoise-teal: #00AFC2;  /* עומק המים */
+    --electric-red-pink: #FF2D60; /* קצה הגלשן העליון */
+    --deep-magenta: #CC2678;    /* גוון המעבר בגלשן */
+    --sunshine-yellow: #FFDE45; /* מרכז הגלשן הבהיר */
+    --golden-orange: #FF9F1C;   /* גוון שקיעה בגלשן */
+    --water-highlight: #E0F7FA; /* נצנוץ המים (לבן-תכלת) */
+    --sun-bleached: #F1EDD5;    /* גוון חול/גלשן בהיר */
+    --deep-shadow: #7A1555;     /* צללים כהים בגלשן */
+    --tan-skin: #C29670;        /* גוון עור שזוף */
+    --deep-teal-sea: #007085;   /* המים העמוקים ביותר */
+    --aqua-mist: #B2EBF2;       /* רסיסי מים */
+}
+
+/* דוגמה לשימוש בגרדיאנט של הגלשן תחת השם החדש */
+.surfer-theme-gradient {
+    background: linear-gradient(180deg, 
+        var(--electric-red-pink) 0%, 
+        var(--golden-orange) 40%, 
+        var(--vibrant-cyan) 80%, 
+        var(--deep-magenta) 100%
+    );
+}
+
 
 
 

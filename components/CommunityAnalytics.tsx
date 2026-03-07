@@ -689,6 +689,61 @@ const CommunityAnalytics: React.FC = () => {
           </motion.div>
         </div>
 
+        {/* Churn & Retention Card - Moved here per user request */}
+        <motion.div 
+          whileHover={{ scale: 1.005 }}
+          className="glass-panel p-10 !rounded-2xl transition-all duration-500 relative overflow-hidden group lg:col-span-2"
+        >
+          {/* Glossy Shimmer Effect */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+          
+          <div className="grid grid-cols-1 gap-12">
+            
+            {/* Low Pulse List */}
+            <div className="space-y-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-900/5 flex items-center justify-center text-slate-900 shadow-inner border border-slate-900/10">
+                    <UserMinus size={20} />
+                  </div>
+                  <h4 className="text-xl font-black glass-text-primary tracking-tight">דופק נמוך (בסיכון נטישה)</h4>
+                </div>
+                <span className="text-[10px] font-black glass-text-secondary uppercase tracking-widest bg-slate-900/5 px-4 py-1.5 rounded-full border border-slate-900/10 shadow-sm">
+                  לא נראו מעל 30 יום
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {stats.lowPulseMembers.length > 0 ? (
+                  stats.lowPulseMembers.map(member => (
+                    <div key={member.id} className="flex items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group/item shadow-lg">
+                      <div className="flex items-center gap-4">
+                        <img 
+                          src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}&background=random`} 
+                          alt="" 
+                          className="w-12 h-12 rounded-xl border-2 border-white/20 shadow-inner object-cover"
+                        />
+                        <div>
+                          <p className="text-base font-black text-black">{member.firstName} {member.lastName}</p>
+                          <p className="text-[10px] font-bold text-black/60 italic">פעם אחרונה: {member.joinedAt}</p>
+                        </div>
+                      </div>
+                      <button className="p-3 rounded-xl bg-white/10 text-white/50 opacity-0 group-hover/item:opacity-100 transition-all hover:bg-white/20 hover:text-white">
+                        <MessageSquare size={18} />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-2 p-12 text-center border border-dashed border-white/10 rounded-3xl bg-white/5">
+                    <p className="text-white/30 font-black uppercase tracking-[0.3em] text-sm">כל החברים פעילים בדופק גבוה ✨</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </motion.div>
+
         {/* Vitality Retention Card - Tachometer Gauges */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -728,11 +783,25 @@ const CommunityAnalytics: React.FC = () => {
                             <stop offset="100%" stopColor="#1A202C" />
                           </radialGradient>
 
-                          {/* Color Band Gradient (Red -> Yellow -> Green) */}
-                          <linearGradient id={`color-band-vitality-${idx}`} x1="0" y1="1" x2="1" y2="0">
-                            <stop offset="0%" stopColor="#FF4D00" />
-                            <stop offset="50%" stopColor="#FFD700" />
-                            <stop offset="100%" stopColor="#00FF00" />
+                          {/* Color Band Gradient (Red -> Orange -> Neon Green) - Precise Mapping */}
+                          <linearGradient id={`color-band-vitality-${idx}`} x1="35" y1="165" x2="165" y2="165" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stopColor="#ef4444" />
+                            <stop offset="30%" stopColor="#f59e0b" />
+                            <stop offset="60%" stopColor="#eab308" />
+                            <stop offset="85%" stopColor="#84cc16" />
+                            <stop offset="100%" stopColor="#39FF14" />
+                          </linearGradient>
+
+                          <radialGradient id={`glass-lens-gauge-${idx}`} cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
+                            <stop offset="0%" stopColor="white" stopOpacity="0.4" />
+                            <stop offset="70%" stopColor="white" stopOpacity="0.05" />
+                            <stop offset="100%" stopColor="white" stopOpacity="0.0" />
+                          </radialGradient>
+
+                          <linearGradient id={`glass-shine-gauge-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="white" stopOpacity="0.3" />
+                            <stop offset="50%" stopColor="white" stopOpacity="0.05" />
+                            <stop offset="100%" stopColor="white" stopOpacity="0.0" />
                           </linearGradient>
 
                           <filter id={`glow-${idx}`} x="-20%" y="-20%" width="140%" height="140%">
@@ -809,8 +878,64 @@ const CommunityAnalytics: React.FC = () => {
                         <circle cx="100" cy="100" r="8" fill="white" />
                         <circle cx="100" cy="100" r="4" fill="#1A202C" />
 
+                        {/* Glassmorphism Overlay - Lens Effect & Shine */}
+                        <circle cx="100" cy="100" r="92" fill={`url(#glass-lens-gauge-${idx})`} className="pointer-events-none" opacity="0.8" />
+                        <circle cx="100" cy="100" r="92" fill={`url(#glass-shine-gauge-${idx})`} className="pointer-events-none" opacity="0.6" />
+                        <circle cx="100" cy="100" r="92" fill="none" stroke="white" strokeWidth="2" strokeOpacity="0.3" className="pointer-events-none" />
+                        
+                        {/* Pad Outline for definition */}
+                        <circle cx="100" cy="100" r="92" fill="none" stroke="white" strokeWidth="0.5" strokeOpacity="0.2" className="pointer-events-none" />
+
+                        {/* Digital Percentage Box - Glassmorphism 3D Effect */}
+                        <g transform="translate(65, 130)">
+                          {/* Outer Bevel / Glass Edge */}
+                          <rect 
+                            width="70" 
+                            height="28" 
+                            rx="6" 
+                            fill="rgba(255, 255, 255, 0.02)" 
+                            stroke="rgba(255, 255, 255, 0.15)" 
+                            strokeWidth="1" 
+                          />
+                          {/* Inner Shadow / Depth */}
+                          <rect 
+                            x="1" 
+                            y="1" 
+                            width="68" 
+                            height="26" 
+                            rx="5" 
+                            fill="none" 
+                            stroke="rgba(0, 0, 0, 0.2)" 
+                            strokeWidth="0.5" 
+                          />
+                          {/* Top Highlight */}
+                          <path 
+                            d="M 6 2 L 64 2" 
+                            stroke="white" 
+                            strokeOpacity="0.15" 
+                            strokeWidth="1" 
+                            strokeLinecap="round"
+                          />
+                          <text 
+                            x="35" 
+                            y="15" 
+                            textAnchor="middle" 
+                            dominantBaseline="middle" 
+                            fill={group.retention >= 80 ? "#39FF14" : group.retention >= 50 ? "#f59e0b" : "#ef4444"} 
+                            fontSize="16" 
+                            fontWeight="black" 
+                            fontFamily="monospace"
+                            style={{ 
+                              filter: `drop-shadow(0px 0px 3px ${group.retention >= 80 ? "rgba(57, 255, 20, 0.4)" : group.retention >= 50 ? "rgba(245, 158, 11, 0.4)" : "rgba(239, 68, 68, 0.4)"})`,
+                              letterSpacing: '-1px'
+                            }}
+                          >
+                            {group.retention}%
+                          </text>
+                        </g>
+
                         {/* Label inside gauge */}
-                        <text x="100" y="170" textAnchor="middle" dominantBaseline="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="14" className="antialiased tracking-tighter">
+                        <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="16" className="antialiased tracking-tighter shadow-sm">
                           {group.label}
                         </text>
                       </svg>
@@ -895,6 +1020,18 @@ const CommunityAnalytics: React.FC = () => {
                         </radialGradient>
 
                         {/* Glossy Highlight */}
+                        <radialGradient id={`glass-lens-gender-${idx}`} cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
+                          <stop offset="0%" stopColor="white" stopOpacity="0.4" />
+                          <stop offset="70%" stopColor="white" stopOpacity="0.05" />
+                          <stop offset="100%" stopColor="white" stopOpacity="0.0" />
+                        </radialGradient>
+
+                        <linearGradient id={`glass-shine-gender-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="white" stopOpacity="0.3" />
+                          <stop offset="50%" stopColor="white" stopOpacity="0.05" />
+                          <stop offset="100%" stopColor="white" stopOpacity="0.0" />
+                        </linearGradient>
+
                         <linearGradient id={`gloss-${idx}`} x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
                           <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
                           <stop offset="50%" stopColor="rgba(255,255,255,0.05)" />
@@ -998,8 +1135,61 @@ const CommunityAnalytics: React.FC = () => {
                       {/* Center Pivot */}
                       <circle cx="100" cy="100" r="6" fill="#2D3748" />
 
+                      {/* Glassmorphism Overlay - Lens Effect & Shine */}
+                      <circle cx="100" cy="100" r="92" fill={`url(#glass-lens-gender-${idx})`} className="pointer-events-none" opacity="0.8" />
+                      <circle cx="100" cy="100" r="92" fill={`url(#glass-shine-gender-${idx})`} className="pointer-events-none" opacity="0.6" />
+                      <circle cx="100" cy="100" r="92" fill="none" stroke="white" strokeWidth="2" strokeOpacity="0.3" className="pointer-events-none" />
+
+                      {/* Digital Percentage Box - Glassmorphism 3D Effect */}
+                      <g transform="translate(65, 130)">
+                        {/* Outer Bevel / Glass Edge */}
+                        <rect 
+                          width="70" 
+                          height="28" 
+                          rx="6" 
+                          fill="rgba(255, 255, 255, 0.02)" 
+                          stroke="rgba(255, 255, 255, 0.15)" 
+                          strokeWidth="1" 
+                        />
+                        {/* Inner Shadow / Depth */}
+                        <rect 
+                          x="1" 
+                          y="1" 
+                          width="68" 
+                          height="26" 
+                          rx="5" 
+                          fill="none" 
+                          stroke="rgba(0, 0, 0, 0.2)" 
+                          strokeWidth="0.5" 
+                        />
+                        {/* Top Highlight */}
+                        <path 
+                          d="M 6 2 L 64 2" 
+                          stroke="white" 
+                          strokeOpacity="0.15" 
+                          strokeWidth="1" 
+                          strokeLinecap="round"
+                        />
+                        <text 
+                          x="35" 
+                          y="15" 
+                          textAnchor="middle" 
+                          dominantBaseline="middle" 
+                          fill="#2D3748" 
+                          fontSize="16" 
+                          fontWeight="black" 
+                          fontFamily="monospace"
+                          style={{ 
+                            filter: `drop-shadow(0px 0px 2px rgba(0,0,0,0.1))`,
+                            letterSpacing: '-1px'
+                          }}
+                        >
+                          {group.value}%
+                        </text>
+                      </g>
+
                       {/* Text Elements */}
-                      <text x="100" y="155" textAnchor="middle" dominantBaseline="middle" fill="#2D3748" fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="14" className="antialiased">{group.label}</text>
+                      <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="#2D3748" fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="14" className="antialiased">{group.label}</text>
                     </svg>
                   </div>
                   
@@ -1027,61 +1217,6 @@ const CommunityAnalytics: React.FC = () => {
                 </div>
               );
             })}
-          </div>
-        </motion.div>
-
-        {/* Churn & Retention Card */}
-        <motion.div 
-          whileHover={{ scale: 1.005 }}
-          className="glass-panel p-10 !rounded-2xl transition-all duration-500 relative overflow-hidden group lg:col-span-2"
-        >
-          {/* Glossy Shimmer Effect */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
-          
-          <div className="grid grid-cols-1 gap-12">
-            
-            {/* Low Pulse List */}
-            <div className="space-y-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-slate-900/5 flex items-center justify-center text-slate-900 shadow-inner border border-slate-900/10">
-                    <UserMinus size={20} />
-                  </div>
-                  <h4 className="text-xl font-black glass-text-primary tracking-tight">דופק נמוך (בסיכון נטישה)</h4>
-                </div>
-                <span className="text-[10px] font-black glass-text-secondary uppercase tracking-widest bg-slate-900/5 px-4 py-1.5 rounded-full border border-slate-900/10 shadow-sm">
-                  לא נראו מעל 30 יום
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {stats.lowPulseMembers.length > 0 ? (
-                  stats.lowPulseMembers.map(member => (
-                    <div key={member.id} className="flex items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group/item shadow-lg">
-                      <div className="flex items-center gap-4">
-                        <img 
-                          src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}&background=random`} 
-                          alt="" 
-                          className="w-12 h-12 rounded-full border-2 border-white/20 shadow-inner"
-                        />
-                        <div>
-                          <p className="text-base font-black text-black">{member.firstName} {member.lastName}</p>
-                          <p className="text-[10px] font-bold text-black/60 italic">פעם אחרונה: {member.joinedAt}</p>
-                        </div>
-                      </div>
-                      <button className="p-3 rounded-xl bg-white/10 text-white/50 opacity-0 group-hover/item:opacity-100 transition-all hover:bg-white/20 hover:text-white">
-                        <MessageSquare size={18} />
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-2 p-12 text-center border border-dashed border-white/10 rounded-3xl bg-white/5">
-                    <p className="text-white/30 font-black uppercase tracking-[0.3em] text-sm">כל החברים פעילים בדופק גבוה ✨</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
           </div>
         </motion.div>
 

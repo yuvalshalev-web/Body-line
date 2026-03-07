@@ -75,7 +75,15 @@ export const CITY_COORDINATES: Record<string, [number, number]> = {
 
 export const getCoordinates = (city?: string, lat?: number, lng?: number): [number, number] | null => {
   if (lat && lng) return [lat, lng];
-  if (city && CITY_COORDINATES[city]) return CITY_COORDINATES[city];
+  if (!city) return null;
+  
+  const cleanCity = city.trim();
+  if (CITY_COORDINATES[cleanCity]) return CITY_COORDINATES[cleanCity];
+  
+  // Try to find a match ignoring parentheses or common suffixes
+  const baseCity = cleanCity.split('(')[0].trim();
+  if (CITY_COORDINATES[baseCity]) return CITY_COORDINATES[baseCity];
+
   return null;
 };
 
