@@ -43,7 +43,7 @@ const SurferCardPage: React.FC = () => {
     <div className="max-w-7xl mx-auto px-[var(--spacing-md)] md:px-[var(--spacing-lg)] py-[var(--spacing-lg)] font-['Assistant']" dir="rtl">
       <div className="surfboard-hero-container mb-[var(--spacing-lg)] text-center md:text-right">
         <h1 className="main-page-title">
-          הדשבורד שלי
+          <span className="surfer-title">הדשבורד שלי</span>
         </h1>
       </div>
 

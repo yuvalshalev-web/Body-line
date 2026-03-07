@@ -159,8 +159,8 @@ const SurfingNewsPage: React.FC = () => {
 
           {/* Main Title */}
           <h1 className="main-page-title">
-            חדשות גלישה
-          </h1>
+          <span className="surfer-title">חדשות גלישה</span>
+        </h1>
 
           {/* Subtitle with Emoji context */}
           <div className="flex flex-col items-center gap-6">

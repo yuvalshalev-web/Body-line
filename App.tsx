@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 
 
+import { WoodSignLink } from './components/WoodSignLink';
+import surferMenuConfig from './surfer_menu_config.json';
 import { motion, AnimatePresence } from 'motion/react';
 import ErrorBoundary from './components/ErrorBoundary';
 import FloatingMenu from './components/FloatingMenu';
@@ -81,16 +83,15 @@ const SignpostLink = React.memo(({
 
   return (
     <motion.div
-      initial={{ x: isRight ? 100 : -100, opacity: 0, rotate: rotation - 10 }}
-      animate={{ x: 0, opacity: 1, rotate: rotation }}
+      initial={{ opacity: 0, x: isRight ? 20 : -20 }}
+      animate={{ opacity: 1, x: 0 }}
       transition={{ 
         delay: index * 0.05, 
-        type: 'spring', 
-        damping: 12, 
-        stiffness: 100 
+        duration: 0.4,
+        ease: "easeOut"
       }}
-      whileHover={{ scale: 1.05, rotate: rotation * 1.5 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       style={{ rotate: rotation }}
       className="relative my-2 w-full group cursor-pointer"
       onClick={onClick}
@@ -246,47 +247,31 @@ const App: React.FC = () => {
     );
   }
 
+  const menuItems = surferMenuConfig.menu_items;
+
+  // Map the original nav items to the new menu config based on index or logic
+  // For now, we'll just use the first 8 items from the config for the main nav
+  // and the next 4 for admin nav, to keep the routing intact while changing the visuals.
   const navItems = [
-    { path: '/', icon: Home, label: 'בית' },
-    { path: '/directory', icon: Users, label: 'נבחרת הגלישה' },
-    { path: '/gallery', icon: ImageIcon, label: 'גלריית תמונות' },
-    { path: '/events', icon: Calendar, label: 'אירועים קרובים' },
-    { path: '/posts', icon: Newspaper, label: 'פוסטים ועדכונים' },
-    { path: '/world-news', icon: Globe, label: 'חדשות מהעולם' },
-    { path: '/surfer-card', icon: Trophy, label: 'דשבורד' },
-    { path: '/profile', icon: UserCircle, label: 'פרופיל אישי' }
+    { path: '/', ...menuItems[0], label: 'בית' },
+    { path: '/directory', ...menuItems[1], label: 'נבחרת הגלישה' },
+    { path: '/gallery', ...menuItems[2], label: 'נבחרת הכוכבים' },
+    { path: '/events', ...menuItems[3], label: 'אירועים קרובים' },
+    { path: '/posts', ...menuItems[4], label: 'פוסטים ועדכונים' },
+    { path: '/world-news', ...menuItems[5], label: 'חדשות מהעולם' },
+    { path: '/surfer-card', ...menuItems[6], label: 'דשבורד' },
+    { path: '/profile', ...menuItems[7], label: 'פרופיל אישי' }
   ];
 
   const adminNavItems = [
-    { path: '/admin', icon: Settings, label: 'פאנל ניהול' },
-    { path: '/admin-info', icon: BarChart3, label: 'דופק חבל זוג' },
-    { path: '/attendance', icon: Users, label: 'יומן סשנים' },
-    { path: '/admin-rollover', icon: Activity, label: 'דו"ח יום חמישי' }
+    { path: '/admin', ...menuItems[8], label: 'פאנל ניהול' },
+    { path: '/admin-info', ...menuItems[9], label: 'דופק חבל זוג' },
+    { path: '/attendance', ...menuItems[10], label: 'יומן סשנים' },
+    { path: '/admin-rollover', ...menuItems[11], label: 'דו"ח יום חמישי' }
   ];
-
-  const isDirectoryPage = location.pathname === '/directory';
 
   return (
     <div className="min-h-screen flex flex-col font-['Assistant'] relative" dir="rtl">
-      {/* Global Wallpaper for Directory Page */}
-      <AnimatePresence>
-        {isDirectoryPage && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.15 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-0 pointer-events-none"
-            style={{
-              backgroundImage: 'url("https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fsurfers_hut.jpg?alt=media")',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              filter: 'brightness(0.9) contrast(1.05)'
-            }}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Global Progress Bar */}
       <div id="global-progress-container">
         <div id="global-progress-bar"></div>
@@ -321,10 +306,8 @@ const App: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[320px] bg-[#f8f1e5] z-[10002] shadow-2xl flex flex-col overflow-hidden"
-              style={{
-                backgroundImage: 'url("https://www.transparenttextures.com/patterns/sandpaper.png")',
-              }}
+              className="fixed top-0 right-0 bottom-0 w-[320px] bg-transparent z-[10002] shadow-2xl flex flex-col overflow-hidden"
+              style={{}}
             >
               {/* The Pole */}
               <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-8 bg-[#8d6e63] shadow-[inset_-4px_0_8px_rgba(0,0,0,0.3),inset_4px_0_8px_rgba(255,255,255,0.1)] z-0">
@@ -350,12 +333,62 @@ const App: React.FC = () => {
 
               {/* Drawer Header */}
               <div className="p-8 pt-16 pb-4 flex items-center justify-between relative z-10">
-                <div className="flex flex-col items-center w-full gap-2">
-                  <div className="w-16 h-16 rounded-full bg-white shadow-xl flex items-center justify-center text-[var(--sand-accent)] border-4 border-[#8d6e63] relative overflow-hidden group">
-                    <Waves size={32} className="group-hover:animate-bounce" />
-                    <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-sky-400/30 backdrop-blur-sm" />
+                <div className="flex flex-col items-center w-full gap-0">
+                  <div className="relative w-24 h-24 flex items-center justify-center group cursor-pointer">
+                    {/* Diamond Sign Background */}
+                    <div className="absolute inset-0 bg-[#F5A623] rounded-[15px] border-[3px] border-black transform rotate-45 shadow-xl flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:rotate-[40deg] group-hover:scale-105"
+                         style={{ clipPath: 'polygon(5% 0%, 95% 0%, 100% 5%, 100% 95%, 95% 100%, 5% 100%, 0% 95%, 0% 5%)' }}>
+                      
+                      {/* Rust spots - more and darker */}
+                      <div className="absolute top-1 left-1 w-5 h-5 bg-orange-950/40 rounded-full blur-[2px]" />
+                      <div className="absolute bottom-2 right-1 w-7 h-7 bg-orange-950/30 rounded-full blur-[3px]" />
+                      <div className="absolute top-6 right-8 w-4 h-4 bg-orange-950/50 rounded-full blur-[1px]" />
+                      <div className="absolute bottom-8 left-4 w-3 h-3 bg-orange-950/40 rounded-full blur-[1px]" />
+                      
+                      {/* Cracks */}
+                      <div className="absolute top-[20%] left-[10%] w-[80%] h-[2px] bg-black/30 rotate-12" />
+                      <div className="absolute top-[60%] left-[20%] w-[60%] h-[2px] bg-black/30 -rotate-6" />
+                      
+                      <div className="absolute inset-1 border-[2px] border-black rounded-lg"></div>
+                    </div>
+                    
+                    {/* Content (un-rotated) */}
+                    <div className="relative z-10 flex flex-col items-center justify-center w-full h-full pt-1">
+                      {/* Shark SVG */}
+                      <svg viewBox="0 0 120 60" className="w-16 h-10 drop-shadow-md transform group-hover:-translate-y-1 transition-transform duration-300">
+                        {/* Tail */}
+                        <path d="M 90 30 C 100 20 110 10 115 15 C 105 25 95 30 95 30 C 95 30 105 40 110 45 C 100 45 95 35 90 30 Z" fill="#1A4B6E" stroke="black" strokeWidth="1.5" strokeLinejoin="round" />
+                        
+                        {/* Body White */}
+                        <path d="M 10 35 C 30 20 60 20 95 30 C 80 45 40 50 10 35 Z" fill="white" stroke="black" strokeWidth="1.5" strokeLinejoin="round" />
+                        
+                        {/* Body Blue */}
+                        <path d="M 10 35 C 30 20 60 20 95 30 C 70 32 40 38 10 35 Z" fill="#1A4B6E" stroke="black" strokeWidth="1.5" strokeLinejoin="round" />
+                        
+                        {/* Dorsal Fin */}
+                        <path d="M 45 23 C 50 5 55 10 60 24 Z" fill="#1A4B6E" stroke="black" strokeWidth="1.5" strokeLinejoin="round" />
+                        
+                        {/* Pectoral Fin */}
+                        <path d="M 40 38 C 35 55 45 50 50 42 Z" fill="#1A4B6E" stroke="black" strokeWidth="1.5" strokeLinejoin="round" />
+                        
+                        {/* Eye */}
+                        <circle cx="20" cy="30" r="1.5" fill="white" />
+                        <circle cx="20" cy="30" r="0.5" fill="black" />
+                        
+                        {/* Gills */}
+                        <path d="M 32 28 L 30 34 M 35 28 L 33 35 M 38 29 L 36 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
+                        
+                        {/* Mouth */}
+                        <path d="M 12 37 C 18 39 25 38 25 38" stroke="black" strokeWidth="1" fill="none" />
+                      </svg>
+                      
+                      {/* Text */}
+                      <div className="flex flex-col items-center leading-none mt-[-2px] z-10">
+                        <span className="text-[11px] font-black text-white uppercase tracking-tight" style={{ WebkitTextStroke: '1.5px black', paintOrder: 'stroke fill' }}>Respect The</span>
+                        <span className="text-[14px] font-black text-white uppercase tracking-tight" style={{ WebkitTextStroke: '1.5px black', paintOrder: 'stroke fill' }}>Locals</span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-2xl font-black text-[#5d4037] tracking-tighter drop-shadow-sm">Body-line</span>
                 </div>
                 <button 
                   onClick={() => setIsDrawerOpen(false)}
@@ -374,7 +407,7 @@ const App: React.FC = () => {
                 </div>
                 
                 {navItems.map((item, idx) => (
-                  <SignpostLink 
+                  <WoodSignLink 
                     key={item.path}
                     item={item}
                     index={idx}
@@ -391,7 +424,7 @@ const App: React.FC = () => {
                       </span>
                     </div>
                     {adminNavItems.map((item, idx) => (
-                      <SignpostLink 
+                      <WoodSignLink 
                         key={item.path}
                         item={item}
                         index={idx + navItems.length}
@@ -404,7 +437,7 @@ const App: React.FC = () => {
               </div>
 
               {/* Profile Section */}
-              <div className="p-6 bg-white/40 backdrop-blur-md border-t border-[#8d6e63]/20 relative z-10">
+              <div className="p-6 bg-transparent backdrop-blur-none border-t border-[#8d6e63]/20 relative z-10">
                 {/* Sand and Sea effect at bottom */}
                 <div className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-0 overflow-hidden">
                   <motion.div 

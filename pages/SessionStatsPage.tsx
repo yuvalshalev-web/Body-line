@@ -490,8 +490,8 @@ const SessionStatsPage: React.FC = () => {
       <header className="mb-8 relative">
         <div className="surfboard-hero-container space-y-2">
           <h1 className="main-page-title">
-            צלילה לסשנים
-          </h1>
+          <span className="surfer-title">צלילה לסשנים</span>
+        </h1>
           
           <p className="text-[#4A5568] max-w-2xl text-xl font-bold">
             ניתוח עומק של ביצועי הנבחרת, מגמות נוכחות ופילוח גולשים. 🌊

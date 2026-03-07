@@ -55,7 +55,7 @@ const AdminInfoPage: React.FC = () => {
       {/* Header */}
       <div className="surfboard-hero-container mb-8">
         <h1 className="main-page-title">
-          הקהילה במספרים
+          <span className="surfer-title">הקהילה במספרים</span>
         </h1>
         <p className="text-[#4A5568] font-bold mt-3 text-lg">
           ניטור בזמן אמת של פעילות הקהילה והמערכת

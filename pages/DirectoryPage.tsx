@@ -219,7 +219,7 @@ const DirectoryPage: React.FC = () => {
       <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}
         <h1 className="main-page-title">
-          נבחרת הגלישה
+          <span className="surfer-title">נבחרת הגלישה</span>
         </h1>
       </div>
 

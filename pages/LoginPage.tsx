@@ -6,6 +6,7 @@ import { Member } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { hashPassword } from '../utils/crypto';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
+import { GlassButton } from '../components/GlassButton';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { processImage } from '../utils/imageProcessor';
@@ -329,10 +330,10 @@ const LoginPage: React.FC = () => {
               </div>
 
               {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
-              <button type="submit" disabled={isLoading} className="w-full py-5 bg-[#006994] text-white rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-3 hover:bg-[#4E8294] transition-all active:scale-95">
+              <GlassButton type="submit" disabled={isLoading} className="w-fit mx-auto">
                 {isLoading ? <Loader2 className="animate-spin" /> : <LogIn size={24} className="text-[#00FFFF]" />}
                 כניסה
-              </button>
+              </GlassButton>
               
               <div className="pt-4 flex justify-center">
                 <button 
@@ -395,10 +396,10 @@ const LoginPage: React.FC = () => {
 
               {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
               
-              <button type="submit" disabled={isLoading} className="w-full py-5 bg-[#006994] text-white rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-3 hover:bg-[#4E8294] transition-all active:scale-95">
+              <GlassButton type="submit" disabled={isLoading} className="w-fit mx-auto">
                 {isLoading ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={24} className="text-[#00FFFF]" />}
                 עדכן סיסמה וכנס
-              </button>
+              </GlassButton>
               
               <button type="button" onClick={() => setMode('LOGIN')} className="w-full text-white/50 hover:text-white font-black text-xs transition-colors">חזרה להתחברות</button>
             </form>
@@ -481,9 +482,9 @@ const LoginPage: React.FC = () => {
                     </div>
                   </div>
                   {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
-                  <button type="submit" disabled={isLoading || isProcessingImage} className="w-full py-5 bg-[#006994] text-white rounded-2xl font-black text-lg hover:bg-[#4E8294] transition-all active:scale-95">
+                  <GlassButton type="submit" disabled={isLoading || isProcessingImage} className="w-fit mx-auto">
                     {isLoading ? <Loader2 className="animate-spin mx-auto" /> : 'שלח בקשה ב-WebP'}
-                  </button>
+                  </GlassButton>
                 </>
               )}
             </form>

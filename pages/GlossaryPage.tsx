@@ -38,7 +38,7 @@ const GlossaryPage: React.FC = () => {
 
         {/* Main Title */}
         <h1 className="main-page-title">
-          מילון הגלישה
+          <span className="surfer-title">מילון הגלישה</span>
         </h1>
 
         {/* Subtitle with Emoji context */}

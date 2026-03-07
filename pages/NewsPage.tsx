@@ -100,7 +100,7 @@ const NewsPage: React.FC = () => {
 
         {/* Main Title */}
         <h1 className="main-page-title">
-          פוסטים מהנבחרת
+          <span className="surfer-title">פוסטים מהנבחרת</span>
         </h1>
 
         {/* Subtitle with Emoji context */}

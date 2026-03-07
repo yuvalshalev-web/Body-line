@@ -30,6 +30,7 @@ import { processImage } from '../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { hashPassword } from '../utils/crypto';
 import { updateMemberAddress } from '../utils/googlePlaces';
+import { GlassButton } from '../components/GlassButton';
 
 const SocialInput = ({ 
   label, name, value, onChange, icon: Icon, placeholder, brandColor, ensureAbsoluteUrl,
@@ -43,7 +44,7 @@ const SocialInput = ({
         <input
           type="text"
           placeholder={placeholder}
-          className="w-full pr-14 pl-12 py-4 bg-slate-50 rounded-2xl font-black text-sm outline-none border border-slate-100 focus:border-indigo-200 focus:bg-white transition-all"
+          className="w-full pr-14 pl-12 py-4 bg-slate-50 rounded-2xl font-black text-sm outline-none focus:border-indigo-200 focus:bg-white transition-all"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -304,7 +305,7 @@ const ProfilePage: React.FC = () => {
       <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}
         <h1 className="main-page-title">
-          הפרופיל שלי
+          <span className="surfer-title">הפרופיל שלי</span>
         </h1>
 
         {/* Subtitle with Emoji context */}
@@ -322,18 +323,21 @@ const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-[4rem] border border-slate-100 shadow-2xl overflow-hidden relative">
-        <div className="h-48 bg-slate-900 relative">
-          <div className="absolute inset-0 opacity-20 pointer-events-none">
-             <div className="absolute top-10 left-10 w-32 h-32 bg-indigo-500 rounded-full blur-3xl"></div>
-             <div className="absolute bottom-10 right-20 w-48 h-48 bg-sky-500 rounded-full blur-3xl"></div>
-          </div>
+      <div className="rounded-[4rem] overflow-hidden relative">
+        <div className="h-48 relative">
+          {/* Removed background image layer here */}
         </div>
         
-        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-24 relative z-10">
+        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-24 bg-white rounded-t-[4rem]">
           <div className="flex flex-col md:flex-row items-end gap-8 mb-16">
             <div className="relative group">
-              <div className="w-44 h-44 rounded-[3rem] border-[10px] border-white overflow-hidden shadow-2xl group-hover:scale-[1.02] transition-transform duration-500 bg-slate-100 flex items-center justify-center">
+              {/* Added full-length banner behind profile picture */}
+              <div className="absolute -top-32 -left-4 -right-4 h-64 rounded-[3rem] overflow-hidden opacity-100 -z-10">
+                 <img src="https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fvan_surfboards.jpg?alt=media" className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent"></div>
+              </div>
+              
+              <div className="w-44 h-44 rounded-[3rem] overflow-hidden shadow-2xl group-hover:scale-[1.02] transition-transform duration-500 bg-slate-100 flex items-center justify-center relative z-10">
                 {isProcessingImage ? (
                   <Loader2 className="animate-spin text-indigo-500" size={32} />
                 ) : formData.avatar ? (
@@ -342,7 +346,7 @@ const ProfilePage: React.FC = () => {
                   <User size={64} className="text-slate-300" />
                 )}
               </div>
-              <label className="absolute bottom-2 left-2 p-3 bg-[#006994] text-white rounded-2xl cursor-pointer hover:bg-[#4E8294] transition-all shadow-xl">
+              <label className="absolute bottom-2 left-2 p-3 bg-[#006994] text-white rounded-2xl cursor-pointer hover:bg-[#4E8294] transition-all shadow-xl z-20">
                 <Camera size={20} className="text-[#00FFFF]" />
                 <input type="file" className="hidden" accept="image/*" onChange={handleAvatarSelect} disabled={isProcessingImage} />
               </label>
@@ -413,7 +417,7 @@ const ProfilePage: React.FC = () => {
                               initial={{ opacity: 0, y: -10, scale: 0.95 }}
                               animate={{ opacity: 1, y: 0, scale: 1 }}
                               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                              className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-2xl border border-slate-100 rounded-2xl shadow-2xl z-[70] overflow-hidden"
+                              className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-2xl z-[70] overflow-hidden"
                             >
                               {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
                                 <button
@@ -497,23 +501,20 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-20 flex flex-col items-center gap-4">
-             <button type="submit" disabled={isSaving || !isDirty} className="group relative px-20 py-6 bg-[#006994] text-white rounded-[2.5rem] font-black text-2xl hover:bg-[#4E8294] transition-all shadow-2xl shadow-[#006994]/20 disabled:opacity-20 active:scale-95 overflow-hidden">
-               <span className="relative z-10 flex items-center gap-4">
-                 {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} className="text-[#00FFFF]" />}
+          <div className="mt-20 flex flex-col items-center gap-6 w-full max-w-sm mx-auto">
+             <GlassButton type="submit" disabled={isSaving || !isDirty} className="w-fit mx-auto">
+                 {isSaving ? <Loader2 className="animate-spin text-[#00FFFF]" size={24} /> : <Save size={24} className="text-[#00FFFF]" />}
                  שמור שינויים
-               </span>
-               <div className="absolute inset-0 bg-gradient-to-r from-[#006994] to-[#4E8294] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-             </button>
+             </GlassButton>
              
-             <button 
+             <GlassButton 
                type="button" 
                onClick={() => setShowPasswordModal(true)}
-               className="mt-4 flex items-center gap-2 text-slate-400 hover:text-slate-600 font-bold transition-colors"
+               className="w-fit mx-auto"
              >
-               <Key size={16} />
-               <span>החלפת סיסמה</span>
-             </button>
+               <Key size={24} className="text-[#00FFFF]" />
+               החלפת סיסמה
+             </GlassButton>
           </div>
         </form>
       </div>
@@ -562,7 +563,7 @@ const ProfilePage: React.FC = () => {
                       type="password"
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
-                      className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100 focus:bg-white focus:border-indigo-200 transition-all"
+                      className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none focus:bg-white focus:border-indigo-200 transition-all"
                       placeholder="הזן סיסמה חדשה"
                       required
                       minLength={6}
@@ -574,21 +575,21 @@ const ProfilePage: React.FC = () => {
                       type="password"
                       value={confirmPassword}
                       onChange={e => setConfirmPassword(e.target.value)}
-                      className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100 focus:bg-white focus:border-indigo-200 transition-all"
+                      className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none focus:bg-white focus:border-indigo-200 transition-all"
                       placeholder="הזן שוב את הסיסמה"
                       required
                       minLength={6}
                     />
                   </div>
 
-                  <button 
+                  <GlassButton 
                     type="submit"
                     disabled={isChangingPassword || !newPassword || !confirmPassword}
-                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-fit mx-auto"
                   >
-                    {isChangingPassword ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                    {isChangingPassword ? <Loader2 className="animate-spin text-[#00FFFF]" size={20} /> : <Save size={20} className="text-[#00FFFF]" />}
                     עדכן סיסמה
-                  </button>
+                  </GlassButton>
                 </form>
               </div>
             </motion.div>

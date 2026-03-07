@@ -197,7 +197,7 @@ const EventsPage: React.FC = () => {
       <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}
         <h1 className="main-page-title">
-          אירועים קרובים
+          <span className="surfer-title">אירועים קרובים</span>
         </h1>
 
         {/* Subtitle with Emoji context */}

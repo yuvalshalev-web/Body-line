@@ -555,8 +555,8 @@ const AdminPage: React.FC = () => {
         <div className="surfboard-hero-container mb-6 space-y-2">
           {/* Main Title */}
           <h1 className="main-page-title">
-            פאנל ניהול
-          </h1>
+          <span className="surfer-title">פאנל ניהול</span>
+        </h1>
 
           {/* Subtitle with Emoji context */}
           <div className="flex flex-col items-center gap-4">
@@ -1640,7 +1640,9 @@ const AdminPage: React.FC = () => {
                   <div className="flex flex-col items-center justify-center p-4 bg-transparent rounded-[2rem] min-h-[160px] border border-slate-100 relative overflow-hidden">
                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2 relative z-10">תצוגה מקדימה</p>
                     <div className="surfboard-hero-container" style={{ minHeight: 'auto', padding: '20px 0' }}>
-                      <h1 className="main-page-title m-0 relative z-10">כותרת אולטרה</h1>
+                      <h1 className="main-page-title m-0 relative z-10">
+          <span className="surfer-title">כותרת אולטרה</span>
+        </h1>
                     </div>
                   </div>
 

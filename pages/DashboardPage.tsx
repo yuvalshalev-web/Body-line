@@ -174,7 +174,7 @@ const DashboardPage: React.FC = () => {
            >
              "A day will come that is like no other... and nothing that happens after will ever be the same."
            </motion.p>
-           <h1 className="home-page-title">יום חמישי הגדול</h1>
+           <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tighter drop-shadow-2xl">יום חמישי הגדול</h1>
            
            <div className="mb-8 space-y-2">
              <p className="text-lg md:text-xl font-bold text-white/60">נכנסים למים בעוד...</p>

@@ -1,0 +1,38 @@
+{
+  "theme_name": "Surfer Theme",
+  "palette": {
+    "vibrant_cyan": "#00D9E6",
+    "turquoise_teal": "#00AFC2",
+    "electric_red_pink": "#FF2D60",
+    "deep_magenta": "#CC2678",
+    "sunshine_yellow": "#FFDE45",
+    "golden_orange": "#FF9F1C",
+    "deep_shadow": "#7A1555",
+    "tan_skin": "#C29670",
+    "deep_teal_sea": "#007085",
+    "aqua_mist": "#B2EBF2",
+    "white_salt": "#F1EDD5",
+    "retro_green": "#2DA95C",
+    "classic_red": "#E23E33"
+  },
+  "menu_items": [
+    { "id": 1, "text": "עמוד הבית", "icon": "🏠", "color": "#FF2D60", "direction": "right", "rotation": 2 },
+    { "id": 2, "text": "Gallery", "icon": "📸", "color": "#00AFC2", "direction": "left", "rotation": -3 },
+    { "id": 3, "text": "Shop", "icon": "🏄‍♂️", "color": "#00D9E6", "direction": "right", "rotation": 1 },
+    { "id": 4, "text": "About", "icon": "🌴", "color": "#FF9F1C", "direction": "left", "rotation": -2 },
+    { "id": 5, "text": "Contact", "icon": "✉️", "color": "#CC2678", "direction": "right", "rotation": 3 },
+    { "id": 6, "text": "Blog", "icon": "📝", "color": "#2DA95C", "direction": "left", "rotation": -1 },
+    { "id": 7, "text": "Surf Cam", "icon": "🌊", "color": "#007085", "direction": "right", "rotation": -2 },
+    { "id": 8, "text": "Reviews", "icon": "⭐", "color": "#F1EDD5", "direction": "left", "rotation": 2 },
+    { "id": 9, "text": "Events", "icon": "🎸", "color": "#FFDE45", "direction": "right", "rotation": -1 },
+    { "id": 10, "text": "Location", "icon": "📍", "color": "#B2EBF2", "direction": "left", "rotation": 3 },
+    { "id": 11, "text": "Team", "icon": "🤙", "color": "#7A1555", "direction": "right", "rotation": -3 },
+    { "id": 12, "text": "FAQ", "icon": "❓", "color": "#C29670", "direction": "left", "rotation": 1 },
+    { "id": 13, "text": "Logout", "icon": "🚪", "color": "#E23E33", "direction": "right", "rotation": 0 }
+  ],
+  "visual_specs": {
+    "font_family": "Permanent Marker, cursive",
+    "effects": ["wood_texture", "drop_shadow", "center_nail", "hover_swing"],
+    "glass_elements": "backdrop-filter: blur(15px)"
+  }
+}
