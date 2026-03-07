@@ -45,6 +45,9 @@
   --sand-medium: #E6CCB2;
   --sand-dark: #DDB892;
   --sand-deep: #B08968;
+  --sand-accent: #D4A373;
+  --sand-shadow: #432818;
+  --sand-muted: #8B7E74;
 
   /* --- Page Title System --- */
   --h1-font-family: 'Assistant', sans-serif;

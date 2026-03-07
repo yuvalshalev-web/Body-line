@@ -1,4 +1,6 @@
-import React, { useState, useRef } from 'react';
+/// <reference types="google.maps" />
+import React, { useState, useRef, useEffect } from 'react';
+import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { 
   Calendar, 
   Clock, 
@@ -49,6 +51,28 @@ const EventsPage: React.FC = () => {
   const [showTypeWarning, setShowTypeWarning] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (showModal && locationInputRef.current) {
+      setOptions({
+        key: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
+      });
+
+      importLibrary("places").then((places) => {
+        const { Autocomplete } = places;
+        const autocomplete = new Autocomplete(locationInputRef.current!, {
+          types: ["geocode"],
+        });
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (place.formatted_address) {
+            setLocation(place.formatted_address);
+          }
+        });
+      });
+    }
+  }, [showModal]);
 
   const canManageCommunityEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor' || currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
   const canManageInstructorEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor' || currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
@@ -105,7 +129,7 @@ const EventsPage: React.FC = () => {
           date,
           time,
           location: location || 'הרצליה',
-          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=800',
+          imageUrl: imageUrl || 'https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fevents_bg.png?alt=media',
           type: eventType,
         });
       } else {
@@ -115,7 +139,7 @@ const EventsPage: React.FC = () => {
           date,
           time,
           location: location || 'הרצליה',
-          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=800',
+          imageUrl: imageUrl || 'https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fevents_bg.png?alt=media',
           type: eventType,
           creatorId: currentUser?.id,
           attendees: []
@@ -162,6 +186,11 @@ const EventsPage: React.FC = () => {
     try { await toggleEventAttendance(eventId, currentUser.id); } finally { setProcessingId(null); }
   };
 
+  const activeEvents = events.filter(e => {
+    const eventDate = new Date(`${e.date}T${e.time || '00:00'}`);
+    return eventDate >= new Date();
+  });
+
   return (
     <div className="min-h-screen bg-white text-right animate-in fade-in duration-700" dir="rtl">
       {/* Body-line Standard Header Stack */}
@@ -174,7 +203,7 @@ const EventsPage: React.FC = () => {
         {/* Subtitle with Emoji context */}
         <div className="flex flex-col items-center gap-4">
           <p className="header-subtitle max-w-2xl">
-            מפגשים, חוויות ורגעים שקורים מחוץ למים • {events.length} אירועים 🗓️
+            מפגשים, חוויות ורגעים שקורים מחוץ למים • {activeEvents.length} אירועים 🗓️
           </p>
           
           {currentUser && (
@@ -190,10 +219,7 @@ const EventsPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {events.filter(e => {
-          const eventDate = new Date(`${e.date}T${e.time || '00:00'}`);
-          return eventDate >= new Date();
-        }).map((event) => {
+        {activeEvents.map((event) => {
           const isAttending = currentUser ? (event.attendees || []).includes(currentUser.id) : false;
           const isProcessing = processingId === event.id;
           
@@ -393,7 +419,7 @@ const EventsPage: React.FC = () => {
                       <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                       <input type="time" required value={time} onChange={e => setTime(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                     </div>
-                    <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                    <input type="text" ref={locationInputRef} value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                     <div className="space-y-4">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">תמונת רקע</label>
                       <div className="relative group/img aspect-video rounded-3xl overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-4 transition-all hover:border-[#006994]/40">

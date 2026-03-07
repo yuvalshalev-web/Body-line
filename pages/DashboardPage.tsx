@@ -22,6 +22,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { SURF_QUOTES } from '../data/surfQuotes';
 import { SURF_DICTIONARY } from '../data/surfDictionary';
+import { motion } from 'motion/react';
 
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -144,6 +145,14 @@ const DashboardPage: React.FC = () => {
     try { await toggleSessionAttendance(currentUser.id); } finally { setIsProcessing(false); }
   };
 
+  const activeEventsCount = useMemo(() => {
+    const now = new Date();
+    return events.filter(e => {
+      const eventDate = new Date(`${e.date}T${e.time || '00:00'}`);
+      return eventDate >= now;
+    }).length;
+  }, [events]);
+
   const brandColor = '#F1D179';
 
   return (
@@ -157,9 +166,14 @@ const DashboardPage: React.FC = () => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
         <div className="relative z-10 min-h-[700px] md:min-h-[650px] flex flex-col items-center justify-center p-8 md:p-12 text-center py-20">
-           <p className="text-white/60 font-medium italic text-sm md:text-base mb-6 max-w-2xl tracking-wide">
+           <motion.p 
+             initial={{ opacity: 0, y: 10 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 1.5, delay: 0.5 }}
+             className="text-white/90 font-semibold italic text-lg md:text-2xl mb-8 max-w-2xl tracking-[0.08em] leading-relaxed drop-shadow-2xl"
+           >
              "A day will come that is like no other... and nothing that happens after will ever be the same."
-           </p>
+           </motion.p>
            <h1 className="home-page-title">יום חמישי הגדול</h1>
            
            <div className="mb-8 space-y-2">
@@ -189,10 +203,10 @@ const DashboardPage: React.FC = () => {
               <button 
                 onClick={handleToggle}
                 disabled={isProcessing}
-                className={`px-10 md:px-16 py-4 md:py-6 rounded-full font-black text-xl md:text-2xl transition-all shadow-2xl active:scale-95 flex items-center gap-[var(--spacing-md)] ${isUserAttending ? 'bg-rose-600 text-white' : 'bg-[var(--ocean-bg)] text-white hover:bg-[var(--ocean-pipe-empty)]'}`}
+                className={`px-10 md:px-16 py-4 md:py-6 rounded-full font-black text-xl md:text-2xl transition-all shadow-2xl active:scale-95 flex items-center gap-[var(--spacing-md)] ${isUserAttending ? 'bg-white border-2 border-[#FF0000]' : 'bg-[var(--ocean-bg)] text-white hover:bg-[var(--ocean-pipe-empty)]'}`}
               >
-                {isProcessing ? <Loader2 className="animate-spin" size={28} /> : <Waves size={28} className="text-[#00FFFF]" />}
-                {isUserAttending ? 'בטל הגעה' : 'אני מגיע/ה'}
+                {isProcessing ? <Loader2 className="animate-spin" size={28} /> : <Waves size={28} className={isUserAttending ? 'text-[#FF0000]' : 'text-[#00FFFF]'} />}
+                {isUserAttending ? <span className="text-[#FF0000]">בטל הגעה</span> : 'אני מגיע/ה'}
               </button>
               
               <div className="flex flex-col items-center gap-4">
@@ -228,7 +242,7 @@ const DashboardPage: React.FC = () => {
         {[
           { label: 'נבחרת הגלישה', value: activeMembers.length, icon: Users, path: '/directory', color: 'text-emerald-600' },
           { label: 'תמונות', value: galleryItems.length, icon: ImageIcon, path: '/gallery', color: 'text-rose-600' },
-          { label: 'אירועים', value: events.length, icon: Calendar, path: '/events', color: 'text-indigo-600' },
+          { label: 'אירועים', value: activeEventsCount, icon: Calendar, path: '/events', color: 'text-indigo-600' },
           { label: 'פוסטים', value: news.length, icon: Newspaper, path: '/posts', color: 'text-amber-600' },
           { label: 'תחזית גלים', value: 'GoSurf', icon: Waves, path: 'https://gosurf.co.il', external: true, color: 'text-sky-600' },
           { label: 'BeachCam', value: 'Live', icon: Video, path: 'https://beachcam.co.il', external: true, color: 'text-violet-600' }
