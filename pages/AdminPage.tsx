@@ -1496,23 +1496,6 @@ const AdminPage: React.FC = () => {
                     <p className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mt-1">החלפה בין תפריט עליון לתחתון</p>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-4 relative z-10">
-                  <div className="gt-segmented">
-                    <div 
-                      className={`gt-segment-item ${siteConfig.navPosition !== 'floating-bottom' ? 'active' : ''}`}
-                      onClick={() => updateSiteConfig({ navPosition: 'floating-top' })}
-                    >
-                      עליון
-                    </div>
-                    <div 
-                      className={`gt-segment-item ${siteConfig.navPosition === 'floating-bottom' ? 'active' : ''}`}
-                      onClick={() => updateSiteConfig({ navPosition: 'floating-bottom' })}
-                    >
-                      תחתון
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 

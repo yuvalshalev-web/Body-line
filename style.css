@@ -664,125 +664,38 @@ header.nav-standard {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-header.nav-floating-top {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 40px);
-  max-width: 600px;
-  height: 64px;
-  background: rgba(243, 243, 243, 0.7);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(192, 192, 192, 0.3); /* metal-silver with opacity */
-  border-radius: 999px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  margin: 0;
-  display: flex !important; /* Force display even on desktop if needed */
-}
-
-header.nav-floating-bottom {
-  @media (max-width: 768px) {
-    transform: translateY(100px);
-    opacity: 0;
-    pointer-events: none;
-    position: absolute;
-  }
-}
-
-.floating-menu-drawer {
-  border-radius: 2rem 0 0 2rem;
-  background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(20px);
-  border-left: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-/* Bottom Navigation Styles */
-.bottom-nav-capsule {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 20px);
-  max-width: 500px;
-  background: rgba(243, 243, 243, 0.7); /* metal-white-smoke with 70% alpha */
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(192, 192, 192, 0.3); /* metal-silver with opacity */
-  border-radius: 2.5rem;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 10px 8px;
-  z-index: 1000;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.bottom-nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  color: var(--metal-aluminium);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  flex: 1;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.bottom-nav-item.active {
-  color: var(--metal-davys-gray);
-  transform: translateY(-4px);
-}
-
-.bottom-nav-item:active {
-  transform: scale(1.2);
-}
-
-.bottom-nav-item.active .icon-wrapper {
-  background: var(--metal-silver);
-  color: var(--metal-davys-gray);
-}
-
-@keyframes bounceClick {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
-}
-
-.animate-bounce-click {
-  animation: bounceClick 200ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.bottom-nav-item .icon-wrapper {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.bottom-nav-item span {
-  font-size: 8px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Transition for Header Position */
-header.is-bottom-nav {
-  transform: translateY(100px);
-  opacity: 0;
-  pointer-events: none;
-}
-
 header {
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+}
+
+/* --- Theme Classes for Sticky Bar --- */
+.sand-theme {
+  background-color: #F5E6D3;
+  padding: 20px;
+  border-radius: 24px;
+  text-align: right;
+  border-right: 4px solid #2C5282;
+}
+
+.ocean-theme-text {
+  color: #1A365D;
+}
+
+.ocean-theme {
+  background-color: #2C5282;
+  color: white;
+}
+
+/* T-Mobile Theme */
+.t-mobile-light {
+  background-color: #fce4f1;
+}
+.t-mobile-strong {
+  background-color: #E20074;
+  color: white;
+}
+.t-mobile-text-strong {
+  color: #E20074;
 }
 
 /* Surfer Card Animation Styles */

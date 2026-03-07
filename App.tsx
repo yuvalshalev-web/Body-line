@@ -25,6 +25,7 @@ import {
 
 import { motion, AnimatePresence } from 'motion/react';
 import ErrorBoundary from './components/ErrorBoundary';
+import FloatingMenu from './components/FloatingMenu';
 
 // Lazy loaded components
 const LoginPage = lazy(() => import('./pages/LoginPage.tsx'));
@@ -99,15 +100,6 @@ const App: React.FC = () => {
       document.documentElement.style.setProperty('--gt-accent', siteConfig.globalColor);
     }
   }, [siteConfig.globalColor]);
-
-  // Apply body class for bottom nav padding
-  React.useEffect(() => {
-    if (siteConfig.navPosition === 'floating-bottom') {
-      document.body.classList.add('has-bottom-nav');
-    } else {
-      document.body.classList.remove('has-bottom-nav');
-    }
-  }, [siteConfig.navPosition]);
 
   const handleNavigation = useCallback((path: string, isMobile: boolean, e?: React.MouseEvent) => {
     if (navigator.vibrate) {
@@ -236,59 +228,23 @@ const App: React.FC = () => {
         <div id="global-progress-bar"></div>
       </div>
 
-      {/* Mobile Header (Visible on all screens, but menu button hidden when floating-bottom is active) */}
-      <header className={`h-16 flex items-center justify-between px-[var(--spacing-md)] transition-all duration-300 ${
-        siteConfig.navPosition === 'standard' ? 'nav-standard sticky top-0 z-[100]' : 
-        siteConfig.navPosition === 'floating-top' ? 'nav-floating-top' : 
-        'nav-floating-bottom'
-      }`}>
+      {/* Mobile Header (Visible on all screens) */}
+      <header className="h-16 flex items-center justify-between px-[var(--spacing-md)] transition-all duration-300 nav-standard sticky top-0 z-[100]">
         <div className="flex items-center gap-[var(--spacing-xs)]">
           <div className="w-8 h-8 bg-[var(--sand-accent)] rounded-[var(--radius-sm)] flex items-center justify-center text-white shadow-md">
             <Waves size={20} className="text-[var(--sand-light)]" />
           </div>
           <span className="font-black text-[var(--sand-dark)] tracking-tighter">חבל זוג</span>
         </div>
-        {siteConfig.navPosition !== 'floating-bottom' && (
-          <button onClick={(e) => toggleMobileMenuWithHaptic(e)} className="p-2 text-[var(--sand-dark)]">
-            <div className="icon-wrapper">
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </div>
-          </button>
-        )}
+        <button onClick={(e) => toggleMobileMenuWithHaptic(e)} className="p-2 text-[var(--sand-dark)]">
+          <div className="icon-wrapper">
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </div>
+        </button>
       </header>
 
-      {/* Bottom Navigation (Visible on all screens when floating-bottom is active) */}
-      {siteConfig.navPosition === 'floating-bottom' && (
-        <div className="bottom-nav-capsule metal-theme">
-          {[navItems[0], navItems[1], navItems[2], navItems[3], navItems[6]].map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <button 
-                key={item.path}
-                onClick={(e) => handleNavigation(item.path, true, e)}
-                className={`bottom-nav-item ${isActive ? 'active' : ''}`}
-              >
-                <div className="icon-wrapper">
-                  <item.icon size={20} />
-                </div>
-                <span>{item.label === 'דשבורד' ? 'דשבורד' : item.label.split(' ')[0]}</span>
-              </button>
-            );
-          })}
-          <button 
-            onClick={(e) => toggleMobileMenuWithHaptic(e)}
-            className={`bottom-nav-item ${isMobileMenuOpen ? 'active' : ''}`}
-          >
-            <div className="icon-wrapper">
-              <Menu size={20} />
-            </div>
-            <span>תפריט</span>
-          </button>
-        </div>
-      )}
-
-      {/* Desktop Sidebar (Hidden when floating-bottom is active) */}
-      <aside className={`${siteConfig.navPosition === 'floating-bottom' ? 'hidden' : 'hidden md:flex'} flex-col w-64 glass-effect border-l border-[var(--sand-medium)]/10 sticky top-0 h-screen z-50 p-[var(--spacing-md)] shadow-sm`}>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col w-64 glass-effect border-l border-[var(--sand-medium)]/10 sticky top-0 h-screen z-50 p-[var(--spacing-md)] shadow-sm">
         <div className="flex items-center gap-[var(--spacing-xs)] mb-14">
           <div className="w-12 h-12 bg-[var(--sand-accent)] rounded-[var(--radius-md)] flex items-center justify-center text-white shadow-lg shadow-[var(--sand-shadow)]/20">
             <Waves size={28} className="text-[var(--sand-light)]" />
@@ -347,6 +303,7 @@ const App: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
+      <FloatingMenu />
       <main className="flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto">
         <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>
@@ -389,9 +346,7 @@ const App: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className={`absolute right-0 top-0 bottom-0 w-72 glass-effect shadow-2xl p-6 flex flex-col z-[2001] ${
-                siteConfig.navPosition !== 'standard' ? 'floating-menu-drawer' : ''
-              }`}
+              className="absolute right-0 top-0 bottom-0 w-72 glass-effect shadow-2xl p-6 flex flex-col z-[2001]"
             >
                <div className="flex items-center justify-between mb-10 pb-6 border-b border-slate-100">
                  <div className="flex items-center gap-4 overflow-hidden">

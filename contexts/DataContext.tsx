@@ -24,7 +24,7 @@ interface DataContextType {
   weeklyHistory: any[];
   siteAssets: any;
   siteConfig: { 
-    navPosition: 'standard' | 'floating-top' | 'floating-bottom',
+    navPosition: 'standard',
     home_break?: {
       formatted: string;
       lat: number | null;
@@ -87,7 +87,7 @@ interface DataContextType {
   clearCollection: (collectionName: string) => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
   updateSiteConfig: (config: Partial<{ 
-    navPosition: 'standard' | 'floating-top' | 'floating-bottom',
+    navPosition: 'standard',
     home_break: any,
     globalColor: string,
     h1Styles: any
@@ -113,7 +113,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [weeklyHistory, setWeeklyHistory] = useState<any[]>([]);
   const [siteAssets, setSiteAssets] = useState<any>({});
   const [siteConfig, setSiteConfig] = useState<{ 
-    navPosition: 'standard' | 'floating-top' | 'floating-bottom',
+    navPosition: 'standard',
     home_break?: any,
     globalColor?: string,
     h1Styles?: {
@@ -135,8 +135,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       glowColor?: string;
     }
   }>(() => {
-    const saved = localStorage.getItem('navPosition');
-    return { navPosition: (saved as any) || 'standard' };
+    return { navPosition: 'standard' };
   });
   const [yearConfig, setYearConfig] = useState<{ startDate: string; endDate: string } | null>(null);
   const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
@@ -539,18 +538,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const isCurrentlyAttending = attendeeIds.includes(userId);
     const activeSessionRef = doc(getDb(), 'site_data', 'active_session');
     if (isCurrentlyAttending) {
-      await updateDoc(activeSessionRef, { attendees: arrayRemove(userId) });
+      await setDoc(activeSessionRef, { attendees: arrayRemove(userId) }, { merge: true });
     } else {
-      await updateDoc(activeSessionRef, { attendees: arrayUnion(userId) });
+      await setDoc(activeSessionRef, { attendees: arrayUnion(userId) }, { merge: true });
     }
   };
 
   const forceResetSession = async () => {
     const nextThurs = getNextThursday();
-    await updateDoc(doc(getDb(), 'site_data', 'active_session'), {
+    await setDoc(doc(getDb(), 'site_data', 'active_session'), {
       attendees: [],
       date: nextThurs
-    });
+    }, { merge: true });
   };
 
   const addRolloverLog = async (action: string, status: 'success' | 'failed', details: string) => {
@@ -617,14 +616,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateSiteConfig = async (config: Partial<{ 
-    navPosition: 'standard' | 'floating-top' | 'floating-bottom',
+    navPosition: 'standard',
     home_break: any,
     globalColor: string,
     h1Styles: any
   }>) => {
-    if (config.navPosition) {
-      localStorage.setItem('navPosition', config.navPosition);
-    }
     setSiteConfig(prev => ({ ...prev, ...config }));
     await setDoc(doc(getDb(), 'site_data', 'config'), config, { merge: true });
   };
