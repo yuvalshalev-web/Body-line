@@ -1052,7 +1052,7 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
     tailType: "Squash/Swallow",
     color: "White",
     logo: "Black R-Dot",
-    hasTractionPad: false
+    hasTractionPad: true
   };
 
   // Calculate fill color based on percentage (Green -> Yellow -> Red)
@@ -1084,9 +1084,9 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
               <svg viewBox="0 0 100 300" className="w-full h-full drop-shadow-xl">
                 <defs>
                   <linearGradient id={`board-gradient-${isAnnual ? 'annual' : 'monthly'}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#f8f9fa" />
+                    <stop offset="0%" stopColor="#F5F7FA" />
                     <stop offset="50%" stopColor="#ffffff" />
-                    <stop offset="100%" stopColor="#e9ecef" />
+                    <stop offset="100%" stopColor="#F5F7FA" />
                   </linearGradient>
                   
                   {/* Stringer (Wood strip down the middle) */}
@@ -1095,35 +1095,78 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
                     <stop offset="50%" stopColor="#faedcd" />
                     <stop offset="100%" stopColor="#d4a373" />
                   </linearGradient>
+
+                  {/* Tail Patch Pattern - Gray Stripes (Carbon Fiber look) */}
+                  <pattern id={`tail-stripes-${isAnnual ? 'annual' : 'monthly'}`} width="0.8" height="0.8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                    <line x1="0" y1="0" x2="0" y2="0.8" stroke="#64748b" strokeWidth="0.4" />
+                  </pattern>
+
+                  <pattern id={`diamond-small-${isAnnual ? 'annual' : 'monthly'}`} x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <rect width="8" height="8" fill="#E2E1D9" />
+                    <path d="M4 1 L7 4 L4 7 L1 4 Z" fill="#D6D4C8" />
+                    <circle cx="4" cy="4" r="1" fill="#BDB9AB" />
+                    <circle cx="0" cy="0" r="0.6" fill="#BDB9AB" />
+                    <circle cx="8" cy="8" r="0.6" fill="#BDB9AB" />
+                  </pattern>
+                  
+                  <filter id={`inner-shadow-small-${isAnnual ? 'annual' : 'monthly'}`}>
+                    <feOffset dx="0" dy="0"/>
+                    <feGaussianBlur stdDeviation="1" result="offset-blur"/>
+                    <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse"/>
+                    <feFlood floodColor="black" floodOpacity="0.15" result="color"/>
+                    <feComposite operator="in" in="color" in2="inverse" result="shadow"/>
+                    <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
+                  </filter>
+
+                  {/* Clip Path for Board Contours */}
+                  <clipPath id={`board-clip-${isAnnual ? 'annual' : 'monthly'}`}>
+                    <path d="M50,5 C50,5 90,80 90,160 C90,240 75,295 50,295 C25,295 10,240 10,160 C10,80 50,5 50,5 Z" />
+                  </clipPath>
                 </defs>
 
-                {/* Board Body - Fish/Hybrid Shape */}
+                {/* Board Body - Performance Shortboard Shape (Pointed Nose) */}
                 <path 
-                  d="M50,5 C75,5 95,60 95,150 C95,240 85,290 50,290 C15,290 5,240 5,150 C5,60 25,5 50,5 Z" 
+                  d="M50,5 C50,5 90,80 90,160 C90,240 75,295 50,295 C25,295 10,240 10,160 C10,80 50,5 50,5 Z" 
                   fill={`url(#board-gradient-${isAnnual ? 'annual' : 'monthly'})`}
                   stroke="#e2e8f0"
-                  strokeWidth="1"
+                  strokeWidth="0.5"
                 />
 
-                {/* Stringer */}
-                <rect x="49" y="5" width="2" height="285" fill="url(#stringer-gradient)" opacity="0.8" />
+                {/* Stringer - Realistic thin wood line */}
+                <rect x="49.7" y="5" width="0.6" height="290" fill="url(#stringer-gradient)" opacity="0.6" />
 
-                {/* Rusty Logo (R-Dot style) */}
-                <g transform="translate(50, 80) scale(0.15)">
-                  <circle cx="0" cy="0" r="40" fill="#000000" />
-                  <text x="0" y="10" textAnchor="middle" fill="white" fontSize="40" fontWeight="bold" fontFamily="Arial">R</text>
+                {/* Al Merrick Logo (Channel Islands) - Moved further up and rotated 90deg left */}
+                <g transform="translate(50, 35) rotate(-90) scale(0.4)">
+                  {/* Hexagons */}
+                  <path d="M0,-10 L8.66,-5 L8.66,5 L0,10 L-8.66,5 L-8.66,-5 Z" fill="#e11d48" transform="translate(0, -12)" /> {/* Red Top */}
+                  <path d="M0,-10 L8.66,-5 L8.66,5 L0,10 L-8.66,5 L-8.66,-5 Z" fill="#f59e0b" transform="translate(-10, 5)" /> {/* Orange Left */}
+                  <path d="M0,-10 L8.66,-5 L8.66,5 L0,10 L-8.66,5 L-8.66,-5 Z" fill="#fbbf24" transform="translate(10, 5)" /> {/* Yellow Right */}
+                  
+                  {/* Text Details */}
+                  <text x="0" y="22" textAnchor="middle" fontSize="3" fontWeight="bold" fontFamily="Arial, sans-serif" fill="black" opacity="0.8">SHAPES DESIGNS</text>
+                  <text x="0" y="32" textAnchor="middle" fontSize="9" fontWeight="900" fontFamily="Impact, sans-serif" fill="black" letterSpacing="-0.5">AL MERRICK</text>
+                  
+                  {/* Divider line above text */}
+                  <line x1="-15" y1="16" x2="15" y2="16" stroke="black" strokeWidth="0.5" opacity="0.3" />
                 </g>
 
-                {/* Model Name */}
-                <text x="50" y="180" textAnchor="middle" fontSize="6" fontFamily="Arial" fill="#cbd5e0" letterSpacing="1" transform="rotate(-90 50 180)">
+                {/* Tail Carbon Patches - Precise wedge shape with stripes, clipped to board contours */}
+                <g clipPath={`url(#board-clip-${isAnnual ? 'annual' : 'monthly'})`} opacity="0.5">
+                  {/* Left Patch */}
+                  <path d="M10,220 L45,295 L10,295 Z" fill={`url(#tail-stripes-${isAnnual ? 'annual' : 'monthly'})`} />
+                  <path d="M10,220 L45,295 L10,295 Z" fill="#475569" opacity="0.1" />
+                  
+                  {/* Right Patch */}
+                  <path d="M90,220 L55,295 L90,295 Z" fill={`url(#tail-stripes-${isAnnual ? 'annual' : 'monthly'})`} />
+                  <path d="M90,220 L55,295 L90,295 Z" fill="#475569" opacity="0.1" />
+                </g>
+
+                {/* Model Name - Subtle vertical text */}
+                <text x="45" y="180" textAnchor="middle" fontSize="4" fontFamily="Arial" fill="#94a3b8" letterSpacing="2" transform="rotate(-90 45 180)" opacity="0.5">
                   {boardSpecs.model.toUpperCase()}
                 </text>
 
                 {/* Dynamic Fill Level (Churn Visualization) */}
-                <clipPath id={`board-clip-${isAnnual ? 'annual' : 'monthly'}`}>
-                  <path d="M50,5 C75,5 95,60 95,150 C95,240 85,290 50,290 C15,290 5,240 5,150 C5,60 25,5 50,5 Z" />
-                </clipPath>
-                
                 <g clipPath={`url(#board-clip-${isAnnual ? 'annual' : 'monthly'})`}>
                   <motion.rect 
                     initial={{ y: 300 }}
@@ -1148,14 +1191,38 @@ const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, p
                   />
                 </g>
 
-                {/* Traction Pad (Tail Pad) */}
+                {/* Traction Pad (Tail Pad) - Using Astrodeck design */}
                 {boardSpecs.hasTractionPad && (
-                  <g transform="translate(50, 260)" opacity="0.8">
-                    <rect x="-15" y="0" width="30" height="20" rx="2" fill="#1a202c" />
-                    <rect x="-15" y="0" width="30" height="20" rx="2" fill="url(#stringer-gradient)" opacity="0.2" />
-                    {/* Grid texture */}
-                    <path d="M-15,5 L15,5 M-15,10 L15,10 M-15,15 L15,15" stroke="white" strokeWidth="0.5" opacity="0.3" />
-                    <path d="M-5,0 L-5,20 M5,0 L5,20" stroke="white" strokeWidth="0.5" opacity="0.3" />
+                  <g transform="translate(50, 270) scale(0.12) translate(-200, -250)" opacity="0.95">
+                    {/* 3-Piece Pad Shape */}
+                    <path d="M 135 38 Q 80 45 40 60 C 30 150 60 250 100 320 C 120 360 160 380 185 380 L 185 330 C 185 300 135 300 135 250 Z" 
+                          fill={`url(#diamond-small-${isAnnual ? 'annual' : 'monthly'})`} filter={`url(#inner-shadow-small-${isAnnual ? 'annual' : 'monthly'})`} stroke="#BDB9AB" strokeWidth="0.2" />
+
+                    <path d="M 145 35 Q 200 20 255 35 L 245 250 C 245 290 155 290 155 250 Z" 
+                          fill={`url(#diamond-small-${isAnnual ? 'annual' : 'monthly'})`} filter={`url(#inner-shadow-small-${isAnnual ? 'annual' : 'monthly'})`} stroke="#BDB9AB" strokeWidth="0.2" />
+
+                    <path d="M 265 38 Q 320 45 360 60 C 370 150 340 250 300 320 C 280 360 240 380 215 380 L 215 330 C 215 300 265 300 265 250 Z" 
+                          fill={`url(#diamond-small-${isAnnual ? 'annual' : 'monthly'})`} filter={`url(#inner-shadow-small-${isAnnual ? 'annual' : 'monthly'})`} stroke="#BDB9AB" strokeWidth="0.2" />
+
+                    {/* Grip Bars */}
+                    <g fill="#BDB9AB" opacity="0.6">
+                      <rect x="170" y="80" width="60" height="6" rx="3" />
+                      <rect x="170" y="100" width="60" height="6" rx="3" />
+                      <rect x="170" y="120" width="60" height="6" rx="3" />
+                      <rect x="170" y="140" width="60" height="6" rx="3" />
+                      <rect x="170" y="160" width="60" height="6" rx="3" />
+                      <rect x="170" y="180" width="60" height="6" rx="3" />
+                      <rect x="170" y="200" width="60" height="6" rx="3" />
+                      <rect x="170" y="220" width="60" height="6" rx="3" />
+                      <rect x="170" y="240" width="60" height="6" rx="3" />
+                    </g>
+
+                    {/* Al Merrick Logo on Pad - Black for contrast on beige */}
+                    <g transform="translate(60, 65) scale(0.8)">
+                      <path d="M 20 0 L 35 8 L 35 25 L 20 33 L 5 25 L 5 8 Z" fill="#000" />
+                      <path d="M 6 27 L 21 35 L 21 52 L 6 60 L -9 52 L -9 35 Z" fill="#000" />
+                      <path d="M 34 27 L 49 35 L 49 52 L 34 60 L 19 52 L 19 35 Z" fill="#000" />
+                    </g>
                   </g>
                 )}
               </svg>
