@@ -48,12 +48,14 @@ const SurfingNewsPage: React.FC = () => {
       const feeds = [
         { url: 'https://www.surfline.com/surf-news/feed', name: 'Surfline' },
         { url: 'https://www.worldsurfleague.com/rss', name: 'WSL' },
-        { url: 'https://www.surfer.com/.rss/full/', name: 'Surfer' }
+        { url: 'https://www.surfer.com/.rss/full/', name: 'Surfer' },
+        { url: 'https://www.stabmag.com/feed/', name: 'Stab' },
+        { url: 'https://www.theinertia.com/feed/', name: 'The Inertia' }
       ];
 
       const results = await Promise.allSettled(
         feeds.map(async (feed) => {
-          let apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`;
+          let apiUrl = `https://rss2json.com/api.json?rss_url=${encodeURIComponent(feed.url)}`;
           if (process.env.RSS_API_KEY) {
             apiUrl += `&api_key=${process.env.RSS_API_KEY}`;
           }
@@ -80,13 +82,19 @@ const SurfingNewsPage: React.FC = () => {
         })
       );
 
-      // Fix: Cast the results to the fulfilled type after filtering to safely access the 'value' property
+      const feedErrors: string[] = [];
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`Feed ${feeds[index].name} failed:`, result.reason);
+          feedErrors.push(`${feeds[index].name}: ${result.reason.message}`);
+        }
+      });
       const combined = (results.filter(result => result.status === 'fulfilled') as PromiseFulfilledResult<Article[]>[])
         .flatMap(result => result.value)
         .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
       if (combined.length === 0) {
-        throw new Error('לא נמצאו חדשות באף אחד מהמקורות. נסו שוב בעוד כמה דקות.');
+        throw new Error(`לא נמצאו חדשות באף אחד מהמקורות. ${feedErrors.join(', ')}`);
       }
 
       // Save to Cache

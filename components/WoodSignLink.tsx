@@ -29,15 +29,15 @@ export const WoodSignLink: React.FC<WoodSignLinkProps> = React.memo(({
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: isRight ? 20 : -20 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, x: isRight ? 20 : -20, scale: 0.9 }}
+      animate={{ opacity: 1, x: 0, scale: 0.9 }}
       transition={{ 
         delay: index * 0.05, 
         duration: 0.4,
         ease: "easeOut"
       }}
-      whileHover={{ scale: 1.05, rotate: 0 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 0.95, rotate: 0 }}
+      whileTap={{ scale: 0.85 }}
       style={{ 
         rotate: item.rotation,
         // Drop shadow on the wrapper because clip-path hides box-shadow
@@ -91,7 +91,7 @@ export const WoodSignLink: React.FC<WoodSignLinkProps> = React.memo(({
             {item.icon}
           </span>
           <span className={`
-            text text-white/90
+            text-base text-white/90 font-['Miriwin'] font-bold
             drop-shadow-[0_2px_2px_rgba(0,0,0,0.6)]
           `}
           >

@@ -283,10 +283,11 @@ const AdminPage: React.FC = () => {
           ] 
         },
         {
-          name: 'פלטת T-Mobile',
+          name: 'פלטת Surfers Theme',
           variables: [
-            '--t-mobile-magenta', '--t-mobile-pink', '--t-mobile-light-pink', 
-            '--t-mobile-extra-light', '--t-mobile-mist'
+            '--vibrant-cyan', '--turquoise-teal', '--electric-red-pink', 
+            '--deep-magenta', '--sunshine-yellow', '--golden-orange',
+            '--deep-shadow', '--tan-skin', '--deep-teal-sea', '--aqua-mist'
           ]
         },
         {

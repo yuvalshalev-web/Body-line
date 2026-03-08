@@ -110,7 +110,7 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer }) => {
                     : `${item.glow} group-hover:rotate-12 group-hover:scale-110`
                 }`} 
               />
-              <span className={`text-[10px] font-black z-10 tracking-tight leading-none ${isActive ? 'text-white' : 'opacity-90'}`}>
+              <span className={`text-[10px] font-black z-10 tracking-tight leading-none font-['Miriwin'] ${isActive ? 'text-white' : 'opacity-90'}`}>
                 {item.label}
               </span>
 
@@ -133,7 +133,7 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer }) => {
           className="flex flex-col items-center gap-1 p-3 px-5 rounded-[32px] border border-slate-200/60 text-slate-700 bg-slate-100/60 hover:bg-slate-200/90 hover:scale-110 active:scale-95 transition-all duration-300"
         >
           <Menu size={26} className="drop-shadow-md" />
-          <span className="text-[10px] font-black opacity-80 leading-none">תפריט</span>
+          <span className="text-[10px] font-black opacity-80 leading-none font-['Miriwin']">תפריט</span>
         </button>
       </nav>
     </motion.div>

@@ -19,7 +19,7 @@
   --color-ocean-10: #ffffff;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700;900&family=Heebo:wght@300;400;600;700;900&family=Rubik:wght@300;400;600;700;900&family=Varela+Round&family=Secular+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700;900&family=Heebo:wght@300;400;600;700;900&family=Rubik:wght@300;400;600;700;900&family=Varela+Round&family=Secular+One&family=Miriwin&display=swap');
 
 :root {
   --primary-font: 'Assistant', sans-serif;
@@ -785,11 +785,11 @@ header {
     filter: drop-shadow(0 0 15px rgba(0, 123, 255, 0.3));
 }
 
-/* 
-   ==========================================================================
-   GLOBAL GLASSMORPHISM DESIGN SYSTEM (APPENDED)
-   ==========================================================================
-*/
+/* 20% reduction for surfboard hero titles */
+.surfboard-hero-container .surfer-title {
+  font-size: clamp(2rem, 6.4vw, 3.2rem) !important;
+}
+
 
 /* 2. Glass Containers & Cards */
 .glass-effect, .glass-panel {
@@ -876,7 +876,7 @@ aside.bg-white {
 }
 
 .floating-menu-drawer {
-    background: rgba(255, 255, 255, 0.6) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
     backdrop-filter: blur(25px) !important;
     border-left: 1px solid rgba(255, 255, 255, 0.3) !important;
 }

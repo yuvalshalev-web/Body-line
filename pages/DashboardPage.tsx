@@ -160,41 +160,40 @@ const DashboardPage: React.FC = () => {
       <section className="relative w-full min-h-[700px] md:min-h-[650px] rounded-[var(--radius-lg)] overflow-hidden shadow-2xl border border-slate-100 group">
         <img 
           src={siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
-          className="absolute inset-0 w-full h-full object-cover grayscale-[0.2] brightness-[0.7] group-hover:scale-105 transition-transform duration-[3000ms]" 
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3000ms]" 
           alt="Hero"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
         <div className="relative z-10 min-h-[700px] md:min-h-[650px] flex flex-col items-center justify-center p-8 md:p-12 text-center py-20">
            <motion.p 
              initial={{ opacity: 0, y: 10 }}
              animate={{ opacity: 1, y: 0 }}
              transition={{ duration: 1.5, delay: 0.5 }}
-             className="text-white/90 font-semibold italic text-lg md:text-2xl mb-8 max-w-2xl tracking-[0.08em] leading-relaxed drop-shadow-2xl"
+             className="text-white font-semibold italic text-lg md:text-2xl max-w-2xl tracking-[0.08em] leading-relaxed drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
            >
              "A day will come that is like no other... and nothing that happens after will ever be the same."
            </motion.p>
-           <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tighter drop-shadow-2xl">יום חמישי הגדול</h1>
+           <h1 className="text-[47px] md:text-[78px] font-black text-[#F5A623] mb-6 tracking-tighter drop-shadow-2xl">יום חמישי הגדול</h1>
            
            <div className="mb-8 space-y-2">
-             <p className="text-lg md:text-xl font-bold text-white/60">נכנסים למים בעוד...</p>
+             <p className="text-lg md:text-xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>נכנסים למים בעוד...</p>
            </div>
 
            <div className="mb-12 flex gap-4 text-white/80 font-black text-xl tracking-tighter" dir="ltr">
-             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
-               <span className="text-3xl text-[#F1D179]">{countdown.days}</span>
+             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl">
+               <span className="text-3xl text-[#F5A623]">{countdown.days}</span>
                <span className="text-[10px] uppercase opacity-60">ימים</span>
              </div>
-             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
-               <span className="text-3xl text-[#F1D179]">{countdown.hours}</span>
+             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl">
+               <span className="text-3xl text-[#F5A623]">{countdown.hours}</span>
                <span className="text-[10px] uppercase opacity-60">שעות</span>
              </div>
-             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
-               <span className="text-3xl text-[#F1D179]">{countdown.minutes}</span>
+             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl">
+               <span className="text-3xl text-[#F5A623]">{countdown.minutes}</span>
                <span className="text-[10px] uppercase opacity-60">דקות</span>
              </div>
-             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
-               <span className="text-3xl text-[#F1D179]">{countdown.seconds}</span>
+             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl">
+               <span className="text-3xl text-[#F5A623]">{countdown.seconds}</span>
                <span className="text-[10px] uppercase opacity-60">שניות</span>
              </div>
            </div>

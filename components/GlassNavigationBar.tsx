@@ -38,7 +38,7 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
             <span className={`text-xl transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-white' : 'text-[#4A5568] group-hover:text-[#1A365D]'}`}>
               {item.icon}
             </span>
-            <span className="text-sm font-bold tracking-tight">
+            <span className="text-sm font-bold tracking-tight font-['Miriwin']">
               {item.label}
             </span>
           </button>
