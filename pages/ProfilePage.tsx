@@ -502,7 +502,7 @@ const ProfilePage: React.FC = () => {
           </div>
 
           <div className="mt-20 flex flex-col items-center gap-6 w-full max-w-sm mx-auto">
-             <GlassButton type="submit" disabled={isSaving || !isDirty} className="w-fit mx-auto">
+             <GlassButton type="submit" disabled={isSaving || !isDirty} className="w-fit mx-auto hd-glass-button-vibrant">
                  {isSaving ? <Loader2 className="animate-spin text-[#00FFFF]" size={24} /> : <Save size={24} className="text-[#00FFFF]" />}
                  שמור שינויים
              </GlassButton>
@@ -510,7 +510,7 @@ const ProfilePage: React.FC = () => {
              <GlassButton 
                type="button" 
                onClick={() => setShowPasswordModal(true)}
-               className="w-fit mx-auto"
+               className="w-fit mx-auto hd-glass-button-vibrant"
              >
                <Key size={24} className="text-[#00FFFF]" />
                החלפת סיסמה
@@ -585,7 +585,7 @@ const ProfilePage: React.FC = () => {
                   <GlassButton 
                     type="submit"
                     disabled={isChangingPassword || !newPassword || !confirmPassword}
-                    className="w-fit mx-auto"
+                    className="w-fit mx-auto hd-glass-button-vibrant"
                   >
                     {isChangingPassword ? <Loader2 className="animate-spin text-[#00FFFF]" size={20} /> : <Save size={20} className="text-[#00FFFF]" />}
                     עדכן סיסמה

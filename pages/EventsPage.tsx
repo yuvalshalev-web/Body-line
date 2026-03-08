@@ -209,7 +209,7 @@ const EventsPage: React.FC = () => {
           {currentUser && (
             <button 
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-4 px-10 py-5 bg-[#006994] text-white rounded-[2rem] font-black text-md hover:bg-[#4E8294] transition-all shadow-xl active:scale-95 group"
+              className="flex items-center gap-4 px-10 py-5 text-white rounded-[2rem] font-black text-md transition-all active:scale-95 group hd-glass-button-vibrant"
             >
               <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />
               <span>הוספת אירוע</span>

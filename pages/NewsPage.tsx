@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { GlassButton } from '../components/GlassButton';
 import { Newspaper, Plus, X, Loader2, Image as ImageIcon, Heart, MessageCircle, Send, Waves, Trash2, User, Info, Activity, Zap, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getStorageInstance } from '../services/firebase';
@@ -89,7 +90,7 @@ const NewsPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-white text-right p-6 md:p-12 animate-in fade-in" dir="rtl">
+    <div className="relative min-h-screen bg-white text-right p-6 md:p-12 animate-in fade-in" dir="rtl" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
       {/* Body-line Standard Header Stack */}
       <div className="surfboard-hero-container mb-10 space-y-4">
         {/* Top Badge */}
@@ -109,13 +110,13 @@ const NewsPage: React.FC = () => {
             עדכונים אופטימליים ורגעים מהחיים של חברי חבל זוג 🗞️
           </p>
           
-          <button 
+          <GlassButton 
             onClick={() => { setShowSuccess(false); setErrorMsg(null); setShowCreateModal(true); }}
-            className="flex items-center gap-4 px-10 py-5 bg-[#006994] text-white rounded-[2rem] font-black text-md hover:bg-[#4E8294] transition-all shadow-xl active:scale-95 group"
+            className="flex items-center gap-4 px-10 py-5 hd-glass-button-vibrant font-black text-md shadow-xl active:scale-95 group"
           >
             <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />
             <span>פרסום פוסט חדש</span>
-          </button>
+          </GlassButton>
         </div>
       </div>
 
@@ -176,14 +177,14 @@ const NewsPage: React.FC = () => {
                   {selectedImage ? <img src={selectedImage.dataUrl} className="w-full h-full object-cover" alt="" /> : <ImageIcon size={32} className="text-slate-300" />}
                   <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageChange} />
                 </div>
-                <button 
+                <GlassButton 
                   type="submit" 
                   disabled={isPosting} 
-                  className="w-full py-5 bg-[#006994] text-white rounded-[2rem] font-black text-xl hover:bg-[#4E8294] transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:opacity-50"
+                  className="w-full py-5 hd-glass-button-vibrant font-black text-xl flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:opacity-50"
                 >
                   {isPosting ? <Loader2 className="animate-spin" /> : <Zap size={24} className="text-[#00FFFF]" />}
                   <span>{isPosting ? 'מפרסם...' : 'פרסם בפורמט WebP'}</span>
-                </button>
+                </GlassButton>
               </form>
             )}
           </div>

@@ -3,9 +3,12 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import cron from "node-cron";
+import Parser from 'rss-parser';
 import { finalizeThursdaySession as finalizeThursdaySessionService } from "./services/rolloverService.js";
 import { getDb } from "./services/firebase.js";
 import { collection, query, getDocs, orderBy, limit } from "firebase/firestore";
+
+const parser = new Parser();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +39,39 @@ async function startServer() {
   });
 
   app.use(express.json());
+
+  // API Route to fetch news
+  app.get("/api/news", async (req, res) => {
+    const feeds = [
+      { url: 'https://www.surfline.com/rss/news', name: 'Surfline' },
+      { url: 'https://www.worldsurfleague.com/rss/news', name: 'WSL' },
+      { url: 'https://www.surfer.com/feed', name: 'Surfer' },
+      { url: 'https://stabmag.com/feed', name: 'Stab' },
+      { url: 'https://www.theinertia.com/feed', name: 'The Inertia' }
+    ];
+
+    const results: any[] = [];
+    
+    for (const feed of feeds) {
+      try {
+        const feedData = await parser.parseURL(feed.url);
+        const articles = feedData.items.map((item: any) => ({
+          title: item.title || 'Untitled',
+          description: item.contentSnippet || item.content || '',
+          url: item.link,
+          urlToImage: item.enclosure?.url || item.image?.url || '',
+          publishedAt: item.pubDate,
+          source: feed.name,
+          content: item.content || ''
+        }));
+        results.push(...articles);
+      } catch (err) {
+        console.error(`Feed ${feed.name} failed:`, err);
+      }
+    }
+    
+    res.json(results);
+  });
 
   // Global error tracking for "Sea Observation"
   let totalRequests = 0;

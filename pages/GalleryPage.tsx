@@ -157,7 +157,7 @@ const GalleryPage: React.FC = () => {
             <button 
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="flex items-center gap-4 px-10 py-5 bg-[#006994] text-white rounded-[2rem] font-black text-md hover:bg-[#4E8294] transition-all shadow-xl active:scale-95 disabled:opacity-50 group"
+              className="flex items-center gap-4 px-10 py-5 text-white rounded-[2rem] font-black text-md transition-all active:scale-95 disabled:opacity-50 group hd-glass-button-vibrant"
             >
               {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />}
               <span>{isUploading ? 'מעבד תמונות...' : 'העלאת תמונות'}</span>

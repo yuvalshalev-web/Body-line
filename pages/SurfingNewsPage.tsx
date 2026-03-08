@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { GlassButton } from '../components/GlassButton';
 import { Globe, Loader2, ExternalLink, Calendar, Newspaper, AlertCircle, RefreshCw, Bookmark, Waves } from 'lucide-react';
 
 interface Article {
@@ -45,56 +46,15 @@ const SurfingNewsPage: React.FC = () => {
     }
 
     try {
-      const feeds = [
-        { url: 'https://www.surfline.com/surf-news/feed', name: 'Surfline' },
-        { url: 'https://www.worldsurfleague.com/rss', name: 'WSL' },
-        { url: 'https://www.surfer.com/.rss/full/', name: 'Surfer' },
-        { url: 'https://www.stabmag.com/feed/', name: 'Stab' },
-        { url: 'https://www.theinertia.com/feed/', name: 'The Inertia' }
-      ];
-
-      const results = await Promise.allSettled(
-        feeds.map(async (feed) => {
-          let apiUrl = `https://rss2json.com/api.json?rss_url=${encodeURIComponent(feed.url)}`;
-          if (process.env.RSS_API_KEY) {
-            apiUrl += `&api_key=${process.env.RSS_API_KEY}`;
-          }
-          
-          const res = await fetch(apiUrl);
-          if (!res.ok) throw new Error(`Failed to fetch ${feed.name}`);
-          
-          const data = await res.json();
-          if (data.status !== 'ok') return [];
-          
-          return (data.items || []).map((item) => ({
-            title: item.title || 'Untitled',
-            description: item.description || item.content || '',
-            url: item.link,
-            urlToImage: item.enclosure?.link || 
-                        item.thumbnail || 
-                        extractImage(item.description) || 
-                        extractImage(item.content) || 
-                        `https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=800&sig=${Math.random()}`,
-            publishedAt: item.pubDate,
-            source: feed.name,
-            content: item.content || ''
-          }));
-        })
-      );
-
-      const feedErrors: string[] = [];
-      results.forEach((result, index) => {
-        if (result.status === 'rejected') {
-          console.error(`Feed ${feeds[index].name} failed:`, result.reason);
-          feedErrors.push(`${feeds[index].name}: ${result.reason.message}`);
-        }
-      });
-      const combined = (results.filter(result => result.status === 'fulfilled') as PromiseFulfilledResult<Article[]>[])
-        .flatMap(result => result.value)
-        .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+      const res = await fetch('/api/news');
+      if (!res.ok) {
+        throw new Error(`${res.status} ${res.statusText}`);
+      }
+      
+      const combined = await res.json();
 
       if (combined.length === 0) {
-        throw new Error(`לא נמצאו חדשות באף אחד מהמקורות. ${feedErrors.join(', ')}`);
+        throw new Error(`לא נמצאו חדשות באף אחד מהמקורות.`);
       }
 
       // Save to Cache
@@ -176,14 +136,15 @@ const SurfingNewsPage: React.FC = () => {
               מבזקים חיים ועדכונים מהעולם - Surfline, WSL ו-Surfer 🌍
             </p>
             
-            <button 
+            <GlassButton 
               onClick={() => fetchNews(true)}
               disabled={loading}
-              className="flex items-center gap-4 px-8 py-4 bg-[#006994] text-white rounded-[1.5rem] font-black text-sm hover:bg-[#4E8294] transition-all active:scale-95 shadow-lg group disabled:opacity-50"
+              noGradient={true}
+              className="flex items-center gap-4 px-8 py-4 rounded-[1.5rem] font-black text-sm transition-all active:scale-95 shadow-lg group disabled:opacity-50 surfer-refresh-btn text-white"
             >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} className="group-hover:rotate-180 transition-transform text-[#00FFFF]" />}
-              <span>רענן עדכונים</span>
-            </button>
+              {loading ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} className="group-hover:rotate-180 transition-transform text-white" />}
+              <span>רענן חדשות</span>
+            </GlassButton>
           </div>
         </div>
 
@@ -192,13 +153,13 @@ const SurfingNewsPage: React.FC = () => {
             <AlertCircle size={48} className="text-rose-400 mb-6" />
             <h3 className="text-2xl font-black text-rose-900 mb-2">אופס, משהו השתבש</h3>
             <p className="text-rose-600 font-bold mb-8 max-w-md mx-auto">{error}</p>
-            <button 
+            <GlassButton 
               onClick={() => fetchNews(true)} 
-              className="px-8 py-4 bg-[#006994] text-white rounded-2xl font-black text-sm shadow-xl hover:bg-[#4E8294] transition-all active:scale-95 flex items-center gap-3"
+              className="px-8 py-4 rounded-2xl font-black text-sm shadow-xl active:scale-95 flex items-center gap-3"
             >
               <RefreshCw size={18} />
               <span>נסה שנית</span>
-            </button>
+            </GlassButton>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

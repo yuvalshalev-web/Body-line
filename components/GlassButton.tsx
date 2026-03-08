@@ -2,13 +2,15 @@ import React, { useRef, useState } from 'react';
 
 interface GlassButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
+  noGradient?: boolean;
 }
 
-export function GlassButton({ children, className = '', ...props }: GlassButtonProps) {
+export function GlassButton({ children, className = '', noGradient = false, ...props }: GlassButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [background, setBackground] = useState<string | undefined>(undefined);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (noGradient) return;
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -18,6 +20,7 @@ export function GlassButton({ children, className = '', ...props }: GlassButtonP
   };
 
   const handleMouseLeave = () => {
+    if (noGradient) return;
     setBackground(undefined);
   };
 

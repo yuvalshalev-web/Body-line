@@ -273,8 +273,8 @@ const DashboardPage: React.FC = () => {
                   <Calendar size={12} />
                   {randomPost.date}
                 </div>
-                <h4 className="text-xl font-black glass-text-primary mb-4 group-hover:text-rose-600 transition-colors line-clamp-2">{randomPost.title}</h4>
-                <p className="glass-text-secondary font-bold text-sm line-clamp-3 mb-6">{randomPost.content}</p>
+                <h4 className="text-xl font-black glass-text-primary mb-4 group-hover:text-rose-600 transition-colors line-clamp-2" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.title}</h4>
+                <p className="glass-text-secondary font-bold text-sm line-clamp-3 mb-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.content}</p>
                 <div className="mt-auto flex items-center gap-3">
                   {randomPost.authorAvatar ? (
                     <img src={randomPost.authorAvatar} className="w-6 h-6 rounded-full object-cover" alt="" />
@@ -283,7 +283,7 @@ const DashboardPage: React.FC = () => {
                       <UserCircle size={12} />
                     </div>
                   )}
-                  <span className="text-[10px] font-black glass-text-secondary">{randomPost.authorName}</span>
+                  <span className="text-[10px] font-black glass-text-secondary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.authorName}</span>
                 </div>
               </div>
             </Link>
