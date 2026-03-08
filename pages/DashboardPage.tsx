@@ -173,7 +173,7 @@ const DashboardPage: React.FC = () => {
            >
              "A day will come that is like no other... and nothing that happens after will ever be the same."
            </motion.p>
-           <h1 className="text-[47px] md:text-[78px] font-black text-[#F5A623] mb-6 tracking-tighter drop-shadow-2xl">יום חמישי הגדול</h1>
+           <h1 className="text-[47px] md:text-[78px] font-black text-[#F5A623] mb-6 tracking-tighter drop-shadow-2xl big-thursday-title">יום חמישי הגדול</h1>
            
            <div className="mb-8 space-y-2">
              <p className="text-lg md:text-xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>נכנסים למים בעוד...</p>
@@ -303,8 +303,8 @@ const DashboardPage: React.FC = () => {
            </div>
            {randomQuotes.map((item, idx) => (
              <div key={idx} className="p-10 glass-effect rounded-[2.5rem] transition-all animate-in fade-in">
-               <p className="text-2xl font-black glass-text-primary leading-tight italic">"{item.text}"</p>
-               <p className="text-lg font-bold glass-text-secondary italic mt-6">— {item.author}</p>
+               <p className="text-2xl font-black glass-text-primary leading-tight italic" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>"{item.text}"</p>
+               <p className="text-lg font-bold glass-text-secondary italic mt-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>— {item.author}</p>
              </div>
            ))}
         </section>
@@ -316,8 +316,8 @@ const DashboardPage: React.FC = () => {
            </div>
            {randomGlossary.map((item, idx) => (
              <div key={idx} className="p-10 glass-effect rounded-[2.5rem] transition-all animate-in fade-in">
-               <h4 className="text-4xl font-black glass-text-primary mb-4" dir="ltr">{item.term}</h4>
-               <p className="text-xl font-bold glass-text-secondary italic border-r-4 border-sky-500/30 pr-6">{item.definition}</p>
+               <h4 className="text-4xl font-black glass-text-primary mb-4" dir="ltr" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.term}</h4>
+               <p className="text-xl font-bold glass-text-secondary italic border-r-4 border-sky-500/30 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.definition}</p>
              </div>
            ))}
         </section>

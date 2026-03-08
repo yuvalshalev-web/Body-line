@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense, useCallback } from 'react';
+import React, { useState, useCallback, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { useData } from './contexts/DataContext';
@@ -34,7 +34,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const DirectoryPage = lazy(() => import('./pages/DirectoryPage'));
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+import ProfilePage from './pages/ProfilePage';
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const EventsPage = lazy(() => import('./pages/EventsPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
@@ -239,11 +239,9 @@ const App: React.FC = () => {
 
   if (!currentUser) {
     return (
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
+      <Routes>
           <Route path="*" element={<LoginPage />} />
         </Routes>
-      </Suspense>
     );
   }
 
@@ -306,7 +304,7 @@ const App: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[50%] max-w-[50%] bg-white/10 backdrop-blur-xl border-l border-white/20 z-[10002] shadow-2xl flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-[85%] sm:w-[60%] md:w-[50%] max-w-[400px] bg-white/10 backdrop-blur-xl border-l border-white/20 z-[10002] shadow-2xl flex flex-col floating-menu-drawer"
               style={{}}
             >
               <div className="w-full h-full flex flex-col relative">
@@ -468,13 +466,12 @@ const App: React.FC = () => {
                     </div>
                   </div>
 
-                  <button
+                  <WoodSignLink 
+                    item={{...menuItems[12], text: 'עזוב את החוף'}}
+                    index={navItems.length + adminNavItems.length}
+                    isActive={false}
                     onClick={handleLogout}
-                    className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-full bg-[#8d6e63] text-white font-black text-sm hover:bg-[#5d4037] transition-all shadow-lg group"
-                  >
-                    <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    <span>עזוב את החוף</span>
-                  </button>
+                  />
                 </div>
               </div>
             </motion.div>
@@ -485,9 +482,7 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <FloatingMenu onOpenDrawer={() => setIsDrawerOpen(true)} />
       <main className="flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto pb-32 relative z-10">
-        <ErrorBoundary>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+        <Routes>
               <Route path="/" element={<DashboardPage />} />
               <Route path="/directory" element={<DirectoryPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
@@ -506,8 +501,6 @@ const App: React.FC = () => {
               )}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </Suspense>
-        </ErrorBoundary>
       </main>
     </div>
   );

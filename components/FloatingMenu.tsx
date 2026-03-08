@@ -80,7 +80,7 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer }) => {
       animate={{ y: 0, opacity: 1 }}
       className="fixed bottom-6 left-4 right-4 md:left-auto md:right-auto md:w-max md:mx-auto z-[9999] 
                  bg-white/85 backdrop-blur-3xl border border-white/60 
-                 rounded-[40px] p-1.5 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.25)] flex items-center gap-1"
+                 rounded-[40px] p-1.5 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.25)] flex items-center gap-1 floating-menu-container"
     >
       <nav className="flex justify-between items-center gap-1">
         {/* Profile Item */}

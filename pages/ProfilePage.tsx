@@ -187,7 +187,7 @@ const ProfilePage: React.FC = () => {
     }
   }, [currentUser]);
 
-  if (!formData) return null;
+  if (!formData) return <div className="text-black">Loading...</div>;
 
   const ensureAbsoluteUrl = (url?: string) => {
     if (!url) return '';
@@ -300,7 +300,17 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-10 text-right animate-in fade-in" dir="rtl">
+    <div className="min-h-screen w-full relative z-10">
+      <div className="fixed inset-0 z-0 opacity-100 pointer-events-none">
+        <img 
+          src="https://images.unsplash.com/photo-1502680390469-be75c86b636f?q=80&w=1920&auto=format&fit=crop" 
+          className="w-full h-full object-cover" 
+          alt="Surf Van" 
+          referrerPolicy="no-referrer" 
+        />
+      </div>
+      <div className="max-w-6xl mx-auto py-10 text-right animate-in fade-in" dir="rtl">
+
       {/* Body-line Standard Header Stack */}
       <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}
@@ -328,14 +338,10 @@ const ProfilePage: React.FC = () => {
           {/* Removed background image layer here */}
         </div>
         
-        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-24 bg-white rounded-t-[4rem]">
+        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-24 bg-white/10 backdrop-blur-lg rounded-t-[4rem]">
           <div className="flex flex-col md:flex-row items-end gap-8 mb-16">
             <div className="relative group">
-              {/* Added full-length banner behind profile picture */}
-              <div className="absolute -top-32 -left-4 -right-4 h-64 rounded-[3rem] overflow-hidden opacity-100 -z-10">
-                 <img src="https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fvan_surfboards.jpg?alt=media" className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
-                 <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent"></div>
-              </div>
+              {/* Removed banner image that was obscuring the watermark */}
               
               <div className="w-44 h-44 rounded-[3rem] overflow-hidden shadow-2xl group-hover:scale-[1.02] transition-transform duration-500 bg-slate-100 flex items-center justify-center relative z-10">
                 {isProcessingImage ? (
@@ -517,6 +523,7 @@ const ProfilePage: React.FC = () => {
              </GlassButton>
           </div>
         </form>
+      </div>
       </div>
 
       {toast && (

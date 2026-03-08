@@ -139,7 +139,7 @@ const GalleryPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-right animate-in fade-in duration-700" dir="rtl">
+    <div className="min-h-screen bg-white text-right animate-in fade-in duration-700" dir="rtl" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
       {/* Body-line Standard Header Stack */}
       <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}

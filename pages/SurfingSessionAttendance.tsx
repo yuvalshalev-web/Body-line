@@ -475,29 +475,29 @@ const SurfingSessionAttendance: React.FC = () => {
 
         {/* Sticky Top Bar for Editing Historical Sessions */}
         {editingHistorySession && (
-          <div className="sticky top-24 z-50 mb-8 bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] border border-[rgba(255,255,255,0.2)] rounded-[16px] p-6 flex items-center justify-between gap-4 shadow-xl" style={{ textAlign: 'right' }}>
-            <div className="flex items-center gap-3 t-mobile-text-strong">
+          <div className="sticky top-24 z-50 mb-8 bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] border border-[rgba(255,255,255,0.2)] rounded-[16px] p-6 flex flex-col gap-4 shadow-xl" style={{ textAlign: 'right' }}>
+            <div className="flex items-start gap-3 t-mobile-text-strong">
+              <AlertTriangle className="shrink-0 mt-1" size={24} />
               <div>
-                <p className="text-lg font-black leading-tight flex items-center gap-2">
-                  <AlertTriangle className="shrink-0" size={24} />
+                <p className="text-lg font-black leading-tight">
                   אתה נמצא במצב עריכה
                 </p>
-                <p className="text-sm font-bold opacity-80 leading-[1.5]">
+                <p className="text-sm font-bold opacity-80 leading-[1.5] mt-1">
                   שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות.
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3 shrink-0 mt-4 md:mt-0">
+            <div className="flex items-center gap-3 shrink-0 pt-2 border-t border-[rgba(255,255,255,0.1)]">
               <button 
                 onClick={() => { setView('history'); setEditingHistorySession(null); }}
-                className="px-4 py-2 bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] border border-[rgba(255,255,255,0.2)] rounded-[16px] font-black text-sm transition-all text-[#006994]"
+                className="flex-1 px-4 py-3 bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] border border-[rgba(255,255,255,0.2)] rounded-[16px] font-black text-sm transition-all text-[#006994]"
               >
                 ביטול
               </button>
               <button 
                 onClick={handleFinalConfirm}
-                disabled={isSaving}
-                className="px-6 py-2 bg-[#006994] text-white rounded-[16px] font-black text-sm hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50"
+                disabled={isSaving || !hasUnsavedChanges}
+                className="flex-1 px-6 py-3 bg-[#00FFFF] text-[#006994] rounded-[16px] font-black text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale"
               >
                 {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                 שמור שינויים

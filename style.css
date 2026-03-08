@@ -21,8 +21,24 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700;900&family=Heebo:wght@300;400;600;700;900&family=Rubik:wght@300;400;600;700;900&family=Varela+Round&family=Secular+One&family=Miriwin&display=swap');
 
+@font-face {
+  font-family: 'Yehuda CLM';
+  src: url('/src/assets/fonts/yehudaclm-light-webfont.woff') format('woff'),
+       url('/src/assets/fonts/yehudaclm-light-webfont.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Yehuda CLM';
+  src: url('/src/assets/fonts/yehudaclm-bold-webfont.woff') format('woff'),
+       url('/src/assets/fonts/yehudaclm-bold-webfont.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
 :root {
-  --primary-font: 'Assistant', sans-serif;
+  --primary-font: 'Yehuda CLM', sans-serif;
   --accent-blue: #2563eb;
   --bg-main: #FFFFFF;
   --bg-alt: #F5F7FA;
@@ -106,6 +122,14 @@
   --h1-glass-border: 1px solid rgba(255, 255, 255, 0.2);
   --h1-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
+
+/* Exceptions for menus and Big Thursday */
+.floating-menu-drawer,
+.floating-menu-container,
+.big-thursday-title {
+  font-family: 'Assistant', sans-serif !important;
+}
+
 
 .surfboard-hero-container {
   display: flex;
@@ -247,19 +271,39 @@ body {
 
 .glass-button {
   background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   padding: 10px 20px;
   color: white;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.5s ease;
+  pointer-events: none;
 }
 
 .glass-button:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
   transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.glass-button:hover::before {
+  transform: translate(-50%, -50%) scale(1);
 }
 
 .glass-button:active {

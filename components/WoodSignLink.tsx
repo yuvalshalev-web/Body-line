@@ -29,29 +29,28 @@ export const WoodSignLink: React.FC<WoodSignLinkProps> = React.memo(({
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: isRight ? 20 : -20, scale: 0.9 }}
-      animate={{ opacity: 1, x: 0, scale: 0.9 }}
+      initial={{ opacity: 0, x: isRight ? 20 : -20, scale: 1, rotate: item.rotation }}
+      animate={{ opacity: 1, x: 0, scale: 1, rotate: item.rotation }}
       transition={{ 
         delay: index * 0.05, 
         duration: 0.4,
         ease: "easeOut"
       }}
-      whileHover={{ scale: 0.95, rotate: 0 }}
-      whileTap={{ scale: 0.85 }}
+      whileHover={{ scale: 1.1, rotate: 0 }}
+      whileTap={{ scale: 0.95 }}
       style={{ 
-        rotate: item.rotation,
         // Drop shadow on the wrapper because clip-path hides box-shadow
         filter: 'drop-shadow(0px 8px 6px rgba(0,0,0,0.3)) drop-shadow(0px 2px 2px rgba(0,0,0,0.2))'
       }}
-      className="wood-sign relative my-3 w-full group cursor-pointer"
+      className="wood-sign relative my-1.5 w-full group cursor-pointer"
       onClick={onClick}
     >
       {/* The Sign Shape */}
       <div 
         className={`
-          relative py-3 px-6 transition-all duration-300
+          relative py-2 px-4 transition-all duration-300
           ${isActive ? 'brightness-110' : 'brightness-90 group-hover:brightness-100'}
-          ${isRight ? 'pr-10 pl-6' : 'pl-10 pr-6'}
+          ${isRight ? 'pr-8 pl-4' : 'pl-8 pr-4'}
         `}
         style={{ 
           backgroundColor: item.color,
@@ -87,11 +86,11 @@ export const WoodSignLink: React.FC<WoodSignLinkProps> = React.memo(({
              }} />
         
         <div className={`flex items-center gap-3 relative z-10 ${isRight ? 'justify-start' : 'justify-end flex-row-reverse'}`}>
-          <span className="text-2xl drop-shadow-md opacity-90">
+          <span className="text-3xl drop-shadow-md opacity-90">
             {item.icon}
           </span>
           <span className={`
-            text-base text-white/90 font-['Miriwin'] font-bold
+            text-2xl text-white/90 font-['Miriwin'] font-bold
             drop-shadow-[0_2px_2px_rgba(0,0,0,0.6)]
           `}
           >
