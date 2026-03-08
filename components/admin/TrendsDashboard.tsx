@@ -71,19 +71,23 @@ const TrendsDashboard: React.FC = () => {
           ctx.stroke();
       });
 
-      // Draw Logo in center
+      // Draw Logo
       if (logoImg.complete) {
         const logoSize = 40;
+        // Move logo to the left side of the board, above the text
+        const newX = centerX - maxRadius * 0.4;
+        const newY = centerY - maxRadius * 0.2;
+        
         ctx.save();
         ctx.beginPath();
-        ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
+        ctx.arc(newX, newY, logoSize / 2, 0, Math.PI * 2);
         ctx.clip();
-        ctx.drawImage(logoImg, centerX - logoSize / 2, centerY - logoSize / 2, logoSize, logoSize);
+        ctx.drawImage(logoImg, newX - logoSize / 2, newY - logoSize / 2, logoSize, logoSize);
         ctx.restore();
         
         // Logo border
         ctx.beginPath();
-        ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
+        ctx.arc(newX, newY, logoSize / 2, 0, Math.PI * 2);
         ctx.strokeStyle = '#007bff';
         ctx.lineWidth = 2;
         ctx.stroke();

@@ -255,7 +255,7 @@ const DashboardPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="p-4 glass-effect text-white rounded-2xl shadow-lg"><Newspaper size={24} /></div>
-            <h3 className="text-3xl font-black glass-text-primary tracking-tight">פוסטים אחרונים</h3>
+            <h3 className="text-3xl font-black glass-text-primary tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>פוסטים אחרונים</h3>
           </div>
           <Link to="/posts" className="glass-text-secondary font-black text-xs uppercase tracking-widest hover:text-slate-950 transition-colors">צפה בהכל</Link>
         </div>
@@ -299,7 +299,7 @@ const DashboardPage: React.FC = () => {
         <section className="glass-panel p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
               <div className="p-4 bg-amber-500/20 text-amber-600 rounded-2xl shadow-inner"><Quote size={24} /></div>
-              <h3 className="text-2xl font-black glass-text-primary">חוכמת הליין-אפ</h3>
+              <h3 className="text-2xl font-black glass-text-primary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>חוכמת הליין-אפ</h3>
            </div>
            {randomQuotes.map((item, idx) => (
              <div key={idx} className="p-10 glass-effect rounded-[2.5rem] transition-all animate-in fade-in">
@@ -312,7 +312,7 @@ const DashboardPage: React.FC = () => {
         <section className="glass-panel p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
               <div className="p-4 bg-sky-500/20 text-sky-600 rounded-2xl shadow-inner"><BookOpen size={24} /></div>
-              <h3 className="text-2xl font-black glass-text-primary">מילון מונחים</h3>
+              <h3 className="text-2xl font-black glass-text-primary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מילון מונחים</h3>
            </div>
            {randomGlossary.map((item, idx) => (
              <div key={idx} className="p-10 glass-effect rounded-[2.5rem] transition-all animate-in fade-in">

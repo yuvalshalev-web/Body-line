@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, getDocs, Query, QuerySnapshot } from 'firebase/firestore';
+import { getDocs, Query, QuerySnapshot, initializeFirestore, persistentLocalCache } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { trackBandwidth } from '../utils/bandwidthTracker';
 
@@ -15,7 +15,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache()
+});
 
 const auth = getAuth(app);
 const storage = getStorage(app);

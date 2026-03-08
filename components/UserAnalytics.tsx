@@ -34,7 +34,7 @@ const getOceanWaterGradient = (percent: number) => {
   return 'from-blue-200/60 via-blue-100/40 to-blue-50/20';
 };
 
-const AstrodeckGauge: React.FC<{
+export const AstrodeckGauge: React.FC<{
   value: number;
   label: string;
   icon: React.ReactNode;

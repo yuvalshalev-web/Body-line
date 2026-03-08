@@ -335,7 +335,9 @@ const App: React.FC = () => {
                 {/* Drawer Header */}
                 <div className="p-8 pt-16 pb-4 flex items-center justify-between relative z-10">
                   <div className="flex flex-col items-center w-full gap-0">
-                    <div className="relative w-24 h-24 flex items-center justify-center group cursor-pointer">
+                    <div 
+                      className="relative w-24 h-24 flex items-center justify-center group cursor-pointer"
+                    >
                       {/* Diamond Sign Background */}
                       <div className="absolute inset-0 bg-[#F5A623] rounded-[15px] border-[3px] border-black transform rotate-45 shadow-xl flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:rotate-[40deg] group-hover:scale-105"
                            style={{ clipPath: 'polygon(5% 0%, 95% 0%, 100% 5%, 100% 95%, 95% 100%, 5% 100%, 0% 95%, 0% 5%)' }}>

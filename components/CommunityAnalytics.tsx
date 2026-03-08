@@ -14,7 +14,7 @@ import {
 import { motion } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { parseDate } from '../src/utils/dateUtils';
-import { getMemberDistanceBins } from '../src/utils/geocoding';
+import { AstrodeckGauge } from './UserAnalytics';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const CommunityAnalytics: React.FC = () => {
@@ -1230,8 +1230,18 @@ const CommunityAnalytics: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-30 pointer-events-none" />
           
           <div className="flex flex-row justify-center gap-16">
-            <ChurnBucket title="שיעור עזיבה חודשי" percentage={stats.churnRate} />
-            <ChurnBucket title="שיעור עזיבה שנתי" percentage={stats.annualChurnRate} />
+            <AstrodeckGauge 
+              value={stats.churnRate}
+              label="שיעור עזיבה חודשי"
+              icon={<UserMinus size={18} />}
+              tooltip="אחוז המתאמנים שעזבו את הנבחרת בחודש האחרון."
+            />
+            <AstrodeckGauge 
+              value={stats.annualChurnRate}
+              label="שיעור עזיבה שנתי"
+              icon={<UserMinus size={18} />}
+              tooltip="אחוז המתאמנים שעזבו את הנבחרת בשנה האחרונה."
+            />
           </div>
         </motion.div>
 
@@ -1317,248 +1327,6 @@ export const Astrodeck = ({ label, value, icon: Icon, path, external, color }: {
         
       </div>
     </Link>
-  );
-};
-
-const ChurnBucket: React.FC<{ title: string; percentage: number }> = ({ title, percentage }) => {
-  const isAnnual = title.includes('שנתי');
-  
-  // Surfboard specs based on user request - Rusty Moby Fish / SD
-  const boardSpecs = {
-    brand: "Rusty",
-    model: "Moby Fish / SD",
-    length: "6'0",
-    volume: 32.5,
-    material: "PU/Polyester",
-    tailType: "Squash/Swallow",
-    color: "White",
-    logo: "Black R-Dot",
-    hasTractionPad: true
-  };
-
-  // Calculate fill color based on percentage (Green -> Yellow -> Red)
-  const getFillColor = (p: number) => {
-    if (p <= 20) return '#10B981'; // Green for low churn
-    if (p <= 50) return '#F59E0B'; // Yellow/Orange for medium churn
-    return '#EF4444'; // Red for high churn
-  };
-
-  const fillColor = getFillColor(percentage);
-
-  return (
-    <div className="flex-1 max-w-[220px] flex flex-col items-center text-center relative group/surfboard">
-      <h3 className="glass-text-secondary font-black text-[11px] mb-8 tracking-tight uppercase -mt-2">
-        {title}
-      </h3>
-
-      <div className="relative w-32 h-64 mb-4 perspective-1000">
-        <motion.div 
-          initial={{ rotateY: 0 }}
-          whileHover={{ rotateY: 180 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
-          className="w-full h-full relative preserve-3d cursor-pointer"
-        >
-          {/* Front Side - The Surfboard Design */}
-          <div className="absolute inset-0 backface-hidden">
-            {/* Surfboard Shape */}
-            <div className="w-full h-full relative">
-              <svg viewBox="0 0 100 300" className="w-full h-full drop-shadow-xl">
-                <defs>
-                  <linearGradient id={`board-gradient-${isAnnual ? 'annual' : 'monthly'}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#F5F7FA" />
-                    <stop offset="50%" stopColor="#ffffff" />
-                    <stop offset="100%" stopColor="#F5F7FA" />
-                  </linearGradient>
-                  
-                  {/* Stringer (Wood strip down the middle) */}
-                  <linearGradient id="stringer-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#d4a373" />
-                    <stop offset="50%" stopColor="#faedcd" />
-                    <stop offset="100%" stopColor="#d4a373" />
-                  </linearGradient>
-
-                  {/* Tail Patch Pattern - Gray Stripes (Carbon Fiber look) */}
-                  <pattern id={`tail-stripes-${isAnnual ? 'annual' : 'monthly'}`} width="0.8" height="0.8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                    <line x1="0" y1="0" x2="0" y2="0.8" stroke="#64748b" strokeWidth="0.4" />
-                  </pattern>
-
-                  <pattern id={`diamond-small-${isAnnual ? 'annual' : 'monthly'}`} x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
-                    <rect width="8" height="8" fill="#E2E1D9" />
-                    <path d="M4 1 L7 4 L4 7 L1 4 Z" fill="#D6D4C8" />
-                    <circle cx="4" cy="4" r="1" fill="#BDB9AB" />
-                    <circle cx="0" cy="0" r="0.6" fill="#BDB9AB" />
-                    <circle cx="8" cy="8" r="0.6" fill="#BDB9AB" />
-                  </pattern>
-                  
-                  <filter id={`inner-shadow-small-${isAnnual ? 'annual' : 'monthly'}`}>
-                    <feOffset dx="0" dy="0"/>
-                    <feGaussianBlur stdDeviation="1" result="offset-blur"/>
-                    <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse"/>
-                    <feFlood floodColor="black" floodOpacity="0.15" result="color"/>
-                    <feComposite operator="in" in="color" in2="inverse" result="shadow"/>
-                    <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
-                  </filter>
-
-                  {/* Clip Path for Board Contours */}
-                  <clipPath id={`board-clip-${isAnnual ? 'annual' : 'monthly'}`}>
-                    <path d="M50,5 C50,5 90,80 90,160 C90,240 75,295 50,295 C25,295 10,240 10,160 C10,80 50,5 50,5 Z" />
-                  </clipPath>
-                </defs>
-
-                {/* Board Body - Performance Shortboard Shape (Pointed Nose) */}
-                <path 
-                  d="M50,5 C50,5 90,80 90,160 C90,240 75,295 50,295 C25,295 10,240 10,160 C10,80 50,5 50,5 Z" 
-                  fill={`url(#board-gradient-${isAnnual ? 'annual' : 'monthly'})`}
-                  stroke="#e2e8f0"
-                  strokeWidth="0.5"
-                />
-
-                {/* Stringer - Realistic thin wood line */}
-                <rect x="49.7" y="5" width="0.6" height="290" fill="url(#stringer-gradient)" opacity="0.6" />
-
-                {/* Al Merrick Logo (Channel Islands) - Moved further up and rotated 90deg left */}
-                <g transform="translate(50, 35) rotate(-90) scale(0.4)">
-                  {/* Hexagons */}
-                  <path d="M0,-10 L8.66,-5 L8.66,5 L0,10 L-8.66,5 L-8.66,-5 Z" fill="#e11d48" transform="translate(0, -12)" /> {/* Red Top */}
-                  <path d="M0,-10 L8.66,-5 L8.66,5 L0,10 L-8.66,5 L-8.66,-5 Z" fill="#f59e0b" transform="translate(-10, 5)" /> {/* Orange Left */}
-                  <path d="M0,-10 L8.66,-5 L8.66,5 L0,10 L-8.66,5 L-8.66,-5 Z" fill="#fbbf24" transform="translate(10, 5)" /> {/* Yellow Right */}
-                  
-                  {/* Text Details */}
-                  <text x="0" y="22" textAnchor="middle" fontSize="3" fontWeight="bold" fontFamily="Arial, sans-serif" fill="black" opacity="0.8">SHAPES DESIGNS</text>
-                  <text x="0" y="32" textAnchor="middle" fontSize="9" fontWeight="900" fontFamily="Impact, sans-serif" fill="black" letterSpacing="-0.5">AL MERRICK</text>
-                  
-                  {/* Divider line above text */}
-                  <line x1="-15" y1="16" x2="15" y2="16" stroke="black" strokeWidth="0.5" opacity="0.3" />
-                </g>
-
-                {/* Tail Carbon Patches - Precise wedge shape with stripes, clipped to board contours */}
-                <g clipPath={`url(#board-clip-${isAnnual ? 'annual' : 'monthly'})`} opacity="0.5">
-                  {/* Left Patch */}
-                  <path d="M10,220 L45,295 L10,295 Z" fill={`url(#tail-stripes-${isAnnual ? 'annual' : 'monthly'})`} />
-                  <path d="M10,220 L45,295 L10,295 Z" fill="#475569" opacity="0.1" />
-                  
-                  {/* Right Patch */}
-                  <path d="M90,220 L55,295 L90,295 Z" fill={`url(#tail-stripes-${isAnnual ? 'annual' : 'monthly'})`} />
-                  <path d="M90,220 L55,295 L90,295 Z" fill="#475569" opacity="0.1" />
-                </g>
-
-                {/* Model Name - Subtle vertical text */}
-                <text x="45" y="180" textAnchor="middle" fontSize="4" fontFamily="Arial" fill="#94a3b8" letterSpacing="2" transform="rotate(-90 45 180)" opacity="0.5">
-                  {boardSpecs.model.toUpperCase()}
-                </text>
-
-                {/* Dynamic Fill Level (Churn Visualization) */}
-                <g clipPath={`url(#board-clip-${isAnnual ? 'annual' : 'monthly'})`}>
-                  <motion.rect 
-                    initial={{ y: 300 }}
-                    animate={{ y: 300 - (percentage * 3) }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    x="0" 
-                    width="100" 
-                    height="300" 
-                    fill={fillColor} 
-                    opacity="0.3"
-                  />
-                  {/* Liquid Top Line */}
-                  <motion.line 
-                    initial={{ y1: 300, y2: 300 }}
-                    animate={{ y1: 300 - (percentage * 3), y2: 300 - (percentage * 3) }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    x1="0" 
-                    x2="100" 
-                    stroke={fillColor} 
-                    strokeWidth="2" 
-                    opacity="0.8"
-                  />
-                </g>
-
-                {/* Traction Pad (Tail Pad) - Using Astrodeck design */}
-                {boardSpecs.hasTractionPad && (
-                  <g transform="translate(50, 270) scale(0.12) translate(-200, -250)" opacity="0.95">
-                    {/* 3-Piece Pad Shape */}
-                    <path d="M 135 38 Q 80 45 40 60 C 30 150 60 250 100 320 C 120 360 160 380 185 380 L 185 330 C 185 300 135 300 135 250 Z" 
-                          fill={`url(#diamond-small-${isAnnual ? 'annual' : 'monthly'})`} filter={`url(#inner-shadow-small-${isAnnual ? 'annual' : 'monthly'})`} stroke="#BDB9AB" strokeWidth="0.2" />
-
-                    <path d="M 145 35 Q 200 20 255 35 L 245 250 C 245 290 155 290 155 250 Z" 
-                          fill={`url(#diamond-small-${isAnnual ? 'annual' : 'monthly'})`} filter={`url(#inner-shadow-small-${isAnnual ? 'annual' : 'monthly'})`} stroke="#BDB9AB" strokeWidth="0.2" />
-
-                    <path d="M 265 38 Q 320 45 360 60 C 370 150 340 250 300 320 C 280 360 240 380 215 380 L 215 330 C 215 300 265 300 265 250 Z" 
-                          fill={`url(#diamond-small-${isAnnual ? 'annual' : 'monthly'})`} filter={`url(#inner-shadow-small-${isAnnual ? 'annual' : 'monthly'})`} stroke="#BDB9AB" strokeWidth="0.2" />
-
-                    {/* Grip Bars */}
-                    <g fill="#BDB9AB" opacity="0.6">
-                      <rect x="170" y="80" width="60" height="6" rx="3" />
-                      <rect x="170" y="100" width="60" height="6" rx="3" />
-                      <rect x="170" y="120" width="60" height="6" rx="3" />
-                      <rect x="170" y="140" width="60" height="6" rx="3" />
-                      <rect x="170" y="160" width="60" height="6" rx="3" />
-                      <rect x="170" y="180" width="60" height="6" rx="3" />
-                      <rect x="170" y="200" width="60" height="6" rx="3" />
-                      <rect x="170" y="220" width="60" height="6" rx="3" />
-                      <rect x="170" y="240" width="60" height="6" rx="3" />
-                    </g>
-                  </g>
-                )}
-              </svg>
-            </div>
-          </div>
-
-          {/* Back Side - Specs & Details */}
-          <div className="absolute inset-0 backface-hidden rotate-y-180 bg-white rounded-[3rem] shadow-xl border border-slate-100 p-4 flex flex-col items-center justify-center transform scale-x-[-1]">
-            <div className="text-center space-y-2">
-              <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest border-b border-slate-100 pb-2 mb-2">
-                Board Specs
-              </h4>
-              <div className="space-y-1 text-[9px] font-mono text-slate-500 text-left w-full px-2">
-                <div className="flex justify-between">
-                  <span>Model:</span>
-                  <span className="font-bold text-slate-700">{boardSpecs.model}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Dims:</span>
-                  <span className="font-bold text-slate-700">{boardSpecs.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Vol:</span>
-                  <span className="font-bold text-slate-700">{boardSpecs.volume}L</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Tail:</span>
-                  <span className="font-bold text-slate-700">{boardSpecs.tailType}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Const:</span>
-                  <span className="font-bold text-slate-700">PU/Poly</span>
-                </div>
-              </div>
-              
-              <div className="mt-4 pt-2 border-t border-slate-100 w-full">
-                <div className="text-[8px] uppercase tracking-widest text-slate-400 mb-1">Churn Level</div>
-                <div className="text-2xl font-black" style={{ color: fillColor }}>
-                  {percentage}%
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      <div className="relative z-20 mt-1">
-        <div className="relative inline-block">
-          <span 
-            className="text-4xl font-black text-[#2B2B2E] tracking-tighter"
-            style={{ 
-              textShadow: '0 3px 6px rgba(0,0,0,0.1)',
-            }}
-          >
-            {percentage}%
-          </span>
-          <div className="absolute -top-8 -right-3 opacity-0 group-hover/surfboard:opacity-100 transition-opacity duration-500">
-             <Sparkles className="w-3 h-3 text-blue-400 animate-pulse" />
-          </div>
-        </div>
-      </div>
-    </div>
   );
 };
 

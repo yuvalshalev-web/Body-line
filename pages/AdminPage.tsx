@@ -1638,8 +1638,8 @@ const AdminPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
                   {/* Preview Area */}
-                  <div className="flex flex-col items-center justify-center p-4 bg-transparent rounded-[2rem] min-h-[160px] border border-slate-100 relative overflow-hidden">
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2 relative z-10">תצוגה מקדימה</p>
+                  <div className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 rounded-[2rem] min-h-[160px] border border-slate-100 relative overflow-hidden">
+                    <p className="text-[10px] font-black text-white/80 uppercase tracking-widest mb-2 relative z-10">תצוגה מקדימה</p>
                     <div className="surfboard-hero-container" style={{ minHeight: 'auto', padding: '20px 0' }}>
                       <h1 className="main-page-title m-0 relative z-10">
           <span className="surfer-title">כותרת אולטרה</span>
@@ -1799,6 +1799,8 @@ const AdminPage: React.FC = () => {
                           value={siteConfig.h1Styles?.fontFamily || "'Assistant', sans-serif"}
                           onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, fontFamily: e.target.value } })}
                         >
+                          <option value="'Miriwin', sans-serif">MiriWin</option>
+                          <option value="'Yehuda CLM', sans-serif">Yehuda CLM</option>
                           <option value="'Assistant', sans-serif">Assistant</option>
                           <option value="'Inter', sans-serif">Inter</option>
                           <option value="'Heebo', sans-serif">Heebo</option>
