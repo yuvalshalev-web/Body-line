@@ -192,7 +192,7 @@ const EventsPage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-white text-right animate-in fade-in duration-700" dir="rtl">
+    <div className="min-h-screen bg-transparent text-right animate-in fade-in duration-700" dir="rtl">
       {/* Body-line Standard Header Stack */}
       <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}
@@ -227,7 +227,7 @@ const EventsPage: React.FC = () => {
           const canEdit = isAdmin || (currentUser && event.creatorId === currentUser.id);
 
           return (
-            <div key={event.id} className="group bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col relative">
+            <div key={event.id} className="group modern-card overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col relative">
               <div className="absolute top-6 left-6 flex gap-2 z-20">
                 {canEdit && (
                   <div className="flex gap-2">

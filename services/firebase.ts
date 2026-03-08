@@ -16,7 +16,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = initializeFirestore(app, {
-  localCache: persistentLocalCache()
+  experimentalForceLongPolling: true,
 });
 
 const auth = getAuth(app);

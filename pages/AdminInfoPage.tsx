@@ -51,7 +51,7 @@ const AdminInfoPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 font-['Assistant']" dir="rtl">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 font-['Yehuda_CLM']" dir="rtl">
       {/* Header */}
       <div className="surfboard-hero-container mb-8">
         <h1 className="main-page-title">

@@ -299,16 +299,9 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  console.log("ProfilePage rendering");
   return (
-    <div className="min-h-screen w-full relative z-10">
-      <div className="fixed inset-0 z-0 opacity-100 pointer-events-none">
-        <img 
-          src="https://images.unsplash.com/photo-1502680390469-be75c86b636f?q=80&w=1920&auto=format&fit=crop" 
-          className="w-full h-full object-cover" 
-          alt="Surf Van" 
-          referrerPolicy="no-referrer" 
-        />
-      </div>
+    <div className="min-h-screen w-full relative">
       <div className="max-w-6xl mx-auto py-10 text-right animate-in fade-in" dir="rtl">
 
       {/* Body-line Standard Header Stack */}
@@ -338,7 +331,7 @@ const ProfilePage: React.FC = () => {
           {/* Removed background image layer here */}
         </div>
         
-        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-24 bg-white/10 backdrop-blur-lg rounded-t-[4rem]">
+        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-24 modern-card rounded-t-[4rem]">
           <div className="flex flex-col md:flex-row items-end gap-8 mb-16">
             <div className="relative group">
               {/* Removed banner image that was obscuring the watermark */}
@@ -372,11 +365,11 @@ const ProfilePage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם פרטי</label>
-                    <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all" />
+                    <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-5 bg-white/5 backdrop-blur-md rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all text-[#2B2B2E]" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם משפחה</label>
-                    <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all" />
+                    <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-5 bg-white/5 backdrop-blur-md rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all text-[#2B2B2E]" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">טלפון נייד</label>
@@ -386,7 +379,7 @@ const ProfilePage: React.FC = () => {
                         type="tel" 
                         value={formData.mobile} 
                         onChange={handleMobileChange} 
-                        className="w-full pr-14 pl-6 py-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all" 
+                        className="w-full pr-14 pl-6 py-5 bg-white/5 backdrop-blur-md rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all text-[#2B2B2E]" 
                       />
                     </div>
                   </div>
@@ -398,7 +391,7 @@ const ProfilePage: React.FC = () => {
                         type="date" 
                         value={formData.birthday || ''} 
                         onChange={e => handleFieldChange('birthday', e.target.value)} 
-                        className="w-full pr-14 pl-6 py-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all cursor-pointer" 
+                        className="w-full pr-14 pl-6 py-5 bg-white/5 backdrop-blur-md rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all cursor-pointer text-[#2B2B2E]" 
                       />
                     </div>
                   </div>
@@ -409,7 +402,7 @@ const ProfilePage: React.FC = () => {
                       <button 
                         type="button"
                         onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                        className="w-full pr-14 pl-12 py-5 bg-slate-50 rounded-2xl font-black text-sm outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all flex items-center justify-between group"
+                        className="w-full pr-14 pl-12 py-5 bg-white/5 backdrop-blur-md rounded-2xl font-black text-sm outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all flex items-center justify-between group text-[#2B2B2E]"
                       >
                         <span>{formData.gender || 'בחר מגדר'}</span>
                         <ChevronDown size={18} className={`text-slate-300 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
@@ -460,7 +453,7 @@ const ProfilePage: React.FC = () => {
                           setIsDirty(true);
                         }} 
                         placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
-                        className="w-full pr-14 pl-6 py-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all" 
+                        className="w-full pr-14 pl-6 py-5 bg-white/5 backdrop-blur-md rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all text-[#2B2B2E]" 
                         required
                         autoComplete="off"
                       />
@@ -500,7 +493,7 @@ const ProfilePage: React.FC = () => {
                   <textarea 
                     value={formData.bio} 
                     onChange={e => handleFieldChange('bio', e.target.value)} 
-                    className="w-full p-8 bg-slate-50 rounded-[3rem] font-bold h-[32rem] resize-none outline-none border border-slate-50 focus:bg-white focus:border-indigo-100 transition-all text-lg leading-relaxed shadow-inner" 
+                    className="w-full p-8 bg-white/5 backdrop-blur-md rounded-[3rem] font-bold h-[32rem] resize-none outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all text-lg leading-relaxed shadow-inner text-[#2B2B2E]" 
                     placeholder="ספר קצת על עצמך, על הגלישה, על החיים..." 
                   />
                </div>

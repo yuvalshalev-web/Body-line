@@ -269,7 +269,7 @@ const App: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col font-['Assistant'] relative" dir="rtl">
+    <div className="min-h-screen flex flex-col font-['Yehuda_CLM'] relative" dir="rtl">
       {/* Global Progress Bar */}
       <div id="global-progress-container">
         <div id="global-progress-bar"></div>

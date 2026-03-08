@@ -159,7 +159,7 @@ const DashboardPage: React.FC = () => {
     <div className="space-y-16 animate-in fade-in duration-700 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
       <section className="relative w-full min-h-[700px] md:min-h-[650px] rounded-[var(--radius-lg)] overflow-hidden shadow-2xl border border-slate-100 group">
         <img 
-          src={siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
+          src={siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fvan_surfboards.jpg?alt=media"} 
           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3000ms]" 
           alt="Hero"
           loading="lazy"

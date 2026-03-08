@@ -243,9 +243,13 @@
   }
 }
 
+html {
+  background-color: var(--sand-light) !important;
+}
+
 body {
   font-family: var(--primary-font);
-  background-color: var(--bg-main);
+  background-color: var(--sand-light) !important;
   color: var(--text-main);
   letter-spacing: -0.01em;
 }

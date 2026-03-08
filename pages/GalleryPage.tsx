@@ -139,7 +139,7 @@ const GalleryPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-right animate-in fade-in duration-700" dir="rtl" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+    <div className="min-h-screen bg-transparent text-right animate-in fade-in duration-700" dir="rtl" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
       {/* Body-line Standard Header Stack */}
       <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}
@@ -168,7 +168,7 @@ const GalleryPage: React.FC = () => {
       </div>
 
       {isUploading && (
-        <div className={`mb-12 rounded-[2.5rem] p-8 border animate-in slide-in-from-top-4 ${errorMsg ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100'}`}>
+        <div className={`mb-12 modern-card p-8 animate-in slide-in-from-top-4 ${errorMsg ? 'bg-rose-500/10 border-rose-500/20' : ''}`}>
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
               {errorMsg ? (
@@ -197,7 +197,7 @@ const GalleryPage: React.FC = () => {
         {galleryItems.map((item) => (
           <div 
             key={item.id} 
-            className={`relative group aspect-square overflow-hidden rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 cursor-zoom-in ${deletingId === item.id ? 'opacity-30' : ''}`}
+            className={`relative group aspect-square overflow-hidden modern-card transition-all duration-500 cursor-zoom-in ${deletingId === item.id ? 'opacity-30' : ''}`}
             onClick={() => setSelectedImage(item.imageUrl)}
           >
             <img 

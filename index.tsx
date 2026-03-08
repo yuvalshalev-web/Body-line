@@ -7,6 +7,9 @@ import { AuthProvider } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
 import { ModalProvider } from './contexts/ModalContext';
 import './src/utils/chartHelpers';
+import './style.css';
+
+console.log("index.tsx running");
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');

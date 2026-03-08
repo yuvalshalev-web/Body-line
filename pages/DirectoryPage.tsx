@@ -70,7 +70,7 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
           )}
         </div>
         <div className="text-center">
-          <p className="text-[10px] font-['Assistant'] font-black glass-text-primary truncate px-1">{member.firstName} {member.lastName}</p>
+          <p className="text-[10px] font-['Yehuda_CLM'] font-black glass-text-primary truncate px-1">{member.firstName} {member.lastName}</p>
           <p className="text-[7px] font-black glass-text-secondary uppercase tracking-widest mt-0.5">{member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}</p>
         </div>
       </div>

@@ -90,7 +90,7 @@ const NewsPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-white text-right p-6 md:p-12 animate-in fade-in" dir="rtl" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+    <div className="relative min-h-screen bg-transparent text-right p-6 md:p-12 animate-in fade-in" dir="rtl" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
       {/* Body-line Standard Header Stack */}
       <div className="surfboard-hero-container mb-10 space-y-4">
         {/* Top Badge */}
@@ -123,7 +123,7 @@ const NewsPage: React.FC = () => {
       <div className="grid grid-cols-1 gap-12">
         {news.length > 0 ? (
           [...news].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((item) => (
-            <article key={item.id} className="group flex flex-col lg:flex-row gap-8 bg-white p-4 rounded-[3.5rem] border border-slate-100 hover:shadow-2xl transition-all relative">
+            <article key={item.id} className="group flex flex-col lg:flex-row gap-8 modern-card p-4 hover:shadow-2xl transition-all relative">
               {(currentUser?.role === 'Admin' || item.authorId === currentUser?.id) && (
                 <button onClick={() => handleDelete(item.id)} className="absolute top-8 left-8 p-3 bg-white text-red-500 rounded-2xl hover:bg-red-500 hover:text-white shadow-sm z-20"><Trash2 size={18} /></button>
               )}

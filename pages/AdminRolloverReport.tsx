@@ -86,7 +86,7 @@ const AdminRolloverReport: React.FC = () => {
   const latestStatus = logs.length > 0 ? logs[0].status : 'success'; // Default to success for demo if empty
 
   return (
-    <div className="min-h-screen bg-[#002025] text-slate-50 font-['Assistant'] p-6 md:p-10 relative overflow-hidden rounded-3xl" dir="rtl">
+    <div className="min-h-screen bg-[#002025] text-slate-50 font-['Yehuda_CLM'] p-6 md:p-10 relative overflow-hidden rounded-3xl" dir="rtl">
       {/* Grid Background */}
       <div className="fixed inset-0 pointer-events-none z-0 opacity-20" style={{
         backgroundImage: 'linear-gradient(rgba(0,175,194,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(0,175,194,0.2) 1px, transparent 1px)',

@@ -459,7 +459,7 @@ const SurfingSessionAttendance: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto font-['Assistant']" dir="rtl">
+    <div className="max-w-6xl mx-auto font-['Yehuda_CLM']" dir="rtl">
       <div className="mt-20">
         {/* Title and Cancel Button */}
         <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">

@@ -485,7 +485,7 @@ const SessionStatsPage: React.FC = () => {
   ) || [];
 
   return (
-    <div className="max-w-7xl mx-auto font-['Assistant'] pb-20 relative" dir="rtl">
+    <div className="max-w-7xl mx-auto font-['Yehuda_CLM'] pb-20 relative" dir="rtl">
       {/* Unified Header */}
       <header className="mb-8 relative">
         <div className="surfboard-hero-container space-y-2">
