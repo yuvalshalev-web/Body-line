@@ -243,13 +243,9 @@
   }
 }
 
-html {
-  background-color: var(--sand-light) !important;
-}
-
 body {
   font-family: var(--primary-font);
-  background-color: var(--sand-light) !important;
+  background-color: var(--bg-main);
   color: var(--text-main);
   letter-spacing: -0.01em;
 }
@@ -1027,8 +1023,8 @@ main.bg-slate-50 {
     font-size: 16px; 
     display: inline-flex; 
     padding: 4px;
-    background: rgba(255, 255, 255, 0.2); 
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(0, 175, 194, 0.2); 
+    border: 1px solid rgba(0, 175, 194, 0.3);
     border-radius: 999px; 
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -1534,7 +1530,13 @@ main.bg-slate-50 {
 }
 
 /* Buttons */
-.glass-btn, button {
+.rs-rsvp-button {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+}
+
+.glass-btn {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -1543,7 +1545,7 @@ main.bg-slate-50 {
   transition: all 0.3s ease;
 }
 
-.glass-btn:hover, button:hover {
+.glass-btn:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -1732,14 +1734,25 @@ main.bg-slate-50 {
 }
 
 .hd-glass-button-vibrant {
-    background: linear-gradient(135deg, rgba(0, 123, 255, 0.3), rgba(0, 210, 255, 0.3));
+    background: linear-gradient(135deg, rgba(64, 224, 208, 0.3), rgba(0, 206, 209, 0.3));
     border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(64, 224, 208, 0.4);
 }
 
 .hd-glass-button-vibrant:hover {
-    background: linear-gradient(135deg, rgba(0, 123, 255, 0.5), rgba(0, 210, 255, 0.5));
-    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.6);
+    background: linear-gradient(135deg, rgba(64, 224, 208, 0.5), rgba(0, 206, 209, 0.5));
+    box-shadow: 0 8px 25px rgba(64, 224, 208, 0.6);
+}
+
+.hd-glass-button-gold {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(218, 165, 32, 0.3));
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 15px rgba(218, 165, 32, 0.4);
+}
+
+.hd-glass-button-gold:hover {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.5), rgba(218, 165, 32, 0.5));
+    box-shadow: 0 8px 25px rgba(218, 165, 32, 0.6);
 }
 
 .hd-glass-button.surfer-refresh-btn {

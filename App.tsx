@@ -401,7 +401,23 @@ const App: React.FC = () => {
 
                 {/* Navigation Items */}
                 <div className="flex-1 px-4 py-8 flex flex-col gap-1 overflow-y-auto relative z-10 custom-scrollbar">
-                  <div className="mb-6 text-center">
+                  {/* Wooden Post */}
+                  <div className="absolute left-1/2 top-0 bottom-0 w-8 bg-[#d2b48c] z-0 -translate-x-1/2 border-l-2 border-r-2 border-[#c1a070] shadow-[inset_0_0_10px_rgba(0,0,0,0.2)]">
+                    {/* Complex Grain Texture */}
+                    <div className="absolute inset-0 opacity-40" style={{ 
+                      backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(139, 69, 19, 0.15) 7px, rgba(139, 69, 19, 0.15) 8px), repeating-linear-gradient(90deg, transparent, transparent 15px, rgba(139, 69, 19, 0.1) 16px, rgba(139, 69, 19, 0.1) 18px)',
+                    }}></div>
+                    {/* Cracks */}
+                    <div className="absolute inset-0 opacity-30" style={{ 
+                      backgroundImage: 'linear-gradient(10deg, transparent 40%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.4) 46%, transparent 50%), linear-gradient(-10deg, transparent 70%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0.3) 76%, transparent 80%)'
+                    }}></div>
+                    {/* Wear/Stains */}
+                    <div className="absolute inset-0 opacity-30" style={{ 
+                      backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(0,0,0,0.2) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0,0,0,0.2) 0%, transparent 50%), linear-gradient(to bottom, transparent 20%, rgba(0,0,0,0.2) 50%, transparent 80%)'
+                    }}></div>
+                  </div>
+                  
+                  <div className="mb-6 text-center relative z-10">
                     <span className="px-4 py-1 bg-[#d4a373] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-sm" style={{ fontFamily: 'Miriwin' }}>
                       בחר יעד
                     </span>
@@ -467,7 +483,7 @@ const App: React.FC = () => {
                   </div>
 
                   <WoodSignLink 
-                    item={{...menuItems[12], text: 'עזוב את החוף'}}
+                    item={{...menuItems[12], text: 'גל יציאה'}}
                     index={navItems.length + adminNavItems.length}
                     isActive={false}
                     onClick={handleLogout}

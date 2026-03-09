@@ -751,7 +751,7 @@ const AdminPage: React.FC = () => {
                            handleApprove(req.id);
                          }}
                          disabled={isProcessing === req.id}
-                         className="flex-1 py-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl font-black text-sm hover:bg-[var(--deep-teal-sea)] transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
+                         className="flex-1 py-4 hd-glass-button-gold text-white rounded-2xl font-black text-sm transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
                        >
                          {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserCheck size={20} className="text-[var(--water-highlight)]" />}
                          אשר הצטרפות

@@ -192,7 +192,7 @@ const EventsPage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-transparent text-right animate-in fade-in duration-700" dir="rtl">
+    <div className="min-h-screen bg-white text-right animate-in fade-in duration-700" dir="rtl">
       {/* Body-line Standard Header Stack */}
       <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}
@@ -227,7 +227,7 @@ const EventsPage: React.FC = () => {
           const canEdit = isAdmin || (currentUser && event.creatorId === currentUser.id);
 
           return (
-            <div key={event.id} className="group modern-card overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col relative">
+            <div key={event.id} className={`group bg-white rounded-[3rem] border-2 ${event.type === 'COMMUNITY' ? 'border-[#FF2D60]' : event.type === 'INSTRUCTOR' ? 'border-[#FF9F1C]' : 'border-[#00D9E6]'} shadow-sm overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col relative`}>
               <div className="absolute top-6 left-6 flex gap-2 z-20">
                 {canEdit && (
                   <div className="flex gap-2">
@@ -257,22 +257,22 @@ const EventsPage: React.FC = () => {
                     <p className="text-sm font-black text-slate-950 whitespace-nowrap tabular-nums">{formatDate(event.date)}</p>
                   </div>
                   <div className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-md ${
-                    event.type === 'COMMUNITY' ? 'bg-[#006994] text-white' : 
-                    event.type === 'INSTRUCTOR' ? 'bg-amber-500 text-white' : 
-                    'bg-white text-[#4E8294]'
+                    event.type === 'COMMUNITY' ? 'bg-[#FF2D60] text-white' : 
+                    event.type === 'INSTRUCTOR' ? 'bg-[#FF9F1C] text-white' : 
+                    'bg-[#00D9E6] text-white'
                   }`}>
                     {event.type === 'COMMUNITY' ? 'אירוע קהילה' : event.type === 'INSTRUCTOR' ? 'אירוע מדריך' : 'אירוע של חבר'}
                   </div>
                 </div>
               </div>
-              <div className="p-8 flex-1 flex flex-col relative z-20">
+              <div className="p-8 flex-1 flex flex-col relative z-30">
                 <h3 className="text-2xl font-black text-[#2B2B2E] mb-4 group-hover:text-rose-600 transition-colors">{event.title}</h3>
                 <p className="text-slate-500 font-bold text-sm mb-8 line-clamp-3">{event.description}</p>
                 <div className="space-y-4 mb-8">
                   <div className="flex items-center gap-3 text-slate-600">
-                    {event.type === 'COMMUNITY' ? <ShieldAlert size={16} className="text-[#006994]" /> : 
-                     event.type === 'INSTRUCTOR' ? <Zap size={16} className="text-amber-500" /> : 
-                     <User size={16} className="text-[#4E8294]" />}
+                    {event.type === 'COMMUNITY' ? <ShieldAlert size={16} className="text-[#FF2D60]" /> : 
+                     event.type === 'INSTRUCTOR' ? <Zap size={16} className="text-[#FF9F1C]" /> : 
+                     <User size={16} className="text-[#00D9E6]" />}
                     <span className="text-xs font-black">
                       {event.type === 'COMMUNITY' ? 'אירוע קהילה רשמי' : 
                        event.type === 'INSTRUCTOR' ? 'אירוע מדריך' : 
@@ -291,9 +291,9 @@ const EventsPage: React.FC = () => {
                 <button 
                   onClick={() => handleToggleAttendance(event.id)}
                   disabled={isProcessing}
-                  className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all ${isAttending ? 'bg-rose-600 text-white' : 'bg-[#006994] text-white hover:bg-[#4E8294]'}`}
+                  className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all shadow-md text-[#2D3748] ${isAttending ? '!bg-[#FF9F1C] hover:!bg-[#FFB03C]' : '!bg-[#00AFC2] hover:!bg-[#009FB2]'}`}
                 >
-                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-[#00FFFF]" />}
+                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-[#2D3748]" />}
                   {isAttending ? 'מבטל הגעה' : 'אני מגיע/ה'}
                 </button>
               </div>
@@ -304,24 +304,29 @@ const EventsPage: React.FC = () => {
 
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-md animate-in fade-in">
-           <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl p-12 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+           <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl p-12 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto text-[#2D3748]">
              <button onClick={() => { setShowModal(false); resetForm(); }} className="absolute top-8 left-8 p-3 text-slate-400 bg-slate-50 rounded-full"><X size={24} /></button>
              <h3 className="text-3xl font-black mb-8">{editingEvent ? 'עריכת אירוע' : 'יצירת אירוע'}</h3>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-4">
                   <label className="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">בחר סוג אירוע</label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className={`grid grid-cols-3 gap-3 p-2 rounded-3xl border-2 transition-colors ${
+                    eventType === 'MEMBER' ? 'bg-[#00D9E6]/10 border-[#00D9E6]' :
+                    eventType === 'INSTRUCTOR' ? 'bg-[#FF9F1C]/10 border-[#FF9F1C]' :
+                    eventType === 'COMMUNITY' ? 'bg-[#FF2D60]/10 border-[#FF2D60]' :
+                    'bg-slate-50 border-slate-100'
+                  }`}>
                     <button 
                       type="button"
                       onClick={() => { setEventType('MEMBER'); setShowTypeWarning(false); }}
                       className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group ${
                         eventType === 'MEMBER' 
-                          ? 'bg-[#006994] border-[#006994] text-white shadow-xl shadow-[#006994]/20' 
-                          : 'bg-white border-slate-100 text-slate-400 hover:border-[#4E8294] hover:bg-slate-50'
+                          ? 'bg-[#00D9E6] border-[#00D9E6] text-white shadow-xl shadow-[#00D9E6]/20' 
+                          : 'bg-white border-slate-100 text-slate-400 hover:border-[#00D9E6] hover:bg-slate-50'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                        eventType === 'MEMBER' ? 'bg-white/20 text-[#00FFFF]' : 'bg-slate-50 text-slate-300 group-hover:text-[#4E8294]'
+                        eventType === 'MEMBER' ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-300 group-hover:text-[#00D9E6]'
                       }`}>
                         <User size={16} />
                       </div>
@@ -330,7 +335,7 @@ const EventsPage: React.FC = () => {
                       </div>
                       {eventType === 'MEMBER' && (
                         <div className="absolute top-2 left-2">
-                          <CheckCircle2 size={12} className="text-[#00FFFF]" />
+                          <CheckCircle2 size={12} className="text-white" />
                         </div>
                       )}
                     </button>
@@ -340,12 +345,12 @@ const EventsPage: React.FC = () => {
                       onClick={() => { setEventType('INSTRUCTOR'); setShowTypeWarning(false); }}
                       className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group ${
                         eventType === 'INSTRUCTOR' 
-                          ? 'bg-amber-500 border-amber-500 text-white shadow-xl shadow-amber-500/20' 
-                          : 'bg-white border-slate-100 text-slate-400 hover:border-amber-200 hover:bg-slate-50'
+                          ? 'bg-[#FF9F1C] border-[#FF9F1C] text-white shadow-xl shadow-[#FF9F1C]/20' 
+                          : 'bg-white border-slate-100 text-slate-400 hover:border-[#FF9F1C] hover:bg-slate-50'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                        eventType === 'INSTRUCTOR' ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-300 group-hover:text-amber-500'
+                        eventType === 'INSTRUCTOR' ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-300 group-hover:text-[#FF9F1C]'
                       }`}>
                         <Zap size={16} />
                       </div>
@@ -364,12 +369,12 @@ const EventsPage: React.FC = () => {
                       onClick={() => { setEventType('COMMUNITY'); setShowTypeWarning(false); }}
                       className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group ${
                         eventType === 'COMMUNITY' 
-                          ? 'bg-[#006994] border-[#006994] text-white shadow-xl shadow-[#006994]/20' 
-                          : 'bg-white border-slate-100 text-slate-400 hover:border-[#4E8294] hover:bg-slate-50'
+                          ? 'bg-[#FF2D60] border-[#FF2D60] text-white shadow-xl shadow-[#FF2D60]/20' 
+                          : 'bg-white border-slate-100 text-slate-400 hover:border-[#FF2D60] hover:bg-slate-50'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                        eventType === 'COMMUNITY' ? 'bg-white/20 text-[#00FFFF]' : 'bg-slate-50 text-slate-300 group-hover:text-[#4E8294]'
+                        eventType === 'COMMUNITY' ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-300 group-hover:text-[#FF2D60]'
                       }`}>
                         <Users size={16} />
                       </div>
@@ -378,7 +383,7 @@ const EventsPage: React.FC = () => {
                       </div>
                       {eventType === 'COMMUNITY' && (
                         <div className="absolute top-2 left-2">
-                          <CheckCircle2 size={12} className="text-[#00FFFF]" />
+                          <CheckCircle2 size={12} className="text-white" />
                         </div>
                       )}
                     </button>
@@ -416,8 +421,14 @@ const EventsPage: React.FC = () => {
                     <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="כותרת האירוע" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                     <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="תיאור האירוע" className="w-full p-5 bg-slate-50 rounded-2xl font-bold outline-none border border-slate-100 h-32 resize-none" />
                     <div className="grid grid-cols-2 gap-4">
-                      <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
-                      <input type="time" required value={time} onChange={e => setTime(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">תאריך</label>
+                        <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">שעה</label>
+                        <input type="time" required value={time} onChange={e => setTime(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                      </div>
                     </div>
                     <input type="text" ref={locationInputRef} value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                     <div className="space-y-4">
@@ -470,9 +481,9 @@ const EventsPage: React.FC = () => {
                 <button 
                   type="submit" 
                   disabled={isSaving || !eventType || (eventType === 'COMMUNITY' && !canManageCommunityEvents) || (eventType === 'INSTRUCTOR' && !canManageInstructorEvents)} 
-                  className="w-full py-5 bg-[#006994] text-white rounded-[2rem] font-black text-xl hover:bg-[#4E8294] transition-all shadow-xl flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-4 px-10 py-5 text-white rounded-[2rem] font-black text-xl transition-all active:scale-95 group hd-glass-button-vibrant w-full disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                   {isSaving ? <Loader2 className="animate-spin" size={24} /> : editingEvent ? <CheckCircle2 size={24} className="text-[#00FFFF]" /> : <Plus size={24} className="text-[#00FFFF]" />}
+                   {isSaving ? <Loader2 className="animate-spin" size={24} /> : editingEvent ? <CheckCircle2 size={24} className="text-[#00FFFF]" /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />}
                    {editingEvent ? 'שמור שינויים' : 'צור אירוע חדש'}
                 </button>
              </form>
