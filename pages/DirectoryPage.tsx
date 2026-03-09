@@ -380,35 +380,38 @@ const DirectoryPage: React.FC = () => {
             </section>
           )}
         </div>
+      </div>
+      <AnimatePresence>
         {selectedMember && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 md:p-12 modal-overlay animate-in fade-in" onClick={() => setSelectedMember(null)}>
            <motion.div 
-         initial={{ opacity: 0, scale: 0.95, y: 40 }}
-         animate={{ opacity: 1, scale: 1, y: 0 }}
-         className="modal-content w-full max-w-5xl max-h-[95vh] rounded-none md:rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col md:flex-row m-0 md:m-4" 
-         onClick={e => e.stopPropagation()}
-       >
-          <div className="md:w-[40%] relative h-[30vh] md:h-auto overflow-hidden bg-slate-100 flex-shrink-0">
-             {selectedMember.avatar ? (
-               <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={`${selectedMember.firstName} ${selectedMember.lastName}`} />
-             ) : (
-               <div className="w-full h-full flex items-center justify-center text-slate-300">
-                 <UserCircle size={120} strokeWidth={0.5} />
+             initial={{ opacity: 0, scale: 0.95, y: 40 }}
+             animate={{ opacity: 1, scale: 1, y: 0 }}
+             exit={{ opacity: 0, scale: 0.95, y: 40 }}
+             className="modal-content w-full max-w-5xl max-h-[95vh] rounded-3xl md:rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col md:flex-row m-0" 
+             onClick={e => e.stopPropagation()}
+           >
+            <button onClick={() => setSelectedMember(null)} className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-white hover:text-slate-200 transition-all bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full z-50"><X size={20} /></button>
+            <div className="md:w-[40%] relative h-[30vh] md:h-auto overflow-hidden bg-slate-100 flex-shrink-0">
+               {selectedMember.avatar ? (
+                 <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={`${selectedMember.firstName} ${selectedMember.lastName}`} />
+               ) : (
+                 <div className="w-full h-full flex items-center justify-center text-slate-300">
+                   <UserCircle size={120} strokeWidth={0.5} />
+                 </div>
+               )}
+               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+               <div className="absolute bottom-8 right-8 left-8">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="h-px w-8 bg-[#D4A373]"></div>
+                    <span className="text-[9px] font-black text-[#D4A373] uppercase tracking-[0.3em]">Profile</span>
+                  </div>
+                  <h3 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
                </div>
-             )}
-             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
-             <div className="absolute bottom-8 right-8 left-8">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="h-px w-8 bg-[#D4A373]"></div>
-                  <span className="text-[9px] font-black text-[#D4A373] uppercase tracking-[0.3em]">Profile</span>
-                </div>
-                <h3 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
-             </div>
-          </div>
+            </div>
 
-          <div className="flex-1 p-6 md:p-12 overflow-y-auto custom-scrollbar text-right relative glass-panel">
-            <button onClick={() => setSelectedMember(null)} className="absolute top-6 left-6 p-2 text-slate-400 hover:text-slate-600 transition-all glass-effect hover:bg-white/20 rounded-full z-10"><X size={20} /></button>
-            
-            <div className="max-w-xl mx-auto space-y-10">
+            <div className="flex-1 p-6 md:p-12 overflow-y-auto custom-scrollbar text-right relative glass-panel">
+              <div className="max-w-xl mx-auto space-y-10">
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1 text-center glass-effect p-3 rounded-2xl">
                   <p className="text-[9px] font-black glass-text-secondary uppercase tracking-widest">Role</p>
@@ -496,10 +499,11 @@ const DirectoryPage: React.FC = () => {
                 </div>
               </div>
             </div>
+            </div>
+           </motion.div>
           </div>
-       </motion.div>
-    )}
-    </div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {isAddMemberModalOpen && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-12 modal-overlay animate-in fade-in" onClick={() => setIsAddMemberModalOpen(false)}>

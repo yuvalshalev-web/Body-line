@@ -157,9 +157,9 @@ const GalleryPage: React.FC = () => {
             <button 
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="flex items-center gap-4 px-10 py-5 text-white rounded-[2rem] font-black text-md transition-all active:scale-95 disabled:opacity-50 group hd-glass-button-vibrant"
+              className="flex items-center gap-4 px-10 py-4 bg-[#00FFFF] text-black border-2 border-black rounded-xl font-black text-lg transition-all active:translate-y-1 active:translate-x-[-1px] active:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 group"
             >
-              {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />}
+              {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-black" />}
               <span>{isUploading ? 'מעבד תמונות...' : 'העלאת תמונות'}</span>
             </button>
             <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileUpload} />
@@ -168,25 +168,25 @@ const GalleryPage: React.FC = () => {
       </div>
 
       {isUploading && (
-        <div className={`mb-12 modern-card p-8 animate-in slide-in-from-top-4 ${errorMsg ? 'bg-rose-500/10 border-rose-500/20' : ''}`}>
+        <div className={`mb-12 bg-white border-2 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-8 animate-in slide-in-from-top-4 ${errorMsg ? 'bg-rose-100' : ''}`}>
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
               {errorMsg ? (
-                <AlertTriangle className="text-rose-500" size={24} />
+                <AlertTriangle className="text-rose-600" size={24} />
               ) : uploadProgress === 100 ? (
-                <CheckCircle2 className="text-emerald-500 animate-bounce" size={24} />
+                <CheckCircle2 className="text-emerald-600 animate-bounce" size={24} />
               ) : (
-                <Loader2 className="animate-spin text-indigo-500" size={24} />
+                <Loader2 className="animate-spin text-black" size={24} />
               )}
-              <span className={`font-black ${errorMsg ? 'text-rose-700' : 'text-[#2B2B2E]'}`}>
+              <span className={`font-black ${errorMsg ? 'text-rose-700' : 'text-black'}`}>
                 {errorMsg || uploadStatus}
               </span>
             </div>
-            <span className="font-black text-slate-400 text-sm">{uploadProgress}%</span>
+            <span className="font-black text-black text-sm">{uploadProgress}%</span>
           </div>
-          <div className="w-full h-4 bg-slate-200 rounded-full overflow-hidden shadow-inner">
+          <div className="w-full h-6 bg-white border-2 border-black rounded-full overflow-hidden">
             <div 
-              className={`h-full transition-all duration-500 ease-out ${errorMsg ? 'bg-rose-500' : 'bg-gradient-to-r from-emerald-500 to-indigo-500'}`}
+              className={`h-full transition-all duration-500 ease-out border-r-2 border-black ${errorMsg ? 'bg-rose-400' : 'bg-[#00FFFF]'}`}
               style={{ width: `${uploadProgress}%` }}
             ></div>
           </div>
@@ -197,7 +197,7 @@ const GalleryPage: React.FC = () => {
         {galleryItems.map((item) => (
           <div 
             key={item.id} 
-            className={`relative group aspect-square overflow-hidden modern-card transition-all duration-500 cursor-zoom-in ${deletingId === item.id ? 'opacity-30' : ''}`}
+            className={`relative group aspect-square overflow-hidden bg-white border-2 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:translate-x-1 transition-all duration-200 cursor-zoom-in ${deletingId === item.id ? 'opacity-30' : ''}`}
             onClick={() => setSelectedImage(item.imageUrl)}
           >
             <img 
@@ -206,14 +206,14 @@ const GalleryPage: React.FC = () => {
               alt={item.uploaderName} 
               loading="lazy" 
             />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-8">
-               <div className="flex items-center gap-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30">
-                    <User size={18} />
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+               <div className="flex items-center gap-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300 bg-white border-2 border-black p-2 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] self-start">
+                  <div className="w-8 h-8 rounded-full bg-[#00FFFF] border-2 border-black flex items-center justify-center text-black">
+                    <User size={16} />
                   </div>
                   <div>
-                    <p className="text-white font-black text-sm">{item.uploaderName}</p>
-                    <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">רגע מהמים</p>
+                    <p className="text-black font-black text-xs">{item.uploaderName}</p>
+                    <p className="text-black/60 text-[10px] font-bold uppercase tracking-widest">רגע מהמים</p>
                   </div>
                </div>
                
@@ -224,7 +224,7 @@ const GalleryPage: React.FC = () => {
                      handleDelete(item); 
                    }}
                    disabled={deletingId === item.id}
-                   className="absolute top-6 left-6 p-3 bg-rose-500/90 backdrop-blur-sm text-white rounded-2xl hover:bg-rose-600 transition-all shadow-lg active:scale-90 z-20 disabled:opacity-50"
+                   className="absolute top-4 left-4 p-3 bg-rose-400 text-black border-2 border-black rounded-xl hover:bg-rose-500 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-[-1px] active:shadow-none z-20 disabled:opacity-50"
                    title="מחיקת תמונה"
                  >
                    {deletingId === item.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
@@ -237,22 +237,22 @@ const GalleryPage: React.FC = () => {
 
       {selectedImage && (
         <div 
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-12 bg-black/90 backdrop-blur-md animate-in fade-in duration-300" 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-12 bg-white/80 backdrop-blur-sm animate-in fade-in duration-300" 
           onClick={() => setSelectedImage(null)}
         >
            <button 
-             className="absolute top-8 left-8 p-4 text-white hover:text-[#00FFFF] transition-colors bg-white/10 hover:bg-white/20 rounded-2xl z-[130]"
+             className="absolute top-8 left-8 p-3 bg-[#00FFFF] text-black border-2 border-black rounded-xl hover:bg-cyan-300 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 active:translate-x-[-1px] active:shadow-none z-[130]"
              onClick={(e) => {
                e.stopPropagation();
                setSelectedImage(null);
              }}
            >
-             <X size={32} />
+             <X size={32} strokeWidth={3} />
            </button>
-           <div className="relative max-w-5xl max-h-full" onClick={e => e.stopPropagation()}>
+           <div className="relative max-w-5xl max-h-full bg-white border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-2" onClick={e => e.stopPropagation()}>
              <img 
                src={selectedImage} 
-               className="w-full h-full object-contain rounded-[2rem] shadow-2xl animate-in zoom-in-95 duration-300" 
+               className="w-full h-full object-contain rounded-xl animate-in zoom-in-95 duration-300" 
                alt="Large view" 
              />
            </div>
