@@ -66,7 +66,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-xl animate-in fade-in">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-xl animate-in fade-in">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -74,7 +74,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
       >
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-3xl font-black text-[#2B2B2E]">עריכת פוסט</h3>
-          <button onClick={onClose} className="p-3 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-400 hover:text-rose-500 transition-all active:scale-95">
+          <button onClick={onClose} className="p-3 glass-effect hover:bg-white/10 rounded-full text-white/60 hover:text-rose-500 transition-all active:scale-95">
             <X size={24} />
           </button>
         </div>
@@ -149,7 +149,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
                   <span className="font-bold">לחץ להעלאת תמונה</span>
                 </div>
               )}
-              <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                 <Camera className="text-white" size={32} />
               </div>
               <input 

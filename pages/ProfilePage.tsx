@@ -44,12 +44,12 @@ const SocialInput = ({
         <input
           type="text"
           placeholder={placeholder}
-          className="w-full pr-14 pl-12 py-4 bg-slate-50 rounded-2xl font-black text-sm outline-none focus:border-indigo-200 focus:bg-white transition-all"
+          className="w-full pr-14 pl-12 py-4 glass-effect rounded-2xl font-black text-sm outline-none focus:border-indigo-200 focus:bg-white/10 transition-all glass-text-primary"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
         />
         {hasValue && (
-          <a href={ensureAbsoluteUrl(value)} target="_blank" rel="noopener noreferrer" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-950 transition-colors bg-white p-1.5 rounded-lg shadow-sm">
+          <a href={ensureAbsoluteUrl(value)} target="_blank" rel="noopener noreferrer" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-950 transition-colors bg-white/20 p-1.5 rounded-lg shadow-sm">
             <ExternalLink size={14} />
           </a>
         )}
@@ -331,7 +331,7 @@ const ProfilePage: React.FC = () => {
           {/* Removed background image layer here */}
         </div>
         
-        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-24 modern-card rounded-t-[4rem]">
+        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-24 glass-panel rounded-t-[4rem] relative z-20">
           <div className="flex flex-col md:flex-row items-end gap-8 mb-16">
             <div className="relative group">
               {/* Removed banner image that was obscuring the watermark */}
@@ -365,11 +365,11 @@ const ProfilePage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם פרטי</label>
-                    <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-5 bg-white/5 backdrop-blur-md rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all text-[#2B2B2E]" />
+                    <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-5 glass-effect rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all glass-text-primary" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם משפחה</label>
-                    <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-5 bg-white/5 backdrop-blur-md rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all text-[#2B2B2E]" />
+                    <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-5 glass-effect rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all glass-text-primary" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">טלפון נייד</label>
@@ -379,7 +379,7 @@ const ProfilePage: React.FC = () => {
                         type="tel" 
                         value={formData.mobile} 
                         onChange={handleMobileChange} 
-                        className="w-full pr-14 pl-6 py-5 bg-white/5 backdrop-blur-md rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all text-[#2B2B2E]" 
+                        className="w-full pr-14 pl-6 py-5 glass-effect rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all glass-text-primary" 
                       />
                     </div>
                   </div>
@@ -391,7 +391,7 @@ const ProfilePage: React.FC = () => {
                         type="date" 
                         value={formData.birthday || ''} 
                         onChange={e => handleFieldChange('birthday', e.target.value)} 
-                        className="w-full pr-14 pl-6 py-5 bg-white/5 backdrop-blur-md rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all cursor-pointer text-[#2B2B2E]" 
+                        className="w-full pr-14 pl-6 py-5 glass-effect rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all cursor-pointer glass-text-primary" 
                       />
                     </div>
                   </div>
@@ -402,7 +402,7 @@ const ProfilePage: React.FC = () => {
                       <button 
                         type="button"
                         onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                        className="w-full pr-14 pl-12 py-5 bg-white/5 backdrop-blur-md rounded-2xl font-black text-sm outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all flex items-center justify-between group text-[#2B2B2E]"
+                        className="w-full pr-14 pl-12 py-5 glass-effect rounded-2xl font-black text-sm outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all flex items-center justify-between group glass-text-primary"
                       >
                         <span>{formData.gender || 'בחר מגדר'}</span>
                         <ChevronDown size={18} className={`text-slate-300 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
@@ -453,7 +453,7 @@ const ProfilePage: React.FC = () => {
                           setIsDirty(true);
                         }} 
                         placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
-                        className="w-full pr-14 pl-6 py-5 bg-white/5 backdrop-blur-md rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all text-[#2B2B2E]" 
+                        className="w-full pr-14 pl-6 py-5 glass-effect rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all glass-text-primary" 
                         required
                         autoComplete="off"
                       />
@@ -493,7 +493,7 @@ const ProfilePage: React.FC = () => {
                   <textarea 
                     value={formData.bio} 
                     onChange={e => handleFieldChange('bio', e.target.value)} 
-                    className="w-full p-8 bg-white/5 backdrop-blur-md rounded-[3rem] font-bold h-[32rem] resize-none outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all text-lg leading-relaxed shadow-inner text-[#2B2B2E]" 
+                    className="w-full p-8 glass-effect rounded-[3rem] font-bold h-[32rem] resize-none outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all text-lg leading-relaxed shadow-inner glass-text-primary" 
                     placeholder="ספר קצת על עצמך, על הגלישה, על החיים..." 
                   />
                </div>
@@ -540,17 +540,17 @@ const ProfilePage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md glass-panel rounded-[2rem] shadow-2xl overflow-hidden"
             >
               <div className="p-8">
                 <div className="flex justify-between items-center mb-8">
-                  <h3 className="text-2xl font-black text-[#2B2B2E] flex items-center gap-3">
+                  <h3 className="text-2xl font-black glass-text-primary flex items-center gap-3">
                     <Key className="text-indigo-500" />
                     החלפת סיסמה
                   </h3>
                   <button 
                     onClick={() => setShowPasswordModal(false)}
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                    className="p-2 text-slate-400 hover:text-slate-200 hover:bg-white/10 rounded-full transition-colors"
                   >
                     <X size={20} />
                   </button>
@@ -563,7 +563,7 @@ const ProfilePage: React.FC = () => {
                       type="password"
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
-                      className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none focus:bg-white focus:border-indigo-200 transition-all"
+                      className="w-full p-4 glass-effect rounded-2xl font-black outline-none focus:bg-white/10 focus:border-indigo-200 transition-all glass-text-primary"
                       placeholder="הזן סיסמה חדשה"
                       required
                       minLength={6}
@@ -575,7 +575,7 @@ const ProfilePage: React.FC = () => {
                       type="password"
                       value={confirmPassword}
                       onChange={e => setConfirmPassword(e.target.value)}
-                      className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none focus:bg-white focus:border-indigo-200 transition-all"
+                      className="w-full p-4 glass-effect rounded-2xl font-black outline-none focus:bg-white/10 focus:border-indigo-200 transition-all glass-text-primary"
                       placeholder="הזן שוב את הסיסמה"
                       required
                       minLength={6}

@@ -644,27 +644,27 @@ const DirectoryPage: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">תאריך לידה</label>
+                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">תאריך לידה</label>
                           <div className="relative">
-                            <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                            <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-white/40" />
                             <input 
                               type="date" 
                               value={newMemberData.birthday || ''} 
                               onChange={e => setNewMemberData(prev => ({ ...prev, birthday: e.target.value }))} 
-                              className="w-full pr-14 pl-6 py-5 bg-white/40 backdrop-blur-md rounded-2xl font-black outline-none border border-white/60 focus:bg-white/60 transition-all cursor-pointer" 
+                              className="w-full pr-14 pl-6 py-5 glass-effect rounded-2xl font-black outline-none focus:bg-white/10 transition-all cursor-pointer glass-text-primary" 
                             />
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">תפקיד</label>
+                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">תפקיד</label>
                           <div className="relative">
                             <button 
                               type="button"
                               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-                              className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all flex items-center justify-between group"
+                              className="w-full p-5 glass-effect rounded-2xl font-black text-sm outline-none focus:bg-white/10 transition-all flex items-center justify-between group glass-text-primary"
                             >
                               <span>{newMemberData.role === 'Admin' ? 'רכז' : newMemberData.role === 'Instructor' ? 'מדריך' : 'חבר'}</span>
-                              <ChevronDown size={18} className={`text-slate-300 transition-transform duration-300 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
+                              <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
 
                             <AnimatePresence>
@@ -675,7 +675,7 @@ const DirectoryPage: React.FC = () => {
                                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                    className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-2xl border border-slate-100 rounded-2xl shadow-2xl z-[170] overflow-hidden"
+                                    className="absolute top-full left-0 right-0 mt-2 glass-panel rounded-2xl shadow-2xl z-[170] overflow-hidden"
                                   >
                                     {(['Member', 'Instructor', 'Admin'] as const).map((r) => (
                                       <button
@@ -685,8 +685,8 @@ const DirectoryPage: React.FC = () => {
                                           setNewMemberData(prev => ({ ...prev, role: r }));
                                           setIsRoleDropdownOpen(false);
                                         }}
-                                        className={`w-full px-6 py-4 text-right font-black transition-all hover:bg-indigo-50 ${
-                                          newMemberData.role === r ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'
+                                        className={`w-full px-6 py-4 text-right font-black transition-all hover:bg-white/10 ${
+                                          newMemberData.role === r ? 'text-[var(--surfer-cyan)] bg-white/5' : 'glass-text-primary'
                                         }`}
                                       >
                                         {r === 'Admin' ? 'רכז' : r === 'Instructor' ? 'מדריך' : 'חבר'}
@@ -699,15 +699,15 @@ const DirectoryPage: React.FC = () => {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">מגדר</label>
+                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">מגדר</label>
                           <div className="relative">
                             <button 
                               type="button"
                               onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                              className="w-full p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all flex items-center justify-between group"
+                              className="w-full p-5 glass-effect rounded-2xl font-black text-sm outline-none focus:bg-white/10 transition-all flex items-center justify-between group glass-text-primary"
                             >
                               <span>{newMemberData.gender || 'בחר מגדר'}</span>
-                              <ChevronDown size={18} className={`text-slate-300 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
+                              <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
 
                             <AnimatePresence>
@@ -718,7 +718,7 @@ const DirectoryPage: React.FC = () => {
                                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                    className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-2xl border border-slate-100 rounded-2xl shadow-2xl z-[170] overflow-hidden"
+                                    className="absolute top-full left-0 right-0 mt-2 glass-panel rounded-2xl shadow-2xl z-[170] overflow-hidden"
                                   >
                                     {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
                                       <button
@@ -728,8 +728,8 @@ const DirectoryPage: React.FC = () => {
                                           setNewMemberData(prev => ({ ...prev, gender: g }));
                                           setIsGenderDropdownOpen(false);
                                         }}
-                                        className={`w-full px-6 py-4 text-right font-black transition-all hover:bg-indigo-50 ${
-                                          newMemberData.gender === g ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'
+                                        className={`w-full px-6 py-4 text-right font-black transition-all hover:bg-white/10 ${
+                                          newMemberData.gender === g ? 'text-[var(--surfer-cyan)] bg-white/5' : 'glass-text-primary'
                                         }`}
                                       >
                                         {g}
@@ -742,14 +742,14 @@ const DirectoryPage: React.FC = () => {
                           </div>
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה</label>
+                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">סיסמה</label>
                           <div className="flex gap-4">
                             <input 
                               type="text" 
                               value={newMemberData.password || ''} 
                               onChange={e => setNewMemberData(prev => ({ ...prev, password: e.target.value }))}
                               placeholder="סיסמה ראשונית"
-                              className="flex-1 p-5 bg-white/40 backdrop-blur-md rounded-2xl font-black outline-none border border-white/60 focus:bg-white/60 transition-all" 
+                              className="flex-1 p-5 glass-effect rounded-2xl font-black outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" 
                             />
                             <button 
                               type="button"
@@ -757,7 +757,7 @@ const DirectoryPage: React.FC = () => {
                                 const pass = Math.random().toString(36).slice(-8);
                                 setNewMemberData(prev => ({ ...prev, password: pass }));
                               }}
-                              className="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black transition-all flex items-center gap-2"
+                              className="px-6 glass-effect hover:bg-white/20 glass-text-primary rounded-2xl font-black transition-all flex items-center gap-2"
                             >
                               <Sparkles size={16} />
                               ייצר
@@ -767,25 +767,25 @@ const DirectoryPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-6">
-                        <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] flex items-center gap-3">
+                        <h4 className="text-[10px] font-black glass-text-secondary uppercase tracking-[0.3em] flex items-center gap-3">
                           <Globe size={14} /> רשתות חברתיות
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">Instagram</label>
-                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.instagramUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, instagramUrl: e.target.value }))} className="w-full p-4 bg-white/40 backdrop-blur-md rounded-xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all" />
+                            <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">Instagram</label>
+                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.instagramUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, instagramUrl: e.target.value }))} className="w-full p-4 glass-effect rounded-xl font-black text-sm outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">Facebook</label>
-                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.facebookUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, facebookUrl: e.target.value }))} className="w-full p-4 bg-white/40 backdrop-blur-md rounded-xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all" />
+                            <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">Facebook</label>
+                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.facebookUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, facebookUrl: e.target.value }))} className="w-full p-4 glass-effect rounded-xl font-black text-sm outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">LinkedIn</label>
-                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.linkedinUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, linkedinUrl: e.target.value }))} className="w-full p-4 bg-white/40 backdrop-blur-md rounded-xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all" />
+                            <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">LinkedIn</label>
+                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.linkedinUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, linkedinUrl: e.target.value }))} className="w-full p-4 glass-effect rounded-xl font-black text-sm outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">X (Twitter)</label>
-                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.twitterUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, twitterUrl: e.target.value }))} className="w-full p-4 bg-white/40 backdrop-blur-md rounded-xl font-black text-sm outline-none border border-white/60 focus:bg-white/60 transition-all" />
+                            <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">X (Twitter)</label>
+                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.twitterUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, twitterUrl: e.target.value }))} className="w-full p-4 glass-effect rounded-xl font-black text-sm outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" />
                           </div>
                         </div>
                       </div>
@@ -795,7 +795,7 @@ const DirectoryPage: React.FC = () => {
               </div>
 
               {/* Footer Actions */}
-              <div className="p-8 md:p-12 border-t border-slate-100 bg-white/40 backdrop-blur-md flex flex-col md:flex-row items-center justify-center gap-4">
+              <div className="p-8 md:p-12 border-t border-white/10 glass-effect flex flex-col md:flex-row items-center justify-center gap-4">
                 <button 
                   onClick={async () => {
                     if (!newMemberData.firstName || !newMemberData.email) {
@@ -846,14 +846,14 @@ const DirectoryPage: React.FC = () => {
                     }
                   }}
                   disabled={isSaving}
-                  className="w-full md:w-auto px-16 py-5 bg-[#D4A373] text-white rounded-2xl font-black text-xl hover:bg-[#B88A5B] transition-all shadow-xl flex items-center justify-center gap-4 disabled:opacity-50"
+                  className="w-full md:w-auto px-16 py-5 bg-[var(--surfer-orange)] text-white rounded-2xl font-black text-xl hover:bg-[var(--surfer-pink)] transition-all shadow-xl flex items-center justify-center gap-4 disabled:opacity-50"
                 >
                   {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
                   שמור חבר חדש
                 </button>
                 <button 
                   onClick={() => setIsAddMemberModalOpen(false)}
-                  className="w-full md:w-auto px-12 py-5 bg-slate-100 text-slate-600 rounded-2xl font-black text-xl hover:bg-slate-200 transition-all"
+                  className="w-full md:w-auto px-12 py-5 glass-effect text-white/60 rounded-2xl font-black text-xl hover:text-white hover:bg-white/10 transition-all"
                 >
                   ביטול
                 </button>
@@ -864,25 +864,25 @@ const DirectoryPage: React.FC = () => {
       </AnimatePresence>
 
       {isWhatsAppModalOpen && selectedMember && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-lg animate-in fade-in" onClick={() => setIsWhatsAppModalOpen(false)}>
-          <div className="bg-white w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="bg-[#075E54] p-8 text-white flex items-center gap-4">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-lg animate-in fade-in" onClick={() => setIsWhatsAppModalOpen(false)}>
+          <div className="glass-panel w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#25D366]/20 p-8 text-white flex items-center gap-4 border-b border-white/10">
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                 <WhatsAppIcon className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h4 className="font-black text-xl">שלח הודעת WhatsApp</h4>
-                <p className="text-xs opacity-70 font-bold">אל: {selectedMember.firstName} {selectedMember.lastName}</p>
+                <h4 className="font-black text-xl glass-text-primary">שלח הודעת WhatsApp</h4>
+                <p className="text-xs opacity-70 font-bold glass-text-secondary">אל: {selectedMember.firstName} {selectedMember.lastName}</p>
               </div>
             </div>
             
             <div className="p-8 space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">תוכן ההודעה</label>
+                <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-2">תוכן ההודעה</label>
                 <textarea 
                   value={whatsappMessage}
                   onChange={e => setWhatsappMessage(e.target.value)}
-                  className="w-full p-6 bg-slate-50 rounded-2xl font-bold h-40 resize-none outline-none border border-slate-100 focus:bg-white focus:border-[#25D366] transition-all text-sm leading-relaxed"
+                  className="w-full p-6 glass-input rounded-2xl font-bold h-40 resize-none outline-none focus:bg-white/10 transition-all text-sm leading-relaxed glass-text-primary placeholder:text-white/40"
                   placeholder="הקלד את ההודעה שלך כאן..."
                   autoFocus
                 />
@@ -891,15 +891,15 @@ const DirectoryPage: React.FC = () => {
               <div className="flex gap-4">
                 <button 
                   onClick={handleSendWhatsApp}
-                  className="flex-1 py-4 bg-[#006994] text-white rounded-2xl font-black text-lg hover:bg-[#4E8294] transition-all shadow-lg active:scale-95"
+                  className="flex-1 py-4 bg-[#25D366] text-white rounded-2xl font-black text-lg hover:bg-[#1EBE5D] transition-all shadow-lg active:scale-95"
                 >
                   שלח
                 </button>
                 <button 
                   onClick={() => setIsWhatsAppModalOpen(false)}
-                  className="flex-1 py-4 bg-slate-100 text-[#4E8294] rounded-2xl font-black text-lg hover:bg-slate-200 transition-all active:scale-95"
+                  className="flex-1 py-4 glass-effect text-white/60 rounded-2xl font-black text-lg hover:text-white hover:bg-white/10 transition-all active:scale-95"
                 >
-                  בטל
+                  ביטול
                 </button>
               </div>
             </div>

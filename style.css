@@ -19,7 +19,7 @@
   --color-ocean-10: #ffffff;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700;900&family=Heebo:wght@300;400;600;700;900&family=Rubik:wght@300;400;600;700;900&family=Varela+Round&family=Secular+One&family=Miriwin&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700;900&family=Heebo:wght@300;400;600;700;900&family=Rubik:wght@300;400;600;700;900&family=Varela+Round&family=Secular+One&family=Miriwin&family=Roboto+Slab:wght@100..900&display=swap');
 
 @font-face {
   font-family: 'Yehuda CLM';
@@ -65,6 +65,18 @@
   --ocean-milestone: #ffffff;
   --ocean-text-main: #ffffff;
   --ocean-text-dim: rgba(255, 255, 255, 0.5);
+  /* --- Surfer Theme Palette --- */
+  --surfer-cyan: #00D9E6;
+  --surfer-teal: #00AFC2;
+  --surfer-pink: #FF2D60;
+  --surfer-magenta: #CC2678;
+  --surfer-yellow: #FFDE45;
+  --surfer-orange: #FF9F1C;
+  --surfer-shadow: #7A1555;
+  --surfer-tan: #C29670;
+  --surfer-deep-teal: #007085;
+  --surfer-aqua: #B2EBF2;
+
   /* --- Global Glassmorphism Design Language (Body-line Standards) --- */
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-blur: 12px;
@@ -125,9 +137,25 @@
 
 /* Exceptions for menus and Big Thursday */
 .floating-menu-drawer,
-.floating-menu-container,
-.big-thursday-title {
+.floating-menu-container {
   font-family: 'Assistant', sans-serif !important;
+}
+
+.big-thursday-title {
+  font-family: 'Heebo', sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: -1px;
+  display: inline-block;
+  border-top: 6px solid var(--surfer-yellow);
+  border-bottom: 6px solid var(--surfer-yellow);
+  padding: 16px 40px;
+  line-height: 1;
+  max-width: 85vw;
+  white-space: nowrap;
+  margin: 0 auto;
+  
+  /* Subtle shadow for readability */
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 
@@ -248,6 +276,17 @@ body {
   background-color: var(--bg-main);
   color: var(--text-main);
   letter-spacing: -0.01em;
+}
+
+/* חוק הברזל החדש לכל הכפתורים באתר */
+button, .btn {
+  display: inline-flex !important; /* מבטל התפרסות על כל הרוחב */
+  width: auto !important;         /* מבטל רוחב קבוע אם הוגדר */
+  flex: none !important;          /* מבטל מתיחה של flex-1 */
+  padding: 12px 24px !important;  /* יחס 1:2, דורס מחלקות Tailwind */
+  white-space: nowrap !important; /* מונע שבירת טקסט */
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .modern-card {
@@ -733,18 +772,67 @@ body {
 }
 
 /* Navigation Modes */
-header.nav-standard {
-  position: relative;
-  top: 0;
-  width: 100%;
-  border-radius: 0;
-  margin: 0;
-  background: rgba(243, 243, 243, 0.7);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border-bottom: 1px solid rgba(192, 192, 192, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+/* --- Surfer Action Hotspot System --- */
+@keyframes surfer-pulse {
+  0% { transform: scale(1); opacity: 0.5; box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+  70% { transform: scale(1.8); opacity: 0; box-shadow: 0 0 0 30px rgba(255, 255, 255, 0); }
+  100% { transform: scale(1); opacity: 0; box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
 }
+
+.surfer-hotspot-container {
+  position: absolute;
+  top: 88%; /* Moved from 55% to bottom area */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.surfer-hotspot {
+  width: 140px !important;
+  height: 140px !important;
+  padding: 0 !important;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50% !important;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.surfer-hotspot:active {
+  transform: scale(0.92);
+}
+
+.pulse-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  animation: surfer-pulse 4s infinite ease-out;
+  pointer-events: none;
+}
+
+.secondary-label {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 900;
+  color: white;
+  opacity: 1;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  pointer-events: none;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
 
 header {
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
@@ -1880,9 +1968,39 @@ h2.surfer-subtitle::after {
     font-size: 1.2rem;
 }
 
+/* --- Navigation Drawer (13 Wood Signs) --- */
+.wood-sign-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  perspective: 1000px;
+}
 
+.wood-sign {
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: top center;
+}
 
+/* The Nail - Removed as it's handled in component */
 
+/* Clip-path arrows - Removed as it's handled in component */
 
+.wood-sign:hover {
+  transform: rotate(0deg) scale(1.1) !important;
+  z-index: 10;
+}
 
+.wood-sign .icon {
+  font-size: 1.5rem;
+  margin: 0 10px;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+}
 
+.wood-sign .text {
+  font-family: var(--surfer-font, 'Assistant', sans-serif);
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}

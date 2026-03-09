@@ -54,91 +54,6 @@ const PageLoader = () => (
   </div>
 );
 
-const SignpostLink = React.memo(({ 
-  item, 
-  isActive, 
-  onClick,
-  index
-}: { 
-  item: any, 
-  isActive: boolean, 
-  onClick: () => void,
-  index: number
-}) => {
-  const colors = [
-    'bg-[#FF6B6B]', // Red
-    'bg-[#4ECDC4]', // Teal
-    'bg-[#FFE66D]', // Yellow
-    'bg-[#FF9F43]', // Orange
-    'bg-[#1DD1A1]', // Green
-    'bg-[#54A0FF]', // Blue
-    'bg-[#5F27CD]', // Purple
-    'bg-[#EE5253]', // Rose
-  ];
-  
-  const rotations = [-3, 2, -1, 3, -2, 1];
-  const color = colors[index % colors.length];
-  const rotation = rotations[index % rotations.length];
-  const isRight = index % 2 === 0;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: isRight ? 20 : -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ 
-        delay: index * 0.05, 
-        duration: 0.4,
-        ease: "easeOut"
-      }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      style={{ rotate: rotation }}
-      className="relative my-2 w-full group cursor-pointer"
-      onClick={onClick}
-    >
-      {/* The Sign Shape */}
-      <div className={`
-        relative py-3 px-8 shadow-xl transition-all duration-300
-        ${color} ${isActive ? 'ring-4 ring-white ring-inset' : 'opacity-90 group-hover:opacity-100'}
-        ${isRight 
-          ? 'rounded-l-lg rounded-r-[40px] pr-12' 
-          : 'rounded-r-lg rounded-l-[40px] pl-12'}
-        border-2 border-black/10
-      `}>
-        {/* Wood Texture Overlay */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none" 
-             style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.1) 21px)', mixBlendMode: 'overlay' }} />
-        
-        <div className={`flex items-center gap-3 relative z-10 ${isRight ? 'justify-start' : 'justify-end flex-row-reverse'}`}>
-          <item.icon 
-            size={22} 
-            className={`${isActive ? 'text-white' : 'text-black/60'} drop-shadow-md`} 
-          />
-          <span className={`
-            text-lg font-[900] tracking-tight
-            ${isActive ? 'text-white' : 'text-black/80'}
-            drop-shadow-[0_1px_1px_rgba(255,255,255,0.3)]
-          `}>
-            {item.label}
-          </span>
-        </div>
-
-        {/* Arrow Tip for Signpost Look */}
-        <div className={`
-          absolute top-0 bottom-0 w-8 bg-inherit border-y-2 border-black/10
-          ${isRight ? 'right-0 rounded-r-full' : 'left-0 rounded-l-full'}
-        `} />
-      </div>
-
-      {/* Nails */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-12 pointer-events-none opacity-40">
-        <div className="w-2 h-2 rounded-full bg-slate-800 shadow-inner" />
-        <div className="w-2 h-2 rounded-full bg-slate-800 shadow-inner" />
-      </div>
-    </motion.div>
-  );
-});
-
 const App: React.FC = () => {
   const { currentUser, logout } = useAuth();
   const { siteConfig } = useData();
@@ -251,21 +166,21 @@ const App: React.FC = () => {
   // For now, we'll just use the first 8 items from the config for the main nav
   // and the next 4 for admin nav, to keep the routing intact while changing the visuals.
   const navItems = [
-    { path: '/', ...menuItems[0], label: 'בית' },
-    { path: '/directory', ...menuItems[1], label: 'נבחרת הגלישה' },
-    { path: '/gallery', ...menuItems[2], label: 'נבחרת הכוכבים' },
-    { path: '/events', ...menuItems[3], label: 'אירועים' },
-    { path: '/posts', ...menuItems[4], label: 'פוסטים ועדכונים' },
-    { path: '/world-news', ...menuItems[5], label: 'חדשות מהעולם' },
-    { path: '/surfer-card', ...menuItems[6], label: 'דשבורד' },
-    { path: '/profile', ...menuItems[7], label: 'פרופיל אישי' }
+    { path: '/', ...menuItems[0], text: 'דף הבית' },
+    { path: '/directory', ...menuItems[1], text: 'נבחרת הכוכבים:' },
+    { path: '/gallery', ...menuItems[2], text: 'ליינאפ התמונות' },
+    { path: '/events', ...menuItems[3], text: 'אירועים' },
+    { path: '/posts', ...menuItems[4], text: 'פוסטים ועדכונים' },
+    { path: '/world-news', ...menuItems[5], text: 'חדשות מהעולם' },
+    { path: '/surfer-card', ...menuItems[6], text: 'דשבורד' },
+    { path: '/profile', ...menuItems[7], text: 'פרופיל אישי' }
   ];
 
   const adminNavItems = [
-    { path: '/admin', ...menuItems[8], label: 'פאנל ניהול' },
-    { path: '/admin-info', ...menuItems[9], label: 'דופק חבל זוג' },
-    { path: '/attendance', ...menuItems[10], label: 'יומן סשנים' },
-    { path: '/admin-rollover', ...menuItems[11], label: 'דו"ח יום חמישי' }
+    { path: '/admin', ...menuItems[8], text: 'פאנל ניהול' },
+    { path: '/admin-info', ...menuItems[9], text: 'דופק חבל זוג' },
+    { path: '/attendance', ...menuItems[10], text: 'יומן סשנים' },
+    { path: '/admin-rollover', ...menuItems[11], text: 'דו"ח יום חמישי' }
   ];
 
   return (
@@ -308,11 +223,6 @@ const App: React.FC = () => {
               style={{}}
             >
               <div className="w-full h-full flex flex-col relative">
-                {/* The Pole */}
-                <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-8 bg-[#8d6e63] shadow-[inset_-4px_0_8px_rgba(0,0,0,0.3),inset_4px_0_8px_rgba(255,255,255,0.1)] z-0">
-                  <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.2) 41px)' }} />
-                </div>
-
                 {/* Crazy Seagull Decoration */}
                 <motion.div 
                   animate={{ 
@@ -401,22 +311,6 @@ const App: React.FC = () => {
 
                 {/* Navigation Items */}
                 <div className="flex-1 px-4 py-8 flex flex-col gap-1 overflow-y-auto relative z-10 custom-scrollbar">
-                  {/* Wooden Post */}
-                  <div className="absolute left-1/2 top-0 bottom-0 w-8 bg-[#d2b48c] z-0 -translate-x-1/2 border-l-2 border-r-2 border-[#c1a070] shadow-[inset_0_0_10px_rgba(0,0,0,0.2)]">
-                    {/* Complex Grain Texture */}
-                    <div className="absolute inset-0 opacity-40" style={{ 
-                      backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(139, 69, 19, 0.15) 7px, rgba(139, 69, 19, 0.15) 8px), repeating-linear-gradient(90deg, transparent, transparent 15px, rgba(139, 69, 19, 0.1) 16px, rgba(139, 69, 19, 0.1) 18px)',
-                    }}></div>
-                    {/* Cracks */}
-                    <div className="absolute inset-0 opacity-30" style={{ 
-                      backgroundImage: 'linear-gradient(10deg, transparent 40%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.4) 46%, transparent 50%), linear-gradient(-10deg, transparent 70%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0.3) 76%, transparent 80%)'
-                    }}></div>
-                    {/* Wear/Stains */}
-                    <div className="absolute inset-0 opacity-30" style={{ 
-                      backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(0,0,0,0.2) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0,0,0,0.2) 0%, transparent 50%), linear-gradient(to bottom, transparent 20%, rgba(0,0,0,0.2) 50%, transparent 80%)'
-                    }}></div>
-                  </div>
-                  
                   <div className="mb-6 text-center relative z-10">
                     <span className="px-4 py-1 bg-[#d4a373] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-sm" style={{ fontFamily: 'Miriwin' }}>
                       בחר יעד

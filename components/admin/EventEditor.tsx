@@ -67,7 +67,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-xl animate-in fade-in">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-xl animate-in fade-in">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -75,7 +75,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
       >
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-3xl font-black text-[#2B2B2E]">עריכת אירוע</h3>
-          <button onClick={onClose} className="p-3 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-400 hover:text-rose-500 transition-all active:scale-95">
+          <button onClick={onClose} className="p-3 glass-effect hover:bg-white/10 rounded-full text-white/60 hover:text-rose-500 transition-all active:scale-95">
             <X size={24} />
           </button>
         </div>
@@ -164,10 +164,10 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
               {form.imageUrl ? (
                 <>
                   <img src={form.imageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Preview" />
-                  <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                     <button 
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-8 py-4 bg-white text-[#2B2B2E] rounded-2xl font-black text-sm shadow-2xl flex items-center gap-3 active:scale-95 hover:bg-[#D4A373] hover:text-white transition-all"
+                      className="px-8 py-4 glass-panel text-white rounded-2xl font-black text-sm shadow-2xl flex items-center gap-3 active:scale-95 hover:bg-white/20 transition-all border border-white/20"
                     >
                       <Camera size={20} />
                       החלפת תמונת רקע
@@ -179,7 +179,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
                   onClick={() => fileInputRef.current?.click()}
                   className="flex flex-col items-center gap-4 text-slate-400 hover:text-[#D4A373] transition-all group/btn"
                 >
-                  <div className="p-6 bg-white rounded-[1.5rem] shadow-sm border border-white/60 group-hover/btn:scale-110 transition-transform">
+                  <div className="p-6 glass-panel rounded-[1.5rem] shadow-sm border border-white/20 group-hover/btn:scale-110 transition-transform">
                     <Camera size={40} strokeWidth={1.5} />
                   </div>
                   <span className="font-black text-xs uppercase tracking-widest">לחץ להעלאת תמונה</span>
@@ -187,7 +187,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
               )}
               
               {isUploading && (
-                <div className="absolute inset-0 bg-white/80 backdrop-blur-md flex flex-col items-center justify-center gap-4 z-10">
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-md flex flex-col items-center justify-center gap-4 z-10">
                   <Loader2 className="animate-spin text-[#D4A373]" size={40} />
                   <span className="font-black text-[#D4A373] text-[10px] uppercase tracking-widest animate-pulse">מעלה תמונה...</span>
                 </div>
@@ -206,7 +206,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
         <div className="grid grid-cols-2 gap-6 mt-12">
           <button 
             onClick={onClose}
-            className="py-5 bg-slate-100 text-slate-600 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all active:scale-95"
+            className="py-5 glass-effect text-white/60 rounded-2xl font-black text-sm hover:text-white hover:bg-white/10 transition-all active:scale-95"
           >
             ביטול
           </button>

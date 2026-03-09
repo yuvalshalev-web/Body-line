@@ -107,7 +107,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
     return { percentile, roundedPercentile, distanceKm, label };
   }, [member, members, siteConfig]);
 
-  if (isLoading) return <div className="p-4 bg-white rounded-2xl border border-slate-100 animate-pulse">טוען...</div>;
+  if (isLoading) return <div className="p-4 glass-panel rounded-2xl border border-white/20 animate-pulse">טוען...</div>;
   if (!member || !stats) return null;
 
   return (
@@ -116,7 +116,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-[var(--ocean-liquid)]/5 rounded-full blur-3xl -z-10" />
       
       <div className="relative">
-        <div className="w-28 h-28 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl bg-slate-50 rotate-3">
+        <div className="w-28 h-28 rounded-[2rem] overflow-hidden border-4 border-white/20 shadow-xl glass-effect rotate-3">
           {member.avatar ? (
             <img src={member.avatar} alt="" className="w-full h-full object-cover" />
           ) : (
@@ -151,7 +151,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             }`}>
               סטטוס: {member.isActive !== false ? 'פעיל' : 'לא פעיל'}
             </span>
-            <span className="inline-flex px-3 py-1 bg-slate-50 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-slate-100 shadow-sm">
+            <span className="inline-flex px-3 py-1 glass-effect glass-text-primary rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10 shadow-sm">
               תפקיד: {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
             </span>
           </div>

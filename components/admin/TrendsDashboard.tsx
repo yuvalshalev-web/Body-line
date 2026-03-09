@@ -450,7 +450,7 @@ const TrendsDashboard: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Header & Switcher */}
-      <div className="bg-white p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
+      <div className="glass-panel p-10 rounded-[3.5rem] border border-white/20 shadow-soft">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600">
@@ -468,7 +468,7 @@ const TrendsDashboard: React.FC = () => {
                 onClick={() => setViewMode('unified')}
                 className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
                   viewMode === 'unified' 
-                    ? 'bg-white text-indigo-600 shadow-sm' 
+                    ? 'glass-panel text-white shadow-sm border border-white/20' 
                     : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
@@ -478,7 +478,7 @@ const TrendsDashboard: React.FC = () => {
                 onClick={() => setViewMode('split')}
                 className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
                   viewMode === 'split' 
-                    ? 'bg-white text-indigo-600 shadow-sm' 
+                    ? 'glass-panel text-white shadow-sm border border-white/20' 
                     : 'text-slate-400 hover:text-slate-600'
                 }`}
               >
@@ -507,7 +507,7 @@ const TrendsDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-soft h-[500px]"
+            className="glass-panel p-8 rounded-[3rem] border border-white/20 shadow-soft h-[500px]"
           >
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
@@ -605,7 +605,7 @@ const TrendsDashboard: React.FC = () => {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {groups.map(group => (
-              <div key={group.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-soft h-[250px] flex flex-col">
+              <div key={group.id} className="glass-panel p-6 rounded-[2.5rem] border border-white/20 shadow-soft h-[250px] flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xs font-black text-[#2B2B2E] uppercase tracking-widest">{group.label}</h4>
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.color }} />
@@ -699,7 +699,7 @@ const TrendsDashboard: React.FC = () => {
       </AnimatePresence>
 
       {/* Persistence Gauges Section */}
-      <div className="bg-white p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
+      <div className="glass-panel p-10 rounded-[3.5rem] border border-white/20 shadow-soft">
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600">
@@ -736,7 +736,7 @@ const TrendsDashboard: React.FC = () => {
       </div>
 
       {/* Community Radius Widget */}
-      <div className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-soft flex flex-col items-center">
+      <div className="glass-panel p-8 rounded-[3rem] border border-white/20 shadow-soft flex flex-col items-center">
         <div className="flex items-center gap-2 mb-6 w-full text-right">
             <h3 className="text-xl font-black text-[#2B2B2E] tracking-tight">רדיוס הקהילה</h3>
             <Activity className="w-5 h-5 text-[#2B2B2E]" />

@@ -461,7 +461,7 @@ const SystemMonitor: React.FC = () => {
       {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl animate-in fade-in">
-          <div className="bg-white w-full max-w-md rounded-[3rem] shadow-[0_0_100px_rgba(255,0,0,0.3)] overflow-hidden animate-in zoom-in-95 flex flex-col border-4 border-[#FF0000]" dir="rtl">
+          <div className="glass-panel border border-white/20 w-full max-w-md rounded-[3rem] shadow-[0_0_100px_rgba(255,0,0,0.3)] overflow-hidden animate-in zoom-in-95 flex flex-col" dir="rtl">
             <div className="bg-[#FF0000] p-8 text-white flex items-center gap-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.3)_0%,transparent_70%)] animate-pulse" />
               <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl border border-white/30 rotate-3">
@@ -640,7 +640,7 @@ const SystemMonitor: React.FC = () => {
                 // We also need to update the global variable if we want it to persist in this session
                 // but for simulation, the event is enough to trigger the graph
               }}
-              className="px-3 py-1 bg-white hover:bg-slate-100 text-[#4A5568] text-[10px] font-black rounded-lg transition-colors uppercase tracking-wider border border-slate-200"
+              className="px-3 py-1 glass-panel text-white/60 hover:text-white text-[10px] font-black rounded-lg transition-colors uppercase tracking-wider border border-white/20"
             >
               בצע בדיקת קריאה
             </button>

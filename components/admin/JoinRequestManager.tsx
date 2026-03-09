@@ -40,7 +40,7 @@ const JoinRequestManager: React.FC<JoinRequestManagerProps> = ({
       {filteredRequests.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredRequests.map(req => (
-            <div key={req.id} className={`bg-white border border-[#ff009f]/5 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-[#ff009f]/5 transition-all group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50' : ''}`}>
+            <div key={req.id} className={`glass-panel border border-white/20 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-[#ff009f]/5 transition-all group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50' : ''}`}>
               <div className="flex items-start gap-5 mb-8">
                 {req.avatar ? (
                   <img src={req.avatar} className="w-16 h-16 rounded-2xl object-cover shadow-md" alt="" />

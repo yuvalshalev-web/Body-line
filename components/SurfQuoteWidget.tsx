@@ -23,7 +23,7 @@ const SurfQuoteWidget: React.FC = () => {
       
       <div className="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto space-y-8">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-sky-500">
+          <div className="w-12 h-12 glass-panel rounded-2xl shadow-sm flex items-center justify-center text-sky-500 border border-white/20">
             <Quote size={24} />
           </div>
         </div>

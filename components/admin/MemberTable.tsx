@@ -85,7 +85,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
                   <div className="flex items-center justify-center gap-2">
                     <button 
                       onClick={() => onEdit(member)}
-                      className="w-10 h-10 bg-white border border-[#ff009f]/10 rounded-xl flex items-center justify-center text-[#f063c1]/40 hover:text-[#ff009f] hover:border-[#ff009f]/30 hover:shadow-lg transition-all"
+                      className="w-10 h-10 glass-panel border border-white/20 rounded-xl flex items-center justify-center text-white/60 hover:text-white hover:border-white/40 hover:shadow-lg transition-all"
                       title="עריכה"
                     >
                       <Pencil size={18} />
@@ -93,7 +93,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
                     {onToggleStatus && (
                       <button 
                         onClick={() => onToggleStatus(member)}
-                        className={`w-10 h-10 bg-white border border-[#ff009f]/10 rounded-xl flex items-center justify-center transition-all hover:shadow-lg ${
+                        className={`w-10 h-10 glass-panel border border-white/20 rounded-xl flex items-center justify-center transition-all hover:shadow-lg ${
                           isArchive ? 'text-emerald-500 hover:text-emerald-600' : 'text-rose-500 hover:text-rose-600'
                         }`}
                         title={isArchive ? 'החזר לפעילות' : 'העבר לארכיון'}

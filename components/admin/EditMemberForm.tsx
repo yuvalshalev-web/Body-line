@@ -161,7 +161,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
   };
 
   return (
-    <div className="bg-white/40 backdrop-blur-md border border-white/60 rounded-[3rem] p-8 md:p-12 shadow-2xl max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-500 relative overflow-hidden">
+    <div className="glass-panel border border-white/20 rounded-[3rem] p-8 md:p-12 shadow-2xl max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-500 relative overflow-hidden">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#E6D5B8]/20 rounded-full blur-[100px]" />
@@ -178,7 +178,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           <span>חזרה</span>
         </button>
 
-        <div className="bg-white/40 backdrop-blur-md border border-white/60 px-4 py-1.5 rounded-full inline-flex items-center gap-2 text-[10px] font-black text-slate-500 tracking-widest uppercase shadow-sm">
+        <div className="glass-panel border border-white/20 px-4 py-1.5 rounded-full inline-flex items-center gap-2 text-[10px] font-black text-white/60 tracking-widest uppercase shadow-sm">
           <UserCircle size={12} className="text-[#D4A373]" />
           <span>USER PROFILE</span>
         </div>
@@ -199,11 +199,11 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
             {editingMember.avatar ? (
               <img src={editingMember.avatar} className="w-40 h-40 rounded-[2.5rem] object-cover shadow-2xl border-4 border-white/60" alt="" />
             ) : (
-              <div className="w-40 h-40 rounded-[2.5rem] bg-white/40 backdrop-blur-md flex items-center justify-center text-slate-300 shadow-inner border-4 border-white/60">
+              <div className="w-40 h-40 rounded-[2.5rem] glass-panel flex items-center justify-center text-white/60 shadow-inner border-4 border-white/20">
                 <UserCircle size={80} strokeWidth={1} />
               </div>
             )}
-            <label className="absolute inset-0 flex items-center justify-center bg-slate-900/40 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-md">
+            <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-md">
               <Camera className="text-white" size={32} />
               <input 
                 type="file" 
@@ -227,7 +227,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">סטטוס תפקיד במערכת</label>
               
               <div 
-                className="relative w-full p-1 bg-white/40 backdrop-blur-md rounded-2xl border border-white/60 flex items-center overflow-hidden shadow-sm"
+                className="relative w-full p-1 glass-panel rounded-2xl border border-white/20 flex items-center overflow-hidden shadow-sm"
                 onMouseEnter={() => setShowRoleWarning(true)}
                 onMouseLeave={() => setShowRoleWarning(false)}
               >
@@ -272,7 +272,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                   exit={{ opacity: 0, height: 0, y: -10 }}
                   className="overflow-hidden"
                 >
-                  <div className="p-4 bg-white/40 backdrop-blur-md rounded-2xl border border-white/60 text-center shadow-sm">
+                  <div className="p-4 glass-panel rounded-2xl border border-white/20 text-center shadow-sm">
                     <p className="text-[11px] text-slate-600 font-bold leading-relaxed">
                       ⚠️ שים לב: שינוי סטטוס המשתמש מעדכן באופן מיידי את <span className="text-[#D4A373] font-black">הרשאות הגישה</span> שלו במערכת.
                     </p>
@@ -284,7 +284,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
             {/* Account Status */}
             <div className={`relative overflow-hidden transition-all duration-500 p-6 rounded-[2rem] border backdrop-blur-md ${
               editingMember.isActive !== false 
-                ? 'bg-white/40 border-white/60 shadow-sm' 
+                ? 'glass-panel border-white/20 shadow-sm' 
                 : 'bg-rose-50/40 border-rose-200 shadow-sm'
             }`}>
               <div className="flex flex-col gap-4">
@@ -299,7 +299,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 p-1 bg-slate-100/50 backdrop-blur-md rounded-2xl relative h-14 items-center border border-white/60 overflow-hidden shadow-inner">
+                <div className="grid grid-cols-2 p-1 glass-effect rounded-2xl relative h-14 items-center border border-white/10 overflow-hidden shadow-inner">
                   <motion.div 
                     className={`absolute top-1 bottom-1 rounded-xl z-0 ${
                       editingMember.isActive !== false ? 'bg-emerald-500 shadow-lg' : 'bg-rose-600 shadow-lg'
@@ -354,7 +354,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="text"
               value={editingMember.firstName || ''}
               onChange={(e) => setEditingMember({ ...editingMember, firstName: e.target.value })}
-              className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none shadow-sm"
+              className="w-full p-5 glass-input rounded-2xl font-bold glass-text-primary focus:bg-white/10 transition-all outline-none shadow-sm"
             />
           </div>
 
@@ -364,7 +364,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="text"
               value={editingMember.lastName || ''}
               onChange={(e) => setEditingMember({ ...editingMember, lastName: e.target.value })}
-              className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none shadow-sm"
+              className="w-full p-5 glass-input rounded-2xl font-bold glass-text-primary focus:bg-white/10 transition-all outline-none shadow-sm"
             />
           </div>
 
@@ -374,7 +374,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="email"
               value={editingMember.email}
               onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
-              className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none shadow-sm"
+              className="w-full p-5 glass-input rounded-2xl font-bold glass-text-primary focus:bg-white/10 transition-all outline-none shadow-sm"
             />
           </div>
         </div>
@@ -386,7 +386,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               <button 
                 type="button"
                 onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none flex items-center justify-between group shadow-sm"
+                className="w-full p-5 glass-input rounded-2xl font-bold glass-text-primary focus:bg-white/10 transition-all outline-none flex items-center justify-between group shadow-sm"
               >
                 <span>{editingMember.gender || 'בחר מגדר'}</span>
                 <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
@@ -430,7 +430,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="text"
               value={editingMember.mobile}
               onChange={(e) => setEditingMember({ ...editingMember, mobile: formatMobileNumber(e.target.value) })}
-              className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all text-left outline-none shadow-sm"
+              className="w-full p-5 glass-input rounded-2xl font-bold glass-text-primary focus:bg-white/10 transition-all text-left outline-none shadow-sm"
               dir="ltr"
             />
           </div>
@@ -443,7 +443,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 type="date"
                 value={editingMember.birthday || ''}
                 onChange={(e) => setEditingMember({ ...editingMember, birthday: e.target.value })}
-                className="w-full pr-14 pl-6 py-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none cursor-pointer shadow-sm"
+                className="w-full pr-14 pl-6 py-5 glass-input rounded-2xl font-bold glass-text-primary focus:bg-white/10 transition-all outline-none cursor-pointer shadow-sm"
               />
             </div>
           </div>
@@ -458,7 +458,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 defaultValue={editingMember.full_address || ''} 
                 onChange={() => setIsPlaceSelected(false)} 
                 placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
-                className="w-full pr-14 pl-6 py-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all outline-none shadow-sm" 
+                className="w-full pr-14 pl-6 py-5 glass-input rounded-2xl font-bold glass-text-primary focus:bg-white/10 transition-all outline-none shadow-sm" 
                 autoComplete="off"
               />
             </div>
@@ -470,7 +470,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           <textarea 
             value={editingMember.bio}
             onChange={(e) => setEditingMember({ ...editingMember, bio: e.target.value })}
-            className="w-full p-6 bg-white/40 backdrop-blur-md border border-white/60 rounded-[2rem] font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all min-h-[120px] outline-none shadow-sm"
+            className="w-full p-6 glass-input rounded-[2rem] font-bold glass-text-primary focus:bg-white/10 transition-all min-h-[120px] outline-none shadow-sm"
             placeholder="ספר קצת על עצמך..."
           />
         </div>
@@ -500,7 +500,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                   value={(editingMember as any)[social.id] || ''}
                   onChange={(e) => setEditingMember({ ...editingMember, [social.id]: e.target.value })}
                   placeholder={social.placeholder}
-                  className="w-full p-5 bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 transition-all text-left outline-none shadow-sm"
+                  className="w-full p-5 glass-input rounded-2xl font-bold glass-text-primary focus:bg-white/10 transition-all text-left outline-none shadow-sm"
                   dir="ltr"
                 />
               </div>
@@ -514,10 +514,10 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="button"
               onClick={handleSave}
               disabled={isProcessing}
-              className={`flex-[2] py-6 rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 backdrop-blur-md border shadow-xl ${
+              className={`flex-[2] py-6 rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 glass-button ${
                 editingMember.isActive !== false 
-                  ? 'bg-[#D4A373] border-white/20 text-white hover:bg-[#C39262]' 
-                  : 'bg-rose-600 border-white/20 text-white hover:bg-rose-700'
+                  ? 'bg-[#00AFC2]/80 hover:bg-[#00AFC2]' 
+                  : 'bg-rose-600/80 hover:bg-rose-600'
               }`}
             >
               {isProcessing ? (
@@ -553,7 +553,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 });
               }}
               disabled={isProcessing}
-              className="flex-1 py-6 bg-white/40 backdrop-blur-md border border-white/60 text-slate-600 hover:text-[#2B2B2E] hover:bg-white/60 rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 shadow-lg"
+              className="flex-1 py-6 glass-button text-slate-600 hover:text-[#2B2B2E] rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 shadow-lg"
             >
               <Archive size={24} /> ארכיון
             </button>
@@ -580,14 +580,14 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={() => setShowPasswordModal(false)}
               />
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden"
+                className="relative w-full max-w-md glass-panel rounded-[2rem] shadow-2xl overflow-hidden border border-white/20"
               >
                 <div className="p-8">
                   <div className="flex justify-between items-center mb-8">
@@ -597,7 +597,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                     </h3>
                     <button 
                       onClick={() => setShowPasswordModal(false)}
-                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                      className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
                     >
                       <X size={20} />
                     </button>
@@ -605,24 +605,24 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
 
                   <form onSubmit={handlePasswordChange} className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה חדשה</label>
+                      <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">סיסמה חדשה</label>
                       <input 
                         type="password"
                         value={newPassword}
                         onChange={e => setNewPassword(e.target.value)}
-                        className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100 focus:bg-white focus:border-indigo-200 transition-all"
+                        className="w-full p-4 glass-input rounded-2xl font-black outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40"
                         placeholder="הזן סיסמה חדשה"
                         required
                         minLength={6}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">אימות סיסמה</label>
+                      <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">אימות סיסמה</label>
                       <input 
                         type="password"
                         value={confirmPassword}
                         onChange={e => setConfirmPassword(e.target.value)}
-                        className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100 focus:bg-white focus:border-indigo-200 transition-all"
+                        className="w-full p-4 glass-input rounded-2xl font-black outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40"
                         placeholder="הזן שוב את הסיסמה"
                         required
                         minLength={6}
@@ -632,7 +632,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                     <button 
                       type="submit"
                       disabled={isChangingPassword || !newPassword || !confirmPassword}
-                      className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="w-full py-4 glass-button bg-[#00AFC2]/80 hover:bg-[#00AFC2] rounded-2xl font-black text-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                       {isChangingPassword ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                       עדכן סיסמה

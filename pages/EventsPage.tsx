@@ -230,7 +230,7 @@ const EventsPage: React.FC = () => {
           const canEdit = isAdmin || (currentUser && event.creatorId === currentUser.id);
 
           return (
-            <div key={event.id} className={`group bg-white rounded-[3rem] border-2 ${event.type === 'COMMUNITY' ? 'border-[#FF2D60]' : event.type === 'INSTRUCTOR' ? 'border-[#FF9F1C]' : 'border-[#00D9E6]'} shadow-sm overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col relative`}>
+            <div key={event.id} className={`group glass-panel rounded-[3rem] border-t-4 ${event.type === 'COMMUNITY' ? 'border-t-[var(--surfer-pink)]' : event.type === 'INSTRUCTOR' ? 'border-t-[var(--surfer-orange)]' : 'border-t-[var(--surfer-cyan)]'} shadow-sm overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col relative`}>
               <div className="absolute top-6 left-6 flex gap-2 z-20">
                 {canEdit && (
                   <div className="flex gap-2">
@@ -256,36 +256,36 @@ const EventsPage: React.FC = () => {
               <div className="relative aspect-video overflow-hidden">
                 <img src={event.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
                 <div className="absolute top-6 right-6 flex flex-col gap-2 items-end">
-                  <div className="bg-white/95 px-4 py-2 rounded-xl text-center shadow-lg min-w-max">
-                    <p className="text-sm font-black text-slate-950 whitespace-nowrap tabular-nums">{formatDate(event.date)}</p>
+                  <div className="glass-effect px-4 py-2 rounded-xl text-center shadow-lg min-w-max">
+                    <p className="text-sm font-black glass-text-primary whitespace-nowrap tabular-nums">{formatDate(event.date)}</p>
                   </div>
                   <div className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-md ${
-                    event.type === 'COMMUNITY' ? 'bg-[#FF2D60] text-white' : 
-                    event.type === 'INSTRUCTOR' ? 'bg-[#FF9F1C] text-white' : 
-                    'bg-[#00D9E6] text-white'
+                    event.type === 'COMMUNITY' ? 'bg-[var(--surfer-pink)] text-white' : 
+                    event.type === 'INSTRUCTOR' ? 'bg-[var(--surfer-orange)] text-white' : 
+                    'bg-[var(--surfer-cyan)] text-white'
                   }`}>
                     {event.type === 'COMMUNITY' ? 'אירוע קהילה' : event.type === 'INSTRUCTOR' ? 'אירוע מדריך' : 'אירוע של חבר'}
                   </div>
                 </div>
               </div>
               <div className="p-8 flex-1 flex flex-col relative z-30">
-                <h3 className="text-2xl font-black text-[#2B2B2E] mb-4 group-hover:text-rose-600 transition-colors">{event.title}</h3>
-                <p className="text-slate-500 font-bold text-sm mb-8 line-clamp-3">{event.description}</p>
+                <h3 className="text-2xl font-black glass-text-primary mb-4 group-hover:text-[var(--surfer-pink)] transition-colors">{event.title}</h3>
+                <p className="glass-text-secondary font-bold text-sm mb-8 line-clamp-3">{event.description}</p>
                 <div className="space-y-4 mb-8">
-                  <div className="flex items-center gap-3 text-slate-600">
-                    {event.type === 'COMMUNITY' ? <ShieldAlert size={16} className="text-[#FF2D60]" /> : 
-                     event.type === 'INSTRUCTOR' ? <Zap size={16} className="text-[#FF9F1C]" /> : 
-                     <User size={16} className="text-[#00D9E6]" />}
+                  <div className="flex items-center gap-3 glass-text-secondary">
+                    {event.type === 'COMMUNITY' ? <ShieldAlert size={16} className="text-[var(--surfer-pink)]" /> : 
+                     event.type === 'INSTRUCTOR' ? <Zap size={16} className="text-[var(--surfer-orange)]" /> : 
+                     <User size={16} className="text-[var(--surfer-cyan)]" />}
                     <span className="text-xs font-black">
                       {event.type === 'COMMUNITY' ? 'אירוע קהילה רשמי' : 
                        event.type === 'INSTRUCTOR' ? 'אירוע מדריך' : 
                        'אירוע חברתי'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-slate-600"><Clock size={16} className="text-rose-500" /><span className="text-xs font-black">{event.time}</span></div>
-                  <div className="flex items-center justify-between gap-3 text-slate-600">
+                  <div className="flex items-center gap-3 glass-text-secondary"><Clock size={16} className="text-[var(--surfer-pink)]" /><span className="text-xs font-black">{event.time}</span></div>
+                  <div className="flex items-center justify-between gap-3 glass-text-secondary">
                     <div className="flex items-center gap-3">
-                      <MapPin size={16} className="text-rose-500" />
+                      <MapPin size={16} className="text-[var(--surfer-pink)]" />
                       <span className="text-xs font-black">{event.location}</span>
                     </div>
                     {event.location && (
@@ -315,8 +315,8 @@ const EventsPage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 text-slate-600">
-                    <Users size={16} className="text-rose-500" />
+                  <div className="flex items-center gap-3 glass-text-secondary">
+                    <Users size={16} className="text-[var(--surfer-pink)]" />
                     <span className="text-xs font-black">
                       {(event.attendees || []).filter(id => activeMemberIds.includes(id)).length} משתתפים
                     </span>
@@ -325,9 +325,9 @@ const EventsPage: React.FC = () => {
                 <button 
                   onClick={() => handleToggleAttendance(event.id)}
                   disabled={isProcessing}
-                  className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all shadow-md text-[#2D3748] ${isAttending ? '!bg-[#FF9F1C] hover:!bg-[#FFB03C]' : '!bg-[#00AFC2] hover:!bg-[#009FB2]'}`}
+                  className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all shadow-md text-white ${isAttending ? 'bg-[var(--surfer-orange)] hover:bg-[var(--surfer-pink)]' : 'bg-[var(--surfer-teal)] hover:bg-[var(--surfer-cyan)]'}`}
                 >
-                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-[#2D3748]" />}
+                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-white" />}
                   {isAttending ? 'מבטל הגעה' : 'אני מגיע/ה'}
                 </button>
               </div>
@@ -337,9 +337,9 @@ const EventsPage: React.FC = () => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-md animate-in fade-in">
-           <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl p-12 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto text-[#2D3748]">
-             <button onClick={() => { setShowModal(false); resetForm(); }} className="absolute top-8 left-8 p-3 text-slate-400 bg-slate-50 rounded-full"><X size={24} /></button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in">
+           <div className="glass-panel w-full max-w-2xl rounded-[3rem] shadow-2xl p-12 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto glass-text-primary">
+             <button onClick={() => { setShowModal(false); resetForm(); }} className="absolute top-8 left-8 p-3 text-white/60 hover:text-white glass-effect rounded-full"><X size={24} /></button>
              <h3 className="text-3xl font-black mb-8">{editingEvent ? 'עריכת אירוע' : 'יצירת אירוע'}</h3>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-4">

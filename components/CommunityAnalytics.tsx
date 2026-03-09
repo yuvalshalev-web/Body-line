@@ -392,16 +392,16 @@ const CommunityAnalytics: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="glass-panel p-8 relative overflow-hidden group min-h-[550px] flex flex-col items-center justify-center"
+            className="glass-panel p-8 relative overflow-hidden group min-h-[550px] flex flex-col items-center justify-center rounded-[3rem]"
           >
             {/* Glossy Shimmer Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
             
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
             
             <div className="w-full flex items-center justify-between mb-8 relative z-10 px-2">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-slate-900/5 flex items-center justify-center text-slate-900 shadow-inner border border-slate-900/10">
+                <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[var(--surfer-cyan)] shadow-inner border border-white/10">
                   <Sparkles size={24} />
                 </div>
                 <div>
@@ -582,18 +582,18 @@ const CommunityAnalytics: React.FC = () => {
  
                   <foreignObject x="280" y="280" width="440" height="440">
                     <div className="w-full h-full flex flex-col items-center justify-center text-center">
-                      <Waves size={48} className="text-[#2D3748] logo-pulse mb-2" />
-                      <span className="text-[#4A5568]/40 text-xs font-black uppercase tracking-[0.4em] mb-2">Community Total</span>
+                      <Waves size={48} className="text-[var(--surfer-cyan)] logo-pulse mb-2" />
+                      <span className="glass-text-secondary text-xs font-black uppercase tracking-[0.4em] mb-2">Community Total</span>
                       <motion.span 
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="text-[#2D3748] text-8xl font-black tracking-tighter drop-shadow-[0_4px_10px_rgba(0,0,0,0.05)]"
+                        className="glass-text-primary text-8xl font-black tracking-tighter drop-shadow-[0_4px_10px_rgba(0,0,0,0.05)]"
                       >
                         {stats.activeCount}
                       </motion.span>
                       <div className="flex items-center gap-2 mt-4">
-                        <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse shadow-sm" />
-                        <span className="text-xs text-blue-600/60 font-black uppercase tracking-[0.2em]">Active Pulse</span>
+                        <div className="w-3 h-3 rounded-full bg-[var(--surfer-cyan)] animate-pulse shadow-sm" />
+                        <span className="text-xs text-[var(--surfer-cyan)]/60 font-black uppercase tracking-[0.2em]">Active Pulse</span>
                       </div>
                     </div>
                   </foreignObject>
@@ -606,16 +606,16 @@ const CommunityAnalytics: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="glass-panel p-8 flex flex-col min-h-[550px] relative overflow-hidden group"
+            className="glass-panel p-8 flex flex-col min-h-[550px] relative overflow-hidden group rounded-[3rem]"
           >
             {/* Glossy Shimmer Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
             
             {/* Background Glow */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
 
             <div className="flex items-center gap-3 mb-8 relative z-10">
-              <div className="w-12 h-12 rounded-xl bg-slate-900/5 flex items-center justify-center text-slate-900 shadow-inner border border-slate-900/10">
+              <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[var(--surfer-cyan)] shadow-inner border border-white/10">
                 <Activity size={24} />
               </div>
               <div>
@@ -637,13 +637,13 @@ const CommunityAnalytics: React.FC = () => {
                   />
                   <YAxis hide />
                   <Tooltip 
-                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         return (
                           <div className="glass-effect p-3 rounded-xl border border-white/20 shadow-2xl">
                             <p className="text-xs font-black glass-text-primary mb-1">{payload[0].payload.label} ק"מ</p>
-                            <p className="text-lg font-black text-blue-600">{payload[0].value} <span className="text-[10px] opacity-60">חברים</span></p>
+                            <p className="text-lg font-black text-[var(--surfer-cyan)]">{payload[0].value} <span className="text-[10px] opacity-60">חברים</span></p>
                           </div>
                         );
                       }
@@ -664,23 +664,23 @@ const CommunityAnalytics: React.FC = () => {
             </div>
 
             <div className="mt-6 grid grid-cols-3 gap-4 relative z-10">
-              <div className="p-4 rounded-2xl bg-white/40 backdrop-blur-md border border-white/20 shadow-sm group/stat hover:bg-white/60 transition-all">
-                <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1 opacity-70">טווח קרוב (0-20)</p>
-                <p className="text-xl font-black text-emerald-800 flex items-baseline gap-1">
+              <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
+                <p className="text-[10px] font-black text-[var(--surfer-cyan)] uppercase tracking-widest mb-1 opacity-70">טווח קרוב (0-20)</p>
+                <p className="text-xl font-black glass-text-primary flex items-baseline gap-1">
                   {stats.near}
                   <span className="text-[10px] font-bold opacity-40">חברים</span>
                 </p>
               </div>
-              <div className="p-4 rounded-2xl bg-white/40 backdrop-blur-md border border-white/20 shadow-sm group/stat hover:bg-white/60 transition-all">
-                <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1 opacity-70">טווח איזורי (21-100)</p>
-                <p className="text-xl font-black text-amber-800 flex items-baseline gap-1">
+              <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
+                <p className="text-[10px] font-black text-[var(--surfer-orange)] uppercase tracking-widest mb-1 opacity-70">טווח איזורי (21-100)</p>
+                <p className="text-xl font-black glass-text-primary flex items-baseline gap-1">
                   {stats.medium}
                   <span className="text-[10px] font-bold opacity-40">חברים</span>
                 </p>
               </div>
-              <div className="p-4 rounded-2xl bg-white/40 backdrop-blur-md border border-white/20 shadow-sm group/stat hover:bg-white/60 transition-all">
-                <p className="text-[10px] font-black text-red-700 uppercase tracking-widest mb-1 opacity-70">טווח רחוק (100+)</p>
-                <p className="text-xl font-black text-red-800 flex items-baseline gap-1">
+              <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
+                <p className="text-[10px] font-black text-[var(--surfer-pink)] uppercase tracking-widest mb-1 opacity-70">טווח רחוק (100+)</p>
+                <p className="text-xl font-black glass-text-primary flex items-baseline gap-1">
                   {stats.far}
                   <span className="text-[10px] font-bold opacity-40">חברים</span>
                 </p>
@@ -692,7 +692,7 @@ const CommunityAnalytics: React.FC = () => {
         {/* Churn & Retention Card - Moved here per user request */}
         <motion.div 
           whileHover={{ scale: 1.005 }}
-          className="glass-panel p-10 !rounded-2xl transition-all duration-500 relative overflow-hidden group lg:col-span-2"
+          className="glass-panel p-10 rounded-[3rem] transition-all duration-500 relative overflow-hidden group lg:col-span-2"
         >
           {/* Glossy Shimmer Effect */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
@@ -703,12 +703,12 @@ const CommunityAnalytics: React.FC = () => {
             <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-slate-900/5 flex items-center justify-center text-slate-900 shadow-inner border border-slate-900/10">
+                  <div className="w-10 h-10 rounded-xl glass-effect flex items-center justify-center text-[var(--surfer-pink)] shadow-inner border border-white/10">
                     <UserMinus size={20} />
                   </div>
                   <h4 className="text-xl font-black glass-text-primary tracking-tight">דופק נמוך (בסיכון נטישה)</h4>
                 </div>
-                <span className="text-[10px] font-black glass-text-secondary uppercase tracking-widest bg-slate-900/5 px-4 py-1.5 rounded-full border border-slate-900/10 shadow-sm">
+                <span className="text-[10px] font-black glass-text-secondary uppercase tracking-widest glass-effect px-4 py-1.5 rounded-full border border-white/10 shadow-sm">
                   לא נראו מעל 30 יום
                 </span>
               </div>
@@ -716,7 +716,7 @@ const CommunityAnalytics: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {stats.lowPulseMembers.length > 0 ? (
                   stats.lowPulseMembers.map(member => (
-                    <div key={member.id} className="flex items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group/item shadow-lg">
+                    <div key={member.id} className="flex items-center justify-between p-6 rounded-2xl glass-effect border border-white/10 hover:bg-white/10 transition-all group/item shadow-lg">
                       <div className="flex items-center gap-4">
                         <img 
                           src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}&background=random`} 
@@ -724,18 +724,18 @@ const CommunityAnalytics: React.FC = () => {
                           className="w-12 h-12 rounded-xl border-2 border-white/20 shadow-inner object-cover"
                         />
                         <div>
-                          <p className="text-base font-black text-black">{member.firstName} {member.lastName}</p>
-                          <p className="text-[10px] font-bold text-black/60 italic">פעם אחרונה: {member.joinedAt}</p>
+                          <p className="text-base font-black glass-text-primary">{member.firstName} {member.lastName}</p>
+                          <p className="text-[10px] font-bold glass-text-secondary italic">פעם אחרונה: {member.joinedAt}</p>
                         </div>
                       </div>
-                      <button className="p-3 rounded-xl bg-white/10 text-white/50 opacity-0 group-hover/item:opacity-100 transition-all hover:bg-white/20 hover:text-white">
+                      <button className="p-3 rounded-xl glass-effect text-white/50 opacity-0 group-hover/item:opacity-100 transition-all hover:bg-white/20 hover:text-white">
                         <MessageSquare size={18} />
                       </button>
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-2 p-12 text-center border border-dashed border-white/10 rounded-3xl bg-white/5">
-                    <p className="text-white/30 font-black uppercase tracking-[0.3em] text-sm">כל החברים פעילים בדופק גבוה ✨</p>
+                  <div className="col-span-2 p-12 text-center border border-dashed border-white/10 rounded-3xl glass-effect">
+                    <p className="glass-text-secondary font-black uppercase tracking-[0.3em] text-sm">כל החברים פעילים בדופק גבוה ✨</p>
                   </div>
                 )}
               </div>
@@ -756,7 +756,7 @@ const CommunityAnalytics: React.FC = () => {
 
             <div className="flex items-center justify-between mb-12 relative z-10">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-slate-900/5 flex items-center justify-center text-slate-900 shadow-inner border border-slate-900/10">
+                <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center text-[var(--surfer-cyan)] shadow-inner border border-white/10">
                   <Activity size={24} />
                 </div>
                 <div>
@@ -985,7 +985,7 @@ const CommunityAnalytics: React.FC = () => {
           
           <div className="flex items-center justify-between mb-12 relative z-10">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-slate-900/5 flex items-center justify-center text-slate-900 shadow-inner border border-slate-900/10">
+              <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center text-[var(--surfer-pink)] shadow-inner border border-white/10">
                 <Heart size={24} />
               </div>
               <div>
@@ -1189,7 +1189,7 @@ const CommunityAnalytics: React.FC = () => {
                       </g>
 
                       {/* Text Elements */}
-                      <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="#2D3748" fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="14" className="antialiased">{group.label}</text>
+                      <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="14" className="antialiased">{group.label}</text>
                     </svg>
                   </div>
                   
@@ -1210,7 +1210,7 @@ const CommunityAnalytics: React.FC = () => {
                         STABLE FLOW
                       </span>
                     )}
-                    <span className="text-[10px] font-black text-[#2D3748] uppercase tracking-widest mt-1">
+                    <span className="text-[10px] font-black glass-text-primary uppercase tracking-widest mt-1">
                       {group.count} חברים
                     </span>
                   </div>
@@ -1224,7 +1224,7 @@ const CommunityAnalytics: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-2 glass-panel p-10 !rounded-[4rem] mt-12 relative overflow-hidden group"
+          className="lg:col-span-2 glass-panel p-10 rounded-[4rem] mt-12 relative overflow-hidden group"
         >
           {/* Glossy Shimmer for the whole container */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-30 pointer-events-none" />

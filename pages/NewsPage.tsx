@@ -123,9 +123,9 @@ const NewsPage: React.FC = () => {
       <div className="grid grid-cols-1 gap-12">
         {news.length > 0 ? (
           [...news].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((item) => (
-            <article key={item.id} className="group flex flex-col lg:flex-row gap-8 modern-card p-4 hover:shadow-2xl transition-all relative">
+            <article key={item.id} className="group flex flex-col lg:flex-row gap-8 glass-panel p-4 hover:shadow-2xl transition-all relative">
               {(currentUser?.role === 'Admin' || item.authorId === currentUser?.id) && (
-                <button onClick={() => handleDelete(item.id)} className="absolute top-8 left-8 p-3 bg-white text-red-500 rounded-2xl hover:bg-red-500 hover:text-white shadow-sm z-20"><Trash2 size={18} /></button>
+                <button onClick={() => handleDelete(item.id)} className="absolute top-8 left-8 p-3 glass-effect text-[var(--surfer-pink)] rounded-2xl hover:bg-[var(--surfer-pink)] hover:text-white shadow-sm z-20"><Trash2 size={18} /></button>
               )}
               {item.imageUrl && (
                 <div className="lg:w-1/3 aspect-video lg:aspect-square rounded-[2.5rem] overflow-hidden">
@@ -133,48 +133,48 @@ const NewsPage: React.FC = () => {
                 </div>
               )}
               <div className="flex-1 p-6 lg:p-10">
-                <h3 className="text-3xl font-black text-slate-950 mb-4">{item.title}</h3>
-                <p className="text-slate-500 font-bold leading-relaxed mb-8 text-lg whitespace-pre-wrap">{item.content}</p>
+                <h3 className="text-3xl font-black glass-text-primary mb-4">{item.title}</h3>
+                <p className="glass-text-secondary font-bold leading-relaxed mb-8 text-lg whitespace-pre-wrap">{item.content}</p>
                 <div className="flex items-center gap-3">
                    {item.authorAvatar ? (
                      <img src={item.authorAvatar} className="w-8 h-8 rounded-full object-cover" alt="" loading="lazy" />
                    ) : (
-                     <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-400">
+                     <div className="w-8 h-8 rounded-full glass-effect flex items-center justify-center text-white/60">
                        <User size={14} />
                      </div>
                    )}
-                   <span className="text-xs font-black text-slate-400">{item.authorName}</span>
+                   <span className="text-xs font-black glass-text-secondary">{item.authorName}</span>
                 </div>
               </div>
             </article>
           ))
         ) : (
-          <div className="py-40 text-center border-2 border-dashed border-slate-100 rounded-[4rem]">
-            <Newspaper size={48} className="text-slate-200 mb-6 mx-auto" />
-            <h3 className="text-2xl font-black text-slate-400">אין עדכונים כרגע</h3>
+          <div className="py-40 text-center border-2 border-dashed border-white/20 rounded-[4rem] glass-panel">
+            <Newspaper size={48} className="text-white/40 mb-6 mx-auto" />
+            <h3 className="text-2xl font-black glass-text-secondary">אין עדכונים כרגע</h3>
           </div>
         )}
       </div>
 
       {showCreateModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-md">
-          <div className="bg-white w-full max-w-2xl rounded-[3.5rem] p-12 relative max-h-[90vh] overflow-y-auto">
-            {!showSuccess && <button onClick={() => setShowCreateModal(false)} className="absolute top-8 left-8 p-3 bg-slate-50 rounded-full"><X size={24} /></button>}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md">
+          <div className="glass-panel w-full max-w-2xl rounded-[3.5rem] p-12 relative max-h-[90vh] overflow-y-auto">
+            {!showSuccess && <button onClick={() => setShowCreateModal(false)} className="absolute top-8 left-8 p-3 glass-effect text-white/60 hover:text-white rounded-full"><X size={24} /></button>}
             {showSuccess ? (
               <div className="py-20 text-center">
-                <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 size={48} className="text-emerald-500" />
+                <div className="w-20 h-20 bg-[var(--surfer-cyan)]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle2 size={48} className="text-[var(--surfer-cyan)]" />
                 </div>
-                <h3 className="text-4xl font-black text-[#2B2B2E]">פורסם!</h3>
+                <h3 className="text-4xl font-black glass-text-primary">פורסם!</h3>
               </div>
             ) : (
               <form onSubmit={handlePostSubmit} className="space-y-6">
-                <h3 className="text-2xl font-black mb-4">יצירת פוסט אופטימלי</h3>
-                {errorMsg && <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-black flex items-center gap-2"><AlertTriangle size={14} /> {errorMsg}</div>}
-                <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="כותרת הפוסט" className="w-full p-5 bg-slate-50 rounded-2xl font-black border-none" />
-                <textarea required value={content} onChange={e => setContent(e.target.value)} placeholder="מה הסיפור?" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-none h-40 resize-none" />
-                <div onClick={() => fileInputRef.current?.click()} className="w-full aspect-video bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center cursor-pointer overflow-hidden">
-                  {selectedImage ? <img src={selectedImage.dataUrl} className="w-full h-full object-cover" alt="" /> : <ImageIcon size={32} className="text-slate-300" />}
+                <h3 className="text-2xl font-black mb-4 glass-text-primary">יצירת פוסט אופטימלי</h3>
+                {errorMsg && <div className="p-4 bg-[var(--surfer-pink)]/20 text-[var(--surfer-pink)] rounded-2xl text-xs font-black flex items-center gap-2"><AlertTriangle size={14} /> {errorMsg}</div>}
+                <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="כותרת הפוסט" className="w-full p-5 glass-input rounded-2xl font-black border-none text-white placeholder-white/50" />
+                <textarea required value={content} onChange={e => setContent(e.target.value)} placeholder="מה הסיפור?" className="w-full p-5 glass-input rounded-2xl font-bold border-none h-40 resize-none text-white placeholder-white/50" />
+                <div onClick={() => fileInputRef.current?.click()} className="w-full aspect-video glass-input rounded-2xl border-2 border-dashed border-white/20 flex items-center justify-center cursor-pointer overflow-hidden hover:bg-white/10 transition-colors">
+                  {selectedImage ? <img src={selectedImage.dataUrl} className="w-full h-full object-cover" alt="" /> : <ImageIcon size={32} className="text-white/40" />}
                   <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageChange} />
                 </div>
                 <GlassButton 

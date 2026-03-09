@@ -156,87 +156,94 @@ const DashboardPage: React.FC = () => {
   const brandColor = '#F1D179';
 
   return (
-    <div className="space-y-16 animate-in fade-in duration-700 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
-      <section className="relative w-full min-h-[700px] md:min-h-[650px] rounded-[var(--radius-lg)] overflow-hidden shadow-2xl border border-slate-100 group">
-        <div className="absolute inset-0 border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] bg-[#00f2ff]">
+    <div className="space-y-16 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
+      <section className="relative w-full min-h-[700px] md:min-h-[650px] rounded-[var(--radius-lg)] overflow-hidden border-0">
+        <div className="absolute inset-0 bg-slate-900">
           <img 
             src={siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
-            className="w-full h-full object-cover contrast-125 saturate-150 mix-blend-multiply group-hover:scale-105 transition-transform duration-[3000ms]" 
+            className="w-full h-full object-cover opacity-60" 
             alt="Hero"
             loading="lazy"
           />
         </div>
         <div className="relative z-10 min-h-[700px] md:min-h-[650px] flex flex-col items-center justify-between p-8 md:p-12 text-center pb-16">
-           <motion.p 
-             initial={{ opacity: 0, y: 10 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ duration: 1.5, delay: 0.5 }}
-             className="text-white font-semibold italic text-lg md:text-2xl max-w-2xl tracking-[0.08em] leading-relaxed drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
-           >
+           <p className="text-white font-semibold italic text-lg md:text-2xl max-w-2xl tracking-[0.08em] leading-relaxed">
              "A day will come that is like no other... and nothing that happens after will ever be the same."
-           </motion.p>
-                       <h1 className="text-[58px] md:text-[110px] font-black font-bold text-[#F4D07A] mb-6 tracking-tighter drop-shadow-2xl big-thursday-title whitespace-nowrap">יום חמישי הגדול</h1>
+           </p>
+           <h1 className="text-[48px] md:text-[90px] text-[var(--surfer-yellow)] mb-6 whitespace-nowrap big-thursday-title" data-text="יום חמישי הגדול">יום חמישי הגדול</h1>
            
-           <div className="mb-8 space-y-2">
-             <p className="text-lg md:text-xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>נכנסים למים בעוד...</p>
+           {/* Surfer Action Hotspot */}
+           <div className="surfer-hotspot-container">
+             <button 
+               onClick={handleToggle}
+               disabled={isProcessing}
+               className="surfer-hotspot"
+               aria-label={isUserAttending ? "בטל הגעה" : "אני מגיע/ה"}
+             >
+               <div className="pulse-halo"></div>
+               {isProcessing && <Loader2 className="animate-spin text-white/50" size={32} />}
+             </button>
+             <motion.span 
+               className="secondary-label"
+               animate={{ opacity: [1, 0.4, 1], scale: [1, 1.02, 1] }}
+               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+             >
+               {isUserAttending ? 'לחץ על הגולש לביטול' : 'לחץ על הגולש לאישור הגעה'}
+             </motion.span>
            </div>
 
-           <div className="mb-12 flex gap-4 text-white/80 font-black text-xl tracking-tighter" dir="ltr">
-             <div className="flex flex-col items-center bg-black/5 backdrop-blur-md px-4 py-2 rounded-2xl">
-               <span className="text-3xl font-black text-[#F4D07A]">{countdown.days}</span>
-               <span className="text-[10px] uppercase opacity-60">ימים</span>
-             </div>
-             <div className="flex flex-col items-center bg-black/5 backdrop-blur-md px-4 py-2 rounded-2xl">
-               <span className="text-3xl font-black text-[#F4D07A]">{countdown.hours}</span>
-               <span className="text-[10px] uppercase opacity-60">שעות</span>
-             </div>
-             <div className="flex flex-col items-center bg-black/5 backdrop-blur-md px-4 py-2 rounded-2xl">
-               <span className="text-3xl font-black text-[#F4D07A]">{countdown.minutes}</span>
-               <span className="text-[10px] uppercase opacity-60">דקות</span>
-             </div>
-             <div className="flex flex-col items-center bg-black/5 backdrop-blur-md px-4 py-2 rounded-2xl">
-               <span className="text-3xl font-black text-[#F4D07A]">{countdown.seconds}</span>
-               <span className="text-[10px] uppercase opacity-60">שניות</span>
-             </div>
+           <div className="mt-10 mb-2 space-y-2">
+             <p className="text-lg md:text-xl font-bold text-white">נכנסים למים בעוד...</p>
            </div>
-           
-           <div className="flex flex-col gap-6 items-center mt-auto">
-                      <button onClick={() => setShowAttendees(true)} className="flex items-center gap-3 hd-glass-button-gold px-6 py-3 rounded-2xl transition-all group">
-                  <div className="flex -space-x-3 space-x-reverse">
-                    {attendees.slice(0, 5).map(a => (
-                      a.avatar ? (
-                        <img key={a.id} src={a.avatar} className="w-10 h-10 rounded-full border-2 border-slate-900 object-cover" alt="" loading="lazy" />
-                      ) : (
-                        <div key={a.id} className="w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-900 flex items-center justify-center text-[10px] text-white font-black">
-                          {a.firstName.charAt(0)}
-                        </div>
-                      )
-                    ))}
-                    {attendees.length > 5 && <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-900 flex items-center justify-center text-[10px] text-white font-black">+{attendees.length - 5}</div>}
-                  </div>
-                  <span className="text-white/70 font-black text-sm group-hover:text-white">{attendees.length} חברים אישרו הגעה</span>
-                </button>
 
-              <button 
-                onClick={handleToggle}
-                disabled={isProcessing}
-                                className={`border-2 border-black px-10 md:px-16 py-4 md:py-6 rounded-full font-black text-xl md:text-2xl transition-all shadow-2xl active:scale-95 flex items-center gap-[var(--spacing-md)] text-[#2D3748] ${isUserAttending ? '!bg-[#FF9F1C] hover:!bg-[#FFB03C]' : '!bg-[#00AFC2] hover:!bg-[#009FB2]'}`}
-              >
-                {isProcessing ? <Loader2 className="animate-spin" size={28} /> : <Waves size={28} className={isUserAttending ? 'text-[#FF0000]' : 'text-[#00FFFF]'} />}
-                {isUserAttending ? <span className="text-[#FF0000]">בטל הגעה</span> : 'אני מגיע/ה'}
-              </button>
-            </div>
-            <div className="mt-6 flex flex-col items-center">
-                
-                {attendees.length > 0 && (
-                  <div className="flex flex-wrap justify-center gap-2 max-w-md">
-                    {attendees.slice(0, 10).map(a => (
-                      <span key={a.id} className="text-[10px] font-black text-white/40 bg-white/5 px-2 py-1 rounded-md">{a.firstName}</span>
-                    ))}
-                  </div>
-                )}
+            <div className="mb-16 flex gap-4 text-white font-black text-xl" dir="ltr">
+              <div className="flex flex-col items-center bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-2 rounded-2xl shadow-lg">
+                <span className="text-3xl font-black text-[var(--surfer-yellow)]" style={{ fontFamily: "'Heebo', sans-serif" }}>{countdown.days}</span>
+                <span className="text-[10px] uppercase opacity-60 text-white">ימים</span>
               </div>
-           </div>
+              <div className="flex flex-col items-center bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-2 rounded-2xl shadow-lg">
+                <span className="text-3xl font-black text-[var(--surfer-yellow)]" style={{ fontFamily: "'Heebo', sans-serif" }}>{countdown.hours}</span>
+                <span className="text-[10px] uppercase opacity-60 text-white">שעות</span>
+              </div>
+              <div className="flex flex-col items-center bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-2 rounded-2xl shadow-lg">
+                <span className="text-3xl font-black text-[var(--surfer-yellow)]" style={{ fontFamily: "'Heebo', sans-serif" }}>{countdown.minutes}</span>
+                <span className="text-[10px] uppercase opacity-60 text-white">דקות</span>
+              </div>
+              <div className="flex flex-col items-center bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-2 rounded-2xl shadow-lg">
+                <span className="text-3xl font-black text-[var(--surfer-yellow)]" style={{ fontFamily: "'Heebo', sans-serif" }}>{countdown.seconds}</span>
+                <span className="text-[10px] uppercase opacity-60 text-white">שניות</span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-8 items-center mt-auto mb-40">
+               <div className="flex flex-col items-center gap-4">
+                 <button onClick={() => setShowAttendees(true)} className="flex items-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 px-6 py-3 rounded-2xl transition-all hover:bg-white/10">
+                    <div className="flex -space-x-3 space-x-reverse">
+                      {attendees.slice(0, 5).map(a => (
+                        a.avatar ? (
+                          <img key={a.id} src={a.avatar} className="w-10 h-10 rounded-full border-2 border-white/20 object-cover" alt="" loading="lazy" />
+                        ) : (
+                          <div key={a.id} className="w-10 h-10 rounded-full bg-slate-700 border-2 border-white/20 flex items-center justify-center text-[10px] text-white font-black">
+                            {a.firstName.charAt(0)}
+                          </div>
+                        )
+                      ))}
+                      {attendees.length > 5 && <div className="w-10 h-10 rounded-full bg-slate-700 border-2 border-white/20 flex items-center justify-center text-[10px] text-white font-black">+{attendees.length - 5}</div>}
+                    </div>
+                    <span className="text-white/90 font-black text-sm">{attendees.length} חברים אישרו הגעה</span>
+                  </button>
+
+                  {attendees.length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-2 max-w-md animate-in fade-in slide-in-from-bottom-2 duration-700">
+                      {attendees.slice(0, 12).map(a => (
+                        <span key={a.id} className="text-[10px] font-black text-white/70 bg-white/5 border border-white/10 px-2 py-1 rounded-md backdrop-blur-sm">{a.firstName}</span>
+                      ))}
+                      {attendees.length > 12 && <span className="text-[10px] font-black text-white/50 px-1">...</span>}
+                    </div>
+                  )}
+               </div>
+            </div>
+          </div>
         </section>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[var(--spacing-md)]">
@@ -281,7 +288,7 @@ const DashboardPage: React.FC = () => {
                   {randomPost.authorAvatar ? (
                     <img src={randomPost.authorAvatar} className="w-6 h-6 rounded-full object-cover" alt="" />
                   ) : (
-                    <div className="w-6 h-6 rounded-full glass-effect flex items-center justify-center text-slate-400">
+                    <div className="w-6 h-6 rounded-full glass-effect flex items-center justify-center text-white/60">
                       <UserCircle size={12} />
                     </div>
                   )}
@@ -335,7 +342,7 @@ const DashboardPage: React.FC = () => {
                     {a.avatar ? (
                       <img src={a.avatar} className="w-12 h-12 rounded-xl object-cover" alt="" loading="lazy" />
                     ) : (
-                      <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-slate-400">
+                      <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-white/60">
                         <UserCircle size={24} />
                       </div>
                     )}

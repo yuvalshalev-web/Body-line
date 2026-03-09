@@ -25,7 +25,7 @@ const AssetEditor: React.FC<AssetEditorProps> = ({
   const [replacingKey, setReplacingKey] = useState<string | null>(null);
 
   return (
-    <div className="bg-white border border-[#ff009f]/10 rounded-[4rem] p-12 shadow-sm">
+    <div className="glass-panel border border-white/20 rounded-[4rem] p-12 shadow-sm">
       <div className="flex items-center justify-between mb-10">
         <div className="flex items-center gap-4">
           <div className="p-4 bg-[#ff009f] text-white rounded-2xl shadow-lg"><RotateCcw size={24} /></div>
@@ -47,7 +47,7 @@ const AssetEditor: React.FC<AssetEditorProps> = ({
         {Object.entries(siteAssets || {}).map(([key, value]: [string, any]) => (
           <div key={key} className="p-6 bg-[#f7c1ea]/10 rounded-[2rem] border border-[#ff009f]/5 flex items-center justify-between group">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center overflow-hidden shadow-sm border border-[#ff009f]/10 relative group/avatar">
+              <div className="w-16 h-16 glass-panel rounded-2xl flex items-center justify-center overflow-hidden shadow-sm border border-white/20 relative group/avatar">
                 {typeof value === 'string' && value.startsWith('http') ? (
                   <img src={value} className="w-full h-full object-contain p-2" alt="" />
                 ) : (
@@ -112,7 +112,7 @@ const AssetEditor: React.FC<AssetEditorProps> = ({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white w-full max-w-lg rounded-[3.5rem] shadow-2xl p-10"
+              className="glass-panel border border-white/20 w-full max-w-lg rounded-[3.5rem] shadow-2xl p-10"
             >
               <h3 className="text-2xl font-black text-[#4a002e] mb-2">עדכון נכס: {editingAsset.key}</h3>
               <p className="text-[#f063c1]/60 font-bold text-sm mb-8">הזן כתובת URL חדשה עבור הנכס</p>

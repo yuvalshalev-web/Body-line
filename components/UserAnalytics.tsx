@@ -48,12 +48,12 @@ export const AstrodeckGauge: React.FC<{
     <div className={`flex-1 w-full flex flex-col items-center text-center group/pad ${isGrit ? 'relative' : ''}`}>
       
       <div className="flex items-center gap-2 mb-6">
-        <div className={`${isGrit ? 'text-blue-700' : 'text-blue-400'} group-hover/pad:text-white transition-colors`}>
+        <div className={`${isGrit ? 'text-[var(--surfer-cyan)]' : 'text-[var(--surfer-teal)]'} group-hover/pad:text-white transition-colors`}>
           {icon}
         </div>
-        <h3 className={`text-[11px] font-black uppercase tracking-[0.15em] ${isGrit ? 'text-blue-900' : 'text-[#2B2B2E]'}`}>{label}</h3>
+        <h3 className={`text-[11px] font-black uppercase tracking-[0.15em] glass-text-primary`}>{label}</h3>
         <div className="gt-info-wrapper">
-          <Info size={14} className="text-[#2B2B2E]/30 hover:text-[#2B2B2E] transition-colors" />
+          <Info size={14} className="glass-text-secondary hover:text-white transition-colors" />
           <span className="gt-tooltip" style={{ bottom: '160%', width: '200px' }}>{tooltip}</span>
         </div>
       </div>
@@ -66,9 +66,9 @@ export const AstrodeckGauge: React.FC<{
         <svg viewBox="0 0 400 400" className="w-full h-full drop-shadow-[0_10px_20px_rgba(0,0,0,0.2)] relative z-10">
           <defs>
             <pattern id="diamond-pad-gauge" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
-              <rect width="16" height="16" fill="#f8fafc" />
-              <path d="M8 2 L14 8 L8 14 L2 8 Z" fill="#f1f5f9" />
-              <circle cx="8" cy="8" r="2" fill="#e2e8f0" />
+              <rect width="16" height="16" fill="rgba(255,255,255,0.05)" />
+              <path d="M8 2 L14 8 L8 14 L2 8 Z" fill="rgba(255,255,255,0.1)" />
+              <circle cx="8" cy="8" r="2" fill="rgba(255,255,255,0.2)" />
             </pattern>
             
             <clipPath id="pad-clip-gauge">
@@ -76,8 +76,8 @@ export const AstrodeckGauge: React.FC<{
             </clipPath>
 
             <linearGradient id={isGrit ? "grit-liquid-grad" : "ocean-liquid-grad-gauge"} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={isGrit ? "#0369a1" : "#38bdf8"} />
-              <stop offset="100%" stopColor={isGrit ? "#0c4a6e" : "#0284c7"} />
+              <stop offset="0%" stopColor={isGrit ? "var(--surfer-orange)" : "var(--surfer-cyan)"} />
+              <stop offset="100%" stopColor={isGrit ? "var(--surfer-pink)" : "var(--surfer-teal)"} />
             </linearGradient>
 
             <radialGradient id="glass-lens-gauge" cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
@@ -107,7 +107,7 @@ export const AstrodeckGauge: React.FC<{
           <path 
             d={padPath} 
             fill="url(#diamond-pad-gauge)" 
-            stroke={isGrit ? "#075985" : "#e2e8f0"} 
+            stroke="rgba(255,255,255,0.2)" 
             strokeWidth={isGrit ? "1.5" : "1"}
             filter="url(#pad-shadow-gauge)"
           />
@@ -135,7 +135,7 @@ export const AstrodeckGauge: React.FC<{
               <svg x="-200" y="-15" width="800" height="30" viewBox="0 0 200 30" preserveAspectRatio="none" className="animate-[ripple_2s_infinite_linear]">
                 <path 
                   d="M0 15 Q 25 0 50 15 T 100 15 T 150 15 T 200 15 V 30 H 0 Z" 
-                  fill={isGrit ? "#0ea5e9" : "#7dd3fc"} 
+                  fill={isGrit ? "var(--surfer-orange)" : "var(--surfer-cyan)"} 
                   opacity="0.6" 
                 />
               </svg>
@@ -249,7 +249,7 @@ export const AstrodeckGauge: React.FC<{
           />
 
           {/* Grip Bars Overlay */}
-          <g fill="#94a3b8" opacity="0.2" pointerEvents="none">
+          <g fill="rgba(255,255,255,0.4)" opacity="0.2" pointerEvents="none">
             <rect x="170" y="80" width="60" height="6" rx="3" />
             <rect x="170" y="100" width="60" height="6" rx="3" />
             <rect x="170" y="120" width="60" height="6" rx="3" />
@@ -265,7 +265,7 @@ export const AstrodeckGauge: React.FC<{
           <path 
             d={padPath} 
             fill="none" 
-            stroke="#cbd5e1" 
+            stroke="rgba(255,255,255,0.3)" 
             strokeWidth="1" 
             opacity="0.5"
           />
@@ -276,7 +276,7 @@ export const AstrodeckGauge: React.FC<{
           <motion.span 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-3xl font-black text-[#334155] tabular-nums tracking-tighter drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]"
+            className="text-3xl font-black text-white tabular-nums tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
           >
             {value}%
           </motion.span>
@@ -336,8 +336,8 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
         <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[var(--radius-lg)]" />
         
         {/* Decorative background elements */}
-        <div className="absolute -right-20 -top-20 w-96 h-96 bg-slate-200/20 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-slate-200/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute -right-20 -top-20 w-96 h-96 bg-white/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-white/5 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="grid grid-cols-1 md:grid-cols-3 items-center justify-center gap-8 md:gap-4 relative z-10">
           
@@ -398,26 +398,26 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
       {/* Surf Compass (Radar Chart) - Future Use - Dynamic Premium Style */}
       <motion.div 
-        className="glass-panel p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] relative overflow-hidden transition-all duration-1000"
+        className="glass-panel p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[3rem] relative overflow-hidden transition-all duration-1000"
       >
         {/* Neumorphic Inner Shadow Overlay */}
-        <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[var(--radius-lg)]" />
+        <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[3rem]" />
         
           <div className="relative z-10">
           <div className="flex flex-col items-center mb-8">
             <div className="flex items-center gap-[var(--spacing-xs)]">
-              <Compass size={18} className="text-[#2B2B2E]" />
-              <h3 className="text-lg font-black text-[#2B2B2E]">רדאר השיפור שלך</h3>
+              <Compass size={18} className="glass-text-primary" />
+              <h3 className="text-lg font-black glass-text-primary">רדאר השיפור שלך</h3>
             </div>
-            <span className="text-[10px] font-bold text-[#2B2B2E] uppercase tracking-widest mt-1">(לשימוש עתידי)</span>
+            <span className="text-[10px] font-bold glass-text-secondary uppercase tracking-widest mt-1">(לשימוש עתידי)</span>
           </div>
 
           <div className="h-[450px] w-full relative">
             <RadarChart />
           </div>
 
-          <div className="mt-6 p-4 bg-white/5 rounded-[var(--radius-md)] border border-white/10">
-            <p className="text-[10px] text-white/40 font-bold text-center leading-relaxed">
+          <div className="mt-6 p-4 glass-effect rounded-[var(--radius-md)] border border-white/10">
+            <p className="text-[10px] glass-text-secondary font-bold text-center leading-relaxed">
               המצפן מנתח את היכולות המקצועיות שלך בים. נתונים אלו יוזנו על ידי המדריכים לאחר הערכות תקופתיות.
             </p>
           </div>
@@ -426,11 +426,11 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
       {/* Session History - Collapsible Dropbox Style - Dynamic Premium Style */}
       <motion.div 
-        className="glass-panel rounded-[var(--radius-lg)] relative overflow-hidden transition-all duration-1000"
+        className="glass-panel rounded-[3rem] relative overflow-hidden transition-all duration-1000"
         onMouseLeave={() => setIsHistoryOpen(false)}
       >
         {/* Neumorphic Inner Shadow Overlay */}
-        <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[var(--radius-lg)]" />
+        <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[3rem]" />
         
         <button 
           onClick={() => setIsHistoryOpen(!isHistoryOpen)}
@@ -438,18 +438,18 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/10 transition-colors group relative z-10"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-100 rounded-[var(--radius-sm)] flex items-center justify-center text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600 transition-all">
+            <div className="w-8 h-8 glass-effect rounded-[var(--radius-sm)] flex items-center justify-center text-white/60 group-hover:bg-white/20 group-hover:text-white transition-all">
               <Calendar size={16} />
             </div>
             <div className="text-right">
-              <h3 className="text-sm font-black text-[#2B2B2E]">היסטוריית סשנים</h3>
-              <p className="text-[10px] font-bold text-[#2B2B2E] uppercase tracking-wider">
+              <h3 className="text-sm font-black glass-text-primary">היסטוריית סשנים</h3>
+              <p className="text-[10px] font-bold glass-text-secondary uppercase tracking-wider">
                 {isHistoryOpen ? 'לחץ לסגירה' : `צפה ב-${userSessions.length} סשנים אחרונים`}
               </p>
             </div>
           </div>
           <div className={`transition-transform duration-300 ${isHistoryOpen ? 'rotate-[-90deg]' : ''}`}>
-            <ChevronLeft size={18} className="text-slate-300 group-hover:text-slate-500" />
+            <ChevronLeft size={18} className="text-white/40 group-hover:text-white/80" />
           </div>
         </button>
 
@@ -473,23 +473,23 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                         e.stopPropagation();
                         setSelectedSession(session);
                       }}
-                      className="group px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-all"
+                      className="group px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-white/10 transition-all"
                     >
                       <div className="flex items-center gap-4">
-                        <Waves size={14} className="text-[#2B2B2E]/50 group-hover:text-[var(--ocean-liquid)] transition-colors" />
+                        <Waves size={14} className="glass-text-secondary group-hover:text-[var(--surfer-cyan)] transition-colors" />
                         <div className="flex flex-col">
-                          <span className="font-bold text-[#2B2B2E] text-xs">{formattedDate}</span>
-                          <span className="text-[10px] text-[#2B2B2E]/60 font-medium">
+                          <span className="font-bold glass-text-primary text-xs">{formattedDate}</span>
+                          <span className="text-[10px] glass-text-secondary font-medium">
                             {session.instructorName || 'מדריך חבל זוג'}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 text-[10px] text-[#2B2B2E]/50 font-black">
+                        <div className="flex items-center gap-1 text-[10px] glass-text-secondary font-black">
                           <Users size={10} />
                           <span>{session.participantIds?.length || 0}</span>
                         </div>
-                        <ChevronLeft size={14} className="text-[#2B2B2E]/50 group-hover:text-[var(--ocean-liquid)] group-hover:translate-x-[-2px] transition-all" />
+                        <ChevronLeft size={14} className="glass-text-secondary group-hover:text-[var(--surfer-cyan)] group-hover:translate-x-[-2px] transition-all" />
                       </div>
                     </div>
                   );
