@@ -223,6 +223,34 @@ const App: React.FC = () => {
               style={{}}
             >
               <div className="w-full h-full flex flex-col relative">
+                {/* Vertical Wooden Post - Full Height */}
+                <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-12 z-0 pointer-events-none"
+                     style={{
+                       background: '#5d4037',
+                       boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5), 5px 0 15px rgba(0,0,0,0.3)',
+                       borderLeft: '2px solid rgba(0,0,0,0.3)',
+                       borderRight: '2px solid rgba(255,255,255,0.1)',
+                       backgroundImage: `
+                         linear-gradient(to right, rgba(0,0,0,0.3) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.4) 100%),
+                         url("data:image/svg+xml,%3Csvg viewBox='0 0 100 1000' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.05' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.3'/%3E%3C/svg%3E")
+                       `,
+                       backgroundSize: '100% 100%'
+                     }}
+                >
+                  {/* Wood Grain */}
+                  <div className="absolute inset-0 opacity-40 mix-blend-multiply" 
+                       style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(0,0,0,0.2) 5px, rgba(0,0,0,0.2) 6px)' }} />
+                  
+                  {/* Knots and cracks */}
+                  <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-4 h-6 rounded-full bg-black/20 blur-[1px]" />
+                  <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-3 h-8 rounded-full bg-black/25 blur-[1px]" />
+                  <div className="absolute top-[75%] left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-black/20 blur-[1px]" />
+                  
+                  {/* Nails at top and bottom */}
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-zinc-800 shadow-inner" />
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-zinc-800 shadow-inner" />
+                </div>
+
                 {/* Crazy Seagull Decoration */}
                 <motion.div 
                   animate={{ 
@@ -312,7 +340,7 @@ const App: React.FC = () => {
                 {/* Navigation Items */}
                 <div className="flex-1 px-4 py-8 flex flex-col gap-1 overflow-y-auto relative z-10 custom-scrollbar">
                   <div className="mb-6 text-center relative z-10">
-                    <span className="px-4 py-1 bg-[#d4a373] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-sm" style={{ fontFamily: 'Miriwin' }}>
+                    <span className="px-4 py-1 bg-[#d4a373] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-sm" style={{ fontFamily: 'Yehuda CLM' }}>
                       בחר יעד
                     </span>
                   </div>
@@ -330,7 +358,7 @@ const App: React.FC = () => {
                   {currentUser.role === 'Admin' && (
                     <>
                       <div className="mt-12 mb-6 text-center">
-                        <span className="px-4 py-1 bg-slate-700 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-sm" style={{ fontFamily: 'Miriwin' }}>
+                        <span className="px-4 py-1 bg-slate-700 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-sm" style={{ fontFamily: 'Yehuda CLM' }}>
                           אזור מנהלים
                         </span>
                       </div>

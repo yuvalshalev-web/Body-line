@@ -37,7 +37,6 @@ const AdminRolloverReport: React.FC = () => {
       } as RolloverLog));
       setLogs(fetchedLogs);
       
-      // Calculate stats based on logs
       const successLogs = fetchedLogs.filter(l => l.status === 'success');
       const latestSuccess = successLogs[0] as any;
       
@@ -46,7 +45,7 @@ const AdminRolloverReport: React.FC = () => {
         countersReset: successLogs.filter(l => l.action.includes('איפוס')).length,
         membersUpdated: latestSuccess?.updatedMembersCount || 0,
         runTime: latestSuccess?.duration || '2.1s',
-        consecutiveSuccess: 4 // Mock
+        consecutiveSuccess: 4
       });
     });
     return () => unsub();
@@ -63,203 +62,202 @@ const AdminRolloverReport: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusStyles = (status: string) => {
     switch(status) {
-      case 'success': return 'text-[#00D9E6] border-[#00D9E6] bg-[#00D9E6]/10';
-      case 'running': return 'text-[#FFDE45] border-[#FFDE45] bg-[#FFDE45]/10';
-      case 'partial': return 'text-[#FF9F1C] border-[#FF9F1C] bg-[#FF9F1C]/10';
-      case 'failure': return 'text-[#FF2D60] border-[#FF2D60] bg-[#FF2D60]/10';
-      default: return 'text-[#B2EBF2] border-[#B2EBF2] bg-[#B2EBF2]/10';
+      case 'success': return 'bg-[#00D9E6] text-black border-black rounded-2xl';
+      case 'running': return 'bg-[#FFDE45] text-black border-black rounded-2xl';
+      case 'partial': return 'bg-[#FF9F1C] text-black border-black rounded-2xl';
+      case 'failure': return 'bg-[#FF2D60] text-white border-black rounded-2xl';
+      default: return 'bg-white text-black border-black rounded-2xl';
     }
   };
 
   const getIcon = (status: string) => {
     switch(status) {
-      case 'success': return <CheckCircle2 size={16} />;
-      case 'running': return <RefreshCw size={16} className="animate-spin" />;
-      case 'partial': return <AlertTriangle size={16} />;
-      case 'failure': return <XCircle size={16} />;
-      default: return <Clock size={16} />;
+      case 'success': return <CheckCircle2 size={20} strokeWidth={3} />;
+      case 'running': return <RefreshCw size={20} strokeWidth={3} className="animate-spin" />;
+      case 'partial': return <AlertTriangle size={20} strokeWidth={3} />;
+      case 'failure': return <XCircle size={20} strokeWidth={3} />;
+      default: return <Clock size={20} strokeWidth={3} />;
     }
   };
 
-  const latestStatus = logs.length > 0 ? logs[0].status : 'success'; // Default to success for demo if empty
+  const latestStatus = logs.length > 0 ? logs[0].status : 'success';
 
   return (
-    <div className="min-h-screen bg-[#002025] text-slate-50 font-['Yehuda_CLM'] p-6 md:p-10 relative overflow-hidden rounded-3xl" dir="rtl">
-      {/* Grid Background */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-20" style={{
-        backgroundImage: 'linear-gradient(rgba(0,175,194,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(0,175,194,0.2) 1px, transparent 1px)',
-        backgroundSize: '40px 40px'
+    <div className="min-h-screen bg-[#B2EBF2] text-black font-['Yehuda_CLM'] p-4 md:p-8 relative overflow-hidden" dir="rtl">
+      {/* Neubrutalism Grid Pattern */}
+      <div className="fixed inset-0 pointer-events-none z-0 opacity-10" style={{
+        backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)',
+        backgroundSize: '24px 24px'
       }}></div>
 
       <div className="max-w-6xl mx-auto relative z-10">
-        {/* Header */}
-        <header className="flex flex-col items-center justify-center gap-2 mb-10 text-center">
-          <h1 className="font-['IBM_Plex_Mono'] text-[#00D9E6] text-xs tracking-[3px] uppercase mb-1">// Admin Monitor</h1>
-          <h2 className="text-4xl font-black text-white leading-none">סגירת סשן <span className="text-[#00D9E6]">שבועית</span></h2>
+        {/* Header Section */}
+        <header className="mb-12 flex flex-col items-start gap-4">
+          <div className="bg-[#FFDE45] border-2 border-black px-4 py-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] inline-block rounded-full">
+            <h1 className="font-['IBM_Plex_Mono'] text-black text-sm font-black tracking-widest uppercase">
+              ADMIN MONITOR // ROLLOVER
+            </h1>
+          </div>
+          <h2 className="text-6xl md:text-8xl font-black text-black leading-none tracking-tighter uppercase">
+            סגירת סשן <span className="text-white" style={{ WebkitTextStroke: '2px black' }}>שבועית</span>
+          </h2>
         </header>
 
         {/* Status Banner */}
-        <div className={`rounded-3xl p-4 md:p-6 mb-8 flex items-center gap-4 border transition-all duration-500 ${
-          latestStatus === 'success' ? 'bg-[#004048] border-[#00D9E6]/50 text-[#00D9E6]' :
-          latestStatus === 'running' ? 'bg-[#004048] border-[#FFDE45]/50 text-[#FFDE45]' :
-          latestStatus === 'partial' ? 'bg-[#004048] border-[#FF9F1C]/50 text-[#FF9F1C]' :
-          'bg-[#004048] border-[#FF2D60]/50 text-[#FF2D60]'
-        }`}>
-          <div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px] animate-pulse ${
-             latestStatus === 'success' ? 'bg-[#00D9E6] shadow-[#00D9E6]' :
-             latestStatus === 'running' ? 'bg-[#FFDE45] shadow-[#FFDE45]' :
-             latestStatus === 'partial' ? 'bg-[#FF9F1C] shadow-[#FF9F1C]' :
-             'bg-[#FF2D60] shadow-[#FF2D60]'
-          }`} />
-          <span className="font-medium text-sm md:text-base">
-            {latestStatus === 'success' ? `✓ סגירת סשן שבועית הושלמה בהצלחה — ${new Date().toLocaleDateString()} · ${new Date().toLocaleTimeString()} · זמן ריצה: ${stats.runTime}` :
-             latestStatus === 'running' ? '⟳ סגירת סשן שבועית רצה עכשיו...' :
-             latestStatus === 'partial' ? '⚠ סגירת סשן שבועית הושלמה חלקית — שגיאה בשלב 4' :
-             '✗ סגירת סשן שבועית נכשלה — נדרשת התערבות ידנית'}
-          </span>
+        <div className={`border-2 border-black p-6 mb-10 flex items-center gap-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] ${getStatusStyles(latestStatus)}`}>
+          <div className="w-12 h-12 border-2 border-black bg-white rounded-xl flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            {getIcon(latestStatus)}
+          </div>
+          <div className="flex flex-col">
+            <span className="font-black text-2xl md:text-3xl uppercase tracking-tight">
+              {latestStatus === 'success' ? 'SYSTEM STATUS: OPTIMAL' :
+               latestStatus === 'running' ? 'SYSTEM STATUS: PROCESSING' :
+               latestStatus === 'partial' ? 'SYSTEM STATUS: WARNING' :
+               'SYSTEM STATUS: CRITICAL'}
+            </span>
+            <span className="font-bold text-base md:text-lg opacity-90">
+              {latestStatus === 'success' ? `הושלם בהצלחה — ${new Date().toLocaleDateString()} · ${new Date().toLocaleTimeString()} · זמן ריצה: ${stats.runTime}` :
+               latestStatus === 'running' ? 'סגירת סשן שבועית רצה עכשיו... נא להמתין' :
+               latestStatus === 'partial' ? 'הושלמה חלקית — שגיאה בשלב 4 נרשמה במערכת' :
+               'נכשלה — נדרשת התערבות ידנית מיידית'}
+            </span>
+          </div>
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {[
-            { label: '// רשומות נשמרו', value: stats.recordsSaved.toLocaleString(), sub: 'השבוע הנוכחי', color: 'after:bg-[#00D9E6]' },
-            { label: '// מונים אופסו', value: stats.countersReset, sub: '0 שגיאות', color: 'after:bg-[#00AFC2]' },
-            { label: '// זמן ריצה', value: stats.runTime, sub: 'ממוצע: 2.1s', color: 'after:bg-[#FFDE45]' },
-            { label: '// שבועות רצופים', value: stats.consecutiveSuccess, sub: 'ללא כישלון', color: 'after:bg-[#00D9E6]' }
+            { label: 'רשומות נשמרו', value: stats.recordsSaved.toLocaleString(), sub: 'השבוע הנוכחי', color: 'bg-[#00D9E6]' },
+            { label: 'מונים אופסו', value: stats.countersReset, sub: '0 שגיאות', color: 'bg-[#FF2D60]', textColor: 'text-white' },
+            { label: 'זמן ריצה', value: stats.runTime, sub: 'ממוצע: 2.1s', color: 'bg-[#FFDE45]' },
+            { label: 'שבועות רצופים', value: stats.consecutiveSuccess, sub: 'ללא כישלון', color: 'bg-white' }
           ].map((stat, i) => (
-            <div key={i} className={`bg-[#004048] border border-[#00AFC2]/20 rounded-3xl p-5 relative overflow-hidden hover:border-[#00AFC2]/50 transition-colors ${stat.color} after:content-[''] after:absolute after:top-0 after:right-0 after:w-[3px] after:h-full`}>
-              <div className="font-['IBM_Plex_Mono'] text-[10px] tracking-[2px] uppercase text-[#B2EBF2] mb-2">{stat.label}</div>
-              <div className="font-['IBM_Plex_Mono'] text-2xl md:text-3xl font-semibold text-white leading-none mb-1">{stat.value}</div>
-              <div className="text-xs text-[#B2EBF2]/70">{stat.sub}</div>
+            <div key={i} className={`border-2 border-black p-6 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all ${stat.color} ${stat.textColor || 'text-black'}`}>
+              <div className="font-['IBM_Plex_Mono'] text-[12px] font-black uppercase mb-4 opacity-80">{stat.label}</div>
+              <div className="text-4xl font-black leading-none mb-2">{stat.value}</div>
+              <div className="font-bold text-[12px] uppercase tracking-wider opacity-70">{stat.sub}</div>
             </div>
           ))}
         </div>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10 items-start">
           
           {/* Steps Log */}
-          <div className="bg-[#004048] border border-[#00AFC2]/20 rounded-3xl overflow-hidden">
-            <div className="p-4 md:p-6 border-b border-[#00AFC2]/20 flex items-center justify-between">
-              <span className="font-['IBM_Plex_Mono'] text-[11px] tracking-[2px] uppercase text-[#B2EBF2]">// לוג שלבים</span>
-              <span className="font-['IBM_Plex_Mono'] text-[11px] px-2 py-1 rounded bg-[#00AFC2]/20 text-[#00D9E6] border border-[#00AFC2]/30">
-                {logs.filter(l => l.status === 'success').length}/{logs.length} פעולות
+          <div className="bg-white border-2 border-black rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+            <div className="p-6 border-b-2 border-black bg-[#00AFC2] flex items-center justify-between">
+              <span className="font-black text-xl uppercase tracking-tight text-white">LOG // לוג שלבים</span>
+              <span className="bg-black text-white px-3 py-1 rounded-full font-black text-sm">
+                {logs.filter(l => l.status === 'success').length}/{logs.length} OK
               </span>
             </div>
 
-            {/* Timeline Bar */}
-            <div className="px-6 py-4 flex items-center gap-1">
-              {logs.slice(0, 6).map((log, i) => (
-                <div key={i} className={`h-1.5 rounded-full transition-all duration-700 ${
-                  log.status === 'success' ? 'bg-[#00D9E6] flex-1' :
-                  log.status === 'failure' ? 'bg-[#FF2D60] flex-1' :
-                  'bg-[#00AFC2]/30 flex-1'
-                }`} />
-              ))}
-            </div>
-
-            <div className="divide-y divide-[#00AFC2]/20">
+            <div className="divide-y-2 divide-black max-h-[800px] overflow-y-auto">
               {logs.map((log) => (
-                <div key={log.id} className="p-4 md:p-6 flex items-center gap-4 hover:bg-[#00AFC2]/10 transition-colors animate-in fade-in slide-in-from-right-4">
-                  <div className={`w-8 h-8 rounded-md flex items-center justify-center border ${getStatusColor(log.status)}`}>
+                <div key={log.id} className="p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 hover:bg-[#B2EBF2]/30 transition-colors group">
+                  <div className={`shrink-0 w-12 h-12 md:w-14 md:h-14 border-2 border-black rounded-xl flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] group-hover:scale-105 transition-transform ${
+                    log.status === 'success' ? 'bg-[#00D9E6]' :
+                    log.status === 'failure' ? 'bg-[#FF2D60]' :
+                    'bg-[#FFDE45]'
+                  }`}>
                     {getIcon(log.status)}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-white mb-1">{log.action}</div>
-                    <div className="font-['IBM_Plex_Mono'] text-[11px] text-[#B2EBF2] truncate">
-                      {log.details}
+                  <div className="flex-1 min-w-0 w-full">
+                    <div className="text-xl md:text-2xl font-black text-black mb-1 uppercase break-words leading-tight">{log.action}</div>
+                    <div className="font-['IBM_Plex_Mono'] text-sm md:text-base font-bold text-black/60 flex flex-wrap items-center gap-2">
+                      <span className="break-words">{log.details}</span>
                       {(log as any).updatedMembersCount !== undefined && (
-                        <span className="text-[#00D9E6] ml-2">
-                          | עודכנו: {(log as any).updatedMembersCount} חברים
+                        <span className="bg-black text-white px-2 py-0.5 text-[10px] md:text-[12px] font-black whitespace-nowrap">
+                          UPDATED: {(log as any).updatedMembersCount}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="text-left shrink-0">
-                    <div className="font-['IBM_Plex_Mono'] text-xs text-[#B2EBF2] mb-1">{new Date(log.timestamp).toLocaleTimeString()}</div>
-                    <div className="font-['IBM_Plex_Mono'] text-[11px] text-[#B2EBF2]/70">{log.duration || '-'}</div>
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2 sm:gap-0 border-t sm:border-t-0 border-black/5 pt-2 sm:pt-0 shrink-0">
+                    <div className="font-['IBM_Plex_Mono'] text-sm md:text-base font-black text-black whitespace-nowrap">
+                      {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <div className="font-['IBM_Plex_Mono'] text-[10px] md:text-sm font-bold text-black/40 whitespace-nowrap uppercase">
+                      {log.duration || '0.0s'}
+                    </div>
                   </div>
                 </div>
               ))}
               
               {logs.length === 0 && (
-                <div className="p-8 text-center text-[#B2EBF2] font-['IBM_Plex_Mono'] text-xs">
-                  // אין נתונים להצגה
+                <div className="p-12 text-center font-black text-3xl text-black/20 uppercase italic">
+                  NO DATA AVAILABLE // אין נתונים
                 </div>
               )}
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="flex flex-col gap-5">
+          {/* Sidebar Section */}
+          <div className="flex flex-col gap-8">
             
             {/* Run Now Button */}
-            <div className="flex justify-center">
-              <button 
-                onClick={handleRunNow}
-                disabled={isRunning}
-                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed px-12 py-4 text-lg bg-[#00AFC2] hover:bg-[#00D9E6] text-white border-none"
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2">
-                  {isRunning ? <Loader2 className="animate-spin" size={20} /> : '⟳'}
-                  {isRunning ? 'רץ כעת...' : 'הרץ עכשיו'}
+            <button 
+              onClick={handleRunNow}
+              disabled={isRunning}
+              className="group relative border-2 border-black bg-[#FFDE45] p-6 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[6px] active:translate-y-[6px] transition-all disabled:opacity-50"
+            >
+              <div className="flex items-center justify-center gap-4">
+                {isRunning ? <Loader2 className="animate-spin" size={28} strokeWidth={3} /> : <Play size={28} fill="currentColor" />}
+                <span className="text-3xl font-black uppercase tracking-tighter">
+                  {isRunning ? 'RUNNING...' : 'RUN NOW // הרץ'}
                 </span>
-              </button>
-            </div>
+              </div>
+            </button>
 
             {/* Health Card */}
-            <div className="bg-[#004048]/80 backdrop-blur-xl border border-[#00AFC2]/30 shadow-xl rounded-3xl overflow-hidden">
-              <div className="p-4 border-b border-[#00AFC2]/20">
-                <span className="font-['IBM_Plex_Mono'] text-[11px] tracking-[2px] uppercase text-[#B2EBF2]">// כרטיס בריאות</span>
+            <div className="bg-white border-2 border-black rounded-3xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <div className="p-6 border-b-2 border-black bg-[#CC2678] text-white">
+                <span className="font-black text-2xl md:text-3xl uppercase tracking-tight text-white">HEALTH // כרטיס בריאות</span>
               </div>
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-[#00AFC2]/20">
-                    <td className="p-3 font-['IBM_Plex_Mono'] text-[10px] text-[#B2EBF2] tracking-widest">פרמטר</td>
-                    <td className="p-3 font-['IBM_Plex_Mono'] text-[10px] text-[#B2EBF2] tracking-widest text-center">לפני</td>
-                    <td className="p-3 font-['IBM_Plex_Mono'] text-[10px] text-[#B2EBF2] tracking-widest text-center">אחרי</td>
-                    <td className="p-3"></td>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#00AFC2]/20">
-                  <tr>
-                    <td className="p-3 text-[13px] text-white">חברים שעודכנו</td>
-                    <td className="p-3 font-['IBM_Plex_Mono'] text-xs text-[#B2EBF2]/70 text-center">-</td>
-                    <td className="p-3 font-['IBM_Plex_Mono'] text-xs text-white font-bold text-center">{stats.membersUpdated}</td>
-                    <td className="p-3 text-center text-[#00D9E6]">✓</td>
-                  </tr>
-                  <tr>
-                    <td className="p-3 text-[13px] text-white">מונים מאופסים</td>
-                    <td className="p-3 font-['IBM_Plex_Mono'] text-xs text-[#B2EBF2]/70 text-center">{stats.countersReset}</td>
-                    <td className="p-3 font-['IBM_Plex_Mono'] text-xs text-white font-bold text-center">0</td>
-                    <td className="p-3 text-center text-[#00D9E6]">✓</td>
-                  </tr>
-                  <tr>
-                    <td className="p-3 text-[13px] text-white">זמן ריצה כולל</td>
-                    <td className="p-3 font-['IBM_Plex_Mono'] text-xs text-[#B2EBF2]/70 text-center">-</td>
-                    <td className="p-3 font-['IBM_Plex_Mono'] text-xs text-white font-bold text-center">{stats.runTime}</td>
-                    <td className="p-3 text-center text-[#00D9E6]">✓</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="overflow-x-auto">
+                <table className="w-full text-right">
+                  <thead>
+                    <tr className="border-b-2 border-black bg-[#B2EBF2]/50">
+                      <th className="p-6 font-black text-lg md:text-xl uppercase">פרמטר</th>
+                      <th className="p-6 font-black text-lg md:text-xl uppercase text-center">לפני</th>
+                      <th className="p-6 font-black text-lg md:text-xl uppercase text-center">אחרי</th>
+                      <th className="p-6"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y-2 divide-black">
+                    {[
+                      { label: 'חברים שעודכנו', before: '-', after: stats.membersUpdated },
+                      { label: 'מונים מאופסים', before: stats.countersReset, after: '0' },
+                      { label: 'זמן ריצה כולל', before: '-', after: stats.runTime }
+                    ].map((row, i) => (
+                      <tr key={i} className="hover:bg-[#B2EBF2]/20">
+                        <td className="p-6 font-bold text-xl md:text-2xl">{row.label}</td>
+                        <td className="p-6 font-['IBM_Plex_Mono'] text-xl md:text-2xl text-center font-bold text-black/40">{row.before}</td>
+                        <td className="p-6 font-['IBM_Plex_Mono'] text-xl md:text-2xl text-center font-black">{row.after}</td>
+                        <td className="p-6 text-center font-black text-[#00D9E6] text-2xl">✓</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* History Panel */}
-            <div className="bg-[#004048]/80 backdrop-blur-xl border border-[#00AFC2]/30 shadow-xl rounded-3xl overflow-hidden">
-              <div className="p-4 border-b border-[#00AFC2]/20 flex justify-between items-center">
-                <span className="font-['IBM_Plex_Mono'] text-[11px] tracking-[2px] uppercase text-[#B2EBF2]">// היסטוריה</span>
-                <span className="font-['IBM_Plex_Mono'] text-[10px] px-2 py-0.5 rounded bg-[#00AFC2]/20 text-[#00D9E6] border border-[#00AFC2]/30">4 שבועות</span>
+            <div className="bg-white border-2 border-black rounded-3xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <div className="p-6 border-b-2 border-black bg-black text-white flex justify-between items-center">
+                <span className="font-black text-2xl md:text-3xl uppercase tracking-tight text-white">HISTORY // היסטוריה</span>
+                <span className="bg-[#FFDE45] text-black px-3 py-1 rounded-full font-black text-sm md:text-base">4 WEEKS</span>
               </div>
-              <div className="divide-y divide-[#00AFC2]/20">
+              <div className="divide-y-2 divide-black">
                 {[1, 2, 3, 4].map((_, i) => (
-                  <div key={i} className="p-3 flex items-center justify-between hover:bg-[#00AFC2]/10">
-                    <div className="flex items-center gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#00D9E6]" />
-                      <span className="font-['IBM_Plex_Mono'] text-[11px] text-[#B2EBF2]">2{7-i}.02.2025</span>
+                  <div key={i} className="p-6 flex items-center justify-between hover:bg-[#B2EBF2]/20 group cursor-pointer">
+                    <div className="flex items-center gap-6">
+                      <div className="w-4 h-4 border-2 border-black bg-[#00D9E6] rounded-sm group-hover:rotate-45 transition-transform" />
+                      <span className="font-['IBM_Plex_Mono'] font-black text-xl md:text-2xl">2{7-i}.02.2025</span>
                     </div>
-                    <span className="font-['IBM_Plex_Mono'] text-[11px] text-[#B2EBF2]">2.{1+i}s</span>
+                    <span className="font-['IBM_Plex_Mono'] font-bold text-xl md:text-2xl text-black/50">2.{1+i}s</span>
                   </div>
                 ))}
               </div>

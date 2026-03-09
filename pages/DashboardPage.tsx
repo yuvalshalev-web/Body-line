@@ -157,94 +157,131 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-16 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
-      <section className="relative w-full min-h-[700px] md:min-h-[650px] rounded-[var(--radius-lg)] overflow-hidden border-0">
-        <div className="absolute inset-0 bg-slate-900">
-          <img 
-            src={siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
-            className="w-full h-full object-cover opacity-60" 
-            alt="Hero"
-            loading="lazy"
-          />
-        </div>
-        <div className="relative z-10 min-h-[700px] md:min-h-[650px] flex flex-col items-center justify-between p-8 md:p-12 text-center pb-16">
-           <p className="text-white font-semibold italic text-lg md:text-2xl max-w-2xl tracking-[0.08em] leading-relaxed">
-             "A day will come that is like no other... and nothing that happens after will ever be the same."
-           </p>
-           <h1 className="text-[48px] md:text-[90px] text-[var(--surfer-yellow)] mb-6 whitespace-nowrap big-thursday-title" data-text="יום חמישי הגדול">יום חמישי הגדול</h1>
-           
-           {/* Surfer Action Hotspot */}
-           <div className="surfer-hotspot-container">
-             <button 
-               onClick={handleToggle}
-               disabled={isProcessing}
-               className="surfer-hotspot"
-               aria-label={isUserAttending ? "בטל הגעה" : "אני מגיע/ה"}
-             >
-               <div className="pulse-halo"></div>
-               {isProcessing && <Loader2 className="animate-spin text-white/50" size={32} />}
-             </button>
-             <motion.span 
-               className="secondary-label"
-               animate={{ opacity: [1, 0.4, 1], scale: [1, 1.02, 1] }}
-               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-             >
-               {isUserAttending ? 'לחץ על הגולש לביטול' : 'לחץ על הגולש לאישור הגעה'}
-             </motion.span>
-           </div>
-
-           <div className="mt-10 mb-2 space-y-2">
-             <p className="text-lg md:text-xl font-bold text-white">נכנסים למים בעוד...</p>
-           </div>
-
-            <div className="mb-16 flex gap-4 text-white font-black text-xl" dir="ltr">
-              <div className="flex flex-col items-center bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-2 rounded-2xl shadow-lg">
-                <span className="text-3xl font-black text-[var(--surfer-yellow)]" style={{ fontFamily: "'Heebo', sans-serif" }}>{countdown.days}</span>
-                <span className="text-[10px] uppercase opacity-60 text-white">ימים</span>
-              </div>
-              <div className="flex flex-col items-center bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-2 rounded-2xl shadow-lg">
-                <span className="text-3xl font-black text-[var(--surfer-yellow)]" style={{ fontFamily: "'Heebo', sans-serif" }}>{countdown.hours}</span>
-                <span className="text-[10px] uppercase opacity-60 text-white">שעות</span>
-              </div>
-              <div className="flex flex-col items-center bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-2 rounded-2xl shadow-lg">
-                <span className="text-3xl font-black text-[var(--surfer-yellow)]" style={{ fontFamily: "'Heebo', sans-serif" }}>{countdown.minutes}</span>
-                <span className="text-[10px] uppercase opacity-60 text-white">דקות</span>
-              </div>
-              <div className="flex flex-col items-center bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-2 rounded-2xl shadow-lg">
-                <span className="text-3xl font-black text-[var(--surfer-yellow)]" style={{ fontFamily: "'Heebo', sans-serif" }}>{countdown.seconds}</span>
-                <span className="text-[10px] uppercase opacity-60 text-white">שניות</span>
-              </div>
-            </div>
-            
-            <div className="flex flex-col gap-8 items-center mt-auto mb-40">
-               <div className="flex flex-col items-center gap-4">
-                 <button onClick={() => setShowAttendees(true)} className="flex items-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 px-6 py-3 rounded-2xl transition-all hover:bg-white/10">
-                    <div className="flex -space-x-3 space-x-reverse">
-                      {attendees.slice(0, 5).map(a => (
-                        a.avatar ? (
-                          <img key={a.id} src={a.avatar} className="w-10 h-10 rounded-full border-2 border-white/20 object-cover" alt="" loading="lazy" />
-                        ) : (
-                          <div key={a.id} className="w-10 h-10 rounded-full bg-slate-700 border-2 border-white/20 flex items-center justify-center text-[10px] text-white font-black">
-                            {a.firstName.charAt(0)}
-                          </div>
-                        )
-                      ))}
-                      {attendees.length > 5 && <div className="w-10 h-10 rounded-full bg-slate-700 border-2 border-white/20 flex items-center justify-center text-[10px] text-white font-black">+{attendees.length - 5}</div>}
-                    </div>
-                    <span className="text-white/90 font-black text-sm">{attendees.length} חברים אישרו הגעה</span>
-                  </button>
-
-                  {attendees.length > 0 && (
-                    <div className="flex flex-wrap justify-center gap-2 max-w-md animate-in fade-in slide-in-from-bottom-2 duration-700">
-                      {attendees.slice(0, 12).map(a => (
-                        <span key={a.id} className="text-[10px] font-black text-white/70 bg-white/5 border border-white/10 px-2 py-1 rounded-md backdrop-blur-sm">{a.firstName}</span>
-                      ))}
-                      {attendees.length > 12 && <span className="text-[10px] font-black text-white/50 px-1">...</span>}
-                    </div>
-                  )}
+      {/* Hero & Attendees Group */}
+      <div className="space-y-6">
+        <section className="relative w-full min-h-[500px] md:min-h-[900px] lg:min-h-[1200px] rounded-[var(--radius-lg)] overflow-hidden border-0 shadow-2xl">
+          <div className="absolute inset-0 bg-slate-900">
+            <img 
+              src={siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
+              className="w-full h-full object-cover opacity-60" 
+              style={{ objectPosition: 'center 5%' }}
+              alt="Hero"
+              loading="lazy"
+            />
+          </div>
+          <div className="relative z-10 min-h-[500px] md:min-h-[900px] lg:min-h-[1200px] flex flex-col items-center justify-between p-6 md:p-12 text-center">
+             {/* Top Section: Quote & Title & Countdown */}
+             <div className="w-full pt-4 md:pt-8 flex flex-col items-center">
+               <p className="text-white font-semibold italic text-sm md:text-2xl max-w-2xl mx-auto tracking-[0.08em] leading-relaxed mb-6 md:mb-10 drop-shadow-lg">
+                 "A day will come that is like no other... and nothing that happens after will ever be the same."
+               </p>
+               <h1 className="text-[var(--surfer-yellow)] big-thursday-title" data-text="יום חמישי הגדול">יום חמישי הגדול</h1>
+               
+               {/* Countdown moved here for fixed positioning relative to title */}
+               <div className="mt-8 md:mt-12 space-y-4 flex flex-col items-center">
+                 <p className="text-base md:text-xl font-bold text-white drop-shadow-md">נכנסים למים בעוד...</p>
+                 <div className="flex gap-2 md:gap-4 text-white font-black" dir="ltr">
+                   {[
+                     { label: 'ימים', value: countdown.days },
+                     { label: 'שעות', value: countdown.hours },
+                     { label: 'דקות', value: countdown.minutes },
+                     { label: 'שניות', value: countdown.seconds }
+                   ].map((item, i) => (
+                     <div key={i} className="flex flex-col items-center bg-white/10 backdrop-blur-md border border-white/20 px-3 py-2 md:px-5 md:py-3 rounded-2xl shadow-xl min-w-[60px] md:min-w-[80px]">
+                       <span className="text-2xl md:text-4xl font-black text-[var(--surfer-yellow)]" style={{ fontFamily: "'Heebo', sans-serif" }}>{item.value}</span>
+                       <span className="text-[9px] md:text-[10px] uppercase font-bold tracking-tighter opacity-80 text-white">{item.label}</span>
+                     </div>
+                   ))}
+                 </div>
                </div>
-            </div>
+             </div>
+             
+             {/* Middle Section: Hotspot */}
+             <div className="w-full flex flex-col items-center py-8 md:py-12 flex-1 justify-center">
+               {/* Surfer Action Hotspot - Absolute positioned in CSS */}
+               <div className="surfer-hotspot-container">
+                 <button 
+                   onClick={handleToggle}
+                   disabled={isProcessing}
+                   className="surfer-hotspot"
+                   aria-label={isUserAttending ? "בטל הגעה" : "אני מגיע/ה"}
+                 >
+                   <div className="pulse-halo"></div>
+                   {isProcessing && <Loader2 className="animate-spin text-white/50" size={32} />}
+                 </button>
+                 <motion.span 
+                   className="secondary-label"
+                   animate={{ opacity: [1, 0.4, 1], scale: [1, 1.02, 1] }}
+                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                 >
+                   {isUserAttending ? 'לחץ על הגולש לביטול הגעה' : 'לחץ על הגולש לאישור הגעה'}
+                 </motion.span>
+               </div>
+
+
+
+
+             </div>
           </div>
         </section>
+
+        {/* Confirmed Members Bar - Positioned below Hero, above AstroDecks */}
+        <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+          <div className="hd-transparent-frame p-6 md:p-10 flex flex-col items-center justify-center gap-8 overflow-hidden relative">
+            {/* Decorative background glows - enhanced for Glassmorphism */}
+            <div className="absolute left-1/4 top-0 w-64 h-64 bg-cyan-500/10 blur-[120px] pointer-events-none" />
+            <div className="absolute right-1/4 bottom-0 w-64 h-64 bg-amber-500/10 blur-[120px] pointer-events-none" />
+
+            <div className="flex flex-col items-center gap-6 relative z-10 w-full">
+              {/* Centered Avatars */}
+              <div className="flex justify-center -space-x-3 md:-space-x-4 space-x-reverse">
+                {attendees.slice(0, 12).map(a => (
+                  <Link to={`/directory?id=${a.id}`} key={a.id} className="relative group">
+                    {a.avatar ? (
+                      <img 
+                        src={a.avatar} 
+                        className="w-12 h-12 md:w-14 md:h-14 rounded-2xl border-2 border-white/40 shadow-xl object-cover transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6" 
+                        alt="" 
+                        loading="lazy" 
+                      />
+                    ) : (
+                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 border-2 border-white/40 flex items-center justify-center text-xs text-white font-black shadow-xl transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6">
+                        {a.firstName.charAt(0)}
+                      </div>
+                    )}
+                    {/* Tooltip on hover */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 backdrop-blur-md text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-30">
+                      {a.firstName} {a.lastName}
+                    </div>
+                  </Link>
+                ))}
+                {attendees.length > 12 && (
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-slate-800/80 backdrop-blur-md border-2 border-white/40 flex items-center justify-center text-xs text-white font-black shadow-xl z-10">
+                    +{attendees.length - 12}
+                  </div>
+                )}
+              </div>
+              
+              <div className="text-center space-y-2">
+                <h4 className="text-2xl md:text-3xl font-black glass-text-primary tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+                  הכוכבים שאישרו הגעה
+                </h4>
+                <p className="text-sm md:text-base font-bold glass-text-secondary uppercase tracking-widest opacity-80" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+                  {attendees.length} גולשים כבר בפנים. מה איתך?
+                </p>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setShowAttendees(true)} 
+              className="hd-glass-button-gold px-10 py-4 rounded-2xl font-black text-xs md:text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all relative z-10"
+            >
+              צפה ברשימה המלאה
+            </button>
+          </div>
+        </section>
+      </div>
+
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[var(--spacing-md)]">
         {[

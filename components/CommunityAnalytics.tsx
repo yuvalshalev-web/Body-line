@@ -375,7 +375,7 @@ const CommunityAnalytics: React.FC = () => {
         </div>
 
         <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200 tracking-tighter leading-none uppercase drop-shadow-2xl">
-          הקהילה במספרים
+          מבט על הקהילה
         </h1>
 
         <p className="max-w-2xl text-xl font-bold text-blue-200/70">

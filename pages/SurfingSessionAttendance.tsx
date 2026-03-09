@@ -501,7 +501,7 @@ const SurfingSessionAttendance: React.FC = () => {
       {view === 'current' ? (
         <>
           {/* Dynamic Section Title & Stats */}
-          <div className="flex items-center justify-between gap-4 mb-10 bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] p-6 rounded-[16px] border border-[rgba(255,255,255,0.2)]">
+          <div className="flex items-center justify-between gap-4 mb-10 hd-transparent-frame p-6">
             {/* Header Text */}
             <div className="text-right">
               <h3 className="text-xl md:text-2xl font-black text-[#006994] tracking-tight">
@@ -513,7 +513,7 @@ const SurfingSessionAttendance: React.FC = () => {
             </div>
 
             {/* Stats Widget */}
-            <div className="bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] px-4 py-2 md:px-6 md:py-3 rounded-[16px] border border-[rgba(255,255,255,0.2)] shadow-sm flex items-center gap-3 shrink-0">
+            <div className="hd-transparent-frame px-4 py-2 md:px-6 md:py-3 shadow-sm flex items-center gap-3 shrink-0">
               <div className="w-8 h-8 md:w-10 md:h-10 bg-cyan-100 rounded-full flex items-center justify-center text-sky-800">
                 <UsersIcon size={18} />
               </div>

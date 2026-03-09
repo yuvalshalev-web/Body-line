@@ -90,7 +90,7 @@ export const WoodSignLink: React.FC<WoodSignLinkProps> = React.memo(({
             {item.icon}
           </span>
           <span className={`
-            text-2xl text-white/90 font-['Miriwin'] font-bold
+            text-2xl text-white/90 font-['Yehuda_CLM'] font-bold
             drop-shadow-[0_2px_2px_rgba(0,0,0,0.6)]
           `}
           >

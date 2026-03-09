@@ -29,6 +29,7 @@ import {
   List
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Member, Gender } from '../types';
@@ -81,11 +82,38 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
 const DirectoryPage: React.FC = () => {
   const { members, siteAssets, addMember } = useData();
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+
+  // Handle URL ID parameter for direct profile access
+  React.useEffect(() => {
+    const memberId = searchParams.get('id');
+    if (memberId && members.length > 0) {
+      const member = members.find(m => m.id === memberId);
+      if (member) {
+        setSelectedMember(member);
+      }
+    }
+  }, [searchParams, members]);
+
+  const closeMemberModal = () => {
+    setSelectedMember(null);
+    // Remove the id from search params when closing
+    const newParams = new URLSearchParams(searchParams);
+    const hasId = newParams.has('id');
+    newParams.delete('id');
+    setSearchParams(newParams);
+    
+    // If we came from the Dashboard (via ?id=), return to home page
+    if (hasId) {
+      navigate('/');
+    }
+  };
   const [whatsappMessage, setWhatsappMessage] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -383,7 +411,7 @@ const DirectoryPage: React.FC = () => {
       </div>
       <AnimatePresence>
         {selectedMember && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 md:p-12 modal-overlay animate-in fade-in" onClick={() => setSelectedMember(null)}>
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 md:p-12 modal-overlay animate-in fade-in" onClick={closeMemberModal}>
            <motion.div 
              initial={{ opacity: 0, scale: 0.95, y: 40 }}
              animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -391,7 +419,7 @@ const DirectoryPage: React.FC = () => {
              className="modal-content w-full max-w-5xl max-h-[95vh] rounded-3xl md:rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col md:flex-row m-0" 
              onClick={e => e.stopPropagation()}
            >
-            <button onClick={() => setSelectedMember(null)} className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-white hover:text-slate-200 transition-all bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full z-50"><X size={20} /></button>
+            <button onClick={closeMemberModal} className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-white hover:text-slate-200 transition-all bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full z-50"><X size={20} /></button>
             <div className="md:w-[40%] relative h-[30vh] md:h-auto overflow-hidden bg-slate-100 flex-shrink-0">
                {selectedMember.avatar ? (
                  <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={`${selectedMember.firstName} ${selectedMember.lastName}`} />
