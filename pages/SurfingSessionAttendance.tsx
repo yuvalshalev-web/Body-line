@@ -46,9 +46,9 @@ interface SessionHistory {
 
 const SurfingSessionAttendance: React.FC = () => {
   const navigate = useNavigate();
-  const { finalizeThursdaySession, members: globalMembers, isLoading: globalLoading, yearConfig, attendeeIds } = useData();
+  const { finalizeThursdaySession, members: globalMembers, isLoading: globalLoading, yearConfig, attendeeIds, toggleSessionAttendance, activeSessionDate } = useData();
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
-  const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
+  const [localConfirmedIds, setLocalConfirmedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [view, setView] = useState<'current' | 'history'>('history');
@@ -58,11 +58,13 @@ const SurfingSessionAttendance: React.FC = () => {
   const [showManualDatePicker, setShowManualDatePicker] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  const confirmedIds = editingHistorySession ? localConfirmedIds : new Set(attendeeIds);
+
   // Track unsaved changes
   useEffect(() => {
     if (editingHistorySession) {
       const originalIds = new Set(editingHistorySession.participantIds || []);
-      const currentIds = confirmedIds;
+      const currentIds = localConfirmedIds;
       
       const isDifferent = originalIds.size !== currentIds.size || 
         Array.from(originalIds).some(id => !currentIds.has(id));
@@ -71,7 +73,7 @@ const SurfingSessionAttendance: React.FC = () => {
     } else {
       setHasUnsavedChanges(false);
     }
-  }, [confirmedIds, editingHistorySession]);
+  }, [localConfirmedIds, editingHistorySession]);
 
   // Warn before leaving
   useEffect(() => {
@@ -139,52 +141,22 @@ const SurfingSessionAttendance: React.FC = () => {
   }, []);
 
   // 3. Separate effect for active session sync to prevent race conditions
-  useEffect(() => {
-    // Only sync with active_session if we are in 'current' view AND NOT editing a historical session
-    if (view !== 'current' || editingHistorySession !== null) {
-      return;
-    }
-
-    const db = getDb();
-    const sessionRef = doc(db, 'site_data', 'active_session');
-    
-    const unsubSession = onSnapshot(sessionRef, (snapshot) => {
-      if (!snapshot.exists()) return;
-      
-      const data = snapshot.data();
-      const attendees = data?.attendees;
-      if (Array.isArray(attendees)) {
-        setConfirmedIds(new Set(attendees));
-      } else {
-        setConfirmedIds(new Set());
-      }
-    }, (error) => {
-      console.error("Active session sync error:", error);
-    });
-
-    return () => unsubSession();
-  }, [view, editingHistorySession]);
+  // (Removed: active_session sync is now handled by DataContext)
 
   const toggleUser = async (userId: string) => {
     if (editingHistorySession) {
-      const newConfirmed = new Set(confirmedIds);
+      const newConfirmed = new Set(localConfirmedIds);
       if (newConfirmed.has(userId)) {
         newConfirmed.delete(userId);
       } else {
         newConfirmed.add(userId);
       }
-      setConfirmedIds(newConfirmed);
+      setLocalConfirmedIds(newConfirmed);
       return;
     }
 
-    const db = getDb();
-    const sessionRef = doc(db, 'site_data', 'active_session');
-    const isSelected = confirmedIds.has(userId);
-
     try {
-      await setDoc(sessionRef, {
-        attendees: isSelected ? arrayRemove(userId) : arrayUnion(userId)
-      }, { merge: true });
+      await toggleSessionAttendance(userId);
     } catch (error) {
       console.error("Error toggling user attendance:", error);
       showError('שגיאה בעדכון הנוכחות');
@@ -203,7 +175,7 @@ const SurfingSessionAttendance: React.FC = () => {
         const db = getDb();
         if (editingHistorySession) {
           const batch = writeBatch(db);
-          const newParticipants = Array.from(confirmedIds);
+          const newParticipants = Array.from(localConfirmedIds);
           const oldParticipants = editingHistorySession.participantIds || [];
           
           const membersRef = collection(db, 'members');
@@ -257,13 +229,13 @@ const SurfingSessionAttendance: React.FC = () => {
           await batch.commit();
           showSuccess('נשמר בהצלחה');
           setEditingHistorySession(null);
-          setConfirmedIds(new Set());
+          setLocalConfirmedIds(new Set());
           navigate('/admin');
         } else {
           // Current session finalize
           await finalizeThursdaySession();
           showSuccess('נשמר בהצלחה');
-          setConfirmedIds(new Set());
+          setLocalConfirmedIds(new Set());
           navigate('/admin');
         }
       } catch (error: any) {
@@ -299,65 +271,76 @@ const SurfingSessionAttendance: React.FC = () => {
   };
 
   const timelineSessions = useMemo(() => {
-    const today = new Date();
-    const nextThursday = new Date(today);
-    // Find the next Thursday (including today if today is Thursday)
-    while (nextThursday.getDay() !== 4) {
-      nextThursday.setDate(nextThursday.getDate() + 1);
+    // The active session date from DataContext
+    const activeDate = activeSessionDate ? new Date(activeSessionDate) : new Date();
+    if (!activeSessionDate) {
+      while (activeDate.getDay() !== 4) {
+        activeDate.setDate(activeDate.getDate() + 1);
+      }
+      activeDate.setHours(7, 0, 0, 0);
     }
 
-    // Check if this next Thursday is already in history
-    const historyDates = history.map(s => {
+    // We will build the list starting with the virtual "Upcoming" session
+    const upcomingSession = {
+      id: 'upcoming',
+      date: Timestamp.fromDate(activeDate),
+      participantsCount: attendeeIds ? attendeeIds.length : 0,
+      participantIds: attendeeIds || [],
+      instructorName: 'מדריך חבל זוג',
+      isUpcoming: true
+    };
+
+    // Filter out any history item that has the EXACT SAME date as the active session
+    // so we don't show duplicates. The active session takes precedence.
+    const filteredHistory = history.filter(s => {
       const d = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
-      return d.toDateString();
+      return d.toDateString() !== activeDate.toDateString();
     });
-    
-    const isAlreadyInHistory = historyDates.includes(nextThursday.toDateString());
 
-    let list = [...history];
-    
-    if (!isAlreadyInHistory) {
-      // Add a virtual "Upcoming" session
-      list.unshift({
-        id: 'upcoming',
-        date: Timestamp.fromDate(nextThursday),
-        participantsCount: attendeeIds ? attendeeIds.length : 0,
-        participantIds: attendeeIds || [],
-        instructorName: 'מדריך חבל זוג',
-        isUpcoming: true
-      } as any);
-    } else {
-      // Mark the one in history as upcoming if it's the same date
-      list = list.map(s => {
-        const d = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
-        if (d.toDateString() === nextThursday.toDateString()) {
-          return { ...s, isUpcoming: true };
-        }
-        return s;
-      });
-    }
+    const list = [upcomingSession, ...filteredHistory];
 
     return list.sort((a, b) => {
       const da = a.date instanceof Timestamp ? a.date.toDate() : new Date(a.date);
       const db = b.date instanceof Timestamp ? b.date.toDate() : new Date(b.date);
       return db.getTime() - da.getTime();
     });
-  }, [history, attendeeIds]);
+  }, [history, attendeeIds, activeSessionDate]);
 
   const loadHistorySession = (session: SessionHistory) => {
     // If it's the virtual upcoming session, treat it as the current active session
     if (session.id === 'upcoming') {
       setEditingHistorySession(null);
-      setConfirmedIds(new Set(attendeeIds || []));
+      setLocalConfirmedIds(new Set(attendeeIds || []));
     } else {
       setEditingHistorySession(session);
-      setConfirmedIds(new Set(session.participantIds));
+      setLocalConfirmedIds(new Set(session.participantIds));
     }
     setView('current');
     setShowHistoryDropdown(false);
   };
 
   const handleSelectHistoryDate = (date: Date) => {
+    const activeDate = activeSessionDate ? new Date(activeSessionDate) : new Date();
+    if (!activeSessionDate) {
+      while (activeDate.getDay() !== 4) {
+        activeDate.setDate(activeDate.getDate() + 1);
+      }
+      activeDate.setHours(7, 0, 0, 0);
+    }
+
+    if (date.toDateString() === activeDate.toDateString()) {
+      loadHistorySession({
+        id: 'upcoming',
+        date: Timestamp.fromDate(activeDate),
+        participantsCount: attendeeIds ? attendeeIds.length : 0,
+        participantIds: attendeeIds || [],
+        instructorName: 'מדריך חבל זוג',
+        isUpcoming: true
+      } as any);
+      setShowManualDatePicker(false);
+      return;
+    }
+
     const existingSession = history.find(s => {
       const sDate = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
       return sDate.toDateString() === date.toDateString();

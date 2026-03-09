@@ -462,6 +462,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const toggleEventAttendance = async (eventId: string, userId: string) => {
+    const member = members.find(m => m.id === userId);
+    if (member && !member.isActive) {
+      showAlert("משתמש מושעה אינו יכול לאשר הגעה", "שגיאה");
+      return;
+    }
     const event = events.find(e => e.id === eventId);
     if (!event) return;
     const isAttending = (event.attendees || []).includes(userId);
@@ -535,6 +540,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const toggleSessionAttendance = async (userId: string) => {
+    const member = members.find(m => m.id === userId);
+    if (member && !member.isActive) {
+      showAlert("משתמש מושעה אינו יכול לאשר הגעה", "שגיאה");
+      return;
+    }
     const isCurrentlyAttending = attendeeIds.includes(userId);
     const activeSessionRef = doc(getDb(), 'site_data', 'active_session');
     if (isCurrentlyAttending) {

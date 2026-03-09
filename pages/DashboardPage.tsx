@@ -158,13 +158,15 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-16 animate-in fade-in duration-700 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
       <section className="relative w-full min-h-[700px] md:min-h-[650px] rounded-[var(--radius-lg)] overflow-hidden shadow-2xl border border-slate-100 group">
-        <img 
-          src={siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3000ms]" 
-          alt="Hero"
-          loading="lazy"
-        />
-        <div className="relative z-10 min-h-[700px] md:min-h-[650px] flex flex-col items-center justify-center p-8 md:p-12 text-center py-20">
+        <div className="absolute inset-0 border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] bg-[#00f2ff]">
+          <img 
+            src={siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
+            className="w-full h-full object-cover contrast-125 saturate-150 mix-blend-multiply group-hover:scale-105 transition-transform duration-[3000ms]" 
+            alt="Hero"
+            loading="lazy"
+          />
+        </div>
+        <div className="relative z-10 min-h-[700px] md:min-h-[650px] flex flex-col items-center justify-between p-8 md:p-12 text-center pb-16">
            <motion.p 
              initial={{ opacity: 0, y: 10 }}
              animate={{ opacity: 1, y: 0 }}
@@ -173,41 +175,32 @@ const DashboardPage: React.FC = () => {
            >
              "A day will come that is like no other... and nothing that happens after will ever be the same."
            </motion.p>
-           <h1 className="text-[47px] md:text-[78px] font-black text-[#F5A623] mb-6 tracking-tighter drop-shadow-2xl big-thursday-title">יום חמישי הגדול</h1>
+                       <h1 className="text-[58px] md:text-[110px] font-black font-bold text-[#F4D07A] mb-6 tracking-tighter drop-shadow-2xl big-thursday-title whitespace-nowrap">יום חמישי הגדול</h1>
            
            <div className="mb-8 space-y-2">
              <p className="text-lg md:text-xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>נכנסים למים בעוד...</p>
            </div>
 
            <div className="mb-12 flex gap-4 text-white/80 font-black text-xl tracking-tighter" dir="ltr">
-             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl">
-               <span className="text-3xl text-[#F5A623]">{countdown.days}</span>
+             <div className="flex flex-col items-center bg-black/5 backdrop-blur-md px-4 py-2 rounded-2xl">
+               <span className="text-3xl font-black text-[#F4D07A]">{countdown.days}</span>
                <span className="text-[10px] uppercase opacity-60">ימים</span>
              </div>
-             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl">
-               <span className="text-3xl text-[#F5A623]">{countdown.hours}</span>
+             <div className="flex flex-col items-center bg-black/5 backdrop-blur-md px-4 py-2 rounded-2xl">
+               <span className="text-3xl font-black text-[#F4D07A]">{countdown.hours}</span>
                <span className="text-[10px] uppercase opacity-60">שעות</span>
              </div>
-             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl">
-               <span className="text-3xl text-[#F5A623]">{countdown.minutes}</span>
+             <div className="flex flex-col items-center bg-black/5 backdrop-blur-md px-4 py-2 rounded-2xl">
+               <span className="text-3xl font-black text-[#F4D07A]">{countdown.minutes}</span>
                <span className="text-[10px] uppercase opacity-60">דקות</span>
              </div>
-             <div className="flex flex-col items-center bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl">
-               <span className="text-3xl text-[#F5A623]">{countdown.seconds}</span>
+             <div className="flex flex-col items-center bg-black/5 backdrop-blur-md px-4 py-2 rounded-2xl">
+               <span className="text-3xl font-black text-[#F4D07A]">{countdown.seconds}</span>
                <span className="text-[10px] uppercase opacity-60">שניות</span>
              </div>
            </div>
            
-           <div className="flex flex-col gap-6 items-center">
-              <button 
-                onClick={handleToggle}
-                disabled={isProcessing}
-                                className={`border-2 border-black px-10 md:px-16 py-4 md:py-6 rounded-full font-black text-xl md:text-2xl transition-all shadow-2xl active:scale-95 flex items-center gap-[var(--spacing-md)] text-[#2D3748] ${isUserAttending ? '!bg-[#FF9F1C] hover:!bg-[#FFB03C]' : '!bg-[#00AFC2] hover:!bg-[#009FB2]'}`}
-              >
-                {isProcessing ? <Loader2 className="animate-spin" size={28} /> : <Waves size={28} className={isUserAttending ? 'text-[#FF0000]' : 'text-[#00FFFF]'} />}
-                {isUserAttending ? <span className="text-[#FF0000]">בטל הגעה</span> : 'אני מגיע/ה'}
-              </button>
-              
+           <div className="flex flex-col gap-6 items-center mt-auto">
                       <button onClick={() => setShowAttendees(true)} className="flex items-center gap-3 hd-glass-button-gold px-6 py-3 rounded-2xl transition-all group">
                   <div className="flex -space-x-3 space-x-reverse">
                     {attendees.slice(0, 5).map(a => (
@@ -223,6 +216,17 @@ const DashboardPage: React.FC = () => {
                   </div>
                   <span className="text-white/70 font-black text-sm group-hover:text-white">{attendees.length} חברים אישרו הגעה</span>
                 </button>
+
+              <button 
+                onClick={handleToggle}
+                disabled={isProcessing}
+                                className={`border-2 border-black px-10 md:px-16 py-4 md:py-6 rounded-full font-black text-xl md:text-2xl transition-all shadow-2xl active:scale-95 flex items-center gap-[var(--spacing-md)] text-[#2D3748] ${isUserAttending ? '!bg-[#FF9F1C] hover:!bg-[#FFB03C]' : '!bg-[#00AFC2] hover:!bg-[#009FB2]'}`}
+              >
+                {isProcessing ? <Loader2 className="animate-spin" size={28} /> : <Waves size={28} className={isUserAttending ? 'text-[#FF0000]' : 'text-[#00FFFF]'} />}
+                {isUserAttending ? <span className="text-[#FF0000]">בטל הגעה</span> : 'אני מגיע/ה'}
+              </button>
+            </div>
+            <div className="mt-6 flex flex-col items-center">
                 
                 {attendees.length > 0 && (
                   <div className="flex flex-wrap justify-center gap-2 max-w-md">

@@ -58,38 +58,56 @@ export const finalizeThursdaySession = async (weeklyHistory: any[], yearConfig: 
       }
     }
 
-    // Idempotency check
-    const alreadyExists = weeklyHistory.some(d => {
+    // Idempotency check / Overwrite existing
+    const existingHistoryItem = weeklyHistory.find(d => {
       const dDate = d.date?.toDate ? d.date.toDate() : new Date(d.date);
       return dDate.toDateString() === sessionDate.toDateString();
     });
 
-    if (alreadyExists) {
-      await addRolloverLog('finalizeThursdaySession', 'success', 'Session already archived (idempotent)');
-      const nextThurs = getNextThursday();
-      await updateDoc(sessionRef, { attendees: [], date: nextThurs });
-      return;
-    }
-
     const batch = writeBatch(db);
     
     // 1. Update totalAttendance
-    if (attendees.length > 0) {
-      attendees.forEach((uid: string) => {
+    let addedAttendees = attendees;
+    let removedAttendees: string[] = [];
+
+    if (existingHistoryItem) {
+      const oldAttendees = existingHistoryItem.participantIds || [];
+      addedAttendees = attendees.filter((id: string) => !oldAttendees.includes(id));
+      removedAttendees = oldAttendees.filter((id: string) => !attendees.includes(id));
+    }
+
+    if (addedAttendees.length > 0) {
+      addedAttendees.forEach((uid: string) => {
         const memberRef = doc(db, 'members', uid);
         batch.update(memberRef, { totalAttendance: increment(1) });
       });
     }
+    
+    if (removedAttendees.length > 0) {
+      removedAttendees.forEach((uid: string) => {
+        const memberRef = doc(db, 'members', uid);
+        batch.update(memberRef, { totalAttendance: increment(-1) });
+      });
+    }
 
-    // 2. Create weekly_history entry
-    const historyRef = doc(collection(db, 'weekly_history'));
-    batch.set(historyRef, {
-      date: Timestamp.fromDate(sessionDate),
-      participantsCount: attendees.length,
-      participantIds: attendees,
-      timestamp: new Date().toISOString(),
-      instructorName: 'מדריך חבל זוג'
-    });
+    // 2. Create or Update weekly_history entry
+    if (existingHistoryItem) {
+      const historyRef = doc(db, 'weekly_history', existingHistoryItem.id);
+      batch.update(historyRef, {
+        participantsCount: attendees.length,
+        participantIds: attendees,
+        updatedAt: new Date().toISOString()
+      });
+    } else {
+      const historyRef = doc(collection(db, 'weekly_history'));
+      batch.set(historyRef, {
+        date: Timestamp.fromDate(sessionDate),
+        participantsCount: attendees.length,
+        participantIds: attendees,
+        timestamp: new Date().toISOString(),
+        instructorName: 'מדריך חבל זוג'
+      });
+    }
 
     // 3. Reset active session
     const nextThurs = getNextThursday();
