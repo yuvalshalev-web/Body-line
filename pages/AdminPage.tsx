@@ -18,6 +18,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getStorageInstance } from '../services/firebase';
 import { processImage } from '../utils/imageProcessor';
 import { updateStorageStats, syncStorageOnUpload } from '../utils/storageStats';
+import { ColorPickerIcon } from '../components/icons/ColorPickerIcon';
 import { extractAddressData } from '../utils/googlePlaces';
 import StorageDisplay from '../components/StorageDisplay';
 import EventEditor from '../components/admin/EventEditor';
@@ -1615,7 +1616,7 @@ const AdminPage: React.FC = () => {
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   <div className="w-12 h-12 rounded-xl shadow-lg border-2 border-white flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" style={{ backgroundColor: siteConfig.globalColor || '#40E0D0' }}>
-                    <img src="https://cdn-icons-png.flaticon.com/512/2921/2921226.png" alt="Color Picker" className="w-7 h-7" />
+                    <ColorPickerIcon className="w-7 h-7 text-white drop-shadow-md" />
                   </div>
                 </div>
               </div>

@@ -46,7 +46,7 @@ interface SessionHistory {
 
 const SurfingSessionAttendance: React.FC = () => {
   const navigate = useNavigate();
-  const { finalizeThursdaySession, members: globalMembers, isLoading: globalLoading, yearConfig, attendeeIds, toggleSessionAttendance, activeSessionDate } = useData();
+  const { members: globalMembers, isLoading: globalLoading, yearConfig, attendeeIds, toggleSessionAttendance, activeSessionDate } = useData();
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const [localConfirmedIds, setLocalConfirmedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
@@ -174,6 +174,16 @@ const SurfingSessionAttendance: React.FC = () => {
       try {
         const db = getDb();
         if (editingHistorySession) {
+          if (editingHistorySession.id === 'upcoming') {
+            const activeSessionRef = doc(db, 'site_data', 'active_session');
+            await setDoc(activeSessionRef, { attendees: Array.from(localConfirmedIds) }, { merge: true });
+            showSuccess('נשמר בהצלחה');
+            setEditingHistorySession(null);
+            setLocalConfirmedIds(new Set());
+            setView('history');
+            return;
+          }
+
           const batch = writeBatch(db);
           const newParticipants = Array.from(localConfirmedIds);
           const oldParticipants = editingHistorySession.participantIds || [];
@@ -231,12 +241,6 @@ const SurfingSessionAttendance: React.FC = () => {
           setEditingHistorySession(null);
           setLocalConfirmedIds(new Set());
           navigate('/admin');
-        } else {
-          // Current session finalize
-          await finalizeThursdaySession();
-          showSuccess('נשמר בהצלחה');
-          setLocalConfirmedIds(new Set());
-          navigate('/admin');
         }
       } catch (error: any) {
         console.error("Error saving session:", error);
@@ -258,17 +262,21 @@ const SurfingSessionAttendance: React.FC = () => {
     }
 
     if (editingHistorySession) {
-      showConfirm({
-        message: "שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות. האם אתה בטוח שברצונך לעדכן את הרישום?",
-        onConfirm: performSave
-      });
-    } else {
-      showConfirm({
-        message: `האם לאשר סופית נוכחות של ${confirmedIds.size} גולשים?`,
-        onConfirm: performSave
-      });
+      if (editingHistorySession.id === 'upcoming') {
+        showConfirm({
+          message: `האם לשמור את השינויים בסשן הקרוב? (${confirmedIds.size} גולשים)`,
+          onConfirm: performSave
+        });
+      } else {
+        showConfirm({
+          message: "שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות. האם אתה בטוח שברצונך לעדכן את הרישום?",
+          onConfirm: performSave
+        });
+      }
     }
   };
+
+
 
   const timelineSessions = useMemo(() => {
     // The active session date from DataContext
@@ -307,12 +315,10 @@ const SurfingSessionAttendance: React.FC = () => {
   }, [history, attendeeIds, activeSessionDate]);
 
   const loadHistorySession = (session: SessionHistory) => {
-    // If it's the virtual upcoming session, treat it as the current active session
+    setEditingHistorySession(session);
     if (session.id === 'upcoming') {
-      setEditingHistorySession(null);
       setLocalConfirmedIds(new Set(attendeeIds || []));
     } else {
-      setEditingHistorySession(session);
       setLocalConfirmedIds(new Set(session.participantIds));
     }
     setView('current');
@@ -466,7 +472,9 @@ const SurfingSessionAttendance: React.FC = () => {
                   אתה נמצא במצב עריכה
                 </p>
                 <p className="text-sm font-bold opacity-80 leading-[1.5] mt-1">
-                  שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות.
+                  {editingHistorySession.id === 'upcoming' 
+                    ? 'עריכת רשימת המשתתפים בסשן הקרוב. שינויים יישמרו לסשן הפעיל.'
+                    : 'שינוי רשימת המשתתפים בסשן היסטורי ישפיע באופן ישיר על הגרפים והסטטיסטיקות השבועיות.'}
                 </p>
               </div>
             </div>
@@ -485,6 +493,7 @@ const SurfingSessionAttendance: React.FC = () => {
                 {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                 שמור שינויים
               </button>
+
             </div>
           </div>
         )}

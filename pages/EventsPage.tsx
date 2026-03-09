@@ -17,7 +17,8 @@ import {
   Zap,
   Info,
   Pencil,
-  Camera
+  Camera,
+  Navigation
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -28,6 +29,8 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getStorageInstance } from '../services/firebase';
 import { processImage } from '../utils/imageProcessor';
 import { syncStorageOnUpload } from '../utils/storageStats';
+import { WazeIcon } from '../components/icons/WazeIcon';
+import { GoogleMapsIcon } from '../components/icons/GoogleMapsIcon';
 
 const EventsPage: React.FC = () => {
   const { currentUser } = useAuth();
@@ -280,7 +283,38 @@ const EventsPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-slate-600"><Clock size={16} className="text-rose-500" /><span className="text-xs font-black">{event.time}</span></div>
-                  <div className="flex items-center gap-3 text-slate-600"><MapPin size={16} className="text-rose-500" /><span className="text-xs font-black">{event.location}</span></div>
+                  <div className="flex items-center justify-between gap-3 text-slate-600">
+                    <div className="flex items-center gap-3">
+                      <MapPin size={16} className="text-rose-500" />
+                      <span className="text-xs font-black">{event.location}</span>
+                    </div>
+                    {event.location && (
+                      <div className="flex items-center gap-2">
+                        <a 
+                          href={`https://waze.com/ul?q=${encodeURIComponent(event.location)}&navigate=yes`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-3 py-1.5 bg-[#33ccff]/10 text-[#33ccff] rounded-xl hover:bg-[#33ccff]/20 transition-colors flex items-center gap-1.5 shrink-0 shadow-sm"
+                          title="ניווט עם Waze"
+                        >
+                          <WazeIcon className="w-4 h-4" />
+                          <span className="text-xs font-bold">Waze</span>
+                        </a>
+                        <a 
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-3 py-1.5 bg-blue-500/10 text-blue-600 rounded-xl hover:bg-blue-500/20 transition-colors flex items-center gap-1.5 shrink-0 shadow-sm"
+                          title="ניווט עם Google Maps"
+                        >
+                          <GoogleMapsIcon className="w-4 h-4" />
+                          <span className="text-xs font-bold">Maps</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex items-center gap-3 text-slate-600">
                     <Users size={16} className="text-rose-500" />
                     <span className="text-xs font-black">
