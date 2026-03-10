@@ -191,14 +191,20 @@ const App: React.FC = () => {
       </div>
 
       {/* Hamburger Button (Top Left) */}
-      <div className="fixed top-6 left-6 z-[10000]">
+      <motion.div 
+        key={location.pathname}
+        drag
+        whileDrag={{ scale: 1.1, zIndex: 100000 }}
+        dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+        className="fixed top-6 left-6 z-[10000] cursor-grab active:cursor-grabbing"
+      >
         <button 
           onClick={() => setIsDrawerOpen(true)}
           className="w-12 h-12 rounded-full bg-white/80 backdrop-blur-md border border-white/40 shadow-xl flex items-center justify-center text-[var(--sand-dark)] hover:text-[var(--sand-accent)] transition-all hover:scale-110 active:scale-95"
         >
           <Menu size={24} />
         </button>
-      </div>
+      </motion.div>
 
       {/* Drawer Menu */}
       <AnimatePresence>

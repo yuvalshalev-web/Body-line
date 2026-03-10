@@ -8,6 +8,8 @@ import { processImage } from '../../utils/imageProcessor';
 import { syncStorageOnUpload } from '../../utils/storageStats';
 import { useModal } from '../../contexts/ModalContext';
 
+import AnalogTimePicker from './AnalogTimePicker';
+
 interface EventEditorProps {
   event: any;
   onSave: (updatedEvent: any) => Promise<void>;
@@ -112,13 +114,11 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
                 className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-[320px]">
               <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">שעה</label>
-              <input 
-                type="time"
-                value={form.time}
-                onChange={(e) => setForm({ ...form, time: e.target.value })}
-                className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
+              <AnalogTimePicker 
+                value={form.time} 
+                onChange={(time) => setForm({ ...form, time })} 
               />
             </div>
           </div>

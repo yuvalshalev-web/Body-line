@@ -1,6 +1,6 @@
 {
-  "name": "MemberHub & Shared Gallery",
-  "description": "A sophisticated community platform featuring member profiles, detailed directories, and an AI-enhanced shared image gallery.",
+  "name": "Body-line",
+  "description": "A sophisticated community platform for surfers featuring member profiles, detailed directories, and an AI-enhanced shared image gallery.",
   "requestFramePermissions": [
     "camera"
   ]

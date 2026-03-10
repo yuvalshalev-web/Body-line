@@ -720,30 +720,32 @@ const SurfingSessionAttendance: React.FC = () => {
                       </div>
 
                       <div className="flex items-center justify-between md:justify-end gap-8">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input 
-                            type="checkbox"
-                            checked={session.status !== 'suspended'}
-                            onChange={async (e) => {
-                              const newStatus = e.target.checked ? 'active' : 'suspended';
-                              try {
-                                const db = getDb();
-                                if (session.id === 'upcoming') {
-                                  await setDoc(doc(db, 'site_data', 'active_session'), { status: newStatus }, { merge: true });
-                                } else {
-                                  await updateDoc(doc(db, 'weekly_history', session.id), { status: newStatus });
+                        {isUpcoming && (
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input 
+                              type="checkbox"
+                              checked={session.status !== 'suspended'}
+                              onChange={async (e) => {
+                                const newStatus = e.target.checked ? 'active' : 'suspended';
+                                try {
+                                  const db = getDb();
+                                  if (session.id === 'upcoming') {
+                                    await setDoc(doc(db, 'site_data', 'active_session'), { status: newStatus }, { merge: true });
+                                  } else {
+                                    await updateDoc(doc(db, 'weekly_history', session.id), { status: newStatus });
+                                  }
+                                } catch (error) {
+                                  console.error("Error updating session status:", error);
+                                  showError('שגיאה בעדכון סטטוס הסשן');
                                 }
-                              } catch (error) {
-                                console.error("Error updating session status:", error);
-                                showError('שגיאה בעדכון סטטוס הסשן');
-                              }
-                            }}
-                            className="w-6 h-6 rounded-md border-2 border-[#006994] accent-[#006994] cursor-pointer"
-                          />
-                          <span className="text-xs font-black text-[#006994]">
-                            {session.status !== 'suspended' ? 'פעיל' : 'מושעה'}
-                          </span>
-                        </label>
+                              }}
+                              className="w-6 h-6 rounded-md border-2 border-[#006994] accent-[#006994] cursor-pointer"
+                            />
+                            <span className="text-xs font-black text-[#006994]">
+                              {session.status !== 'suspended' ? 'פעיל' : 'מושעה'}
+                            </span>
+                          </label>
+                        )}
                         <div className="flex -space-x-3 space-x-reverse">
                           {session.participantIds.length > 0 ? (
                             session.participantIds.slice(0, 3).map((uid, i) => {

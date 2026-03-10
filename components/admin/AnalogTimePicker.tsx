@@ -1,92 +1,175 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'motion/react';
+import React, { useState } from 'react';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { StaticTimePicker } from '@mui/x-date-pickers/StaticTimePicker';
+import dayjs, { Dayjs } from 'dayjs';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface AnalogTimePickerProps {
   value: string;
   onChange: (time: string) => void;
 }
 
-const AnalogTimePicker: React.FC<AnalogTimePickerProps> = ({ value, onChange }) => {
-  const [hours, setHours] = useState(parseInt(value.split(':')[0]) || 0);
-  const [minutes, setMinutes] = useState(parseInt(value.split(':')[1]) || 0);
-  const [isDragging, setIsDragging] = useState(false);
-  const clockRef = useRef<SVGSVGElement>(null);
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#006994',
+    },
+  },
+  typography: {
+    fontFamily: '"Inter", sans-serif',
+  },
+  components: {
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'transparent',
+          boxShadow: 'none',
+        },
+      },
+    },
+  },
+});
 
-  const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!clockRef.current) return;
-    const rect = clockRef.current.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    
-    const x = clientX - rect.left - rect.width / 2;
-    const y = clientY - rect.top - rect.height / 2;
-    
-    // Calculate angle in degrees (0 is top/12 o'clock)
-    let angle = Math.atan2(y, x) * (180 / Math.PI) + 90;
-    if (angle < 0) angle += 360;
-    
-    // Determine if we are setting hours or minutes based on distance from center
-    const distance = Math.sqrt(x * x + y * y);
-    
-    if (distance < rect.width / 4) {
-      // Set hours (0-11)
-      const newHours = Math.round(angle / 30) % 12;
-      setHours(newHours);
-    } else {
-      // Set minutes (0-59)
-      const newMinutes = Math.round(angle / 6) % 60;
-      setMinutes(newMinutes);
+const AnalogTimePicker: React.FC<AnalogTimePickerProps> = ({ value, onChange }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const timeValue = value ? dayjs(`2024-01-01T${value}`) : dayjs();
+
+  const handleAccept = (newValue: Dayjs | null) => {
+    if (newValue) {
+      onChange(newValue.format('HH:mm'));
     }
+    setIsExpanded(false);
   };
 
-  useEffect(() => {
-    onChange(`${String(hours % 12 === 0 ? 12 : hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
-  }, [hours, minutes]);
+  const handleCancel = () => {
+    setIsExpanded(false);
+  };
 
   return (
-    <div className="flex flex-col items-center gap-4 p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl">
-      <svg
-        ref={clockRef}
-        width="200"
-        height="200"
-        viewBox="0 0 200 200"
-        className="cursor-pointer touch-none"
-        onMouseDown={() => setIsDragging(true)}
-        onMouseMove={(e) => isDragging && handleInteraction(e)}
-        onMouseUp={() => setIsDragging(false)}
-        onMouseLeave={() => setIsDragging(false)}
-        onTouchMove={(e) => handleInteraction(e)}
-      >
-        <circle cx="100" cy="100" r="90" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
-        
-        {/* Hour hand */}
-        <motion.line
-          x1="100" y1="100"
-          x2="100" y2="60"
-          stroke="white"
-          strokeWidth="6"
-          strokeLinecap="round"
-          animate={{ rotate: hours * 30 + minutes * 0.5 }}
-          style={{ originX: "100px", originY: "100px" }}
-        />
-        
-        {/* Minute hand */}
-        <motion.line
-          x1="100" y1="100"
-          x2="100" y2="30"
-          stroke="rgba(255,255,255,0.8)"
-          strokeWidth="4"
-          strokeLinecap="round"
-          animate={{ rotate: minutes * 6 }}
-          style={{ originX: "100px", originY: "100px" }}
-        />
-        
-        <circle cx="100" cy="100" r="4" fill="white" />
-      </svg>
-      <div className="text-2xl font-black text-white">
-        {String(hours === 0 ? 12 : hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}
+    <ThemeProvider theme={theme}>
+      <div className="flex flex-col gap-2 w-full">
+        {/* Minimized View */}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center justify-between w-full h-[48px] px-5 bg-white/40 backdrop-blur-md text-[var(--deep-teal-sea)] border border-white/40 rounded-2xl font-black text-sm hover:bg-white/60 transition-all shadow-sm group"
+          style={{ backdropFilter: 'blur(12px)' }}
+        >
+          <div className="flex items-center gap-3">
+            <Clock size={18} className="text-[var(--vibrant-cyan)]" />
+            <span>{value || 'בחירת שעה'}</span>
+          </div>
+          {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </button>
+
+        {/* Expanded Picker */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, scale: 0.95 }}
+              animate={{ opacity: 1, height: 'auto', scale: 1 }}
+              exit={{ opacity: 0, height: 0, scale: 0.95 }}
+              className="overflow-hidden"
+            >
+              <div 
+                className="bg-white/30 backdrop-blur-xl border border-white/40 rounded-3xl overflow-hidden shadow-2xl mt-2 relative"
+                style={{ backdropFilter: 'blur(20px)' }}
+              >
+                {/* Glassy overlay for extra frosted effect */}
+                <div className="absolute inset-0 bg-white/20 pointer-events-none" />
+                
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <StaticTimePicker 
+                    displayStaticWrapperAs="desktop"
+                    orientation="portrait"
+                    ampm={false}
+                    value={timeValue}
+                    onAccept={handleAccept}
+                    onClose={handleCancel}
+                    onChange={(newValue) => {
+                      if (newValue) {
+                        onChange(newValue.format('HH:mm'));
+                      }
+                    }}
+                    slotProps={{
+                      actionBar: { 
+                        actions: ['accept', 'cancel'],
+                        sx: {
+                          '& .MuiButton-root': {
+                            fontWeight: '900',
+                            fontSize: '0.75rem',
+                            fontFamily: '"Inter", sans-serif',
+                            color: '#006994',
+                          }
+                        }
+                      },
+                      toolbar: {
+                        hidden: false,
+                      }
+                    }}
+                    sx={{
+                      '& .MuiPickersLayout-root': {
+                        backgroundColor: 'transparent',
+                      },
+                      '& .MuiClock-root': {
+                        backgroundColor: 'rgba(248, 250, 252, 0.5)',
+                        margin: '16px',
+                        borderRadius: '50%',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                      },
+                      '& .MuiClockPointer-root': {
+                        backgroundColor: '#006994',
+                      },
+                      '& .MuiClockPointer-thumb': {
+                        backgroundColor: '#006994',
+                        borderColor: '#006994',
+                      },
+                      '& .MuiClock-pin': {
+                        backgroundColor: '#006994',
+                      },
+                      '& .MuiPickersToolbar-root': {
+                        padding: '24px 16px',
+                        backgroundColor: 'rgba(248, 250, 252, 0.3)',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+                        display: 'flex',
+                        flexDirection: 'row !important', // Force LTR order
+                        justifyContent: 'center !important', // Center digits
+                        alignItems: 'center',
+                        direction: 'ltr', // Ensure HH : mm order
+                      },
+                      '& .MuiPickersToolbar-content': {
+                        display: 'flex',
+                        flexDirection: 'row !important',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: '8px',
+                        width: '100%',
+                      },
+                      '& .MuiPickersToolbarText-root': {
+                        fontSize: '3rem',
+                        fontWeight: '300',
+                        color: '#1e293b',
+                      },
+                      '& .MuiPickersToolbarText-root.Mui-selected': {
+                        color: '#006994',
+                        fontWeight: '600',
+                      },
+                      '& .MuiPickersToolbar-separator': {
+                        fontSize: '3rem',
+                        margin: '0 8px',
+                        color: '#94a3b8',
+                      }
+                    }}
+                  />
+                </LocalizationProvider>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </ThemeProvider>
   );
 };
 

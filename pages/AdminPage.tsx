@@ -1476,7 +1476,7 @@ const AdminPage: React.FC = () => {
                     <Calendar size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">מועד סשן/ים שבועי</h3>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">הוספת סשן שבועי</h3>
                     <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ימים ושעות לסשנים קבועים</p>
                   </div>
                 </div>
@@ -1521,48 +1521,33 @@ const AdminPage: React.FC = () => {
                   </div>
 
                   {/* Add New Session Controls */}
-                  <div className="flex flex-wrap items-end gap-4 p-4 bg-[var(--aqua-mist)]/10 rounded-2xl border border-[var(--vibrant-cyan)]/10">
-                    <div className="flex-1 min-w-[280px]">
-                      <label className="block text-[10px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">יום בשבוע</label>
-                      <div className="flex flex-wrap gap-2">
-                        {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'].map((day, index) => (
-                          <button
-                            key={index}
-                            onClick={() => setNewSessionDay(index)}
-                            className={`px-4 py-2 rounded-xl font-black text-sm transition-all duration-300 border ${
-                              newSessionDay === index 
-                                ? 'bg-[var(--deep-teal-sea)] text-white shadow-lg shadow-[var(--deep-teal-sea)]/20 border-[var(--deep-teal-sea)]' 
-                                : 'bg-white/40 backdrop-blur-md text-[var(--deep-teal-sea)] border-white/20 hover:bg-white/60'
-                            }`}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-black text-[var(--deep-teal-sea)]">הוספת סשן שבועי:</h4>
+                    <div className="flex flex-wrap items-end gap-4 p-4 bg-[var(--aqua-mist)]/10 rounded-2xl border border-[var(--vibrant-cyan)]/10">
+                      <div className="min-w-[160px]">
+                        <label className="block text-[10px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">יום בשבוע</label>
+                        <div className="relative">
+                          <select
+                            value={newSessionDay}
+                            onChange={(e) => setNewSessionDay(parseInt(e.target.value))}
+                            className="w-full h-[48px] px-5 bg-white/60 backdrop-blur-md text-[var(--deep-teal-sea)] border border-[var(--vibrant-cyan)]/20 rounded-2xl font-black text-sm focus:outline-none focus:ring-2 focus:ring-[var(--vibrant-cyan)]/30 transition-all appearance-none cursor-pointer"
                           >
-                            {day}
-                          </button>
-                        ))}
+                            {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'].map((day, index) => (
+                              <option key={index} value={index} className="bg-white text-[var(--deep-teal-sea)]">
+                                יום {day}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--deep-teal-sea)]/40">
+                            <ChevronDown size={18} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="min-w-[200px]">
+                        <label className="block text-[10px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">שעה</label>
+                        <AnalogTimePicker value={newSessionTime} onChange={setNewSessionTime} />
                       </div>
                     </div>
-                    <div className="flex-1 min-w-[120px]">
-                      <label className="block text-[10px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">שעה</label>
-                      <AnalogTimePicker value={newSessionTime} onChange={setNewSessionTime} />
-                    </div>
-                    <button
-                      onClick={() => {
-                        const newSession = {
-                          dayOfWeek: newSessionDay,
-                          time: newSessionTime,
-                          isActive: false
-                        };
-                        // Prevent duplicates
-                        if (!weeklySessions.some(s => s.dayOfWeek === newSession.dayOfWeek && s.time === newSession.time)) {
-                          setWeeklySessions([...weeklySessions, newSession]);
-                        } else {
-                          showError('סשן זה כבר קיים ברשימה.');
-                        }
-                      }}
-                      className="h-[48px] px-6 bg-white text-[var(--deep-teal-sea)] border border-[var(--vibrant-cyan)]/20 rounded-xl font-black text-sm hover:bg-[var(--aqua-mist)]/20 transition-colors flex items-center gap-2"
-                    >
-                      <Plus size={16} />
-                      הוספת סשן
-                    </button>
                   </div>
 
                   {/* Save Button */}
@@ -1571,7 +1556,27 @@ const AdminPage: React.FC = () => {
                       onClick={async () => {
                         setIsSavingSessions(true);
                         try {
-                          await updateSiteConfig({ weeklySessions });
+                          let updatedSessions = [...weeklySessions];
+                          
+                          // Check if the current selection in "Add New Session" should be added
+                          // We add it if it doesn't already exist in the list
+                          const newSession = {
+                            dayOfWeek: newSessionDay,
+                            time: newSessionTime,
+                            isActive: true // Default to active when adding via Save button
+                          };
+
+                          const exists = weeklySessions.some(s => 
+                            s.dayOfWeek === newSession.dayOfWeek && 
+                            s.time === newSession.time
+                          );
+
+                          if (!exists) {
+                            updatedSessions.push(newSession);
+                            setWeeklySessions(updatedSessions);
+                          }
+
+                          await updateSiteConfig({ weeklySessions: updatedSessions });
                           showSuccess('מועדי הסשנים נשמרו בהצלחה');
                         } catch (err) {
                           console.error(err);

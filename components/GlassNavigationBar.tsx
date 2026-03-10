@@ -46,7 +46,12 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
   const currentTheme = themeStyles[theme];
 
   return (
-    <div className={`relative p-2 !rounded-[2rem] overflow-hidden glass-panel flex w-full max-w-5xl mx-auto overflow-x-auto no-scrollbar border border-white/30 backdrop-blur-xl ${currentTheme.container}`}>
+    <motion.div 
+      drag
+      whileDrag={{ scale: 1.02, zIndex: 100000 }}
+      dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+      className={`relative p-2 !rounded-[2rem] overflow-hidden glass-panel flex w-full max-w-5xl mx-auto overflow-x-auto no-scrollbar border border-white/30 backdrop-blur-xl cursor-grab active:cursor-grabbing ${currentTheme.container}`}
+    >
       {items.map((item) => {
         const isActive = activeId === item.id;
         return (
@@ -84,7 +89,7 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
           </button>
         );
       })}
-    </div>
+    </motion.div>
   );
 };
 
