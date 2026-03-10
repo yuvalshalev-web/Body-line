@@ -41,12 +41,37 @@ export const calculateUserStats = (
   if (!member) return null;
 
   const startDate = yearConfig?.startDate ? new Date(yearConfig.startDate) : new Date(0);
+  const now = new Date();
   
-  // Filter history for sessions after startDate
-  const relevantHistory = weeklyHistory.filter(session => {
+  // Filter history for sessions after startDate, ignoring cancelled sessions
+  const validSessions = weeklyHistory.filter(session => {
     const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
-    return sessionDate >= startDate;
+    return sessionDate >= startDate && sessionDate <= now && (session.participantsCount || 0) > 0;
   });
+
+  // Group by week (Thursday) to merge participantIds
+  const sessionsByDate = new Map<string, { date: Date, participantIds: Set<string> }>();
+  validSessions.forEach(session => {
+    const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+    
+    // Normalize to Thursday 07:00
+    const day = sessionDate.getDay();
+    const diff = 4 - day;
+    const thursdayDate = new Date(sessionDate);
+    thursdayDate.setDate(thursdayDate.getDate() + diff);
+    thursdayDate.setHours(7, 0, 0, 0);
+    
+    const dateKey = thursdayDate.toDateString();
+    if (!sessionsByDate.has(dateKey)) {
+      sessionsByDate.set(dateKey, { date: thursdayDate, participantIds: new Set<string>() });
+    }
+    (session.participantIds || []).forEach((id: string) => sessionsByDate.get(dateKey)!.participantIds.add(id));
+  });
+
+  const relevantHistory = Array.from(sessionsByDate.values()).map(s => ({
+    date: s.date,
+    participantIds: Array.from(s.participantIds)
+  }));
 
   // Calculate attendance
   const userSessions = relevantHistory.filter(session => 
@@ -56,7 +81,6 @@ export const calculateUserStats = (
   const totalSessions = userSessions.length;
 
   // Calculate Social Attendance (Only past events)
-  const now = new Date();
   const pastSocialEvents = events.filter(e => {
     const eventDate = e.date?.toDate ? e.date.toDate() : new Date(e.date);
     return (e.type === 'COMMUNITY' || e.type === 'MEMBER') && eventDate < now;
@@ -68,9 +92,7 @@ export const calculateUserStats = (
   // Calculate Streak (consecutive weeks)
   // Sort history by date desc
   const sortedHistory = [...relevantHistory].sort((a, b) => {
-    const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-    const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
-    return dateB.getTime() - dateA.getTime();
+    return b.date.getTime() - a.date.getTime();
   });
 
   let streak = 0;
@@ -143,13 +165,13 @@ export const calculateUserStats = (
 
   // Filter user sessions to only those in the current season
   const userSessionsSeason = userSessions.filter(s => {
-    const d = s.date?.toDate ? s.date.toDate() : new Date(s.date);
+    const d = s.date;
     return d >= seasonStart && d <= seasonEnd;
   });
 
   // Calculate active weeks (weeks with at least one session attended) in the season
   const userSessionWeeks = new Set(userSessionsSeason.map(s => {
-    const d = s.date?.toDate ? s.date.toDate() : new Date(s.date);
+    const d = s.date;
     // Simple week identifier: Year-WeekNumber
     const oneJan = new Date(d.getFullYear(), 0, 1);
     const numberOfDays = Math.floor((d.getTime() - oneJan.getTime()) / (24 * 60 * 60 * 1000));

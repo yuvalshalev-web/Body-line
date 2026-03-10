@@ -50,7 +50,8 @@ interface DataContextType {
       strokeColor?: string;
       glowSize?: string;
       glowColor?: string;
-    }
+    },
+    weeklySessions?: { dayOfWeek: number, time: string, isActive?: boolean }[];
   };
   yearConfig: { startDate: string; endDate: string } | null;
   attendeeIds: string[];
@@ -90,7 +91,8 @@ interface DataContextType {
     navPosition: 'standard',
     home_break: any,
     globalColor: string,
-    h1Styles: any
+    h1Styles: any,
+    weeklySessions: { dayOfWeek: number, time: string, isActive?: boolean }[]
   }>) => Promise<void>;
   updateYearConfig: (config: { startDate: string; endDate: string }) => Promise<void>;
   archiveMember: (id: string) => Promise<void>;
@@ -133,9 +135,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       strokeColor?: string;
       glowSize?: string;
       glowColor?: string;
-    }
+    },
+    weeklySessions?: { dayOfWeek: number, time: string, isActive?: boolean }[];
   }>(() => {
-    return { navPosition: 'standard' };
+    return { navPosition: 'standard', weeklySessions: [{ dayOfWeek: 4, time: '07:00', isActive: false }] };
   });
   const [yearConfig, setYearConfig] = useState<{ startDate: string; endDate: string } | null>(null);
   const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
@@ -629,7 +632,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     navPosition: 'standard',
     home_break: any,
     globalColor: string,
-    h1Styles: any
+    h1Styles: any,
+    weeklySessions: { dayOfWeek: number, time: string }[]
   }>) => {
     setSiteConfig(prev => ({ ...prev, ...config }));
     await setDoc(doc(getDb(), 'site_data', 'config'), config, { merge: true });

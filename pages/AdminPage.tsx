@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import GlassNavigationBar from '../components/GlassNavigationBar';
 import { 
   Users, Archive, Mic, Image as ImageIcon, Calendar, Settings, UserCheck, ShieldAlert, Search, 
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 
@@ -21,6 +22,7 @@ import { updateStorageStats, syncStorageOnUpload } from '../utils/storageStats';
 import { ColorPickerIcon } from '../components/icons/ColorPickerIcon';
 import { extractAddressData } from '../utils/googlePlaces';
 import StorageDisplay from '../components/StorageDisplay';
+import AnalogTimePicker from '../components/admin/AnalogTimePicker';
 import EventEditor from '../components/admin/EventEditor';
 import EditMemberForm from '../components/admin/EditMemberForm';
 import PostEditor from '../components/admin/PostEditor';
@@ -43,7 +45,28 @@ const AdminPage: React.FC = () => {
     yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE'>('DASHBOARD');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE'>('USERS');
+  const [newSessionDay, setNewSessionDay] = useState(4);
+  const [newSessionTime, setNewSessionTime] = useState('07:00');
+
+  const adminTabs = [
+    { id: 'USERS', label: 'משתמשים', icon: <Users size={20} /> },
+    { id: 'ARCHIVE', label: 'ארכיון', icon: <Archive size={20} /> },
+    { id: 'POSTS', label: 'פוסטים', icon: <Newspaper size={20} /> },
+    { id: 'GALLERY', label: 'גלריה', icon: <ImageIcon size={20} /> },
+    { id: 'EVENTS', label: 'אירועים', icon: <Calendar size={20} /> },
+    { id: 'REQUESTS', label: 'בקשות', icon: <UserCheck size={20} />, count: joinRequests.length },
+    { id: 'ROLLOVER', label: 'דו"ח יום חמישי', icon: <Activity size={20} /> },
+    { id: 'SITE', label: 'הגדרות', icon: <Settings size={20} /> }
+  ];
+
+  const handleTabChange = (id: string) => {
+    if (id === 'ROLLOVER') {
+      navigate('/admin-rollover');
+    } else {
+      setActiveTab(id as any);
+    }
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [approvedUser, setApprovedUser] = useState<{ firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null>(null);
@@ -234,11 +257,23 @@ const AdminPage: React.FC = () => {
 
     return () => cleanupFns.forEach(fn => fn());
   }, [activeTab]);
-  
+
   // Year Config State
   const [isEditingYear, setIsEditingYear] = useState(false);
   const [yearForm, setYearForm] = useState({ startDate: '', endDate: '' });
   const [isSavingYear, setIsSavingYear] = useState(false);
+
+  // Weekly Sessions State
+  const [weeklySessions, setWeeklySessions] = useState<{ dayOfWeek: number, time: string, isActive?: boolean }[]>(
+    siteConfig.weeklySessions || [{ dayOfWeek: 4, time: '07:00', isActive: false }]
+  );
+  const [isSavingSessions, setIsSavingSessions] = useState(false);
+
+  React.useEffect(() => {
+    if (siteConfig.weeklySessions) {
+      setWeeklySessions(siteConfig.weeklySessions);
+    }
+  }, [siteConfig.weeklySessions]);
 
   React.useEffect(() => {
     if (yearConfig) {
@@ -568,57 +603,15 @@ const AdminPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-12 items-start">
-          {/* Sidebar Navigation - Sleek Icon Grid */}
-          <aside className="w-full lg:w-24 flex-shrink-0 lg:sticky lg:top-8 z-40">
-            <nav className="bg-white/80 backdrop-blur-xl p-3 rounded-[2rem] border border-[var(--vibrant-cyan)]/20 flex lg:flex-col gap-3 shadow-2xl shadow-[var(--turquoise-teal)]/10 overflow-x-auto lg:overflow-x-visible no-scrollbar">
-              {[
-                { id: 'DASHBOARD', label: 'ראשי', icon: LayoutDashboard },
-                { id: 'USERS', label: 'משתמשים', icon: Users },
-                { id: 'ARCHIVE', label: 'ארכיון', icon: Archive },
-                { id: 'POSTS', label: 'פוסטים', icon: Newspaper },
-                { id: 'GALLERY', label: 'גלריה', icon: ImageIcon },
-                { id: 'EVENTS', label: 'אירועים', icon: Calendar },
-                { id: 'REQUESTS', label: 'בקשות', icon: UserCheck, count: joinRequests.length },
-                { id: 'ROLLOVER', label: 'דו"ח יום חמישי', icon: Activity },
-                { id: 'SITE', label: 'הגדרות', icon: Settings }
-              ].map((tab) => (
-                <button 
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex-shrink-0 w-14 h-14 lg:w-16 lg:h-16 flex flex-col items-center justify-center rounded-2xl font-black transition-all duration-500 group relative ${
-                    activeTab === tab.id 
-                      ? 'text-white shadow-xl shadow-[var(--vibrant-cyan)]/40 scale-110' 
-                      : 'text-[var(--turquoise-teal)] hover:bg-[var(--aqua-mist)]/30'
-                  }`}
-                >
-                  {activeTab === tab.id && (
-                    <motion.div 
-                      layoutId="activeTabBg"
-                      className="absolute inset-0 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] z-0 rounded-2xl" 
-                    />
-                  )}
-                  <div className="relative z-10 flex flex-col items-center">
-                    <tab.icon size={22} className={`transition-transform duration-500 ${activeTab === tab.id ? 'scale-110' : 'group-hover:scale-125'}`} />
-                    
-                    {/* Hover Label - Only visible on hover or if active */}
-                    <div className={`absolute top-full mt-2 lg:mt-0 lg:right-full lg:mr-4 px-3 py-1.5 bg-[var(--deep-teal-sea)] text-white text-[10px] rounded-lg whitespace-nowrap opacity-0 pointer-events-none transition-all duration-300 transform lg:translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 z-50 shadow-xl`}>
-                      {tab.label}
-                      <div className="absolute top-1/2 -translate-y-1/2 -right-1 border-4 border-transparent border-l-[var(--deep-teal-sea)] hidden lg:block" />
-                    </div>
-                  </div>
-
-                  {tab.count !== undefined && tab.count > 0 && (
-                    <span className={`absolute -top-1 -right-1 z-20 w-5 h-5 flex items-center justify-center rounded-full text-[8px] font-black border-2 border-white ${
-                      activeTab === tab.id ? 'bg-[var(--sunshine-yellow)] text-[var(--deep-teal-sea)]' : 'bg-[var(--electric-red-pink)] text-white'
-                    }`}>
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
-          </aside>
+        <div className="flex flex-col gap-12 items-start">
+          {/* Top Navigation - Glass Style like AdminInfoPage */}
+          <div className="w-full mb-8">
+            <GlassNavigationBar 
+              items={adminTabs}
+              activeId={activeTab}
+              onChange={handleTabChange}
+            />
+          </div>
 
           {/* Main Content Area */}
           <div className="flex-1 min-w-0 w-full">
@@ -1400,10 +1393,14 @@ const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-rose-50 border border-rose-100 p-6 rounded-[2rem] flex items-start gap-4">
-                <div className="text-2xl">⚠️</div>
-                <p className="text-sm font-bold text-rose-800 leading-relaxed">
-                  זהו דף רגיש! שינויים לא זהירים עלולים לפגוע באתר. אם משעמם לך, עדיף למצוא עיסוק אחר.
+              <div className="bg-red-600 border-4 border-red-800 p-6 rounded-[1.5rem] flex flex-col items-center justify-center gap-3 shadow-[0_0_25px_rgba(220,38,38,0.8)] animate-pulse text-center transform hover:scale-105 transition-transform duration-300 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-50"></div>
+                <ShieldAlert size={48} className="text-white mb-2 animate-bounce relative z-10" />
+                <h2 className="text-2xl md:text-3xl font-black text-white tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] relative z-10">
+                  ⚠️ אל תיגע כאן! ⚠️
+                </h2>
+                <p className="text-lg md:text-xl font-black text-white/95 leading-relaxed max-w-2xl drop-shadow-md relative z-10">
+                  שינוי פרמטרים אלה עלול להפוך את האתר למדפסת בלי דפים ולגרום לדיכאון תכנותי
                 </p>
               </div>
             </div>
@@ -1463,6 +1460,131 @@ const AdminPage: React.FC = () => {
                       title="עריכת הגדרות שנה"
                     >
                       <Settings size={24} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Weekly Sessions Config Widget */}
+            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-6">
+              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-start justify-between gap-8 relative overflow-hidden">
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
+                
+                <div className="flex items-center gap-6 relative z-10 lg:w-1/3">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+                    <Calendar size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">מועד סשן/ים שבועי</h3>
+                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ימים ושעות לסשנים קבועים</p>
+                  </div>
+                </div>
+
+                <div className="flex-1 relative z-10 space-y-6">
+                  {/* Active Sessions List */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-black text-[var(--deep-teal-sea)]">סשנים פעילים:</h4>
+                    {weeklySessions.map((session, index) => (
+                      <div key={index} className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div className="flex items-center gap-4">
+                          <input 
+                            type="checkbox"
+                            checked={session.isActive !== false}
+                            onChange={(e) => {
+                              const newSessions = [...weeklySessions];
+                              newSessions[index] = { ...newSessions[index], isActive: e.target.checked };
+                              setWeeklySessions(newSessions);
+                            }}
+                            className="w-5 h-5 rounded border-gray-300 text-[var(--deep-teal-sea)] focus:ring-[var(--deep-teal-sea)]"
+                          />
+                          <div className={`w-3 h-3 rounded-full ${session.isActive ?? true ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]' : 'bg-slate-300'}`} />
+                          <div className="flex-1">
+                            <p className="text-lg font-black text-[var(--deep-teal-sea)]">
+                              יום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][session.dayOfWeek]} - {session.time}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const newSessions = [...weeklySessions];
+                            newSessions.splice(index, 1);
+                            setWeeklySessions(newSessions);
+                          }}
+                          className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
+                          title="מחיקת סשן"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add New Session Controls */}
+                  <div className="flex flex-wrap items-end gap-4 p-4 bg-[var(--aqua-mist)]/10 rounded-2xl border border-[var(--vibrant-cyan)]/10">
+                    <div className="flex-1 min-w-[280px]">
+                      <label className="block text-[10px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">יום בשבוע</label>
+                      <div className="flex flex-wrap gap-2">
+                        {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'].map((day, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setNewSessionDay(index)}
+                            className={`px-4 py-2 rounded-xl font-black text-sm transition-all duration-300 border ${
+                              newSessionDay === index 
+                                ? 'bg-[var(--deep-teal-sea)] text-white shadow-lg shadow-[var(--deep-teal-sea)]/20 border-[var(--deep-teal-sea)]' 
+                                : 'bg-white/40 backdrop-blur-md text-[var(--deep-teal-sea)] border-white/20 hover:bg-white/60'
+                            }`}
+                          >
+                            {day}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-[120px]">
+                      <label className="block text-[10px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">שעה</label>
+                      <AnalogTimePicker value={newSessionTime} onChange={setNewSessionTime} />
+                    </div>
+                    <button
+                      onClick={() => {
+                        const newSession = {
+                          dayOfWeek: newSessionDay,
+                          time: newSessionTime,
+                          isActive: false
+                        };
+                        // Prevent duplicates
+                        if (!weeklySessions.some(s => s.dayOfWeek === newSession.dayOfWeek && s.time === newSession.time)) {
+                          setWeeklySessions([...weeklySessions, newSession]);
+                        } else {
+                          showError('סשן זה כבר קיים ברשימה.');
+                        }
+                      }}
+                      className="h-[48px] px-6 bg-white text-[var(--deep-teal-sea)] border border-[var(--vibrant-cyan)]/20 rounded-xl font-black text-sm hover:bg-[var(--aqua-mist)]/20 transition-colors flex items-center gap-2"
+                    >
+                      <Plus size={16} />
+                      הוספת סשן
+                    </button>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="flex justify-end mt-6">
+                    <button
+                      onClick={async () => {
+                        setIsSavingSessions(true);
+                        try {
+                          await updateSiteConfig({ weeklySessions });
+                          showSuccess('מועדי הסשנים נשמרו בהצלחה');
+                        } catch (err) {
+                          console.error(err);
+                          showError('שגיאה בשמירת מועדי הסשנים');
+                        } finally {
+                          setIsSavingSessions(false);
+                        }
+                      }}
+                      disabled={isSavingSessions}
+                      className="px-8 py-4 bg-[var(--deep-teal-sea)] text-white rounded-2xl font-black text-sm hover:bg-[var(--vibrant-cyan)] transition-all shadow-lg shadow-[var(--deep-teal-sea)]/20 active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {isSavingSessions ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                      שמירת שינויים
                     </button>
                   </div>
                 </div>

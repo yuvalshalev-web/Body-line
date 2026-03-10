@@ -46,6 +46,12 @@ export const finalizeThursdaySession = async (weeklyHistory: any[], yearConfig: 
       return;
     }
     const sessionDate = new Date(sessionDateStr);
+    
+    // Normalize sessionDate to Thursday 07:00
+    const sDay = sessionDate.getDay();
+    const sDiff = 4 - sDay;
+    sessionDate.setDate(sessionDate.getDate() + sDiff);
+    sessionDate.setHours(7, 0, 0, 0);
 
     // Season check
     if (yearConfig) {
@@ -61,7 +67,12 @@ export const finalizeThursdaySession = async (weeklyHistory: any[], yearConfig: 
     // Idempotency check / Overwrite existing
     const existingHistoryItem = weeklyHistory.find(d => {
       const dDate = d.date?.toDate ? d.date.toDate() : new Date(d.date);
-      return dDate.toDateString() === sessionDate.toDateString();
+      const dDay = dDate.getDay();
+      const dDiff = 4 - dDay;
+      const dThursday = new Date(dDate);
+      dThursday.setDate(dThursday.getDate() + dDiff);
+      dThursday.setHours(7, 0, 0, 0);
+      return dThursday.toDateString() === sessionDate.toDateString();
     });
 
     const batch = writeBatch(db);

@@ -71,7 +71,7 @@ const SessionStatsPage: React.FC = () => {
   };
 
   const [gritSortConfig, setGritSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({
-    key: 'streak',
+    key: 'gritScore',
     direction: 'desc'
   });
 
@@ -81,34 +81,60 @@ const SessionStatsPage: React.FC = () => {
     const now = new Date();
     // 1. Filter sessions by Shnat Hevel Zug start date
     const startDate = new Date(yearConfig.startDate);
-    const seenDates = new Set<string>();
     const cancelledDates = new Set<string>();
     
-    const filteredSessions = weeklyHistory
-      .filter(session => {
-        const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
-        const dateKey = sessionDate.toDateString();
-        // Only count unique days with participants within the date range
-        if (sessionDate >= startDate && sessionDate <= now && (session.participantsCount || 0) > 0 && !seenDates.has(dateKey)) {
-          seenDates.add(dateKey);
-          return true;
-        }
-        return false;
-      })
-      .sort((a, b) => {
-        const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-        const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
-        return dateA.getTime() - dateB.getTime();
-      });
+    // Filter history for sessions after startDate, ignoring cancelled sessions
+    const validSessions = weeklyHistory.filter(session => {
+      const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+      return sessionDate >= startDate && sessionDate <= now && (session.participantsCount || 0) > 0;
+    });
+
+    // Group by week (Thursday) to merge participantIds
+    const sessionsByDate = new Map<string, { date: Date, participantIds: Set<string>, participantsCount: number }>();
+    validSessions.forEach(session => {
+      const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+      
+      // Normalize to Thursday 07:00
+      const day = sessionDate.getDay();
+      const diff = 4 - day;
+      const thursdayDate = new Date(sessionDate);
+      thursdayDate.setDate(thursdayDate.getDate() + diff);
+      thursdayDate.setHours(7, 0, 0, 0);
+      
+      const dateKey = thursdayDate.toDateString();
+      if (!sessionsByDate.has(dateKey)) {
+        sessionsByDate.set(dateKey, { date: thursdayDate, participantIds: new Set<string>(), participantsCount: 0 });
+      }
+      const merged = sessionsByDate.get(dateKey)!;
+      (session.participantIds || []).forEach((id: string) => merged.participantIds.add(id));
+      merged.participantsCount = merged.participantIds.size;
+    });
+
+    const filteredSessions = Array.from(sessionsByDate.values())
+      .map(s => ({
+        date: s.date,
+        participantIds: Array.from(s.participantIds),
+        participantsCount: s.participantsCount
+      }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
 
     const cancelledSessionsCount = weeklyHistory.filter(session => {
       const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
-      const dateKey = sessionDate.toDateString();
+      
+      // Normalize to Thursday 07:00
+      const day = sessionDate.getDay();
+      const diff = 4 - day;
+      const thursdayDate = new Date(sessionDate);
+      thursdayDate.setDate(thursdayDate.getDate() + diff);
+      thursdayDate.setHours(7, 0, 0, 0);
+      
+      const dateKey = thursdayDate.toDateString();
+      
       return (
         sessionDate >= startDate && 
         sessionDate <= now && 
         (session.participantsCount || 0) === 0 &&
-        !seenDates.has(dateKey) &&
+        !sessionsByDate.has(dateKey) &&
         !cancelledDates.has(dateKey)
       ) ? (cancelledDates.add(dateKey), true) : false;
     }).length;
@@ -135,9 +161,7 @@ const SessionStatsPage: React.FC = () => {
     
     // Sort sessions descending for streak calculation
     const sortedSessionsDesc = [...filteredSessions].sort((a, b) => {
-      const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-      const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
-      return dateB.getTime() - dateA.getTime();
+      return b.date.getTime() - a.date.getTime();
     });
 
     // Initialize map and calculate streaks
@@ -180,14 +204,17 @@ const SessionStatsPage: React.FC = () => {
       if (secondHalfFreq > firstHalfFreq + 0.05) trend = 'up';
       else if (secondHalfFreq < firstHalfFreq - 0.05) trend = 'down';
 
+      const gritScore = Math.min(100, (mStats.total * 1.5) + (mStats.streak * 4));
+
       processedMembers.push({
         ...member,
         totalAttendance: mStats.total,
         streak: mStats.streak,
+        gritScore,
         trend
       });
     }
-    processedMembers.sort((a, b) => b.totalAttendance - a.totalAttendance);
+    processedMembers.sort((a, b) => b.gritScore - a.gritScore);
 
     // 4. Segmentation
     const segmentation = [
@@ -220,8 +247,7 @@ const SessionStatsPage: React.FC = () => {
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     const lastMonthSessions = filteredSessions.filter(s => {
-      const d = s.date?.toDate ? s.date.toDate() : new Date(s.date);
-      return d >= oneMonthAgo;
+      return s.date >= oneMonthAgo;
     });
 
     // Age Mapping (Local Map for efficiency)
@@ -274,7 +300,7 @@ const SessionStatsPage: React.FC = () => {
     thirtyDaysAgo.setDate(now.getDate() - 30);
     
     const lastSession = filteredSessions[filteredSessions.length - 1];
-    const lastSessionDate = lastSession ? (lastSession.date?.toDate ? lastSession.date.toDate() : new Date(lastSession.date)) : null;
+    const lastSessionDate = lastSession ? lastSession.date : null;
 
     ageGroupsBase.forEach(group => {
       radialStats.annual[group.label] = 0;
@@ -283,7 +309,7 @@ const SessionStatsPage: React.FC = () => {
     });
 
     filteredSessions.forEach(session => {
-      const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+      const sessionDate = session.date;
       const isMonthly = sessionDate >= thirtyDaysAgo;
       const isLast = lastSessionDate && sessionDate.getTime() === lastSessionDate.getTime();
 
@@ -299,8 +325,7 @@ const SessionStatsPage: React.FC = () => {
 
     const totalSessionsCount = filteredSessions.length;
     const monthlySessionsCount = filteredSessions.filter(s => {
-      const d = s.date?.toDate ? s.date.toDate() : new Date(s.date);
-      return d >= thirtyDaysAgo;
+      return s.date >= thirtyDaysAgo;
     }).length;
 
     const radialPercentages = ageGroupsBase.map(group => {
@@ -321,8 +346,7 @@ const SessionStatsPage: React.FC = () => {
     // Total counts for hollow center
     const totalAnnualParticipants = filteredSessions.reduce((acc, s) => acc + (s.participantIds?.length || 0), 0);
     const totalMonthlyParticipants = filteredSessions.filter(s => {
-      const d = s.date?.toDate ? s.date.toDate() : new Date(s.date);
-      return d >= thirtyDaysAgo;
+      return s.date >= thirtyDaysAgo;
     }).reduce((acc, s) => acc + (s.participantIds?.length || 0), 0);
     const totalLastParticipants = lastSession?.participantIds?.length || 0;
 
@@ -369,8 +393,7 @@ const SessionStatsPage: React.FC = () => {
     if (filteredSessions.length > 0 && yearConfig) {
       const sessionMap = new Map<string, number>();
       filteredSessions.forEach(s => {
-        const d = s.date?.toDate ? s.date.toDate() : new Date(s.date);
-        sessionMap.set(d.toDateString(), s.participantsCount || 0);
+        sessionMap.set(s.date.toDateString(), s.participantsCount || 0);
       });
 
       let iter = new Date(startDate);
@@ -865,6 +888,14 @@ const SessionStatsPage: React.FC = () => {
                         </th>
                         <th 
                           className="pb-6 text-[10px] font-black text-[#4A5568] uppercase tracking-widest cursor-pointer hover:text-[#2D3748] transition-colors"
+                          onClick={() => setGritSortConfig(prev => ({ key: 'gritScore', direction: prev.key === 'gritScore' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
+                        >
+                          <div className="flex items-center gap-1">
+                            מדד Grit <ArrowUpDown size={12} className="opacity-50" />
+                          </div>
+                        </th>
+                        <th 
+                          className="pb-6 text-[10px] font-black text-[#4A5568] uppercase tracking-widest cursor-pointer hover:text-[#2D3748] transition-colors"
                           onClick={() => setGritSortConfig(prev => ({ key: 'streak', direction: prev.key === 'streak' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
                         >
                           <div className="flex items-center gap-1">
@@ -895,7 +926,12 @@ const SessionStatsPage: React.FC = () => {
                           </td>
                           <td className="py-5">
                             <div className="flex items-center gap-2">
-                              <span className="text-3xl font-black text-[#1A365D]">{member.streak}</span>
+                              <span className="text-3xl font-black text-[#D69E2E]">{Math.round(member.gritScore)}%</span>
+                            </div>
+                          </td>
+                          <td className="py-5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl font-black text-[#1A365D]">{member.streak}</span>
                               <span className="text-[10px] font-black text-[#4A5568] uppercase">סשנים</span>
                             </div>
                           </td>

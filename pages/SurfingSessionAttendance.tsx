@@ -42,6 +42,7 @@ interface SessionHistory {
   participantIds: string[];
   instructorName?: string;
   createdAt?: string;
+  status?: 'active' | 'suspended';
 }
 
 const SurfingSessionAttendance: React.FC = () => {
@@ -57,6 +58,18 @@ const SurfingSessionAttendance: React.FC = () => {
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
   const [showManualDatePicker, setShowManualDatePicker] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [activeSessionStatus, setActiveSessionStatus] = useState<'active' | 'suspended'>('active');
+
+  useEffect(() => {
+    const db = getDb();
+    const unsub = onSnapshot(doc(db, 'site_data', 'active_session'), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data() as any;
+        setActiveSessionStatus(data.status || 'active');
+      }
+    });
+    return unsub;
+  }, []);
 
   const confirmedIds = editingHistorySession ? localConfirmedIds : new Set(attendeeIds);
 
@@ -206,28 +219,52 @@ const SurfingSessionAttendance: React.FC = () => {
           let finalDate;
           try {
             if (editingHistorySession.date && typeof editingHistorySession.date.toDate === 'function') {
-              finalDate = editingHistorySession.date;
+              finalDate = editingHistorySession.date.toDate();
             } else if (editingHistorySession.date instanceof Date) {
-              finalDate = Timestamp.fromDate(editingHistorySession.date);
+              finalDate = editingHistorySession.date;
             } else if (editingHistorySession.date && editingHistorySession.date.seconds) {
-              finalDate = new Timestamp(editingHistorySession.date.seconds, editingHistorySession.date.nanoseconds || 0);
+              finalDate = new Date(editingHistorySession.date.seconds * 1000);
             } else {
-              finalDate = Timestamp.fromDate(new Date(editingHistorySession.date));
+              finalDate = new Date(editingHistorySession.date);
             }
           } catch (e) {
-            finalDate = Timestamp.now();
+            finalDate = new Date();
           }
+
+          // Normalize finalDate to Thursday 07:00 of its week
+          const day = finalDate.getDay();
+          const diff = 4 - day; // 4 is Thursday
+          finalDate.setDate(finalDate.getDate() + diff);
+          finalDate.setHours(7, 0, 0, 0);
+          
+          const finalTimestamp = Timestamp.fromDate(finalDate);
 
           const sessionData = {
             participantIds: newParticipants,
             participantsCount: newParticipants.length,
             updatedAt: serverTimestamp(),
-            date: finalDate,
+            date: finalTimestamp,
             instructorName: editingHistorySession.instructorName || 'מדריך חבל זוג'
           };
 
-          if (editingHistorySession.id) {
-            batch.update(doc(historyRef, editingHistorySession.id), sessionData);
+          let sessionIdToUpdate = editingHistorySession.id;
+          if (!sessionIdToUpdate) {
+             const existing = history.find(s => {
+               const sDate = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
+               const sDay = sDate.getDay();
+               const sDiff = 4 - sDay;
+               const sThursday = new Date(sDate);
+               sThursday.setDate(sThursday.getDate() + sDiff);
+               sThursday.setHours(7, 0, 0, 0);
+               return sThursday.toDateString() === finalDate.toDateString();
+             });
+             if (existing) {
+               sessionIdToUpdate = existing.id;
+             }
+          }
+
+          if (sessionIdToUpdate) {
+            batch.update(doc(historyRef, sessionIdToUpdate), sessionData);
           } else {
             const newDocRef = doc(historyRef);
             batch.set(newDocRef, {
@@ -281,12 +318,12 @@ const SurfingSessionAttendance: React.FC = () => {
   const timelineSessions = useMemo(() => {
     // The active session date from DataContext
     const activeDate = activeSessionDate ? new Date(activeSessionDate) : new Date();
-    if (!activeSessionDate) {
-      while (activeDate.getDay() !== 4) {
-        activeDate.setDate(activeDate.getDate() + 1);
-      }
-      activeDate.setHours(7, 0, 0, 0);
-    }
+    
+    // Normalize activeDate to Thursday 07:00
+    const aDay = activeDate.getDay();
+    const aDiff = 4 - aDay;
+    activeDate.setDate(activeDate.getDate() + aDiff);
+    activeDate.setHours(7, 0, 0, 0);
 
     // We will build the list starting with the virtual "Upcoming" session
     const upcomingSession = {
@@ -295,14 +332,20 @@ const SurfingSessionAttendance: React.FC = () => {
       participantsCount: attendeeIds ? attendeeIds.length : 0,
       participantIds: attendeeIds || [],
       instructorName: 'מדריך חבל זוג',
-      isUpcoming: true
+      isUpcoming: true,
+      status: activeSessionStatus
     };
 
     // Filter out any history item that has the EXACT SAME date as the active session
     // so we don't show duplicates. The active session takes precedence.
     const filteredHistory = history.filter(s => {
       const d = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
-      return d.toDateString() !== activeDate.toDateString();
+      const dDay = d.getDay();
+      const dDiff = 4 - dDay;
+      const dThursday = new Date(d);
+      dThursday.setDate(dThursday.getDate() + dDiff);
+      dThursday.setHours(7, 0, 0, 0);
+      return dThursday.toDateString() !== activeDate.toDateString();
     });
 
     const list = [upcomingSession, ...filteredHistory];
@@ -312,7 +355,7 @@ const SurfingSessionAttendance: React.FC = () => {
       const db = b.date instanceof Timestamp ? b.date.toDate() : new Date(b.date);
       return db.getTime() - da.getTime();
     });
-  }, [history, attendeeIds, activeSessionDate]);
+  }, [history, attendeeIds, activeSessionDate, activeSessionStatus]);
 
   const loadHistorySession = (session: SessionHistory) => {
     setEditingHistorySession(session);
@@ -326,6 +369,12 @@ const SurfingSessionAttendance: React.FC = () => {
   };
 
   const handleSelectHistoryDate = (date: Date) => {
+    const targetDate = new Date(date);
+    const tDay = targetDate.getDay();
+    const tDiff = 4 - tDay;
+    targetDate.setDate(targetDate.getDate() + tDiff);
+    targetDate.setHours(7, 0, 0, 0);
+
     const activeDate = activeSessionDate ? new Date(activeSessionDate) : new Date();
     if (!activeSessionDate) {
       while (activeDate.getDay() !== 4) {
@@ -333,11 +382,17 @@ const SurfingSessionAttendance: React.FC = () => {
       }
       activeDate.setHours(7, 0, 0, 0);
     }
+    
+    const aDay = activeDate.getDay();
+    const aDiff = 4 - aDay;
+    const activeThursday = new Date(activeDate);
+    activeThursday.setDate(activeThursday.getDate() + aDiff);
+    activeThursday.setHours(7, 0, 0, 0);
 
-    if (date.toDateString() === activeDate.toDateString()) {
+    if (targetDate.toDateString() === activeThursday.toDateString()) {
       loadHistorySession({
         id: 'upcoming',
-        date: Timestamp.fromDate(activeDate),
+        date: Timestamp.fromDate(activeThursday),
         participantsCount: attendeeIds ? attendeeIds.length : 0,
         participantIds: attendeeIds || [],
         instructorName: 'מדריך חבל זוג',
@@ -349,7 +404,12 @@ const SurfingSessionAttendance: React.FC = () => {
 
     const existingSession = history.find(s => {
       const sDate = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
-      return sDate.toDateString() === date.toDateString();
+      const sDay = sDate.getDay();
+      const sDiff = 4 - sDay;
+      const sThursday = new Date(sDate);
+      sThursday.setDate(sThursday.getDate() + sDiff);
+      sThursday.setHours(7, 0, 0, 0);
+      return sThursday.toDateString() === targetDate.toDateString();
     });
 
     if (existingSession) {
@@ -358,7 +418,7 @@ const SurfingSessionAttendance: React.FC = () => {
       // Create a new historical session object
       const newSession: SessionHistory = {
         id: '', // No ID means it's new
-        date: Timestamp.fromDate(date),
+        date: Timestamp.fromDate(targetDate),
         participantsCount: 0,
         participantIds: [],
         instructorName: 'מדריך חבל זוג'
@@ -384,6 +444,7 @@ const SurfingSessionAttendance: React.FC = () => {
           while (current.getDay() !== 4) {
             current.setDate(current.getDate() + 1);
           }
+          current.setHours(7, 0, 0, 0);
 
           const batch = [];
           while (current <= today) {
@@ -659,6 +720,30 @@ const SurfingSessionAttendance: React.FC = () => {
                       </div>
 
                       <div className="flex items-center justify-between md:justify-end gap-8">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="checkbox"
+                            checked={session.status !== 'suspended'}
+                            onChange={async (e) => {
+                              const newStatus = e.target.checked ? 'active' : 'suspended';
+                              try {
+                                const db = getDb();
+                                if (session.id === 'upcoming') {
+                                  await setDoc(doc(db, 'site_data', 'active_session'), { status: newStatus }, { merge: true });
+                                } else {
+                                  await updateDoc(doc(db, 'weekly_history', session.id), { status: newStatus });
+                                }
+                              } catch (error) {
+                                console.error("Error updating session status:", error);
+                                showError('שגיאה בעדכון סטטוס הסשן');
+                              }
+                            }}
+                            className="w-6 h-6 rounded-md border-2 border-[#006994] accent-[#006994] cursor-pointer"
+                          />
+                          <span className="text-xs font-black text-[#006994]">
+                            {session.status !== 'suspended' ? 'פעיל' : 'מושעה'}
+                          </span>
+                        </label>
                         <div className="flex -space-x-3 space-x-reverse">
                           {session.participantIds.length > 0 ? (
                             session.participantIds.slice(0, 3).map((uid, i) => {

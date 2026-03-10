@@ -68,6 +68,7 @@ const AdminInfoPage: React.FC = () => {
           items={tabs}
           activeId={activeTab}
           onChange={(id) => setActiveTab(id as Tab)}
+          theme="sunset"
         />
       </div>
 
