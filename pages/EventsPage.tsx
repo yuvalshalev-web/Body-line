@@ -31,6 +31,7 @@ import { processImage } from '../utils/imageProcessor';
 import { syncStorageOnUpload } from '../utils/storageStats';
 import { WazeIcon } from '../components/icons/WazeIcon';
 import { GoogleMapsIcon } from '../components/icons/GoogleMapsIcon';
+import TimePicker from '../components/TimePicker';
 
 const EventsPage: React.FC = () => {
   const { currentUser } = useAuth();
@@ -461,7 +462,7 @@ const EventsPage: React.FC = () => {
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">שעה</label>
-                        <input type="time" required value={time} onChange={e => setTime(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                        <TimePicker required value={time} onChangeValue={setTime} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                       </div>
                     </div>
                     <input type="text" ref={locationInputRef} value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />

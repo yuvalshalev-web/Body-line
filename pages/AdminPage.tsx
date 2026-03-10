@@ -6,7 +6,7 @@ import {
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
-  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Sparkles, Globe, Activity
+  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Sparkles, Globe, Activity, AlertTriangle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -22,10 +22,12 @@ import { updateStorageStats, syncStorageOnUpload } from '../utils/storageStats';
 import { ColorPickerIcon } from '../components/icons/ColorPickerIcon';
 import { extractAddressData } from '../utils/googlePlaces';
 import StorageDisplay from '../components/StorageDisplay';
-import AnalogTimePicker from '../components/admin/AnalogTimePicker';
+import TimePicker from '../components/TimePicker';
+import { DayPicker } from '../components/DayPicker';
 import EventEditor from '../components/admin/EventEditor';
 import EditMemberForm from '../components/admin/EditMemberForm';
 import PostEditor from '../components/admin/PostEditor';
+import AdminRolloverReport from './AdminRolloverReport';
 
 const ASSET_LABELS: Record<string, string> = {
   habalZugLogo: 'לוגו חבל זוג',
@@ -45,9 +47,10 @@ const AdminPage: React.FC = () => {
     yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE'>('USERS');
-  const [newSessionDay, setNewSessionDay] = useState(4);
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER'>('USERS');
+  const [newSessionDay, setNewSessionDay] = useState(0);
   const [newSessionTime, setNewSessionTime] = useState('07:00');
+  const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
 
   const adminTabs = [
     { id: 'USERS', label: 'משתמשים', icon: <Users size={20} /> },
@@ -61,11 +64,7 @@ const AdminPage: React.FC = () => {
   ];
 
   const handleTabChange = (id: string) => {
-    if (id === 'ROLLOVER') {
-      navigate('/admin-rollover');
-    } else {
-      setActiveTab(id as any);
-    }
+    setActiveTab(id as any);
   };
   const [searchTerm, setSearchTerm] = useState('');
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
@@ -636,11 +635,7 @@ const AdminPage: React.FC = () => {
                   <button
                     key={item.id}
                     onClick={() => {
-                      if (item.id === 'ROLLOVER') {
-                        navigate('/admin-rollover');
-                      } else {
-                        setActiveTab(item.id as any);
-                      }
+                      setActiveTab(item.id as any);
                     }}
                     className="group bg-white p-8 rounded-[2.5rem] border border-[var(--vibrant-cyan)]/10 shadow-sm hover:shadow-2xl hover:shadow-[var(--turquoise-teal)]/10 transition-all duration-500 text-right relative overflow-hidden"
                   >
@@ -1379,6 +1374,10 @@ const AdminPage: React.FC = () => {
           </div>
         )}
 
+        {activeTab === 'ROLLOVER' && (
+          <AdminRolloverReport />
+        )}
+
         {activeTab === 'SITE' && (
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
             {/* Design and Settings Section */}
@@ -1393,7 +1392,7 @@ const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-red-600 border-4 border-red-800 p-6 rounded-[1.5rem] flex flex-col items-center justify-center gap-3 shadow-[0_0_25px_rgba(220,38,38,0.8)] animate-pulse text-center transform hover:scale-105 transition-transform duration-300 relative overflow-hidden">
+              <div className="bg-red-600 border-4 border-red-800 py-6 px-[5%] rounded-[1.5rem] flex flex-col items-center justify-center gap-3 shadow-[0_0_25px_rgba(220,38,38,0.8)] animate-pulse text-center transform hover:scale-105 transition-transform duration-300 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-50"></div>
                 <ShieldAlert size={48} className="text-white mb-2 animate-bounce relative z-10" />
                 <h2 className="text-2xl md:text-3xl font-black text-white tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] relative z-10">
@@ -1415,7 +1414,7 @@ const AdminPage: React.FC = () => {
                     <Calendar size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">שנת חבל זוג</h3>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">הגדרת שנת פעילות</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                       <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">תקופה פעילה כעת</p>
@@ -1459,7 +1458,7 @@ const AdminPage: React.FC = () => {
                       className="w-14 h-14 bg-[var(--deep-teal-sea)] text-white rounded-2xl flex items-center justify-center hover:bg-[var(--vibrant-cyan)] transition-all shadow-xl shadow-[var(--deep-teal-sea)]/10 active:scale-90"
                       title="עריכת הגדרות שנה"
                     >
-                      <Settings size={24} />
+                      <Save size={24} />
                     </button>
                   </div>
                 </div>
@@ -1476,7 +1475,7 @@ const AdminPage: React.FC = () => {
                     <Calendar size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">הוספת סשן שבועי</h3>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">ניהול מועדי סשנים</h3>
                     <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ימים ושעות לסשנים קבועים</p>
                   </div>
                 </div>
@@ -1484,7 +1483,7 @@ const AdminPage: React.FC = () => {
                 <div className="flex-1 relative z-10 space-y-6">
                   {/* Active Sessions List */}
                   <div className="space-y-3">
-                    <h4 className="text-sm font-black text-[var(--deep-teal-sea)]">סשנים פעילים:</h4>
+                    <h4 className="text-lg font-black text-[var(--deep-teal-sea)] mb-4">מועדי סשנים שמורים:</h4>
                     {weeklySessions.map((session, index) => (
                       <div key={index} className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
                         <div className="flex items-center gap-4">
@@ -1496,9 +1495,11 @@ const AdminPage: React.FC = () => {
                               newSessions[index] = { ...newSessions[index], isActive: e.target.checked };
                               setWeeklySessions(newSessions);
                             }}
-                            className="w-5 h-5 rounded border-gray-300 text-[var(--deep-teal-sea)] focus:ring-[var(--deep-teal-sea)]"
+                            className="w-5 h-5 rounded border-gray-300 text-[#4A5568] focus:ring-[#4A5568]"
                           />
-                          <div className={`w-3 h-3 rounded-full ${session.isActive ?? true ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]' : 'bg-slate-300'}`} />
+                          <span className={`px-2 py-1 rounded-md text-[10px] font-black tracking-widest uppercase ${session.isActive !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>
+                            {session.isActive !== false ? 'פעיל' : 'מושבת'}
+                          </span>
                           <div className="flex-1">
                             <p className="text-lg font-black text-[var(--deep-teal-sea)]">
                               יום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][session.dayOfWeek]} - {session.time}
@@ -1506,11 +1507,7 @@ const AdminPage: React.FC = () => {
                           </div>
                         </div>
                         <button
-                          onClick={() => {
-                            const newSessions = [...weeklySessions];
-                            newSessions.splice(index, 1);
-                            setWeeklySessions(newSessions);
-                          }}
+                          onClick={() => setSessionToDelete(index)}
                           className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
                           title="מחיקת סשן"
                         >
@@ -1520,58 +1517,82 @@ const AdminPage: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Add New Session Controls */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-black text-[var(--deep-teal-sea)]">הוספת סשן שבועי:</h4>
-                    <div className="flex flex-wrap items-end gap-4 p-4 bg-[var(--aqua-mist)]/10 rounded-2xl border border-[var(--vibrant-cyan)]/10">
-                      <div className="min-w-[160px]">
-                        <label className="block text-[10px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">יום בשבוע</label>
-                        <div className="relative">
-                          <select
-                            value={newSessionDay}
-                            onChange={(e) => setNewSessionDay(parseInt(e.target.value))}
-                            className="w-full h-[48px] px-5 bg-white/60 backdrop-blur-md text-[var(--deep-teal-sea)] border border-[var(--vibrant-cyan)]/20 rounded-2xl font-black text-sm focus:outline-none focus:ring-2 focus:ring-[var(--vibrant-cyan)]/30 transition-all appearance-none cursor-pointer"
-                          >
-                            {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'].map((day, index) => (
-                              <option key={index} value={index} className="bg-white text-[var(--deep-teal-sea)]">
-                                יום {day}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--deep-teal-sea)]/40">
-                            <ChevronDown size={18} />
-                          </div>
+                  {/* Delete Session Warning Modal */}
+                  {sessionToDelete !== null && (
+                    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl border border-rose-100"
+                      >
+                        <div className="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                          <AlertTriangle size={32} />
                         </div>
+                        <h3 className="text-xl font-black text-center text-slate-800 mb-4">
+                          ⚠️ אזהרה: אל תעשו את זה לעצמכם (או לנו)
+                        </h3>
+                        <p className="text-center text-slate-600 mb-8 font-medium leading-relaxed">
+                          מחיקת סשן עלולה לגרום לנתונים להיעלם, לפעילות להיעצר ולמפתחים שלנו 
+                          לפתח מיגרנה קשה בניסיון להציל את המצב. בטוח שאתה רוצה להמשיך?
+                        </p>
+                        <div className="flex gap-4">
+                          <button
+                            onClick={() => setSessionToDelete(null)}
+                            className="flex-1 py-4 rounded-xl font-black text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+                          >
+                            אני אוותר
+                          </button>
+                          <button
+                            onClick={() => {
+                              const newSessions = [...weeklySessions];
+                              newSessions.splice(sessionToDelete, 1);
+                              setWeeklySessions(newSessions);
+                              setSessionToDelete(null);
+                            }}
+                            className="flex-1 py-4 rounded-xl font-black text-white bg-rose-500 hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/30"
+                          >
+                            אני מתעקש
+                          </button>
+                        </div>
+                      </motion.div>
+                    </div>
+                  )}
+
+                  {/* Add New Session Controls */}
+                  <div className="mt-8">
+                    <h4 className="text-lg font-black text-[var(--deep-teal-sea)] mb-4">הוספת מועד סשן שבועי</h4>
+                    <div className="flex flex-wrap items-end gap-4 p-4 bg-[var(--aqua-mist)]/10 rounded-2xl border border-[var(--vibrant-cyan)]/10">
+                      <div className="flex-1 min-w-[280px]">
+                        <label className="block text-[10px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">יום בשבוע</label>
+                        <DayPicker value={newSessionDay} onChange={setNewSessionDay} />
                       </div>
-                      <div className="min-w-[200px]">
+                      <div className="flex-1 min-w-[120px]">
                         <label className="block text-[10px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">שעה</label>
-                        <AnalogTimePicker value={newSessionTime} onChange={setNewSessionTime} />
+                        <TimePicker 
+                          value={newSessionTime} 
+                          onChangeValue={setNewSessionTime} 
+                          className="w-full bg-white/40 backdrop-blur-md border border-white/20 rounded-xl p-3 text-xl font-bold text-[var(--deep-teal-sea)] focus:ring-2 focus:ring-[var(--surfer-cyan)] outline-none transition-all"
+                        />
                       </div>
                     </div>
                   </div>
 
                   {/* Save Button */}
-                  <div className="flex justify-end mt-6">
+                  <div className="flex justify-center mt-6">
                     <button
                       onClick={async () => {
                         setIsSavingSessions(true);
                         try {
-                          let updatedSessions = [...weeklySessions];
-                          
-                          // Check if the current selection in "Add New Session" should be added
-                          // We add it if it doesn't already exist in the list
                           const newSession = {
                             dayOfWeek: newSessionDay,
                             time: newSessionTime,
-                            isActive: true // Default to active when adding via Save button
+                            isActive: false
                           };
-
-                          const exists = weeklySessions.some(s => 
-                            s.dayOfWeek === newSession.dayOfWeek && 
-                            s.time === newSession.time
-                          );
-
-                          if (!exists) {
+                          
+                          let updatedSessions = [...weeklySessions];
+                          
+                          // Prevent duplicates when adding the new session
+                          if (!weeklySessions.some(s => s.dayOfWeek === newSession.dayOfWeek && s.time === newSession.time)) {
                             updatedSessions.push(newSession);
                             setWeeklySessions(updatedSessions);
                           }
@@ -1589,7 +1610,7 @@ const AdminPage: React.FC = () => {
                       className="px-8 py-4 bg-[var(--deep-teal-sea)] text-white rounded-2xl font-black text-sm hover:bg-[var(--vibrant-cyan)] transition-all shadow-lg shadow-[var(--deep-teal-sea)]/20 active:scale-95 flex items-center gap-2 disabled:opacity-50"
                     >
                       {isSavingSessions ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-                      שמירת שינויים
+                      שמירת נתונים
                     </button>
                   </div>
                 </div>

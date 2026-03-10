@@ -22,6 +22,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { SURF_QUOTES } from '../data/surfQuotes';
 import { SURF_DICTIONARY } from '../data/surfDictionary';
+import { WaxButton } from '../components/WaxButton';
 import { motion } from 'motion/react';
 
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
@@ -296,11 +297,27 @@ const DashboardPage: React.FC = () => {
         ))}
       </div>
 
+      {/* Wax Buttons Showcase */}
+      <section className="space-y-8 py-8">
+        <div className="flex items-center justify-center gap-4 mb-8">
+          <h3 className="text-3xl font-black glass-text-primary tracking-tight text-center" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+            כפתורי שעווה (Wax Buttons)
+          </h3>
+        </div>
+        <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+          <WaxButton color="blue" label="Blue Button" size={160} />
+          <WaxButton color="red" label="Red Button" size={160} />
+          <WaxButton color="green" label="Green Button" size={160} />
+          <WaxButton color="orange" label="Orange Button" size={160} />
+          <WaxButton color="yellow" label="Yellow Button" size={160} />
+        </div>
+      </section>
+
       {/* Latest Posts Section */}
       <section className="space-y-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-4 glass-effect text-white rounded-2xl shadow-lg"><Newspaper size={24} /></div>
+            <div className="p-4 bg-rose-500/20 text-rose-600 rounded-2xl shadow-inner"><Newspaper size={24} /></div>
             <h3 className="text-3xl font-black glass-text-primary tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>פוסטים אחרונים</h3>
           </div>
           <Link to="/posts" className="glass-text-secondary font-black text-xs uppercase tracking-widest hover:text-slate-950 transition-colors">צפה בהכל</Link>
@@ -315,21 +332,21 @@ const DashboardPage: React.FC = () => {
                 </div>
               )}
               <div className="p-8 flex-1 flex flex-col">
-                <div className="flex items-center gap-2 text-[10px] font-black glass-text-secondary uppercase tracking-widest mb-4">
-                  <Calendar size={12} />
+                <div className="flex items-center gap-2 text-[15px] font-black glass-text-secondary uppercase tracking-widest mb-4">
+                  <Calendar size={18} />
                   {randomPost.date}
                 </div>
-                <h4 className="text-xl font-black glass-text-primary mb-4 group-hover:text-rose-600 transition-colors line-clamp-2" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.title}</h4>
-                <p className="glass-text-secondary font-bold text-sm line-clamp-3 mb-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.content}</p>
+                <h4 className="text-3xl font-black glass-text-primary mb-4 group-hover:text-rose-600 transition-colors line-clamp-2" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.title}</h4>
+                <p className="glass-text-secondary font-bold text-xl line-clamp-3 mb-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.content}</p>
                 <div className="mt-auto flex items-center gap-3">
                   {randomPost.authorAvatar ? (
-                    <img src={randomPost.authorAvatar} className="w-6 h-6 rounded-full object-cover" alt="" />
+                    <img src={randomPost.authorAvatar} className="w-9 h-9 rounded-full object-cover" alt="" />
                   ) : (
-                    <div className="w-6 h-6 rounded-full glass-effect flex items-center justify-center text-white/60">
-                      <UserCircle size={12} />
+                    <div className="w-9 h-9 rounded-full glass-effect flex items-center justify-center text-white/60">
+                      <UserCircle size={18} />
                     </div>
                   )}
-                  <span className="text-[10px] font-black glass-text-secondary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.authorName}</span>
+                  <span className="text-[15px] font-black glass-text-secondary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.authorName}</span>
                 </div>
               </div>
             </Link>

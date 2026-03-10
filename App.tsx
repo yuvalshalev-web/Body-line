@@ -40,7 +40,6 @@ const EventsPage = lazy(() => import('./pages/EventsPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
 const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage'));
 const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage'));
-const AdminRolloverReport = lazy(() => import('./pages/AdminRolloverReport'));
 const SurferCardPage = lazy(() => import('./pages/SurferCardPage'));
 const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance'));
 const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage'));
@@ -179,8 +178,7 @@ const App: React.FC = () => {
   const adminNavItems = [
     { path: '/admin', ...menuItems[8], text: 'פאנל ניהול' },
     { path: '/admin-info', ...menuItems[9], text: 'דופק חבל זוג' },
-    { path: '/attendance', ...menuItems[10], text: 'יומן סשנים' },
-    { path: '/admin-rollover', ...menuItems[11], text: 'דו"ח יום חמישי' }
+    { path: '/attendance', ...menuItems[10], text: 'יומן סשנים' }
   ];
 
   return (
@@ -191,20 +189,14 @@ const App: React.FC = () => {
       </div>
 
       {/* Hamburger Button (Top Left) */}
-      <motion.div 
-        key={location.pathname}
-        drag
-        whileDrag={{ scale: 1.1, zIndex: 100000 }}
-        dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
-        className="fixed top-6 left-6 z-[10000] cursor-grab active:cursor-grabbing"
-      >
+      <div className="fixed top-6 left-6 z-[10000]">
         <button 
           onClick={() => setIsDrawerOpen(true)}
           className="w-12 h-12 rounded-full bg-white/80 backdrop-blur-md border border-white/40 shadow-xl flex items-center justify-center text-[var(--sand-dark)] hover:text-[var(--sand-accent)] transition-all hover:scale-110 active:scale-95"
         >
           <Menu size={24} />
         </button>
-      </motion.div>
+      </div>
 
       {/* Drawer Menu */}
       <AnimatePresence>
@@ -439,7 +431,6 @@ const App: React.FC = () => {
                 <>
                   <Route path="/admin" element={<AdminPage />} />
                   <Route path="/admin-info" element={<AdminInfoPage />} />
-                  <Route path="/admin-rollover" element={<AdminRolloverReport />} />
                   <Route path="/attendance" element={<SurfingSessionAttendance />} />
                 </>
               )}

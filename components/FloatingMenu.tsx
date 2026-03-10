@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Users, Image as ImageIcon, Calendar, Trophy, UserCircle, LogOut, Newspaper, Menu } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, useAnimation, useMotionValue } from 'motion/react';
 
 interface FloatingMenuProps {
   onOpenDrawer: () => void;
@@ -10,6 +10,46 @@ interface FloatingMenuProps {
 const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const menuRef = useRef<HTMLDivElement>(null);
+  const controls = useAnimation();
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const [constraints, setConstraints] = useState({ top: 0, left: 0, right: 0, bottom: 0 });
+
+  // Reset position on route change
+  useEffect(() => {
+    controls.start({ x: 0, y: 0, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 30 } });
+  }, [location.pathname, controls]);
+
+  // Calculate drag constraints
+  useEffect(() => {
+    const updateConstraints = () => {
+      if (menuRef.current) {
+        const rect = menuRef.current.getBoundingClientRect();
+        const currentX = x.get();
+        const currentY = y.get();
+        
+        const originalLeft = rect.left - currentX;
+        const originalTop = rect.top - currentY;
+        const originalRight = rect.right - currentX;
+        const originalBottom = rect.bottom - currentY;
+
+        setConstraints({
+          top: -originalTop + 10,
+          left: -originalLeft + 10,
+          right: window.innerWidth - originalRight - 10,
+          bottom: window.innerHeight - originalBottom - 10,
+        });
+      }
+    };
+
+    const timeoutId = setTimeout(updateConstraints, 100);
+    window.addEventListener('resize', updateConstraints);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', updateConstraints);
+    };
+  }, [x, y]);
 
   const menuItems = [
     { 
@@ -76,12 +116,13 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer }) => {
 
   return (
     <motion.div 
-      key={location.pathname}
+      ref={menuRef}
       drag
-      whileDrag={{ scale: 1.02, zIndex: 100000 }}
-      dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+      dragMomentum={false}
+      dragConstraints={constraints}
+      animate={controls}
+      style={{ x, y }}
       initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
       className="fixed bottom-6 left-4 right-4 md:left-auto md:right-auto md:w-max md:mx-auto z-[9999] 
                  bg-white/85 backdrop-blur-3xl border border-white/60 
                  rounded-[40px] p-1.5 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.25)] flex items-center gap-1 floating-menu-container cursor-grab active:cursor-grabbing"

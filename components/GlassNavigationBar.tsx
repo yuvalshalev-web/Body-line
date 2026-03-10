@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 
 interface NavItem {
@@ -44,14 +44,19 @@ const themeStyles = {
 
 const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId, onChange, theme = 'ocean' }) => {
   const currentTheme = themeStyles[theme];
+  const constraintsRef = useRef(null);
 
   return (
-    <motion.div 
-      drag
-      whileDrag={{ scale: 1.02, zIndex: 100000 }}
-      dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
-      className={`relative p-2 !rounded-[2rem] overflow-hidden glass-panel flex w-full max-w-5xl mx-auto overflow-x-auto no-scrollbar border border-white/30 backdrop-blur-xl cursor-grab active:cursor-grabbing ${currentTheme.container}`}
-    >
+    <>
+      <div ref={constraintsRef} className="fixed inset-0 pointer-events-none z-[9998]" />
+      <motion.div 
+        drag
+        dragConstraints={constraintsRef}
+        dragElastic={0.1}
+        whileDrag={{ scale: 1.02, zIndex: 100000 }}
+        dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+        className={`relative p-2 !rounded-[2rem] overflow-hidden glass-panel flex w-full max-w-5xl mx-auto overflow-x-auto no-scrollbar border border-white/30 backdrop-blur-xl cursor-grab active:cursor-grabbing ${currentTheme.container}`}
+      >
       {items.map((item) => {
         const isActive = activeId === item.id;
         return (
@@ -89,7 +94,8 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
           </button>
         );
       })}
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
 

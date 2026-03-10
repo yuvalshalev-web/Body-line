@@ -85,9 +85,9 @@ const AdminRolloverReport: React.FC = () => {
   const latestStatus = logs.length > 0 ? logs[0].status : 'success';
 
   return (
-    <div className="min-h-screen bg-[#B2EBF2] text-black font-['Yehuda_CLM'] p-4 md:p-8 relative overflow-hidden" dir="rtl">
+    <div className="w-full bg-[#B2EBF2] text-black font-['Yehuda_CLM'] p-4 md:p-8 relative overflow-hidden rounded-[3rem] animate-in fade-in slide-in-from-bottom-4" dir="rtl">
       {/* Neubrutalism Grid Pattern */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-10" style={{
+      <div className="absolute inset-0 pointer-events-none z-0 opacity-10" style={{
         backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)',
         backgroundSize: '24px 24px'
       }}></div>

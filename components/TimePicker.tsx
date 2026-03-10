@@ -1,37 +1,90 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import $ from 'jquery';
 
-interface TimePickerProps {
+interface TimePickerProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
   value: string;
-  onChange: (time: string) => void;
+  onChangeValue: (time: string) => void;
 }
 
-export const TimePicker: React.FC<TimePickerProps> = ({ value, onChange }) => {
-  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-  const minutes = ['00', '15', '30', '45'];
+const bodyLineTimePickerConfig = {
+    colors: {
+        buttonTextColor: '#00D9E6', // vibrant-cyan
+        clockFaceColor: '#007085', // deep-teal-sea
+        clockInnerCircleTextColor: '#FFDE45', // sunshine-yellow
+        clockOuterCircleTextColor: '#B2EBF2', // aqua-mist
+        hoverCircleColor: '#FF2D60', // electric-red-pink
+        popupBackgroundColor: '#00AFC2', // turquoise-teal
+        popupHeaderBackgroundColor: '#007085', // deep-teal-sea
+        popupHeaderTextColor: '#FFDE45', // sunshine-yellow
+        selectorColor: '#FF2D60', // electric-red-pink
+        selectorNumberColor: '#FFFFFF'
+    },
+    fonts: {
+        fontFamily: 'Assistant, sans-serif',
+    },
+    precision: 5,
+    vibrate: true
+};
 
-  const [hour, minute] = value.split(':');
+const TimePicker: React.FC<TimePickerProps> = ({ value, onChangeValue, className, ...props }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    const initPicker = async () => {
+      if (typeof window !== 'undefined') {
+        (window as any).jQuery = $;
+        (window as any).$ = $;
+      }
+      
+      await import('jquery-clock-timepicker');
+      
+      if (!isMounted || !inputRef.current) return;
+      
+      const $input = $(inputRef.current);
+      
+      ($input as any).clockTimePicker({
+        ...bodyLineTimePickerConfig,
+        onChange: function(newValue: string) {
+          onChangeValue(newValue);
+        }
+      });
+
+      $input.on('change', function() {
+        onChangeValue($(this).val() as string);
+      });
+    };
+
+    initPicker();
+
+    return () => {
+      isMounted = false;
+      if (inputRef.current) {
+        const $input = $(inputRef.current);
+        $input.off('change');
+        if (typeof ($input as any).clockTimePicker === 'function') {
+          ($input as any).clockTimePicker('dispose');
+        }
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (inputRef.current && inputRef.current.value !== value) {
+      $(inputRef.current).val(value);
+    }
+  }, [value]);
 
   return (
-    <div className="flex items-center gap-2">
-      <select
-        value={hour}
-        onChange={(e) => onChange(`${e.target.value}:${minute}`)}
-        className="p-3 rounded-[16px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] [-webkit-backdrop-filter:blur(12px)] font-bold text-white focus:ring-2 ring-[var(--vibrant-cyan)]/30"
-      >
-        {hours.map((h) => (
-          <option key={h} value={h} className="text-black">{h}</option>
-        ))}
-      </select>
-      <span className="text-white font-black">:</span>
-      <select
-        value={minute}
-        onChange={(e) => onChange(`${hour}:${e.target.value}`)}
-        className="p-3 rounded-[16px] border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] [-webkit-backdrop-filter:blur(12px)] font-bold text-white focus:ring-2 ring-[var(--vibrant-cyan)]/30"
-      >
-        {minutes.map((m) => (
-          <option key={m} value={m} className="text-black">{m}</option>
-        ))}
-      </select>
-    </div>
+    <input 
+      ref={inputRef}
+      type="text" 
+      defaultValue={value}
+      className={`community-time-input ${className || ''}`}
+      {...props}
+    />
   );
 };
+
+export default TimePicker;
