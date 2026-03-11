@@ -1266,63 +1266,16 @@ export const Astrodeck = ({ label, value, icon: Icon, path, external, color }: {
       target={external ? "_blank" : undefined} 
       className="block h-full group"
     >
-      <div className="relative w-full aspect-square max-w-[220px] mx-auto flex items-center justify-center transition-transform duration-300 group-hover:scale-105 group-hover:-translate-y-2">
+      <div className="relative w-full aspect-square max-w-[220px] mx-auto flex flex-col items-center justify-center transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 glass-panel rounded-3xl overflow-hidden border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.5)] hover:border-white/40">
         
-        {/* SVG Background */}
-        <div className="absolute inset-0 w-full h-full">
-          <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-xl">
-            <defs>
-              <pattern id="diamond" x="0" y="0" width="30" height="16" patternUnits="userSpaceOnUse">
-                <path d="M15 0 L30 8 L15 16 L0 8 Z" fill="#ffffff" stroke="#f0f0f0" strokeWidth="1"/>
-                <path d="M15 0 L30 8 L15 8 L0 0 Z" fill="#ffffff"/>
-                <path d="M0 8 L15 16 L30 8 L15 8 Z" fill="#f8f8f8"/>
-                <path d="M0 8 L15 0 L15 16 Z" fill="#fdfdfd"/>
-              </pattern>
-              
-              <filter id="inner-shadow">
-                <feOffset dx="0" dy="0"/>
-                <feGaussianBlur stdDeviation="4" result="offset-blur"/>
-                <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse"/>
-                <feFlood floodColor="black" floodOpacity="0.15" result="color"/>
-                <feComposite operator="in" in="color" in2="inverse" result="shadow"/>
-                <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
-              </filter>
-            </defs>
-
-            <path d="M 135 38 Q 80 45 40 60 C 30 150 60 250 100 320 C 120 360 160 380 185 380 L 185 330 C 185 300 135 300 135 250 Z" 
-                  fill="url(#diamond)" filter="url(#inner-shadow)" stroke="#cbd5e1" strokeWidth="1" />
-
-            <path d="M 145 35 Q 200 20 255 35 L 245 250 C 245 290 155 290 155 250 Z" 
-                  fill="url(#diamond)" filter="url(#inner-shadow)" stroke="#cbd5e1" strokeWidth="1" />
-
-            <path d="M 265 38 Q 320 45 360 60 C 370 150 340 250 300 320 C 280 360 240 380 215 380 L 215 330 C 215 300 265 300 265 250 Z" 
-                  fill="url(#diamond)" filter="url(#inner-shadow)" stroke="#cbd5e1" strokeWidth="1" />
-
-            <g fill="#d4d4d4" filter="url(#inner-shadow)">
-              <rect x="170" y="80" width="60" height="6" rx="3" />
-              <rect x="170" y="100" width="60" height="6" rx="3" />
-              <rect x="170" y="120" width="60" height="6" rx="3" />
-              <rect x="170" y="140" width="60" height="6" rx="3" />
-              <rect x="170" y="160" width="60" height="6" rx="3" />
-              <rect x="170" y="180" width="60" height="6" rx="3" />
-              <rect x="170" y="200" width="60" height="6" rx="3" />
-              <rect x="170" y="220" width="60" height="6" rx="3" />
-              <rect x="170" y="240" width="60" height="6" rx="3" />
-            </g>
-
-            <g transform="translate(60, 65) scale(0.8)">
-              <path d="M 20 0 L 35 8 L 35 25 L 20 33 L 5 25 L 5 8 Z" fill="#b80028" stroke="#8a001e" strokeWidth="1" />
-              <path d="M 6 27 L 21 35 L 21 52 L 6 60 L -9 52 L -9 35 Z" fill="#d4c12a" stroke="#a3941d" strokeWidth="1" />
-              <path d="M 34 27 L 49 35 L 49 52 L 34 60 L 19 52 L 19 35 Z" fill="#e01a22" stroke="#a81118" strokeWidth="1" />
-            </g>
-          </svg>
-        </div>
-
-        {/* Content overlay - now transparent */}
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-50 pointer-events-none" />
+        
+        {/* Content overlay */}
         <div className="relative z-10 flex flex-col items-center justify-center p-4">
-          <Icon size={32} className={`mb-1 ${color}`} />
-          <p className="text-4xl font-black text-slate-900 mb-0 leading-none drop-shadow-sm">{value}</p>
-          <p className="text-[11px] font-black uppercase tracking-widest text-slate-700 mt-1 drop-shadow-sm">{label}</p>
+          <Icon size={32} className={`mb-3 ${color} drop-shadow-md transition-transform duration-500 group-hover:scale-110`} />
+          <p className="text-4xl font-black glass-text-primary mb-1 leading-none drop-shadow-sm">{value}</p>
+          <p className="text-[12px] font-black uppercase tracking-widest glass-text-secondary mt-1 drop-shadow-sm text-center">{label}</p>
         </div>
         
       </div>

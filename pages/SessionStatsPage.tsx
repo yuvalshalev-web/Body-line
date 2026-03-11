@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
+import { getBodyLineStats } from '../src/utils/bodyLineStats';
 import { 
   BarChart, 
   Bar, 
@@ -78,6 +79,7 @@ const SessionStatsPage: React.FC = () => {
   const stats = useMemo(() => {
     if (!weeklyHistory || weeklyHistory.length === 0 || !yearConfig) return null;
 
+    const activeMembers = getBodyLineStats(members).activeMembers;
     const now = new Date();
     // 1. Filter sessions by Shnat Hevel Zug start date
     const startDate = new Date(yearConfig.startDate);
@@ -165,7 +167,7 @@ const SessionStatsPage: React.FC = () => {
     });
 
     // Initialize map and calculate streaks
-    members.forEach(member => {
+    activeMembers.forEach(member => {
       let streak = 0;
       for (const session of sortedSessionsDesc) {
         if ((session.participantIds || []).includes(member.id)) {
@@ -190,7 +192,7 @@ const SessionStatsPage: React.FC = () => {
 
     let processedUsersCount = 0;
     const processedMembers = [];
-    for (const member of members) {
+    for (const member of activeMembers) {
       processedUsersCount++;
       if (processedUsersCount > 200) break; // Safety cap for user mapping
 
@@ -214,13 +216,23 @@ const SessionStatsPage: React.FC = () => {
         trend
       });
     }
-    processedMembers.sort((a, b) => b.gritScore - a.gritScore);
+    
+    // Use getBodyLineStats for global ranking and percentile based on gritScore
+    const statsHelper = getBodyLineStats(processedMembers as any);
+    
+    const finalMembers = processedMembers.map(m => ({
+      ...m,
+      rank: statsHelper.getRank(m.gritScore, 'gritScore'),
+      percentile: statsHelper.calculatePercentile(m.gritScore, 'gritScore')
+    }));
+
+    finalMembers.sort((a, b) => b.gritScore - a.gritScore);
 
     // 4. Segmentation
     const segmentation = [
-      { name: 'Regulars (5+)', value: processedMembers.filter(m => m.totalAttendance >= 5).length, color: '#006994' },
-      { name: 'Steady (2-4)', value: processedMembers.filter(m => m.totalAttendance >= 2 && m.totalAttendance <= 4).length, color: '#40E0D0' },
-      { name: 'One-timers (1)', value: processedMembers.filter(m => m.totalAttendance === 1).length, color: '#94a3b8' },
+      { name: 'Regulars (5+)', value: finalMembers.filter(m => m.totalAttendance >= 5).length, color: '#006994' },
+      { name: 'Steady (2-4)', value: finalMembers.filter(m => m.totalAttendance >= 2 && m.totalAttendance <= 4).length, color: '#40E0D0' },
+      { name: 'One-timers (1)', value: finalMembers.filter(m => m.totalAttendance === 1).length, color: '#94a3b8' },
     ].filter(s => s.value > 0);
 
     // 5. Age-based Statistics
@@ -252,7 +264,7 @@ const SessionStatsPage: React.FC = () => {
 
     // Age Mapping (Local Map for efficiency)
     const ageMap = new Map<string, string | null>();
-    members.forEach(m => {
+    activeMembers.forEach(m => {
       const age = calculateAge(m.birthday);
       if (age === null) {
         ageMap.set(m.id, null);
@@ -287,7 +299,7 @@ const SessionStatsPage: React.FC = () => {
     // 6. Radial Bar Data (Age Attendance Rate)
     const membersByAge: Record<string, number> = {};
     ageGroupsBase.forEach(g => {
-      membersByAge[g.label] = members.filter(m => ageMap.get(m.id) === g.label).length;
+      membersByAge[g.label] = activeMembers.filter(m => ageMap.get(m.id) === g.label).length;
     });
 
     const radialStats = {
@@ -363,7 +375,7 @@ const SessionStatsPage: React.FC = () => {
       unspecified: { label: 'לא צוין', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-gray-400', hex: '#9ca3af' }
     };
 
-    members.forEach(m => {
+    activeMembers.forEach(m => {
       const g = m.gender === 'זכר' ? 'men' : m.gender === 'נקבה' ? 'women' : 'unspecified';
       genderStatsObj[g].count++;
       genderStatsObj[g].totalAttendance += (memberStatsMap[m.id]?.total || 0);
@@ -415,7 +427,7 @@ const SessionStatsPage: React.FC = () => {
           pulseData.push({
             date: iter.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }),
             count: count,
-            percentage: members.length > 0 ? Math.round((count / members.length) * 100) : 0,
+            percentage: activeMembers.length > 0 ? Math.round((count / activeMembers.length) * 100) : 0,
             fullDate: iter.toLocaleDateString('he-IL', { month: 'long' }), // Just the month name for title
             activityMonth: (iter.getFullYear() - startDate.getFullYear()) * 12 + (iter.getMonth() - startDate.getMonth()) + 1,
             weekNumber: Math.ceil(Math.abs(iter.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 7)) || 1
@@ -428,7 +440,7 @@ const SessionStatsPage: React.FC = () => {
 
     // 10. Age & Activity Table Data (Participation rate per group across 3 time ranges)
     const ageActivityData = ageGroupsBase.map(group => {
-      const groupMembers = members.filter(m => ageMap.get(m.id) === group.label);
+      const groupMembers = activeMembers.filter(m => ageMap.get(m.id) === group.label);
       const groupCount = groupMembers.length;
 
       const calcRate = (sessions: any[]) => {
@@ -448,7 +460,7 @@ const SessionStatsPage: React.FC = () => {
     });
 
     // 11. Grit Leaderboard
-    const filteredGrit = processedMembers.filter(m => 
+    const filteredGrit = finalMembers.filter(m => 
       `${m.firstName} ${m.lastName}`.toLowerCase().includes(gritSearchTerm.toLowerCase())
     );
 
@@ -470,12 +482,13 @@ const SessionStatsPage: React.FC = () => {
       .slice(0, 50);
 
     return {
+      activeMembersCount: activeMembers.length,
       totalSessions: filteredSessions.length,
       totalAttendance: filteredSessions.reduce((acc, s) => acc + s.participantsCount, 0),
       avgAttendance: Math.round(filteredSessions.reduce((acc, s) => acc + s.participantsCount, 0) / filteredSessions.length),
       globalTrend,
       trendPercentage: Math.abs(Math.round(trendPercentage)),
-      processedMembers,
+      processedMembers: finalMembers,
       segmentation,
       ageStackedData,
       ageGroupsBase,
@@ -682,11 +695,11 @@ const SessionStatsPage: React.FC = () => {
                 <div className="mb-12">
                   <div className="flex justify-between text-[12px] font-black text-[#4A5568] uppercase tracking-widest mb-3">
                     <span>תמהיל קהילתי</span>
-                    <span>{members.length} חברים</span>
+                    <span>{stats.activeMembersCount} חברים פעילים</span>
                   </div>
                   <div className="flex h-4 w-full rounded-full overflow-hidden bg-white p-[2px] border border-slate-200">
                     {stats.genderImpact.map((item, idx) => {
-                      const width = (item.count / members.length) * 100;
+                      const width = (item.count / stats.activeMembersCount) * 100;
                       if (width === 0) return null;
                       return (
                         <div 
@@ -967,3 +980,5 @@ const SessionStatsPage: React.FC = () => {
 };
 
 export default SessionStatsPage;
+// --- APPENDED CODE: V2 ---
+export const SessionStatsPageV2 = SessionStatsPage;

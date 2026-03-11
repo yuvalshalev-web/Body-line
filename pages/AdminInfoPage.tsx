@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { TrendingUp, Waves, Server, ShieldAlert, Users, Activity } from 'lucide-react';
+import { TrendingUp, Waves, Server, ShieldAlert, Users, Activity, Book } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CommunityAnalytics from '../components/CommunityAnalytics';
 import CommunityHeatMap from '../components/CommunityHeatMap';
@@ -9,8 +9,9 @@ import SystemMonitor from '../components/SystemMonitor';
 import SessionStatsPage from './SessionStatsPage';
 import TrendsDashboard from '../components/admin/TrendsDashboard';
 import GlassNavigationBar from '../components/GlassNavigationBar';
+import AdminHelpPage from '../components/admin/AdminHelpPage';
 
-type Tab = 'community' | 'trends' | 'attendance' | 'system';
+type Tab = 'community' | 'trends' | 'attendance' | 'system' | 'help';
 
 const SnorkelIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg 
@@ -40,6 +41,7 @@ const AdminInfoPage: React.FC = () => {
     { id: 'trends', label: 'טרנדים והתמדה', icon: <Activity size={20} /> },
     { id: 'attendance', label: 'צוללים לסשנים', icon: <Waves size={20} /> },
     { id: 'system', label: 'חדר מכונות', icon: <Server size={20} /> },
+    { id: 'help', label: 'מדריך אנליטיקה', icon: <Book size={20} /> },
   ];
 
   if (currentUser?.role !== 'Admin') {
@@ -91,6 +93,7 @@ const AdminInfoPage: React.FC = () => {
             {activeTab === 'trends' && <TrendsDashboard />}
             {activeTab === 'attendance' && <SessionStatsPage />}
             {activeTab === 'system' && <SystemMonitor />}
+            {activeTab === 'help' && <AdminHelpPage />}
           </motion.div>
         </AnimatePresence>
       </div>

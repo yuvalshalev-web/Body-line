@@ -372,6 +372,11 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                 icon={<Trophy size={18} />}
                 tooltip="זהו מדד ה'נחישות' שלך. הוא בודק כמה אתה מתמיד. הוא משלב את כמות הסשנים שעשית עם העקביות שלך (הרצף). העקביות חשובה יותר מהכמות."
                 isGrit={true}
+                footer={
+                  <p className="mt-4 text-[12px] font-bold text-white/40">
+                    ממוצע הקהילה: {Math.round(data.averageGrit)}
+                  </p>
+                }
               />
             </div>
           </div>

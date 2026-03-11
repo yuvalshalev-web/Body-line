@@ -1,5 +1,6 @@
 import { Member } from '../../types';
 import { formatDate } from './dateUtils';
+import { getBodyLineStats } from './bodyLineStats';
 
 export interface UserStats {
   userId: string;
@@ -13,6 +14,7 @@ export interface UserStats {
   streak: number;
   rank: string;
   gritScore: number;
+  averageGrit: number;
   totalSessions: number;
   attendancePercent: number;
   isTop10: boolean;
@@ -132,27 +134,34 @@ export const calculateUserStats = (
   const possibleSessions = relevantHistory.length;
   const attendancePercent = possibleSessions > 0 ? Math.round((totalSessions / possibleSessions) * 100) : 0;
 
-  // Top 10% Logic
-  const allCounts = members.map(m => {
-    return relevantHistory.filter(s => s.participantIds?.includes(m.id)).length;
-  }).sort((a, b) => b - a);
-  
-  const top10Threshold = allCounts[Math.floor(allCounts.length * 0.1)] || 0;
-  const isTop10 = totalSessions >= top10Threshold && totalSessions > 0;
+  // Use getBodyLineStats for Percentile calculation based on Grit Score
+  // First, we need to calculate grit for all members
+  const membersWithStats = members.map(m => {
+    const mSessions = relevantHistory.filter(s => s.participantIds?.includes(m.id));
+    const mTotalSessions = mSessions.length;
+    
+    let mStreak = 0;
+    for (const session of sortedHistory) {
+      if (session.participantIds?.includes(m.id)) {
+        mStreak++;
+      } else {
+        break;
+      }
+    }
+    
+    const mGritScore = Math.min(100, (mTotalSessions * 1.5) + (mStreak * 4));
+    
+    return {
+      ...m,
+      gritScore: mGritScore
+    };
+  });
 
-  // Improved Percentile calculation (Standard Percentile Rank formula)
-  const otherCounts = members
-    .filter(m => m.id !== userId)
-    .map(m => relevantHistory.filter(s => s.participantIds?.includes(m.id)).length);
-  
-  const strictlySmaller = otherCounts.filter(c => c < totalSessions).length;
-  const tied = otherCounts.filter(c => c === totalSessions).length;
-  const totalOthers = otherCounts.length;
-  
-  // PR = (L + 0.5S) / N * 100
-  const percentile = totalOthers > 0 
-    ? Math.round(((strictlySmaller + (0.5 * tied)) / totalOthers) * 100) 
-    : 100;
+  const statsHelper = getBodyLineStats(membersWithStats as any);
+  const percentileValue = parseFloat(statsHelper.calculatePercentile(gritScore, 'gritScore'));
+  const percentile = Math.round(percentileValue);
+  const isTop10 = percentile >= 90 && totalSessions > 0;
+  const averageGrit = statsHelper.getAverage('gritScore');
 
   // Yearly Stability Calculation (based on Shnat Hevel Zug)
   const seasonStart = yearConfig?.startDate ? new Date(yearConfig.startDate) : new Date('2026-01-01');
@@ -194,6 +203,7 @@ export const calculateUserStats = (
     streak,
     rank,
     gritScore,
+    averageGrit,
     totalSessions,
     attendancePercent,
     isTop10,

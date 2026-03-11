@@ -20,6 +20,7 @@ import {
 import { Astrodeck } from '../components/CommunityAnalytics';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { getBodyLineStats } from '../src/utils/bodyLineStats';
 import { SURF_QUOTES } from '../data/surfQuotes';
 import { SURF_DICTIONARY } from '../data/surfDictionary';
 import { motion } from 'motion/react';
@@ -47,7 +48,7 @@ const DashboardPage: React.FC = () => {
   const [isRefreshingGlossary, setIsRefreshingGlossary] = useState(false);
   const [isRefreshingPost, setIsRefreshingPost] = useState(false);
 
-  const activeMembers = useMemo(() => members.filter(m => m.isActive !== false), [members]);
+  const activeMembers = useMemo(() => getBodyLineStats(members).activeMembers, [members]);
   const attendees = useMemo(() => activeMembers.filter(m => attendeeIds.includes(m.id)).sort((a, b) => {
     const aLast = a.lastName || '';
     const bLast = b.lastName || '';
@@ -399,3 +400,5 @@ const DashboardPage: React.FC = () => {
 };
 
 export default DashboardPage;
+// --- APPENDED CODE: V2 ---
+export const DashboardPageV2 = DashboardPage;

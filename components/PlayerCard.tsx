@@ -3,6 +3,7 @@ import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import { Calendar, Crown, Star } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { calculateUserStats } from '../src/utils/analytics';
+import { getBodyLineStats } from '../src/utils/bodyLineStats';
 
 interface PlayerCardProps {
   userId: string;
@@ -38,18 +39,15 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
     };
 
     const userAge = calculateAge(member.birthday);
-    const allAges = members
-      .map(m => m.birthday ? calculateAge(m.birthday) : null)
-      .filter((age): age is number => age !== null)
-      .sort((a, b) => a - b); // Sorted youngest to oldest
+    
+    // Use getBodyLineStats for age percentile
+    const membersWithAge = members.map(m => ({
+      ...m,
+      age: m.birthday ? calculateAge(m.birthday) : undefined
+    }));
 
-    if (allAges.length === 0) return null;
-
-    // Find index of user's age. 
-    // If index is 0, they are the youngest (0th percentile).
-    // If index is length-1, they are the oldest (100th percentile).
-    const index = allAges.indexOf(userAge);
-    const percentile = (index / (allAges.length - 1)) * 100;
+    const statsHelper = getBodyLineStats(membersWithAge as any);
+    const percentile = parseFloat(statsHelper.calculatePercentile(userAge, 'age'));
     const roundedPercentile = Math.round(percentile);
 
     let label = `גולש מנוסה: אתה בוגר ומנוסה יותר מ-${roundedPercentile}% מהקהילה`;
@@ -88,17 +86,14 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
     const userDistance = calculateDistance(member.lat, member.lng, homeBreak.lat, homeBreak.lng);
     
-    const allDistances = members
-      .filter(m => m.lat && m.lng)
-      .map(m => calculateDistance(m.lat!, m.lng!, homeBreak.lat!, homeBreak.lng!))
-      .sort((a, b) => a - b); // Sorted closest to farthest
+    // Use getBodyLineStats for distance percentile
+    const membersWithDistance = members.map(m => ({
+      ...m,
+      distance: m.lat && m.lng ? calculateDistance(m.lat!, m.lng!, homeBreak.lat!, homeBreak.lng!) : undefined
+    }));
 
-    if (allDistances.length === 0) return null;
-
-    // Find index of user's distance. 
-    // If index is 0, they are the closest (0th percentile).
-    const index = allDistances.indexOf(userDistance);
-    const percentile = (index / (allDistances.length - 1)) * 100;
+    const statsHelper = getBodyLineStats(membersWithDistance as any);
+    const percentile = parseFloat(statsHelper.calculatePercentile(userDistance, 'distance'));
     const roundedPercentile = Math.round(percentile);
     const distanceKm = userDistance.toFixed(1);
 

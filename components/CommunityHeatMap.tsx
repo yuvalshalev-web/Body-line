@@ -79,7 +79,7 @@ const CommunityHeatMap: React.FC = () => {
     });
 
     // Prepare data for heatmap and stats
-    const activeMembers = members.filter(m => m.isActive !== false);
+    const activeMembers = getBodyLineStats(members).activeMembers;
     const heatPoints: [number, number, number][] = [];
     
     let nearCount = 0;
