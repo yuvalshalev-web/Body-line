@@ -1402,14 +1402,82 @@ export const Astrodeck = ({ label, value, icon: Icon, path, external, color, neo
     >
       <svg viewBox="0 0 400 400" className={`w-full h-full ${neoBrutal ? 'bg-white/10 backdrop-blur-[15px] border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)]' : 'backdrop-blur-[10px] rounded-[24px]'}`}>
         <defs>
-          <pattern id="diamond-pad-texture" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-            <rect width="20" height="20" fill="rgba(0, 112, 133, 0.05)" />
-            <path d="M10 2 L18 10 L10 18 L2 10 Z" fill="rgba(0, 112, 133, 0.1)" />
+          <pattern id="diamond-pad-texture" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+            <rect width="16" height="16" fill="rgba(0,0,0,0.05)" />
+            <path d="M8 2 L14 8 L8 14 L2 8 Z" fill="rgba(0,0,0,0.1)" />
+            <circle cx="8" cy="8" r="2" fill="rgba(0,0,0,0.1)" />
           </pattern>
+
+          <radialGradient id="glass-lens-pad" cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
+            <stop offset="0%" stopColor="white" stopOpacity="0.4" />
+            <stop offset="70%" stopColor="white" stopOpacity="0.05" />
+            <stop offset="100%" stopColor="white" stopOpacity="0.0" />
+          </radialGradient>
+
+          <linearGradient id="glass-shine-pad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="white" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="white" stopOpacity="0.05" />
+            <stop offset="100%" stopColor="white" stopOpacity="0.0" />
+          </linearGradient>
+
+          <filter id="rough-texture-pad">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
+            <feDiffuseLighting in="noise" lightingColor="#ffffff" surfaceScale="2.5">
+              <feDistantLight azimuth="45" elevation="45" />
+            </feDiffuseLighting>
+            <feComposite operator="in" in2="SourceGraphic" />
+          </filter>
         </defs>
 
+        {/* Background Pad */}
+        <path 
+          d={padPath} 
+          fill="url(#diamond-pad-texture)" 
+          stroke="rgba(255,255,255,0.2)" 
+          strokeWidth="1"
+        />
+
+        {/* Base Color Fill */}
         <path d={padPath} fill="rgba(0, 112, 133, 0.1)" stroke="var(--surfer-deep-teal)" strokeWidth="2" strokeLinejoin="round" />
-        <path d={padPath} fill="url(#diamond-pad-texture)" />
+        
+        {/* Glassmorphism Overlay */}
+        <path d={padPath} fill="url(#glass-lens-pad)" opacity="0.8" className="pointer-events-none" />
+        <path d={padPath} fill="url(#glass-shine-pad)" opacity="0.6" className="pointer-events-none" />
+
+        {/* Grip Bars Overlay */}
+        <g fill="rgba(255,255,255,0.4)" opacity="0.2" pointerEvents="none">
+          <rect x="170" y="80" width="60" height="6" rx="3" />
+          <rect x="170" y="100" width="60" height="6" rx="3" />
+          <rect x="170" y="120" width="60" height="6" rx="3" />
+          <rect x="170" y="140" width="60" height="6" rx="3" />
+          <rect x="170" y="160" width="60" height="6" rx="3" />
+          <rect x="170" y="180" width="60" height="6" rx="3" />
+          <rect x="170" y="200" width="60" height="6" rx="3" />
+          <rect x="170" y="220" width="60" height="6" rx="3" />
+          <rect x="170" y="240" width="60" height="6" rx="3" />
+        </g>
+
+        {/* Rough Texture Overlay */}
+        <path d={padPath} fill="#121212" filter="url(#rough-texture-pad)" opacity="0.25" className="pointer-events-none" />
+        
+        {/* Pad Outline for definition */}
+        <path 
+          d={padPath} 
+          fill="none" 
+          stroke="rgba(255,255,255,0.3)" 
+          strokeWidth="1" 
+          opacity="0.5"
+        />
+
+        {/* Charcoal Outline */}
+        <path 
+          d={padPath} 
+          fill="none" 
+          stroke="#121212" 
+          strokeWidth="1.2" 
+          strokeLinejoin="round"
+          className="pointer-events-none"
+        />
       </svg>
       
       <div className="absolute inset-0 flex flex-col items-center justify-center p-4 z-10 pointer-events-none">

@@ -66,9 +66,9 @@ export const AstrodeckGauge: React.FC<{
         <svg viewBox="0 0 400 400" className="w-full h-full drop-shadow-[0_10px_20px_rgba(0,0,0,0.2)] relative z-10">
           <defs>
             <pattern id="diamond-pad-gauge" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
-              <rect width="16" height="16" fill="rgba(255,255,255,0.05)" />
-              <path d="M8 2 L14 8 L8 14 L2 8 Z" fill="rgba(255,255,255,0.1)" />
-              <circle cx="8" cy="8" r="2" fill="rgba(255,255,255,0.2)" />
+              <rect width="16" height="16" fill="rgba(0,0,0,0.05)" />
+              <path d="M8 2 L14 8 L8 14 L2 8 Z" fill="rgba(0,0,0,0.1)" />
+              <circle cx="8" cy="8" r="2" fill="rgba(0,0,0,0.1)" />
             </pattern>
             
             <clipPath id="pad-clip-gauge">
@@ -100,6 +100,14 @@ export const AstrodeckGauge: React.FC<{
 
             <filter id="pad-shadow-gauge">
               <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.2" />
+            </filter>
+
+            <filter id="rough-texture-gauge">
+              <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
+              <feDiffuseLighting in="noise" lightingColor="#ffffff" surfaceScale="2.5">
+                <feDistantLight azimuth="45" elevation="45" />
+              </feDiffuseLighting>
+              <feComposite operator="in" in2="SourceGraphic" />
             </filter>
           </defs>
 
@@ -260,6 +268,15 @@ export const AstrodeckGauge: React.FC<{
             <rect x="170" y="220" width="60" height="6" rx="3" />
             <rect x="170" y="240" width="60" height="6" rx="3" />
           </g>
+
+          {/* Rough Texture Overlay */}
+          <path 
+            d={padPath} 
+            fill="#121212" 
+            filter="url(#rough-texture-gauge)"
+            opacity="0.25"
+            className="pointer-events-none"
+          />
           
           {/* Pad Outline for definition */}
           <path 
@@ -268,6 +285,15 @@ export const AstrodeckGauge: React.FC<{
             stroke="rgba(255,255,255,0.3)" 
             strokeWidth="1" 
             opacity="0.5"
+          />
+
+          {/* Charcoal Outline */}
+          <path 
+            d={padPath} 
+            fill="none" 
+            stroke="#121212" 
+            strokeWidth="1.2" 
+            className="pointer-events-none"
           />
         </svg>
 
