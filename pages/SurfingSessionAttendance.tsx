@@ -20,7 +20,7 @@ import {
   writeBatch,
   increment
 } from 'firebase/firestore';
-import { Users as UsersIcon, Check, Save, Search, Loader2, ChevronRight, History, Calendar as CalendarIcon, User as UserIcon, AlertTriangle, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Users as UsersIcon, Check, Save, Search, Loader2, ChevronRight, History, Calendar as CalendarIcon, User as UserIcon, AlertTriangle, ArrowRight, CheckCircle2, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { useModal } from '../contexts/ModalContext';
@@ -610,10 +610,10 @@ const SurfingSessionAttendance: React.FC = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     onClick={() => toggleUser(user.id)}
-                    className={`relative cursor-pointer group rounded-[16px] p-4 transition-all duration-500 flex flex-col items-center border backdrop-blur-[12px] ${
+                    className={`relative cursor-pointer group rounded-[8px] p-4 transition-all duration-300 flex flex-col items-center border-[2px] border-black backdrop-blur-[15px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] ${
                       isSelected 
-                        ? 'bg-teal-100 shadow-2xl shadow-sky-800/5 border-teal-300/40' 
-                        : 'bg-[rgba(255,255,255,0.1)] border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.2)] hover:shadow-xl'
+                        ? 'bg-slate-200' 
+                        : 'bg-[rgba(255,255,255,0.1)]'
                     }`}
                   >
                     <div className="relative mb-4">
@@ -631,16 +631,17 @@ const SurfingSessionAttendance: React.FC = () => {
                         </div>
                       </div>
                       
-                      {/* Selection Checkmark - Top Right */}
+                      {/* Selection Star - Top Right */}
                       <div className={`absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center border border-white shadow-md z-10 transition-all duration-500 ${
-                        isSelected ? 'bg-teal-300 text-sky-800 scale-110 rotate-0' : 'bg-white text-slate-200 scale-0 rotate-45'
+                        isSelected ? 'bg-yellow-400 text-white scale-110 rotate-0' : 'bg-white text-slate-200 scale-0 rotate-45'
                       }`}>
-                        <CheckCircle2 size={18} strokeWidth={2.5} />
+                        <Star size={18} strokeWidth={2.5} fill={isSelected ? "currentColor" : "none"} />
                       </div>
+                    </div>
 
                       {/* Role Badge */}
                       {user.role && (
-                        <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full shadow-sm border transition-all ${
+                        <div className={`mt-2 px-2 py-0.5 rounded-full shadow-sm border transition-all ${
                           isSelected ? 'bg-sky-800 text-white border-sky-800' : 'bg-white text-sky-600 border-slate-100'
                         }`}>
                           <span className="text-[8px] font-black uppercase tracking-tighter whitespace-nowrap">
@@ -648,7 +649,6 @@ const SurfingSessionAttendance: React.FC = () => {
                           </span>
                         </div>
                       )}
-                    </div>
 
                     <span className={`text-sm font-black text-center transition-colors mt-1 ${
                       isSelected ? 'text-sky-800' : 'text-sky-600'

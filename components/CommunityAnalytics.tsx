@@ -1383,32 +1383,39 @@ const CommunityAnalytics: React.FC = () => {
   );
 };
 
-export const Astrodeck = ({ label, value, icon: Icon, path, external, color }: { 
+export const Astrodeck = ({ label, value, icon: Icon, path, external, color, neoBrutal }: { 
   label: string; 
   value: string | number; 
   icon: any; 
   path: string; 
   external?: boolean;
   color: string;
+  neoBrutal?: boolean;
 }) => {
+  const padPath = "M 135 38 Q 80 45 40 60 C 30 150 60 250 100 320 C 120 360 160 380 185 380 L 185 330 C 185 300 135 300 135 250 Z M 145 35 Q 200 20 255 35 L 245 250 C 245 290 155 290 155 250 Z M 265 38 Q 320 45 360 60 C 370 150 340 250 300 320 C 280 360 240 380 215 380 L 215 330 C 215 300 265 300 265 250 Z";
+
   return (
     <Link 
       to={path} 
       target={external ? "_blank" : undefined} 
-      className="block h-full group"
+      className={`block h-full group relative w-full aspect-square max-w-[220px] mx-auto transition-all duration-300 ${neoBrutal ? 'hover:translate-x-[2px] hover:translate-y-[2px]' : 'hover:scale-105 hover:-translate-y-2'}`}
     >
-      <div className="relative w-full aspect-square max-w-[220px] mx-auto flex flex-col items-center justify-center transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 glass-panel rounded-3xl overflow-hidden border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.5)] hover:border-white/40">
-        
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-50 pointer-events-none" />
-        
-        {/* Content overlay */}
-        <div className="relative z-10 flex flex-col items-center justify-center p-4">
-          <Icon size={32} className={`mb-3 ${color} drop-shadow-md transition-transform duration-500 group-hover:scale-110`} />
-          <p className="text-4xl font-black glass-text-primary mb-1 leading-none drop-shadow-sm">{value}</p>
-          <p className="text-[12px] font-black uppercase tracking-widest glass-text-secondary mt-1 drop-shadow-sm text-center">{label}</p>
-        </div>
-        
+      <svg viewBox="0 0 400 400" className={`w-full h-full ${neoBrutal ? 'bg-white/10 border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)]' : 'backdrop-blur-[10px] rounded-[24px]'}`}>
+        <defs>
+          <pattern id="diamond-pad-texture" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="rgba(0, 112, 133, 0.05)" />
+            <path d="M10 2 L18 10 L10 18 L2 10 Z" fill="rgba(0, 112, 133, 0.1)" />
+          </pattern>
+        </defs>
+
+        <path d={padPath} fill="rgba(0, 112, 133, 0.1)" stroke="var(--surfer-deep-teal)" strokeWidth="2" strokeLinejoin="round" />
+        <path d={padPath} fill="url(#diamond-pad-texture)" />
+      </svg>
+      
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 z-10 pointer-events-none">
+        <Icon size={32} className={`mb-3 ${color} drop-shadow-md transition-transform duration-500 group-hover:scale-110`} />
+        <p className="text-4xl font-black text-[var(--surfer-deep-teal)] mb-1 leading-none drop-shadow-sm">{value}</p>
+        <p className="text-[12px] font-black uppercase tracking-widest text-[var(--surfer-deep-teal)]/70 mt-1 drop-shadow-sm text-center">{label}</p>
       </div>
     </Link>
   );

@@ -228,7 +228,7 @@ const DashboardPage: React.FC = () => {
 
         {/* Confirmed Members Bar - Positioned below Hero, above AstroDecks */}
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-          <div className="hd-transparent-frame p-6 md:p-10 flex flex-col items-center justify-center gap-8 overflow-hidden relative">
+          <div className="hd-transparent-frame p-6 md:p-10 flex flex-col items-center justify-center gap-8 overflow-hidden relative rounded-[8px] border-[2px] border-black backdrop-blur-[15px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] bg-[rgba(255,255,255,0.1)]">
             {/* Decorative background glows - enhanced for Glassmorphism */}
             <div className="absolute left-1/4 top-0 w-64 h-64 bg-cyan-500/10 blur-[120px] pointer-events-none" />
             <div className="absolute right-1/4 bottom-0 w-64 h-64 bg-amber-500/10 blur-[120px] pointer-events-none" />
@@ -275,7 +275,7 @@ const DashboardPage: React.FC = () => {
 
             <button 
               onClick={() => setShowAttendees(true)} 
-              className="hd-glass-button-gold px-10 py-4 rounded-2xl font-black text-xs md:text-sm uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all relative z-10"
+              className="px-10 py-4 rounded-[8px] font-black text-xs md:text-sm uppercase tracking-[0.2em] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] transition-all relative z-10 bg-yellow-400 text-black"
             >
               צפה ברשימה המלאה
             </button>
@@ -284,14 +284,14 @@ const DashboardPage: React.FC = () => {
       </div>
 
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[var(--spacing-md)]">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
         {[
-          { label: 'נבחרת הגלישה', value: activeMembers.length, icon: Users, path: '/directory', color: 'text-emerald-600' },
-          { label: 'תמונות', value: galleryItems.length, icon: ImageIcon, path: '/gallery', color: 'text-rose-600' },
-          { label: 'אירועים', value: activeEventsCount, icon: Calendar, path: '/events', color: 'text-indigo-600' },
-          { label: 'פוסטים', value: news.length, icon: Newspaper, path: '/posts', color: 'text-amber-600' },
-          { label: 'תחזית גלים', value: 'GoSurf', icon: Waves, path: 'https://gosurf.co.il', external: true, color: 'text-sky-600' },
-          { label: 'BeachCam', value: 'Live', icon: Video, path: 'https://beachcam.co.il', external: true, color: 'text-violet-600' }
+          { label: 'נבחרת הגלישה', value: activeMembers.length, icon: Users, path: '/directory', color: 'text-emerald-600', neoBrutal: true },
+          { label: 'תמונות', value: galleryItems.length, icon: ImageIcon, path: '/gallery', color: 'text-rose-600', neoBrutal: true },
+          { label: 'אירועים', value: activeEventsCount, icon: Calendar, path: '/events', color: 'text-indigo-600', neoBrutal: true },
+          { label: 'פוסטים', value: news.length, icon: Newspaper, path: '/posts', color: 'text-amber-600', neoBrutal: true },
+          { label: 'תחזית גלים', value: 'GoSurf', icon: Waves, path: 'https://gosurf.co.il', external: true, color: 'text-sky-600', neoBrutal: true },
+          { label: 'BeachCam', value: 'Live', icon: Video, path: 'https://beachcam.co.il', external: true, color: 'text-violet-600', neoBrutal: true }
         ].map((card, i) => (
           <Astrodeck key={i} {...card} />
         ))}
@@ -301,7 +301,7 @@ const DashboardPage: React.FC = () => {
       <section className="space-y-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-4 glass-effect text-white rounded-2xl shadow-lg"><Newspaper size={24} /></div>
+            <div className="p-4 backdrop-blur-[15px] bg-white/10 border border-white/20 text-white rounded-2xl shadow-lg"><Newspaper size={24} /></div>
             <h3 className="text-3xl font-black glass-text-primary tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>פוסטים אחרונים</h3>
           </div>
           <Link to="/posts" className="glass-text-secondary font-black text-xs uppercase tracking-widest hover:text-slate-950 transition-colors">צפה בהכל</Link>
@@ -309,7 +309,7 @@ const DashboardPage: React.FC = () => {
         
         <div className="max-w-xl mx-auto">
           {randomPost ? (
-            <Link to="/posts" className={`group glass-panel overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col ${isRefreshingPost ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+            <Link to="/posts" className={`group backdrop-blur-[15px] bg-white/10 border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] overflow-hidden hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-300 flex flex-col ${isRefreshingPost ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
               {randomPost.imageUrl && (
                 <div className="aspect-video overflow-hidden">
                   <img src={randomPost.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
@@ -343,26 +343,26 @@ const DashboardPage: React.FC = () => {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <section className="glass-panel p-12 relative min-h-[400px]">
+        <section className="backdrop-blur-[15px] bg-white/10 border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
               <div className="p-4 bg-amber-500/20 text-amber-600 rounded-2xl shadow-inner"><Quote size={24} /></div>
               <h3 className="text-2xl font-black glass-text-primary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>חוכמת הליין-אפ</h3>
            </div>
            {randomQuotes.map((item, idx) => (
-             <div key={idx} className="p-10 glass-effect rounded-[2.5rem] transition-all animate-in fade-in">
+             <div key={idx} className="p-10 backdrop-blur-[15px] bg-white/5 border-[1.5px] border-black rounded-[8px] transition-all animate-in fade-in">
                <p className="text-2xl font-black glass-text-primary leading-tight italic" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>"{item.text}"</p>
                <p className="text-lg font-bold glass-text-secondary italic mt-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>— {item.author}</p>
              </div>
            ))}
         </section>
 
-        <section className="glass-panel p-12 relative min-h-[400px]">
+        <section className="backdrop-blur-[15px] bg-white/10 border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
               <div className="p-4 bg-sky-500/20 text-sky-600 rounded-2xl shadow-inner"><BookOpen size={24} /></div>
               <h3 className="text-2xl font-black glass-text-primary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מילון מונחים</h3>
            </div>
            {randomGlossary.map((item, idx) => (
-             <div key={idx} className="p-10 glass-effect rounded-[2.5rem] transition-all animate-in fade-in">
+             <div key={idx} className="p-10 backdrop-blur-[15px] bg-white/5 border-[1.5px] border-black rounded-[8px] transition-all animate-in fade-in">
                <h4 className="text-4xl font-black glass-text-primary mb-4" dir="ltr" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.term}</h4>
                <p className="text-xl font-bold glass-text-secondary italic border-r-4 border-sky-500/30 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.definition}</p>
              </div>
