@@ -21,6 +21,7 @@ import {
   Trophy,
   Activity
 } from 'lucide-react';
+import { AngryBird } from './components/AngryBird';
 
 
 import { WoodSignLink } from './components/WoodSignLink';
@@ -254,13 +255,19 @@ const App: React.FC = () => {
                   </div>
 
                   {navItems.map((item, idx) => (
-                    <WoodSignLink 
-                      key={item.path}
-                      item={item}
-                      index={idx}
-                      isActive={location.pathname === item.path}
-                      onClick={() => handleNavigation(item.path)}
-                    />
+                    <div key={item.path} className="relative w-full max-w-[280px] flex justify-center overflow-visible">
+                      {idx === 0 && (
+                        <div className="absolute -top-17 -left-3 z-[10000] pointer-events-none scale-[0.6375]">
+                          <AngryBird delay={0.5} />
+                        </div>
+                      )}
+                      <WoodSignLink 
+                        item={item}
+                        index={idx}
+                        isActive={location.pathname === item.path}
+                        onClick={() => handleNavigation(item.path)}
+                      />
+                    </div>
                   ))}
 
                   {currentUser.role === 'Admin' && (
@@ -271,19 +278,20 @@ const App: React.FC = () => {
                         </span>
                       </div>
                       {adminNavItems.map((item, idx) => (
-                        <WoodSignLink 
-                          key={item.path}
-                          item={item}
-                          index={idx + navItems.length}
-                          isActive={location.pathname === item.path}
-                          onClick={() => handleNavigation(item.path)}
-                        />
+                        <div key={item.path} className="relative w-full max-w-[280px] flex justify-center overflow-visible">
+                          <WoodSignLink 
+                            item={item}
+                            index={idx + navItems.length}
+                            isActive={location.pathname === item.path}
+                            onClick={() => handleNavigation(item.path)}
+                          />
+                        </div>
                       ))}
                     </>
                   )}
 
                   {/* Exit Wave (Logout) Sign */}
-                  <div className="mt-8 w-full flex justify-center">
+                  <div className="mt-8 w-full max-w-[280px] flex justify-center overflow-visible">
                     <WoodSignLink 
                       item={{ 
                         id: 999,

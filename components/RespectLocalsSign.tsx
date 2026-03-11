@@ -60,7 +60,7 @@ export const RespectLocalsSign: React.FC = () => {
           <span className="text-xl font-black mb-0 drop-shadow-sm" style={{ WebkitTextStroke: '1.5px black', paintOrder: 'stroke fill' }}>Respect The</span>
           
           {/* Detailed Shark SVG */}
-          <div className="relative w-48 h-16 my-1">
+          <div className="relative w-[260px] h-[86px] my-1">
             <svg viewBox="0 0 120 60" className="w-full h-full drop-shadow-md">
               {/* Tail */}
               <path d="M 90 30 C 100 20 110 10 115 15 C 105 25 95 30 95 30 C 95 30 105 40 110 45 C 100 45 95 35 90 30 Z" fill="#1A4B6E" stroke="black" strokeWidth="1.5" strokeLinejoin="round" />

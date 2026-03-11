@@ -28,7 +28,7 @@ const SignsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col items-center py-12 px-4 overflow-x-hidden bg-[#e0f2f1]">
+    <div className="min-h-screen relative flex flex-col items-center pt-20 pb-12 px-4 bg-[#e0f2f1] overflow-visible">
       {/* Beach Background Elements */}
       <div className="absolute bottom-0 left-0 right-0 h-[40vh] bg-[#fdf5e6] -z-10" style={{ borderRadius: '100% 100% 0 0 / 20% 20% 0 0' }} />
       <div className="absolute bottom-[35vh] left-0 right-0 h-20 bg-[#80cbc4]/20 blur-2xl -z-10" />
@@ -47,20 +47,19 @@ const SignsPage: React.FC = () => {
       <div className="absolute bottom-[39vh] left-1/2 -translate-x-1/2 w-16 h-6 bg-amber-100/80 blur-sm rounded-[100%] -z-10" />
 
       {/* Respect the Locals Sign at the top */}
-      <div className="scale-75 md:scale-100 mb-4 z-10 relative flex flex-col items-center">
+      <div className="scale-75 md:scale-100 mb-40 z-10 relative flex flex-col items-center overflow-visible">
         <RespectLocalsSign />
         {/* Nail for the diamond sign */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#2a2a2a] shadow-lg z-20" />
       </div>
 
       {/* Navigation Signs */}
-      <div className="flex flex-col items-center w-full max-w-md gap-1 relative z-10">
+      <div className="flex flex-col items-center w-full max-w-md gap-1 relative z-10 overflow-visible">
         {navItems.map((item, idx) => (
-          <div key={item.path} className="w-full max-w-[320px] flex justify-center relative">
-            {/* Angry Bird perched on the Home Page sign */}
+          <div key={item.path} className={`w-full max-w-[256px] flex justify-center relative overflow-visible ${idx === 0 ? 'z-[100]' : 'z-10'}`}>
             {idx === 0 && (
-              <div className="absolute -top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
-                <AngryBird delay={0.5} />
+              <div className="absolute -top-21 -left-8 z-[10000] pointer-events-none scale-[0.935]">
+                <AngryBird delay={0.1} />
               </div>
             )}
             <WoodSignLink 
