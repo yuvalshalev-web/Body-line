@@ -1,6 +1,5 @@
 /// <reference types="google.maps" />
 import React, { useState, useRef, useEffect } from 'react';
-import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { 
   Calendar, 
   Clock, 
@@ -31,6 +30,7 @@ import { processImage } from '../utils/imageProcessor';
 import { syncStorageOnUpload } from '../utils/storageStats';
 import { WazeIcon } from '../components/icons/WazeIcon';
 import { GoogleMapsIcon } from '../components/icons/GoogleMapsIcon';
+import { loadGoogleMaps } from '../utils/googlePlaces';
 import TimePicker from '../components/TimePicker';
 
 const EventsPage: React.FC = () => {
@@ -56,26 +56,41 @@ const EventsPage: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
 
   useEffect(() => {
-    if (showModal && locationInputRef.current) {
-      setOptions({
-        key: import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string,
-      });
+    const initAutocomplete = () => {
+      if (locationInputRef.current && window.google?.maps?.places && !autocompleteRef.current) {
+        try {
+          const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current!, {
+            types: ["geocode"],
+          });
+          autocompleteRef.current = autocomplete;
+          autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (place.formatted_address) {
+              setLocation(place.formatted_address);
+            }
+          });
+        } catch (e) {
+          console.error("Failed to initialize Autocomplete:", e);
+        }
+      }
+    };
 
-      importLibrary("places").then((places) => {
-        const { Autocomplete } = places;
-        const autocomplete = new Autocomplete(locationInputRef.current!, {
-          types: ["geocode"],
+    if (showModal) {
+      loadGoogleMaps()
+        .then(initAutocomplete)
+        .catch(err => {
+          console.warn("Google Maps loading failed:", err.message);
         });
-        autocomplete.addListener("place_changed", () => {
-          const place = autocomplete.getPlace();
-          if (place.formatted_address) {
-            setLocation(place.formatted_address);
-          }
-        });
-      });
     }
+
+    return () => {
+      if (autocompleteRef.current && window.google) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+    };
   }, [showModal]);
 
   const canManageCommunityEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor' || currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
@@ -213,9 +228,9 @@ const EventsPage: React.FC = () => {
           {currentUser && (
             <button 
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-4 px-10 py-5 text-white rounded-[2rem] font-black text-md transition-all active:scale-95 group hd-glass-button-vibrant"
+              className="flex items-center gap-4 px-10 py-5 bg-[var(--surfer-cyan)] text-black rounded-[8px] font-black text-md transition-all active:scale-95 group border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:bg-[var(--surfer-teal)] hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,0.9)]"
             >
-              <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />
+              <Plus size={24} className="group-hover:rotate-90 transition-transform text-black" />
               <span>הוספת אירוע</span>
             </button>
           )}
@@ -231,33 +246,11 @@ const EventsPage: React.FC = () => {
           const canEdit = isAdmin || (currentUser && event.creatorId === currentUser.id);
 
           return (
-            <div key={event.id} className={`group glass-panel rounded-[3rem] border-t-4 ${event.type === 'COMMUNITY' ? 'border-t-[var(--surfer-pink)]' : event.type === 'INSTRUCTOR' ? 'border-t-[var(--surfer-orange)]' : 'border-t-[var(--surfer-cyan)]'} shadow-sm overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col relative`}>
-              <div className="absolute top-6 left-6 flex gap-2 z-20">
-                {canEdit && (
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => handleEdit(event)} 
-                      title="עריכת אירוע"
-                      className="p-3 bg-white text-[#006994] border border-slate-200 rounded-2xl shadow-xl hover:bg-slate-50 transition-all active:scale-90 flex items-center justify-center"
-                    >
-                      <Pencil size={18} />
-                    </button>
-                    {canDelete && (
-                      <button 
-                        onClick={() => handleDelete(event.id)} 
-                        title="מחיקת אירוע"
-                        className="p-3 bg-white text-red-500 border border-slate-200 rounded-2xl shadow-xl hover:bg-red-50 transition-all active:scale-90 flex items-center justify-center"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+            <div key={event.id} className={`group bg-white/10 backdrop-blur-[15px] rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] overflow-hidden hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,0.9)] transition-all duration-300 flex flex-col relative`}>
               <div className="relative aspect-video overflow-hidden">
                 <img src={event.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
                 <div className="absolute top-6 right-6 flex flex-col gap-2 items-end">
-                  <div className="glass-effect px-4 py-2 rounded-xl text-center shadow-lg min-w-max">
+                  <div className="bg-white/10 backdrop-blur-[15px] px-4 py-2 rounded-xl text-center shadow-lg min-w-max">
                     <p className="text-sm font-black glass-text-primary whitespace-nowrap tabular-nums">{formatDate(event.date)}</p>
                   </div>
                   <div className={`px-3 py-1 rounded-lg text-[12px] font-black uppercase tracking-wider shadow-md ${
@@ -270,6 +263,16 @@ const EventsPage: React.FC = () => {
                 </div>
               </div>
               <div className="p-8 flex-1 flex flex-col relative z-30">
+                {/* Attendance Button - Now under the image */}
+                <button 
+                  onClick={() => handleToggleAttendance(event.id)}
+                  disabled={isProcessing}
+                  className={`w-full py-4 mb-6 rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-sm flex items-center justify-center gap-3 transition-all text-white ${isAttending ? 'bg-[var(--surfer-orange)] hover:bg-[var(--surfer-pink)]' : 'bg-[var(--surfer-teal)] hover:bg-[var(--surfer-cyan)]'}`}
+                >
+                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-white" />}
+                  {isAttending ? 'מבטל הגעה' : 'אני מגיע/ה'}
+                </button>
+
                 <h3 className="text-2xl font-black glass-text-primary mb-4 group-hover:text-[var(--surfer-pink)] transition-colors">{event.title}</h3>
                 <p className="glass-text-secondary font-bold text-sm mb-8 line-clamp-3">{event.description}</p>
                 <div className="space-y-4 mb-8">
@@ -296,7 +299,7 @@ const EventsPage: React.FC = () => {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="px-3 py-1.5 bg-[#33ccff]/10 text-[#33ccff] rounded-xl hover:bg-[#33ccff]/20 transition-colors flex items-center gap-1.5 shrink-0 shadow-sm"
+                          className="px-3 py-1.5 bg-[#33ccff]/10 text-[#33ccff] rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:bg-[#33ccff]/20 transition-all flex items-center gap-1.5 shrink-0"
                           title="ניווט עם Waze"
                         >
                           <WazeIcon className="w-4 h-4" />
@@ -307,7 +310,7 @@ const EventsPage: React.FC = () => {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="px-3 py-1.5 bg-blue-500/10 text-blue-600 rounded-xl hover:bg-blue-500/20 transition-colors flex items-center gap-1.5 shrink-0 shadow-sm"
+                          className="px-3 py-1.5 bg-blue-500/10 text-blue-600 rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:bg-blue-500/20 transition-all flex items-center gap-1.5 shrink-0"
                           title="ניווט עם Google Maps"
                         >
                           <GoogleMapsIcon className="w-4 h-4" />
@@ -323,14 +326,32 @@ const EventsPage: React.FC = () => {
                     </span>
                   </div>
                 </div>
-                <button 
-                  onClick={() => handleToggleAttendance(event.id)}
-                  disabled={isProcessing}
-                  className={`w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all shadow-md text-white ${isAttending ? 'bg-[var(--surfer-orange)] hover:bg-[var(--surfer-pink)]' : 'bg-[var(--surfer-teal)] hover:bg-[var(--surfer-cyan)]'}`}
-                >
-                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-white" />}
-                  {isAttending ? 'מבטל הגעה' : 'אני מגיע/ה'}
-                </button>
+
+                {/* Edit/Delete Buttons - Now at the bottom center */}
+                <div className="mt-auto pt-6 flex justify-center border-t border-black/5">
+                  {canEdit && (
+                    <div className="flex gap-4">
+                      <button 
+                        onClick={() => handleEdit(event)} 
+                        title="עריכת אירוע"
+                        className="p-3 bg-white text-[#006994] border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:bg-slate-50 transition-all active:scale-90 flex items-center justify-center"
+                      >
+                        <Pencil size={20} />
+                        <span className="mr-2 font-black text-xs">עריכה</span>
+                      </button>
+                      {canDelete && (
+                        <button 
+                          onClick={() => handleDelete(event.id)} 
+                          title="מחיקת אירוע"
+                          className="p-3 bg-white text-red-500 border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:bg-red-50 transition-all active:scale-90 flex items-center justify-center"
+                        >
+                          <Trash2 size={20} />
+                          <span className="mr-2 font-black text-xs">מחיקה</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           );
@@ -339,8 +360,8 @@ const EventsPage: React.FC = () => {
 
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in">
-           <div className="glass-panel w-full max-w-2xl rounded-[3rem] shadow-2xl p-12 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto glass-text-primary">
-             <button onClick={() => { setShowModal(false); resetForm(); }} className="absolute top-8 left-8 p-3 text-white/60 hover:text-white glass-effect rounded-full"><X size={24} /></button>
+           <div className="bg-white/10 backdrop-blur-[15px] w-full max-w-2xl rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] p-12 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto glass-text-primary">
+             <button onClick={() => { setShowModal(false); resetForm(); }} className="absolute top-8 left-8 p-3 text-black bg-[var(--surfer-cyan)] rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:bg-[var(--surfer-teal)] active:scale-95 transition-all"><X size={24} /></button>
              <h3 className="text-3xl font-black mb-8">{editingEvent ? 'עריכת אירוע' : 'יצירת אירוע'}</h3>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-4">
@@ -354,10 +375,10 @@ const EventsPage: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => { setEventType('MEMBER'); setShowTypeWarning(false); }}
-                      className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group ${
+                      className={`relative p-3 rounded-[8px] border-[2px] border-black transition-all flex flex-col items-center gap-2 text-center group ${
                         eventType === 'MEMBER' 
-                          ? 'bg-[#00D9E6] border-[#00D9E6] text-white shadow-xl shadow-[#00D9E6]/20' 
-                          : 'bg-white border-slate-100 text-slate-400 hover:border-[#00D9E6] hover:bg-slate-50'
+                          ? 'bg-[#00D9E6] text-white shadow-[2px_2px_0px_rgba(0,0,0,0.8)]' 
+                          : 'bg-white text-slate-400 hover:bg-slate-50'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
@@ -378,10 +399,10 @@ const EventsPage: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => { setEventType('INSTRUCTOR'); setShowTypeWarning(false); }}
-                      className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group ${
+                      className={`relative p-3 rounded-[8px] border-[2px] border-black transition-all flex flex-col items-center gap-2 text-center group ${
                         eventType === 'INSTRUCTOR' 
-                          ? 'bg-[#FF9F1C] border-[#FF9F1C] text-white shadow-xl shadow-[#FF9F1C]/20' 
-                          : 'bg-white border-slate-100 text-slate-400 hover:border-[#FF9F1C] hover:bg-slate-50'
+                          ? 'bg-[#FF9F1C] text-white shadow-[2px_2px_0px_rgba(0,0,0,0.8)]' 
+                          : 'bg-white text-slate-400 hover:bg-slate-50'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
@@ -402,10 +423,10 @@ const EventsPage: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => { setEventType('COMMUNITY'); setShowTypeWarning(false); }}
-                      className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group ${
+                      className={`relative p-3 rounded-[8px] border-[2px] border-black transition-all flex flex-col items-center gap-2 text-center group ${
                         eventType === 'COMMUNITY' 
-                          ? 'bg-[#FF2D60] border-[#FF2D60] text-white shadow-xl shadow-[#FF2D60]/20' 
-                          : 'bg-white border-slate-100 text-slate-400 hover:border-[#FF2D60] hover:bg-slate-50'
+                          ? 'bg-[#FF2D60] text-white shadow-[2px_2px_0px_rgba(0,0,0,0.8)]' 
+                          : 'bg-white text-slate-400 hover:bg-slate-50'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
@@ -453,19 +474,19 @@ const EventsPage: React.FC = () => {
                     ></div>
                   )}
                   <div className={`space-y-6 transition-opacity ${!eventType ? 'opacity-40' : 'opacity-100'}`}>
-                    <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="כותרת האירוע" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
-                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="תיאור האירוע" className="w-full p-5 bg-slate-50 rounded-2xl font-bold outline-none border border-slate-100 h-32 resize-none" />
+                    <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="כותרת האירוע" className="w-full p-5 bg-white/50 backdrop-blur-sm rounded-[8px] font-black outline-none border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.1)] focus:shadow-[4px_4px_0px_rgba(0,0,0,0.2)] transition-all" />
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="תיאור האירוע" className="w-full p-5 bg-white/50 backdrop-blur-sm rounded-[8px] font-bold outline-none border-[1.5px] border-black h-32 resize-none shadow-[2px_2px_0px_rgba(0,0,0,0.1)] focus:shadow-[4px_4px_0px_rgba(0,0,0,0.2)] transition-all" />
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-2">תאריך</label>
-                        <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                        <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full p-5 bg-white/50 backdrop-blur-sm rounded-[8px] font-black outline-none border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.1)] transition-all" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-2">שעה</label>
-                        <TimePicker required value={time} onChangeValue={setTime} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                        <TimePicker required value={time} onChangeValue={setTime} className="w-full p-5 bg-white/50 backdrop-blur-sm rounded-[8px] font-black outline-none border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.1)] transition-all" />
                       </div>
                     </div>
-                    <input type="text" ref={locationInputRef} value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
+                    <input type="text" ref={locationInputRef} value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-white/50 backdrop-blur-sm rounded-[8px] font-black outline-none border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.1)] transition-all" />
                     <div className="space-y-4">
                       <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">תמונת רקע</label>
                       <div className="relative group/img aspect-video rounded-3xl overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-4 transition-all hover:border-[#006994]/40">
@@ -476,7 +497,7 @@ const EventsPage: React.FC = () => {
                               <button 
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="px-6 py-3 bg-white text-[#006994] rounded-2xl font-black text-sm shadow-xl flex items-center gap-2 active:scale-95"
+                                className="px-6 py-3 bg-white text-[#006994] rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] font-black text-sm flex items-center gap-2 active:scale-95"
                               >
                                 <Camera size={18} />
                                 החלפת תמונת רקע
@@ -489,7 +510,7 @@ const EventsPage: React.FC = () => {
                             onClick={() => fileInputRef.current?.click()}
                             className="flex flex-col items-center gap-2 text-slate-400 hover:text-[#006994] transition-colors"
                           >
-                            <div className="p-4 bg-white rounded-2xl shadow-sm">
+                            <div className="p-4 bg-white rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
                               <Camera size={32} />
                             </div>
                             <span className="font-black text-xs">לחץ להעלאת תמונה</span>
@@ -516,9 +537,9 @@ const EventsPage: React.FC = () => {
                 <button 
                   type="submit" 
                   disabled={isSaving || !eventType || (eventType === 'COMMUNITY' && !canManageCommunityEvents) || (eventType === 'INSTRUCTOR' && !canManageInstructorEvents)} 
-                  className="flex items-center justify-center gap-4 px-10 py-5 text-white rounded-[2rem] font-black text-xl transition-all active:scale-95 group hd-glass-button-vibrant w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-4 px-10 py-5 bg-[var(--surfer-cyan)] text-black rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-xl transition-all active:scale-95 group w-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--surfer-teal)]"
                 >
-                   {isSaving ? <Loader2 className="animate-spin" size={24} /> : editingEvent ? <CheckCircle2 size={24} className="text-[#00FFFF]" /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#00FFFF]" />}
+                   {isSaving ? <Loader2 className="animate-spin" size={24} /> : editingEvent ? <CheckCircle2 size={24} className="text-black" /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-black" />}
                    {editingEvent ? 'שמור שינויים' : 'צור אירוע חדש'}
                 </button>
              </form>

@@ -160,7 +160,7 @@ const DashboardPage: React.FC = () => {
     <div className="space-y-16 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
       {/* Hero & Attendees Group */}
       <div className="space-y-6">
-        <section className="relative w-full min-h-[500px] md:min-h-[900px] lg:min-h-[1200px] rounded-[var(--radius-lg)] overflow-hidden border-0 shadow-2xl">
+        <section className="relative w-full min-h-[500px] md:min-h-[900px] lg:min-h-[1200px] rounded-[8px] overflow-hidden border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)]">
           <div className="absolute inset-0 bg-slate-900">
             <img 
               src={siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
@@ -188,7 +188,7 @@ const DashboardPage: React.FC = () => {
                      { label: 'דקות', value: countdown.minutes },
                      { label: 'שניות', value: countdown.seconds }
                    ].map((item, i) => (
-                     <div key={i} className="flex flex-col items-center bg-white/10 backdrop-blur-md border border-white/20 px-3 py-2 md:px-5 md:py-3 rounded-2xl shadow-xl min-w-[60px] md:min-w-[80px]">
+                     <div key={i} className="flex flex-col items-center bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black px-3 py-2 md:px-5 md:py-3 rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] min-w-[60px] md:min-w-[80px]">
                        <span className="text-2xl md:text-4xl font-black text-[var(--surfer-yellow)]" style={{ fontFamily: "'Heebo', sans-serif" }}>{item.value}</span>
                        <span className="text-[9px] md:text-[12px] uppercase font-bold tracking-tighter opacity-80 text-white">{item.label}</span>
                      </div>
@@ -228,7 +228,7 @@ const DashboardPage: React.FC = () => {
 
         {/* Confirmed Members Bar - Positioned below Hero, above AstroDecks */}
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-          <div className="hd-transparent-frame p-6 md:p-10 flex flex-col items-center justify-center gap-8 overflow-hidden relative rounded-[8px] border-[2px] border-black backdrop-blur-[15px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] bg-[rgba(255,255,255,0.1)]">
+          <div className="neo-glass-card p-6 md:p-10 flex flex-col items-center justify-center gap-8 overflow-hidden relative">
             {/* Decorative background glows - enhanced for Glassmorphism */}
             <div className="absolute left-1/4 top-0 w-64 h-64 bg-cyan-500/10 blur-[120px] pointer-events-none" />
             <div className="absolute right-1/4 bottom-0 w-64 h-64 bg-amber-500/10 blur-[120px] pointer-events-none" />
@@ -241,12 +241,12 @@ const DashboardPage: React.FC = () => {
                     {a.avatar ? (
                       <img 
                         src={a.avatar} 
-                        className="w-12 h-12 md:w-14 md:h-14 rounded-2xl border-2 border-white/40 shadow-xl object-cover transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6" 
+                        className="w-12 h-12 md:w-14 md:h-14 rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] object-cover transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6" 
                         alt="" 
                         loading="lazy" 
                       />
                     ) : (
-                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 border-2 border-white/40 flex items-center justify-center text-xs text-white font-black shadow-xl transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6">
+                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-[8px] bg-gradient-to-br from-slate-700 to-slate-900 border-[1.5px] border-black flex items-center justify-center text-xs text-white font-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6">
                         {a.firstName.charAt(0)}
                       </div>
                     )}
@@ -257,7 +257,7 @@ const DashboardPage: React.FC = () => {
                   </Link>
                 ))}
                 {attendees.length > 12 && (
-                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-slate-800/80 backdrop-blur-md border-2 border-white/40 flex items-center justify-center text-xs text-white font-black shadow-xl z-10">
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-[8px] bg-slate-800/80 backdrop-blur-md border-[1.5px] border-black flex items-center justify-center text-xs text-white font-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] z-10">
                     +{attendees.length - 12}
                   </div>
                 )}
@@ -275,7 +275,7 @@ const DashboardPage: React.FC = () => {
 
             <button 
               onClick={() => setShowAttendees(true)} 
-              className="px-10 py-4 rounded-[8px] font-black text-xs md:text-sm uppercase tracking-[0.2em] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] transition-all relative z-10 bg-yellow-400 text-black"
+              className="px-10 py-4 bg-[var(--surfer-yellow)] text-black rounded-[8px] font-black text-xs md:text-sm uppercase tracking-[0.2em] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] transition-all relative z-10"
             >
               צפה ברשימה המלאה
             </button>
@@ -301,7 +301,7 @@ const DashboardPage: React.FC = () => {
       <section className="space-y-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-4 backdrop-blur-[15px] bg-white/10 border border-white/20 text-white rounded-2xl shadow-lg"><Newspaper size={24} /></div>
+            <div className="p-4 bg-[var(--surfer-pink)]/20 text-black rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]"><Newspaper size={24} /></div>
             <h3 className="text-3xl font-black glass-text-primary tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>פוסטים אחרונים</h3>
           </div>
           <Link to="/posts" className="glass-text-secondary font-black text-xs uppercase tracking-widest hover:text-slate-950 transition-colors">צפה בהכל</Link>
@@ -309,9 +309,9 @@ const DashboardPage: React.FC = () => {
         
         <div className="max-w-xl mx-auto">
           {randomPost ? (
-            <Link to="/posts" className={`group backdrop-blur-[15px] bg-white/10 border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] overflow-hidden hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-300 flex flex-col ${isRefreshingPost ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+            <Link to="/posts" className={`group neo-glass-card overflow-hidden hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-300 flex flex-col ${isRefreshingPost ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
               {randomPost.imageUrl && (
-                <div className="aspect-video overflow-hidden">
+                <div className="aspect-video overflow-hidden border-b-[2px] border-black">
                   <img src={randomPost.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
                 </div>
               )}
@@ -320,13 +320,13 @@ const DashboardPage: React.FC = () => {
                   <Calendar size={12} />
                   {randomPost.date}
                 </div>
-                <h4 className="text-xl font-black glass-text-primary mb-4 group-hover:text-rose-600 transition-colors line-clamp-2" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.title}</h4>
+                <h4 className="text-xl font-black glass-text-primary mb-4 group-hover:text-[var(--surfer-pink)] transition-colors line-clamp-2" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.title}</h4>
                 <p className="glass-text-secondary font-bold text-sm line-clamp-3 mb-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.content}</p>
                 <div className="mt-auto flex items-center gap-3">
                   {randomPost.authorAvatar ? (
-                    <img src={randomPost.authorAvatar} className="w-6 h-6 rounded-full object-cover" alt="" />
+                    <img src={randomPost.authorAvatar} className="w-6 h-6 rounded-full object-cover border border-black" alt="" />
                   ) : (
-                    <div className="w-6 h-6 rounded-full glass-effect flex items-center justify-center text-white/60">
+                    <div className="w-6 h-6 rounded-full bg-white/10 border border-black flex items-center justify-center text-slate-400">
                       <UserCircle size={12} />
                     </div>
                   )}
@@ -335,7 +335,7 @@ const DashboardPage: React.FC = () => {
               </div>
             </Link>
           ) : (
-            <div className="py-20 text-center glass-panel border-2 border-dashed border-white/20">
+            <div className="py-20 text-center neo-glass-card border-dashed">
               <p className="glass-text-secondary font-bold">אין פוסטים להצגה</p>
             </div>
           )}
@@ -343,44 +343,44 @@ const DashboardPage: React.FC = () => {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <section className="backdrop-blur-[15px] bg-white/10 border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] p-12 relative min-h-[400px]">
+        <section className="neo-glass-card p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-amber-500/20 text-amber-600 rounded-2xl shadow-inner"><Quote size={24} /></div>
+              <div className="p-4 bg-[var(--surfer-yellow)]/20 text-black rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]"><Quote size={24} /></div>
               <h3 className="text-2xl font-black glass-text-primary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>חוכמת הליין-אפ</h3>
            </div>
            {randomQuotes.map((item, idx) => (
-             <div key={idx} className="p-10 backdrop-blur-[15px] bg-white/5 border-[1.5px] border-black rounded-[8px] transition-all animate-in fade-in">
+             <div key={idx} className="p-10 bg-white/5 backdrop-blur-[15px] border-[1.5px] border-black rounded-[8px] transition-all animate-in fade-in">
                <p className="text-2xl font-black glass-text-primary leading-tight italic" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>"{item.text}"</p>
                <p className="text-lg font-bold glass-text-secondary italic mt-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>— {item.author}</p>
              </div>
            ))}
         </section>
 
-        <section className="backdrop-blur-[15px] bg-white/10 border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] p-12 relative min-h-[400px]">
+        <section className="neo-glass-card p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-sky-500/20 text-sky-600 rounded-2xl shadow-inner"><BookOpen size={24} /></div>
+              <div className="p-4 bg-[var(--surfer-cyan)]/20 text-black rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]"><BookOpen size={24} /></div>
               <h3 className="text-2xl font-black glass-text-primary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מילון מונחים</h3>
            </div>
            {randomGlossary.map((item, idx) => (
-             <div key={idx} className="p-10 backdrop-blur-[15px] bg-white/5 border-[1.5px] border-black rounded-[8px] transition-all animate-in fade-in">
+             <div key={idx} className="p-10 bg-white/5 backdrop-blur-[15px] border-[1.5px] border-black rounded-[8px] transition-all animate-in fade-in">
                <h4 className="text-4xl font-black glass-text-primary mb-4" dir="ltr" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.term}</h4>
-               <p className="text-xl font-bold glass-text-secondary italic border-r-4 border-sky-500/30 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.definition}</p>
+               <p className="text-xl font-bold glass-text-secondary italic border-r-4 border-[var(--surfer-cyan)]/30 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.definition}</p>
              </div>
            ))}
         </section>
       </div>
 
       {showAttendees && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 modal-overlay" onClick={() => setShowAttendees(false)}>
-           <div className="modal-content w-full max-w-lg p-10 animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in" onClick={() => setShowAttendees(false)}>
+           <div className="bg-white/10 backdrop-blur-[15px] border-[2px] border-black shadow-[6px_6px_0px_rgba(0,0,0,0.9)] rounded-[8px] w-full max-w-lg p-10 animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
               <h3 className="text-3xl font-black mb-8 glass-text-primary">נבחרת הסשן</h3>
               <div className="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar">
                 {attendees.map(a => (
-                  <div key={a.id} className="flex items-center gap-4 p-4 glass-effect rounded-2xl">
+                  <div key={a.id} className="flex items-center gap-4 p-4 bg-white/5 backdrop-blur-[15px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
                     {a.avatar ? (
-                      <img src={a.avatar} className="w-12 h-12 rounded-xl object-cover" alt="" loading="lazy" />
+                      <img src={a.avatar} className="w-12 h-12 rounded-[8px] border border-black object-cover" alt="" loading="lazy" />
                     ) : (
-                      <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-white/60">
+                      <div className="w-12 h-12 rounded-[8px] bg-white/10 border border-black flex items-center justify-center text-slate-400">
                         <UserCircle size={24} />
                       </div>
                     )}
@@ -391,7 +391,7 @@ const DashboardPage: React.FC = () => {
                   </div>
                 ))}
               </div>
-              <button onClick={() => setShowAttendees(false)} className="w-full mt-8 py-4 hd-glass-button-gold text-white rounded-2xl font-black text-lg transition-all active:scale-95">סגור</button>
+              <button onClick={() => setShowAttendees(false)} className="w-full mt-8 py-4 bg-[var(--surfer-cyan)] text-black rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-lg transition-all active:scale-95 hover:bg-[var(--surfer-teal)]">סגור</button>
            </div>
         </div>
       )}

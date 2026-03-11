@@ -100,17 +100,11 @@ const SurferCardPage: React.FC = () => {
 
           return (
             <motion.div 
-              className="p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] bg-[#FDFBF7] text-[#2B2B2E] shadow-sm transition-all duration-1000 relative border border-slate-100"
+              className="p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[8px] bg-white/10 backdrop-blur-[15px] text-[#2B2B2E] transition-all duration-1000 relative border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)]"
             >
-              {/* Neumorphic Inner Shadow Overlay */}
-              <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[var(--radius-lg)]" />
-              
-              {/* Subtle background elements */}
-              <div className="absolute -right-20 -top-20 w-96 h-96 bg-slate-200/20 rounded-full blur-[120px] pointer-events-none" />
-              
               {/* Decorative background elements */}
-              <div className="absolute -right-20 -top-20 w-96 h-96 bg-white/5 rounded-full blur-[120px] pointer-events-none animate-pulse" />
-              <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-black/30 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute -right-20 -top-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
+              <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
               
               <div className="relative z-10">
                 <div className="flex flex-col md:flex-row items-center gap-10 mb-6">
@@ -129,7 +123,7 @@ const SurferCardPage: React.FC = () => {
                     />
                     
                     {/* Trophy Container */}
-                    <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-2xl shrink-0 shadow-[10px_10px_20px_rgba(0,0,0,0.4),inset_0_0_10px_rgba(255,255,255,0.1)] border border-amber-400/50 relative z-10 overflow-hidden group transform perspective-1000 rotate-y-12">
+                    <div className="w-14 h-14 bg-white/20 rounded-[8px] flex items-center justify-center backdrop-blur-2xl shrink-0 shadow-[2px_2px_0px_rgba(0,0,0,0.8)] border-[1.5px] border-black relative z-10 overflow-hidden group">
                       <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-40" />
                       
                       {/* The Trophy Icon */}
@@ -182,12 +176,12 @@ const SurferCardPage: React.FC = () => {
                         className="absolute top-[-50px] flex flex-col items-center pointer-events-none z-[60]"
                         style={{ transform: 'translateX(-50%)' }}
                       >
-                        <div className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-200 shadow-sm mb-1">
+                        <div className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-[4px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] mb-1">
                           <span className="text-[12px] font-black text-[#2B2B2E] uppercase tracking-widest whitespace-nowrap">
                             מיקומך הנוכחי
                           </span>
                         </div>
-                        <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[10px] border-t-[var(--gt-accent)] drop-shadow-sm" />
+                        <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[10px] border-t-black drop-shadow-sm" />
                       </motion.div>
 
                       <div className="relative w-full h-full flex items-center">
@@ -198,11 +192,11 @@ const SurferCardPage: React.FC = () => {
                             width: `${progressPercent}%` 
                           }}
                           transition={{ duration: 2, ease: "circOut" }}
-                          className="h-[20px] rounded-full relative z-10 opacity-60 backdrop-blur-[4px] overflow-hidden"
+                          className="h-[20px] rounded-[4px] relative z-10 opacity-80 backdrop-blur-[4px] overflow-hidden"
                           style={{ 
                             background: 'linear-gradient(90deg, #00F2FE 0%, #4FACFE 50%, #00F2FE 100%)',
-                            boxShadow: '0 0 25px rgba(79, 172, 254, 0.4), inset 0 2px 4px rgba(255,255,255,0.3)',
-                            border: '1px solid rgba(255, 255, 255, 0.4)'
+                            border: '1.5px solid black',
+                            boxShadow: '2px 2px 0px rgba(0,0,0,0.8)'
                           }}
                         >
                           {/* Shimmer Effect Overlay */}
@@ -241,13 +235,13 @@ const SurferCardPage: React.FC = () => {
                                   style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
                                 >
                                   {/* Identical Circle Node */}
-                                  <div className={`w-4 h-4 rounded-full transition-all duration-1000 border-2 relative ${
+                                  <div className={`w-4 h-4 rounded-full transition-all duration-1000 border-[1.5px] border-black relative ${
                                     isCurrent || isPassed
-                                      ? 'bg-white border-white shadow-[0_0_15px_#fff]' 
-                                      : 'bg-slate-800/50 border-white/30'
+                                      ? 'bg-white shadow-[2px_2px_0px_rgba(0,0,0,0.8)]' 
+                                      : 'bg-slate-800/50'
                                   }`}>
                                     {isCurrent && (
-                                      <div className="absolute inset-[-6px] border-2 border-white/60 rounded-full animate-pulse blur-[1px]" />
+                                      <div className="absolute inset-[-6px] border-[1.5px] border-black rounded-full animate-pulse blur-[1px]" />
                                     )}
                                   </div>
                                 </div>
@@ -310,12 +304,12 @@ const SurferCardPage: React.FC = () => {
                 </div>
 
                 {/* Stats Grid - Moved from PlayerCard */}
-                <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-[var(--spacing-md)] border-t border-slate-100 pt-8">
-                  <div className="flex flex-col group relative items-center">
+                <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-[var(--spacing-md)] border-t-[1.5px] border-black pt-8">
+                  <div className="flex flex-col group relative items-center p-4 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
                     <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
                       <Crown size={13} className="text-amber-500" /> מעמד
                       <Info size={12} className="text-slate-400" />
-                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-50">
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-black/80 backdrop-blur-md text-white text-xs rounded shadow-lg z-50">
                         הדרגה הנוכחית שלך בנבחרת.
                       </div>
                     </span>
@@ -324,11 +318,11 @@ const SurferCardPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="flex flex-col group relative items-center">
+                  <div className="flex flex-col group relative items-center p-4 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
                     <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
                       <Waves size={13} className="text-[var(--ocean-4)]" /> סשנים
                       <Info size={12} className="text-slate-400" />
-                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-50">
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-black/80 backdrop-blur-md text-white text-xs rounded shadow-lg z-50">
                         מספר הסשנים הכולל שהשתתפת בהם עד כה.
                       </div>
                     </span>
@@ -337,11 +331,11 @@ const SurferCardPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="flex flex-col group relative items-center">
+                  <div className="flex flex-col group relative items-center p-4 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
                     <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
                       <Target size={13} className="text-emerald-500" /> {userData?.nextRankName ? `סשנים ל${userData.nextRankName}` : 'הגעת לפסגה'}
                       <Info size={12} className="text-slate-400" />
-                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-50">
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-black/80 backdrop-blur-md text-white text-xs rounded shadow-lg z-50">
                         {userData?.nextRankName ? `מספר הסשנים שנותרו עד למעמד ${userData.nextRankName}` : 'כל הכבוד! הגעת למעמד הגבוה ביותר.'}
                       </div>
                     </span>
@@ -350,11 +344,11 @@ const SurferCardPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="flex flex-col group relative items-center">
+                  <div className="flex flex-col group relative items-center p-4 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
                     <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 cursor-help">
                       <Flame size={13} className="text-[var(--ocean-1)]" /> רצף
                       <Info size={12} className="text-slate-400" />
-                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-slate-800 text-white text-xs rounded shadow-lg z-50">
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-black/80 backdrop-blur-md text-white text-xs rounded shadow-lg z-50">
                         מספר השבועות הרצופים בהם הגעת לסשן.
                       </div>
                     </span>
@@ -370,9 +364,9 @@ const SurferCardPage: React.FC = () => {
       </div>
 
       {/* Detailed Analytics below */}
-      <div className="mt-16 border-t border-slate-100 pt-16">
+      <div className="mt-16 border-t-[2px] border-black pt-16">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-[var(--ocean-bg)]/10 rounded-xl flex items-center justify-center text-[var(--ocean-bg)]">
+          <div className="w-10 h-10 bg-white/10 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] flex items-center justify-center text-[var(--ocean-bg)] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
             <Waves size={20} />
           </div>
           <h2 className="text-2xl font-black text-[var(--ocean-bg)] tracking-tight">ניתוח ביצועים מעמיק</h2>

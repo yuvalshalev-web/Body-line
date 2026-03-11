@@ -20,7 +20,7 @@ import { getStorageInstance } from '../services/firebase';
 import { processImage } from '../utils/imageProcessor';
 import { updateStorageStats, syncStorageOnUpload } from '../utils/storageStats';
 import { ColorPickerIcon } from '../components/icons/ColorPickerIcon';
-import { extractAddressData } from '../utils/googlePlaces';
+import { extractAddressData, loadGoogleMaps } from '../utils/googlePlaces';
 import StorageDisplay from '../components/StorageDisplay';
 import TimePicker from '../components/TimePicker';
 import { DayPicker } from '../components/DayPicker';
@@ -54,16 +54,24 @@ const AdminPage: React.FC = () => {
 
   const adminTabs = [
     { id: 'USERS', label: 'משתמשים', icon: <Users size={20} /> },
-    { id: 'ARCHIVE', label: 'ארכיון', icon: <Archive size={20} /> },
     { id: 'POSTS', label: 'פוסטים', icon: <Newspaper size={20} /> },
     { id: 'GALLERY', label: 'גלריה', icon: <ImageIcon size={20} /> },
     { id: 'EVENTS', label: 'אירועים', icon: <Calendar size={20} /> },
-    { id: 'REQUESTS', label: 'בקשות', icon: <UserCheck size={20} />, count: joinRequests.length },
     { id: 'ROLLOVER', label: 'דו"ח יום חמישי', icon: <Activity size={20} /> },
-    { id: 'SITE', label: 'הגדרות', icon: <Settings size={20} /> }
+    ...(currentUser?.role === 'Admin' ? [
+      { id: 'ARCHIVE', label: 'ארכיון', icon: <Archive size={20} /> },
+      { id: 'REQUESTS', label: 'בקשות', icon: <UserCheck size={20} />, count: joinRequests.length },
+      { id: 'SITE', label: 'הגדרות', icon: <Settings size={20} /> }
+    ] : [])
   ];
 
+  const isAdmin = currentUser?.role === 'Admin';
+
   const handleTabChange = (id: string) => {
+    if (!isAdmin && ['ARCHIVE', 'REQUESTS', 'SITE'].includes(id)) {
+      showError('אין לך הרשאות לגשת לאזור זה');
+      return;
+    }
     setActiveTab(id as any);
   };
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,12 +94,6 @@ const AdminPage: React.FC = () => {
 
   useEffect(() => {
     if (activeTab !== 'SITE') return;
-
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-      console.warn("VITE_GOOGLE_MAPS_API_KEY is missing. Google Maps autocomplete will not work.");
-      return;
-    }
 
     const initAutocomplete = () => {
       // הגנה משופרת: בודקים שכל שרשרת האובייקטים קיימת לפני הגישה אליהם
@@ -149,36 +151,17 @@ const AdminPage: React.FC = () => {
       showError('שגיאת הרשאות במפות גוגל. יש לוודא שה-Places API וה-Maps JavaScript API מופעלים ב-Google Cloud.');
     };
 
-    // בדיקה אם גוגל כבר נטען, אם לא - נטען את הסקריפט
-    if (window.google?.maps?.places) {
-      initAutocomplete();
-    } else {
-      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=he&region=IL`;
-        script.async = true;
-        script.defer = true;
-        script.onload = () => {
-          setTimeout(initAutocomplete, 100);
-        };
-        document.head.appendChild(script);
-      } else {
-        existingScript.addEventListener('load', () => {
-          setTimeout(initAutocomplete, 100);
-        });
-        
-        // במקרה שהסקריפט כבר נטען אבל האובייקטים עדיין לא זמינים
-        const checkGoogleInterval = setInterval(() => {
-          if (window.google?.maps?.places) {
-            initAutocomplete();
-            clearInterval(checkGoogleInterval);
-          }
-        }, 500);
-        
-        return () => clearInterval(checkGoogleInterval);
+    loadGoogleMaps()
+      .then(initAutocomplete)
+      .catch(err => {
+        console.warn("Google Maps loading failed:", err.message);
+      });
+
+    return () => {
+      if (autocompleteRef.current && window.google) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
-    }
+    };
   }, [activeTab]);
 
   // לוגיקה לאובייקטים של Turquoise Glassmorphism
@@ -624,13 +607,15 @@ const AdminPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
                 {[
                   { id: 'USERS', label: 'ניהול משתמשים', desc: `${members.length} חברים רשומים`, icon: Users, color: 'bg-[var(--turquoise-teal)]' },
-                  { id: 'REQUESTS', label: 'בקשות הצטרפות', desc: `${joinRequests.length} ממתינים לאישור`, icon: UserCheck, color: 'bg-[var(--electric-red-pink)]', count: joinRequests.length },
                   { id: 'EVENTS', label: 'ניהול אירועים', desc: `${events.length} אירועים בלוח`, icon: Calendar, color: 'bg-[var(--vibrant-cyan)]' },
                   { id: 'GALLERY', label: 'גלריית תמונות', desc: `${galleryItems.length} פריטים במדיה`, icon: ImageIcon, color: 'bg-[var(--sunshine-yellow)]' },
                   { id: 'POSTS', label: 'פוסטים', desc: 'ניהול תכני האתר', icon: Newspaper, color: 'bg-[var(--sun-bleached)]' },
-                  { id: 'SITE', label: 'הגדרות אתר', desc: 'לוגואים, רקעים ונכסים', icon: Settings, color: 'bg-[var(--deep-teal-sea)]' },
-                  { id: 'ARCHIVE', label: 'ארכיון משתמשים', desc: 'ניהול חברים שהושעו', icon: Archive, color: 'bg-[var(--deep-magenta)]' },
                   { id: 'ROLLOVER', label: 'דו"ח יום חמישי', desc: 'ארכיון סשנים שבועי וסיכום נוכחות', icon: Activity, color: 'bg-[var(--turquoise-teal)]' },
+                  ...(isAdmin ? [
+                    { id: 'REQUESTS', label: 'בקשות הצטרפות', desc: `${joinRequests.length} ממתינים לאישור`, icon: UserCheck, color: 'bg-[var(--electric-red-pink)]', count: joinRequests.length },
+                    { id: 'SITE', label: 'הגדרות אתר', desc: 'לוגואים, רקעים ונכסים', icon: Settings, color: 'bg-[var(--deep-teal-sea)]' },
+                    { id: 'ARCHIVE', label: 'ארכיון משתמשים', desc: 'ניהול חברים שהושעו', icon: Archive, color: 'bg-[var(--deep-magenta)]' }
+                  ] : [])
                 ].map((item) => (
                   <button
                     key={item.id}

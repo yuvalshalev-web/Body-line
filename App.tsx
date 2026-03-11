@@ -268,11 +268,11 @@ const App: React.FC = () => {
                     </div>
                   ))}
 
-                  {currentUser.role === 'Admin' && (
+                  {(currentUser.role === 'Admin' || currentUser.role === 'Instructor') && (
                     <>
                       <div className="mt-8 mb-4 w-full text-center">
                         <span className="text-xs font-bold text-slate-300 uppercase tracking-wider bg-transparent border border-white/20 px-3 py-1 rounded-full">
-                          אזור מנהלים
+                          אזור צוות
                         </span>
                       </div>
                       {adminNavItems.map((item, idx) => (
@@ -324,7 +324,7 @@ const App: React.FC = () => {
             <Route path="/world-news" element={<SurfingNewsPage />} />
             <Route path="/surfer-card" element={<SurferCardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            {currentUser.role === 'Admin' && (
+            {(currentUser.role === 'Admin' || currentUser.role === 'Instructor') && (
               <>
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="/admin-info" element={<AdminInfoPage />} />

@@ -7,6 +7,7 @@ import { getStorageInstance } from '../../services/firebase';
 import { processImage } from '../../utils/imageProcessor';
 import { syncStorageOnUpload } from '../../utils/storageStats';
 import { useModal } from '../../contexts/ModalContext';
+import { loadGoogleMaps } from '../../utils/googlePlaces';
 import TimePicker from '../TimePicker';
 
 interface EventEditorProps {
@@ -29,6 +30,41 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
+
+  React.useEffect(() => {
+    const initAutocomplete = () => {
+      if (locationInputRef.current && window.google?.maps?.places && !autocompleteRef.current) {
+        try {
+          const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current!, {
+            types: ["geocode"],
+          });
+          autocompleteRef.current = autocomplete;
+          autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (place.formatted_address) {
+              setForm(prev => ({ ...prev, location: place.formatted_address! }));
+            }
+          });
+        } catch (e) {
+          console.error("Failed to initialize Autocomplete:", e);
+        }
+      }
+    };
+
+    loadGoogleMaps()
+      .then(initAutocomplete)
+      .catch(err => {
+        console.warn("Google Maps loading failed:", err.message);
+      });
+
+    return () => {
+      if (autocompleteRef.current && window.google) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+    };
+  }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -151,6 +187,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
             <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">מיקום</label>
             <input 
               type="text"
+              ref={locationInputRef}
               value={form.location}
               onChange={(e) => setForm({ ...form, location: e.target.value })}
               className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"

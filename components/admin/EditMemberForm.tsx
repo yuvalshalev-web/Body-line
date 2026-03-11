@@ -12,7 +12,7 @@ import { validateMobileNumber, formatMobileNumber } from '../../utils/validation
 import { useModal } from '../../contexts/ModalContext';
 import { SUPER_ADMIN_EMAIL } from '../../constants';
 import { hashPassword } from '../../utils/crypto';
-import { updateMemberAddress } from '../../utils/googlePlaces';
+import { updateMemberAddress, loadGoogleMaps } from '../../utils/googlePlaces';
 
 interface EditMemberFormProps {
   member: Member;
@@ -37,40 +37,38 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
   const autocompleteRef = useRef<any>(null);
 
   useEffect(() => {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-      console.warn("VITE_GOOGLE_MAPS_API_KEY is missing. Google Maps autocomplete will not work.");
-      return;
-    }
-
     const initAutocomplete = () => {
-      if (addressInputRef.current && window.google && !autocompleteRef.current) {
-        autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
-          componentRestrictions: { country: "il" },
-          fields: ["address_components", "geometry", "formatted_address"]
-        });
-
-        autocompleteRef.current.addListener('place_changed', () => {
-          const place = autocompleteRef.current.getPlace();
-          
-          if (!place.geometry) {
-            setIsPlaceSelected(false);
-            return;
-          }
-
-          setIsPlaceSelected(true);
-          if (addressInputRef.current) {
-            addressInputRef.current.value = place.formatted_address || '';
-          }
-          
-          updateMemberAddress(editingMember.id, place).then(addressData => {
-            setEditingMember(prev => ({ ...prev, ...addressData }));
-            showSuccess('הכתובת עודכנה בהצלחה!');
-          }).catch(err => {
-            console.error(err);
-            showError('שגיאה בעדכון הכתובת');
+      if (addressInputRef.current && window.google?.maps?.places && !autocompleteRef.current) {
+        try {
+          autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+            componentRestrictions: { country: "il" },
+            fields: ["address_components", "geometry", "formatted_address"]
           });
-        });
+
+          autocompleteRef.current.addListener('place_changed', () => {
+            const place = autocompleteRef.current.getPlace();
+            
+            if (!place.geometry) {
+              setIsPlaceSelected(false);
+              return;
+            }
+
+            setIsPlaceSelected(true);
+            if (addressInputRef.current) {
+              addressInputRef.current.value = place.formatted_address || '';
+            }
+            
+            updateMemberAddress(editingMember.id, place).then(addressData => {
+              setEditingMember(prev => ({ ...prev, ...addressData }));
+              showSuccess('הכתובת עודכנה בהצלחה!');
+            }).catch(err => {
+              console.error(err);
+              showError('שגיאה בעדכון הכתובת');
+            });
+          });
+        } catch (e) {
+          console.error("Failed to initialize Autocomplete:", e);
+        }
       }
     };
 
@@ -80,21 +78,17 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
       showError('שגיאת הרשאות במפות גוגל. יש לוודא שה-Places API וה-Maps JavaScript API מופעלים ב-Google Cloud.');
     };
 
-    if (window.google) {
-      initAutocomplete();
-    } else {
-      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=he&region=IL`;
-        script.async = true;
-        script.defer = true;
-        script.onload = initAutocomplete;
-        document.head.appendChild(script);
-      } else {
-        existingScript.addEventListener('load', initAutocomplete);
+    loadGoogleMaps()
+      .then(initAutocomplete)
+      .catch(err => {
+        console.warn("Google Maps loading failed:", err.message);
+      });
+
+    return () => {
+      if (autocompleteRef.current && window.google) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
-    }
+    };
   }, [editingMember.id]);
 
   const ensureAbsoluteUrl = (url?: string) => {

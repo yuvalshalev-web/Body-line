@@ -41,6 +41,68 @@ export const extractAddressData = (place: any) => {
 };
 
 /**
+ * Centralized Google Maps script loader to prevent multiple script tags
+ * and handle loading states consistently.
+ */
+let scriptLoadingPromise: Promise<void> | null = null;
+
+export const loadGoogleMaps = (): Promise<void> => {
+  if (window.google?.maps?.places) {
+    return Promise.resolve();
+  }
+
+  if (scriptLoadingPromise) {
+    return scriptLoadingPromise;
+  }
+
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  if (!apiKey) {
+    return Promise.reject(new Error("VITE_GOOGLE_MAPS_API_KEY is missing"));
+  }
+
+  scriptLoadingPromise = new Promise((resolve, reject) => {
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+    
+    const handleLoad = () => {
+      // Small delay to ensure all objects are initialized
+      setTimeout(() => {
+        if (window.google?.maps?.places) {
+          resolve();
+        } else {
+          reject(new Error("Google Maps Places library not found after script load"));
+        }
+      }, 100);
+    };
+
+    if (existingScript) {
+      existingScript.addEventListener('load', handleLoad);
+      existingScript.addEventListener('error', () => reject(new Error("Google Maps script failed to load")));
+      
+      // If script is already loaded but window.google isn't ready yet
+      const checkInterval = setInterval(() => {
+        if (window.google?.maps?.places) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 100);
+      
+      // Safety timeout
+      setTimeout(() => clearInterval(checkInterval), 10000);
+    } else {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=he&region=IL`;
+      script.async = true;
+      script.defer = true;
+      script.onload = handleLoad;
+      script.onerror = () => reject(new Error("Google Maps script failed to load"));
+      document.head.appendChild(script);
+    }
+  });
+
+  return scriptLoadingPromise;
+};
+
+/**
  * Extracts address components from a Google Places Autocomplete result
  * and updates the user's document in Firestore.
  * 

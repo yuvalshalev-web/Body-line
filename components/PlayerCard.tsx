@@ -106,12 +106,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   if (!member || !stats) return null;
 
   return (
-    <div className="glass-panel p-[var(--spacing-md)] flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
+    <div className="neo-glass-card p-[var(--spacing-md)] flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
       {/* Background Accent */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-[var(--ocean-liquid)]/5 rounded-full blur-3xl -z-10" />
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl -z-10" />
       
       <div className="relative">
-        <div className="w-28 h-28 rounded-[2rem] overflow-hidden border-4 border-white/20 shadow-xl glass-effect rotate-3">
+        <div className="w-28 h-28 rounded-[8px] overflow-hidden border-[2px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] bg-white/10 backdrop-blur-md rotate-3">
           {member.avatar ? (
             <img src={member.avatar} alt="" className="w-full h-full object-cover" />
           ) : (
@@ -121,7 +121,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
           )}
         </div>
         {stats.isTop10 && (
-          <div className="absolute -top-2 -right-2 w-10 h-10 bg-amber-400 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white animate-bounce">
+          <div className="absolute -top-2 -right-2 w-10 h-10 bg-amber-400 rounded-full flex items-center justify-center text-white shadow-[2px_2px_0px_rgba(0,0,0,0.8)] border-[1.5px] border-black animate-bounce">
             <Crown size={20} />
           </div>
         )}
@@ -136,17 +136,17 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             <span className="flex items-center gap-1"><Calendar size={14} /> הצטרף ב-{stats.joiningDate}</span>
           </div>
           <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-            <span className="inline-flex px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[12px] font-black uppercase tracking-widest border border-indigo-100 shadow-sm">
+            <span className="inline-flex px-3 py-1 bg-indigo-50 text-indigo-600 rounded-[4px] text-[12px] font-black uppercase tracking-widest border border-black shadow-[1px_1px_0px_rgba(0,0,0,0.8)]">
               מעמד: {stats.rank}
             </span>
-            <span className={`inline-flex px-3 py-1 rounded-full text-[12px] font-black uppercase tracking-widest border shadow-sm ${
+            <span className={`inline-flex px-3 py-1 rounded-[4px] text-[12px] font-black uppercase tracking-widest border shadow-[1px_1px_0px_rgba(0,0,0,0.8)] ${
               member.isActive !== false 
-                ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                : 'bg-rose-50 text-rose-600 border-rose-100'
+                ? 'bg-emerald-50 text-emerald-600 border-black' 
+                : 'bg-rose-50 text-rose-600 border-black'
             }`}>
               סטטוס: {member.isActive !== false ? 'פעיל' : 'לא פעיל'}
             </span>
-            <span className="inline-flex px-3 py-1 glass-effect glass-text-primary rounded-full text-[12px] font-black uppercase tracking-widest border border-white/10 shadow-sm">
+            <span className="inline-flex px-3 py-1 bg-white/10 backdrop-blur-md glass-text-primary rounded-[4px] text-[12px] font-black uppercase tracking-widest border border-black shadow-[1px_1px_0px_rgba(0,0,0,0.8)]">
               תפקיד: {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
             </span>
           </div>
@@ -195,15 +195,15 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
               {/* Drift Popup Modal */}
               {showDriftPopup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" onClick={() => setShowDriftPopup(false)}>
-                  <div className="modal-content p-6 max-w-xs w-full text-center" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in" onClick={() => setShowDriftPopup(false)}>
+                  <div className="neo-glass-card p-8 max-w-xs w-full text-center animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
                     <h2 className="text-xl font-black text-[#006994] mb-3">
                       סיבוב דאווין 🌊
                     </h2>
                     <p className="text-md font-bold text-slate-700">מרחק מהבית: {driftPercentile.distanceKm} ק"מ</p>
                     <p className="text-sm text-slate-500 mt-1">אתה באחוזון ה-{driftPercentile.roundedPercentile} של המרחק מהחוף</p>
                     <button 
-                      className="mt-4 px-5 py-1.5 bg-[#006994] text-white rounded-full font-bold text-sm"
+                      className="mt-6 px-8 py-2 bg-[#006994] text-white rounded-[8px] border-[2px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] font-black text-sm uppercase tracking-widest transition-all active:scale-95"
                       onClick={() => setShowDriftPopup(false)}
                     >
                       סגור
@@ -270,8 +270,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
               {/* Popup Modal */}
               {showPopup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" onClick={() => setShowPopup(false)}>
-                  <div className="modal-content p-6 max-w-xs w-full text-center" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in" onClick={() => setShowPopup(false)}>
+                  <div className="neo-glass-card p-8 max-w-xs w-full text-center animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
                     <h2 className="text-xl font-black text-[#006994] mb-3">
                       סיבוב דאווין {(() => {
                         const p = agePercentile.roundedPercentile;
@@ -290,7 +290,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
                     </h2>
                     <p className="text-md font-bold text-slate-700">הגעת לאחוזון גיל {agePercentile.roundedPercentile}%</p>
                     <button 
-                      className="mt-4 px-5 py-1.5 bg-[#006994] text-white rounded-full font-bold text-sm"
+                      className="mt-6 px-8 py-2 bg-[#006994] text-white rounded-[8px] border-[2px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] font-black text-sm uppercase tracking-widest transition-all active:scale-95"
                       onClick={() => setShowPopup(false)}
                     >
                       סגור

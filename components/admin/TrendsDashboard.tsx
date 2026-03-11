@@ -20,6 +20,7 @@ import { Activity, LayoutGrid, Maximize2, TrendingUp, Heart } from 'lucide-react
 import { getOperationalXAxisProps } from '../../src/utils/chartHelpers';
 import OperationalChartHeader from '../OperationalChartHeader';
 import { calculateDistance } from '../../utils/distanceCalculator';
+import { getCoordinates } from '../../src/utils/geocoding';
 
 const TrendsDashboard: React.FC = () => {
   const { members, weeklyHistory, yearConfig, siteAssets, siteConfig } = useData();
@@ -42,9 +43,9 @@ const TrendsDashboard: React.FC = () => {
     const centerY = canvas.height / 2;
     const maxRadius = 182; // רדיוס הטבעת החיצונית (הוגדל ב-30% מ-140)
 
-    // Home Break Coords
-    const homeLat = siteConfig.home_break?.lat;
-    const homeLng = siteConfig.home_break?.lng;
+    // Home Break Coords with defaults if missing
+    const homeLat = siteConfig.home_break?.lat || 32.1624;
+    const homeLng = siteConfig.home_break?.lng || 34.8447;
 
     // Load Logo
     const logoImg = new Image();
@@ -102,10 +103,12 @@ const TrendsDashboard: React.FC = () => {
       // 2. ציור חברי הקהילה כנקודות
       const membersWithCanvasPos = members.map((member, index) => {
           let distance = 0;
-          if (homeLat && homeLng && member.lat && member.lng) {
-            distance = calculateDistance(homeLat, homeLng, member.lat, member.lng);
+          const coords = getCoordinates(member.city, member.lat, member.lng);
+          
+          if (homeLat && homeLng && coords) {
+            distance = calculateDistance(homeLat, homeLng, coords[0], coords[1]);
           } else {
-            // Mock distance if no real address data
+            // Mock distance if no real address or city data
             distance = member.distance || (Math.random() * 30);
           }
           

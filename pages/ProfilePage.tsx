@@ -29,7 +29,7 @@ import { generateBio } from '../services/geminiService';
 import { processImage } from '../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { hashPassword } from '../utils/crypto';
-import { updateMemberAddress } from '../utils/googlePlaces';
+import { updateMemberAddress, loadGoogleMaps } from '../utils/googlePlaces';
 import { GlassButton } from '../components/GlassButton';
 
 const SocialInput = ({ 
@@ -44,7 +44,7 @@ const SocialInput = ({
         <input
           type="text"
           placeholder={placeholder}
-          className="w-full pr-14 pl-12 py-4 glass-effect rounded-2xl font-black text-sm outline-none focus:border-indigo-200 focus:bg-white/10 transition-all glass-text-primary"
+          className="w-full pr-14 pl-12 py-4 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black text-sm outline-none focus:bg-white/20 transition-all glass-text-primary"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -95,68 +95,66 @@ const ProfilePage: React.FC = () => {
   }, [currentUser?.id]); // Only run on initial load or user change
 
   useEffect(() => {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-      console.warn("VITE_GOOGLE_MAPS_API_KEY is missing. Google Maps autocomplete will not work.");
-      return;
-    }
-
     const initAutocomplete = () => {
-      if (addressInputRef.current && window.google && !autocompleteRef.current) {
-        autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
-          componentRestrictions: { country: "il" },
-          fields: ["address_components", "geometry", "formatted_address"]
-        });
+      if (addressInputRef.current && window.google?.maps?.places && !autocompleteRef.current) {
+        try {
+          autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+            componentRestrictions: { country: "il" },
+            fields: ["address_components", "geometry", "formatted_address"]
+          });
 
-        autocompleteRef.current.addListener('place_changed', () => {
-          const place = autocompleteRef.current.getPlace();
-          
-          if (!place.geometry) {
-            setIsPlaceSelected(false);
-            return;
-          }
+          autocompleteRef.current.addListener('place_changed', () => {
+            const place = autocompleteRef.current.getPlace();
+            
+            if (!place.geometry) {
+              setIsPlaceSelected(false);
+              return;
+            }
 
-          setIsPlaceSelected(true);
-          if (addressInputRef.current) {
-            addressInputRef.current.value = place.formatted_address || '';
-          }
-          
-          if (currentUser) {
-            // Populate hidden fields
-            const addressComponents = place.address_components || [];
-            const city = addressComponents.find((c: any) => c.types.includes('locality'))?.long_name || '';
-            const street = addressComponents.find((c: any) => c.types.includes('route'))?.long_name || '';
-            const houseNum = addressComponents.find((c: any) => c.types.includes('street_number'))?.long_name || '';
-            const lat = place.geometry?.location?.lat() || 0;
-            const lng = place.geometry?.location?.lng() || 0;
+            setIsPlaceSelected(true);
+            if (addressInputRef.current) {
+              addressInputRef.current.value = place.formatted_address || '';
+            }
+            
+            if (currentUser) {
+              // Populate hidden fields
+              const addressComponents = place.address_components || [];
+              const city = addressComponents.find((c: any) => c.types.includes('locality'))?.long_name || '';
+              const street = addressComponents.find((c: any) => c.types.includes('route'))?.long_name || '';
+              const houseNum = addressComponents.find((c: any) => c.types.includes('street_number'))?.long_name || '';
+              const lat = place.geometry?.location?.lat() || 0;
+              const lng = place.geometry?.location?.lng() || 0;
 
-            const fields = [
-              { ref: cityRef, value: city },
-              { ref: streetRef, value: street },
-              { ref: houseNumRef, value: houseNum },
-              { ref: latRef, value: lat.toString() },
-              { ref: lngRef, value: lng.toString() }
-            ];
+              const fields = [
+                { ref: cityRef, value: city },
+                { ref: streetRef, value: street },
+                { ref: houseNumRef, value: houseNum },
+                { ref: latRef, value: lat.toString() },
+                { ref: lngRef, value: lng.toString() }
+              ];
 
-            fields.forEach(({ ref, value }) => {
-              if (ref.current) {
-                ref.current.value = value;
-                // Dispatch input event to trigger React state/form validation
-                ref.current.dispatchEvent(new Event('input', { bubbles: true }));
-              }
-            });
+              fields.forEach(({ ref, value }) => {
+                if (ref.current) {
+                  ref.current.value = value;
+                  // Dispatch input event to trigger React state/form validation
+                  ref.current.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+              });
 
-            updateMemberAddress(currentUser.id, place).then(addressData => {
-              setFormData(prev => prev ? { ...prev, ...addressData, city, street, house_num: houseNum, lat, lng } : null);
-              setToast({ msg: 'הכתובת עודכנה בהצלחה!', type: 'success' });
-              setTimeout(() => setToast(null), 3000);
-            }).catch(err => {
-              console.error(err);
-              setToast({ msg: 'שגיאה בעדכון הכתובת', type: 'error' });
-              setTimeout(() => setToast(null), 3000);
-            });
-          }
-        });
+              updateMemberAddress(currentUser.id, place).then(addressData => {
+                setFormData(prev => prev ? { ...prev, ...addressData, city, street, house_num: houseNum, lat, lng } : null);
+                setToast({ msg: 'הכתובת עודכנה בהצלחה!', type: 'success' });
+                setTimeout(() => setToast(null), 3000);
+              }).catch(err => {
+                console.error(err);
+                setToast({ msg: 'שגיאה בעדכון הכתובת', type: 'error' });
+                setTimeout(() => setToast(null), 3000);
+              });
+            }
+          });
+        } catch (e) {
+          console.error("Failed to initialize Autocomplete:", e);
+        }
       }
     };
 
@@ -170,21 +168,17 @@ const ProfilePage: React.FC = () => {
       setTimeout(() => setToast(null), 6000);
     };
 
-    if (window.google) {
-      initAutocomplete();
-    } else {
-      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=he&region=IL`;
-        script.async = true;
-        script.defer = true;
-        script.onload = initAutocomplete;
-        document.head.appendChild(script);
-      } else {
-        existingScript.addEventListener('load', initAutocomplete);
+    loadGoogleMaps()
+      .then(initAutocomplete)
+      .catch(err => {
+        console.warn("Google Maps loading failed:", err.message);
+      });
+
+    return () => {
+      if (autocompleteRef.current && window.google) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
-    }
+    };
   }, [currentUser]);
 
   if (!formData) return <div className="text-black">Loading...</div>;
@@ -302,10 +296,10 @@ const ProfilePage: React.FC = () => {
   console.log("ProfilePage rendering");
   return (
     <div className="min-h-screen w-full relative">
-      <div className="max-w-6xl mx-auto py-10 text-right animate-in fade-in" dir="rtl">
+      <div className="max-w-6xl mx-auto pt-2 pb-10 text-right animate-in fade-in" dir="rtl">
 
       {/* Body-line Standard Header Stack */}
-      <div className="surfboard-hero-container mb-6 space-y-2">
+      <div className="surfboard-hero-container mb-2 space-y-2">
         {/* Main Title */}
         <h1 className="main-page-title">
           <span className="surfer-title">הפרופיל שלי</span>
@@ -327,16 +321,16 @@ const ProfilePage: React.FC = () => {
       </div>
 
       <div className="rounded-[4rem] overflow-hidden relative">
-        <div className="h-48 relative">
+        <div className="h-12 relative">
           {/* Removed background image layer here */}
         </div>
         
-        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-24 glass-panel rounded-t-[4rem] relative z-20">
+        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-6 bg-white/10 backdrop-blur-[15px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] rounded-[8px] relative z-20">
           <div className="flex flex-col md:flex-row items-end gap-8 mb-16">
             <div className="relative group">
               {/* Removed banner image that was obscuring the watermark */}
               
-              <div className="w-44 h-44 rounded-[3rem] overflow-hidden shadow-2xl group-hover:scale-[1.02] transition-transform duration-500 bg-slate-100 flex items-center justify-center relative z-10">
+              <div className="w-44 h-44 rounded-[8px] overflow-hidden border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] group-hover:scale-[1.02] transition-transform duration-500 bg-slate-100 flex items-center justify-center relative z-10">
                 {isProcessingImage ? (
                   <Loader2 className="animate-spin text-indigo-500" size={32} />
                 ) : formData.avatar ? (
@@ -345,7 +339,7 @@ const ProfilePage: React.FC = () => {
                   <User size={64} className="text-slate-300" />
                 )}
               </div>
-              <label className="absolute bottom-2 left-2 p-3 bg-[#006994] text-white rounded-2xl cursor-pointer hover:bg-[#4E8294] transition-all shadow-xl z-20">
+              <label className="absolute bottom-2 left-2 p-3 bg-[var(--surfer-cyan)] text-black rounded-[8px] cursor-pointer hover:bg-[var(--surfer-teal)] hover:text-white transition-all border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] z-20">
                 <Camera size={20} className="text-[#00FFFF]" />
                 <input type="file" className="hidden" accept="image/*" onChange={handleAvatarSelect} disabled={isProcessingImage} />
               </label>
@@ -365,11 +359,11 @@ const ProfilePage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">שם פרטי</label>
-                    <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-5 glass-effect rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all glass-text-primary" />
+                    <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-5 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all glass-text-primary" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">שם משפחה</label>
-                    <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-5 glass-effect rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all glass-text-primary" />
+                    <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-5 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all glass-text-primary" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">טלפון נייד</label>
@@ -379,7 +373,7 @@ const ProfilePage: React.FC = () => {
                         type="tel" 
                         value={formData.mobile} 
                         onChange={handleMobileChange} 
-                        className="w-full pr-14 pl-6 py-5 glass-effect rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all glass-text-primary" 
+                        className="w-full pr-14 pl-6 py-5 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all glass-text-primary" 
                       />
                     </div>
                   </div>
@@ -391,7 +385,7 @@ const ProfilePage: React.FC = () => {
                         type="date" 
                         value={formData.birthday || ''} 
                         onChange={e => handleFieldChange('birthday', e.target.value)} 
-                        className="w-full pr-14 pl-6 py-5 glass-effect rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all cursor-pointer glass-text-primary" 
+                        className="w-full pr-14 pl-6 py-5 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all cursor-pointer glass-text-primary" 
                       />
                     </div>
                   </div>
@@ -402,7 +396,7 @@ const ProfilePage: React.FC = () => {
                       <button 
                         type="button"
                         onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                        className="w-full pr-14 pl-12 py-5 glass-effect rounded-2xl font-black text-sm outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all flex items-center justify-between group glass-text-primary"
+                        className="w-full pr-14 pl-12 py-5 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black text-sm outline-none focus:bg-white/20 transition-all flex items-center justify-between group glass-text-primary"
                       >
                         <span>{formData.gender || 'בחר מגדר'}</span>
                         <ChevronDown size={18} className={`text-slate-300 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
@@ -416,7 +410,7 @@ const ProfilePage: React.FC = () => {
                               initial={{ opacity: 0, y: -10, scale: 0.95 }}
                               animate={{ opacity: 1, y: 0, scale: 1 }}
                               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                              className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-2xl z-[70] overflow-hidden"
+                              className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-[15px] rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] z-[70] overflow-hidden"
                             >
                               {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
                                 <button
@@ -453,7 +447,7 @@ const ProfilePage: React.FC = () => {
                           setIsDirty(true);
                         }} 
                         placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
-                        className="w-full pr-14 pl-6 py-5 glass-effect rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all glass-text-primary" 
+                        className="w-full pr-14 pl-6 py-5 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all glass-text-primary" 
                         required
                         autoComplete="off"
                       />
@@ -486,14 +480,14 @@ const ProfilePage: React.FC = () => {
                <div className="sticky top-24 space-y-4">
                   <div className="flex justify-between items-center px-4">
                     <label className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">הסיפור שלי</label>
-                    <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="text-[12px] font-black text-[#006994] flex items-center gap-1.5 hover:bg-[#40E0D0]/10 px-3 py-1.5 rounded-lg transition-all border border-[#006994]/10">
+                    <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="text-[12px] font-black text-black bg-[var(--surfer-cyan)] flex items-center gap-1.5 hover:bg-[var(--surfer-teal)] hover:text-white px-3 py-1.5 rounded-[8px] transition-all border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
                       {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} className="text-[#00FFFF]" />} שדרג ביוגרפיה עם AI
                     </button>
                   </div>
                   <textarea 
                     value={formData.bio} 
                     onChange={e => handleFieldChange('bio', e.target.value)} 
-                    className="w-full p-8 glass-effect rounded-[3rem] font-bold h-[32rem] resize-none outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all text-lg leading-relaxed shadow-inner glass-text-primary" 
+                    className="w-full p-8 bg-white/10 backdrop-blur-[15px] border-[2px] border-black shadow-[inset_2px_2px_4px_rgba(0,0,0,0.1),4px_4px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-bold h-[32rem] resize-none outline-none focus:bg-white/20 transition-all text-lg leading-relaxed glass-text-primary" 
                     placeholder="ספר קצת על עצמך, על הגלישה, על החיים..." 
                   />
                </div>
@@ -501,19 +495,23 @@ const ProfilePage: React.FC = () => {
           </div>
 
           <div className="mt-20 flex flex-col items-center gap-6 w-full max-w-sm mx-auto">
-             <GlassButton type="submit" disabled={isSaving || !isDirty} className="w-fit mx-auto hd-glass-button-vibrant">
-                 {isSaving ? <Loader2 className="animate-spin text-[#00FFFF]" size={24} /> : <Save size={24} className="text-[#00FFFF]" />}
+             <button 
+               type="submit" 
+               disabled={isSaving || !isDirty} 
+               className="w-full max-w-xs mx-auto flex items-center justify-center gap-4 px-10 py-5 bg-[var(--surfer-cyan)] text-black rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-xl transition-all hover:bg-[var(--surfer-teal)] hover:text-white hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,0.9)] active:scale-95 disabled:opacity-50"
+             >
+                 {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
                  שמור שינויים
-             </GlassButton>
+             </button>
              
-             <GlassButton 
+             <button 
                type="button" 
                onClick={() => setShowPasswordModal(true)}
-               className="w-fit mx-auto hd-glass-button-vibrant"
+               className="w-full max-w-xs mx-auto flex items-center justify-center gap-4 px-10 py-5 bg-white/10 backdrop-blur-[15px] text-black rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-xl transition-all hover:bg-white/20 hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,0.9)] active:scale-95"
              >
-               <Key size={24} className="text-[#00FFFF]" />
+               <Key size={24} />
                החלפת סיסמה
-             </GlassButton>
+             </button>
           </div>
         </form>
       </div>
@@ -540,7 +538,7 @@ const ProfilePage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md glass-panel rounded-[2rem] shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md bg-white/10 backdrop-blur-[15px] border-[2px] border-black shadow-[6px_6px_0px_rgba(0,0,0,0.9)] rounded-[8px] overflow-hidden"
             >
               <div className="p-8">
                 <div className="flex justify-between items-center mb-8">
@@ -563,7 +561,7 @@ const ProfilePage: React.FC = () => {
                       type="password"
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
-                      className="w-full p-4 glass-effect rounded-2xl font-black outline-none focus:bg-white/10 focus:border-indigo-200 transition-all glass-text-primary"
+                      className="w-full p-4 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all glass-text-primary"
                       placeholder="הזן סיסמה חדשה"
                       required
                       minLength={6}
@@ -575,21 +573,21 @@ const ProfilePage: React.FC = () => {
                       type="password"
                       value={confirmPassword}
                       onChange={e => setConfirmPassword(e.target.value)}
-                      className="w-full p-4 glass-effect rounded-2xl font-black outline-none focus:bg-white/10 focus:border-indigo-200 transition-all glass-text-primary"
+                      className="w-full p-4 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all glass-text-primary"
                       placeholder="הזן שוב את הסיסמה"
                       required
                       minLength={6}
                     />
                   </div>
 
-                  <GlassButton 
+                  <button 
                     type="submit"
                     disabled={isChangingPassword || !newPassword || !confirmPassword}
-                    className="w-fit mx-auto hd-glass-button-vibrant"
+                    className="w-full flex items-center justify-center gap-4 px-8 py-4 bg-[var(--surfer-cyan)] text-black rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-lg transition-all hover:bg-[var(--surfer-teal)] hover:text-white active:scale-95 disabled:opacity-50"
                   >
-                    {isChangingPassword ? <Loader2 className="animate-spin text-[#00FFFF]" size={20} /> : <Save size={20} className="text-[#00FFFF]" />}
+                    {isChangingPassword ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                     עדכן סיסמה
-                  </GlassButton>
+                  </button>
                 </form>
               </div>
             </motion.div>

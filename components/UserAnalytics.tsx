@@ -330,14 +330,11 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
     <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700 min-h-[400px]" dir="rtl">
       {/* Unified Modern Dashboard - Dynamic Premium Style matching Surfer Card */}
       <motion.div 
-        className="glass-panel p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[var(--radius-lg)] relative transition-all duration-1000"
+        className="neo-glass-card p-[var(--spacing-md)] md:p-[var(--spacing-lg)] relative transition-all duration-1000"
       >
-        {/* Neumorphic Inner Shadow Overlay */}
-        <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[var(--radius-lg)]" />
-        
         {/* Decorative background elements */}
-        <div className="absolute -right-20 -top-20 w-96 h-96 bg-white/5 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-white/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute -right-20 -top-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="grid grid-cols-1 md:grid-cols-3 items-center justify-center gap-8 md:gap-4 relative z-10">
           
@@ -403,15 +400,14 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
       {/* Surf Compass (Radar Chart) - Future Use - Dynamic Premium Style */}
       <motion.div 
-        className="glass-panel p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[3rem] relative overflow-hidden transition-all duration-1000"
+        className="neo-glass-card p-[var(--spacing-md)] md:p-[var(--spacing-lg)] relative overflow-hidden transition-all duration-1000"
       >
-        {/* Neumorphic Inner Shadow Overlay */}
-        <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[3rem]" />
-        
           <div className="relative z-10">
           <div className="flex flex-col items-center mb-8">
             <div className="flex items-center gap-[var(--spacing-xs)]">
-              <Compass size={18} className="glass-text-primary" />
+              <div className="p-2 bg-white/10 backdrop-blur-md border border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)] mr-2">
+                <Compass size={18} className="glass-text-primary" />
+              </div>
               <h3 className="text-lg font-black glass-text-primary">רדאר השיפור שלך</h3>
             </div>
             <span className="text-[12px] font-bold glass-text-secondary uppercase tracking-widest mt-1">(לשימוש עתידי)</span>
@@ -421,7 +417,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
             <RadarChart />
           </div>
 
-          <div className="mt-6 p-4 glass-effect rounded-[var(--radius-md)] border border-white/10">
+          <div className="mt-6 p-4 bg-white/5 backdrop-blur-md rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
             <p className="text-[12px] glass-text-secondary font-bold text-center leading-relaxed">
               המצפן מנתח את היכולות המקצועיות שלך בים. נתונים אלו יוזנו על ידי המדריכים לאחר הערכות תקופתיות.
             </p>
@@ -431,19 +427,16 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
       {/* Session History - Collapsible Dropbox Style - Dynamic Premium Style */}
       <motion.div 
-        className="glass-panel rounded-[3rem] relative overflow-hidden transition-all duration-1000"
+        className="neo-glass-card relative overflow-hidden transition-all duration-1000"
         onMouseLeave={() => setIsHistoryOpen(false)}
       >
-        {/* Neumorphic Inner Shadow Overlay */}
-        <div className="absolute inset-0 shadow-[inner_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none rounded-[3rem]" />
-        
         <button 
           onClick={() => setIsHistoryOpen(!isHistoryOpen)}
           onMouseEnter={() => setIsHistoryOpen(true)}
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/10 transition-colors group relative z-10"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 glass-effect rounded-[var(--radius-sm)] flex items-center justify-center text-white/60 group-hover:bg-white/20 group-hover:text-white transition-all">
+            <div className="w-8 h-8 bg-white/10 backdrop-blur-md border border-black rounded-[4px] shadow-[1px_1px_0px_rgba(0,0,0,0.8)] flex items-center justify-center text-white/60 group-hover:bg-white/20 group-hover:text-white transition-all">
               <Calendar size={16} />
             </div>
             <div className="text-right">
@@ -465,9 +458,9 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="border-t border-white/5 relative z-10"
+              className="border-t-[1.5px] border-black relative z-10"
             >
-              <div className="divide-y divide-white/5 max-h-[400px] overflow-y-auto custom-scrollbar">
+              <div className="divide-y-[1.5px] divide-black max-h-[400px] overflow-y-auto custom-scrollbar">
                 {userSessions.slice(0, 15).map((session, idx) => {
                   const formattedDate = formatDate(session.date);
 
@@ -508,7 +501,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               </div>
               
               {userSessions.length > 15 && (
-                <div className="p-3 bg-black/20 text-center border-t border-white/5">
+                <div className="p-3 bg-black/20 text-center border-t-[1.5px] border-black">
                   <span className="text-[12px] font-black text-white/30 uppercase tracking-widest">
                     מציג 15 סשנים אחרונים
                   </span>

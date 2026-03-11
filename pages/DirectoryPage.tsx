@@ -18,6 +18,7 @@ import {
   Cake,
   Phone,
   UserCircle,
+  User,
   Users,
   Plus,
   Camera,
@@ -60,26 +61,24 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
       className="group cursor-pointer relative" 
       onClick={onClick}
     >
-      <div className="wax-comb-card transition-all duration-300 hover:translate-y-[2px] hover:translate-x-[2px]">
-        <div className="absolute inset-0 w-full h-full wax-comb-mask z-0 pointer-events-none">
-          <div className="w-full h-[45%] avatar-fade">
-            {member.avatar ? (
-              <img 
-                src={member.avatar} 
-                className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105" 
-                alt={`${member.firstName} ${member.lastName}`} 
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400">
-                <UserCircle size={48} strokeWidth={1} />
-              </div>
-            )}
-          </div>
+      <div className="wax-comb-card wax-comb-mask transition-all duration-300 hover:translate-y-[2px] hover:translate-x-[2px]">
+        <div className="w-full h-[64%] mt-[16%] p-4">
+          {member.avatar ? (
+            <img 
+              src={member.avatar} 
+              className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105 rounded-lg avatar-fade" 
+              alt={`${member.firstName} ${member.lastName}`} 
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400 rounded-lg avatar-fade">
+              <UserCircle size={48} strokeWidth={1} />
+            </div>
+          )}
         </div>
         
         <div className="flex-1 w-full pointer-events-none"></div>
         
-        <div className="relative z-10 text-center space-y-2 w-full px-2 mt-auto">
+        <div className="relative z-10 text-center space-y-2 w-full px-2 mt-auto pb-10">
           {/* Role Badge */}
           <div className="flex justify-center">
             <div className={`px-3 py-1 rounded-md inline-flex items-center gap-2 bg-white/40 backdrop-blur-md border-2 border-slate-900 shadow-[2px_2px_0px_rgba(0,0,0,0.8)]`}>
@@ -290,7 +289,19 @@ const DirectoryPage: React.FC = () => {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-black text-[#1e293b] leading-none">{activeMembers.length}</span>
-              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Members</span>
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">קהילה</span>
+            </div>
+          </div>
+          
+          <div className="hidden sm:block w-px h-6 bg-white/30" />
+
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
+              <User size={14} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-black text-emerald-600 leading-none">{groupedMembers.Member.length}</span>
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">חברים</span>
             </div>
           </div>
           
@@ -302,7 +313,7 @@ const DirectoryPage: React.FC = () => {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-black text-[#00AFC2] leading-none">{groupedMembers.Instructor.length}</span>
-              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Instructors</span>
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">מדריכים</span>
             </div>
           </div>
           
@@ -314,7 +325,7 @@ const DirectoryPage: React.FC = () => {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-black text-[#FF2D60] leading-none">{groupedMembers.Admin.length}</span>
-              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Coordinators</span>
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">רכזים</span>
             </div>
           </div>
           

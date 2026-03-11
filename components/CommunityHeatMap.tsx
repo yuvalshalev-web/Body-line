@@ -14,6 +14,7 @@ import {
 import { ShieldAlert } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { getCoordinates } from '../src/utils/geocoding';
+import { getBodyLineStats } from '../src/utils/bodyLineStats';
 
 declare const L: any;
 
@@ -86,25 +87,27 @@ const CommunityHeatMap: React.FC = () => {
     let mediumCount = 0;
     let farCount = 0;
 
-    // Initialize 10 bins
+    // Initialize 10 bins with continuous ranges
     const binDefinitions = [
       { label: '0-10', min: 0, max: 10, color: '#10b981' },
-      { label: '11-20', min: 11, max: 20, color: '#10b981' },
-      { label: '21-30', min: 21, max: 30, color: '#f59e0b' },
-      { label: '31-40', min: 31, max: 40, color: '#f59e0b' },
-      { label: '41-50', min: 41, max: 50, color: '#f59e0b' },
-      { label: '51-60', min: 51, max: 60, color: '#f59e0b' },
-      { label: '61-70', min: 61, max: 70, color: '#f59e0b' },
-      { label: '71-80', min: 71, max: 80, color: '#f59e0b' },
-      { label: '81-90', min: 81, max: 90, color: '#f59e0b' },
-      { label: '91-100+', min: 91, max: Infinity, color: '#ef4444' },
+      { label: '10-20', min: 10, max: 20, color: '#10b981' },
+      { label: '20-30', min: 20, max: 30, color: '#f59e0b' },
+      { label: '30-40', min: 30, max: 40, color: '#f59e0b' },
+      { label: '40-50', min: 40, max: 50, color: '#f59e0b' },
+      { label: '50-60', min: 50, max: 60, color: '#f59e0b' },
+      { label: '60-70', min: 60, max: 70, color: '#f59e0b' },
+      { label: '70-80', min: 70, max: 80, color: '#f59e0b' },
+      { label: '80-90', min: 80, max: 90, color: '#f59e0b' },
+      { label: '90+', min: 90, max: Infinity, color: '#ef4444' },
     ];
 
     const binCounts = binDefinitions.map(b => ({ ...b, count: 0 }));
+    let mappedCount = 0;
 
     activeMembers.forEach(member => {
       const coords = getCoordinates(member.city, member.lat, member.lng);
       if (coords) {
+        mappedCount++;
         const memberLatLng = L.latLng(coords[0], coords[1]);
         const distanceKm = homeLatLng.distanceTo(memberLatLng) / 1000;
 
@@ -113,18 +116,20 @@ const CommunityHeatMap: React.FC = () => {
         else if (distanceKm <= 100) mediumCount++;
         else farCount++;
 
-        // Bin calculation for chart
-        const binIndex = binDefinitions.findIndex(b => distanceKm >= b.min && distanceKm <= b.max);
+        // Bin calculation for chart - using continuous ranges
+        const binIndex = binDefinitions.findIndex(b => distanceKm >= b.min && distanceKm < b.max);
         if (binIndex !== -1) {
           binCounts[binIndex].count++;
-        } else if (distanceKm > 100) {
-          binCounts[9].count++; // Add to the last bin if it's > 100
+        } else if (distanceKm >= 90) {
+          binCounts[9].count++; 
         }
 
         // [lat, lng, intensity]
-        heatPoints.push([coords[0], coords[1], 0.8]); // Increased intensity from 0.5 to 0.8
+        heatPoints.push([coords[0], coords[1], 0.8]); 
       }
     });
+
+    console.log(`HeatMap Debug: Total Members: ${members.length}, Active: ${activeMembers.length}, Mapped: ${mappedCount}`);
 
     setStats({ 
       near: nearCount, 
@@ -196,18 +201,25 @@ const CommunityHeatMap: React.FC = () => {
   const hasNoPoints = members.length > 0 && stats.bins.reduce((a, b) => a + b.count, 0) === 0;
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    let retryCount = 0;
+    const maxRetries = 10;
+
+    const tryInit = () => {
       if (typeof L !== 'undefined') {
         initHeatMap();
+      } else if (retryCount < maxRetries) {
+        retryCount++;
+        setTimeout(tryInit, 500);
       }
-    }, 500);
+    };
+
+    tryInit();
 
     return () => {
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;
       }
-      clearTimeout(timer);
     };
   }, [members, siteConfig]);
 

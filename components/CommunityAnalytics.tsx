@@ -1400,7 +1400,7 @@ export const Astrodeck = ({ label, value, icon: Icon, path, external, color, neo
       target={external ? "_blank" : undefined} 
       className={`block h-full group relative w-full aspect-square max-w-[220px] mx-auto transition-all duration-300 ${neoBrutal ? 'hover:translate-x-[2px] hover:translate-y-[2px]' : 'hover:scale-105 hover:-translate-y-2'}`}
     >
-      <svg viewBox="0 0 400 400" className={`w-full h-full ${neoBrutal ? 'bg-white/10 border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)]' : 'backdrop-blur-[10px] rounded-[24px]'}`}>
+      <svg viewBox="0 0 400 400" className={`w-full h-full ${neoBrutal ? 'bg-white/10 backdrop-blur-[15px] border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)]' : 'backdrop-blur-[10px] rounded-[24px]'}`}>
         <defs>
           <pattern id="diamond-pad-texture" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
             <rect width="20" height="20" fill="rgba(0, 112, 133, 0.05)" />

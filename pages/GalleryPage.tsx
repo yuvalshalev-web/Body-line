@@ -157,9 +157,9 @@ const GalleryPage: React.FC = () => {
             <button 
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="flex items-center gap-4 px-10 py-4 hd-glass-button-vibrant rounded-xl font-black text-lg transition-all disabled:opacity-50 group"
+              className="flex items-center gap-4 px-10 py-4 bg-[var(--surfer-cyan)] text-black rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-lg transition-all hover:bg-[var(--surfer-teal)] hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,0.9)] active:scale-95 disabled:opacity-50 group"
             >
-              {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-white" />}
+              {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-black" />}
               <span>{isUploading ? 'מעבד תמונות...' : 'העלאת תמונות'}</span>
             </button>
             <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileUpload} />
@@ -168,7 +168,7 @@ const GalleryPage: React.FC = () => {
       </div>
 
       {isUploading && (
-        <div className={`mb-12 glass-panel rounded-xl p-8 animate-in slide-in-from-top-4 ${errorMsg ? 'border-rose-500/50' : ''}`}>
+        <div className={`mb-12 bg-white/10 backdrop-blur-[15px] rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] p-8 animate-in slide-in-from-top-4 ${errorMsg ? 'border-rose-500' : ''}`}>
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
               {errorMsg ? (
@@ -195,9 +195,8 @@ const GalleryPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {galleryItems.map((item) => (
-          <div 
-            key={item.id} 
-            className={`relative group aspect-square overflow-hidden glass-panel rounded-xl hover:-translate-y-1 hover:shadow-2xl transition-all duration-500 cursor-zoom-in ${deletingId === item.id ? 'opacity-30' : ''}`}
+          <div key={item.id} 
+            className={`relative group aspect-square overflow-hidden bg-white/10 backdrop-blur-[15px] rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,0.9)] transition-all duration-300 cursor-zoom-in ${deletingId === item.id ? 'opacity-30' : ''}`}
             onClick={() => setSelectedImage(item.imageUrl)}
           >
             <img 
@@ -224,7 +223,7 @@ const GalleryPage: React.FC = () => {
                      handleDelete(item); 
                    }}
                    disabled={deletingId === item.id}
-                   className="absolute top-4 left-4 p-3 bg-rose-500/80 text-white backdrop-blur-md rounded-xl hover:bg-rose-500 transition-all z-20 disabled:opacity-50"
+                   className="absolute top-4 left-4 p-3 bg-[var(--surfer-pink)] text-black border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:bg-rose-600 transition-all z-20 disabled:opacity-50 active:scale-90 flex items-center justify-center"
                    title="מחיקת תמונה"
                  >
                    {deletingId === item.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
@@ -241,7 +240,7 @@ const GalleryPage: React.FC = () => {
           onClick={() => setSelectedImage(null)}
         >
            <button 
-             className="absolute top-8 left-8 p-3 glass-effect text-white rounded-xl hover:bg-white/20 transition-all z-[130]"
+             className="absolute top-8 left-8 p-3 bg-[var(--surfer-cyan)] text-black rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:bg-[var(--surfer-teal)] transition-all z-[130] active:scale-90"
              onClick={(e) => {
                e.stopPropagation();
                setSelectedImage(null);
@@ -249,10 +248,10 @@ const GalleryPage: React.FC = () => {
            >
              <X size={32} strokeWidth={3} />
            </button>
-           <div className="relative max-w-5xl max-h-full glass-panel rounded-2xl p-2" onClick={e => e.stopPropagation()}>
+           <div className="relative max-w-5xl max-h-full bg-white/10 backdrop-blur-[15px] rounded-[8px] border-[2px] border-black shadow-[6px_6px_0px_rgba(0,0,0,0.9)] p-2" onClick={e => e.stopPropagation()}>
              <img 
                src={selectedImage} 
-               className="w-full h-full object-contain rounded-xl animate-in zoom-in-95 duration-300" 
+               className="w-full h-full object-contain rounded-[4px] animate-in zoom-in-95 duration-300" 
                alt="Large view" 
              />
            </div>
