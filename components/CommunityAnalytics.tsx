@@ -159,6 +159,19 @@ const CommunityAnalytics: React.FC = () => {
         ? Math.round((actualAttendance / potentialAttendance) * 100) 
         : 0;
 
+      // Calculate Yearly Retention
+      const yearlyPotentialAttendance = groupMembers.length * weeklyHistory.length;
+      const yearlyActualAttendance = weeklyHistory.reduce((sum, session) => {
+        const attendees = session.participantIds || [];
+        const groupAttendees = attendees.filter((id: string) => 
+          groupMembers.some(m => m.id === id)
+        ).length;
+        return sum + groupAttendees;
+      }, 0);
+      const yearlyRetention = yearlyPotentialAttendance > 0 
+        ? Math.round((yearlyActualAttendance / yearlyPotentialAttendance) * 100) 
+        : 0;
+
       // Pulse logic: Retention < 60% in the last 2 sessions
       const last2Sessions = last8Sessions.slice(0, 2);
       const potentialAttendanceLast2 = groupMembers.length * last2Sessions.length;
@@ -195,6 +208,7 @@ const CommunityAnalytics: React.FC = () => {
       return {
         label: c.label,
         retention,
+        yearlyRetention,
         count: groupMembers.length,
         color: colorClass,
         hexColor,
@@ -320,11 +334,25 @@ const CommunityAnalytics: React.FC = () => {
         ? Math.round((actualAttendance / potentialAttendance) * 100) 
         : 0;
       
+      // Calculate Yearly Retention
+      const yearlyPotentialAttendance = groupMembers.length * weeklyHistory.length;
+      const yearlyActualAttendance = weeklyHistory.reduce((sum, session) => {
+        const attendees = session.participantIds || [];
+        const groupAttendees = attendees.filter((id: string) => 
+          groupMembers.some(m => m.id === id)
+        ).length;
+        return sum + groupAttendees;
+      }, 0);
+      const yearlyRetention = yearlyPotentialAttendance > 0 
+        ? Math.round((yearlyActualAttendance / yearlyPotentialAttendance) * 100) 
+        : 0;
+
       const count = genderCounts[c.key as keyof typeof genderCounts] || 0;
       
       return {
         label: c.label,
         value: retention,
+        yearlyRetention,
         count: count,
         color: c.color,
         hexColor: c.hexColor,
@@ -749,7 +777,7 @@ const CommunityAnalytics: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass-panel p-10 rounded-[4rem] transition-all duration-500 relative overflow-hidden group"
+          className="lg:col-span-2 glass-panel p-10 rounded-[4rem] transition-all duration-500 relative overflow-hidden group"
         >
             {/* Glossy Shimmer Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
@@ -766,25 +794,50 @@ const CommunityAnalytics: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-12 gap-y-16 relative z-10">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 relative z-10">
               {stats.cohorts.map((group: any, idx: number) => {
-                const isHigh = group.retention >= 80;
-                const isLow = group.retention < 50;
+                const retention = group.retention;
+                
+                let categoryLabel = "";
+                let categoryColor = "";
+                if (retention < 50) {
+                  categoryLabel = "תיירים";
+                  categoryColor = "text-red-400 bg-red-500/10 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]";
+                } else if (retention < 70) {
+                  categoryLabel = "אקונומי פלוס";
+                  categoryColor = "text-amber-400 bg-amber-500/10 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]";
+                } else if (retention < 85) {
+                  categoryLabel = "ביזנס קלאס";
+                  categoryColor = "text-blue-400 bg-blue-500/10 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]";
+                } else {
+                  categoryLabel = "פירסט קלאס";
+                  categoryColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]";
+                }
                 
                 return (
                   <div key={idx} className="flex flex-col items-center relative group/gauge">
                     {/* Gauge Container */}
-                    <div className="relative w-full max-w-[280px] mx-auto flex justify-center items-center">
+                    <div className="relative w-full max-w-[280px] mx-auto flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-full p-2 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
                       <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
                         <defs>
-                          {/* Inner Dial Gradient */}
-                          <radialGradient id={`dial-bg-${idx}`} cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
-                            <stop offset="0%" stopColor="#334155" />
-                            <stop offset="100%" stopColor="#1A202C" />
-                          </radialGradient>
+                          {/* Frosted Glass Background Filter */}
+                          <filter id={`frosted-glass-age-${idx}`} x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="8" result="blur" />
+                            <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" in="blur" result="goo" />
+                            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+                          </filter>
 
-                          {/* Color Band Gradient (Red -> Orange -> Neon Green) - Precise Mapping */}
-                          <linearGradient id={`color-band-vitality-${idx}`} x1="35" y1="165" x2="165" y2="165" gradientUnits="userSpaceOnUse">
+                          {/* Brushed Metal for Needle */}
+                          <linearGradient id={`brushed-metal-age-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#f8fafc" />
+                            <stop offset="25%" stopColor="#94a3b8" />
+                            <stop offset="50%" stopColor="#e2e8f0" />
+                            <stop offset="75%" stopColor="#475569" />
+                            <stop offset="100%" stopColor="#cbd5e1" />
+                          </linearGradient>
+
+                          {/* Liquid Light Gradient (Vitality) */}
+                          <linearGradient id={`liquid-light-age-${idx}`} x1="35" y1="165" x2="165" y2="165" gradientUnits="userSpaceOnUse">
                             <stop offset="0%" stopColor="#ef4444" />
                             <stop offset="30%" stopColor="#f59e0b" />
                             <stop offset="60%" stopColor="#eab308" />
@@ -792,171 +845,186 @@ const CommunityAnalytics: React.FC = () => {
                             <stop offset="100%" stopColor="#39FF14" />
                           </linearGradient>
 
-                          <radialGradient id={`glass-lens-gauge-${idx}`} cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
-                            <stop offset="0%" stopColor="white" stopOpacity="0.4" />
-                            <stop offset="70%" stopColor="white" stopOpacity="0.05" />
-                            <stop offset="100%" stopColor="white" stopOpacity="0.0" />
-                          </radialGradient>
-
-                          <linearGradient id={`glass-shine-gauge-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                          {/* Glossy Highlight */}
+                          <radialGradient id={`glass-lens-age-${idx}`} cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
                             <stop offset="0%" stopColor="white" stopOpacity="0.3" />
                             <stop offset="50%" stopColor="white" stopOpacity="0.05" />
                             <stop offset="100%" stopColor="white" stopOpacity="0.0" />
-                          </linearGradient>
+                          </radialGradient>
 
-                          <filter id={`glow-${idx}`} x="-20%" y="-20%" width="140%" height="140%">
-                            <feGaussianBlur stdDeviation="4" result="blur" />
-                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                          </filter>
+                          <linearGradient id={`glass-shine-age-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="white" stopOpacity="0.2" />
+                            <stop offset="50%" stopColor="white" stopOpacity="0.02" />
+                            <stop offset="100%" stopColor="white" stopOpacity="0.0" />
+                          </linearGradient>
                         </defs>
 
-                        {/* Dial Background */}
-                        <circle cx="100" cy="100" r="92" fill={`url(#dial-bg-${idx})`} stroke="white" strokeOpacity="0.1" strokeWidth="1" />
+                        {/* Frosted Glass Background */}
+                        <circle cx="100" cy="100" r="92" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
+                        <circle cx="100" cy="100" r="92" fill="none" stroke="rgba(0, 0, 0, 0.5)" strokeWidth="2" />
 
-                        {/* Colored Edge Band (270 degrees) */}
+                        {/* Empty Glass Tube */}
                         <path 
                           d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
                           fill="none" 
-                          stroke={`url(#color-band-vitality-${idx})`} 
-                          strokeWidth="10" 
-                          strokeLinecap="butt" 
-                          opacity="0.8"
+                          stroke="rgba(255, 255, 255, 0.03)" 
+                          strokeWidth="12" 
+                          strokeLinecap="round" 
+                        />
+                        <path 
+                          d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
+                          fill="none" 
+                          stroke="rgba(0, 0, 0, 0.4)" 
+                          strokeWidth="12" 
+                          strokeLinecap="round" 
+                          style={{ filter: 'blur(1px)' }}
+                          opacity="0.6"
+                        />
+
+                        {/* Liquid Light (Filled) */}
+                        <motion.path 
+                          d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
+                          fill="none" 
+                          stroke={`url(#liquid-light-age-${idx})`} 
+                          strokeWidth="8" 
+                          strokeLinecap="round" 
+                          pathLength="100"
+                          strokeDasharray="100"
+                          initial={{ strokeDashoffset: 100 }}
+                          animate={{ strokeDashoffset: 100 - group.retention }}
+                          transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
+                          style={{ filter: 'drop-shadow(0px 0px 8px rgba(57,255,20,0.4))' }}
                         />
 
                         {/* Tick Marks and Numbers */}
-                        {[0, 20, 40, 60, 80, 100].map((val) => {
+                        {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((val) => {
                           const angle = -45 + (val / 100) * 270;
                           const rad = (angle * Math.PI) / 180;
+                          const isMajor = val % 20 === 0;
                           
                           // Tick marks
-                          const outerR = 92;
-                          const innerR = 82;
+                          const outerR = 82;
+                          const innerR = isMajor ? 72 : 77;
                           const x1 = 100 - Math.cos(rad) * outerR;
                           const y1 = 100 - Math.sin(rad) * outerR;
                           const x2 = 100 - Math.cos(rad) * innerR;
                           const y2 = 100 - Math.sin(rad) * innerR;
 
                           // Numbers
-                          const textR = 68;
+                          const textR = 58;
                           const tx = 100 - Math.cos(rad) * textR;
                           const ty = 100 - Math.sin(rad) * textR;
 
                           return (
                             <g key={val}>
-                              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="white" strokeWidth="2" opacity="0.3" />
-                              <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="8" fontFamily="Inter, sans-serif" fontWeight="black" opacity="0.6">
-                                {val}%
-                              </text>
+                              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.3)" strokeWidth={isMajor ? 1.5 : 0.5} style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.8))' }} />
+                              {isMajor && (
+                                <g>
+                                  <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.85)" fontSize="10" fontFamily="'Helvetica Neue', Helvetica, Arial, sans-serif" fontWeight="200" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.8), -1px -1px 1px rgba(255,255,255,0.2)' }}>
+                                    {val}
+                                  </text>
+                                </g>
+                              )}
                             </g>
                           );
                         })}
 
-                        {/* Needle */}
+                        {/* Yearly Retention Marker */}
+                        <motion.g
+                          className="group/marker cursor-pointer outline-none"
+                          tabIndex={0}
+                          onTouchStart={() => {}}
+                          initial={{ rotate: -135 }}
+                          animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
+                          style={{ transformOrigin: "100px 100px" }}
+                          transition={{ duration: 1.5, ease: "easeOut" }}
+                        >
+                          {/* Invisible hit area for easier hover */}
+                          <circle cx="100" cy="-5" r="32" fill="transparent" />
+                          
+                          {/* Pulsing Glow */}
+                          <motion.circle 
+                            cx="100" cy="-5" r="8" 
+                            fill="rgba(255,222,69,0.3)" 
+                            animate={{ scale: [1, 1.8, 1], opacity: [0.8, 0, 0.8] }} 
+                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} 
+                          />
+                          {/* Isosceles Triangle Pointer */}
+                          <polygon 
+                            points="94,-12 106,-12 100,2" 
+                            fill="#FFDE45"
+                            stroke="#FFFFFF"
+                            strokeWidth="1"
+                            style={{ filter: 'drop-shadow(0px 2px 6px rgba(255,222,69,0.8))' }}
+                          />
+                          
+                          {/* Tooltip (Counter-rotated to stay upright) */}
+                          <g 
+                            className="opacity-0 group-hover/marker:opacity-100 group-focus/marker:opacity-100 transition-opacity duration-300 pointer-events-none"
+                            style={{ transform: `rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}deg)`, transformOrigin: '100px -44px' }}
+                          >
+                            <rect x="40" y="-70" width="120" height="52" rx="10" fill="rgba(15, 23, 42, 0.95)" stroke="#FFDE45" strokeWidth="1.5" style={{ filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.6))' }} />
+                            <text x="100" y="-52" textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize="14" fontWeight="bold" fontFamily="Inter, sans-serif">
+                              שנתי
+                            </text>
+                            <text x="100" y="-30" textAnchor="middle" dominantBaseline="middle" fill="#FFDE45" fontSize="22" fontWeight="black" fontFamily="monospace" style={{ letterSpacing: '0.5px' }}>
+                              {group.yearlyRetention}%
+                            </text>
+                          </g>
+                        </motion.g>
+
+                        {/* Thin Sharp Needle */}
                         <motion.g
                           initial={{ rotate: -135 }}
                           animate={{ rotate: -135 + (group.retention / 100) * 270 }}
-                          style={{ 
-                            transformOrigin: "100px 100px"
-                          }}
-                          transition={{ 
-                            duration: 2.5, 
-                            ease: [0.34, 1.56, 0.64, 1],
-                            delay: idx * 0.1 
-                          }}
+                          style={{ transformOrigin: "100px 100px" }}
+                          transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
                         >
                           <circle cx="100" cy="100" r="100" fill="none" />
                           <polygon 
-                            points="98,100 102,100 100,10" 
-                            fill="white"
-                            style={{ 
-                              filter: 'drop-shadow(0px 0px 8px rgba(255,255,255,0.4))'
-                            }}
+                            points="98.5,100 101.5,100 100,18" 
+                            fill={`url(#brushed-metal-age-${idx})`}
+                            style={{ filter: `drop-shadow(0px 4px 6px rgba(0,0,0,0.5))` }}
                           />
+                          {/* Illuminated Tip */}
+                          <circle cx="100" cy="18" r="2.5" fill="#ffffff" style={{ filter: 'drop-shadow(0px 0px 4px #ffffff)' }} />
                         </motion.g>
-                        
+
                         {/* Center Pivot */}
-                        <circle cx="100" cy="100" r="8" fill="white" />
-                        <circle cx="100" cy="100" r="4" fill="#1A202C" />
+                        <circle cx="100" cy="100" r="8" fill={`url(#brushed-metal-age-${idx})`} style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))' }} />
+                        <circle cx="100" cy="100" r="3" fill="#0F172A" />
 
                         {/* Glassmorphism Overlay - Lens Effect & Shine */}
-                        <circle cx="100" cy="100" r="92" fill={`url(#glass-lens-gauge-${idx})`} className="pointer-events-none" opacity="0.8" />
-                        <circle cx="100" cy="100" r="92" fill={`url(#glass-shine-gauge-${idx})`} className="pointer-events-none" opacity="0.6" />
-                        <circle cx="100" cy="100" r="92" fill="none" stroke="white" strokeWidth="2" strokeOpacity="0.3" className="pointer-events-none" />
-                        
-                        {/* Pad Outline for definition */}
-                        <circle cx="100" cy="100" r="92" fill="none" stroke="white" strokeWidth="0.5" strokeOpacity="0.2" className="pointer-events-none" />
+                        <circle cx="100" cy="100" r="92" fill={`url(#glass-lens-age-${idx})`} className="pointer-events-none" opacity="0.8" />
+                        <circle cx="100" cy="100" r="92" fill={`url(#glass-shine-age-${idx})`} className="pointer-events-none" opacity="0.6" />
+                        <circle cx="100" cy="100" r="92" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" className="pointer-events-none" />
 
-                        {/* Digital Percentage Box - Glassmorphism 3D Effect */}
-                        <g transform="translate(65, 130)">
-                          {/* Outer Bevel / Glass Edge */}
-                          <rect 
-                            width="70" 
-                            height="28" 
-                            rx="6" 
-                            fill="rgba(255, 255, 255, 0.02)" 
-                            stroke="rgba(255, 255, 255, 0.15)" 
-                            strokeWidth="1" 
-                          />
-                          {/* Inner Shadow / Depth */}
-                          <rect 
-                            x="1" 
-                            y="1" 
-                            width="68" 
-                            height="26" 
-                            rx="5" 
-                            fill="none" 
-                            stroke="rgba(0, 0, 0, 0.2)" 
-                            strokeWidth="0.5" 
-                          />
-                          {/* Top Highlight */}
-                          <path 
-                            d="M 6 2 L 64 2" 
-                            stroke="white" 
-                            strokeOpacity="0.15" 
-                            strokeWidth="1" 
-                            strokeLinecap="round"
-                          />
-                          <text 
-                            x="35" 
-                            y="15" 
-                            textAnchor="middle" 
-                            dominantBaseline="middle" 
-                            fill={group.retention >= 80 ? "#39FF14" : group.retention >= 50 ? "#f59e0b" : "#ef4444"} 
-                            fontSize="16" 
-                            fontWeight="black" 
-                            fontFamily="monospace"
-                            style={{ 
-                              filter: `drop-shadow(0px 0px 3px ${group.retention >= 80 ? "rgba(57, 255, 20, 0.4)" : group.retention >= 50 ? "rgba(245, 158, 11, 0.4)" : "rgba(239, 68, 68, 0.4)"})`,
-                              letterSpacing: '-1px'
-                            }}
-                          >
-                            {group.retention}%
-                          </text>
+                        {/* Digital Percentage Boxes - Side by Side */}
+                        <g transform="translate(48, 110)">
+                          {/* Yearly Box */}
+                          <rect width="50" height="32" rx="4" fill="rgba(255, 255, 255, 0.05)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
+                          <text x="25" y="12" textAnchor="middle" dominantBaseline="middle" fill="#4A5568" fontSize="8" fontFamily="Inter, sans-serif" fontWeight="bold">שנתי</text>
+                          <text x="25" y="24" textAnchor="middle" dominantBaseline="middle" fill="#D69E2E" fontSize="13" fontWeight="black" fontFamily="monospace" style={{ filter: 'drop-shadow(0px 0px 2px rgba(214,158,46,0.4))', letterSpacing: '-0.5px' }}>{group.yearlyRetention}%</text>
+                        </g>
+                        <g transform="translate(102, 110)">
+                          {/* Octo Box */}
+                          <rect width="50" height="32" rx="4" fill="rgba(255, 255, 255, 0.05)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
+                          <text x="25" y="12" textAnchor="middle" dominantBaseline="middle" fill="#4A5568" fontSize="8" fontFamily="Inter, sans-serif" fontWeight="bold">אוקטו (8)</text>
+                          <text x="25" y="24" textAnchor="middle" dominantBaseline="middle" fill="#2D3748" fontSize="13" fontWeight="black" fontFamily="monospace" style={{ filter: 'drop-shadow(0px 0px 2px rgba(0,0,0,0.1))', letterSpacing: '-0.5px' }}>{group.retention}%</text>
                         </g>
 
-                        {/* Label inside gauge */}
-                        <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="16" className="antialiased tracking-tighter shadow-sm">
-                          {group.label}
-                        </text>
+                        {/* Text Elements */}
+                        <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="14" className="antialiased">{group.label}</text>
                       </svg>
                     </div>
                     
                     {/* Status Labels */}
                     <div className="mt-4 flex flex-col items-center gap-2">
-                      {isLow && (
-                        <div className="px-4 py-1 rounded-full bg-red-500/10 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
-                          <span className="text-[12px] text-red-400 font-black uppercase tracking-widest antialiased">
-                            LOW PULSE
-                          </span>
-                        </div>
-                      )}
-                      {isHigh && (
-                        <div className="px-4 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                          <span className="text-[12px] text-emerald-400 font-black uppercase tracking-widest antialiased">
-                            PEAK FLOW
-                          </span>
-                        </div>
-                      )}
+                      <div className={`px-4 py-1 rounded-full border ${categoryColor}`}>
+                        <span className="text-[12px] font-black uppercase tracking-widest antialiased">
+                          {categoryLabel}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -964,12 +1032,21 @@ const CommunityAnalytics: React.FC = () => {
             </div>
 
             {/* Footer Indicators */}
-            <div className="mt-16 pt-8 border-t border-white/5 flex justify-between items-center w-full relative z-10">
+            <div className="mt-16 pt-8 border-t border-white/5 flex flex-wrap justify-center gap-6 md:justify-between items-center w-full relative z-10">
               <div className="flex items-center gap-3">
-                <span className="text-[12px] text-white/30 font-black uppercase tracking-[0.2em]">LOW PULSE (&lt;50%)</span>
+                <span className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em]">תיירים (&lt;50%)</span>
+                <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]" />
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[12px] text-white/30 font-black uppercase tracking-[0.2em]">HIGH RETENTION (&gt;80%)</span>
+                <span className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em]">אקונומי פלוס (50-69%)</span>
+                <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em]">ביזנס קלאס (70-84%)</span>
+                <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em]">פירסט קלאס (85%+)</span>
                 <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
               </div>
             </div>
@@ -978,7 +1055,7 @@ const CommunityAnalytics: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-2 glass-panel p-10 transition-all duration-500 relative overflow-hidden group"
+          className="lg:col-span-2 glass-panel p-10 rounded-[4rem] transition-all duration-500 relative overflow-hidden group"
         >
           {/* Glossy Shimmer Effect */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
@@ -997,84 +1074,103 @@ const CommunityAnalytics: React.FC = () => {
 
           <div className="flex flex-row flex-nowrap items-center justify-around gap-2 relative z-10 overflow-x-auto">
             {stats.genderCohorts.map((group: any, idx: number) => {
-              const isHigh = group.isHigh;
-              const isLow = group.isLow;
+              const retention = group.value;
+              
+              let categoryLabel = "";
+              let categoryColor = "";
+              if (retention < 50) {
+                categoryLabel = "תיירים";
+                categoryColor = "text-red-400 bg-red-500/20 border-red-500/30 shadow-[0_0_12px_rgba(239,68,68,0.4)]";
+              } else if (retention < 70) {
+                categoryLabel = "אקונומי פלוס";
+                categoryColor = "text-amber-400 bg-amber-500/20 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.4)]";
+              } else if (retention < 85) {
+                categoryLabel = "ביזנס קלאס";
+                categoryColor = "text-blue-400 bg-blue-500/20 border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.4)]";
+              } else {
+                categoryLabel = "פירסט קלאס";
+                categoryColor = "text-emerald-400 bg-emerald-500/20 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.4)]";
+              }
               
               return (
-                <div key={idx} className="flex-1 flex flex-col items-center relative group/gauge w-full max-w-[350px]">
+                <div key={idx} className="flex-1 flex flex-col items-center relative group/gauge w-full max-w-[280px]">
                   {/* Gauge Container */}
-                  <div className="relative w-full flex justify-center items-center backdrop-blur-[12px] rounded-full p-2 border border-white/5 shadow-[0_0_30px_rgba(0,0,0,0.1)]">
+                  <div className="relative w-full flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-full p-2 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
                     <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
                       <defs>
-                        {/* Outer Metallic Ring Gradient */}
-                        <linearGradient id={`metal-ring-${idx}`} x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
-                          <stop offset="0%" stopColor="#E2E8F0" />
-                          <stop offset="50%" stopColor="#94A3B8" />
-                          <stop offset="100%" stopColor="#475569" />
-                        </linearGradient>
-                        
-                        {/* Inner Dial Gradient */}
-                        <radialGradient id={`dial-bg-${idx}`} cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
-                          <stop offset="0%" stopColor="#334155" />
-                          <stop offset="100%" stopColor="#0F172A" />
-                        </radialGradient>
+                        {/* Frosted Glass Background Filter */}
+                        <filter id={`frosted-glass-gender-${idx}`} x="-20%" y="-20%" width="140%" height="140%">
+                          <feGaussianBlur stdDeviation="8" result="blur" />
+                          <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" in="blur" result="goo" />
+                          <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+                        </filter>
 
-                        {/* Glossy Highlight */}
-                        <radialGradient id={`glass-lens-gender-${idx}`} cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
-                          <stop offset="0%" stopColor="white" stopOpacity="0.4" />
-                          <stop offset="70%" stopColor="white" stopOpacity="0.05" />
-                          <stop offset="100%" stopColor="white" stopOpacity="0.0" />
-                        </radialGradient>
-
-                        <linearGradient id={`glass-shine-gender-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="white" stopOpacity="0.3" />
-                          <stop offset="50%" stopColor="white" stopOpacity="0.05" />
-                          <stop offset="100%" stopColor="white" stopOpacity="0.0" />
+                        {/* Brushed Metal for Needle */}
+                        <linearGradient id={`brushed-metal-gender-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#f8fafc" />
+                          <stop offset="25%" stopColor="#94a3b8" />
+                          <stop offset="50%" stopColor="#e2e8f0" />
+                          <stop offset="75%" stopColor="#475569" />
+                          <stop offset="100%" stopColor="#cbd5e1" />
                         </linearGradient>
 
-                        <linearGradient id={`gloss-${idx}`} x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                          <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
-                          <stop offset="50%" stopColor="rgba(255,255,255,0.05)" />
-                          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-                        </linearGradient>
-
-                        {/* Color Band Gradient (Ocean: Dark -> Light) */}
-                        <linearGradient id={`color-band-${idx}`} x1="0" y1="200" x2="200" y2="0" gradientUnits="userSpaceOnUse">
+                        {/* Liquid Light Gradient (Ocean) */}
+                        <linearGradient id={`liquid-light-gender-${idx}`} x1="0" y1="200" x2="200" y2="0" gradientUnits="userSpaceOnUse">
                           <stop offset="0%" stopColor="#1A365D" />
                           <stop offset="50%" stopColor="#2C5282" />
                           <stop offset="100%" stopColor="#63B3ED" />
                         </linearGradient>
+
+                        {/* Glossy Highlight */}
+                        <radialGradient id={`glass-lens-gender-${idx}`} cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
+                          <stop offset="0%" stopColor="white" stopOpacity="0.3" />
+                          <stop offset="50%" stopColor="white" stopOpacity="0.05" />
+                          <stop offset="100%" stopColor="white" stopOpacity="0.0" />
+                        </radialGradient>
+
+                        <linearGradient id={`glass-shine-gender-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="white" stopOpacity="0.2" />
+                          <stop offset="50%" stopColor="white" stopOpacity="0.02" />
+                          <stop offset="100%" stopColor="white" stopOpacity="0.0" />
+                        </linearGradient>
                       </defs>
 
-                      {/* Colored Edge Band (270 degrees) */}
+                      {/* Frosted Glass Background */}
+                      <circle cx="100" cy="100" r="92" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
+                      <circle cx="100" cy="100" r="92" fill="none" stroke="rgba(0, 0, 0, 0.5)" strokeWidth="2" />
+
+                      {/* Empty Glass Tube */}
                       <path 
                         d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
                         fill="none" 
-                        stroke={`url(#color-band-${idx})`} 
+                        stroke="rgba(255, 255, 255, 0.03)" 
                         strokeWidth="12" 
-                        strokeLinecap="butt" 
-                        style={{ filter: 'drop-shadow(0px 0px 15px rgba(255,255,255,0.3))' }}
+                        strokeLinecap="round" 
                       />
-
-                      {/* Thin Border for Arc */}
                       <path 
                         d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
                         fill="none" 
-                        stroke="#2D3748" 
-                        strokeWidth="0.5" 
-                        strokeLinecap="butt" 
-                        opacity="0.1"
+                        stroke="rgba(0, 0, 0, 0.4)" 
+                        strokeWidth="12" 
+                        strokeLinecap="round" 
+                        style={{ filter: 'blur(1px)' }}
+                        opacity="0.6"
                       />
 
-                      {/* Glossy Overlay */}
-                      <path 
-                        d="M 8 100 A 92 92 0 0 1 192 100 C 192 145 145 192 100 192 C 55 192 8 145 8 100 Z" 
-                        fill={`url(#gloss-${idx})`} 
-                        clipPath={`url(#dial-clip-${idx})`}
+                      {/* Liquid Light (Filled) */}
+                      <motion.path 
+                        d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
+                        fill="none" 
+                        stroke={`url(#liquid-light-gender-${idx})`} 
+                        strokeWidth="8" 
+                        strokeLinecap="round" 
+                        pathLength="100"
+                        strokeDasharray="100"
+                        initial={{ strokeDashoffset: 100 }}
+                        animate={{ strokeDashoffset: 100 - group.value }}
+                        transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
+                        style={{ filter: 'drop-shadow(0px 0px 8px rgba(99,179,237,0.4))' }}
                       />
-                      <clipPath id={`dial-clip-${idx}`}>
-                        <circle cx="100" cy="100" r="92" />
-                      </clipPath>
 
                       {/* Tick Marks and Numbers */}
                       {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((val) => {
@@ -1084,24 +1180,24 @@ const CommunityAnalytics: React.FC = () => {
                         
                         // Tick marks
                         const outerR = 82;
-                        const innerR = isMajor ? 70 : 76;
+                        const innerR = isMajor ? 72 : 77;
                         const x1 = 100 - Math.cos(rad) * outerR;
                         const y1 = 100 - Math.sin(rad) * outerR;
                         const x2 = 100 - Math.cos(rad) * innerR;
                         const y2 = 100 - Math.sin(rad) * innerR;
 
                         // Numbers
-                        const textR = 55;
+                        const textR = 58;
                         const tx = 100 - Math.cos(rad) * textR;
                         const ty = 100 - Math.sin(rad) * textR;
 
                         return (
                           <g key={val}>
-                            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#4A5568" strokeWidth={isMajor ? 2 : 1} opacity="0.2" />
+                            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.3)" strokeWidth={isMajor ? 1.5 : 0.5} style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.8))' }} />
                             {isMajor && (
                               <g>
-                                <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="#2D3748" fontSize="10" fontFamily="Arial, sans-serif" fontWeight="bold" opacity="0.6">
-                                  {val}%
+                                <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.85)" fontSize="10" fontFamily="'Helvetica Neue', Helvetica, Arial, sans-serif" fontWeight="200" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.8), -1px -1px 1px rgba(255,255,255,0.2)' }}>
+                                  {val}
                                 </text>
                               </g>
                             )}
@@ -1109,83 +1205,88 @@ const CommunityAnalytics: React.FC = () => {
                         );
                       })}
 
-                      {/* Classic Needle */}
+                      {/* Yearly Retention Marker */}
                       <motion.g
-                        initial={{ rotate: -225 }}
-                        animate={{ rotate: -225 + (group.value / 100) * 270 }}
-                        style={{ 
-                          transformOrigin: "100px 100px"
-                        }}
-                        transition={{ 
-                          duration: 2.5, 
-                          ease: [0.34, 1.56, 0.64, 1],
-                          delay: idx * 0.1 
-                        }}
+                        className="group/marker cursor-pointer outline-none"
+                        tabIndex={0}
+                        onTouchStart={() => {}}
+                        initial={{ rotate: -135 }}
+                        animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
+                        style={{ transformOrigin: "100px 100px" }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                      >
+                        {/* Invisible hit area for easier hover */}
+                        <circle cx="100" cy="-5" r="32" fill="transparent" />
+                        
+                        {/* Pulsing Glow */}
+                        <motion.circle 
+                          cx="100" cy="-5" r="8" 
+                          fill="rgba(255,222,69,0.3)" 
+                          animate={{ scale: [1, 1.8, 1], opacity: [0.8, 0, 0.8] }} 
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} 
+                        />
+                        {/* Isosceles Triangle Pointer */}
+                        <polygon 
+                          points="94,-12 106,-12 100,2" 
+                          fill="#FFDE45"
+                          stroke="#FFFFFF"
+                          strokeWidth="1"
+                          style={{ filter: 'drop-shadow(0px 2px 6px rgba(255,222,69,0.8))' }}
+                        />
+                        
+                        {/* Tooltip (Counter-rotated to stay upright) */}
+                        <g 
+                          className="opacity-0 group-hover/marker:opacity-100 group-focus/marker:opacity-100 transition-opacity duration-300 pointer-events-none"
+                          style={{ transform: `rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}deg)`, transformOrigin: '100px -44px' }}
+                        >
+                          <rect x="40" y="-70" width="120" height="52" rx="10" fill="rgba(15, 23, 42, 0.95)" stroke="#FFDE45" strokeWidth="1.5" style={{ filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.6))' }} />
+                          <text x="100" y="-52" textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize="14" fontWeight="bold" fontFamily="Inter, sans-serif">
+                            שנתי
+                          </text>
+                          <text x="100" y="-30" textAnchor="middle" dominantBaseline="middle" fill="#FFDE45" fontSize="22" fontWeight="black" fontFamily="monospace" style={{ letterSpacing: '0.5px' }}>
+                            {group.yearlyRetention}%
+                          </text>
+                        </g>
+                      </motion.g>
+
+                      {/* Thin Sharp Needle */}
+                      <motion.g
+                        initial={{ rotate: -135 }}
+                        animate={{ rotate: -135 + (group.value / 100) * 270 }}
+                        style={{ transformOrigin: "100px 100px" }}
+                        transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
                       >
                         <circle cx="100" cy="100" r="100" fill="none" />
                         <polygon 
-                          points="100,98 100,102 180,100" 
-                          fill="#2D3748"
-                          style={{ 
-                            filter: `drop-shadow(0px 2px 4px rgba(0,0,0,0.1))`
-                          }}
+                          points="98.5,100 101.5,100 100,18" 
+                          fill={`url(#brushed-metal-gender-${idx})`}
+                          style={{ filter: `drop-shadow(0px 4px 6px rgba(0,0,0,0.5))` }}
                         />
+                        {/* Illuminated Tip */}
+                        <circle cx="100" cy="18" r="2.5" fill="#ffffff" style={{ filter: 'drop-shadow(0px 0px 4px #ffffff)' }} />
                       </motion.g>
 
                       {/* Center Pivot */}
-                      <circle cx="100" cy="100" r="6" fill="#2D3748" />
+                      <circle cx="100" cy="100" r="8" fill={`url(#brushed-metal-gender-${idx})`} style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))' }} />
+                      <circle cx="100" cy="100" r="3" fill="#0F172A" />
 
                       {/* Glassmorphism Overlay - Lens Effect & Shine */}
                       <circle cx="100" cy="100" r="92" fill={`url(#glass-lens-gender-${idx})`} className="pointer-events-none" opacity="0.8" />
                       <circle cx="100" cy="100" r="92" fill={`url(#glass-shine-gender-${idx})`} className="pointer-events-none" opacity="0.6" />
-                      <circle cx="100" cy="100" r="92" fill="none" stroke="white" strokeWidth="2" strokeOpacity="0.3" className="pointer-events-none" />
+                      <circle cx="100" cy="100" r="92" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" className="pointer-events-none" />
 
-                      {/* Digital Percentage Box - Glassmorphism 3D Effect */}
-                      <g transform="translate(65, 130)">
-                        {/* Outer Bevel / Glass Edge */}
-                        <rect 
-                          width="70" 
-                          height="28" 
-                          rx="6" 
-                          fill="rgba(255, 255, 255, 0.02)" 
-                          stroke="rgba(255, 255, 255, 0.15)" 
-                          strokeWidth="1" 
-                        />
-                        {/* Inner Shadow / Depth */}
-                        <rect 
-                          x="1" 
-                          y="1" 
-                          width="68" 
-                          height="26" 
-                          rx="5" 
-                          fill="none" 
-                          stroke="rgba(0, 0, 0, 0.2)" 
-                          strokeWidth="0.5" 
-                        />
-                        {/* Top Highlight */}
-                        <path 
-                          d="M 6 2 L 64 2" 
-                          stroke="white" 
-                          strokeOpacity="0.15" 
-                          strokeWidth="1" 
-                          strokeLinecap="round"
-                        />
-                        <text 
-                          x="35" 
-                          y="15" 
-                          textAnchor="middle" 
-                          dominantBaseline="middle" 
-                          fill="#2D3748" 
-                          fontSize="16" 
-                          fontWeight="black" 
-                          fontFamily="monospace"
-                          style={{ 
-                            filter: `drop-shadow(0px 0px 2px rgba(0,0,0,0.1))`,
-                            letterSpacing: '-1px'
-                          }}
-                        >
-                          {group.value}%
-                        </text>
+                      {/* Digital Percentage Boxes - Side by Side */}
+                      <g transform="translate(48, 110)">
+                        {/* Yearly Box */}
+                        <rect width="50" height="32" rx="4" fill="rgba(255, 255, 255, 0.05)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
+                        <text x="25" y="12" textAnchor="middle" dominantBaseline="middle" fill="#4A5568" fontSize="8" fontFamily="Inter, sans-serif" fontWeight="bold">שנתי</text>
+                        <text x="25" y="24" textAnchor="middle" dominantBaseline="middle" fill="#D69E2E" fontSize="13" fontWeight="black" fontFamily="monospace" style={{ filter: 'drop-shadow(0px 0px 2px rgba(214,158,46,0.4))', letterSpacing: '-0.5px' }}>{group.yearlyRetention}%</text>
+                      </g>
+                      <g transform="translate(102, 110)">
+                        {/* Octo Box */}
+                        <rect width="50" height="32" rx="4" fill="rgba(255, 255, 255, 0.05)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
+                        <text x="25" y="12" textAnchor="middle" dominantBaseline="middle" fill="#4A5568" fontSize="8" fontFamily="Inter, sans-serif" fontWeight="bold">אוקטו (8)</text>
+                        <text x="25" y="24" textAnchor="middle" dominantBaseline="middle" fill="#2D3748" fontSize="13" fontWeight="black" fontFamily="monospace" style={{ filter: 'drop-shadow(0px 0px 2px rgba(0,0,0,0.1))', letterSpacing: '-0.5px' }}>{group.value}%</text>
                       </g>
 
                       {/* Text Elements */}
@@ -1195,21 +1296,9 @@ const CommunityAnalytics: React.FC = () => {
                   
                   {/* Labels below gauge */}
                   <div className="mt-2 flex flex-col items-center gap-2 h-10">
-                    {isLow && (
-                      <span className="text-[8px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full font-black border border-red-500/30 shadow-[0_0_12px_rgba(239,68,68,0.4)] antialiased">
-                        LOW PULSE
-                      </span>
-                    )}
-                    {isHigh && (
-                      <span className="text-[8px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-black border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.4)] antialiased">
-                        PEAK FLOW
-                      </span>
-                    )}
-                    {!isLow && !isHigh && (
-                      <span className="text-[8px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-black border border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.4)] antialiased">
-                        STABLE FLOW
-                      </span>
-                    )}
+                    <span className={`text-[10px] px-3 py-0.5 rounded-full font-black border antialiased ${categoryColor}`}>
+                      {categoryLabel}
+                    </span>
                     <span className="text-[12px] font-black glass-text-primary uppercase tracking-widest mt-1">
                       {group.count} חברים
                     </span>
@@ -1229,6 +1318,18 @@ const CommunityAnalytics: React.FC = () => {
           {/* Glossy Shimmer for the whole container */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-30 pointer-events-none" />
           
+          <div className="flex items-center justify-between mb-12 relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center text-[var(--surfer-pink)] shadow-inner border border-white/10">
+                <UserMinus size={24} />
+              </div>
+              <div>
+                <h3 className="glass-text-primary font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעורי עזיבה Churn rate</h3>
+                <p className="glass-text-secondary text-[12px] tracking-[0.3em] mt-1 font-black uppercase">COMMUNITY INSIGHTS • ATTRITION</p>
+              </div>
+            </div>
+          </div>
+
           <div className="flex flex-row justify-center gap-16">
             <AstrodeckGauge 
               value={stats.churnRate}
