@@ -141,17 +141,17 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             <span className="flex items-center gap-1"><Calendar size={14} /> הצטרף ב-{stats.joiningDate}</span>
           </div>
           <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-            <span className="inline-flex px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100 shadow-sm">
+            <span className="inline-flex px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[12px] font-black uppercase tracking-widest border border-indigo-100 shadow-sm">
               מעמד: {stats.rank}
             </span>
-            <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${
+            <span className={`inline-flex px-3 py-1 rounded-full text-[12px] font-black uppercase tracking-widest border shadow-sm ${
               member.isActive !== false 
                 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
                 : 'bg-rose-50 text-rose-600 border-rose-100'
             }`}>
               סטטוס: {member.isActive !== false ? 'פעיל' : 'לא פעיל'}
             </span>
-            <span className="inline-flex px-3 py-1 glass-effect glass-text-primary rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10 shadow-sm">
+            <span className="inline-flex px-3 py-1 glass-effect glass-text-primary rounded-full text-[12px] font-black uppercase tracking-widest border border-white/10 shadow-sm">
               תפקיד: {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
             </span>
           </div>

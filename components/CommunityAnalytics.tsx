@@ -643,7 +643,7 @@ const CommunityAnalytics: React.FC = () => {
                         return (
                           <div className="glass-effect p-3 rounded-xl border border-white/20 shadow-2xl">
                             <p className="text-xs font-black glass-text-primary mb-1">{payload[0].payload.label} ק"מ</p>
-                            <p className="text-lg font-black text-[var(--surfer-cyan)]">{payload[0].value} <span className="text-[10px] opacity-60">חברים</span></p>
+                            <p className="text-lg font-black text-[var(--surfer-cyan)]">{payload[0].value} <span className="text-[12px] opacity-60">חברים</span></p>
                           </div>
                         );
                       }
@@ -665,24 +665,24 @@ const CommunityAnalytics: React.FC = () => {
 
             <div className="mt-6 grid grid-cols-3 gap-4 relative z-10">
               <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
-                <p className="text-[10px] font-black text-[var(--surfer-cyan)] uppercase tracking-widest mb-1 opacity-70">טווח קרוב (0-20)</p>
+                <p className="text-[12px] font-black text-[var(--surfer-cyan)] uppercase tracking-widest mb-1 opacity-70">טווח קרוב (0-20)</p>
                 <p className="text-xl font-black glass-text-primary flex items-baseline gap-1">
                   {stats.near}
-                  <span className="text-[10px] font-bold opacity-40">חברים</span>
+                  <span className="text-[12px] font-bold opacity-40">חברים</span>
                 </p>
               </div>
               <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
-                <p className="text-[10px] font-black text-[var(--surfer-orange)] uppercase tracking-widest mb-1 opacity-70">טווח איזורי (21-100)</p>
+                <p className="text-[12px] font-black text-[var(--surfer-orange)] uppercase tracking-widest mb-1 opacity-70">טווח איזורי (21-100)</p>
                 <p className="text-xl font-black glass-text-primary flex items-baseline gap-1">
                   {stats.medium}
-                  <span className="text-[10px] font-bold opacity-40">חברים</span>
+                  <span className="text-[12px] font-bold opacity-40">חברים</span>
                 </p>
               </div>
               <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
-                <p className="text-[10px] font-black text-[var(--surfer-pink)] uppercase tracking-widest mb-1 opacity-70">טווח רחוק (100+)</p>
+                <p className="text-[12px] font-black text-[var(--surfer-pink)] uppercase tracking-widest mb-1 opacity-70">טווח רחוק (100+)</p>
                 <p className="text-xl font-black glass-text-primary flex items-baseline gap-1">
                   {stats.far}
-                  <span className="text-[10px] font-bold opacity-40">חברים</span>
+                  <span className="text-[12px] font-bold opacity-40">חברים</span>
                 </p>
               </div>
             </div>
@@ -708,7 +708,7 @@ const CommunityAnalytics: React.FC = () => {
                   </div>
                   <h4 className="text-xl font-black glass-text-primary tracking-tight">דופק נמוך (בסיכון נטישה)</h4>
                 </div>
-                <span className="text-[10px] font-black glass-text-secondary uppercase tracking-widest glass-effect px-4 py-1.5 rounded-full border border-white/10 shadow-sm">
+                <span className="text-[12px] font-black glass-text-secondary uppercase tracking-widest glass-effect px-4 py-1.5 rounded-full border border-white/10 shadow-sm">
                   לא נראו מעל 30 יום
                 </span>
               </div>
@@ -725,7 +725,7 @@ const CommunityAnalytics: React.FC = () => {
                         />
                         <div>
                           <p className="text-base font-black glass-text-primary">{member.firstName} {member.lastName}</p>
-                          <p className="text-[10px] font-bold glass-text-secondary italic">פעם אחרונה: {member.joinedAt}</p>
+                          <p className="text-[12px] font-bold glass-text-secondary italic">פעם אחרונה: {member.joinedAt}</p>
                         </div>
                       </div>
                       <button className="p-3 rounded-xl glass-effect text-white/50 opacity-0 group-hover/item:opacity-100 transition-all hover:bg-white/20 hover:text-white">
@@ -761,7 +761,7 @@ const CommunityAnalytics: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="glass-text-primary font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי קבוצות גיל</h3>
-                  <p className="glass-text-secondary text-[10px] tracking-[0.3em] mt-1 font-black uppercase">SESSION VITALITY METRICS-8</p>
+                  <p className="glass-text-secondary text-[12px] tracking-[0.3em] mt-1 font-black uppercase">SESSION VITALITY METRICS-8</p>
                 </div>
               </div>
             </div>
@@ -945,14 +945,14 @@ const CommunityAnalytics: React.FC = () => {
                     <div className="mt-4 flex flex-col items-center gap-2">
                       {isLow && (
                         <div className="px-4 py-1 rounded-full bg-red-500/10 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
-                          <span className="text-[10px] text-red-400 font-black uppercase tracking-widest antialiased">
+                          <span className="text-[12px] text-red-400 font-black uppercase tracking-widest antialiased">
                             LOW PULSE
                           </span>
                         </div>
                       )}
                       {isHigh && (
                         <div className="px-4 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                          <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest antialiased">
+                          <span className="text-[12px] text-emerald-400 font-black uppercase tracking-widest antialiased">
                             PEAK FLOW
                           </span>
                         </div>
@@ -966,10 +966,10 @@ const CommunityAnalytics: React.FC = () => {
             {/* Footer Indicators */}
             <div className="mt-16 pt-8 border-t border-white/5 flex justify-between items-center w-full relative z-10">
               <div className="flex items-center gap-3">
-                <span className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em]">LOW PULSE (&lt;50%)</span>
+                <span className="text-[12px] text-white/30 font-black uppercase tracking-[0.2em]">LOW PULSE (&lt;50%)</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em]">HIGH RETENTION (&gt;80%)</span>
+                <span className="text-[12px] text-white/30 font-black uppercase tracking-[0.2em]">HIGH RETENTION (&gt;80%)</span>
                 <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
               </div>
             </div>
@@ -990,7 +990,7 @@ const CommunityAnalytics: React.FC = () => {
               </div>
               <div>
                 <h3 className="glass-text-primary font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי מגדר</h3>
-                <p className="glass-text-secondary text-[10px] tracking-[0.3em] mt-1 font-black uppercase">COMMUNITY INSIGHTS • GENDER DYNAMICS</p>
+                <p className="glass-text-secondary text-[12px] tracking-[0.3em] mt-1 font-black uppercase">COMMUNITY INSIGHTS • GENDER DYNAMICS</p>
               </div>
             </div>
           </div>
@@ -1210,7 +1210,7 @@ const CommunityAnalytics: React.FC = () => {
                         STABLE FLOW
                       </span>
                     )}
-                    <span className="text-[10px] font-black glass-text-primary uppercase tracking-widest mt-1">
+                    <span className="text-[12px] font-black glass-text-primary uppercase tracking-widest mt-1">
                       {group.count} חברים
                     </span>
                   </div>

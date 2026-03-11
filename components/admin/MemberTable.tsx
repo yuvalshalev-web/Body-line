@@ -37,11 +37,11 @@ const MemberTable: React.FC<MemberTableProps> = ({
         <table className="w-full text-right">
           <thead className="bg-[rgba(255,255,255,0.05)] border-b border-[rgba(255,255,255,0.1)]">
             <tr>
-              <th className="px-8 py-6 text-[10px] font-black text-white/60 uppercase tracking-widest">
+              <th className="px-8 py-6 text-[12px] font-black text-white/60 uppercase tracking-widest">
                 {isArchive ? 'משתמש מושעה' : 'משתמש'}
               </th>
-              <th className="px-8 py-6 text-[10px] font-black text-white/60 uppercase tracking-widest">סטטוס</th>
-              <th className="px-8 py-6 text-[10px] font-black text-white/60 uppercase tracking-widest text-center">פעולות</th>
+              <th className="px-8 py-6 text-[12px] font-black text-white/60 uppercase tracking-widest">סטטוס</th>
+              <th className="px-8 py-6 text-[12px] font-black text-white/60 uppercase tracking-widest text-center">פעולות</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[rgba(255,255,255,0.1)]">
@@ -68,14 +68,14 @@ const MemberTable: React.FC<MemberTableProps> = ({
                       <h4 className={`font-black ${isArchive ? 'text-[#f063c1]/40' : 'text-[#4a002e]'}`}>
                         {member.firstName} {member.lastName}
                       </h4>
-                      <p className={`text-[10px] font-black truncate max-w-[150px] ${isArchive ? 'text-[#f063c1]/20' : 'text-[#f063c1]/60'}`}>
+                      <p className={`text-[12px] font-black truncate max-w-[150px] ${isArchive ? 'text-[#f063c1]/20' : 'text-[#f063c1]/60'}`}>
                         {member.email}
                       </p>
                     </div>
                   </div>
                 </td>
                 <td className="px-8 py-6">
-                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                  <span className={`px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest ${
                     isArchive ? 'bg-[#f7c1ea]/10 text-[#f063c1]/40' : 'bg-[#ff009f]/5 text-[#ff009f]'
                   }`}>
                     {member.role === 'Admin' ? 'מנהל' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}

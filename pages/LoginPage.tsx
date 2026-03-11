@@ -111,7 +111,7 @@ const LoginPage: React.FC = () => {
           loginCount: increment(1)
         });
         
-        login({ id: userDoc.id, ...memberData, loginCount: (memberData.loginCount || 0) + 1 });
+        login({ ...memberData, id: userDoc.id, loginCount: (memberData.loginCount || 0) + 1 });
       }
     } catch (err: any) { 
       console.error(err);
@@ -151,8 +151,8 @@ const LoginPage: React.FC = () => {
       });
       
       login({ 
-        id: tempUser.id, 
         ...tempUser.data, 
+        id: tempUser.id, 
         isTemporary: false, 
         loginCount: (tempUser.data.loginCount || 0) + 1 
       });
@@ -269,7 +269,7 @@ const LoginPage: React.FC = () => {
                        <Waves size={32} />
                      </div>
                      <div className="text-white text-4xl font-black italic tracking-tighter">חבל זוג</div>
-                     <div className="text-white/50 text-[10px] font-black uppercase tracking-[0.3em]">HERZLIYA SURF CLUB</div>
+                     <div className="text-white/50 text-[12px] font-black uppercase tracking-[0.3em]">HERZLIYA SURF CLUB</div>
                    </div>
                  )}
                </div>

@@ -236,15 +236,15 @@ const CommunityHeatMap: React.FC = () => {
         <div className="flex gap-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-emerald-500" />
-            <span className="text-[10px] font-bold glass-text-secondary">זמינות מיידית (0-20)</span>
+            <span className="text-[12px] font-bold glass-text-secondary">זמינות מיידית (0-20)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-amber-500" />
-            <span className="text-[10px] font-bold glass-text-secondary">דורש התראה (21-100)</span>
+            <span className="text-[12px] font-bold glass-text-secondary">דורש התראה (21-100)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-red-500" />
-            <span className="text-[10px] font-bold glass-text-secondary">מרוחקים (100+)</span>
+            <span className="text-[12px] font-bold glass-text-secondary">מרוחקים (100+)</span>
           </div>
         </div>
       </div>
@@ -275,7 +275,7 @@ const CommunityHeatMap: React.FC = () => {
             <div className="glass-effect p-4 rounded-2xl border border-white/20 shadow-xl backdrop-blur-xl">
               <div className="flex items-center gap-3 mb-1">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black glass-text-primary uppercase tracking-widest">זמינות מיידית</span>
+                <span className="text-[12px] font-black glass-text-primary uppercase tracking-widest">זמינות מיידית</span>
               </div>
               <p className="text-xl font-black glass-text-primary">{stats.near} <span className="text-xs font-normal opacity-50">חברים</span></p>
               {/* Debug Info */}
@@ -290,23 +290,23 @@ const CommunityHeatMap: React.FC = () => {
           {/* Heatmap Color Legend */}
           <div className="absolute bottom-4 right-4 z-[1000]">
             <div className="glass-effect p-4 rounded-2xl border border-white/20 shadow-xl backdrop-blur-xl flex flex-col gap-3">
-              <span className="text-[10px] font-black glass-text-primary uppercase tracking-widest mb-1">צפיפות חברים</span>
+              <span className="text-[12px] font-black glass-text-primary uppercase tracking-widest mb-1">צפיפות חברים</span>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-[#ef4444] shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
-                  <span className="text-[10px] font-bold glass-text-secondary">גבוהה מאוד</span>
+                  <span className="text-[12px] font-bold glass-text-secondary">גבוהה מאוד</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-[#f59e0b] shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
-                  <span className="text-[10px] font-bold glass-text-secondary">גבוהה</span>
+                  <span className="text-[12px] font-bold glass-text-secondary">גבוהה</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-[#10b981] shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                  <span className="text-[10px] font-bold glass-text-secondary">בינונית</span>
+                  <span className="text-[12px] font-bold glass-text-secondary">בינונית</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-[#3b82f6] shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                  <span className="text-[10px] font-bold glass-text-secondary">נמוכה</span>
+                  <span className="text-[12px] font-bold glass-text-secondary">נמוכה</span>
                 </div>
               </div>
             </div>

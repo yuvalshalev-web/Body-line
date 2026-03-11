@@ -356,7 +356,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               icon={<Calendar size={18} />}
               tooltip="מדד הבודק כמה שבועות היית פעיל ברצף מתחילת העונה."
               footer={
-                <p className="mt-4 text-[10px] font-bold text-white/40">
+                <p className="mt-4 text-[12px] font-bold text-white/40">
                   היית פעיל ב-{data.yearlyStability.activeWeeks} מתוך {data.yearlyStability.totalWeeks} שבועות השנה.
                 </p>
               }
@@ -409,7 +409,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               <Compass size={18} className="glass-text-primary" />
               <h3 className="text-lg font-black glass-text-primary">רדאר השיפור שלך</h3>
             </div>
-            <span className="text-[10px] font-bold glass-text-secondary uppercase tracking-widest mt-1">(לשימוש עתידי)</span>
+            <span className="text-[12px] font-bold glass-text-secondary uppercase tracking-widest mt-1">(לשימוש עתידי)</span>
           </div>
 
           <div className="h-[450px] w-full relative">
@@ -417,7 +417,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
           </div>
 
           <div className="mt-6 p-4 glass-effect rounded-[var(--radius-md)] border border-white/10">
-            <p className="text-[10px] glass-text-secondary font-bold text-center leading-relaxed">
+            <p className="text-[12px] glass-text-secondary font-bold text-center leading-relaxed">
               המצפן מנתח את היכולות המקצועיות שלך בים. נתונים אלו יוזנו על ידי המדריכים לאחר הערכות תקופתיות.
             </p>
           </div>
@@ -443,7 +443,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
             </div>
             <div className="text-right">
               <h3 className="text-sm font-black glass-text-primary">היסטוריית סשנים</h3>
-              <p className="text-[10px] font-bold glass-text-secondary uppercase tracking-wider">
+              <p className="text-[12px] font-bold glass-text-secondary uppercase tracking-wider">
                 {isHistoryOpen ? 'לחץ לסגירה' : `צפה ב-${userSessions.length} סשנים אחרונים`}
               </p>
             </div>
@@ -479,13 +479,13 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                         <Waves size={14} className="glass-text-secondary group-hover:text-[var(--surfer-cyan)] transition-colors" />
                         <div className="flex flex-col">
                           <span className="font-bold glass-text-primary text-xs">{formattedDate}</span>
-                          <span className="text-[10px] glass-text-secondary font-medium">
+                          <span className="text-[12px] glass-text-secondary font-medium">
                             {session.instructorName || 'מדריך חבל זוג'}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 text-[10px] glass-text-secondary font-black">
+                        <div className="flex items-center gap-1 text-[12px] glass-text-secondary font-black">
                           <Users size={10} />
                           <span>{session.participantIds?.length || 0}</span>
                         </div>
@@ -504,7 +504,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               
               {userSessions.length > 15 && (
                 <div className="p-3 bg-black/20 text-center border-t border-white/5">
-                  <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">
+                  <span className="text-[12px] font-black text-white/30 uppercase tracking-widest">
                     מציג 15 סשנים אחרונים
                   </span>
                 </div>

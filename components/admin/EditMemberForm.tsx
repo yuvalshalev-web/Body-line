@@ -178,7 +178,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           <span>חזרה</span>
         </button>
 
-        <div className="glass-panel border border-white/20 px-4 py-1.5 rounded-full inline-flex items-center gap-2 text-[10px] font-black text-white/60 tracking-widest uppercase shadow-sm">
+        <div className="glass-panel border border-white/20 px-4 py-1.5 rounded-full inline-flex items-center gap-2 text-[12px] font-black text-white/60 tracking-widest uppercase shadow-sm">
           <UserCircle size={12} className="text-[#D4A373]" />
           <span>USER PROFILE</span>
         </div>
@@ -219,12 +219,12 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               />
             </label>
           </div>
-          <p className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">לחץ לשינוי תמונה</p>
+          <p className="mt-4 text-[12px] font-black text-slate-400 uppercase tracking-widest">לחץ לשינוי תמונה</p>
           
           {/* Role Management */}
           <div className="mt-12 w-full max-w-md space-y-6">
             <div className="flex flex-col items-center gap-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">סטטוס תפקיד במערכת</label>
+              <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em]">סטטוס תפקיד במערכת</label>
               
               <div 
                 className="relative w-full p-1 glass-panel rounded-2xl border border-white/20 flex items-center overflow-hidden shadow-sm"
@@ -335,7 +335,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                       exit={{ opacity: 0, height: 0 }}
                       className="overflow-hidden"
                     >
-                      <p className="text-rose-600 text-[10px] text-center pt-2 leading-relaxed font-black animate-pulse uppercase tracking-widest">
+                      <p className="text-rose-600 text-[12px] text-center pt-2 leading-relaxed font-black animate-pulse uppercase tracking-widest">
                         ⚠️ ACCOUNT WILL BE RESTRICTED
                       </p>
                     </motion.div>
@@ -349,7 +349,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
         {/* Basic Info */}
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">שם פרטי</label>
+            <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">שם פרטי</label>
             <input 
               type="text"
               value={editingMember.firstName || ''}
@@ -359,7 +359,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">שם משפחה</label>
+            <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">שם משפחה</label>
             <input 
               type="text"
               value={editingMember.lastName || ''}
@@ -369,7 +369,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">אימייל</label>
+            <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">אימייל</label>
             <input 
               type="email"
               value={editingMember.email}
@@ -381,7 +381,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">מגדר</label>
+            <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">מגדר</label>
             <div className="relative">
               <button 
                 type="button"
@@ -425,7 +425,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">טלפון נייד</label>
+            <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">טלפון נייד</label>
             <input 
               type="text"
               value={editingMember.mobile}
@@ -436,7 +436,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">תאריך יום הולדת</label>
+            <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">תאריך יום הולדת</label>
             <div className="relative">
               <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
@@ -449,7 +449,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">כתובת מגורים</label>
+            <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">כתובת מגורים</label>
             <div className="relative">
               <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
@@ -466,7 +466,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
         </div>
 
         <div className="md:col-span-2 space-y-2">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">ביוגרפיה</label>
+          <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">ביוגרפיה</label>
           <textarea 
             value={editingMember.bio}
             onChange={(e) => setEditingMember({ ...editingMember, bio: e.target.value })}
@@ -491,7 +491,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               { id: 'websiteUrl', label: 'אתר אישי', icon: Globe, placeholder: 'https://...' }
             ].map((social) => (
               <div key={social.id} className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4 flex items-center gap-2">
+                <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4 flex items-center gap-2">
                   <social.icon size={12} />
                   {social.label}
                 </label>
@@ -605,7 +605,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
 
                   <form onSubmit={handlePasswordChange} className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">סיסמה חדשה</label>
+                      <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">סיסמה חדשה</label>
                       <input 
                         type="password"
                         value={newPassword}
@@ -617,7 +617,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">אימות סיסמה</label>
+                      <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">אימות סיסמה</label>
                       <input 
                         type="password"
                         value={confirmPassword}

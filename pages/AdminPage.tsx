@@ -112,7 +112,7 @@ const AdminPage: React.FC = () => {
             if (!place.geometry) {
               if (place.name && window.google?.maps?.Geocoder) {
                 const geocoder = new window.google.maps.Geocoder();
-                geocoder.geocode({ address: place.name + ', Israel' }, (results, status) => {
+                geocoder.geocode({ address: place.name + ', Israel' }, (results: any, status: any) => {
                   if (status === 'OK' && results && results[0]) {
                     setIsPlaceSelected(true);
                     selectedPlaceRef.current = results[0];
@@ -615,7 +615,7 @@ const AdminPage: React.FC = () => {
           {/* Main Content Area */}
           <div className="flex-1 min-w-0 w-full">
             {isProcessing && (
-              <div className="fixed top-4 left-4 bg-black text-white p-2 z-[999] text-[10px]">
+              <div className="fixed top-4 left-4 bg-black text-white p-2 z-[999] text-[12px]">
                 Processing: {isProcessing}
               </div>
             )}
@@ -645,7 +645,7 @@ const AdminPage: React.FC = () => {
                         <item.icon size={28} />
                       </div>
                       {item.count !== undefined && item.count > 0 && (
-                        <div className="bg-[var(--electric-red-pink)] text-white px-3 py-1 rounded-full text-[10px] font-black animate-pulse">
+                        <div className="bg-[var(--electric-red-pink)] text-white px-3 py-1 rounded-full text-[12px] font-black animate-pulse">
                           {item.count} חדש
                         </div>
                       )}
@@ -653,7 +653,7 @@ const AdminPage: React.FC = () => {
                     <h3 className="text-xl font-black text-[var(--deep-teal-sea)] mb-2 group-hover:text-[var(--turquoise-teal)] transition-colors">{item.label}</h3>
                     <p className="text-xs font-black text-[var(--deep-teal-sea)]/70 uppercase tracking-widest">{item.desc}</p>
                     
-                    <div className="mt-8 flex items-center gap-2 text-[var(--turquoise-teal)] text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+                    <div className="mt-8 flex items-center gap-2 text-[var(--turquoise-teal)] text-[12px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
                       כניסה לניהול <ArrowLeft size={12} />
                     </div>
                   </button>
@@ -674,7 +674,7 @@ const AdminPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">בקשות להצטרף</h3>
-                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ואישור חברים חדשים בקהילה</p>
+                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ואישור חברים חדשים בקהילה</p>
                   </div>
                 </div>
 
@@ -712,7 +712,7 @@ const AdminPage: React.FC = () => {
                        )}
                        <div>
                           <h4 className="text-xl font-black text-[var(--deep-teal-sea)] mb-1">{req.firstName} {req.lastName}</h4>
-                          <div className="flex items-center gap-2 text-[var(--turquoise-teal)]/60 font-bold text-[10px] uppercase tracking-widest">
+                          <div className="flex items-center gap-2 text-[var(--turquoise-teal)]/60 font-bold text-[12px] uppercase tracking-widest">
                              <Calendar size={12} />
                              {new Date(req.requestedAt).toLocaleDateString('he-IL')}
                           </div>
@@ -792,7 +792,7 @@ const AdminPage: React.FC = () => {
                       </div>
                       <div>
                         <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">חברים</h3>
-                        <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול וסינון חברי הקהילה</p>
+                        <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול וסינון חברי הקהילה</p>
                       </div>
                     </div>
 
@@ -844,9 +844,9 @@ const AdminPage: React.FC = () => {
                   <table className="w-full text-right">
                     <thead className="bg-[var(--aqua-mist)]/10 border-b border-[var(--vibrant-cyan)]/5">
                       <tr>
-                        <th className="px-8 py-6 text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">משתמש</th>
-                        <th className="px-8 py-6 text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">סטטוס</th>
-                        <th className="px-8 py-6 text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest text-center">עריכה</th>
+                        <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">משתמש</th>
+                        <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">סטטוס</th>
+                        <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest text-center">עריכה</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--aqua-mist)]/20">
@@ -874,12 +874,12 @@ const AdminPage: React.FC = () => {
                               )}
                               <div>
                                 <h4 className="font-black text-[var(--deep-teal-sea)]">{member.firstName} {member.lastName}</h4>
-                                <p className="text-[10px] text-[var(--turquoise-teal)]/60 font-black truncate max-w-[150px]">{member.email}</p>
+                                <p className="text-[12px] text-[var(--turquoise-teal)]/60 font-black truncate max-w-[150px]">{member.email}</p>
                               </div>
                             </div>
                           </td>
                           <td className="px-8 py-6">
-                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                            <span className={`px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest ${
                               member.role === 'Admin' 
                                 ? 'bg-[var(--vibrant-cyan)]/10 text-[var(--vibrant-cyan)]' 
                                 : member.role === 'Instructor'
@@ -926,7 +926,7 @@ const AdminPage: React.FC = () => {
                       </div>
                       <div>
                         <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">חברים מושעים</h3>
-                        <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול משתמשים שהוצאו מהמערכת</p>
+                        <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול משתמשים שהוצאו מהמערכת</p>
                       </div>
                     </div>
 
@@ -946,9 +946,9 @@ const AdminPage: React.FC = () => {
                 <table className="w-full text-right">
                   <thead className="bg-[var(--aqua-mist)]/10 border-b border-[var(--vibrant-cyan)]/5">
                     <tr>
-                      <th className="px-8 py-6 text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">משתמש מושעה</th>
-                      <th className="px-8 py-6 text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">תפקיד</th>
-                      <th className="px-8 py-6 text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest text-center">פעולות</th>
+                      <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">משתמש מושעה</th>
+                      <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">תפקיד</th>
+                      <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest text-center">פעולות</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--aqua-mist)]/10">
@@ -984,12 +984,12 @@ const AdminPage: React.FC = () => {
                             )}
                             <div>
                               <h4 className="font-black text-[var(--turquoise-teal)]/40">{member.firstName} {member.lastName}</h4>
-                              <p className="text-[10px] text-[var(--turquoise-teal)]/20 font-black truncate max-w-[150px]">{member.email}</p>
+                              <p className="text-[12px] text-[var(--turquoise-teal)]/20 font-black truncate max-w-[150px]">{member.email}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-8 py-6">
-                          <span className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)]/40">
+                          <span className="px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)]/40">
                             {member.role === 'Admin' ? 'מנהל' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
                           </span>
                         </td>
@@ -1050,7 +1050,7 @@ const AdminPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">פוסטים</h3>
-                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ומחיקה של פוסטים בקהילה</p>
+                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ומחיקה של פוסטים בקהילה</p>
                   </div>
                 </div>
 
@@ -1091,7 +1091,7 @@ const AdminPage: React.FC = () => {
                       )}
                       <div>
                         <p className="text-xs font-black text-slate-700">{item.authorName}</p>
-                        <p className="text-[10px] text-slate-400">{new Date(item.date).toLocaleDateString('he-IL')}</p>
+                        <p className="text-[12px] text-slate-400">{new Date(item.date).toLocaleDateString('he-IL')}</p>
                       </div>
                     </div>
                     
@@ -1166,7 +1166,7 @@ const AdminPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">גלריה</h3>
-                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ומחיקה של תמונות מהגלריה</p>
+                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ומחיקה של תמונות מהגלריה</p>
                   </div>
                 </div>
 
@@ -1281,7 +1281,7 @@ const AdminPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">לוח אירועים</h3>
-                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול לוח הזמנים הקהילתי</p>
+                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול לוח הזמנים הקהילתי</p>
                   </div>
                 </div>
 
@@ -1311,7 +1311,7 @@ const AdminPage: React.FC = () => {
                   <div key={event.id} className={`bg-white border border-[var(--vibrant-cyan)]/5 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-[var(--vibrant-cyan)]/5 transition-all flex items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
                     
                     {isPastEvent && (
-                      <div className="absolute -right-12 top-6 transform rotate-45 bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest px-12 py-1 shadow-sm z-10">
+                      <div className="absolute -right-12 top-6 transform rotate-45 bg-slate-100 text-slate-400 text-[12px] font-black uppercase tracking-widest px-12 py-1 shadow-sm z-10">
                         הסתיים
                       </div>
                     )}
@@ -1417,7 +1417,7 @@ const AdminPage: React.FC = () => {
                     <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">הגדרת שנת פעילות</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">תקופה פעילה כעת</p>
+                      <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">תקופה פעילה כעת</p>
                     </div>
                   </div>
                 </div>
@@ -1449,7 +1449,7 @@ const AdminPage: React.FC = () => {
                       <p className="text-[9px] font-black text-[var(--turquoise-teal)] uppercase tracking-widest mb-1">שבועות שחלפו</p>
                       <div className="flex items-baseline gap-1 justify-center">
                         <span className="text-4xl font-black text-[var(--vibrant-cyan)] tabular-nums">{calculateWeeks(yearConfig?.startDate || '')}</span>
-                        <span className="text-[10px] font-black text-slate-400">/ 52</span>
+                        <span className="text-[12px] font-black text-slate-400">/ 52</span>
                       </div>
                     </div>
 
@@ -1476,7 +1476,7 @@ const AdminPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">ניהול מועדי סשנים</h3>
-                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ימים ושעות לסשנים קבועים</p>
+                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ימים ושעות לסשנים קבועים</p>
                   </div>
                 </div>
 
@@ -1497,7 +1497,7 @@ const AdminPage: React.FC = () => {
                             }}
                             className="w-5 h-5 rounded border-gray-300 text-[#4A5568] focus:ring-[#4A5568]"
                           />
-                          <span className={`px-2 py-1 rounded-md text-[10px] font-black tracking-widest uppercase ${session.isActive !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>
+                          <span className={`px-2 py-1 rounded-md text-[12px] font-black tracking-widest uppercase ${session.isActive !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>
                             {session.isActive !== false ? 'פעיל' : 'מושבת'}
                           </span>
                           <div className="flex-1">
@@ -1563,11 +1563,11 @@ const AdminPage: React.FC = () => {
                     <h4 className="text-lg font-black text-[var(--deep-teal-sea)] mb-4">הוספת מועד סשן שבועי</h4>
                     <div className="flex flex-wrap items-end gap-4 p-4 bg-[var(--aqua-mist)]/10 rounded-2xl border border-[var(--vibrant-cyan)]/10">
                       <div className="flex-1 min-w-[280px]">
-                        <label className="block text-[10px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">יום בשבוע</label>
+                        <label className="block text-[12px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">יום בשבוע</label>
                         <DayPicker value={newSessionDay} onChange={setNewSessionDay} />
                       </div>
                       <div className="flex-1 min-w-[120px]">
-                        <label className="block text-[10px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">שעה</label>
+                        <label className="block text-[12px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">שעה</label>
                         <TimePicker 
                           value={newSessionTime} 
                           onChangeValue={setNewSessionTime} 
@@ -1628,12 +1628,12 @@ const AdminPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">חוף הבית</h3>
-                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">עוגן לחישוב מרחקים גיאוגרפים</p>
+                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">עוגן לחישוב מרחקים גיאוגרפים</p>
                   </div>
                 </div>
 
                 <div className="flex-1 max-w-xl relative z-10 space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">כתובת</label>
+                  <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">כתובת</label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -1692,7 +1692,7 @@ const AdminPage: React.FC = () => {
                           } else {
                             if (window.google?.maps?.Geocoder) {
                               const geocoder = new window.google.maps.Geocoder();
-                              geocoder.geocode({ address: currentValue + ', Israel' }, async (results, status) => {
+                              geocoder.geocode({ address: currentValue + ', Israel' }, async (results: any, status: any) => {
                                 if (status === 'OK' && results && results[0]) {
                                   try {
                                     const addressData = extractAddressData(results[0]);
@@ -1736,7 +1736,7 @@ const AdminPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">מיקום תפריט הניווט</h3>
-                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">החלפה בין תפריט עליון לתחתון</p>
+                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">החלפה בין תפריט עליון לתחתון</p>
                   </div>
                 </div>
               </div>
@@ -1780,15 +1780,15 @@ const AdminPage: React.FC = () => {
                     <Sparkles size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">H1 Ultra Design Studio</h3>
-                    <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">סטודיו מתקדם לעיצוב כותרות אולטרה-מודרניות</p>
+                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">Ultra Design Studio</h3>
+                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">אולטרה סטודיו לעיצוב</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
                   {/* Preview Area */}
                   <div className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 rounded-[2rem] min-h-[160px] border border-slate-100 relative overflow-hidden">
-                    <p className="text-[10px] font-black text-white/80 uppercase tracking-widest mb-2 relative z-10">תצוגה מקדימה</p>
+                    <p className="text-[12px] font-black text-white/80 uppercase tracking-widest mb-2 relative z-10">תצוגה מקדימה</p>
                     <div className="surfboard-hero-container" style={{ minHeight: 'auto', padding: '20px 0' }}>
                       <h1 className="main-page-title m-0 relative z-10">
           <span className="surfer-title">כותרת אולטרה</span>
@@ -1802,7 +1802,7 @@ const AdminPage: React.FC = () => {
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-3">
                         <div className="flex justify-between items-center px-1">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">גודל פונט</label>
+                          <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest">גודל פונט</label>
                           <span className="text-xs font-black text-[#6366f1]">{siteConfig.h1Styles?.fontSize || '50px'}</span>
                         </div>
                         <input 
@@ -1814,7 +1814,7 @@ const AdminPage: React.FC = () => {
                       </div>
                       <div className="space-y-3">
                         <div className="flex justify-between items-center px-1">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ריווח אותיות</label>
+                          <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest">ריווח אותיות</label>
                           <span className="text-xs font-black text-[#6366f1]">{siteConfig.h1Styles?.letterSpacing || '0'}px</span>
                         </div>
                         <input 
@@ -1829,7 +1829,7 @@ const AdminPage: React.FC = () => {
                     {/* Gradient Colors */}
                     <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block text-center">צבע 1</label>
+                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block text-center">צבע 1</label>
                         <input 
                           type="color" 
                           value={siteConfig.h1Styles?.color1 || '#ffffff'}
@@ -1838,7 +1838,7 @@ const AdminPage: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block text-center">צבע 2</label>
+                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block text-center">צבע 2</label>
                         <input 
                           type="color" 
                           value={siteConfig.h1Styles?.color2 || '#ffffff'}
@@ -1847,7 +1847,7 @@ const AdminPage: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block text-center">זווית ({siteConfig.h1Styles?.gradAngle || '90'}°)</label>
+                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block text-center">זווית ({siteConfig.h1Styles?.gradAngle || '90'}°)</label>
                         <input 
                           type="range" min="0" max="360" 
                           value={parseInt(siteConfig.h1Styles?.gradAngle || '90')}
@@ -1860,7 +1860,7 @@ const AdminPage: React.FC = () => {
                     {/* Stroke & Glow */}
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">קו מתאר (Stroke)</label>
+                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block mb-2">קו מתאר (Stroke)</label>
                         <div className="flex items-center gap-3 mb-3">
                           <input 
                             type="color" 
@@ -1877,7 +1877,7 @@ const AdminPage: React.FC = () => {
                         </div>
                       </div>
                       <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">הילה (Glow)</label>
+                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block mb-2">הילה (Glow)</label>
                         <div className="flex items-center gap-3 mb-3">
                           <input 
                             type="color" 
@@ -1898,7 +1898,7 @@ const AdminPage: React.FC = () => {
                     {/* Glassmorphism Controls */}
                     <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-6">
                       <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">אפקט Glassmorphism</label>
+                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest">אפקט Glassmorphism</label>
                         <button 
                           onClick={() => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, showGlass: siteConfig.h1Styles?.showGlass === false ? true : false } })}
                           className={`px-6 py-2 rounded-xl font-black text-xs transition-all ${
@@ -1913,7 +1913,7 @@ const AdminPage: React.FC = () => {
                         <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-200">
                           <div className="space-y-3">
                             <div className="flex justify-between items-center px-1">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">טשטוש</label>
+                              <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest">טשטוש</label>
                               <span className="text-xs font-black text-[#6366f1]">{siteConfig.h1Styles?.glassBlur || '10'}px</span>
                             </div>
                             <input 
@@ -1925,7 +1925,7 @@ const AdminPage: React.FC = () => {
                           </div>
                           <div className="space-y-3">
                             <div className="flex justify-between items-center px-1">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">שקיפות</label>
+                              <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest">שקיפות</label>
                               <span className="text-xs font-black text-[#6366f1]">{Math.round(parseFloat(siteConfig.h1Styles?.glassOpacity || '0.1') * 100)}%</span>
                             </div>
                             <input 
@@ -1942,7 +1942,7 @@ const AdminPage: React.FC = () => {
                     {/* Final Adjustments */}
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">סוג פונט</label>
+                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block">סוג פונט</label>
                         <select 
                           className="gt-select w-full"
                           value={siteConfig.h1Styles?.fontFamily || "'Assistant', sans-serif"}
@@ -1959,7 +1959,7 @@ const AdminPage: React.FC = () => {
                         </select>
                       </div>
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">יישור</label>
+                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block">יישור</label>
                         <div className="gt-segmented">
                           {['right', 'center', 'left'].map(id => (
                             <button 
@@ -1986,7 +1986,7 @@ const AdminPage: React.FC = () => {
                     </div>
                     <div>
                         <h2 className="text-2xl font-black text-[var(--deep-teal-sea)] m-0">קטלוג פלטות צבעים</h2>
-                        <p className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ויזואלי של צבעי המערכת (לחיצה להעתקה)</p>
+                        <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ויזואלי של צבעי המערכת (לחיצה להעתקה)</p>
                     </div>
                 </div>
                 <div id="palettes-container">
@@ -2023,7 +2023,7 @@ const AdminPage: React.FC = () => {
                             {typeof value === 'string' && value.startsWith('http') ? (
                                <img src={value} className="w-full h-full object-contain p-2" alt="" />
                             ) : (
-                               <span className="text-[var(--turquoise-teal)]/40 font-black text-[10px] uppercase">{key.slice(0, 2)}</span>
+                               <span className="text-[var(--turquoise-teal)]/40 font-black text-[12px] uppercase">{key.slice(0, 2)}</span>
                             )}
                             
                             <button 
@@ -2042,9 +2042,9 @@ const AdminPage: React.FC = () => {
                             </button>
                          </div>
                          <div>
-                            <p className="text-[10px] font-black text-[var(--vibrant-cyan)] uppercase tracking-widest mb-1">{key}</p>
+                            <p className="text-[12px] font-black text-[var(--vibrant-cyan)] uppercase tracking-widest mb-1">{key}</p>
                             <h4 className="text-lg font-black text-[var(--deep-teal-sea)]">{ASSET_LABELS[key] || key}</h4>
-                            <p className="text-[10px] font-bold text-[var(--turquoise-teal)]/40 truncate max-w-[180px]">{typeof value === 'string' ? value : 'נתון מורכב'}</p>
+                            <p className="text-[12px] font-bold text-[var(--turquoise-teal)]/40 truncate max-w-[180px]">{typeof value === 'string' ? value : 'נתון מורכב'}</p>
                          </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -2077,19 +2077,19 @@ const AdminPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {/* 1. Primary Button */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">כפתור ראשי</p>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">כפתור ראשי</p>
                     <button className="gt-btn-primary">לחץ כאן</button>
                   </div>
 
                   {/* 2. Glass Button */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">כפתור זכוכית</p>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">כפתור זכוכית</p>
                     <button className="gt-btn-glass">כפתור שקוף</button>
                   </div>
 
                   {/* 3. Toggle */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מפסק טורקיז (Toggle)</p>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">מפסק טורקיז (Toggle)</p>
                     <div className="gt-toggle-container">
                       <div className="gt-toggle" />
                       <span className="gt-label label-list">LIST</span>
@@ -2099,7 +2099,7 @@ const AdminPage: React.FC = () => {
 
                   {/* 4. Segmented Control */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">בקר מקטעים (Segmented)</p>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">בקר מקטעים (Segmented)</p>
                     <div className="gt-segmented">
                       <div className="gt-segment-item active">LIST</div>
                       <div className="gt-segment-item">GRID</div>
@@ -2108,13 +2108,13 @@ const AdminPage: React.FC = () => {
 
                   {/* 5. Real Slider */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סליידר אמיתי</p>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">סליידר אמיתי</p>
                     <input type="range" className="gt-slider-input w-full" defaultValue="50" />
                   </div>
 
                   {/* 6. Stepper */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מונה (Stepper)</p>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">מונה (Stepper)</p>
                     <div className="gt-stepper">
                       <div className="gt-step-btn minus">-</div>
                       <div className="gt-step-val">10</div>
@@ -2124,13 +2124,13 @@ const AdminPage: React.FC = () => {
 
                   {/* 7. Input Field */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">שדה טקסט (Input)</p>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">שדה טקסט (Input)</p>
                     <input type="text" className="gt-input" placeholder="הקלד כאן..." />
                   </div>
 
                   {/* 8. Select/Dropdown */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">תפריט בחירה (Select)</p>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">תפריט בחירה (Select)</p>
                     <select className="gt-select">
                       <option>אופציה 1</option>
                       <option>אופציה 2</option>
@@ -2140,7 +2140,7 @@ const AdminPage: React.FC = () => {
 
                   {/* 9. Checkbox */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">צ'קבוקס (Checkbox)</p>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">צ'קבוקס (Checkbox)</p>
                     <div className="flex items-center gap-2">
                       <input type="checkbox" className="gt-checkbox" id="gt-check-demo" />
                       <label htmlFor="gt-check-demo" className="text-xs font-bold text-slate-500">בחר אותי</label>
@@ -2149,16 +2149,16 @@ const AdminPage: React.FC = () => {
 
                   {/* 10. Sample Card */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">כרטיס לדוגמה (Card)</p>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">כרטיס לדוגמה (Card)</p>
                     <div className="gt-card w-full">
                       <h4 className="font-black text-[var(--deep-teal-sea)] mb-2">כותרת כרטיס</h4>
-                      <p className="text-[10px] text-slate-500">זהו כרטיס זכוכית מעוצב עם אפקט טשטוש עדין.</p>
+                      <p className="text-[12px] text-slate-500">זהו כרטיס זכוכית מעוצב עם אפקט טשטוש עדין.</p>
                     </div>
                   </div>
 
                   {/* 11. Status Badge */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">תווית סטטוס (Badge)</p>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">תווית סטטוס (Badge)</p>
                     <div className="flex gap-2">
                       <span className="gt-badge">פעיל</span>
                       <span className="gt-badge" style={{ background: 'rgba(255, 0, 159, 0.1)', color: '#ff009f' }}>חדש</span>
@@ -2167,7 +2167,7 @@ const AdminPage: React.FC = () => {
 
                   {/* 12. Tooltip */}
                   <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">אייקון מידע (Tooltip)</p>
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">אייקון מידע (Tooltip)</p>
                     <div className="gt-info-wrapper">
                       <div className="gt-info-icon">i</div>
                       <span className="gt-tooltip">זהו הסבר קצר שמופיע רק כשמרחפים מעל האייקון!</span>
@@ -2197,7 +2197,7 @@ const AdminPage: React.FC = () => {
             
             <div className="space-y-6 mb-10">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mr-4">כתובת URL</label>
+                <label className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mr-4">כתובת URL</label>
                 <input 
                   type="text"
                   value={editingAsset.value}
@@ -2271,7 +2271,7 @@ const AdminPage: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">תאריך התחלה חדש</label>
+                  <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-2">תאריך התחלה חדש</label>
                   <input 
                     type="date" 
                     value={yearForm.startDate}
@@ -2281,7 +2281,7 @@ const AdminPage: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">תאריך סיום חדש</label>
+                  <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-2">תאריך סיום חדש</label>
                   <input 
                     type="date" 
                     value={yearForm.endDate}
@@ -2343,12 +2343,12 @@ const AdminPage: React.FC = () => {
               <div className="bg-[var(--aqua-mist)]/10 rounded-[2rem] p-8 mb-6 border border-[var(--vibrant-cyan)]/5 relative group">
                  <div className="space-y-4">
                     <div className="flex justify-between items-center text-right">
-                       <span className="text-[10px] font-black text-[var(--turquoise-teal)]/40 uppercase tracking-widest">שם משתמש</span>
+                       <span className="text-[12px] font-black text-[var(--turquoise-teal)]/40 uppercase tracking-widest">שם משתמש</span>
                        <span className="font-black text-[var(--deep-teal-sea)]">{approvedUser.email}</span>
                     </div>
                     <div className="h-px bg-[var(--vibrant-cyan)]/10"></div>
                     <div className="flex justify-between items-center text-right">
-                       <span className="text-[10px] font-black text-[var(--turquoise-teal)]/40 uppercase tracking-widest">סיסמה זמנית</span>
+                       <span className="text-[12px] font-black text-[var(--turquoise-teal)]/40 uppercase tracking-widest">סיסמה זמנית</span>
                        <span className="font-black text-[var(--vibrant-cyan)] text-xl tracking-wider select-all">{approvedUser.tempPassword}</span>
                     </div>
                  </div>

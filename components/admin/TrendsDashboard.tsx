@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../../contexts/DataContext';
-import { Activity, LayoutGrid, Maximize2, TrendingUp, Heart, Sparkles } from 'lucide-react';
+import { Activity, LayoutGrid, Maximize2, TrendingUp, Heart, Sparkles, Waves } from 'lucide-react';
 import { getOperationalXAxisProps } from '../../src/utils/chartHelpers';
 import OperationalChartHeader from '../OperationalChartHeader';
 import { calculateDistance } from '../../utils/distanceCalculator';
@@ -385,18 +385,21 @@ const TrendsDashboard: React.FC = () => {
             })}
 
             <motion.g
-              initial={{ rotate: -45 }}
-              animate={{ rotate: -45 + (value / 100) * 270 }}
+              initial={{ rotate: -135 }}
+              animate={{ rotate: -135 + (value / 100) * 270 }}
+              style={{ 
+                transformOrigin: "100px 100px"
+              }}
               transition={{ duration: 2, ease: "easeOut" }}
             >
-              <polygon points="100,98 100,102 25,100" fill="#2D3748" />
+              <polygon points="98,100 102,100 100,10" fill="#2D3748" />
             </motion.g>
             <circle cx="100" cy="100" r="8" fill="#2D3748" />
             <text x="100" y="150" textAnchor="middle" className="text-2xl font-black fill-[#2D3748]">{value}%</text>
           </svg>
         </div>
         <div className="mt-3 text-center">
-          <p className="text-[10px] font-black text-[#2B2B2E] uppercase tracking-widest mb-1">{label}</p>
+          <p className="text-[12px] font-black text-[#2B2B2E] uppercase tracking-widest mb-1">{label}</p>
           <div className="flex flex-col items-center gap-1">
             {isLow && <span className="text-[7px] bg-red-500/10 text-red-500 px-2 py-0.5 rounded-full font-black">LOW PULSE</span>}
             {isHigh && <span className="text-[7px] bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full font-black">PEAK FLOW</span>}
@@ -414,7 +417,7 @@ const TrendsDashboard: React.FC = () => {
       return (
         <div className="bg-[#2D3748] p-4 rounded-2xl border-none shadow-xl text-white text-right" dir="rtl">
           <p className="text-xs font-black mb-1 border-b border-white/10 pb-2">{data.fullDate}</p>
-          <p className="text-[10px] font-bold text-blue-300 mb-2">חודש {data.activityMonth} לשנת חבל זוג</p>
+          <p className="text-[12px] font-bold text-blue-300 mb-2">חודש {data.activityMonth} לשנת חבל זוג</p>
           <div className="space-y-1.5">
             {payload.map((entry: any, index: number) => {
               // Only show the group data, skip the count bars in unified view if they are too many
@@ -430,14 +433,14 @@ const TrendsDashboard: React.FC = () => {
                     <span className="text-xs font-black text-white">{Math.round(entry.value as number)}%</span>
                   </div>
                   {entry.payload[`${entry.dataKey}_count`] !== undefined && (
-                    <p className="text-[10px] font-bold text-slate-400 mr-4">
+                    <p className="text-[12px] font-bold text-slate-400 mr-4">
                       מספר משתתפים בפועל: {entry.payload[`${entry.dataKey}_count`]}
                     </p>
                   )}
                 </div>
               );
             })}
-            <p className="text-[10px] font-bold text-slate-500 mt-2 pt-2 border-t border-white/5">
+            <p className="text-[12px] font-bold text-slate-500 mt-2 pt-2 border-t border-white/5">
               שבוע {data.weekNumber} מתחילת הפעילות
             </p>
           </div>
@@ -458,7 +461,7 @@ const TrendsDashboard: React.FC = () => {
             </div>
             <div>
               <h3 className="text-xl font-black text-[#2B2B2E] tracking-tight">דשבורד טרנדים והתמדה</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ניתוח שנת חבל זוג • 7 קבוצות מיקוד</p>
+              <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">ניתוח שנת חבל זוג • 7 קבוצות מיקוד</p>
             </div>
           </div>
 
@@ -466,7 +469,7 @@ const TrendsDashboard: React.FC = () => {
             <div className="flex bg-slate-100 p-1 rounded-full">
               <button
                 onClick={() => setViewMode('unified')}
-                className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`px-6 py-2 rounded-full text-[12px] font-black uppercase tracking-widest transition-all ${
                   viewMode === 'unified' 
                     ? 'glass-panel text-white shadow-sm border border-white/20' 
                     : 'text-slate-400 hover:text-slate-600'
@@ -476,7 +479,7 @@ const TrendsDashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => setViewMode('split')}
-                className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`px-6 py-2 rounded-full text-[12px] font-black uppercase tracking-widest transition-all ${
                   viewMode === 'split' 
                     ? 'glass-panel text-white shadow-sm border border-white/20' 
                     : 'text-slate-400 hover:text-slate-600'
@@ -707,31 +710,65 @@ const TrendsDashboard: React.FC = () => {
             </div>
             <div>
               <h3 className="text-xl font-black text-[#2B2B2E] tracking-tight">מדדי התמדה נוכחיים</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">מבוסס על 8 המפגשים האחרונים</p>
+              <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">מבוסס על 8 המפגשים האחרונים</p>
             </div>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
             <Sparkles size={14} className="text-amber-500" />
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Real-time Vitality</span>
+            <span className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Real-time Vitality</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-8">
-          {persistenceStats.map((stat, idx) => (
-            <motion.div
-              key={stat.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
-            >
-              <PersistenceGauge 
-                value={stat.retention} 
-                label={stat.label} 
-                color={stat.color} 
-                count={stat.count}
-              />
-            </motion.div>
-          ))}
+        <div className="space-y-12">
+          {/* Age Groups */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
+            {persistenceStats.slice(0, 4).map((stat, idx) => (
+              <motion.div
+                key={stat.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+              >
+                <PersistenceGauge 
+                  value={stat.retention} 
+                  label={stat.label} 
+                  color={stat.color} 
+                  count={stat.count}
+                />
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Separator Line */}
+          <div className="relative py-4">
+            <div className="absolute inset-0 flex items-center" aria-hidden="true">
+              <div className="w-full border-t border-slate-200/60"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-4 text-slate-300">
+                <Waves size={16} />
+              </span>
+            </div>
+          </div>
+
+          {/* Gender Groups */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {persistenceStats.slice(4).map((stat, idx) => (
+              <motion.div
+                key={stat.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: (idx + 4) * 0.05 }}
+              >
+                <PersistenceGauge 
+                  value={stat.retention} 
+                  label={stat.label} 
+                  color={stat.color} 
+                  count={stat.count}
+                />
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
 

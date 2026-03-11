@@ -71,7 +71,7 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
           )}
         </div>
         <div className="text-center">
-          <p className="text-[10px] font-['Yehuda_CLM'] font-black glass-text-primary truncate px-1">{member.firstName} {member.lastName}</p>
+          <p className="text-[12px] font-['Yehuda_CLM'] font-black glass-text-primary truncate px-1">{member.firstName} {member.lastName}</p>
           <p className="text-[7px] font-black glass-text-secondary uppercase tracking-widest mt-0.5">{member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}</p>
         </div>
       </div>
@@ -247,7 +247,7 @@ const DirectoryPage: React.FC = () => {
       <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}
         <h1 className="main-page-title">
-          <span className="surfer-title">נבחרת הגלישה</span>
+          <span className="surfer-title">נבחרת הכוכבים</span>
         </h1>
       </div>
 
@@ -294,14 +294,14 @@ const DirectoryPage: React.FC = () => {
             <div className="gt-segmented glass-effect shadow-sm h-[48px] items-center">
               <button 
                 onClick={() => setViewMode('grid')}
-                className={`gt-segment-item flex items-center gap-2 ${viewMode === 'grid' ? 'active' : ''} text-[10px] font-black uppercase tracking-widest`}
+                className={`gt-segment-item flex items-center gap-2 ${viewMode === 'grid' ? 'active' : ''} text-[12px] font-black uppercase tracking-widest`}
               >
                 <LayoutGrid size={14} />
                 <span className="hidden sm:inline">Grid</span>
               </button>
               <button 
                 onClick={() => setViewMode('list')}
-                className={`gt-segment-item flex items-center gap-2 ${viewMode === 'list' ? 'active' : ''} text-[10px] font-black uppercase tracking-widest`}
+                className={`gt-segment-item flex items-center gap-2 ${viewMode === 'list' ? 'active' : ''} text-[12px] font-black uppercase tracking-widest`}
               >
                 <List size={14} />
                 <span className="hidden sm:inline">List</span>
@@ -317,9 +317,9 @@ const DirectoryPage: React.FC = () => {
                </button>
                {isSortOpen && (
                  <div className="absolute top-full left-0 right-0 md:left-auto md:w-56 mt-3 glass-panel z-50 overflow-hidden animate-in fade-in slide-in-from-top-4">
-                    <button onClick={() => {setSortBy('name-asc'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] glass-text-primary hover:bg-[#D4A373] hover:text-white transition-all border-b border-white/10">שם (א-ת)</button>
-                    <button onClick={() => {setSortBy('attendance'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] glass-text-primary hover:bg-[#D4A373] hover:text-white transition-all border-b border-white/10">הכי פעילים בסשנים</button>
-                    <button onClick={() => {setSortBy('newest'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[10px] glass-text-primary hover:bg-[#D4A373] hover:text-white transition-all">מצטרפים חדשים</button>
+                    <button onClick={() => {setSortBy('name-asc'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[12px] glass-text-primary hover:bg-[#D4A373] hover:text-white transition-all border-b border-white/10">שם (א-ת)</button>
+                    <button onClick={() => {setSortBy('attendance'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[12px] glass-text-primary hover:bg-[#D4A373] hover:text-white transition-all border-b border-white/10">הכי פעילים בסשנים</button>
+                    <button onClick={() => {setSortBy('newest'); setIsSortOpen(false)}} className="w-full p-4 text-right font-black text-[12px] glass-text-primary hover:bg-[#D4A373] hover:text-white transition-all">מצטרפים חדשים</button>
                  </div>
                )}
             </div>
@@ -343,7 +343,7 @@ const DirectoryPage: React.FC = () => {
                         <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover border border-white/40" alt="" />
                         <div>
                           <p className="font-black text-[#2B2B2E]">{member.firstName} {member.lastName}</p>
-                          <p className="text-[10px] text-slate-400 uppercase tracking-widest">{member.role}</p>
+                          <p className="text-[12px] text-slate-400 uppercase tracking-widest">{member.role}</p>
                         </div>
                       </div>
                       <ChevronDown className="-rotate-90 text-slate-300" size={20} />
@@ -370,7 +370,7 @@ const DirectoryPage: React.FC = () => {
                         <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover border border-white/40" alt="" />
                         <div>
                           <p className="font-black text-[#2B2B2E]">{member.firstName} {member.lastName}</p>
-                          <p className="text-[10px] text-slate-400 uppercase tracking-widest">{member.role}</p>
+                          <p className="text-[12px] text-slate-400 uppercase tracking-widest">{member.role}</p>
                         </div>
                       </div>
                       <ChevronDown className="-rotate-90 text-slate-300" size={20} />
@@ -397,7 +397,7 @@ const DirectoryPage: React.FC = () => {
                         <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-12 h-12 rounded-xl object-cover border border-white/40" alt="" />
                         <div>
                           <p className="font-black text-[#2B2B2E]">{member.firstName} {member.lastName}</p>
-                          <p className="text-[10px] text-slate-400 uppercase tracking-widest">{member.role}</p>
+                          <p className="text-[12px] text-slate-400 uppercase tracking-widest">{member.role}</p>
                         </div>
                       </div>
                       <ChevronDown className="-rotate-90 text-slate-300" size={20} />
@@ -550,7 +550,7 @@ const DirectoryPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-black glass-text-primary tracking-tighter">הוספת חבר חדש</h3>
-                    <p className="text-[10px] font-black glass-text-secondary uppercase tracking-widest">יצירת פרופיל משתמש ידני</p>
+                    <p className="text-[12px] font-black glass-text-secondary uppercase tracking-widest">יצירת פרופיל משתמש ידני</p>
                   </div>
                 </div>
                 <button onClick={() => setIsAddMemberModalOpen(false)} className="p-3 text-slate-400 hover:text-slate-600 transition-all glass-effect hover:bg-white/20 rounded-full">
@@ -598,12 +598,12 @@ const DirectoryPage: React.FC = () => {
                             />
                           </label>
                         </div>
-                        <p className="mt-4 text-[10px] font-black glass-text-secondary uppercase tracking-widest">תמונת פרופיל</p>
+                        <p className="mt-4 text-[12px] font-black glass-text-secondary uppercase tracking-widest">תמונת פרופיל</p>
                       </div>
 
                       <div className="space-y-4">
                         <div className="flex justify-between items-center px-2">
-                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest">ביוגרפיה</label>
+                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest">ביוגרפיה</label>
                           <button 
                             type="button" 
                             onClick={async () => {
@@ -618,7 +618,7 @@ const DirectoryPage: React.FC = () => {
                                 setIsGeneratingBio(false);
                               }
                             }} 
-                            className="text-[10px] font-black text-[#D4A373] flex items-center gap-1.5 hover:bg-[#D4A373]/10 px-3 py-1.5 rounded-lg transition-all border border-[#D4A373]/10"
+                            className="text-[12px] font-black text-[#D4A373] flex items-center gap-1.5 hover:bg-[#D4A373]/10 px-3 py-1.5 rounded-lg transition-all border border-[#D4A373]/10"
                           >
                             {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} שדרג עם AI
                           </button>
@@ -636,7 +636,7 @@ const DirectoryPage: React.FC = () => {
                     <div className="lg:col-span-8 space-y-10">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">שם פרטי</label>
+                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">שם פרטי</label>
                           <input 
                             type="text" 
                             value={newMemberData.firstName} 
@@ -645,7 +645,7 @@ const DirectoryPage: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">שם משפחה</label>
+                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">שם משפחה</label>
                           <input 
                             type="text" 
                             value={newMemberData.lastName} 
@@ -654,7 +654,7 @@ const DirectoryPage: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">אימייל</label>
+                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">אימייל</label>
                           <input 
                             type="email" 
                             value={newMemberData.email} 
@@ -663,7 +663,7 @@ const DirectoryPage: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">טלפון נייד</label>
+                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">טלפון נייד</label>
                           <input 
                             type="tel" 
                             value={newMemberData.mobile} 
@@ -672,7 +672,7 @@ const DirectoryPage: React.FC = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">תאריך לידה</label>
+                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">תאריך לידה</label>
                           <div className="relative">
                             <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-white/40" />
                             <input 
@@ -684,7 +684,7 @@ const DirectoryPage: React.FC = () => {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">תפקיד</label>
+                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">תפקיד</label>
                           <div className="relative">
                             <button 
                               type="button"
@@ -727,7 +727,7 @@ const DirectoryPage: React.FC = () => {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">מגדר</label>
+                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">מגדר</label>
                           <div className="relative">
                             <button 
                               type="button"
@@ -770,7 +770,7 @@ const DirectoryPage: React.FC = () => {
                           </div>
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                          <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">סיסמה</label>
+                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">סיסמה</label>
                           <div className="flex gap-4">
                             <input 
                               type="text" 
@@ -795,24 +795,24 @@ const DirectoryPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-6">
-                        <h4 className="text-[10px] font-black glass-text-secondary uppercase tracking-[0.3em] flex items-center gap-3">
+                        <h4 className="text-[12px] font-black glass-text-secondary uppercase tracking-[0.3em] flex items-center gap-3">
                           <Globe size={14} /> רשתות חברתיות
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">Instagram</label>
+                            <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">Instagram</label>
                             <input type="text" placeholder="קישור לפרופיל" value={newMemberData.instagramUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, instagramUrl: e.target.value }))} className="w-full p-4 glass-effect rounded-xl font-black text-sm outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">Facebook</label>
+                            <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">Facebook</label>
                             <input type="text" placeholder="קישור לפרופיל" value={newMemberData.facebookUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, facebookUrl: e.target.value }))} className="w-full p-4 glass-effect rounded-xl font-black text-sm outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">LinkedIn</label>
+                            <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">LinkedIn</label>
                             <input type="text" placeholder="קישור לפרופיל" value={newMemberData.linkedinUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, linkedinUrl: e.target.value }))} className="w-full p-4 glass-effect rounded-xl font-black text-sm outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-3">X (Twitter)</label>
+                            <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">X (Twitter)</label>
                             <input type="text" placeholder="קישור לפרופיל" value={newMemberData.twitterUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, twitterUrl: e.target.value }))} className="w-full p-4 glass-effect rounded-xl font-black text-sm outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" />
                           </div>
                         </div>
@@ -906,7 +906,7 @@ const DirectoryPage: React.FC = () => {
             
             <div className="p-8 space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black glass-text-secondary uppercase tracking-widest pr-2">תוכן ההודעה</label>
+                <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-2">תוכן ההודעה</label>
                 <textarea 
                   value={whatsappMessage}
                   onChange={e => setWhatsappMessage(e.target.value)}

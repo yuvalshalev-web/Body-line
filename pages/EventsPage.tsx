@@ -260,7 +260,7 @@ const EventsPage: React.FC = () => {
                   <div className="glass-effect px-4 py-2 rounded-xl text-center shadow-lg min-w-max">
                     <p className="text-sm font-black glass-text-primary whitespace-nowrap tabular-nums">{formatDate(event.date)}</p>
                   </div>
-                  <div className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-md ${
+                  <div className={`px-3 py-1 rounded-lg text-[12px] font-black uppercase tracking-wider shadow-md ${
                     event.type === 'COMMUNITY' ? 'bg-[var(--surfer-pink)] text-white' : 
                     event.type === 'INSTRUCTOR' ? 'bg-[var(--surfer-orange)] text-white' : 
                     'bg-[var(--surfer-cyan)] text-white'
@@ -366,7 +366,7 @@ const EventsPage: React.FC = () => {
                         <User size={16} />
                       </div>
                       <div>
-                        <p className="font-black text-[10px] mb-0.5">אירוע חבר</p>
+                        <p className="font-black text-[12px] mb-0.5">אירוע חבר</p>
                       </div>
                       {eventType === 'MEMBER' && (
                         <div className="absolute top-2 left-2">
@@ -390,7 +390,7 @@ const EventsPage: React.FC = () => {
                         <Zap size={16} />
                       </div>
                       <div>
-                        <p className="font-black text-[10px] mb-0.5">אירוע מדריך</p>
+                        <p className="font-black text-[12px] mb-0.5">אירוע מדריך</p>
                       </div>
                       {eventType === 'INSTRUCTOR' && (
                         <div className="absolute top-2 left-2">
@@ -414,7 +414,7 @@ const EventsPage: React.FC = () => {
                         <Users size={16} />
                       </div>
                       <div>
-                        <p className="font-black text-[10px] mb-0.5">אירוע קהילה</p>
+                        <p className="font-black text-[12px] mb-0.5">אירוע קהילה</p>
                       </div>
                       {eventType === 'COMMUNITY' && (
                         <div className="absolute top-2 left-2">
@@ -425,21 +425,21 @@ const EventsPage: React.FC = () => {
                   </div>
                   
                   {showTypeWarning && (
-                    <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-[10px] font-black animate-bounce">
+                    <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-[12px] font-black animate-bounce">
                       <ShieldAlert size={16} />
                       <p>נא לבחור את סוג האירוע</p>
                     </div>
                   )}
 
                   {eventType === 'COMMUNITY' && !canManageCommunityEvents && (
-                    <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-center gap-3 text-orange-700 text-[10px] font-black animate-in slide-in-from-top-2">
+                    <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-center gap-3 text-orange-700 text-[12px] font-black animate-in slide-in-from-top-2">
                       <ShieldAlert size={16} />
                       <p>רק רכז או מדריך יכולים ליצור אירוע רשמי של הקהילה.</p>
                     </div>
                   )}
 
                   {eventType === 'INSTRUCTOR' && !canManageInstructorEvents && (
-                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3 text-amber-700 text-[10px] font-black animate-in slide-in-from-top-2">
+                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3 text-amber-700 text-[12px] font-black animate-in slide-in-from-top-2">
                       <Zap size={16} />
                       <p>הלו... אתה עדיין לא מדריך. 😉</p>
                     </div>
@@ -457,17 +457,17 @@ const EventsPage: React.FC = () => {
                     <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="תיאור האירוע" className="w-full p-5 bg-slate-50 rounded-2xl font-bold outline-none border border-slate-100 h-32 resize-none" />
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">תאריך</label>
+                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-2">תאריך</label>
                         <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">שעה</label>
+                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-2">שעה</label>
                         <TimePicker required value={time} onChangeValue={setTime} className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                       </div>
                     </div>
                     <input type="text" ref={locationInputRef} value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-slate-50 rounded-2xl font-black outline-none border border-slate-100" />
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">תמונת רקע</label>
+                      <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">תמונת רקע</label>
                       <div className="relative group/img aspect-video rounded-3xl overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-4 transition-all hover:border-[#006994]/40">
                         {imageUrl ? (
                           <>
@@ -499,7 +499,7 @@ const EventsPage: React.FC = () => {
                         {isUploading && (
                           <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
                             <Loader2 className="animate-spin text-[#006994]" size={32} />
-                            <span className="font-black text-[#006994] text-[10px] uppercase tracking-widest">מעלה תמונה...</span>
+                            <span className="font-black text-[#006994] text-[12px] uppercase tracking-widest">מעלה תמונה...</span>
                           </div>
                         )}
                       </div>

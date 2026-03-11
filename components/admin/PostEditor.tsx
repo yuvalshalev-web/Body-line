@@ -81,7 +81,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
         
         <div className="space-y-8">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">כותרת הפוסט</label>
+            <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">כותרת הפוסט</label>
             <input 
               type="text"
               value={form.title}
@@ -92,7 +92,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תוכן הפוסט</label>
+            <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תוכן הפוסט</label>
             <textarea 
               value={form.content}
               onChange={(e) => setForm({ ...form, content: e.target.value })}
@@ -103,7 +103,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תאריך</label>
+              <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תאריך</label>
               <input 
                 type="date"
                 value={form.date}
@@ -112,7 +112,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">קטגוריה</label>
+              <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">קטגוריה</label>
               <select 
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value as any })}
@@ -128,7 +128,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">שם המחבר</label>
+            <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">שם המחבר</label>
             <input 
               type="text"
               value={form.authorName}
@@ -139,7 +139,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תמונת נושא</label>
+            <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תמונת נושא</label>
             <div className="relative group rounded-[2rem] overflow-hidden bg-white/40 backdrop-blur-md border border-white/60 aspect-video shadow-sm">
               {form.imageUrl ? (
                 <img src={form.imageUrl} className="w-full h-full object-cover" alt="" />

@@ -51,7 +51,7 @@ const JoinRequestManager: React.FC<JoinRequestManagerProps> = ({
                 )}
                 <div>
                   <h4 className="text-xl font-black text-[#4a002e] mb-1">{req.firstName} {req.lastName}</h4>
-                  <div className="flex items-center gap-2 text-[#f063c1]/60 font-bold text-[10px] uppercase tracking-widest">
+                  <div className="flex items-center gap-2 text-[#f063c1]/60 font-bold text-[12px] uppercase tracking-widest">
                     <Calendar size={12} />
                     {new Date(req.requestedAt).toLocaleDateString('he-IL')}
                   </div>

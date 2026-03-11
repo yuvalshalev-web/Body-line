@@ -38,6 +38,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChangeValue, className
         (window as any).$ = $;
       }
       
+      // @ts-ignore
       await import('jquery-clock-timepicker');
       
       if (!isMounted || !inputRef.current) return;

@@ -24,7 +24,7 @@ const OperationalChartHeader: React.FC<OperationalChartHeaderProps> = ({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Calendar size={14} className="text-slate-400" />
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+            <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em]">
               תצוגת שנת חבל זוג
             </span>
             <span className={`ml-2 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
@@ -43,7 +43,7 @@ const OperationalChartHeader: React.FC<OperationalChartHeaderProps> = ({
             className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full"
           >
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">
+            <span className="text-[12px] font-black text-emerald-700 uppercase tracking-widest">
               סטטוס: שבוע {currentWeek} לפעילות
               {currentMonth && ` (חודש ${currentMonth})`}
             </span>

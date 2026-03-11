@@ -38,7 +38,7 @@ const SocialInput = ({
   const hasValue = !!(value && value.trim());
   return (
     <div className="group">
-      <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">{label}</label>
+      <label className="block text-[12px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">{label}</label>
       <div className="relative">
         <Icon size={18} className="absolute right-5 top-1/2 -translate-y-1/2" style={{ color: hasValue ? brandColor : '#cbd5e1' }} />
         <input
@@ -124,9 +124,9 @@ const ProfilePage: React.FC = () => {
           if (currentUser) {
             // Populate hidden fields
             const addressComponents = place.address_components || [];
-            const city = addressComponents.find(c => c.types.includes('locality'))?.long_name || '';
-            const street = addressComponents.find(c => c.types.includes('route'))?.long_name || '';
-            const houseNum = addressComponents.find(c => c.types.includes('street_number'))?.long_name || '';
+            const city = addressComponents.find((c: any) => c.types.includes('locality'))?.long_name || '';
+            const street = addressComponents.find((c: any) => c.types.includes('route'))?.long_name || '';
+            const houseNum = addressComponents.find((c: any) => c.types.includes('street_number'))?.long_name || '';
             const lat = place.geometry?.location?.lat() || 0;
             const lng = place.geometry?.location?.lng() || 0;
 
@@ -364,15 +364,15 @@ const ProfilePage: React.FC = () => {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם פרטי</label>
+                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">שם פרטי</label>
                     <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-5 glass-effect rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all glass-text-primary" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">שם משפחה</label>
+                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">שם משפחה</label>
                     <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-5 glass-effect rounded-2xl font-black outline-none border border-white/10 focus:bg-white/10 focus:border-white/20 transition-all glass-text-primary" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">טלפון נייד</label>
+                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">טלפון נייד</label>
                     <div className="relative">
                       <Phone size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
                       <input 
@@ -384,7 +384,7 @@ const ProfilePage: React.FC = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">תאריך יום הולדת</label>
+                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">תאריך יום הולדת</label>
                     <div className="relative">
                       <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
                       <input 
@@ -396,7 +396,7 @@ const ProfilePage: React.FC = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">מגדר</label>
+                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">מגדר</label>
                     <div className="relative">
                       <User size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
                       <button 
@@ -440,7 +440,7 @@ const ProfilePage: React.FC = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">כתובת מגורים (חובה)</label>
+                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">כתובת מגורים (חובה)</label>
                     <div className="relative">
                       <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
                       <input 
@@ -463,7 +463,7 @@ const ProfilePage: React.FC = () => {
                     <input type="hidden" id="house_num" ref={houseNumRef} />
                     <input type="hidden" id="lat" ref={latRef} />
                     <input type="hidden" id="lng" ref={lngRef} />
-                    <p className="text-[10px] text-slate-400 pr-3 font-bold">חובה לבחור את הכתובת מתוך הרשימה שנפתחת כדי שנוכל לחשב מרחק מהמועדון.</p>
+                    <p className="text-[12px] text-slate-400 pr-3 font-bold">חובה לבחור את הכתובת מתוך הרשימה שנפתחת כדי שנוכל לחשב מרחק מהמועדון.</p>
                   </div>
                 </div>
               </section>
@@ -486,7 +486,7 @@ const ProfilePage: React.FC = () => {
                <div className="sticky top-24 space-y-4">
                   <div className="flex justify-between items-center px-4">
                     <label className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">הסיפור שלי</label>
-                    <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="text-[10px] font-black text-[#006994] flex items-center gap-1.5 hover:bg-[#40E0D0]/10 px-3 py-1.5 rounded-lg transition-all border border-[#006994]/10">
+                    <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="text-[12px] font-black text-[#006994] flex items-center gap-1.5 hover:bg-[#40E0D0]/10 px-3 py-1.5 rounded-lg transition-all border border-[#006994]/10">
                       {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} className="text-[#00FFFF]" />} שדרג ביוגרפיה עם AI
                     </button>
                   </div>
@@ -558,7 +558,7 @@ const ProfilePage: React.FC = () => {
 
                 <form onSubmit={handlePasswordChange} className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה חדשה</label>
+                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה חדשה</label>
                     <input 
                       type="password"
                       value={newPassword}
@@ -570,7 +570,7 @@ const ProfilePage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-3">אימות סיסמה</label>
+                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">אימות סיסמה</label>
                     <input 
                       type="password"
                       value={confirmPassword}

@@ -135,7 +135,7 @@ const RadarChart: React.FC = () => {
           <button
             key={month}
             onClick={() => toggleMonth(month)}
-            className="px-2.5 py-0.5 rounded-full text-[10px] font-serif transition-all border-2"
+            className="px-2.5 py-0.5 rounded-full text-[12px] font-serif transition-all border-2"
             style={{ 
               background: activeMonths.has(month) ? colors[month].fill : 'rgba(255,255,255,0.04)',
               borderColor: activeMonths.has(month) ? colors[month].stroke : 'rgba(255,255,255,0.15)',

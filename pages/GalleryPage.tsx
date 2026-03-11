@@ -213,7 +213,7 @@ const GalleryPage: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-white font-black text-xs">{item.uploaderName}</p>
-                    <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">רגע מהמים</p>
+                    <p className="text-white/60 text-[12px] font-bold uppercase tracking-widest">רגע מהמים</p>
                   </div>
                </div>
                

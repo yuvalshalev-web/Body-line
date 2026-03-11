@@ -579,7 +579,7 @@ const SurfingSessionAttendance: React.FC = () => {
                 <UsersIcon size={18} />
               </div>
               <div>
-                <p className="text-[8px] md:text-[10px] font-black text-sky-600 uppercase tracking-widest leading-none mb-1">סה"כ נוכחים</p>
+                <p className="text-[8px] md:text-[12px] font-black text-sky-600 uppercase tracking-widest leading-none mb-1">סה"כ נוכחים</p>
                 <p className="text-lg md:text-xl font-black text-sky-800 leading-none">{confirmedIds.size}</p>
               </div>
             </div>
@@ -692,7 +692,7 @@ const SurfingSessionAttendance: React.FC = () => {
                     } backdrop-blur-[12px] p-8 rounded-[16px] border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col md:flex-row md:items-center justify-between gap-8`}>
                       <div className="flex items-center gap-8">
                         <div className="text-right">
-                          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${
+                          <p className={`text-[12px] font-black uppercase tracking-widest mb-1 ${
                             isUpcoming ? 'text-emerald-600' : (isGrayedOut ? 'text-slate-400' : 'text-[#4E8294]')
                           }`}>
                             {isUpcoming ? 'סשן קרוב (יום חמישי)' : (isGrayedOut ? 'סשן בוטל / 0 משתתפים' : 'תאריך הסשן')}
@@ -707,7 +707,7 @@ const SurfingSessionAttendance: React.FC = () => {
                         }`}></div>
                         
                         <div>
-                          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${
+                          <p className={`text-[12px] font-black uppercase tracking-widest mb-1 ${
                             isUpcoming ? 'text-emerald-600' : (isGrayedOut ? 'text-slate-400' : 'text-[#4E8294]')
                           }`}>מדריך</p>
                           <div className={`flex items-center gap-2 font-black ${
@@ -720,32 +720,30 @@ const SurfingSessionAttendance: React.FC = () => {
                       </div>
 
                       <div className="flex items-center justify-between md:justify-end gap-8">
-                        {isUpcoming && (
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                              type="checkbox"
-                              checked={session.status !== 'suspended'}
-                              onChange={async (e) => {
-                                const newStatus = e.target.checked ? 'active' : 'suspended';
-                                try {
-                                  const db = getDb();
-                                  if (session.id === 'upcoming') {
-                                    await setDoc(doc(db, 'site_data', 'active_session'), { status: newStatus }, { merge: true });
-                                  } else {
-                                    await updateDoc(doc(db, 'weekly_history', session.id), { status: newStatus });
-                                  }
-                                } catch (error) {
-                                  console.error("Error updating session status:", error);
-                                  showError('שגיאה בעדכון סטטוס הסשן');
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="checkbox"
+                            checked={session.status !== 'suspended'}
+                            onChange={async (e) => {
+                              const newStatus = e.target.checked ? 'active' : 'suspended';
+                              try {
+                                const db = getDb();
+                                if (session.id === 'upcoming') {
+                                  await setDoc(doc(db, 'site_data', 'active_session'), { status: newStatus }, { merge: true });
+                                } else {
+                                  await updateDoc(doc(db, 'weekly_history', session.id), { status: newStatus });
                                 }
-                              }}
-                              className="w-6 h-6 rounded-md border-2 border-[#006994] accent-[#006994] cursor-pointer"
-                            />
-                            <span className="text-xs font-black text-[#006994]">
-                              {session.status !== 'suspended' ? 'פעיל' : 'מושעה'}
-                            </span>
-                          </label>
-                        )}
+                              } catch (error) {
+                                console.error("Error updating session status:", error);
+                                showError('שגיאה בעדכון סטטוס הסשן');
+                              }
+                            }}
+                            className="w-6 h-6 rounded-md border-2 border-[#006994] accent-[#006994] cursor-pointer"
+                          />
+                          <span className="text-xs font-black text-[#006994]">
+                            {session.status !== 'suspended' ? 'פעיל' : 'מושעה'}
+                          </span>
+                        </label>
                         <div className="flex -space-x-3 space-x-reverse">
                           {session.participantIds.length > 0 ? (
                             session.participantIds.slice(0, 3).map((uid, i) => {
@@ -768,7 +766,7 @@ const SurfingSessionAttendance: React.FC = () => {
                             </div>
                           )}
                           {session.participantsCount > 3 && (
-                            <div className={`w-10 h-10 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-black shadow-sm ${
+                            <div className={`w-10 h-10 rounded-full border-2 border-white flex items-center justify-center text-[12px] font-black shadow-sm ${
                               isUpcoming ? 'bg-emerald-200 text-emerald-700' : 'bg-[#00FFFF] text-[#006994]'
                             }`}>
                               +{session.participantsCount - 3}
@@ -777,7 +775,7 @@ const SurfingSessionAttendance: React.FC = () => {
                         </div>
 
                         <div className="text-left">
-                          <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${
+                          <p className={`text-[12px] font-black uppercase tracking-widest mb-1 ${
                             isUpcoming ? 'text-emerald-600' : (isGrayedOut ? 'text-slate-400' : 'text-[#4E8294]')
                           }`}>משתתפים</p>
                           <p className={`text-2xl font-black ${

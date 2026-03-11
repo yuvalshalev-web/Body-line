@@ -53,7 +53,7 @@ export const WoodSignLink: React.FC<WoodSignLinkProps> = React.memo(({
           ${isRight ? 'pr-8 pl-4' : 'pl-8 pr-4'}
         `}
         style={{ 
-          backgroundColor: item.color,
+          backgroundColor: `${item.color}66`, // Add transparency (66 = ~40%)
           clipPath: isRight ? clipPathRight : clipPathLeft,
           // Wood texture and lighting
           backgroundImage: `
@@ -137,9 +137,21 @@ export const WoodSignLink: React.FC<WoodSignLinkProps> = React.memo(({
         </svg>
       </div>
 
-      {/* Center Nail */}
+      {/* Center Nail - Rusty & Weathered */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex pointer-events-none">
-        <div className="w-3.5 h-3.5 rounded-full bg-[#2a2a2a] shadow-[inset_0_2px_4px_rgba(0,0,0,0.9),0_1px_1px_rgba(255,255,255,0.4)]" />
+        <div className="relative w-4 h-4">
+          {/* Main nail head with irregular shape (dinged) */}
+          <div 
+            className="absolute inset-0 rounded-full bg-[#5d4037] shadow-[inset_0_2px_4px_rgba(0,0,0,0.8),0_1px_1px_rgba(255,255,255,0.2)]"
+            style={{
+              clipPath: 'polygon(10% 20%, 40% 5%, 85% 15%, 95% 50%, 80% 85%, 45% 95%, 5% 75%)',
+              backgroundImage: 'radial-gradient(circle at 30% 30%, #8b4513 0%, #3e2723 100%)'
+            }}
+          />
+          {/* Rust spots/dings */}
+          <div className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-[#cd853f] opacity-40 blur-[0.5px]" />
+          <div className="absolute bottom-1 right-1.5 w-1 h-1 rounded-full bg-[#2a1b18] opacity-60" />
+        </div>
       </div>
     </motion.div>
   );

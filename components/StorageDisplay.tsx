@@ -69,7 +69,7 @@ const StorageDisplay: React.FC = () => {
         </div>
 
         <div className="text-left">
-          <p className="text-[10px] font-black text-slate-600 tabular-nums leading-none">{formatSize(QUOTA_MB)}</p>
+          <p className="text-[12px] font-black text-slate-600 tabular-nums leading-none">{formatSize(QUOTA_MB)}</p>
           <p className="text-[8px] font-bold text-slate-400 mt-1">מכסה</p>
         </div>
       </div>

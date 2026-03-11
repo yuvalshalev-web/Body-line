@@ -169,7 +169,7 @@ const AdminRolloverReport: React.FC = () => {
                     <div className="font-['IBM_Plex_Mono'] text-sm md:text-base font-bold text-black/60 flex flex-wrap items-center gap-2">
                       <span className="break-words">{log.details}</span>
                       {(log as any).updatedMembersCount !== undefined && (
-                        <span className="bg-black text-white px-2 py-0.5 text-[10px] md:text-[12px] font-black whitespace-nowrap">
+                        <span className="bg-black text-white px-2 py-0.5 text-[12px] font-black whitespace-nowrap">
                           UPDATED: {(log as any).updatedMembersCount}
                         </span>
                       )}
@@ -179,7 +179,7 @@ const AdminRolloverReport: React.FC = () => {
                     <div className="font-['IBM_Plex_Mono'] text-sm md:text-base font-black text-black whitespace-nowrap">
                       {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
-                    <div className="font-['IBM_Plex_Mono'] text-[10px] md:text-sm font-bold text-black/40 whitespace-nowrap uppercase">
+                    <div className="font-['IBM_Plex_Mono'] text-[12px] md:text-sm font-bold text-black/40 whitespace-nowrap uppercase">
                       {log.duration || '0.0s'}
                     </div>
                   </div>

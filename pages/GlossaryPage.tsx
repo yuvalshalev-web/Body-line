@@ -92,7 +92,7 @@ const GlossaryPage: React.FC = () => {
             className="group relative flex flex-col bg-white rounded-[3rem] border border-slate-100 p-10 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500"
           >
             <div className="flex items-start justify-between mb-6">
-              <span className="px-4 py-1.5 bg-sky-50 text-sky-600 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+              <span className="px-4 py-1.5 bg-sky-50 text-sky-600 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center gap-2">
                 <Tag size={10} />
                 {item.category}
               </span>
@@ -128,7 +128,7 @@ const GlossaryPage: React.FC = () => {
 
       {/* Footer Decoration */}
       <div className="mt-24 pt-12 border-t border-slate-100 flex flex-col items-center gap-6">
-        <div className="flex items-center gap-2 text-slate-300 font-black text-[10px] uppercase tracking-[0.4em]">
+        <div className="flex items-center gap-2 text-slate-300 font-black text-[12px] uppercase tracking-[0.4em]">
           <Waves size={16} />
           End of Lineup
           <Waves size={16} />

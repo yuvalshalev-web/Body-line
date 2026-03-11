@@ -36,7 +36,7 @@ const StorageUsageMonitor: React.FC = () => {
       <h3 className="text-sm font-black text-[#2B2B2E] mb-2">סטטוס אחסון (Blaze Safe Mode)</h3>
       <div className="flex items-center justify-between">
         <p className="text-xs font-bold text-slate-600">גודל בשימוש: <strong className="text-[#006994]">{sizeMB} MB</strong></p>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סטטוס: {status}</p>
+        <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">סטטוס: {status}</p>
       </div>
     </div>
   );

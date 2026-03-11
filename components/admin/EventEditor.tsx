@@ -83,7 +83,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
         
         <div className="space-y-8">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">כותרת האירוע</label>
+            <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">כותרת האירוע</label>
             <input 
               type="text"
               value={form.title}
@@ -94,7 +94,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תיאור</label>
+            <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תיאור</label>
             <textarea 
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -105,7 +105,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
 
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תאריך</label>
+              <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תאריך</label>
               <input 
                 type="date"
                 value={form.date}
@@ -114,7 +114,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">שעה</label>
+              <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">שעה</label>
               <TimePicker 
                 value={form.time}
                 onChangeValue={(time) => setForm({ ...form, time })}
@@ -124,7 +124,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">סוג אירוע</label>
+            <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">סוג אירוע</label>
             <div className="flex gap-4">
               {[
                 { id: 'COMMUNITY', label: 'קהילה' },
@@ -148,7 +148,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">מיקום</label>
+            <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">מיקום</label>
             <input 
               type="text"
               value={form.location}
@@ -159,7 +159,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
           </div>
 
           <div className="space-y-4">
-            <label className="text-[10px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תמונת רקע</label>
+            <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תמונת רקע</label>
             <div className="relative group/img aspect-video rounded-[2rem] overflow-hidden border-2 border-dashed border-[#D4A373]/20 bg-white/40 backdrop-blur-md flex flex-col items-center justify-center gap-4 transition-all hover:border-[#D4A373]/40 shadow-sm">
               {form.imageUrl ? (
                 <>
@@ -189,7 +189,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
               {isUploading && (
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-md flex flex-col items-center justify-center gap-4 z-10">
                   <Loader2 className="animate-spin text-[#D4A373]" size={40} />
-                  <span className="font-black text-[#D4A373] text-[10px] uppercase tracking-widest animate-pulse">מעלה תמונה...</span>
+                  <span className="font-black text-[#D4A373] text-[12px] uppercase tracking-widest animate-pulse">מעלה תמונה...</span>
                 </div>
               )}
             </div>

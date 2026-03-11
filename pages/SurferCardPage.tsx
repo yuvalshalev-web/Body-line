@@ -183,7 +183,7 @@ const SurferCardPage: React.FC = () => {
                         style={{ transform: 'translateX(-50%)' }}
                       >
                         <div className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full border border-slate-200 shadow-sm mb-1">
-                          <span className="text-[10px] font-black text-[#2B2B2E] uppercase tracking-widest whitespace-nowrap">
+                          <span className="text-[12px] font-black text-[#2B2B2E] uppercase tracking-widest whitespace-nowrap">
                             מיקומך הנוכחי
                           </span>
                         </div>
@@ -284,7 +284,7 @@ const SurferCardPage: React.FC = () => {
                             className="absolute flex flex-col items-center"
                             style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
                           >
-                            <span className={`whitespace-nowrap text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-500 mb-1 ${
+                            <span className={`whitespace-nowrap text-[12px] font-black tracking-[0.2em] uppercase transition-all duration-500 mb-1 ${
                               isCurrent ? 'text-[var(--gt-accent)] opacity-100 scale-110' : 'text-[#2B2B2E] opacity-60'
                             }`}>
                               {rank.name}

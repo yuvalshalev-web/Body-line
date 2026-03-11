@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
 
 interface NavItem {
@@ -44,19 +44,9 @@ const themeStyles = {
 
 const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId, onChange, theme = 'ocean' }) => {
   const currentTheme = themeStyles[theme];
-  const constraintsRef = useRef(null);
 
   return (
-    <>
-      <div ref={constraintsRef} className="fixed inset-0 pointer-events-none z-[9998]" />
-      <motion.div 
-        drag
-        dragConstraints={constraintsRef}
-        dragElastic={0.1}
-        whileDrag={{ scale: 1.02, zIndex: 100000 }}
-        dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
-        className={`relative p-2 !rounded-[2rem] overflow-hidden glass-panel flex w-full max-w-5xl mx-auto overflow-x-auto no-scrollbar border border-white/30 backdrop-blur-xl cursor-grab active:cursor-grabbing ${currentTheme.container}`}
-      >
+    <div className={`relative p-2 !rounded-[2rem] overflow-hidden glass-panel flex w-full max-w-5xl mx-auto overflow-x-auto no-scrollbar border border-white/30 backdrop-blur-xl ${currentTheme.container}`}>
       {items.map((item) => {
         const isActive = activeId === item.id;
         return (
@@ -81,7 +71,7 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
                 {item.icon}
               </span>
               {item.count !== undefined && item.count > 0 && (
-                <span className={`absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-black border-2 border-white/50 shadow-sm ${
+                <span className={`absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center rounded-full text-[12px] font-black border-2 border-white/50 shadow-sm ${
                   isActive ? currentTheme.badgeActive : currentTheme.badgeInactive
                 }`}>
                   {item.count}
@@ -94,8 +84,7 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
           </button>
         );
       })}
-      </motion.div>
-    </>
+    </div>
   );
 };
 

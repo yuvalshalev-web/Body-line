@@ -98,7 +98,7 @@ const CircularRing: React.FC<CircularRingProps> = ({
             </text>
           </svg>
         </div>
-        <p className="text-[10px] font-black text-[#4A5568] mt-4 tabular-nums uppercase tracking-widest">
+        <p className="text-[12px] font-black text-[#4A5568] mt-4 tabular-nums uppercase tracking-widest">
           {sublabel}
         </p>
       </div>
@@ -107,24 +107,13 @@ const CircularRing: React.FC<CircularRingProps> = ({
 
   return (
     <div className={`flex flex-col items-center justify-center p-4 ${animateClass || ''}`}>
-      <div className="relative w-40 h-40 flex items-center justify-center glass-panel !rounded-full p-4 shadow-inner">
+      <div className="relative w-40 h-40 flex items-center justify-center bg-white rounded-full shadow-sm border border-slate-100">
         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
           <defs>
             <linearGradient id={`grad-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor={gradient[0]} />
-              <stop offset="50%" stopColor={gradient[1]}>
-                <animate attributeName="offset" values="0;1;0" dur="2s" repeatCount="indefinite" />
-              </stop>
-              <stop offset="100%" stopColor={gradient[0]} />
+              <stop offset="100%" stopColor={gradient[1]} />
             </linearGradient>
-            
-            <filter id={`glow-${id}`}>
-              <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
           </defs>
           
           {/* Background Ring (Track) */}
@@ -132,8 +121,8 @@ const CircularRing: React.FC<CircularRingProps> = ({
             cx="50"
             cy="50"
             r={radius}
-            stroke="rgba(0,0,0,0.05)"
-            strokeWidth="10"
+            stroke="#f1f5f9"
+            strokeWidth="8"
             fill="transparent"
           />
           
@@ -143,45 +132,25 @@ const CircularRing: React.FC<CircularRingProps> = ({
             cy="50"
             r={radius}
             stroke={`url(#grad-${id})`}
-            strokeWidth="10"
+            strokeWidth="8"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
             fill="transparent"
-            className={`gauge-ring-fill ${ringClass || ''}`}
-            style={{ 
-              filter: isHigh ? 'brightness(1.1) saturate(120%)' : `url(#glow-${id})`
-            }}
-          />
-
-          {/* Glassmorphism Overlay - Lens Effect */}
-          <defs>
-            <radialGradient id={`glass-lens-${id}`} cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
-              <stop offset="0%" stopColor="white" stopOpacity="0.4" />
-              <stop offset="70%" stopColor="white" stopOpacity="0.05" />
-              <stop offset="100%" stopColor="white" stopOpacity="0.0" />
-            </radialGradient>
-          </defs>
-          <circle
-            cx="50"
-            cy="50"
-            r={radius + 5}
-            fill={`url(#glass-lens-${id})`}
-            className="pointer-events-none"
-            opacity="0.6"
+            className={`transition-all duration-1000 ease-out`}
           />
         </svg>
         
         <div className="absolute inset-0 flex items-center justify-center flex-col">
-          <span className="gauge-value text-[#2D3748]">
+          <span className="text-2xl font-black text-slate-800">
             {displayValue.toFixed(0)}%
           </span>
-          <span className="text-[9px] font-black text-[#4A5568] uppercase tracking-[0.2em] mt-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">
             {label}
           </span>
         </div>
       </div>
-      <p className="text-[10px] font-black text-[#4A5568] mt-6 tabular-nums uppercase tracking-widest">
+      <p className="text-xs font-bold text-slate-500 mt-4 tabular-nums uppercase tracking-widest">
         {sublabel}
       </p>
     </div>
@@ -338,7 +307,7 @@ const SystemMonitor: React.FC = () => {
       </ResponsiveContainer>
       <div className="absolute inset-0 flex flex-col items-center justify-center pt-10">
         <span className="text-3xl font-black text-[#2B2B2E] tabular-nums">{value}%</span>
-        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
+        <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
         {sublabel && <span className="text-[8px] text-slate-300 mt-1">{sublabel}</span>}
       </div>
     </div>
@@ -348,7 +317,7 @@ const SystemMonitor: React.FC = () => {
     <div className="space-y-8 animate-in fade-in duration-700 min-h-[400px]" dir="rtl">
       {/* Unified Header */}
       <div className="flex flex-col items-center text-center mb-16 space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#F5F7FA] text-[#2D3748] text-[10px] font-black rounded-full shadow-soft border border-slate-200">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#F5F7FA] text-[#2D3748] text-[12px] font-black rounded-full shadow-soft border border-slate-200">
           <Activity size={12} className="text-[#1A365D]" />
           <span>SYSTEM DIVE ANALYTICS</span>
         </div>
@@ -640,7 +609,7 @@ const SystemMonitor: React.FC = () => {
                 // We also need to update the global variable if we want it to persist in this session
                 // but for simulation, the event is enough to trigger the graph
               }}
-              className="px-3 py-1 glass-panel text-white/60 hover:text-white text-[10px] font-black rounded-lg transition-colors uppercase tracking-wider border border-white/20"
+              className="px-3 py-1 glass-panel text-white/60 hover:text-white text-[12px] font-black rounded-lg transition-colors uppercase tracking-wider border border-white/20"
             >
               בצע בדיקת קריאה
             </button>
@@ -685,7 +654,7 @@ const SystemMonitor: React.FC = () => {
           
           {readHistory.every(pt => pt.reads === 0) && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] bg-white/80 px-4 py-2 rounded-full backdrop-blur-sm">
+              <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.3em] bg-white/80 px-4 py-2 rounded-full backdrop-blur-sm">
                 No active traffic detected
               </p>
             </div>
@@ -700,13 +669,13 @@ const SystemMonitor: React.FC = () => {
           <div className="flex gap-4">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-[#1A365D]" />
-              <span className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest flex items-center gap-1">
+              <span className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest flex items-center gap-1">
                 <ArrowDown size={10} /> Incoming
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-[#38B2AC]" />
-              <span className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest flex items-center gap-1">
+              <span className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest flex items-center gap-1">
                 <ArrowUp size={10} /> Outgoing
               </span>
             </div>

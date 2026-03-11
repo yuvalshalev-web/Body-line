@@ -73,13 +73,13 @@ const SurfingNewsPage: React.FC = () => {
     }
   };
 
-  const extractImage = (html) => {
+  const extractImage = (html: string) => {
     if (!html) return '';
     const match = html.match(/<img[^>]+(?:src|data-src)="([^">]+)"/);
     return match ? match[1] : '';
   };
 
-  const cleanDescription = (text) => {
+  const cleanDescription = (text: string) => {
     if (!text) return '';
     return text
       .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gmi, '')
@@ -180,14 +180,14 @@ const SurfingNewsPage: React.FC = () => {
                         (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=800";
                       }}
                     />
-                    <div className="absolute top-4 right-4 bg-[#006994]/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 text-[10px] font-black text-white shadow-lg flex items-center gap-2">
+                    <div className="absolute top-4 right-4 bg-[#006994]/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 text-[12px] font-black text-white shadow-lg flex items-center gap-2">
                       <Waves size={10} className="text-[#00FFFF]" />
                       {article.source}
                     </div>
                   </div>
                   
                   <div className="p-8 flex-1 flex flex-col">
-                    <div className="flex items-center gap-3 text-slate-400 text-[10px] font-black uppercase tracking-widest mb-4">
+                    <div className="flex items-center gap-3 text-slate-400 text-[12px] font-black uppercase tracking-widest mb-4">
                       <Calendar size={12} />
                       {new Date(article.publishedAt).toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </div>

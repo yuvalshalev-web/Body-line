@@ -511,11 +511,7 @@ const SessionStatsPage: React.FC = () => {
     <div className="max-w-7xl mx-auto font-['Yehuda_CLM'] pb-20 relative" dir="rtl">
       {/* Unified Header */}
       <header className="mb-8 relative">
-        <div className="surfboard-hero-container space-y-2">
-          <h1 className="main-page-title">
-          <span className="surfer-title">צלילה לסשנים</span>
-        </h1>
-          
+        <div className="space-y-2">
           <p className="text-[#4A5568] max-w-2xl text-xl font-bold">
             ניתוח עומק של ביצועי הנבחרת, מגמות נוכחות ופילוח גולשים. 🌊
           </p>
@@ -527,7 +523,7 @@ const SessionStatsPage: React.FC = () => {
         <div className="relative group">
           <div className="absolute inset-0 bg-blue-500/10 blur-2xl group-hover:bg-blue-500/20 transition-all duration-500" />
           <div className="relative bg-[#DDE1E4] p-8 rounded-[3rem] text-center min-w-[280px] shadow-soft border border-slate-200">
-            <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-2">זמן ים מצטבר (הערכה)</p>
+            <p className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest mb-2">זמן ים מצטבר (הערכה)</p>
             <div className="flex flex-col items-center">
               <span className="text-6xl font-black text-[#2D3748] drop-shadow-sm">
                 {stats?.totalSeaTimeHours || 0}
@@ -559,10 +555,10 @@ const SessionStatsPage: React.FC = () => {
               return (
                 <>
                   <div className="flex flex-col items-center mb-6">
-                    <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-2">התקדמות שנתית - חבל זוג</p>
+                    <p className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest mb-2">התקדמות שנתית - חבל זוג</p>
                     <div className="flex items-center gap-2">
                       <span className="text-3xl font-black text-[#1A365D]">{percentage}%</span>
-                      <span className="text-[10px] font-black text-[#4A5568]/40 uppercase">ביצוע</span>
+                      <span className="text-[12px] font-black text-[#4A5568]/40 uppercase">ביצוע</span>
                     </div>
                   </div>
 
@@ -629,7 +625,7 @@ const SessionStatsPage: React.FC = () => {
           <div className="flex flex-row gap-4 justify-center items-stretch max-w-4xl mx-auto">
             <div className="flex-1 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ממוצע גולשים</p>
+                <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">ממוצע גולשים</p>
                 <div className="gt-info-wrapper">
                   <div className="gt-info-icon" style={{ width: '16px', height: '16px', fontSize: '10px' }}>i</div>
                   <span className="gt-tooltip" style={{ bottom: '180%', width: '200px' }}>
@@ -642,7 +638,7 @@ const SessionStatsPage: React.FC = () => {
 
             <div className="flex-1 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">כניסות למים</p>
+                <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">כניסות למים</p>
                 <div className="gt-info-wrapper">
                   <div className="gt-info-icon" style={{ width: '16px', height: '16px', fontSize: '10px' }}>i</div>
                   <span className="gt-tooltip" style={{ bottom: '180%', width: '200px' }}>
@@ -658,7 +654,7 @@ const SessionStatsPage: React.FC = () => {
               stats.globalTrend === 'down' ? 'bg-rose-50 border-rose-100 text-rose-600' : 
               'bg-white border-slate-100 text-slate-400'
             }`}>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-3">מגמת נוכחות</p>
+              <p className="text-[12px] font-black uppercase tracking-widest opacity-60 mb-3">מגמת נוכחות</p>
               <div className="flex items-center gap-3">
                 {stats.globalTrend === 'up' ? <ArrowUpRight size={28} /> : stats.globalTrend === 'down' ? <ArrowDownRight size={28} /> : <Minus size={28} />}
                 <p className="text-3xl md:text-4xl font-black leading-none">{stats.trendPercentage}%</p>
@@ -675,7 +671,7 @@ const SessionStatsPage: React.FC = () => {
                 <div className="flex justify-between items-start mb-10">
                   <div>
                     <h3 className="text-[#2D3748] font-black text-2xl tracking-tighter">פילוח מגדרי ואימפקט</h3>
-                    <p className="text-[#4A5568] text-[10px] uppercase tracking-widest mt-1">תמהיל הקהילה ומדדי התמדה</p>
+                    <p className="text-[#4A5568] text-[12px] uppercase tracking-widest mt-1">תמהיל הקהילה ומדדי התמדה</p>
                   </div>
                   <div className="p-3 bg-white rounded-2xl text-[#1A365D] shadow-sm border border-slate-100">
                     <PieChartIcon size={24} />
@@ -684,7 +680,7 @@ const SessionStatsPage: React.FC = () => {
 
                 {/* Stacked Progress Bar */}
                 <div className="mb-12">
-                  <div className="flex justify-between text-[10px] font-black text-[#4A5568] uppercase tracking-widest mb-3">
+                  <div className="flex justify-between text-[12px] font-black text-[#4A5568] uppercase tracking-widest mb-3">
                     <span>תמהיל קהילתי</span>
                     <span>{members.length} חברים</span>
                   </div>
@@ -714,7 +710,7 @@ const SessionStatsPage: React.FC = () => {
                         <div className={`w-3 h-3 rounded-full ${item.color} shadow-sm`} />
                         <div>
                           <span className="text-[#2D3748] font-black text-lg block leading-none mb-1">{item.label}</span>
-                          <span className="text-[#4A5568] text-[10px] font-bold uppercase tracking-widest">{item.count} חברי קהילה</span>
+                          <span className="text-[#4A5568] text-[12px] font-bold uppercase tracking-widest">{item.count} חברי קהילה</span>
                         </div>
                       </div>
                       
@@ -751,10 +747,10 @@ const SessionStatsPage: React.FC = () => {
                   <table className="w-full text-right">
                     <thead>
                       <tr className="bg-slate-50">
-                        <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">קבוצת גיל</th>
-                        <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">סשן אחרון</th>
-                        <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">4 אחרונים</th>
-                        <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">שנתי</th>
+                        <th className="p-5 text-[12px] font-black text-slate-400 uppercase tracking-widest">קבוצת גיל</th>
+                        <th className="p-5 text-[12px] font-black text-slate-400 uppercase tracking-widest text-center">סשן אחרון</th>
+                        <th className="p-5 text-[12px] font-black text-slate-400 uppercase tracking-widest text-center">4 אחרונים</th>
+                        <th className="p-5 text-[12px] font-black text-slate-400 uppercase tracking-widest text-center">שנתי</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -791,7 +787,7 @@ const SessionStatsPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-[#2D3748] tracking-tighter">דופק הקהילה (Pulse)</h3>
-                    <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest">מגמת נוכחות שבועית</p>
+                    <p className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest">מגמת נוכחות שבועית</p>
                   </div>
                 </div>
                 
@@ -860,7 +856,7 @@ const SessionStatsPage: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-2xl font-black text-[#2D3748] tracking-tighter">מדד נחישות (Grit Leaderboard)</h3>
-                      <p className="text-[10px] font-black text-[#4A5568] uppercase tracking-widest">טופ 50 גולשים</p>
+                      <p className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest">טופ 50 גולשים</p>
                     </div>
                   </div>
                   <div className="relative group min-w-[300px]">
@@ -879,7 +875,7 @@ const SessionStatsPage: React.FC = () => {
                     <thead>
                       <tr className="border-b border-slate-200">
                         <th 
-                          className="pb-6 text-[10px] font-black text-[#4A5568] uppercase tracking-widest pr-4 cursor-pointer hover:text-[#2D3748] transition-colors"
+                          className="pb-6 text-[12px] font-black text-[#4A5568] uppercase tracking-widest pr-4 cursor-pointer hover:text-[#2D3748] transition-colors"
                           onClick={() => setGritSortConfig(prev => ({ key: 'firstName', direction: prev.key === 'firstName' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
                         >
                           <div className="flex items-center gap-1">
@@ -887,7 +883,7 @@ const SessionStatsPage: React.FC = () => {
                           </div>
                         </th>
                         <th 
-                          className="pb-6 text-[10px] font-black text-[#4A5568] uppercase tracking-widest cursor-pointer hover:text-[#2D3748] transition-colors"
+                          className="pb-6 text-[12px] font-black text-[#4A5568] uppercase tracking-widest cursor-pointer hover:text-[#2D3748] transition-colors"
                           onClick={() => setGritSortConfig(prev => ({ key: 'gritScore', direction: prev.key === 'gritScore' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
                         >
                           <div className="flex items-center gap-1">
@@ -895,7 +891,7 @@ const SessionStatsPage: React.FC = () => {
                           </div>
                         </th>
                         <th 
-                          className="pb-6 text-[10px] font-black text-[#4A5568] uppercase tracking-widest cursor-pointer hover:text-[#2D3748] transition-colors"
+                          className="pb-6 text-[12px] font-black text-[#4A5568] uppercase tracking-widest cursor-pointer hover:text-[#2D3748] transition-colors"
                           onClick={() => setGritSortConfig(prev => ({ key: 'streak', direction: prev.key === 'streak' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
                         >
                           <div className="flex items-center gap-1">
@@ -903,14 +899,14 @@ const SessionStatsPage: React.FC = () => {
                           </div>
                         </th>
                         <th 
-                          className="pb-6 text-[10px] font-black text-[#4A5568] uppercase tracking-widest cursor-pointer hover:text-[#2D3748] transition-colors text-center"
+                          className="pb-6 text-[12px] font-black text-[#4A5568] uppercase tracking-widest cursor-pointer hover:text-[#2D3748] transition-colors text-center"
                           onClick={() => setGritSortConfig(prev => ({ key: 'totalAttendance', direction: prev.key === 'totalAttendance' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
                         >
                           <div className="flex items-center justify-center gap-1">
                             סך הכל <ArrowUpDown size={12} className="opacity-50" />
                           </div>
                         </th>
-                        <th className="pb-6 text-[10px] font-black text-[#4A5568] uppercase tracking-widest text-center">מגמה</th>
+                        <th className="pb-6 text-[12px] font-black text-[#4A5568] uppercase tracking-widest text-center">מגמה</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
@@ -932,7 +928,7 @@ const SessionStatsPage: React.FC = () => {
                           <td className="py-5">
                             <div className="flex items-center gap-2">
                               <span className="text-xl font-black text-[#1A365D]">{member.streak}</span>
-                              <span className="text-[10px] font-black text-[#4A5568] uppercase">סשנים</span>
+                              <span className="text-[12px] font-black text-[#4A5568] uppercase">סשנים</span>
                             </div>
                           </td>
                           <td className="py-5 font-black text-[#4A5568] text-center text-lg">{member.totalAttendance}</td>

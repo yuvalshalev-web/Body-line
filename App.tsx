@@ -24,6 +24,8 @@ import {
 
 
 import { WoodSignLink } from './components/WoodSignLink';
+import { RespectLocalsSign } from './components/RespectLocalsSign';
+import { SignPost } from './components/SignPost';
 import surferMenuConfig from './surfer_menu_config.json';
 import { motion, AnimatePresence } from 'motion/react';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -41,6 +43,7 @@ const NewsPage = lazy(() => import('./pages/NewsPage'));
 const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage'));
 const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage'));
 const SurferCardPage = lazy(() => import('./pages/SurferCardPage'));
+const SignsPage = lazy(() => import('./pages/SignsPage'));
 const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance'));
 const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage'));
 
@@ -153,9 +156,11 @@ const App: React.FC = () => {
 
   if (!currentUser) {
     return (
-      <Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
           <Route path="*" element={<LoginPage />} />
         </Routes>
+      </Suspense>
     );
   }
 
@@ -166,12 +171,13 @@ const App: React.FC = () => {
   // and the next 4 for admin nav, to keep the routing intact while changing the visuals.
   const navItems = [
     { path: '/', ...menuItems[0], text: 'דף הבית' },
-    { path: '/directory', ...menuItems[1], text: 'נבחרת הכוכבים:' },
-    { path: '/gallery', ...menuItems[2], text: 'ליינאפ התמונות' },
+    { path: '/directory', ...menuItems[1], text: 'נבחרת הכוכבים' },
+    { path: '/gallery', ...menuItems[2], text: 'גלריית תמונות' },
     { path: '/events', ...menuItems[3], text: 'אירועים' },
     { path: '/posts', ...menuItems[4], text: 'פוסטים ועדכונים' },
     { path: '/world-news', ...menuItems[5], text: 'חדשות מהעולם' },
-    { path: '/surfer-card', ...menuItems[6], text: 'דשבורד' },
+    { path: '/surfer-card', ...menuItems[6], text: 'דשבורד אישי' },
+    { path: '/signs', ...menuItems[12], text: 'תפריט שלטים' },
     { path: '/profile', ...menuItems[7], text: 'פרופיל אישי' }
   ];
 
@@ -217,132 +223,36 @@ const App: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[85%] sm:w-[60%] md:w-[50%] max-w-[400px] bg-white/10 backdrop-blur-xl border-l border-white/20 z-[10002] shadow-2xl flex flex-col floating-menu-drawer"
-              style={{}}
+              className="fixed top-0 right-0 bottom-0 w-[85%] sm:w-[60%] md:w-[50%] max-w-[400px] z-[10002] shadow-2xl flex flex-col floating-menu-drawer"
+              style={{
+                backgroundImage: 'url("/src/assets/wood-texture.jpg")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
             >
-              <div className="w-full h-full flex flex-col relative">
-                {/* Vertical Wooden Post - Full Height */}
-                <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-12 z-0 pointer-events-none"
-                     style={{
-                       background: '#5d4037',
-                       boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5), 5px 0 15px rgba(0,0,0,0.3)',
-                       borderLeft: '2px solid rgba(0,0,0,0.3)',
-                       borderRight: '2px solid rgba(255,255,255,0.1)',
-                       backgroundImage: `
-                         linear-gradient(to right, rgba(0,0,0,0.3) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.4) 100%),
-                         url("data:image/svg+xml,%3Csvg viewBox='0 0 100 1000' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.05' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.3'/%3E%3C/svg%3E")
-                       `,
-                       backgroundSize: '100% 100%'
-                     }}
-                >
-                  {/* Wood Grain */}
-                  <div className="absolute inset-0 opacity-40 mix-blend-multiply" 
-                       style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(0,0,0,0.2) 5px, rgba(0,0,0,0.2) 6px)' }} />
-                  
-                  {/* Knots and cracks */}
-                  <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-4 h-6 rounded-full bg-black/20 blur-[1px]" />
-                  <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-3 h-8 rounded-full bg-black/25 blur-[1px]" />
-                  <div className="absolute top-[75%] left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-black/20 blur-[1px]" />
-                  
-                  {/* Nails at top and bottom */}
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-zinc-800 shadow-inner" />
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-zinc-800 shadow-inner" />
+              <div className="w-full h-full flex flex-col relative bg-transparent backdrop-blur-[2px]">
+                {/* Wood Pole in Drawer - Centered absolutely behind everything */}
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-10 h-[88%] pointer-events-none -z-10 opacity-80">
+                  <SignPost className="h-full w-full" />
                 </div>
 
-                {/* Crazy Seagull Decoration */}
-                <motion.div 
-                  animate={{ 
-                    y: [0, -5, 0],
-                    rotate: [0, 2, -2, 0]
-                  }}
-                  transition={{ repeat: Infinity, duration: 4 }}
-                  className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+                {/* Close Button */}
+                <button 
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="absolute top-6 right-6 p-2 rounded-full bg-white/50 hover:bg-white text-[#5d4037] transition-all shadow-sm z-30"
                 >
-                  <div className="relative">
-                    <span className="text-4xl">🐦</span>
-                    <div className="absolute -top-4 -right-4 bg-white px-2 py-1 rounded-full text-[10px] font-bold shadow-sm border border-slate-100 rotate-12">
-                      MINE!
-                    </div>
-                  </div>
-                </motion.div>
+                  <X size={20} />
+                </button>
 
-                {/* Drawer Header */}
-                <div className="p-8 pt-16 pb-4 flex items-center justify-between relative z-10">
-                  <div className="flex flex-col items-center w-full gap-0">
-                    <div 
-                      className="relative w-24 h-24 flex items-center justify-center group cursor-pointer"
-                    >
-                      {/* Diamond Sign Background */}
-                      <div className="absolute inset-0 bg-[#F5A623] rounded-[15px] border-[3px] border-black transform rotate-45 shadow-xl flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:rotate-[40deg] group-hover:scale-105"
-                           style={{ clipPath: 'polygon(5% 0%, 95% 0%, 100% 5%, 100% 95%, 95% 100%, 5% 100%, 0% 95%, 0% 5%)' }}>
-                        
-                        {/* Rust spots - more and darker */}
-                        <div className="absolute top-1 left-1 w-5 h-5 bg-orange-950/40 rounded-full blur-[2px]" />
-                        <div className="absolute bottom-2 right-1 w-7 h-7 bg-orange-950/30 rounded-full blur-[3px]" />
-                        <div className="absolute top-6 right-8 w-4 h-4 bg-orange-950/50 rounded-full blur-[1px]" />
-                        <div className="absolute bottom-8 left-4 w-3 h-3 bg-orange-950/40 rounded-full blur-[1px]" />
-                        
-                        {/* Cracks */}
-                        <div className="absolute top-[20%] left-[10%] w-[80%] h-[2px] bg-black/30 rotate-12" />
-                        <div className="absolute top-[60%] left-[20%] w-[60%] h-[2px] bg-black/30 -rotate-6" />
-                        
-                        <div className="absolute inset-1 border-[2px] border-black rounded-lg"></div>
-                      </div>
-                      
-                      {/* Content (un-rotated) */}
-                      <div className="relative z-10 flex flex-col items-center justify-center w-full h-full pt-1">
-                        {/* Shark SVG */}
-                        <svg viewBox="0 0 120 60" className="w-16 h-10 drop-shadow-md transform group-hover:-translate-y-1 transition-transform duration-300">
-                          {/* Tail */}
-                          <path d="M 90 30 C 100 20 110 10 115 15 C 105 25 95 30 95 30 C 95 30 105 40 110 45 C 100 45 95 35 90 30 Z" fill="#1A4B6E" stroke="black" strokeWidth="1.5" strokeLinejoin="round" />
-                          
-                          {/* Body White */}
-                          <path d="M 10 35 C 30 20 60 20 95 30 C 80 45 40 50 10 35 Z" fill="white" stroke="black" strokeWidth="1.5" strokeLinejoin="round" />
-                          
-                          {/* Body Blue */}
-                          <path d="M 10 35 C 30 20 60 20 95 30 C 70 32 40 38 10 35 Z" fill="#1A4B6E" stroke="black" strokeWidth="1.5" strokeLinejoin="round" />
-                          
-                          {/* Dorsal Fin */}
-                          <path d="M 45 23 C 50 5 55 10 60 24 Z" fill="#1A4B6E" stroke="black" strokeWidth="1.5" strokeLinejoin="round" />
-                          
-                          {/* Pectoral Fin */}
-                          <path d="M 40 38 C 35 55 45 50 50 42 Z" fill="#1A4B6E" stroke="black" strokeWidth="1.5" strokeLinejoin="round" />
-                          
-                          {/* Eye */}
-                          <circle cx="20" cy="30" r="1.5" fill="white" />
-                          <circle cx="20" cy="30" r="0.5" fill="black" />
-                          
-                          {/* Gills */}
-                          <path d="M 32 28 L 30 34 M 35 28 L 33 35 M 38 29 L 36 36" stroke="black" strokeWidth="1" fill="none" strokeLinecap="round" />
-                          
-                          {/* Mouth */}
-                          <path d="M 12 37 C 18 39 25 38 25 38" stroke="black" strokeWidth="1" fill="none" />
-                        </svg>
-                        
-                        {/* Text */}
-                        <div className="flex flex-col items-center leading-none mt-[-2px] z-10">
-                          <span className="text-[11px] font-black text-white uppercase tracking-tight" style={{ WebkitTextStroke: '1.5px black', paintOrder: 'stroke fill' }}>Respect The</span>
-                          <span className="text-[14px] font-black text-white uppercase tracking-tight" style={{ WebkitTextStroke: '1.5px black', paintOrder: 'stroke fill' }}>Locals</span>
-                        </div>
-                      </div>
-                    </div>
+                {/* Navigation Items & Signs */}
+                <div className="flex-1 px-6 pt-16 pb-24 flex flex-col items-center gap-0 overflow-y-auto relative z-10 custom-scrollbar">
+                  {/* Respect the Locals Sign at the top of the list */}
+                  <div className="scale-50 -my-20 relative flex flex-col items-center mb-0">
+                    <RespectLocalsSign />
+                    {/* Nail for the diamond sign */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#2a2a2a] shadow-lg z-20" />
                   </div>
-                  <button 
-                    onClick={() => setIsDrawerOpen(false)}
-                    className="absolute top-6 right-6 p-2 rounded-full bg-white/50 hover:bg-white text-[#5d4037] transition-all shadow-sm"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
 
-                {/* Navigation Items */}
-                <div className="flex-1 px-4 py-8 flex flex-col gap-1 overflow-y-auto relative z-10 custom-scrollbar">
-                  <div className="mb-6 text-center relative z-10">
-                    <span className="px-4 py-1 bg-[#d4a373] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-sm" style={{ fontFamily: 'Yehuda CLM' }}>
-                      בחר יעד
-                    </span>
-                  </div>
-                  
                   {navItems.map((item, idx) => (
                     <WoodSignLink 
                       key={item.path}
@@ -355,8 +265,8 @@ const App: React.FC = () => {
 
                   {currentUser.role === 'Admin' && (
                     <>
-                      <div className="mt-12 mb-6 text-center">
-                        <span className="px-4 py-1 bg-slate-700 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-sm" style={{ fontFamily: 'Yehuda CLM' }}>
+                      <div className="mt-8 mb-4 w-full text-center">
+                        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider bg-transparent border border-white/20 px-3 py-1 rounded-full">
                           אזור מנהלים
                         </span>
                       </div>
@@ -371,43 +281,23 @@ const App: React.FC = () => {
                       ))}
                     </>
                   )}
-                </div>
 
-                {/* Profile Section */}
-                <div className="p-6 bg-transparent backdrop-blur-none border-t border-[#8d6e63]/20 relative z-10">
-                  {/* Sand and Sea effect at bottom */}
-                  <div className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-0 overflow-hidden">
-                    <motion.div 
-                      animate={{ x: [-20, 20, -20] }}
-                      transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-                      className="absolute bottom-4 left-[-20%] w-[140%] h-8 bg-sky-400/20 rounded-[100%] blur-md" 
+                  {/* Exit Wave (Logout) Sign */}
+                  <div className="mt-8 w-full flex justify-center">
+                    <WoodSignLink 
+                      item={{ 
+                        id: 999,
+                        text: 'גל יציאה', 
+                        icon: '🚪',
+                        color: '#5d4037',
+                        direction: 'left',
+                        rotation: -2
+                      }}
+                      index={navItems.length + adminNavItems.length + 1}
+                      isActive={false}
+                      onClick={handleLogout}
                     />
-                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-[#f4d03f]/40 blur-sm" />
-                    <span className="absolute bottom-1 left-4 text-xl">🐚</span>
-                    <span className="absolute bottom-2 right-8 text-xl rotate-12">⭐</span>
                   </div>
-
-                  <div className="flex items-center gap-4 mb-6 px-2 relative z-10">
-                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-lg ring-2 ring-[#d4a373]">
-                      <img 
-                        src={currentUser.avatar || `https://ui-avatars.com/api/?name=${currentUser.firstName}+${currentUser.lastName}&background=D4A373&color=fff`} 
-                        alt={`${currentUser.firstName} ${currentUser.lastName}`}
-                        className="w-full h-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-black text-sm text-[#5d4037]">{currentUser.firstName} {currentUser.lastName}</span>
-                      <span className="text-[10px] font-bold text-[#8d6e63] uppercase tracking-widest">{currentUser.role}</span>
-                    </div>
-                  </div>
-
-                  <WoodSignLink 
-                    item={{...menuItems[12], text: 'גל יציאה'}}
-                    index={navItems.length + adminNavItems.length}
-                    isActive={false}
-                    onClick={handleLogout}
-                  />
                 </div>
               </div>
             </motion.div>
@@ -418,24 +308,27 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <FloatingMenu onOpenDrawer={() => setIsDrawerOpen(true)} />
       <main className="flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto pb-32 relative z-10">
-        <Routes>
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/directory" element={<DirectoryPage />} />
-              <Route path="/gallery" element={<GalleryPage />} />
-              <Route path="/events" element={<EventsPage />} />
-              <Route path="/posts" element={<NewsPage />} />
-              <Route path="/world-news" element={<SurfingNewsPage />} />
-              <Route path="/surfer-card" element={<SurferCardPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              {currentUser.role === 'Admin' && (
-                <>
-                  <Route path="/admin" element={<AdminPage />} />
-                  <Route path="/admin-info" element={<AdminInfoPage />} />
-                  <Route path="/attendance" element={<SurfingSessionAttendance />} />
-                </>
-              )}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/directory" element={<DirectoryPage />} />
+            <Route path="/gallery" element={<GalleryPage />} />
+            <Route path="/events" element={<EventsPage />} />
+            <Route path="/posts" element={<NewsPage />} />
+            <Route path="/world-news" element={<SurfingNewsPage />} />
+            <Route path="/surfer-card" element={<SurferCardPage />} />
+            <Route path="/signs" element={<SignsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            {currentUser.role === 'Admin' && (
+              <>
+                <Route path="/admin" element={<AdminPage />} />
+                <Route path="/admin-info" element={<AdminInfoPage />} />
+                <Route path="/attendance" element={<SurfingSessionAttendance />} />
+              </>
+            )}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </main>
     </div>
   );

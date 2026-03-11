@@ -51,7 +51,7 @@ const AssetEditor: React.FC<AssetEditorProps> = ({
                 {typeof value === 'string' && value.startsWith('http') ? (
                   <img src={value} className="w-full h-full object-contain p-2" alt="" />
                 ) : (
-                  <span className="text-[#f063c1]/40 font-black text-[10px] uppercase">{key.slice(0, 2)}</span>
+                  <span className="text-[#f063c1]/40 font-black text-[12px] uppercase">{key.slice(0, 2)}</span>
                 )}
                 
                 <button 
@@ -70,9 +70,9 @@ const AssetEditor: React.FC<AssetEditorProps> = ({
                 </button>
               </div>
               <div>
-                <p className="text-[10px] font-black text-[#ff009f] uppercase tracking-widest mb-1">{key}</p>
+                <p className="text-[12px] font-black text-[#ff009f] uppercase tracking-widest mb-1">{key}</p>
                 <h4 className="text-lg font-black text-[#4a002e]">{assetLabels[key] || key}</h4>
-                <p className="text-[10px] font-bold text-[#f063c1]/40 truncate max-w-[180px]">{typeof value === 'string' ? value : 'נתון מורכב'}</p>
+                <p className="text-[12px] font-bold text-[#f063c1]/40 truncate max-w-[180px]">{typeof value === 'string' ? value : 'נתון מורכב'}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ const AssetEditor: React.FC<AssetEditorProps> = ({
               
               <div className="space-y-6 mb-10">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-4">כתובת URL</label>
+                  <label className="text-[12px] font-black text-[#f063c1]/60 uppercase tracking-widest mr-4">כתובת URL</label>
                   <input 
                     type="text"
                     value={editingAsset.value}

@@ -64,14 +64,14 @@ const SessionDetails: React.FC<SessionDetailsProps> = ({ session, members, onClo
             <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
               <div className="flex items-center gap-3 text-white/30 mb-2">
                 <User size={18} />
-                <span className="text-[10px] font-black uppercase tracking-widest">מדריך</span>
+                <span className="text-[12px] font-black uppercase tracking-widest">מדריך</span>
               </div>
               <p className="text-xl font-black text-white">{session.instructorName || 'מדריך חבל זוג'}</p>
             </div>
             <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
               <div className="flex items-center gap-3 text-white/30 mb-2">
                 <Users size={18} />
-                <span className="text-[10px] font-black uppercase tracking-widest">משתתפים</span>
+                <span className="text-[12px] font-black uppercase tracking-widest">משתתפים</span>
               </div>
               <p className="text-xl font-black text-white">{session.participantsCount || 0} גולשים</p>
             </div>

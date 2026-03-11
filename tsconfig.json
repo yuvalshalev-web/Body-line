@@ -17,10 +17,11 @@
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
+    "types": ["vite/client"],
     "paths": {
       "@/*": ["src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "App.tsx", "index.tsx", "server.ts", "pages", "components", "contexts", "services", "utils"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
