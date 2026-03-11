@@ -1805,24 +1805,50 @@ const AdminPage: React.FC = () => {
                           <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest">גודל פונט</label>
                           <span className="text-xs font-black text-[#6366f1]">{siteConfig.h1Styles?.fontSize || '50px'}</span>
                         </div>
-                        <input 
-                          type="range" min="20" max="120" 
-                          value={parseInt(siteConfig.h1Styles?.fontSize || '50')}
-                          onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, fontSize: e.target.value + 'px' } })}
-                          className="gt-slider-input w-full" 
-                        />
+                        <div className="gt-stepper w-full !justify-between">
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const current = parseInt(siteConfig.h1Styles?.fontSize || '50');
+                              if (current > 20) updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, fontSize: (current - 1) + 'px' } });
+                            }}
+                            className="gt-step-btn minus"
+                          >-</button>
+                          <div className="gt-step-val">{parseInt(siteConfig.h1Styles?.fontSize || '50')}</div>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const current = parseInt(siteConfig.h1Styles?.fontSize || '50');
+                              if (current < 120) updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, fontSize: (current + 1) + 'px' } });
+                            }}
+                            className="gt-step-btn plus"
+                          >+</button>
+                        </div>
                       </div>
                       <div className="space-y-3">
                         <div className="flex justify-between items-center px-1">
                           <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest">ריווח אותיות</label>
                           <span className="text-xs font-black text-[#6366f1]">{siteConfig.h1Styles?.letterSpacing || '0'}px</span>
                         </div>
-                        <input 
-                          type="range" min="-5" max="20" 
-                          value={parseInt(siteConfig.h1Styles?.letterSpacing || '0')}
-                          onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, letterSpacing: e.target.value + 'px' } })}
-                          className="gt-slider-input w-full" 
-                        />
+                        <div className="gt-stepper w-full !justify-between">
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const current = parseInt(siteConfig.h1Styles?.letterSpacing || '0');
+                              if (current > -5) updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, letterSpacing: (current - 1) + 'px' } });
+                            }}
+                            className="gt-step-btn minus"
+                          >-</button>
+                          <div className="gt-step-val">{parseInt(siteConfig.h1Styles?.letterSpacing || '0')}</div>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const current = parseInt(siteConfig.h1Styles?.letterSpacing || '0');
+                              if (current < 20) updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, letterSpacing: (current + 1) + 'px' } });
+                            }}
+                            className="gt-step-btn plus"
+                          >+</button>
+                        </div>
                       </div>
                     </div>
 
