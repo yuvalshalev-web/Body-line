@@ -420,12 +420,14 @@ const CommunityAnalytics: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="glass-panel p-8 relative overflow-hidden group min-h-[550px] flex flex-col items-center justify-center rounded-[3rem]"
+            className="glass-panel p-8 relative group min-h-[550px] flex flex-col items-center justify-center rounded-[3rem]"
           >
-            {/* Glossy Shimmer Effect */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
-            
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+            {/* Background elements that need clipping */}
+            <div className="absolute inset-0 overflow-hidden rounded-[3rem] pointer-events-none">
+              {/* Glossy Shimmer Effect */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+            </div>
             
             <div className="w-full flex items-center justify-between mb-8 relative z-10 px-2">
               <div className="flex items-center gap-4">
@@ -634,13 +636,16 @@ const CommunityAnalytics: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="glass-panel p-8 flex flex-col min-h-[550px] relative overflow-hidden group rounded-[3rem]"
+            className="glass-panel p-8 flex flex-col min-h-[550px] relative group rounded-[3rem]"
           >
-            {/* Glossy Shimmer Effect */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
-            
-            {/* Background Glow */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+            {/* Background elements that need clipping */}
+            <div className="absolute inset-0 overflow-hidden rounded-[3rem] pointer-events-none">
+              {/* Glossy Shimmer Effect */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              
+              {/* Background Glow */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+            </div>
 
             <div className="flex items-center gap-3 mb-8 relative z-10">
               <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[var(--surfer-cyan)] shadow-inner border border-white/10">
@@ -693,21 +698,21 @@ const CommunityAnalytics: React.FC = () => {
 
             <div className="mt-6 grid grid-cols-3 gap-4 relative z-10">
               <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
-                <p className="text-[12px] font-black text-[var(--surfer-cyan)] uppercase tracking-widest mb-1 opacity-70">טווח קרוב (0-20)</p>
+                <p className="text-[12px] font-black text-[var(--surfer-cyan)] uppercase tracking-widest mb-1 opacity-70">חי״ר (0-20 ק״מ)</p>
                 <p className="text-xl font-black glass-text-primary flex items-baseline gap-1">
                   {stats.near}
                   <span className="text-[12px] font-bold opacity-40">חברים</span>
                 </p>
               </div>
               <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
-                <p className="text-[12px] font-black text-[var(--surfer-orange)] uppercase tracking-widest mb-1 opacity-70">טווח איזורי (21-100)</p>
+                <p className="text-[12px] font-black text-[var(--surfer-orange)] uppercase tracking-widest mb-1 opacity-70">שיריון (21-100 ק״מ)</p>
                 <p className="text-xl font-black glass-text-primary flex items-baseline gap-1">
                   {stats.medium}
                   <span className="text-[12px] font-bold opacity-40">חברים</span>
                 </p>
               </div>
               <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
-                <p className="text-[12px] font-black text-[var(--surfer-pink)] uppercase tracking-widest mb-1 opacity-70">טווח רחוק (100+)</p>
+                <p className="text-[12px] font-black text-[var(--surfer-pink)] uppercase tracking-widest mb-1 opacity-70">חיל אויר (100+ ק״מ)</p>
                 <p className="text-xl font-black glass-text-primary flex items-baseline gap-1">
                   {stats.far}
                   <span className="text-[12px] font-bold opacity-40">חברים</span>
@@ -720,10 +725,13 @@ const CommunityAnalytics: React.FC = () => {
         {/* Churn & Retention Card - Moved here per user request */}
         <motion.div 
           whileHover={{ scale: 1.005 }}
-          className="glass-panel p-10 rounded-[3rem] transition-all duration-500 relative overflow-hidden group lg:col-span-2"
+          className="glass-panel p-10 rounded-[3rem] transition-all duration-500 relative group lg:col-span-2"
         >
-          {/* Glossy Shimmer Effect */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+          {/* Background elements that need clipping */}
+          <div className="absolute inset-0 overflow-hidden rounded-[3rem] pointer-events-none">
+            {/* Glossy Shimmer Effect */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+          </div>
           
           <div className="grid grid-cols-1 gap-12">
             
@@ -777,10 +785,13 @@ const CommunityAnalytics: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="lg:col-span-2 glass-panel p-10 rounded-[4rem] transition-all duration-500 relative overflow-hidden group"
+          className="lg:col-span-2 glass-panel p-10 rounded-[4rem] transition-all duration-500 relative group"
         >
-            {/* Glossy Shimmer Effect */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+            {/* Background elements that need clipping */}
+            <div className="absolute inset-0 overflow-hidden rounded-[4rem] pointer-events-none">
+              {/* Glossy Shimmer Effect */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            </div>
 
             <div className="flex items-center justify-between mb-12 relative z-10">
               <div className="flex items-center gap-4">
@@ -815,9 +826,16 @@ const CommunityAnalytics: React.FC = () => {
                 }
                 
                 return (
-                  <div key={idx} className="flex flex-col items-center relative group/gauge">
+                  <div key={idx} className="flex flex-col items-center relative group/gauge hover:z-50 z-10">
+                    {/* Category Sign (Clock Style) */}
+                    <div className="mb-4 bg-[#fdfdfd] border border-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.3)] px-4 py-0.5 min-w-[100px] flex justify-center items-center relative z-20">
+                      <span className="text-black font-black text-[11px] uppercase tracking-[0.15em] antialiased">
+                        {group.label} {group.count}
+                      </span>
+                    </div>
+
                     {/* Gauge Container */}
-                    <div className="relative w-full max-w-[280px] mx-auto flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-full p-2 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                    <div className="relative w-full max-w-[280px] mx-auto flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-4 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
                       <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
                         <defs>
                           {/* Frosted Glass Background Filter */}
@@ -929,50 +947,7 @@ const CommunityAnalytics: React.FC = () => {
                           );
                         })}
 
-                        {/* Yearly Retention Marker */}
-                        <motion.g
-                          className="group/marker cursor-pointer outline-none"
-                          tabIndex={0}
-                          onTouchStart={() => {}}
-                          initial={{ rotate: -135 }}
-                          animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
-                          style={{ transformOrigin: "100px 100px" }}
-                          transition={{ duration: 1.5, ease: "easeOut" }}
-                        >
-                          {/* Invisible hit area for easier hover */}
-                          <circle cx="100" cy="-5" r="32" fill="transparent" />
-                          
-                          {/* Pulsing Glow */}
-                          <motion.circle 
-                            cx="100" cy="-5" r="8" 
-                            fill="rgba(255,222,69,0.3)" 
-                            animate={{ scale: [1, 1.8, 1], opacity: [0.8, 0, 0.8] }} 
-                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} 
-                          />
-                          {/* Isosceles Triangle Pointer */}
-                          <polygon 
-                            points="94,-12 106,-12 100,2" 
-                            fill="#FFDE45"
-                            stroke="#FFFFFF"
-                            strokeWidth="1"
-                            style={{ filter: 'drop-shadow(0px 2px 6px rgba(255,222,69,0.8))' }}
-                          />
-                          
-                          {/* Tooltip (Counter-rotated to stay upright) */}
-                          <g 
-                            className="opacity-0 group-hover/marker:opacity-100 group-focus/marker:opacity-100 transition-opacity duration-300 pointer-events-none"
-                            style={{ transform: `rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}deg)`, transformOrigin: '100px -44px' }}
-                          >
-                            <rect x="40" y="-70" width="120" height="52" rx="10" fill="rgba(15, 23, 42, 0.95)" stroke="#FFDE45" strokeWidth="1.5" style={{ filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.6))' }} />
-                            <text x="100" y="-52" textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize="14" fontWeight="bold" fontFamily="Inter, sans-serif">
-                              שנתי
-                            </text>
-                            <text x="100" y="-30" textAnchor="middle" dominantBaseline="middle" fill="#FFDE45" fontSize="22" fontWeight="black" fontFamily="monospace" style={{ letterSpacing: '0.5px' }}>
-                              {group.yearlyRetention}%
-                            </text>
-                          </g>
-                        </motion.g>
-
+                        {/* Yearly Retention Marker moved to end of SVG for top z-index */}
                         {/* Thin Sharp Needle */}
                         <motion.g
                           initial={{ rotate: -135 }}
@@ -1015,11 +990,55 @@ const CommunityAnalytics: React.FC = () => {
 
                         {/* Text Elements */}
                         <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="14" className="antialiased">{group.label}</text>
+
+                        {/* Yearly Retention Marker (Rendered last to be on top) */}
+                        <motion.g
+                          className="group/marker cursor-pointer outline-none"
+                          tabIndex={0}
+                          onTouchStart={() => {}}
+                          initial={{ rotate: -135 }}
+                          animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
+                          style={{ transformOrigin: "100px 100px" }}
+                          transition={{ duration: 1.5, ease: "easeOut" }}
+                        >
+                          {/* Invisible hit area for easier hover */}
+                          <circle cx="100" cy="-5" r="32" fill="transparent" />
+                          
+                          {/* Pulsing Glow */}
+                          <motion.circle 
+                            cx="100" cy="-5" r="8" 
+                            fill="rgba(255,222,69,0.3)" 
+                            animate={{ scale: [1, 1.8, 1], opacity: [0.8, 0, 0.8] }} 
+                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} 
+                          />
+                          {/* Isosceles Triangle Pointer */}
+                          <polygon 
+                            points="94,-12 106,-12 100,2" 
+                            fill="#FFDE45"
+                            stroke="#FFFFFF"
+                            strokeWidth="1"
+                            style={{ filter: 'drop-shadow(0px 2px 6px rgba(255,222,69,0.8))' }}
+                          />
+                          
+                          {/* Tooltip (Counter-rotated to stay upright) */}
+                          <g 
+                            className="opacity-0 group-hover/marker:opacity-100 group-focus/marker:opacity-100 transition-opacity duration-300 pointer-events-none"
+                            style={{ transform: `rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}deg)`, transformOrigin: '100px -44px' }}
+                          >
+                            <rect x="40" y="-70" width="120" height="52" rx="10" fill="rgba(15, 23, 42, 0.95)" stroke="#FFDE45" strokeWidth="1.5" style={{ filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.6))' }} />
+                            <text x="100" y="-52" textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize="14" fontWeight="bold" fontFamily="Inter, sans-serif">
+                              שנתי
+                            </text>
+                            <text x="100" y="-30" textAnchor="middle" dominantBaseline="middle" fill="#FFDE45" fontSize="22" fontWeight="black" fontFamily="monospace" style={{ letterSpacing: '0.5px' }}>
+                              {group.yearlyRetention}%
+                            </text>
+                          </g>
+                        </motion.g>
                       </svg>
                     </div>
                     
                     {/* Status Labels */}
-                    <div className="mt-4 flex flex-col items-center gap-2">
+                    <div className="mt-6 flex flex-col items-center gap-2 h-12">
                       <div className={`px-4 py-1 rounded-full border ${categoryColor}`}>
                         <span className="text-[12px] font-black uppercase tracking-widest antialiased">
                           {categoryLabel}
@@ -1034,19 +1053,19 @@ const CommunityAnalytics: React.FC = () => {
             {/* Footer Indicators */}
             <div className="mt-16 pt-8 border-t border-white/5 flex flex-wrap justify-center gap-6 md:justify-between items-center w-full relative z-10">
               <div className="flex items-center gap-3">
-                <span className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em]">תיירים (&lt;50%)</span>
+                <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">תיירים (&lt;50%)</span>
                 <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]" />
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em]">אקונומי פלוס (50-69%)</span>
+                <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">אקונומי פלוס (50-69%)</span>
                 <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em]">ביזנס קלאס (70-84%)</span>
+                <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">ביזנס קלאס (70-84%)</span>
                 <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em]">פירסט קלאס (85%+)</span>
+                <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">פירסט קלאס (85%+)</span>
                 <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
               </div>
             </div>
@@ -1055,10 +1074,13 @@ const CommunityAnalytics: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-2 glass-panel p-10 rounded-[4rem] transition-all duration-500 relative overflow-hidden group"
+          className="lg:col-span-2 glass-panel p-10 rounded-[4rem] transition-all duration-500 relative group"
         >
-          {/* Glossy Shimmer Effect */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+          {/* Background elements that need clipping */}
+          <div className="absolute inset-0 overflow-hidden rounded-[4rem] pointer-events-none">
+            {/* Glossy Shimmer Effect */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+          </div>
           
           <div className="flex items-center justify-between mb-12 relative z-10">
             <div className="flex items-center gap-4">
@@ -1093,9 +1115,16 @@ const CommunityAnalytics: React.FC = () => {
               }
               
               return (
-                <div key={idx} className="flex-1 flex flex-col items-center relative group/gauge w-full max-w-[280px]">
+                <div key={idx} className="flex-1 flex flex-col items-center relative group/gauge w-full max-w-[280px] hover:z-50 z-10">
+                  {/* Category Sign (Clock Style) */}
+                  <div className="mb-4 bg-[#fdfdfd] border border-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.3)] px-4 py-0.5 min-w-[100px] flex justify-center items-center relative z-20">
+                    <span className="text-black font-black text-[11px] uppercase tracking-[0.15em] antialiased">
+                      {group.label} {group.count}
+                    </span>
+                  </div>
+
                   {/* Gauge Container */}
-                  <div className="relative w-full flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-full p-2 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                  <div className="relative w-full flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-4 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
                     <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
                       <defs>
                         {/* Frosted Glass Background Filter */}
@@ -1205,50 +1234,7 @@ const CommunityAnalytics: React.FC = () => {
                         );
                       })}
 
-                      {/* Yearly Retention Marker */}
-                      <motion.g
-                        className="group/marker cursor-pointer outline-none"
-                        tabIndex={0}
-                        onTouchStart={() => {}}
-                        initial={{ rotate: -135 }}
-                        animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
-                        style={{ transformOrigin: "100px 100px" }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
-                      >
-                        {/* Invisible hit area for easier hover */}
-                        <circle cx="100" cy="-5" r="32" fill="transparent" />
-                        
-                        {/* Pulsing Glow */}
-                        <motion.circle 
-                          cx="100" cy="-5" r="8" 
-                          fill="rgba(255,222,69,0.3)" 
-                          animate={{ scale: [1, 1.8, 1], opacity: [0.8, 0, 0.8] }} 
-                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} 
-                        />
-                        {/* Isosceles Triangle Pointer */}
-                        <polygon 
-                          points="94,-12 106,-12 100,2" 
-                          fill="#FFDE45"
-                          stroke="#FFFFFF"
-                          strokeWidth="1"
-                          style={{ filter: 'drop-shadow(0px 2px 6px rgba(255,222,69,0.8))' }}
-                        />
-                        
-                        {/* Tooltip (Counter-rotated to stay upright) */}
-                        <g 
-                          className="opacity-0 group-hover/marker:opacity-100 group-focus/marker:opacity-100 transition-opacity duration-300 pointer-events-none"
-                          style={{ transform: `rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}deg)`, transformOrigin: '100px -44px' }}
-                        >
-                          <rect x="40" y="-70" width="120" height="52" rx="10" fill="rgba(15, 23, 42, 0.95)" stroke="#FFDE45" strokeWidth="1.5" style={{ filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.6))' }} />
-                          <text x="100" y="-52" textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize="14" fontWeight="bold" fontFamily="Inter, sans-serif">
-                            שנתי
-                          </text>
-                          <text x="100" y="-30" textAnchor="middle" dominantBaseline="middle" fill="#FFDE45" fontSize="22" fontWeight="black" fontFamily="monospace" style={{ letterSpacing: '0.5px' }}>
-                            {group.yearlyRetention}%
-                          </text>
-                        </g>
-                      </motion.g>
-
+                      {/* Yearly Retention Marker moved to end of SVG for top z-index */}
                       {/* Thin Sharp Needle */}
                       <motion.g
                         initial={{ rotate: -135 }}
@@ -1291,11 +1277,55 @@ const CommunityAnalytics: React.FC = () => {
 
                       {/* Text Elements */}
                       <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="14" className="antialiased">{group.label}</text>
+
+                      {/* Yearly Retention Marker (Rendered last to be on top) */}
+                      <motion.g
+                        className="group/marker cursor-pointer outline-none"
+                        tabIndex={0}
+                        onTouchStart={() => {}}
+                        initial={{ rotate: -135 }}
+                        animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
+                        style={{ transformOrigin: "100px 100px" }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                      >
+                        {/* Invisible hit area for easier hover */}
+                        <circle cx="100" cy="-5" r="32" fill="transparent" />
+                        
+                        {/* Pulsing Glow */}
+                        <motion.circle 
+                          cx="100" cy="-5" r="8" 
+                          fill="rgba(255,222,69,0.3)" 
+                          animate={{ scale: [1, 1.8, 1], opacity: [0.8, 0, 0.8] }} 
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} 
+                        />
+                        {/* Isosceles Triangle Pointer */}
+                        <polygon 
+                          points="94,-12 106,-12 100,2" 
+                          fill="#FFDE45"
+                          stroke="#FFFFFF"
+                          strokeWidth="1"
+                          style={{ filter: 'drop-shadow(0px 2px 6px rgba(255,222,69,0.8))' }}
+                        />
+                        
+                        {/* Tooltip (Counter-rotated to stay upright) */}
+                        <g 
+                          className="opacity-0 group-hover/marker:opacity-100 group-focus/marker:opacity-100 transition-opacity duration-300 pointer-events-none"
+                          style={{ transform: `rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}deg)`, transformOrigin: '100px -44px' }}
+                        >
+                          <rect x="40" y="-70" width="120" height="52" rx="10" fill="rgba(15, 23, 42, 0.95)" stroke="#FFDE45" strokeWidth="1.5" style={{ filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.6))' }} />
+                          <text x="100" y="-52" textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize="14" fontWeight="bold" fontFamily="Inter, sans-serif">
+                            שנתי
+                          </text>
+                          <text x="100" y="-30" textAnchor="middle" dominantBaseline="middle" fill="#FFDE45" fontSize="22" fontWeight="black" fontFamily="monospace" style={{ letterSpacing: '0.5px' }}>
+                            {group.yearlyRetention}%
+                          </text>
+                        </g>
+                      </motion.g>
                     </svg>
                   </div>
                   
                   {/* Labels below gauge */}
-                  <div className="mt-2 flex flex-col items-center gap-2 h-10">
+                  <div className="mt-4 flex flex-col items-center gap-2 h-12">
                     <span className={`text-[10px] px-3 py-0.5 rounded-full font-black border antialiased ${categoryColor}`}>
                       {categoryLabel}
                     </span>

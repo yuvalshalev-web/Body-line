@@ -44,7 +44,6 @@ const NewsPage = lazy(() => import('./pages/NewsPage'));
 const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage'));
 const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage'));
 const SurferCardPage = lazy(() => import('./pages/SurferCardPage'));
-const SignsPage = lazy(() => import('./pages/SignsPage'));
 const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance'));
 const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage'));
 
@@ -178,7 +177,6 @@ const App: React.FC = () => {
     { path: '/posts', ...menuItems[4], text: 'פוסטים ועדכונים' },
     { path: '/world-news', ...menuItems[5], text: 'חדשות מהעולם' },
     { path: '/surfer-card', ...menuItems[6], text: 'דשבורד אישי' },
-    { path: '/signs', ...menuItems[12], text: 'תפריט שלטים' },
     { path: '/profile', ...menuItems[7], text: 'פרופיל אישי' }
   ];
 
@@ -325,7 +323,6 @@ const App: React.FC = () => {
             <Route path="/posts" element={<NewsPage />} />
             <Route path="/world-news" element={<SurfingNewsPage />} />
             <Route path="/surfer-card" element={<SurferCardPage />} />
-            <Route path="/signs" element={<SignsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             {currentUser.role === 'Admin' && (
               <>

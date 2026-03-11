@@ -74,9 +74,9 @@ const TrendsDashboard: React.FC = () => {
       // Draw Logo
       if (logoImg.complete) {
         const logoSize = 40;
-        // Move logo to the left side of the board, above the text
-        const newX = centerX - maxRadius * 0.4;
-        const newY = centerY - maxRadius * 0.2;
+        // Center the logo in the middle of the radar
+        const newX = centerX;
+        const newY = centerY;
         
         ctx.save();
         ctx.beginPath();
@@ -399,7 +399,7 @@ const TrendsDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="glass-panel p-8 rounded-[3rem] border border-white/20 shadow-soft h-[500px]"
+            className="glass-panel p-10 rounded-[3.5rem] border border-white/20 shadow-soft h-[500px]"
           >
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
@@ -494,10 +494,10 @@ const TrendsDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 gap-8"
           >
             {groups.map(group => (
-              <div key={group.id} className="glass-panel p-6 rounded-[2.5rem] border border-white/20 shadow-soft h-[250px] flex flex-col">
+              <div key={group.id} className="glass-panel p-10 rounded-[3.5rem] border border-white/20 shadow-soft h-[350px] flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xs font-black text-[#2B2B2E] uppercase tracking-widest">{group.label}</h4>
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.color }} />
