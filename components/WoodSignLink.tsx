@@ -165,6 +165,7 @@ export const WoodSignLinkV2: React.FC<WoodSignLinkProps> = React.memo(({
   index
 }) => {
   const isRight = item.direction === 'right';
+  const rotation = React.useMemo(() => (Math.random() * 6) - 3, []);
 
   // Organic, slightly weathered wooden board shapes with small breaks/notches
   const clipPathRight = 'polygon(2% 4%, 25% 2%, 27% 12%, 30% 1%, calc(100% - 28px) 0%, 100% 50%, calc(100% - 28px) 100%, 60% 98%, 58% 85%, 55% 99%, 0% 96%, 3% 50%)';
@@ -172,8 +173,8 @@ export const WoodSignLinkV2: React.FC<WoodSignLinkProps> = React.memo(({
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: isRight ? 20 : -20, scale: 1, rotate: item.rotation }}
-      animate={{ opacity: 1, x: 0, scale: 1, rotate: item.rotation }}
+      initial={{ opacity: 0, x: isRight ? 20 : -20, scale: 1, rotate: rotation }}
+      animate={{ opacity: 1, x: 0, scale: 1, rotate: rotation }}
       transition={{ 
         delay: index * 0.05, 
         duration: 0.4,
@@ -181,7 +182,7 @@ export const WoodSignLinkV2: React.FC<WoodSignLinkProps> = React.memo(({
       }}
       whileHover={{ 
         scale: 1.05, 
-        rotate: [item.rotation, item.rotation - 3, item.rotation + 3, item.rotation - 2, item.rotation + 2, item.rotation], 
+        rotate: [rotation, rotation - 3, rotation + 3, rotation - 2, rotation + 2, rotation], 
         transition: { duration: 0.6, ease: "easeInOut" } 
       }}
       whileTap={{ scale: 0.95 }}

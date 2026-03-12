@@ -301,7 +301,7 @@ const DashboardPage: React.FC = () => {
       <section className="space-y-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-4 bg-[var(--surfer-pink)]/20 text-black rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]"><Newspaper size={24} /></div>
+            <div className="p-4 bg-[var(--surfer-pink)]/20 text-[#FF007F] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]"><Newspaper size={24} /></div>
             <h3 className="text-3xl font-black glass-text-primary tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>פוסטים אחרונים</h3>
           </div>
           <Link to="/posts" className="glass-text-secondary font-black text-xs uppercase tracking-widest hover:text-slate-950 transition-colors">צפה בהכל</Link>
@@ -345,7 +345,7 @@ const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <section className="neo-glass-card p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-[var(--surfer-yellow)]/20 text-black rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]"><Quote size={24} /></div>
+              <div className="p-4 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]"><Quote size={24} /></div>
               <h3 className="text-2xl font-black glass-text-primary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>חוכמת הליין-אפ</h3>
            </div>
            {randomQuotes.map((item, idx) => (
@@ -358,7 +358,7 @@ const DashboardPage: React.FC = () => {
 
         <section className="neo-glass-card p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-[var(--surfer-cyan)]/20 text-black rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]"><BookOpen size={24} /></div>
+              <div className="p-4 bg-[var(--surfer-cyan)]/20 text-[#00FFFF] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]"><BookOpen size={24} /></div>
               <h3 className="text-2xl font-black glass-text-primary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מילון מונחים</h3>
            </div>
            {randomGlossary.map((item, idx) => (

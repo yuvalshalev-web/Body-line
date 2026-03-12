@@ -158,7 +158,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
     <div className="glass-panel border border-white/30 rounded-[4rem] p-8 md:p-12 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.2)] max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-700 relative overflow-hidden backdrop-blur-3xl">
       {/* Background Decorative Elements - Surfers Theme Atmosphere */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-24 -left-24 w-[500px] h-[500px] bg-[#00D9E6]/15 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute -top-24 -left-24 w-[500px] h-[500px] bg-[#3dbbd3]/15 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#FF2D60]/5 rounded-full blur-[150px]" />
         <div className="absolute -bottom-32 -right-32 w-[400px] h-[400px] bg-[#FFDE45]/10 rounded-full blur-[100px]" />
       </div>
@@ -182,7 +182,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           עריכת משתמש
         </h1>
 
-        <div className="w-24 h-1.5 bg-gradient-to-r from-[#00D9E6] via-[#FF2D60] to-[#FFDE45] rounded-full" />
+        <div className="w-24 h-1.5 bg-gradient-to-r from-[#3dbbd3] via-[#FF2D60] to-[#FFDE45] rounded-full" />
 
         <p className="text-slate-500 font-bold max-w-2xl text-lg leading-relaxed">
           ניהול הרשאות, פרטי קשר ונוכחות דיגיטלית של חבר הנבחרת 👤
@@ -193,7 +193,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
         {/* Avatar Section */}
         <div className="md:col-span-2 flex flex-col items-center mb-8">
           <div className="relative group">
-            <div className="absolute -inset-4 bg-gradient-to-tr from-[#00D9E6] via-[#FF2D60] to-[#FFDE45] rounded-[3.5rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
+            <div className="absolute -inset-4 bg-gradient-to-tr from-[#3dbbd3] via-[#FF2D60] to-[#FFDE45] rounded-[3.5rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
             {editingMember.avatar ? (
               <img src={editingMember.avatar} className="w-48 h-48 rounded-[3rem] object-cover shadow-2xl border-8 border-white/80 relative z-10" alt="" />
             ) : (
@@ -413,7 +413,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                             setEditingMember({ ...editingMember, gender: g });
                             setIsGenderDropdownOpen(false);
                           }}
-                          className={`w-full px-8 py-5 text-right font-black transition-all hover:bg-[#00D9E6]/10 hover:text-[#007085] ${
+                          className={`w-full px-8 py-5 text-right font-black transition-all hover:bg-[#3dbbd3]/10 hover:text-[#007085] ${
                             editingMember.gender === g ? 'text-[#00AFC2] bg-[#00AFC2]/5' : 'text-slate-700'
                           }`}
                         >
@@ -521,7 +521,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               disabled={isProcessing}
               className={`flex-[2] py-8 rounded-[2.5rem] font-black text-xl transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 shadow-2xl relative overflow-hidden group ${
                 editingMember.isActive !== false 
-                  ? 'bg-gradient-to-br from-[#00D9E6] to-[#00AFC2] text-white' 
+                  ? 'bg-gradient-to-br from-[#3dbbd3] to-[#00AFC2] text-white' 
                   : 'bg-gradient-to-br from-[#FF2D60] to-[#CC2678] text-white'
               }`}
             >

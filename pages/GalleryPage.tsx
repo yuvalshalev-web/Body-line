@@ -149,7 +149,7 @@ const GalleryPage: React.FC = () => {
 
         {/* Subtitle with Emoji context */}
         <div className="flex flex-col items-center gap-4">
-          <p className="header-subtitle max-w-2xl">
+          <p className="header-subtitle max-w-2xl text-[var(--surfer-yellow)] font-bold drop-shadow-md">
             רגעים מהמים • {galleryItems.length} תמונות אופטימליות של הגולשים שלנו 📸
           </p>
           
@@ -157,9 +157,9 @@ const GalleryPage: React.FC = () => {
             <button 
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="flex items-center gap-4 px-10 py-4 bg-[var(--surfer-cyan)] text-black rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-lg transition-all hover:bg-[var(--surfer-teal)] hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,0.9)] active:scale-95 disabled:opacity-50 group"
+              className="flex items-center gap-4 px-10 py-4 bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_15px_30px_-10px_var(--surfer-deep-shadow),inset_0_0_15px_var(--surfer-aqua-mist)] text-[var(--surfer-cyan)] rounded-2xl font-black text-lg transition-all hover:bg-[var(--surfer-aqua-mist)]/20 hover:scale-105 active:scale-95 disabled:opacity-50 group"
             >
-              {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-black" />}
+              {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-[var(--surfer-yellow)]" />}
               <span>{isUploading ? 'מעבד תמונות...' : 'העלאת תמונות'}</span>
             </button>
             <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileUpload} />
@@ -168,23 +168,23 @@ const GalleryPage: React.FC = () => {
       </div>
 
       {isUploading && (
-        <div className={`mb-12 bg-white/10 backdrop-blur-[15px] rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] p-8 animate-in slide-in-from-top-4 ${errorMsg ? 'border-rose-500' : ''}`}>
+        <div className={`mb-12 bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_15px_30px_-10px_var(--surfer-deep-shadow),inset_0_0_15px_var(--surfer-aqua-mist)] rounded-2xl p-8 animate-in slide-in-from-top-4 ${errorMsg ? 'border-rose-500' : ''}`}>
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
               {errorMsg ? (
-                <AlertTriangle className="text-rose-500" size={24} />
+                <AlertTriangle className="text-[var(--surfer-yellow)]" size={24} />
               ) : uploadProgress === 100 ? (
-                <CheckCircle2 className="text-emerald-500 animate-bounce" size={24} />
+                <CheckCircle2 className="text-[var(--surfer-cyan)] animate-bounce" size={24} />
               ) : (
                 <Loader2 className="animate-spin text-white" size={24} />
               )}
-              <span className={`font-black ${errorMsg ? 'text-rose-500' : 'glass-text-primary'}`}>
+              <span className={`font-black ${errorMsg ? 'text-rose-500' : 'text-white'}`}>
                 {errorMsg || uploadStatus}
               </span>
             </div>
-            <span className="font-black glass-text-primary text-sm">{uploadProgress}%</span>
+            <span className="font-black text-[var(--surfer-cyan)] text-sm">{uploadProgress}%</span>
           </div>
-          <div className="w-full h-6 glass-effect rounded-full overflow-hidden">
+          <div className="w-full h-6 bg-black/20 rounded-full overflow-hidden">
             <div 
               className={`h-full transition-all duration-500 ease-out ${errorMsg ? 'bg-rose-500' : 'bg-[var(--surfer-cyan)]'}`}
               style={{ width: `${uploadProgress}%` }}
@@ -193,10 +193,10 @@ const GalleryPage: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-4">
         {galleryItems.map((item) => (
           <div key={item.id} 
-            className={`relative group aspect-square overflow-hidden bg-white/10 backdrop-blur-[15px] rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,0.9)] transition-all duration-300 cursor-zoom-in ${deletingId === item.id ? 'opacity-30' : ''}`}
+            className={`relative group aspect-square overflow-hidden bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_15px_30px_-10px_var(--surfer-deep-shadow),inset_0_0_15px_var(--surfer-aqua-mist)] rounded-2xl transition-all duration-500 cursor-zoom-in hover:scale-105 ${deletingId === item.id ? 'opacity-30' : ''}`}
             onClick={() => setSelectedImage(item.imageUrl)}
           >
             <img 
@@ -205,14 +205,14 @@ const GalleryPage: React.FC = () => {
               alt={item.uploaderName} 
               loading="lazy" 
             />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-               <div className="flex items-center gap-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300 glass-effect p-2 rounded-lg self-start">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+               <div className="flex items-center gap-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300 bg-[var(--surfer-aqua-mist)]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 p-2 rounded-xl self-start">
                   <div className="w-8 h-8 rounded-full bg-[var(--surfer-cyan)] flex items-center justify-center text-white">
                     <User size={16} />
                   </div>
                   <div>
-                    <p className="text-white font-black text-xs">{item.uploaderName}</p>
-                    <p className="text-white/60 text-[12px] font-bold uppercase tracking-widest">רגע מהמים</p>
+                    <p className="text-[var(--surfer-magenta)] font-black text-xs">{item.uploaderName}</p>
+                    <p className="text-[var(--surfer-yellow)] text-[10px] font-bold uppercase tracking-widest">רגע מהמים</p>
                   </div>
                </div>
                
@@ -223,7 +223,7 @@ const GalleryPage: React.FC = () => {
                      handleDelete(item); 
                    }}
                    disabled={deletingId === item.id}
-                   className="absolute top-4 left-4 p-3 bg-[var(--surfer-pink)] text-black border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:bg-rose-600 transition-all z-20 disabled:opacity-50 active:scale-90 flex items-center justify-center"
+                   className="absolute top-4 left-4 p-3 bg-[var(--surfer-pink)] text-white rounded-xl shadow-[0_5px_15px_rgba(255,45,96,0.4)] hover:bg-rose-600 transition-all z-20 disabled:opacity-50 active:scale-90 flex items-center justify-center"
                    title="מחיקת תמונה"
                  >
                    {deletingId === item.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
@@ -240,7 +240,7 @@ const GalleryPage: React.FC = () => {
           onClick={() => setSelectedImage(null)}
         >
            <button 
-             className="absolute top-8 left-8 p-3 bg-[var(--surfer-cyan)] text-black rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:bg-[var(--surfer-teal)] transition-all z-[130] active:scale-90"
+             className="absolute top-8 left-8 p-3 bg-[var(--surfer-aqua-mist)]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 text-white rounded-xl hover:bg-[var(--surfer-aqua-mist)]/40 transition-all z-[130] active:scale-90"
              onClick={(e) => {
                e.stopPropagation();
                setSelectedImage(null);
@@ -248,10 +248,10 @@ const GalleryPage: React.FC = () => {
            >
              <X size={32} strokeWidth={3} />
            </button>
-           <div className="relative max-w-5xl max-h-full bg-white/10 backdrop-blur-[15px] rounded-[8px] border-[2px] border-black shadow-[6px_6px_0px_rgba(0,0,0,0.9)] p-2" onClick={e => e.stopPropagation()}>
+           <div className="relative max-w-5xl max-h-full bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_20px_50px_-10px_var(--surfer-deep-shadow)] rounded-3xl p-2" onClick={e => e.stopPropagation()}>
              <img 
                src={selectedImage} 
-               className="w-full h-full object-contain rounded-[4px] animate-in zoom-in-95 duration-300" 
+               className="w-full h-full object-contain rounded-2xl animate-in zoom-in-95 duration-300" 
                alt="Large view" 
              />
            </div>

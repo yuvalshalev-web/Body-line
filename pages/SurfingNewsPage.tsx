@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { GlassButton } from '../components/GlassButton';
+import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { Globe, Loader2, ExternalLink, Calendar, Newspaper, AlertCircle, RefreshCw, Bookmark, Waves } from 'lucide-react';
 
 interface Article {
@@ -121,7 +121,7 @@ const SurfingNewsPage: React.FC = () => {
         <div className="surfboard-hero-container mb-10 space-y-4">
           {/* Top Badge */}
           <div className="header-badge-glass">
-            <Globe size={12} className="text-[#00f2fe]" />
+            <Globe size={12} className="text-[#00FFFF]" />
             <span>GLOBAL SURF UPDATES</span>
           </div>
 
@@ -142,7 +142,7 @@ const SurfingNewsPage: React.FC = () => {
               noGradient={true}
               className="flex items-center gap-4 px-8 py-4 rounded-[1.5rem] font-black text-sm transition-all active:scale-95 shadow-lg group disabled:opacity-50 surfer-refresh-btn text-white"
             >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} className="group-hover:rotate-180 transition-transform text-white" />}
+              {loading ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} className="group-hover:rotate-180 transition-transform text-[#00FFFF]" />}
               <span>רענן חדשות</span>
             </GlassButton>
           </div>
@@ -150,14 +150,14 @@ const SurfingNewsPage: React.FC = () => {
 
         {error ? (
           <div className="py-40 text-center bg-rose-50 rounded-[4rem] border-2 border-dashed border-rose-100 flex flex-col items-center p-12">
-            <AlertCircle size={48} className="text-rose-400 mb-6" />
+            <AlertCircle size={48} className="text-[#FF2D60] mb-6" />
             <h3 className="text-2xl font-black text-rose-900 mb-2">אופס, משהו השתבש</h3>
             <p className="text-rose-600 font-bold mb-8 max-w-md mx-auto">{error}</p>
             <GlassButton 
               onClick={() => fetchNews(true)} 
               className="px-8 py-4 rounded-2xl font-black text-sm shadow-xl active:scale-95 flex items-center gap-3"
             >
-              <RefreshCw size={18} />
+              <RefreshCw size={18} className="text-[#00FFFF]" />
               <span>נסה שנית</span>
             </GlassButton>
           </div>
@@ -188,7 +188,7 @@ const SurfingNewsPage: React.FC = () => {
                   
                   <div className="p-8 flex-1 flex flex-col">
                     <div className="flex items-center gap-3 text-slate-400 text-[12px] font-black uppercase tracking-widest mb-4">
-                      <Calendar size={12} />
+                      <Calendar size={12} className="text-[#FFD700]" />
                       {new Date(article.publishedAt).toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </div>
                     
@@ -214,7 +214,7 @@ const SurfingNewsPage: React.FC = () => {
               ))
             ) : (
               <div className="col-span-full py-40 text-center bg-white rounded-[4rem] border-2 border-dashed border-slate-100 flex flex-col items-center">
-                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8 text-slate-200">
+                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8 text-[#00FFFF]">
                   <Newspaper size={48} />
                 </div>
                 <h3 className="text-2xl font-black text-[#2B2B2E]">לא נמצאו כתבות</h3>

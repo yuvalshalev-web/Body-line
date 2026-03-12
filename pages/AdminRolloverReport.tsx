@@ -64,7 +64,7 @@ const AdminRolloverReport: React.FC = () => {
 
   const getStatusStyles = (status: string) => {
     switch(status) {
-      case 'success': return 'bg-[#00D9E6] text-black border-black rounded-2xl';
+      case 'success': return 'bg-[#3dbbd3] text-black border-black rounded-2xl';
       case 'running': return 'bg-[#FFDE45] text-black border-black rounded-2xl';
       case 'partial': return 'bg-[#FF9F1C] text-black border-black rounded-2xl';
       case 'failure': return 'bg-[#FF2D60] text-white border-black rounded-2xl';
@@ -129,7 +129,7 @@ const AdminRolloverReport: React.FC = () => {
         {/* Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {[
-            { label: 'רשומות נשמרו', value: stats.recordsSaved.toLocaleString(), sub: 'השבוע הנוכחי', color: 'bg-[#00D9E6]' },
+            { label: 'רשומות נשמרו', value: stats.recordsSaved.toLocaleString(), sub: 'השבוע הנוכחי', color: 'bg-[#3dbbd3]' },
             { label: 'מונים אופסו', value: stats.countersReset, sub: '0 שגיאות', color: 'bg-[#FF2D60]', textColor: 'text-white' },
             { label: 'זמן ריצה', value: stats.runTime, sub: 'ממוצע: 2.1s', color: 'bg-[#FFDE45]' },
             { label: 'שבועות רצופים', value: stats.consecutiveSuccess, sub: 'ללא כישלון', color: 'bg-white' }
@@ -158,7 +158,7 @@ const AdminRolloverReport: React.FC = () => {
               {logs.map((log) => (
                 <div key={log.id} className="p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 hover:bg-[#B2EBF2]/30 transition-colors group">
                   <div className={`shrink-0 w-12 h-12 md:w-14 md:h-14 border-2 border-black rounded-xl flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] group-hover:scale-105 transition-transform ${
-                    log.status === 'success' ? 'bg-[#00D9E6]' :
+                    log.status === 'success' ? 'bg-[#3dbbd3]' :
                     log.status === 'failure' ? 'bg-[#FF2D60]' :
                     'bg-[#FFDE45]'
                   }`}>
@@ -236,7 +236,7 @@ const AdminRolloverReport: React.FC = () => {
                         <td className="p-6 font-bold text-xl md:text-2xl">{row.label}</td>
                         <td className="p-6 font-['IBM_Plex_Mono'] text-xl md:text-2xl text-center font-bold text-black/40">{row.before}</td>
                         <td className="p-6 font-['IBM_Plex_Mono'] text-xl md:text-2xl text-center font-black">{row.after}</td>
-                        <td className="p-6 text-center font-black text-[#00D9E6] text-2xl">✓</td>
+                        <td className="p-6 text-center font-black text-[#3dbbd3] text-2xl">✓</td>
                       </tr>
                     ))}
                   </tbody>
@@ -254,7 +254,7 @@ const AdminRolloverReport: React.FC = () => {
                 {[1, 2, 3, 4].map((_, i) => (
                   <div key={i} className="p-6 flex items-center justify-between hover:bg-[#B2EBF2]/20 group cursor-pointer">
                     <div className="flex items-center gap-6">
-                      <div className="w-4 h-4 border-2 border-black bg-[#00D9E6] rounded-sm group-hover:rotate-45 transition-transform" />
+                      <div className="w-4 h-4 border-2 border-black bg-[#3dbbd3] rounded-sm group-hover:rotate-45 transition-transform" />
                       <span className="font-['IBM_Plex_Mono'] font-black text-xl md:text-2xl">2{7-i}.02.2025</span>
                     </div>
                     <span className="font-['IBM_Plex_Mono'] font-bold text-xl md:text-2xl text-black/50">2.{1+i}s</span>

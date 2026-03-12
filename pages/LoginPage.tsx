@@ -6,7 +6,7 @@ import { Member } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { hashPassword } from '../utils/crypto';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
-import { GlassButton } from '../components/GlassButton';
+import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { processImage } from '../utils/imageProcessor';

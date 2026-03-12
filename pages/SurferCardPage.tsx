@@ -53,7 +53,7 @@ const SurferCardPage: React.FC = () => {
       </div>
 
       {/* Motivation Card & Rank Roadmap */}
-      <div className="mb-10">
+      <div className="mb-6">
         {(() => {
           const rankColors: Record<string, { bg: string, glow: string, trophy: string }> = {
             'פופ-אפיסט': { bg: 'from-[#021626] to-[#010d17]', glow: 'rgba(0, 242, 254, 0.2)', trophy: '#E5E7EB' },
@@ -100,14 +100,14 @@ const SurferCardPage: React.FC = () => {
 
           return (
             <motion.div 
-              className="p-[var(--spacing-md)] md:p-[var(--spacing-lg)] rounded-[8px] bg-white/10 backdrop-blur-[15px] text-[#2B2B2E] transition-all duration-1000 relative border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)]"
+              className="p-4 md:p-6 rounded-[8px] bg-white/10 backdrop-blur-[15px] text-[#2B2B2E] transition-all duration-1000 relative border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)]"
             >
               {/* Decorative background elements */}
               <div className="absolute -right-20 -top-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
               <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
               
               <div className="relative z-10">
-                <div className="flex flex-col md:flex-row items-center gap-10 mb-6">
+                <div className="flex flex-col md:flex-row items-center gap-6 mb-4">
                   <div className="relative">
                     {/* Dynamic Backend Glow */}
                     <motion.div 
@@ -158,12 +158,12 @@ const SurferCardPage: React.FC = () => {
                 </div>
 
                 {/* Final 3-Layer Roadmap - Professional Glassmorphism */}
-                <div className="mt-10 mb-10 px-8 max-w-4xl mx-auto">
+                <div className="mt-6 mb-4 px-4 md:px-8 max-w-4xl mx-auto">
                   {/* Parent Container - Wraps both Indicator and Progress Bar */}
-                  <div className="relative w-full pt-10">
+                  <div className="relative w-full pt-4">
                     
                     {/* Progress Bar Container - Zero-Point Sync */}
-                    <div className="progress-container w-full px-4 mt-12">
+                    <div className="progress-container w-full px-4 mt-8">
                       {/* Layer 3: 'מיקומך הנוכחי' Marker - Positioned above the bar */}
                       <motion.div 
                         key="current-marker"
@@ -235,13 +235,13 @@ const SurferCardPage: React.FC = () => {
                                   style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
                                 >
                                   {/* Identical Circle Node */}
-                                  <div className={`w-4 h-4 rounded-full transition-all duration-1000 border-[1.5px] border-black relative ${
+                                  <div className={`w-4 h-4 rounded-[2px] transition-all duration-1000 border-[1.5px] border-black relative ${
                                     isCurrent || isPassed
                                       ? 'bg-white shadow-[2px_2px_0px_rgba(0,0,0,0.8)]' 
                                       : 'bg-slate-800/50'
                                   }`}>
                                     {isCurrent && (
-                                      <div className="absolute inset-[-6px] border-[1.5px] border-black rounded-full animate-pulse blur-[1px]" />
+                                      <div className="absolute inset-[-6px] border-[1.5px] border-black rounded-[4px] animate-pulse blur-[1px]" />
                                     )}
                                   </div>
                                 </div>
@@ -264,7 +264,7 @@ const SurferCardPage: React.FC = () => {
                   </div>
 
                   {/* Labels (Layer 1 - Below the bar) */}
-                  <div className="relative w-full h-20 mt-2 px-4">
+                  <div className="relative w-full h-16 mt-2 px-4">
                     <div className="relative w-full h-full">
                       {userData?.rankThresholds.map((rank, idx) => {
                         const isCurrent = rank.name === currentRank;
@@ -304,10 +304,10 @@ const SurferCardPage: React.FC = () => {
                 </div>
 
                 {/* Stats Grid - Moved from PlayerCard */}
-                <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-[var(--spacing-md)] border-t-[1.5px] border-black pt-8">
-                  <div className="flex flex-col group relative items-center p-4 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
+                <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 border-t-[1.5px] border-black pt-6">
+                  <div className="flex flex-col group relative items-center p-3 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
                     <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
-                      <Crown size={13} className="text-amber-500" /> מעמד
+                      <Crown size={13} className="text-[#FFD700]" /> מעמד
                       <Info size={12} className="text-slate-400" />
                       <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-black/80 backdrop-blur-md text-white text-xs rounded shadow-lg z-50">
                         הדרגה הנוכחית שלך בנבחרת.
@@ -318,9 +318,9 @@ const SurferCardPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="flex flex-col group relative items-center p-4 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
+                  <div className="flex flex-col group relative items-center p-3 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
                     <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
-                      <Waves size={13} className="text-[var(--ocean-4)]" /> סשנים
+                      <Waves size={13} className="text-[#00FFFF]" /> סשנים
                       <Info size={12} className="text-slate-400" />
                       <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-black/80 backdrop-blur-md text-white text-xs rounded shadow-lg z-50">
                         מספר הסשנים הכולל שהשתתפת בהם עד כה.
@@ -331,9 +331,9 @@ const SurferCardPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="flex flex-col group relative items-center p-4 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
+                  <div className="flex flex-col group relative items-center p-3 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
                     <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
-                      <Target size={13} className="text-emerald-500" /> {userData?.nextRankName ? `סשנים ל${userData.nextRankName}` : 'הגעת לפסגה'}
+                      <Target size={13} className="text-[#FF007F]" /> {userData?.nextRankName ? `סשנים ל${userData.nextRankName}` : 'הגעת לפסגה'}
                       <Info size={12} className="text-slate-400" />
                       <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-black/80 backdrop-blur-md text-white text-xs rounded shadow-lg z-50">
                         {userData?.nextRankName ? `מספר הסשנים שנותרו עד למעמד ${userData.nextRankName}` : 'כל הכבוד! הגעת למעמד הגבוה ביותר.'}
@@ -344,9 +344,9 @@ const SurferCardPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="flex flex-col group relative items-center p-4 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
+                  <div className="flex flex-col group relative items-center p-3 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
                     <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 cursor-help">
-                      <Flame size={13} className="text-[var(--ocean-1)]" /> רצף
+                      <Flame size={13} className="text-[#FFD700]" /> רצף
                       <Info size={12} className="text-slate-400" />
                       <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-black/80 backdrop-blur-md text-white text-xs rounded shadow-lg z-50">
                         מספר השבועות הרצופים בהם הגעת לסשן.
@@ -366,7 +366,7 @@ const SurferCardPage: React.FC = () => {
       {/* Detailed Analytics below */}
       <div className="mt-16 border-t-[2px] border-black pt-16">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-white/10 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] flex items-center justify-center text-[var(--ocean-bg)] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
+          <div className="w-10 h-10 bg-white/10 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] flex items-center justify-center text-[#00FFFF] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
             <Waves size={20} />
           </div>
           <h2 className="text-2xl font-black text-[var(--ocean-bg)] tracking-tight">ניתוח ביצועים מעמיק</h2>

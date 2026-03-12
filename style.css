@@ -66,7 +66,7 @@
   --ocean-text-main: #ffffff;
   --ocean-text-dim: rgba(255, 255, 255, 0.5);
   /* --- Surfer Theme Palette --- */
-  --surfer-cyan: #00D9E6;
+  --surfer-cyan: #3dbbd3;
   --surfer-teal: #00AFC2;
   --surfer-pink: #FF2D60;
   --surfer-magenta: #CC2678;
@@ -138,6 +138,81 @@
   --h1-glass-bg: rgba(255, 255, 255, 0.1);
   --h1-glass-border: 1px solid rgba(255, 255, 255, 0.2);
   --h1-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+  /* --- Neo-Brutalism Palette --- */
+  --electric-pink: #FF2D60;
+  --vibrant-cyan: #3dbbd3;
+  --sunshine-yellow: #FFDE45;
+  --acid-green: #A2FF00;
+  --safety-orange: #FF9F1C;
+  
+  /* Deep Accents */
+  --deep-magenta: #CC2678;
+  --midnight-black: #000000;
+  
+  /* Background & Surfaces (The "Soft" part) */
+  --soft-sand: #F2E9E4;
+  --pure-white: #FFFFFF;
+  
+  /* Functional Styles */
+  --neo-border-width: 3px;
+  --neo-shadow: 5px 5px 0px 0px var(--midnight-black);
+  --neo-shadow-hover: 2px 2px 0px 0px var(--midnight-black);
+
+  /* --- Tangible Surfer UI Palette --- */
+  --surfer-deep-shadow: #7A1555;
+  --surfer-aqua-mist: #B2EBF2;
+  --surfer-vibrant-cyan: #3dbbd3;
+  --surfer-electric-pink: #FF2D60;
+  --surfer-sunshine-yellow: #FFDE45;
+}
+
+.surfer-image-feather {
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+.tangible-surfer-card {
+  background: rgba(178, 235, 242, 0.15); /* Aqua Mist with transparency */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Beveled edge */
+  border-top: 2px solid rgba(255, 255, 255, 0.4); /* Extra top light */
+  box-shadow: 
+    0 15px 35px -12px rgba(122, 21, 85, 0.6), /* Primary Deep Shadow */
+    0 4px 8px -2px rgba(122, 21, 85, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2); /* Inner bevel */
+  border-radius: 24px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.tangible-surfer-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  background: rgba(178, 235, 242, 0.25);
+  box-shadow: 
+    0 25px 50px -15px rgba(122, 21, 85, 0.8),
+    0 10px 20px -5px rgba(122, 21, 85, 0.4);
+}
+
+.neon-text-cyan {
+  color: #3dbbd3 !important;
+  text-shadow: 0 0 10px rgba(0, 217, 230, 0.6), 0 0 20px rgba(0, 217, 230, 0.2);
+}
+
+.neon-text-pink {
+  color: #FF2D60 !important;
+  text-shadow: 0 0 12px rgba(255, 45, 96, 0.5), 0 0 25px rgba(255, 45, 96, 0.2);
+}
+
+.neon-text-yellow {
+  color: #FFDE45 !important;
+  text-shadow: 0 0 8px rgba(255, 222, 69, 0.6);
+}
+
+.tangible-bevel-inset {
+  background: rgba(0, 0, 0, 0.1);
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -1px -1px 2px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Exceptions for menus and Big Thursday */
@@ -198,13 +273,16 @@
   aspect-ratio: 3 / 1;
   
   /* צבע טקסט - שונה לכחול כהה לקריאות על גלשן בהיר */
-  color: #1e293b !important;
+  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
   
   /* אפקט Stroke (קו מתאר) מעודן יותר */
-  -webkit-text-stroke: 1px rgba(15, 23, 42, 0.8);
+  -webkit-text-stroke: 1px rgba(15, 23, 42, 0.3);
   
   /* הצללה קשיחה מעודנת (Subtle Neo-Glass) */
-  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
   filter: none;
 
   /* שכבת ה-Glassmorphism (באמצעות pseudo-element כדי לא להפריע ל-background-clip: text) */
@@ -1559,26 +1637,29 @@ main.bg-slate-50 {
     box-shadow: 0 2px 8px rgba(64, 224, 208, 0.3);
 }
 
-/* --- High-End Glass Tube Progress Bar --- */
+/* --- Soft Neu Brutalism Progress Bar --- */
 .progress-container {
     direction: ltr !important;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 999px;
-    height: 32px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid black;
+    border-radius: 4px;
+    height: 36px;
     position: relative;
-    box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.5), 0 10px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
 }
 
 .progress-fill {
     background: linear-gradient(90deg, var(--ocean-1), var(--ocean-2), var(--ocean-3), var(--ocean-4), var(--ocean-5));
-    box-shadow: 0 0 20px rgba(0, 66, 106, 0.4);
-    border-radius: 999px;
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+    border: 1.5px solid black;
+    border-radius: 2px;
     position: absolute;
-    top: 4px;
-    bottom: 4px;
-    left: 4px;
+    top: 6px;
+    bottom: 6px;
+    left: 6px;
     overflow: hidden;
     transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -1874,7 +1955,7 @@ main.bg-slate-50 {
 
 :root {
     /* Surfer Theme - Extended (12 Shades) */
-    --vibrant-cyan: #00D9E6;    /* המים הבהירים */
+    --vibrant-cyan: #3dbbd3;    /* המים הבהירים */
     --turquoise-teal: #00AFC2;  /* עומק המים */
     --electric-red-pink: #FF2D60; /* קצה הגלשן העליון */
     --deep-magenta: #CC2678;    /* גוון המעבר בגלשן */
@@ -1946,7 +2027,7 @@ main.bg-slate-50 {
 }
 
 .hd-glass-button.surfer-refresh-btn {
-    background: #00D9E6 !important;
+    background: #3dbbd3 !important;
 }
 .hd-glass-button.surfer-refresh-btn:hover {
     background: #00AFC2 !important;
@@ -2119,4 +2200,103 @@ h2.surfer-subtitle::after {
 .clock-timepicker-canvas {
     /* הוספת עומק לשעון האנלוגי */
     filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.2));
+}
+
+/* --- Neo-Brutalism Styles --- */
+.neo-card {
+  background-color: var(--pure-white);
+  border: var(--neo-border-width) solid var(--midnight-black);
+  box-shadow: var(--neo-shadow);
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.neo-card:hover {
+  transform: translate(3px, 3px);
+  box-shadow: var(--neo-shadow-hover);
+}
+
+/* כפתור אקשן בולט (CTA) */
+.btn-primary {
+  background-color: var(--electric-pink);
+  color: var(--midnight-black);
+  font-weight: bold;
+  border: var(--neo-border-width) solid var(--midnight-black);
+  box-shadow: var(--neo-shadow);
+  cursor: pointer;
+  padding: 10px 20px;
+}
+
+/* --- Subtle Neo-Glass (Member Profile Modal) --- */
+.neo-glass-modal {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 2px solid var(--deep-teal-sea, #007085) !important;
+  border-radius: 8px !important;
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.8) !important;
+}
+
+.neo-glass-panel {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 2px solid var(--deep-teal-sea, #007085) !important;
+  border-radius: 8px !important;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8) !important;
+  transition: all 0.2s ease-in-out;
+}
+
+.neo-glass-panel-dark {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 2px solid var(--deep-teal-sea, #007085) !important;
+  border-radius: 8px !important;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8) !important;
+}
+
+.neo-glass-button {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 2px solid var(--deep-teal-sea, #007085) !important;
+  border-radius: 8px !important;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8) !important;
+  transition: all 0.2s ease-in-out;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.neo-glass-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.8) !important;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.neo-glass-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8) !important;
+}
+
+.neo-glass-button-accent {
+  background: var(--electric-red-pink, #FF2D60) !important;
+  border: 2px solid #000 !important;
+  border-radius: 8px !important;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  font-weight: 900;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.neo-glass-button-accent:hover {
+  background: var(--vibrant-cyan, #3dbbd3) !important;
+  color: #000 !important;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.8) !important;
+}
+.neo-glass-button-accent:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8) !important;
 }

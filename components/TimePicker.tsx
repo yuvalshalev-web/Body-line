@@ -8,7 +8,7 @@ interface TimePickerProps extends Omit<React.InputHTMLAttributes<HTMLInputElemen
 
 const bodyLineTimePickerConfig = {
     colors: {
-        buttonTextColor: '#00D9E6', // vibrant-cyan
+        buttonTextColor: '#3dbbd3', // vibrant-cyan
         clockFaceColor: '#007085', // deep-teal-sea
         clockInnerCircleTextColor: '#FFDE45', // sunshine-yellow
         clockOuterCircleTextColor: '#B2EBF2', // aqua-mist

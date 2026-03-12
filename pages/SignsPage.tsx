@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { WoodSignLink } from '../components/WoodSignLink';
+import { WoodSignLinkV2 as WoodSignLink } from '../components/WoodSignLink';
 import { RespectLocalsSign } from '../components/RespectLocalsSign';
 import { SignPost } from '../components/SignPost';
 import { AngryBird } from '../components/AngryBird';

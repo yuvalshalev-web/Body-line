@@ -24,7 +24,7 @@ import {
 import { AngryBird } from './components/AngryBird';
 
 
-import { WoodSignLink } from './components/WoodSignLink';
+import { WoodSignLinkV2 as WoodSignLink } from './components/WoodSignLink';
 import { RespectLocalsSign } from './components/RespectLocalsSign';
 import { SignPost } from './components/SignPost';
 import surferMenuConfig from './surfer_menu_config.json';

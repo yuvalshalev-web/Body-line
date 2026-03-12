@@ -1,7 +1,7 @@
 {
   "theme_name": "Surfer Theme",
   "palette": {
-    "vibrant_cyan": "#00D9E6",
+    "vibrant_cyan": "#3dbbd3",
     "turquoise_teal": "#00AFC2",
     "electric_red_pink": "#FF2D60",
     "deep_magenta": "#CC2678",
@@ -18,7 +18,7 @@
   "menu_items": [
     { "id": 1, "text": "Respect the Locals", "icon": "🏠", "color": "#FF2D60", "direction": "right", "rotation": 2 },
     { "id": 2, "text": "נבחרת הכוכבים", "icon": "🏄‍♂️", "color": "#00AFC2", "direction": "left", "rotation": -3 },
-    { "id": 3, "text": "גלריית תמונות", "icon": "📸", "color": "#00D9E6", "direction": "right", "rotation": 1 },
+    { "id": 3, "text": "גלריית תמונות", "icon": "📸", "color": "#3dbbd3", "direction": "right", "rotation": 1 },
     { "id": 4, "text": "אירועים", "icon": "🌴", "color": "#FF9F1C", "direction": "left", "rotation": -2 },
     { "id": 5, "text": "פוסטים", "icon": "✉️", "color": "#CC2678", "direction": "right", "rotation": 3 },
     { "id": 6, "text": "חדשות", "icon": "📝", "color": "#2DA95C", "direction": "left", "rotation": -1 },

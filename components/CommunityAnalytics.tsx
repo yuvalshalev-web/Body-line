@@ -146,7 +146,19 @@ const CommunityAnalytics: React.FC = () => {
         return false;
       });
 
-      const potentialAttendance = groupMembers.length * sessionCount;
+      const potentialAttendance = last8Sessions.reduce((sum, session) => {
+        const activeGroupMembers = groupMembers.filter(m => {
+          const joinedDate = new Date(m.joinedAt);
+          const sessionDate = new Date(session.date);
+          if (joinedDate > sessionDate) return false;
+          if (m.deactivatedAt) {
+            const deactivatedDate = new Date(m.deactivatedAt);
+            if (deactivatedDate < sessionDate) return false;
+          }
+          return true;
+        });
+        return sum + activeGroupMembers.length;
+      }, 0);
       const actualAttendance = last8Sessions.reduce((sum, session) => {
         const attendees = session.participantIds || [];
         const groupAttendees = attendees.filter((id: string) => 
@@ -160,7 +172,19 @@ const CommunityAnalytics: React.FC = () => {
         : 0;
 
       // Calculate Yearly Retention
-      const yearlyPotentialAttendance = groupMembers.length * weeklyHistory.length;
+      const yearlyPotentialAttendance = weeklyHistory.reduce((sum, session) => {
+        const activeGroupMembers = groupMembers.filter(m => {
+          const joinedDate = new Date(m.joinedAt);
+          const sessionDate = new Date(session.date);
+          if (joinedDate > sessionDate) return false;
+          if (m.deactivatedAt) {
+            const deactivatedDate = new Date(m.deactivatedAt);
+            if (deactivatedDate < sessionDate) return false;
+          }
+          return true;
+        });
+        return sum + activeGroupMembers.length;
+      }, 0);
       const yearlyActualAttendance = weeklyHistory.reduce((sum, session) => {
         const attendees = session.participantIds || [];
         const groupAttendees = attendees.filter((id: string) => 
@@ -174,7 +198,19 @@ const CommunityAnalytics: React.FC = () => {
 
       // Pulse logic: Retention < 60% in the last 2 sessions
       const last2Sessions = last8Sessions.slice(0, 2);
-      const potentialAttendanceLast2 = groupMembers.length * last2Sessions.length;
+      const potentialAttendanceLast2 = last2Sessions.reduce((sum, session) => {
+        const activeGroupMembers = groupMembers.filter(m => {
+          const joinedDate = new Date(m.joinedAt);
+          const sessionDate = new Date(session.date);
+          if (joinedDate > sessionDate) return false;
+          if (m.deactivatedAt) {
+            const deactivatedDate = new Date(m.deactivatedAt);
+            if (deactivatedDate < sessionDate) return false;
+          }
+          return true;
+        });
+        return sum + activeGroupMembers.length;
+      }, 0);
       const actualAttendanceLast2 = last2Sessions.reduce((sum, session) => {
         const attendees = session.participantIds || [];
         const groupAttendees = attendees.filter((id: string) => 
@@ -321,7 +357,19 @@ const CommunityAnalytics: React.FC = () => {
         return m.gender === c.key;
       });
 
-      const potentialAttendance = groupMembers.length * sessionCount;
+      const potentialAttendance = last8Sessions.reduce((sum, session) => {
+        const activeGroupMembers = groupMembers.filter(m => {
+          const joinedDate = new Date(m.joinedAt);
+          const sessionDate = new Date(session.date);
+          if (joinedDate > sessionDate) return false;
+          if (m.deactivatedAt) {
+            const deactivatedDate = new Date(m.deactivatedAt);
+            if (deactivatedDate < sessionDate) return false;
+          }
+          return true;
+        });
+        return sum + activeGroupMembers.length;
+      }, 0);
       const actualAttendance = last8Sessions.reduce((sum, session) => {
         const attendees = session.participantIds || [];
         const groupAttendees = attendees.filter((id: string) => 
@@ -335,7 +383,19 @@ const CommunityAnalytics: React.FC = () => {
         : 0;
       
       // Calculate Yearly Retention
-      const yearlyPotentialAttendance = groupMembers.length * weeklyHistory.length;
+      const yearlyPotentialAttendance = weeklyHistory.reduce((sum, session) => {
+        const activeGroupMembers = groupMembers.filter(m => {
+          const joinedDate = new Date(m.joinedAt);
+          const sessionDate = new Date(session.date);
+          if (joinedDate > sessionDate) return false;
+          if (m.deactivatedAt) {
+            const deactivatedDate = new Date(m.deactivatedAt);
+            if (deactivatedDate < sessionDate) return false;
+          }
+          return true;
+        });
+        return sum + activeGroupMembers.length;
+      }, 0);
       const yearlyActualAttendance = weeklyHistory.reduce((sum, session) => {
         const attendees = session.participantIds || [];
         const groupAttendees = attendees.filter((id: string) => 

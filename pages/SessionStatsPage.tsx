@@ -424,10 +424,21 @@ const SessionStatsPage: React.FC = () => {
       while (iter <= end && safety < 400) {
         if (iter.getDay() === 4) {
           const count = sessionMap.get(iter.toDateString()) || 0;
+          const sessionDate = new Date(iter);
+          const activeAtSession = activeMembers.filter(m => {
+            const joinedDate = new Date(m.joinedAt);
+            if (joinedDate > sessionDate) return false;
+            if (m.deactivatedAt) {
+              const deactivatedDate = new Date(m.deactivatedAt);
+              if (deactivatedDate < sessionDate) return false;
+            }
+            return true;
+          }).length;
+          
           pulseData.push({
             date: iter.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }),
             count: count,
-            percentage: activeMembers.length > 0 ? Math.round((count / activeMembers.length) * 100) : 0,
+            percentage: activeAtSession > 0 ? Math.round((count / activeAtSession) * 100) : 0,
             fullDate: iter.toLocaleDateString('he-IL', { month: 'long' }), // Just the month name for title
             activityMonth: (iter.getFullYear() - startDate.getFullYear()) * 12 + (iter.getMonth() - startDate.getMonth()) + 1,
             weekNumber: Math.ceil(Math.abs(iter.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 7)) || 1
@@ -444,11 +455,25 @@ const SessionStatsPage: React.FC = () => {
       const groupCount = groupMembers.length;
 
       const calcRate = (sessions: any[]) => {
-        if (groupCount === 0 || sessions.length === 0) return 0;
+        if (sessions.length === 0) return 0;
+        let potentialAttendance = 0;
         const actualAttendance = sessions.reduce((acc, s) => {
+          const sessionDate = new Date(s.date);
+          const activeAtSession = groupMembers.filter(m => {
+            const joinedDate = new Date(m.joinedAt);
+            if (joinedDate > sessionDate) return false;
+            if (m.deactivatedAt) {
+              const deactivatedDate = new Date(m.deactivatedAt);
+              if (deactivatedDate < sessionDate) return false;
+            }
+            return true;
+          }).length;
+          potentialAttendance += activeAtSession;
+          
           return acc + (s.participantIds || []).filter((uid: string) => ageMap.get(uid) === group.label).length;
         }, 0);
-        return Math.round((actualAttendance / (groupCount * sessions.length)) * 100);
+        if (potentialAttendance === 0) return 0;
+        return Math.round((actualAttendance / potentialAttendance) * 100);
       };
 
       return {

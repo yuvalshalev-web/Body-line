@@ -28,7 +28,8 @@ import {
   AlertCircle,
   ShieldAlert,
   LayoutGrid,
-  List
+  List,
+  MessageCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -42,9 +43,35 @@ import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 
 type SortOption = 'name-asc' | 'attendance' | 'newest';
 
+const PhoneIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="phone-grad-glass" x1="0%" y1="100%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="rgba(0, 122, 255, 0.7)" />
+        <stop offset="100%" stopColor="rgba(0, 26, 153, 0.7)" />
+      </linearGradient>
+    </defs>
+    <circle cx="50" cy="50" r="46" fill="url(#phone-grad-glass)" />
+    <path 
+      d="M67.2,60.8l-7.1-7.1c-1.1-1.1-3-1.1-4.1,0l-3.3,3.3c-0.6-0.3-1.2-0.7-1.8-1.1c-4.3-2.9-7.8-6.4-10.7-10.7 c-0.4-0.6-0.8-1.2-1.1-1.8l3.3-3.3c1.1-1.1,1.1-3,0-4.1l-7.1-7.1c-1.1-1.1-3-1.1-4.1,0l-5.2,5.2c-2.5,2.5-3.4,6.2-2.2,9.6 c1.9,5.7,5.2,10.8,9.6,15.2c4.4,4.4,9.5,7.7,15.2,9.6c3.4,1.2,7.1,0.3,9.6-2.2l5.2-5.2C68.3,63.8,68.3,61.9,67.2,60.8z" 
+      fill="white" 
+    />
+  </svg>
+);
+
 const WhatsAppIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.396.015 12.03c0 2.12.554 4.189 1.605 6.006L0 24l6.149-1.613a11.771 11.771 0 005.9 1.569h.005c6.632 0 12.028-5.398 12.03-12.03a11.85 11.85 0 00-3.527-8.511" />
+  <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="wa-grad-glass" x1="0%" y1="100%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="rgba(0, 168, 0, 0.7)" />
+        <stop offset="100%" stopColor="rgba(151, 255, 51, 0.7)" />
+      </linearGradient>
+    </defs>
+    <circle cx="50" cy="50" r="48" fill="url(#wa-grad-glass)" />
+    <path 
+      fill="white" 
+      d="M50.2 24.3c-14.2 0-25.8 11.6-25.8 25.8 0 4.5 1.2 9 3.4 12.9L24 75.7l13.1-3.4c3.8 2.1 8.1 3.2 12.5 3.2 14.2 0 25.8-11.6 25.8-25.8 0-14.2-11.6-25.8-25.2-25.8zm0 47.3c-3.8 0-7.6-1-10.8-2.9l-.8-.5-7.8 2 2-7.6-.5-.8c-2.1-3.3-3.2-7.1-3.2-11.1 0-11.4 9.3-20.7 20.7-20.7 11.4 0 20.7 9.3 20.7 20.7 0 11.4-9.3 21.2-20.3 21.2zm11.5-15.4c-.6-.3-3.7-1.8-4.3-2-.6-.2-1-.3-1.4.3-.4.6-1.7 2.1-2.1 2.6-.4.5-.8.5-1.4.2-.6-.3-2.5-.9-4.8-3-1.8-1.6-3-3.5-3.4-4.1-.4-.6 0-.9.3-1.2.3-.3.6-.7.9-1 .3-.3.4-.6.6-.9.2-.3.1-.6 0-.9-.1-.3-1-2.4-1.4-3.3-.4-1-.7-.8-1-.8-.3 0-.6 0-.9 0-.3 0-.8.1-1.2.6-.4.5-1.5 1.5-1.5 3.6 0 2.1 1.5 4.1 1.7 4.4.2.3 3 4.6 7.3 6.4 1 .4 1.8.7 2.4.9 1 .3 2 .3 2.7.2.8-.1 2.5-.9 2.8-1.9.3-.9.3-1.7.2-1.9-.1-.2-.4-.3-1-.6z"
+    />
   </svg>
 );
 
@@ -55,49 +82,66 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -8, transition: { duration: 0.3 } }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ y: -10, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       transition={{ delay: idx * 0.03, type: 'spring', stiffness: 260, damping: 20 }}
       className="group cursor-pointer relative" 
       onClick={onClick}
     >
-      <div className="wax-comb-card wax-comb-mask transition-all duration-300 hover:translate-y-[2px] hover:translate-x-[2px]">
-        <div className="w-full h-[64%] mt-[16%] p-4">
+      <div className="bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_15px_30px_-10px_var(--surfer-deep-shadow),inset_0_0_15px_var(--surfer-aqua-mist)] rounded-2xl flex flex-col h-full transition-all duration-500 overflow-hidden relative">
+        {/* Top Half: Avatar with Feathered Edges */}
+        <div className="relative aspect-square w-full overflow-hidden">
           {member.avatar ? (
             <img 
               src={member.avatar} 
-              className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105 rounded-lg avatar-fade" 
-              alt={`${member.firstName} ${member.lastName}`} 
+              className="w-full h-full object-cover surfer-image-feather" 
+              alt={`${member.firstName} ${member.lastName}`}
+              referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400 rounded-lg avatar-fade">
-              <UserCircle size={48} strokeWidth={1} />
+            <div className="w-full h-full bg-gradient-to-br from-[var(--surfer-aqua-mist)]/20 to-[var(--surfer-pink)]/20 flex items-center justify-center surfer-image-feather">
+              <UserCircle size={64} strokeWidth={0.5} className="text-[var(--surfer-deep-teal)]/20" />
             </div>
           )}
         </div>
-        
-        <div className="flex-1 w-full pointer-events-none"></div>
-        
-        <div className="relative z-10 text-center space-y-2 w-full px-2 mt-auto pb-10">
-          {/* Role Badge */}
-          <div className="flex justify-center">
-            <div className={`px-3 py-1 rounded-md inline-flex items-center gap-2 bg-white/40 backdrop-blur-md border-2 border-slate-900 shadow-[2px_2px_0px_rgba(0,0,0,0.8)]`}>
-               <div className={`w-1.5 h-1.5 rounded-full ${member.role === 'Admin' ? 'bg-[#FF2D60]' : member.role === 'Instructor' ? 'bg-[#00AFC2]' : 'bg-emerald-400'}`} />
-               <span className="text-[8px] font-black text-[#1e293b] uppercase tracking-[0.2em]">
-                 {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
-               </span>
-            </div>
-          </div>
 
-          <h4 className="text-sm font-black text-[#1e293b] truncate tracking-tight group-hover:text-[#00AFC2] transition-colors">
+        {/* Bottom Half: Content */}
+        <div className="pt-2 pb-8 px-4 flex flex-col items-center justify-center text-center flex-1">
+          <h4 className="text-base font-black text-[#7A1555] [text-shadow:0_0_10px_var(--surfer-pink)] truncate w-full">
             {member.firstName} {member.lastName}
           </h4>
-          <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-             <div className="h-0.5 w-4 bg-gradient-to-r from-transparent to-[#00AFC2]" />
-             <Sparkles size={10} className="text-[#FFDE45]" />
-             <div className="h-0.5 w-4 bg-gradient-to-l from-transparent to-[#00AFC2]" />
-          </div>
         </div>
+
+        {/* Quick Phone Action - Bottom Left Corner */}
+        {member.mobile && (
+          <div
+            role="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open(`tel:${member.mobile}`, '_self');
+            }}
+            className="absolute bottom-1.5 left-1.5 w-8 h-8 flex items-center justify-center bg-white/10 backdrop-blur-md rounded-full shadow-lg hover:scale-110 transition-all duration-300 z-30 cursor-pointer"
+            title="חיוג מהיר"
+          >
+            <PhoneIcon className="w-8 h-8" />
+          </div>
+        )}
+
+        {/* Quick WhatsApp Action - Absolute Corner */}
+        {member.mobile && (
+          <div
+            role="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const phone = member.mobile?.replace(/[^0-9]/g, '');
+              window.open(`https://wa.me/${phone}`, '_blank');
+            }}
+            className="absolute bottom-1.5 right-1.5 w-8 h-8 flex items-center justify-center bg-white/10 backdrop-blur-md rounded-full shadow-lg hover:scale-110 transition-all duration-300 z-30 cursor-pointer"
+            title="שלח הודעה מהירה"
+          >
+            <WhatsAppIcon className="w-8 h-8" />
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -260,84 +304,78 @@ const DirectoryPage: React.FC = () => {
   }, [processedMembers]);
 
   return (
-    <div className="min-h-screen text-right relative overflow-hidden bg-[#f8fafc]" dir="rtl">
+    <div className="min-h-screen text-right relative overflow-hidden bg-slate-50" dir="rtl">
       {/* Background Decorative Elements - Atmospheric Surfers Theme */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute -top-48 -left-48 w-[800px] h-[800px] bg-[#00D9E6]/10 rounded-full blur-[150px] animate-pulse" />
-        <div className="absolute top-1/4 -right-64 w-[700px] h-[700px] bg-[#FF2D60]/5 rounded-full blur-[180px]" />
-        <div className="absolute bottom-0 left-1/4 w-[900px] h-[900px] bg-[#FFDE45]/10 rounded-full blur-[200px]" />
-        
-        {/* Floating Stars/Sparkles */}
-        <div className="absolute top-20 right-[10%] w-2 h-2 bg-[#FFDE45] rounded-full blur-sm animate-ping" />
-        <div className="absolute top-40 left-[15%] w-1.5 h-1.5 bg-[#00D9E6] rounded-full blur-sm animate-pulse" />
-        <div className="absolute bottom-40 right-[20%] w-1 h-1 bg-[#FF2D60] rounded-full blur-sm animate-bounce" />
+        <div className="absolute -top-48 -left-48 w-[800px] h-[800px] bg-[#00AFC2]/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[#FF2D60]/5 rounded-full blur-[150px]" />
       </div>
 
       <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}
         <h1 className="main-page-title">
-          <span className="surfer-title">נבחרת הכוכבים</span>
+          <span className="surfer-title glass-text-primary">נבחרת הכוכבים</span>
         </h1>
       </div>
 
       {/* Compact Stats Pill */}
       <div className="flex justify-center mb-12 px-6">
-        <div className="glass-panel border-2 border-slate-900 px-8 py-3 rounded-lg shadow-[4px_4px_0px_rgba(0,0,0,0.8)] !bg-white/40 !backdrop-blur-3xl flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
+        <div className="glass-panel px-8 py-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-              <Users size={14} />
+            <div className="w-10 h-10 glass-effect !rounded-full flex items-center justify-center text-[#00AFC2]">
+              <Users size={18} />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-black text-[#1e293b] leading-none">{activeMembers.length}</span>
-              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">קהילה</span>
+              <span className="text-lg font-black glass-text-primary leading-none">{activeMembers.length}</span>
+              <span className="text-[10px] font-black glass-text-secondary uppercase tracking-widest mt-0.5">קהילה</span>
             </div>
           </div>
           
-          <div className="hidden sm:block w-px h-6 bg-white/30" />
+          <div className="hidden sm:block w-px h-8 bg-white/20" />
 
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
-              <User size={14} />
+            <div className="w-10 h-10 glass-effect !rounded-full flex items-center justify-center text-emerald-500">
+              <User size={18} />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-black text-emerald-600 leading-none">{groupedMembers.Member.length}</span>
-              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">חברים</span>
+              <span className="text-lg font-black glass-text-primary leading-none">{groupedMembers.Member.length}</span>
+              <span className="text-[10px] font-black glass-text-secondary uppercase tracking-widest mt-0.5">חברים</span>
             </div>
           </div>
           
-          <div className="hidden sm:block w-px h-6 bg-white/30" />
+          <div className="hidden sm:block w-px h-8 bg-white/20" />
           
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#00AFC2]/10 flex items-center justify-center text-[#00AFC2]">
-              <Sparkles size={14} />
+            <div className="w-10 h-10 glass-effect !rounded-full flex items-center justify-center text-[#FFD700]">
+              <Sparkles size={18} />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-black text-[#00AFC2] leading-none">{groupedMembers.Instructor.length}</span>
-              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">מדריכים</span>
+              <span className="text-lg font-black glass-text-primary leading-none">{groupedMembers.Instructor.length}</span>
+              <span className="text-[10px] font-black glass-text-secondary uppercase tracking-widest mt-0.5">מדריכים</span>
             </div>
           </div>
           
-          <div className="hidden sm:block w-px h-6 bg-white/30" />
+          <div className="hidden sm:block w-px h-8 bg-white/20" />
           
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#FF2D60]/10 flex items-center justify-center text-[#FF2D60]">
-              <ShieldAlert size={14} />
+            <div className="w-10 h-10 glass-effect !rounded-full flex items-center justify-center text-[#FF2D60]">
+              <ShieldAlert size={18} />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-black text-[#FF2D60] leading-none">{groupedMembers.Admin.length}</span>
-              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">רכזים</span>
+              <span className="text-lg font-black glass-text-primary leading-none">{groupedMembers.Admin.length}</span>
+              <span className="text-[10px] font-black glass-text-secondary uppercase tracking-widest mt-0.5">רכזים</span>
             </div>
           </div>
           
           {isAdmin && (
             <>
-              <div className="hidden sm:block w-px h-6 bg-white/30" />
+              <div className="hidden sm:block w-px h-8 bg-white/20" />
               <button 
                 onClick={() => setIsAddMemberModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#00AFC2] text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all border-2 border-slate-900 shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:translate-y-[2px] hover:translate-x-[2px] active:scale-95"
+                className="glass-effect px-6 py-3 !rounded-full flex items-center gap-2 text-[#00AFC2] font-black text-[11px] uppercase tracking-widest hover:bg-white/20 transition-all"
               >
-                <Plus size={12} />
-                <span>Add Star</span>
+                <Plus size={14} />
+                <span>הוסף כוכב +</span>
               </button>
             </>
           )}
@@ -346,30 +384,30 @@ const DirectoryPage: React.FC = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-6">
         {/* Search & Filter Section */}
-        <div className="flex flex-col md:flex-row gap-6 mb-20 items-center">
-          <div className="flex-1 relative group w-full">
-             <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00AFC2] transition-colors" size={22} />
+        <div className="flex flex-col md:flex-row gap-8 mb-20 items-center">
+          <div className="flex-1 relative w-full">
+             <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400" size={22} />
              <input 
                type="text" 
                placeholder="חפש כוכב בנבחרת..." 
-               className="w-full pr-16 pl-8 py-5 glass-panel border-2 border-slate-900 rounded-lg font-bold text-[#1e293b] outline-none focus:bg-white/40 transition-all shadow-[4px_4px_0px_rgba(0,0,0,0.8)] focus:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] focus:translate-y-[2px] focus:translate-x-[2px] text-lg placeholder:text-slate-400 backdrop-blur-3xl"
+               className="glass-input w-full pr-16 pl-8 py-5 font-bold text-slate-700 text-lg placeholder:text-slate-400"
                value={searchTerm}
                onChange={e => setSearchTerm(e.target.value)}
              />
           </div>
 
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <div className="glass-panel border-2 border-slate-900 p-1.5 rounded-lg flex items-center shadow-[4px_4px_0px_rgba(0,0,0,0.8)] bg-white/20 backdrop-blur-3xl">
+          <div className="flex items-center gap-6 w-full md:w-auto">
+            <div className="glass-panel p-1.5 flex items-center !rounded-2xl">
               <button 
                 onClick={() => setViewMode('grid')}
-                className={`px-6 py-2.5 rounded-md flex items-center gap-2 transition-all ${viewMode === 'grid' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-white/40'} text-[11px] font-black uppercase tracking-widest`}
+                className={`px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all ${viewMode === 'grid' ? 'bg-white/20 text-[#00AFC2] shadow-sm' : 'text-slate-500 hover:bg-white/10'} text-[11px] font-black uppercase tracking-widest`}
               >
                 <LayoutGrid size={14} />
                 <span>Grid</span>
               </button>
               <button 
                 onClick={() => setViewMode('list')}
-                className={`px-6 py-2.5 rounded-md flex items-center gap-2 transition-all ${viewMode === 'list' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-white/40'} text-[11px] font-black uppercase tracking-widest`}
+                className={`px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all ${viewMode === 'list' ? 'bg-white/20 text-[#00AFC2] shadow-sm' : 'text-slate-500 hover:bg-white/10'} text-[11px] font-black uppercase tracking-widest`}
               >
                 <List size={14} />
                 <span>List</span>
@@ -379,18 +417,18 @@ const DirectoryPage: React.FC = () => {
             <div className="relative">
                <button 
                  onClick={() => setIsSortOpen(!isSortOpen)}
-                 className="h-[56px] px-8 glass-panel border-2 border-slate-900 text-[#1e293b] rounded-lg font-black text-xs flex items-center justify-between gap-6 hover:bg-white/40 transition-all shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:translate-y-[2px] hover:translate-x-[2px] active:scale-95 backdrop-blur-3xl"
+                 className="glass-panel h-[60px] px-8 text-slate-700 font-black text-xs !rounded-2xl flex items-center justify-between gap-6 hover:bg-white/20 transition-all"
                >
-                  <span className="uppercase tracking-[0.2em]">Sort By</span> 
+                  <span className="uppercase tracking-widest">Sort By</span> 
                   <ChevronDown size={14} className={`transition-transform duration-500 ${isSortOpen ? 'rotate-180' : ''}`} />
                </button>
                <AnimatePresence>
                  {isSortOpen && (
                    <motion.div 
-                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                     className="absolute top-full left-0 right-0 md:left-auto md:w-64 mt-4 glass-panel border-2 border-slate-900 z-50 overflow-hidden shadow-[4px_4px_0px_rgba(0,0,0,0.8)] bg-white/80 backdrop-blur-3xl rounded-lg"
+                     initial={{ opacity: 0, scale: 0.95 }}
+                     animate={{ opacity: 1, scale: 1 }}
+                     exit={{ opacity: 0, scale: 0.95 }}
+                     className="absolute top-full left-0 right-0 md:left-auto md:w-64 mt-4 glass-panel !rounded-3xl shadow-2xl z-50 overflow-hidden"
                    >
                       {[
                         { id: 'name-asc', label: 'שם (א-ת)' },
@@ -400,7 +438,7 @@ const DirectoryPage: React.FC = () => {
                         <button 
                           key={opt.id}
                           onClick={() => {setSortBy(opt.id as SortOption); setIsSortOpen(false)}} 
-                          className={`w-full p-5 text-right font-black text-[12px] transition-all border-b-2 border-slate-900 last:border-none ${sortBy === opt.id ? 'text-[#00AFC2] bg-[#00AFC2]/5' : 'text-slate-600 hover:bg-white/40'}`}
+                          className={`w-full p-5 text-right font-black text-[12px] transition-all border-b border-white/10 last:border-none ${sortBy === opt.id ? 'bg-[#00AFC2]/10 text-[#00AFC2]' : 'text-slate-600 hover:bg-white/10'}`}
                         >
                           {opt.label}
                         </button>
@@ -416,13 +454,13 @@ const DirectoryPage: React.FC = () => {
           {groupedMembers.Admin.length > 0 && (
             <section className="animate-in fade-in slide-in-from-bottom-8 duration-700">
               <div className="flex items-center gap-6 mb-12">
-                <div className="w-12 h-12 bg-[#FF2D60]/10 !rounded-full flex items-center justify-center text-[#FF2D60] shadow-inner">
+                <div className="w-12 h-12 glass-effect !rounded-full flex items-center justify-center text-[#FF2D60]">
                   <ShieldAlert size={24} />
                 </div>
-                <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.5em] whitespace-nowrap">צוות קדמי</h3>
-                <div className="h-px w-full bg-gradient-to-r from-slate-200 to-transparent"></div>
+                <h3 className="text-sm font-black glass-text-secondary uppercase tracking-[0.5em] whitespace-nowrap">צוות קדמי</h3>
+                <div className="h-px flex-1 bg-white/20"></div>
               </div>
-              <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-10" : "space-y-6"}>
+              <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-12" : "space-y-8"}>
                 {groupedMembers.Admin.map((member, idx) => (
                   viewMode === 'grid' ? (
                     <MemberCard key={member.id} member={member} idx={idx} onClick={() => setSelectedMember(member)} />
@@ -431,19 +469,23 @@ const DirectoryPage: React.FC = () => {
                       key={member.id} 
                       onClick={() => setSelectedMember(member)} 
                       whileHover={{ x: -10 }}
-                      className="glass-panel border-2 border-slate-900 p-5 rounded-lg flex items-center justify-between hover:bg-white/60 cursor-pointer transition-all shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:translate-y-[2px] hover:translate-x-[2px] relative z-10 bg-white/20 backdrop-blur-2xl"
+                      className="tangible-surfer-card p-6 !rounded-[2.5rem] flex items-center justify-between cursor-pointer transition-all"
                     >
                       <div className="flex items-center gap-6">
-                        <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-16 h-16 rounded-lg object-cover" alt="" />
+                        <div className="w-16 h-16 tangible-bevel-inset !rounded-full p-1">
+                          <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-full h-full rounded-full object-cover" alt="" />
+                        </div>
                         <div>
-                          <p className="text-lg font-black text-[#1e293b]">{member.firstName} {member.lastName}</p>
-                          <div className="flex items-center gap-2">
-                             <span className="text-[10px] font-black text-[#FF2D60] uppercase tracking-widest bg-[#FF2D60]/10 px-3 py-1 rounded-md border-2 border-slate-900 shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">רכז</span>
-                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{member.totalAttendance || 0} סשנים</span>
+                          <p className="text-lg font-black neon-text-pink">{member.firstName} {member.lastName}</p>
+                          <div className="flex items-center gap-4">
+                             <div className="tangible-bevel-inset px-3 py-1 !rounded-full">
+                               <span className="text-[10px] font-black text-[#FF2D60] uppercase tracking-widest">רכז</span>
+                             </div>
+                             <span className="text-[10px] font-black neon-text-cyan uppercase tracking-widest">{member.totalAttendance || 0} סשנים</span>
                           </div>
                         </div>
                       </div>
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center text-slate-300 group-hover:text-[#00AFC2] transition-colors">
+                      <div className="w-12 h-12 tangible-bevel-inset !rounded-full flex items-center justify-center text-slate-400">
                         <ChevronDown className="-rotate-90" size={24} />
                       </div>
                     </motion.div>
@@ -456,13 +498,13 @@ const DirectoryPage: React.FC = () => {
           {groupedMembers.Instructor.length > 0 && (
             <section className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
               <div className="flex items-center gap-6 mb-12">
-                <div className="w-12 h-12 bg-[#00AFC2]/10 !rounded-full flex items-center justify-center text-[#00AFC2] shadow-inner">
+                <div className="w-12 h-12 glass-effect !rounded-full flex items-center justify-center text-[#00AFC2]">
                   <Sparkles size={24} />
                 </div>
-                <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.5em] whitespace-nowrap">מדריכים</h3>
-                <div className="h-px w-full bg-gradient-to-r from-slate-200 to-transparent"></div>
+                <h3 className="text-sm font-black glass-text-secondary uppercase tracking-[0.5em] whitespace-nowrap">מדריכים</h3>
+                <div className="h-px flex-1 bg-white/20"></div>
               </div>
-              <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-10" : "space-y-6"}>
+              <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-12" : "space-y-8"}>
                 {groupedMembers.Instructor.map((member, idx) => (
                   viewMode === 'grid' ? (
                     <MemberCard key={member.id} member={member} idx={idx} onClick={() => setSelectedMember(member)} />
@@ -471,19 +513,23 @@ const DirectoryPage: React.FC = () => {
                       key={member.id} 
                       onClick={() => setSelectedMember(member)} 
                       whileHover={{ x: -10 }}
-                      className="glass-panel border-2 border-slate-900 p-5 rounded-lg flex items-center justify-between hover:bg-white/60 cursor-pointer transition-all shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:translate-y-[2px] hover:translate-x-[2px] relative z-10 bg-white/20 backdrop-blur-2xl"
+                      className="tangible-surfer-card p-6 !rounded-[2.5rem] flex items-center justify-between cursor-pointer transition-all"
                     >
                       <div className="flex items-center gap-6">
-                        <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-16 h-16 rounded-lg object-cover" alt="" />
+                        <div className="w-16 h-16 tangible-bevel-inset !rounded-full p-1">
+                          <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-full h-full rounded-full object-cover" alt="" />
+                        </div>
                         <div>
-                          <p className="text-lg font-black text-[#1e293b]">{member.firstName} {member.lastName}</p>
-                          <div className="flex items-center gap-2">
-                             <span className="text-[10px] font-black text-[#00AFC2] uppercase tracking-widest bg-[#00AFC2]/10 px-3 py-1 rounded-md border-2 border-slate-900 shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">מדריך</span>
-                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{member.totalAttendance || 0} סשנים</span>
+                          <p className="text-lg font-black text-[#00426a]">{member.firstName} {member.lastName}</p>
+                          <div className="flex items-center gap-4">
+                             <div className="tangible-bevel-inset px-3 py-1 !rounded-full">
+                               <span className="text-[10px] font-black text-[#00AFC2] uppercase tracking-widest">מדריך</span>
+                             </div>
+                             <span className="text-[10px] font-black neon-text-cyan uppercase tracking-widest">{member.totalAttendance || 0} סשנים</span>
                           </div>
                         </div>
                       </div>
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center text-slate-300 group-hover:text-[#00AFC2] transition-colors">
+                      <div className="w-12 h-12 tangible-bevel-inset !rounded-full flex items-center justify-center text-slate-400">
                         <ChevronDown className="-rotate-90" size={24} />
                       </div>
                     </motion.div>
@@ -496,13 +542,13 @@ const DirectoryPage: React.FC = () => {
           {groupedMembers.Member.length > 0 && (
             <section className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
               <div className="flex items-center gap-6 mb-12">
-                <div className="w-12 h-12 bg-emerald-500/10 !rounded-full flex items-center justify-center text-emerald-500 shadow-inner">
+                <div className="w-12 h-12 glass-effect !rounded-full flex items-center justify-center text-emerald-500">
                   <Users size={24} />
                 </div>
-                <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.5em] whitespace-nowrap">חברי הקהילה</h3>
-                <div className="h-px w-full bg-gradient-to-r from-slate-200 to-transparent"></div>
+                <h3 className="text-sm font-black glass-text-secondary uppercase tracking-[0.5em] whitespace-nowrap">חברי הקהילה</h3>
+                <div className="h-px flex-1 bg-white/20"></div>
               </div>
-              <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-10" : "space-y-6"}>
+              <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-12" : "space-y-8"}>
                 {groupedMembers.Member.map((member, idx) => (
                   viewMode === 'grid' ? (
                     <MemberCard key={member.id} member={member} idx={idx} onClick={() => setSelectedMember(member)} />
@@ -511,19 +557,23 @@ const DirectoryPage: React.FC = () => {
                       key={member.id} 
                       onClick={() => setSelectedMember(member)} 
                       whileHover={{ x: -10 }}
-                      className="glass-panel border-2 border-slate-900 p-5 rounded-lg flex items-center justify-between hover:bg-white/60 cursor-pointer transition-all shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:translate-y-[2px] hover:translate-x-[2px] relative z-10 bg-white/20 backdrop-blur-2xl"
+                      className="tangible-surfer-card p-6 !rounded-[2.5rem] flex items-center justify-between cursor-pointer transition-all"
                     >
                       <div className="flex items-center gap-6">
-                        <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-16 h-16 rounded-lg object-cover" alt="" />
+                        <div className="w-16 h-16 tangible-bevel-inset !rounded-full p-1">
+                          <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-full h-full rounded-full object-cover" alt="" />
+                        </div>
                         <div>
-                          <p className="text-lg font-black text-[#1e293b]">{member.firstName} {member.lastName}</p>
-                          <div className="flex items-center gap-2">
-                             <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-md border-2 border-slate-900 shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">חבר</span>
-                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{member.totalAttendance || 0} סשנים</span>
+                          <p className="text-lg font-black text-[#00426a]">{member.firstName} {member.lastName}</p>
+                          <div className="flex items-center gap-4">
+                             <div className="tangible-bevel-inset px-3 py-1 !rounded-full">
+                               <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">חבר</span>
+                             </div>
+                             <span className="text-[10px] font-black neon-text-cyan uppercase tracking-widest">{member.totalAttendance || 0} סשנים</span>
                           </div>
                         </div>
                       </div>
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center text-slate-300 group-hover:text-[#00AFC2] transition-colors">
+                      <div className="w-12 h-12 tangible-bevel-inset !rounded-full flex items-center justify-center text-slate-400">
                         <ChevronDown className="-rotate-90" size={24} />
                       </div>
                     </motion.div>
@@ -537,123 +587,135 @@ const DirectoryPage: React.FC = () => {
       <AnimatePresence>
         {selectedMember && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 md:p-12 modal-overlay animate-in fade-in" onClick={closeMemberModal}>
-           <motion.div 
-             initial={{ opacity: 0, scale: 0.95, y: 40 }}
-             animate={{ opacity: 1, scale: 1, y: 0 }}
-             exit={{ opacity: 0, scale: 0.95, y: 40 }}
-             className="modal-content w-full max-w-5xl max-h-[95vh] !rounded-3xl shadow-2xl overflow-hidden relative flex flex-col md:flex-row m-0" 
-             onClick={e => e.stopPropagation()}
-           >
-            <button onClick={closeMemberModal} className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-white hover:text-slate-200 transition-all bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full z-50"><X size={20} /></button>
-            <div className="md:w-[40%] relative h-[30vh] md:h-auto overflow-hidden bg-slate-100 flex-shrink-0">
-               {selectedMember.avatar ? (
-                 <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={`${selectedMember.firstName} ${selectedMember.lastName}`} />
-               ) : (
-                 <div className="w-full h-full flex items-center justify-center text-slate-300">
-                   <UserCircle size={120} strokeWidth={0.5} />
-                 </div>
-               )}
-               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
-               <div className="absolute bottom-8 right-8 left-8">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="h-px w-8 bg-[#D4A373]"></div>
-                    <span className="text-[9px] font-black text-[#D4A373] uppercase tracking-[0.3em]">Profile</span>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 40 }}
+              className="w-full max-w-5xl max-h-[95vh] rounded-3xl overflow-hidden relative flex flex-col md:flex-row m-0 bg-[#B2EBF2]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_20px_50px_-10px_#7A1555]" 
+              onClick={e => e.stopPropagation()}
+            >
+             <button onClick={closeMemberModal} className="absolute top-4 right-4 md:top-6 md:right-6 p-2 rounded-xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(122,21,85,0.4)] text-white hover:bg-[#B2EBF2]/40 transition-all z-50"><X size={20} /></button>
+             <div className="md:w-[40%] relative h-[30vh] md:h-auto overflow-hidden bg-slate-100 flex-shrink-0 border-b-2 md:border-b-0 md:border-l-2 border-white/20">
+                {selectedMember.avatar ? (
+                  <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={`${selectedMember.firstName} ${selectedMember.lastName}`} />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-300">
+                    <UserCircle size={120} strokeWidth={0.5} />
                   </div>
-                  <h3 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+                <div className="absolute bottom-8 right-8 left-8">
+                   <div className="flex items-center gap-3 mb-2">
+                     <div className="h-px w-8 bg-[#FFDE45]"></div>
+                     <span className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-[0.3em]">Profile</span>
+                   </div>
+                   <h3 className="text-4xl md:text-5xl font-black text-[#FF2D60] drop-shadow-[0_0_10px_rgba(255,45,96,0.6)] tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
+                </div>
+             </div>
+
+             <div className="flex-1 p-6 md:p-12 overflow-y-auto custom-scrollbar text-right relative">
+               <div className="max-w-xl mx-auto space-y-10">
+               <div className="grid grid-cols-3 gap-4">
+                 <div className="space-y-1 text-center p-3 rounded-2xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555]">
+                   <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-widest">Role</p>
+                   <p className="font-black text-[#3dbbd3] drop-shadow-[0_0_10px_rgba(0,217,230,0.6)] text-sm">{selectedMember.role}</p>
+                 </div>
+                 <div className="space-y-1 text-center p-3 rounded-2xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555]">
+                   <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-widest">Sessions</p>
+                   <p className="font-black text-[#3dbbd3] drop-shadow-[0_0_10px_rgba(0,217,230,0.6)] text-sm">{selectedMember.totalAttendance || 0}</p>
+                 </div>
+                 <div className="space-y-1 text-center p-3 rounded-2xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555]">
+                   <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-widest">Joined</p>
+                   <p className="font-black text-[#3dbbd3] drop-shadow-[0_0_10px_rgba(0,217,230,0.6)] text-sm">{formatDate(selectedMember.joinedAt)}</p>
+                 </div>
                </div>
-            </div>
 
-            <div className="flex-1 p-6 md:p-12 overflow-y-auto custom-scrollbar text-right relative glass-panel">
-              <div className="max-w-xl mx-auto space-y-10">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-1 text-center glass-effect p-3 !rounded-full">
-                  <p className="text-[9px] font-black glass-text-secondary uppercase tracking-widest">Role</p>
-                  <p className="font-black glass-text-primary text-sm">{selectedMember.role}</p>
-                </div>
-                <div className="space-y-1 text-center glass-effect p-3 !rounded-full">
-                  <p className="text-[9px] font-black glass-text-secondary uppercase tracking-widest">Sessions</p>
-                  <p className="font-black glass-text-primary text-sm">{selectedMember.totalAttendance || 0}</p>
-                </div>
-                <div className="space-y-1 text-center glass-effect p-3 !rounded-full">
-                  <p className="text-[9px] font-black glass-text-secondary uppercase tracking-widest">Joined</p>
-                  <p className="font-black glass-text-primary text-sm">{formatDate(selectedMember.joinedAt)}</p>
-                </div>
-              </div>
+               <div className="space-y-3">
+                 <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-[0.3em]">About</p>
+                 <p className="text-lg font-bold text-[#3dbbd3] drop-shadow-[0_0_10px_rgba(0,217,230,0.6)] leading-snug tracking-tight italic">
+                   "{selectedMember.bio || 'חבר בקהילת הגולשים של חבל זוג. חולק את התשוקה לים ולגלים.'}"
+                 </p>
+               </div>
 
-              <div className="space-y-3">
-                <p className="text-[9px] font-black text-[#D4A373] uppercase tracking-[0.3em]">About</p>
-                <p className="text-lg font-bold glass-text-secondary leading-snug tracking-tight italic">
-                  "{selectedMember.bio || 'חבר בקהילת הגולשים של חבל זוג. חולק את התשוקה לים ולגלים.'}"
-                </p>
-              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="p-5 rounded-2xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555] flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-[#B2EBF2]/20 border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_-5px_#7A1555] flex items-center justify-center text-[#FFDE45]"><Phone size={18} /></div>
+                    <div className="overflow-hidden">
+                       <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-widest mb-0.5">Mobile</p>
+                       <p className="font-black text-[#3dbbd3] drop-shadow-[0_0_10px_rgba(0,217,230,0.6)] text-sm">{selectedMember.mobile}</p>
+                    </div>
+                 </div>
+                 <div className="p-5 rounded-2xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555] flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-[#B2EBF2]/20 border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_-5px_#7A1555] flex items-center justify-center text-[#FFDE45]"><Mail size={18} /></div>
+                    <div className="overflow-hidden">
+                       <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-widest mb-0.5">Email</p>
+                       <p className="font-black text-[#3dbbd3] drop-shadow-[0_0_10px_rgba(0,217,230,0.6)] text-sm truncate">{selectedMember.email}</p>
+                    </div>
+                 </div>
+               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-5 glass-effect !rounded-full flex items-center gap-4">
-                   <div className="w-10 h-10 glass-effect !rounded-full flex items-center justify-center text-slate-400"><Phone size={18} /></div>
-                   <div className="overflow-hidden">
-                      <p className="text-[9px] font-black glass-text-secondary uppercase tracking-widest mb-0.5">Mobile</p>
-                      <p className="font-black glass-text-primary text-sm">{selectedMember.mobile}</p>
-                   </div>
-                </div>
-                <div className="p-5 glass-effect !rounded-full flex items-center gap-4">
-                   <div className="w-10 h-10 glass-effect !rounded-full flex items-center justify-center text-slate-400"><Mail size={18} /></div>
-                   <div className="overflow-hidden">
-                      <p className="text-[9px] font-black glass-text-secondary uppercase tracking-widest mb-0.5">Email</p>
-                      <p className="font-black glass-text-primary text-sm truncate">{selectedMember.email}</p>
-                   </div>
-                </div>
-              </div>
+               <div className="flex justify-center gap-6">
+                 <motion.button 
+                   onClick={() => openWhatsAppModal(selectedMember.firstName, selectedMember.lastName)}
+                   whileHover={{ scale: 1.05 }}
+                   whileTap={{ scale: 0.95 }}
+                   className="w-16 h-16 rounded-full bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555] flex items-center justify-center text-[#25D366] hover:bg-[#B2EBF2]/40 transition-all"
+                   title="שלח הודעת WhatsApp"
+                 >
+                   <WhatsAppIcon className="w-8 h-8 drop-shadow-[0_0_8px_rgba(37,211,102,0.6)]" />
+                 </motion.button>
 
-              <motion.button 
-                onClick={() => openWhatsAppModal(selectedMember.firstName, selectedMember.lastName)}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                className="w-full py-5 bg-[#25D366] text-white !rounded-full font-black text-lg shadow-xl flex items-center justify-center gap-4"
-              >
-                <WhatsAppIcon className="w-6 h-6" />
-                <span>Open WhatsApp Chat</span>
-              </motion.button>
+                 <motion.button 
+                   onClick={() => window.open(`tel:${selectedMember.mobile}`, '_self')}
+                   whileHover={{ scale: 1.05 }}
+                   whileTap={{ scale: 0.95 }}
+                   className="w-16 h-16 rounded-full bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555] flex items-center justify-center text-[#3dbbd3] hover:bg-[#B2EBF2]/40 transition-all"
+                   title="Call"
+                 >
+                   <PhoneIcon className="w-8 h-8 drop-shadow-[0_0_8px_rgba(61,187,211,0.6)]" />
+                 </motion.button>
+               </div>
 
-              <div className="space-y-4">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] text-center">Social Connect</p>
-                <div className="flex justify-center gap-4">
-                  <a 
-                    href={selectedMember.instagramUrl ? ensureAbsoluteUrl(selectedMember.instagramUrl) : '#'} 
-                    target={selectedMember.instagramUrl ? "_blank" : undefined} 
-                    rel="noopener noreferrer" 
-                    className={`w-12 h-12 !rounded-full flex items-center justify-center transition-all hover:shadow-lg hover:-translate-y-0.5 border border-white/10 ${selectedMember.instagramUrl ? 'bg-white/5 text-rose-500 hover:bg-rose-500 hover:text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
-                  >
-                    <Instagram size={20} />
-                  </a>
-                  <a 
-                    href={selectedMember.facebookUrl ? ensureAbsoluteUrl(selectedMember.facebookUrl) : '#'} 
-                    target={selectedMember.facebookUrl ? "_blank" : undefined} 
-                    rel="noopener noreferrer" 
-                    className={`w-12 h-12 !rounded-full flex items-center justify-center transition-all hover:shadow-lg hover:-translate-y-0.5 border border-white/10 ${selectedMember.facebookUrl ? 'bg-white/5 text-blue-600 hover:bg-blue-600 hover:text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
-                  >
-                    <Facebook size={20} />
-                  </a>
-                  <a 
-                    href={selectedMember.tiktokUrl ? ensureAbsoluteUrl(selectedMember.tiktokUrl) : '#'} 
-                    target={selectedMember.tiktokUrl ? "_blank" : undefined} 
-                    rel="noopener noreferrer" 
-                    className={`w-12 h-12 !rounded-full flex items-center justify-center transition-all hover:shadow-lg hover:-translate-y-0.5 border border-white/10 ${selectedMember.tiktokUrl ? 'bg-white/5 text-black hover:bg-black hover:text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
-                  >
-                    <Music2 size={20} />
-                  </a>
-                  <a 
-                    href={selectedMember.linkedinUrl ? ensureAbsoluteUrl(selectedMember.linkedinUrl) : '#'} 
-                    target={selectedMember.linkedinUrl ? "_blank" : undefined} 
-                    rel="noopener noreferrer" 
-                    className={`w-12 h-12 !rounded-full flex items-center justify-center transition-all hover:shadow-lg hover:-translate-y-0.5 border border-white/10 ${selectedMember.linkedinUrl ? 'bg-white/5 text-[#00CED1] hover:bg-[#00CED1] hover:text-white' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}
-                  >
-                    <Linkedin size={20} />
-                  </a>
-                </div>
-              </div>
-            </div>
-            </div>
-           </motion.div>
+               <div className="space-y-4">
+                 <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-[0.3em] text-center">Social Connect</p>
+                 <div className="flex justify-center gap-4">
+                   <a 
+                     href={selectedMember.instagramUrl ? ensureAbsoluteUrl(selectedMember.instagramUrl) : '#'} 
+                     target={selectedMember.instagramUrl ? "_blank" : undefined} 
+                     rel="noopener noreferrer" 
+                     className={`w-12 h-12 rounded-xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555] flex items-center justify-center transition-all ${selectedMember.instagramUrl ? 'text-[#FF2D60] hover:bg-[#B2EBF2]/40' : 'opacity-30 cursor-not-allowed'}`}
+                   >
+                     <Instagram size={20} />
+                   </a>
+                   <a 
+                     href={selectedMember.facebookUrl ? ensureAbsoluteUrl(selectedMember.facebookUrl) : '#'} 
+                     target={selectedMember.facebookUrl ? "_blank" : undefined} 
+                     rel="noopener noreferrer" 
+                     className={`w-12 h-12 rounded-xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555] flex items-center justify-center transition-all ${selectedMember.facebookUrl ? 'text-[#3dbbd3] hover:bg-[#B2EBF2]/40' : 'opacity-30 cursor-not-allowed'}`}
+                   >
+                     <Facebook size={20} />
+                   </a>
+                   <a 
+                     href={selectedMember.tiktokUrl ? ensureAbsoluteUrl(selectedMember.tiktokUrl) : '#'} 
+                     target={selectedMember.tiktokUrl ? "_blank" : undefined} 
+                     rel="noopener noreferrer" 
+                     className={`w-12 h-12 rounded-xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555] flex items-center justify-center transition-all ${selectedMember.tiktokUrl ? 'text-[#FFDE45] hover:bg-[#B2EBF2]/40' : 'opacity-30 cursor-not-allowed'}`}
+                   >
+                     <Music2 size={20} />
+                   </a>
+                   <a 
+                     href={selectedMember.linkedinUrl ? ensureAbsoluteUrl(selectedMember.linkedinUrl) : '#'} 
+                     target={selectedMember.linkedinUrl ? "_blank" : undefined} 
+                     rel="noopener noreferrer" 
+                     className={`w-12 h-12 rounded-xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555] flex items-center justify-center transition-all ${selectedMember.linkedinUrl ? 'text-[#3dbbd3] hover:bg-[#B2EBF2]/40' : 'opacity-30 cursor-not-allowed'}`}
+                   >
+                     <Linkedin size={20} />
+                   </a>
+                 </div>
+               </div>
+             </div>
+             </div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -664,21 +726,21 @@ const DirectoryPage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 40 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 40 }}
-              className="modal-content w-full max-w-7xl h-full md:h-auto md:max-h-[90vh] !rounded-3xl shadow-2xl overflow-hidden relative flex flex-col" 
+              className="tangible-surfer-card w-full max-w-7xl h-full md:h-auto md:max-h-[90vh] !rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col" 
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="p-8 md:p-12 border-b border-white/10 flex items-center justify-between glass-effect">
+              <div className="p-8 md:p-12 border-b border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-[#D4A373]/10 !rounded-full flex items-center justify-center text-[#D4A373]">
+                  <div className="w-12 h-12 tangible-bevel-inset !rounded-full flex items-center justify-center text-[#3dbbd3]">
                     <Plus size={24} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black glass-text-primary tracking-tighter">הוספת חבר חדש</h3>
-                    <p className="text-[12px] font-black glass-text-secondary uppercase tracking-widest">יצירת פרופיל משתמש ידני</p>
+                    <h3 className="text-2xl font-black neon-text-pink tracking-tighter">הוספת חבר חדש</h3>
+                    <p className="text-[12px] font-black neon-text-yellow uppercase tracking-widest">יצירת פרופיל משתמש ידני</p>
                   </div>
                 </div>
-                <button onClick={() => setIsAddMemberModalOpen(false)} className="p-3 text-slate-400 hover:text-slate-600 transition-all glass-effect hover:bg-white/20 !rounded-full">
+                <button onClick={() => setIsAddMemberModalOpen(false)} className="p-3 tangible-bevel-inset hover:bg-white/20 !rounded-full text-white/40 hover:text-white transition-all">
                   <X size={24} />
                 </button>
               </div>
@@ -691,16 +753,16 @@ const DirectoryPage: React.FC = () => {
                     <div className="lg:col-span-4 space-y-8">
                       <div className="flex flex-col items-center">
                         <div className="relative group">
-                          <div className="w-48 h-48 !rounded-full border-[10px] border-white/10 overflow-hidden shadow-2xl glass-panel flex items-center justify-center">
+                          <div className="w-48 h-48 glass-effect !rounded-full p-2 flex items-center justify-center overflow-hidden">
                             {isProcessingImage ? (
-                              <Loader2 className="animate-spin text-[#D4A373]" size={32} />
+                              <Loader2 className="animate-spin text-[#00AFC2]" size={32} />
                             ) : newMemberData.avatar ? (
-                              <img src={newMemberData.avatar} className="w-full h-full object-cover" alt="" />
+                              <img src={newMemberData.avatar} className="w-full h-full object-cover rounded-full" alt="" />
                             ) : (
-                              <UserCircle size={80} className="text-slate-300" strokeWidth={0.5} />
+                              <UserCircle size={80} className="text-white/20" strokeWidth={0.5} />
                             )}
                           </div>
-                          <label className="absolute bottom-2 left-2 p-3 bg-[#D4A373] text-white !rounded-full cursor-pointer hover:bg-[#B88A5B] transition-all shadow-xl">
+                          <label className="absolute bottom-2 left-2 p-3 bg-[#00AFC2] text-white !rounded-full cursor-pointer shadow-lg hover:scale-110 transition-all">
                             <Camera size={20} />
                             <input 
                               type="file" 
@@ -743,7 +805,7 @@ const DirectoryPage: React.FC = () => {
                                 setIsGeneratingBio(false);
                               }
                             }} 
-                            className="text-[12px] font-black text-[#D4A373] flex items-center gap-1.5 hover:bg-[#D4A373]/10 px-3 py-1.5 !rounded-full transition-all border border-[#D4A373]/10"
+                            className="px-3 py-1.5 glass-effect hover:bg-white/20 !rounded-full text-[10px] font-black text-[#00AFC2] flex items-center gap-1.5 transition-all"
                           >
                             {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} שדרג עם AI
                           </button>
@@ -751,7 +813,7 @@ const DirectoryPage: React.FC = () => {
                         <textarea 
                           value={newMemberData.bio} 
                           onChange={e => setNewMemberData(prev => ({ ...prev, bio: e.target.value }))}
-                          className="w-full p-6 glass-effect !rounded-3xl font-bold h-64 resize-none outline-none focus:bg-white/10 transition-all text-sm leading-relaxed shadow-inner glass-text-primary" 
+                          className="w-full p-6 glass-input !rounded-3xl font-bold h-64 resize-none outline-none focus:bg-white/10 transition-all text-sm leading-relaxed glass-text-primary placeholder:text-white/40" 
                           placeholder="ספר קצת על החבר החדש..." 
                         />
                       </div>
@@ -804,7 +866,7 @@ const DirectoryPage: React.FC = () => {
                               type="date" 
                               value={newMemberData.birthday || ''} 
                               onChange={e => setNewMemberData(prev => ({ ...prev, birthday: e.target.value }))} 
-                              className="w-full pr-14 pl-6 py-5 glass-effect !rounded-full font-black outline-none focus:bg-white/10 transition-all cursor-pointer glass-text-primary" 
+                              className="w-full p-5 pr-12 glass-effect !rounded-full font-black outline-none focus:bg-white/10 transition-all glass-text-primary [color-scheme:dark]" 
                             />
                           </div>
                         </div>
@@ -814,9 +876,9 @@ const DirectoryPage: React.FC = () => {
                             <button 
                               type="button"
                               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-                              className="w-full p-5 glass-effect !rounded-full font-black text-sm outline-none focus:bg-white/10 transition-all flex items-center justify-between group glass-text-primary"
+                              className="w-full p-5 glass-effect !rounded-full font-black text-sm outline-none transition-all flex items-center justify-between group hover:bg-white/10"
                             >
-                              <span>{newMemberData.role === 'Admin' ? 'רכז' : newMemberData.role === 'Instructor' ? 'מדריך' : 'חבר'}</span>
+                              <span className="glass-text-primary">{newMemberData.role === 'Admin' ? 'רכז' : newMemberData.role === 'Instructor' ? 'מדריך' : 'חבר'}</span>
                               <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
 
@@ -839,7 +901,7 @@ const DirectoryPage: React.FC = () => {
                                           setIsRoleDropdownOpen(false);
                                         }}
                                         className={`w-full px-6 py-4 text-right font-black transition-all hover:bg-white/10 ${
-                                          newMemberData.role === r ? 'text-[var(--surfer-cyan)] bg-white/5' : 'glass-text-primary'
+                                          newMemberData.role === r ? 'text-[#00AFC2] bg-white/10' : 'glass-text-primary'
                                         }`}
                                       >
                                         {r === 'Admin' ? 'רכז' : r === 'Instructor' ? 'מדריך' : 'חבר'}
@@ -857,9 +919,9 @@ const DirectoryPage: React.FC = () => {
                             <button 
                               type="button"
                               onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                              className="w-full p-5 glass-effect !rounded-full font-black text-sm outline-none focus:bg-white/10 transition-all flex items-center justify-between group glass-text-primary"
+                              className="w-full p-5 glass-effect !rounded-full font-black text-sm outline-none transition-all flex items-center justify-between group hover:bg-white/10"
                             >
-                              <span>{newMemberData.gender || 'בחר מגדר'}</span>
+                              <span className="glass-text-primary">{newMemberData.gender || 'בחר מגדר'}</span>
                               <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
 
@@ -882,7 +944,7 @@ const DirectoryPage: React.FC = () => {
                                           setIsGenderDropdownOpen(false);
                                         }}
                                         className={`w-full px-6 py-4 text-right font-black transition-all hover:bg-white/10 ${
-                                          newMemberData.gender === g ? 'text-[var(--surfer-cyan)] bg-white/5' : 'glass-text-primary'
+                                          newMemberData.gender === g ? 'text-[#00AFC2] bg-white/10' : 'glass-text-primary'
                                         }`}
                                       >
                                         {g}
@@ -902,7 +964,7 @@ const DirectoryPage: React.FC = () => {
                               value={newMemberData.password || ''} 
                               onChange={e => setNewMemberData(prev => ({ ...prev, password: e.target.value }))}
                               placeholder="סיסמה ראשונית"
-                              className="flex-1 p-5 glass-effect !rounded-full font-black outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" 
+                              className="flex-1 p-5 glass-effect !rounded-full font-black outline-none transition-all glass-text-primary placeholder:text-white/40" 
                             />
                             <button 
                               type="button"
@@ -910,7 +972,7 @@ const DirectoryPage: React.FC = () => {
                                 const pass = Math.random().toString(36).slice(-8);
                                 setNewMemberData(prev => ({ ...prev, password: pass }));
                               }}
-                              className="px-6 glass-effect hover:bg-white/20 glass-text-primary !rounded-full font-black transition-all flex items-center gap-2"
+                              className="px-6 glass-effect hover:bg-white/20 !rounded-full text-[#00AFC2] font-black transition-all flex items-center gap-2"
                             >
                               <Sparkles size={16} />
                               ייצר
@@ -926,19 +988,19 @@ const DirectoryPage: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-1">
                             <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">Instagram</label>
-                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.instagramUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, instagramUrl: e.target.value }))} className="w-full p-4 glass-effect !rounded-full font-black text-sm outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" />
+                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.instagramUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, instagramUrl: e.target.value }))} className="w-full p-4 glass-effect !rounded-full font-black text-sm outline-none transition-all glass-text-primary placeholder:text-white/40" />
                           </div>
                           <div className="space-y-1">
                             <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">Facebook</label>
-                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.facebookUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, facebookUrl: e.target.value }))} className="w-full p-4 glass-effect !rounded-full font-black text-sm outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" />
+                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.facebookUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, facebookUrl: e.target.value }))} className="w-full p-4 glass-effect !rounded-full font-black text-sm outline-none transition-all glass-text-primary placeholder:text-white/40" />
                           </div>
                           <div className="space-y-1">
                             <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">LinkedIn</label>
-                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.linkedinUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, linkedinUrl: e.target.value }))} className="w-full p-4 glass-effect !rounded-full font-black text-sm outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" />
+                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.linkedinUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, linkedinUrl: e.target.value }))} className="w-full p-4 glass-effect !rounded-full font-black text-sm outline-none transition-all glass-text-primary placeholder:text-white/40" />
                           </div>
                           <div className="space-y-1">
                             <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">X (Twitter)</label>
-                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.twitterUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, twitterUrl: e.target.value }))} className="w-full p-4 glass-effect !rounded-full font-black text-sm outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40" />
+                            <input type="text" placeholder="קישור לפרופיל" value={newMemberData.twitterUrl || ''} onChange={e => setNewMemberData(prev => ({ ...prev, twitterUrl: e.target.value }))} className="w-full p-4 glass-effect !rounded-full font-black text-sm outline-none transition-all glass-text-primary placeholder:text-white/40" />
                           </div>
                         </div>
                       </div>
@@ -948,7 +1010,7 @@ const DirectoryPage: React.FC = () => {
               </div>
 
               {/* Footer Actions */}
-              <div className="p-8 md:p-12 border-t border-white/10 glass-effect flex flex-col md:flex-row items-center justify-center gap-4">
+              <div className="p-8 md:p-12 border-t border-white/10 flex flex-col md:flex-row items-center justify-center gap-4">
                 <button 
                   onClick={async () => {
                     if (!newMemberData.firstName || !newMemberData.email) {
@@ -999,14 +1061,14 @@ const DirectoryPage: React.FC = () => {
                     }
                   }}
                   disabled={isSaving}
-                  className="w-full md:w-auto px-16 py-5 bg-[var(--surfer-orange)] text-white !rounded-full font-black text-xl hover:bg-[var(--surfer-pink)] transition-all shadow-xl flex items-center justify-center gap-4 disabled:opacity-50"
+                  className="w-full md:w-auto px-16 py-5 bg-[#FF9F1C] text-white !rounded-full font-black text-xl flex items-center justify-center gap-4 shadow-xl shadow-[#FF9F1C]/20 disabled:opacity-50"
                 >
                   {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
                   שמור חבר חדש
                 </button>
                 <button 
                   onClick={() => setIsAddMemberModalOpen(false)}
-                  className="w-full md:w-auto px-12 py-5 glass-effect text-white/60 !rounded-full font-black text-xl hover:text-white hover:bg-white/10 transition-all"
+                  className="w-full md:w-auto px-12 py-5 glass-effect hover:bg-white/20 !rounded-full glass-text-secondary font-black text-xl transition-all"
                 >
                   ביטול
                 </button>
@@ -1018,14 +1080,14 @@ const DirectoryPage: React.FC = () => {
 
       {isWhatsAppModalOpen && selectedMember && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-lg animate-in fade-in" onClick={() => setIsWhatsAppModalOpen(false)}>
-          <div className="glass-panel w-full max-w-md !rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="bg-[#25D366]/20 p-8 text-white flex items-center gap-4 border-b border-white/10">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                <WhatsAppIcon className="w-8 h-8 text-white" />
+          <div className="glass-panel w-full max-w-md !rounded-[2.5rem] overflow-hidden animate-in zoom-in-95 flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#25D366]/10 p-8 text-white flex items-center gap-4 border-b border-white/10">
+              <div className="w-12 h-12 glass-effect !rounded-full flex items-center justify-center">
+                <WhatsAppIcon className="w-10 h-10" />
               </div>
               <div>
                 <h4 className="font-black text-xl glass-text-primary">שלח הודעת WhatsApp</h4>
-                <p className="text-xs opacity-70 font-bold glass-text-secondary">אל: {selectedMember.firstName} {selectedMember.lastName}</p>
+                <p className="text-xs font-bold glass-text-secondary">אל: {selectedMember.firstName} {selectedMember.lastName}</p>
               </div>
             </div>
             
@@ -1044,13 +1106,13 @@ const DirectoryPage: React.FC = () => {
               <div className="flex gap-4">
                 <button 
                   onClick={handleSendWhatsApp}
-                  className="flex-1 py-4 bg-[#25D366] text-white !rounded-full font-black text-lg hover:bg-[#1EBE5D] transition-all shadow-lg active:scale-95"
+                  className="flex-1 py-4 bg-[#25D366] text-white !rounded-full font-black text-lg shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] transition-all"
                 >
                   שלח
                 </button>
                 <button 
                   onClick={() => setIsWhatsAppModalOpen(false)}
-                  className="flex-1 py-4 glass-effect text-white/60 !rounded-full font-black text-lg hover:text-white hover:bg-white/10 transition-all active:scale-95"
+                  className="flex-1 py-4 glass-effect hover:bg-white/20 !rounded-full glass-text-secondary font-black text-lg transition-all"
                 >
                   ביטול
                 </button>

@@ -314,6 +314,13 @@ const AdminPage: React.FC = () => {
             '--accent-blue', '--bg-main', '--bg-alt', '--text-main', '--text-muted',
             '--glass-bg', '--glass-text', '--glass-text-dark'
           ]
+        },
+        {
+          name: 'פלטת Neo-Brutalism',
+          variables: [
+            '--electric-pink', '--vibrant-cyan', '--sunshine-yellow', '--acid-green',
+            '--safety-orange', '--deep-magenta', '--midnight-black', '--soft-sand', '--pure-white'
+          ]
         }
       ];
 
@@ -606,15 +613,15 @@ const AdminPage: React.FC = () => {
             {activeTab === 'DASHBOARD' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
                 {[
-                  { id: 'USERS', label: 'ניהול משתמשים', desc: `${members.length} חברים רשומים`, icon: Users, color: 'bg-[var(--turquoise-teal)]' },
-                  { id: 'EVENTS', label: 'ניהול אירועים', desc: `${events.length} אירועים בלוח`, icon: Calendar, color: 'bg-[var(--vibrant-cyan)]' },
-                  { id: 'GALLERY', label: 'גלריית תמונות', desc: `${galleryItems.length} פריטים במדיה`, icon: ImageIcon, color: 'bg-[var(--sunshine-yellow)]' },
-                  { id: 'POSTS', label: 'פוסטים', desc: 'ניהול תכני האתר', icon: Newspaper, color: 'bg-[var(--sun-bleached)]' },
-                  { id: 'ROLLOVER', label: 'דו"ח יום חמישי', desc: 'ארכיון סשנים שבועי וסיכום נוכחות', icon: Activity, color: 'bg-[var(--turquoise-teal)]' },
+                  { id: 'USERS', label: 'ניהול משתמשים', desc: `${members.length} חברים רשומים`, icon: Users, color: 'bg-[#00FFFF]' },
+                  { id: 'EVENTS', label: 'ניהול אירועים', desc: `${events.length} אירועים בלוח`, icon: Calendar, color: 'bg-[#FFD700]' },
+                  { id: 'GALLERY', label: 'גלריית תמונות', desc: `${galleryItems.length} פריטים במדיה`, icon: ImageIcon, color: 'bg-[#FF007F]' },
+                  { id: 'POSTS', label: 'פוסטים', desc: 'ניהול תכני האתר', icon: Newspaper, color: 'bg-[#00FFFF]' },
+                  { id: 'ROLLOVER', label: 'דו"ח יום חמישי', desc: 'ארכיון סשנים שבועי וסיכום נוכחות', icon: Activity, color: 'bg-[#FFD700]' },
                   ...(isAdmin ? [
-                    { id: 'REQUESTS', label: 'בקשות הצטרפות', desc: `${joinRequests.length} ממתינים לאישור`, icon: UserCheck, color: 'bg-[var(--electric-red-pink)]', count: joinRequests.length },
-                    { id: 'SITE', label: 'הגדרות אתר', desc: 'לוגואים, רקעים ונכסים', icon: Settings, color: 'bg-[var(--deep-teal-sea)]' },
-                    { id: 'ARCHIVE', label: 'ארכיון משתמשים', desc: 'ניהול חברים שהושעו', icon: Archive, color: 'bg-[var(--deep-magenta)]' }
+                    { id: 'REQUESTS', label: 'בקשות הצטרפות', desc: `${joinRequests.length} ממתינים לאישור`, icon: UserCheck, color: 'bg-[#FF2D60]', count: joinRequests.length },
+                    { id: 'SITE', label: 'הגדרות אתר', desc: 'לוגואים, רקעים ונכסים', icon: Settings, color: 'bg-[#00FFFF]' },
+                    { id: 'ARCHIVE', label: 'ארכיון משתמשים', desc: 'ניהול חברים שהושעו', icon: Archive, color: 'bg-[#FFD700]' }
                   ] : [])
                 ].map((item) => (
                   <button
@@ -626,7 +633,7 @@ const AdminPage: React.FC = () => {
                   >
                     <div className={`absolute top-0 left-0 w-2 h-full ${item.color} opacity-20 group-hover:opacity-100 transition-opacity`} />
                     <div className="flex items-start justify-between mb-6">
-                      <div className={`p-4 rounded-2xl ${item.color} ${item.color === 'bg-[var(--sunshine-yellow)]' || item.color === 'bg-[var(--sun-bleached)]' ? 'text-[var(--deep-teal-sea)]' : 'text-white'} shadow-lg group-hover:scale-110 transition-transform duration-500`}>
+                      <div className={`p-4 rounded-2xl ${item.color} text-white shadow-lg group-hover:scale-110 transition-transform duration-500`}>
                         <item.icon size={28} />
                       </div>
                       {item.count !== undefined && item.count > 0 && (
@@ -654,7 +661,7 @@ const AdminPage: React.FC = () => {
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#00FFFF] to-[#FFD700] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#00FFFF]/20 group-hover:rotate-6 transition-transform">
                     <UserCheck size={32} />
                   </div>
                   <div>
@@ -673,7 +680,7 @@ const AdminPage: React.FC = () => {
             </div>
 
             <div className="relative">
-               <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-[var(--turquoise-teal)]/40" />
+               <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-[#00FFFF]/40" />
                <input 
                  type="text" 
                  placeholder="חיפוש לפי שם או אימייל..." 
@@ -691,14 +698,14 @@ const AdminPage: React.FC = () => {
                        {req.avatar ? (
                          <img src={req.avatar} className="w-16 h-16 rounded-2xl object-cover shadow-md" alt="" />
                        ) : (
-                         <div className="w-16 h-16 rounded-2xl bg-[var(--aqua-mist)]/20 flex items-center justify-center text-[var(--vibrant-cyan)] shadow-md">
+                         <div className="w-16 h-16 rounded-2xl bg-[var(--aqua-mist)]/20 flex items-center justify-center text-[#00FFFF] shadow-md">
                            <UserCircle size={32} />
                          </div>
                        )}
                        <div>
                           <h4 className="text-xl font-black text-[var(--deep-teal-sea)] mb-1">{req.firstName} {req.lastName}</h4>
                           <div className="flex items-center gap-2 text-[var(--turquoise-teal)]/60 font-bold text-[12px] uppercase tracking-widest">
-                             <Calendar size={12} />
+                             <Calendar size={12} className="text-[#FFD700]" />
                              {new Date(req.requestedAt).toLocaleDateString('he-IL')}
                           </div>
                        </div>
@@ -727,7 +734,7 @@ const AdminPage: React.FC = () => {
                          disabled={isProcessing === req.id}
                          className="flex-1 py-4 hd-glass-button-gold text-white rounded-2xl font-black text-sm transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
                        >
-                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserCheck size={20} className="text-[var(--water-highlight)]" />}
+                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserCheck size={20} className="text-[#00FFFF]" />}
                          אשר הצטרפות
                        </button>
                        <button 
@@ -738,7 +745,7 @@ const AdminPage: React.FC = () => {
                          className="p-4 bg-rose-50 text-rose-600 rounded-2xl hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50 flex items-center justify-center border-2 border-rose-200 hover:border-rose-600 shadow-sm"
                          title="דחה ומחק בקשה"
                        >
-                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserX size={20} />}
+                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserX size={20} className="text-[#FF2D60]" />}
                        </button>
                     </div>
                   </div>
@@ -746,7 +753,7 @@ const AdminPage: React.FC = () => {
               </div>
             ) : (
               <div className="py-32 text-center border-2 border-dashed border-[var(--vibrant-cyan)]/10 rounded-[4rem]">
-                 <div className="w-20 h-20 bg-[var(--aqua-mist)]/20 rounded-full flex items-center justify-center mx-auto mb-6 text-[var(--turquoise-teal)]/20">
+                 <div className="w-20 h-20 bg-[var(--aqua-mist)]/20 rounded-full flex items-center justify-center mx-auto mb-6 text-[#00FFFF]/20">
                     <UserCheck size={40} />
                  </div>
                  <h3 className="text-2xl font-black text-[var(--turquoise-teal)]/40">אין בקשות הצטרפות ממתינות</h3>
@@ -772,7 +779,7 @@ const AdminPage: React.FC = () => {
                     <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                     
                     <div className="flex items-center gap-6 relative z-10">
-                      <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+                      <div className="w-16 h-16 bg-gradient-to-br from-[#00FFFF] to-[#FFD700] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#00FFFF]/20 group-hover:rotate-6 transition-transform">
                         <Users size={32} />
                       </div>
                       <div>
@@ -906,7 +913,7 @@ const AdminPage: React.FC = () => {
                     <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                     
                     <div className="flex items-center gap-6 relative z-10">
-                      <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+                      <div className="w-16 h-16 bg-gradient-to-br from-[#00FFFF] to-[#FFD700] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#00FFFF]/20 group-hover:rotate-6 transition-transform">
                         <UserX size={32} />
                       </div>
                       <div>
@@ -961,7 +968,7 @@ const AdminPage: React.FC = () => {
                               />
                             ) : (
                               <div 
-                                className="w-12 h-12 rounded-xl bg-[var(--aqua-mist)]/20 flex items-center justify-center text-[var(--turquoise-teal)]/20 cursor-pointer hover:bg-[var(--aqua-mist)]/30 transition-colors"
+                                className="w-12 h-12 rounded-xl bg-[var(--aqua-mist)]/20 flex items-center justify-center text-[#00FFFF]/20 cursor-pointer hover:bg-[var(--aqua-mist)]/30 transition-colors"
                                 onClick={() => setEditingMember(member)}
                               >
                                 <UserCircle size={24} />
@@ -1004,7 +1011,7 @@ const AdminPage: React.FC = () => {
                               className="w-10 h-10 bg-white border border-[var(--vibrant-cyan)]/10 rounded-xl flex items-center justify-center text-[var(--turquoise-teal)]/40 hover:text-[var(--vibrant-cyan)] hover:border-[var(--vibrant-cyan)]/30 hover:shadow-lg transition-all"
                               title="החזר לפעילות"
                             >
-                              <RefreshCw size={18} />
+                              <RefreshCw size={18} className="text-[#00FFFF]" />
                             </button>
                           </div>
                         </td>
@@ -1070,7 +1077,7 @@ const AdminPage: React.FC = () => {
                       {item.authorAvatar ? (
                         <img src={item.authorAvatar} className="w-8 h-8 rounded-full object-cover" alt="" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[#FFD700]">
                           <User size={14} />
                         </div>
                       )}
@@ -1085,7 +1092,7 @@ const AdminPage: React.FC = () => {
                         onClick={() => setEditingPost(item)}
                         className="p-2 bg-indigo-50 text-indigo-500 rounded-xl hover:bg-indigo-500 hover:text-white transition-colors"
                       >
-                        <Edit2 size={16} />
+                        <Edit2 size={16} className="text-[#00FFFF]" />
                       </button>
                       <button 
                         onClick={() => {
@@ -1106,7 +1113,7 @@ const AdminPage: React.FC = () => {
                         }}
                         className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-colors"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={16} className="text-[#FF2D60]" />
                       </button>
                     </div>
                   </div>
@@ -1115,7 +1122,7 @@ const AdminPage: React.FC = () => {
               
               {news.length === 0 && (
                 <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-200 rounded-[3rem]">
-                  <Newspaper className="mx-auto text-slate-300 mb-4" size={48} />
+                  <Newspaper className="mx-auto text-[#00FFFF] mb-4" size={48} />
                   <h3 className="text-xl font-black text-slate-400">אין פוסטים במערכת</h3>
                 </div>
               )}
@@ -1326,7 +1333,7 @@ const AdminPage: React.FC = () => {
                           className="p-4 bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)] rounded-2xl hover:bg-[var(--vibrant-cyan)] hover:text-white transition-all"
                           title="עריכת אירוע"
                         >
-                          <Pencil size={20} />
+                          <Pencil size={20} className="text-[#00FFFF]" />
                         </button>
                       )}
                       {!isPastEvent && (
@@ -1340,7 +1347,7 @@ const AdminPage: React.FC = () => {
                           className="p-4 bg-rose-50 text-rose-400 rounded-2xl hover:bg-rose-500 hover:text-white transition-all"
                           title="מחיקת אירוע"
                         >
-                          <Trash2 size={20} />
+                          <Trash2 size={20} className="text-[#FF2D60]" />
                         </button>
                       )}
                       {isPastEvent && (
@@ -1348,7 +1355,7 @@ const AdminPage: React.FC = () => {
                           className="p-4 bg-slate-50 text-slate-300 rounded-2xl cursor-not-allowed"
                           title="לא ניתן לערוך אירוע שהסתיים"
                         >
-                          <Archive size={20} />
+                          <Archive size={20} className="text-[#FFD700]" />
                         </button>
                       )}
                     </div>
@@ -1369,7 +1376,7 @@ const AdminPage: React.FC = () => {
             <div className="space-y-8">
               <div className="flex items-center gap-4">
                 <div className="p-4 bg-[var(--deep-teal-sea)] text-white rounded-2xl shadow-lg shadow-[var(--deep-teal-sea)]/20">
-                  <Settings size={24} />
+                  <Settings size={24} className="text-[#00FFFF]" />
                 </div>
                 <div>
                   <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">עיצוב והגדרות</h3>
@@ -1379,7 +1386,7 @@ const AdminPage: React.FC = () => {
 
               <div className="bg-red-600 border-4 border-red-800 py-6 px-[5%] rounded-[1.5rem] flex flex-col items-center justify-center gap-3 shadow-[0_0_25px_rgba(220,38,38,0.8)] animate-pulse text-center transform hover:scale-105 transition-transform duration-300 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-50"></div>
-                <ShieldAlert size={48} className="text-white mb-2 animate-bounce relative z-10" />
+                <ShieldAlert size={48} className="text-[#FF2D60] mb-2 animate-bounce relative z-10" />
                 <h2 className="text-2xl md:text-3xl font-black text-white tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] relative z-10">
                   ⚠️ אל תיגע כאן! ⚠️
                 </h2>
@@ -1443,7 +1450,7 @@ const AdminPage: React.FC = () => {
                       className="w-14 h-14 bg-[var(--deep-teal-sea)] text-white rounded-2xl flex items-center justify-center hover:bg-[var(--vibrant-cyan)] transition-all shadow-xl shadow-[var(--deep-teal-sea)]/10 active:scale-90"
                       title="עריכת הגדרות שנה"
                     >
-                      <Save size={24} />
+                      <Save size={24} className="text-[#00FFFF]" />
                     </button>
                   </div>
                 </div>
@@ -1496,7 +1503,7 @@ const AdminPage: React.FC = () => {
                           className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
                           title="מחיקת סשן"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={18} className="text-[#FF2D60]" />
                         </button>
                       </div>
                     ))}
@@ -1992,7 +1999,7 @@ const AdminPage: React.FC = () => {
             {/* Color Catalog Section */}
             <section id="color-catalog" className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="flex items-center gap-4 mb-8">
-                    <div className="p-4 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] text-white rounded-2xl shadow-lg">
+                    <div className="p-4 bg-gradient-to-br from-[#00FFFF] to-[#FFD700] text-white rounded-2xl shadow-lg">
                         <Sparkles size={24} />
                     </div>
                     <div>

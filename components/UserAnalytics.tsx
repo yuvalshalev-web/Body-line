@@ -47,7 +47,7 @@ export const AstrodeckGauge: React.FC<{
   return (
     <div className={`flex-1 w-full flex flex-col items-center text-center group/pad ${isGrit ? 'relative' : ''}`}>
       
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-4">
         <div className={`${isGrit ? 'text-[var(--surfer-cyan)]' : 'text-[var(--surfer-teal)]'} group-hover/pad:text-white transition-colors`}>
           {icon}
         </div>
@@ -356,27 +356,27 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
     <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700 min-h-[400px]" dir="rtl">
       {/* Unified Modern Dashboard - Dynamic Premium Style matching Surfer Card */}
       <motion.div 
-        className="neo-glass-card p-[var(--spacing-md)] md:p-[var(--spacing-lg)] relative transition-all duration-1000"
+        className="neo-glass-card p-4 md:p-6 relative transition-all duration-1000"
       >
         {/* Decorative background elements */}
         <div className="absolute -right-20 -top-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 items-center justify-center gap-8 md:gap-4 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 items-center justify-center gap-6 md:gap-4 relative z-10">
           
           {/* Left Column */}
-          <div className="flex flex-col gap-12 md:gap-20">
+          <div className="flex flex-col gap-8 md:gap-12">
             <AstrodeckGauge 
               value={data.attendancePercent}
               label="מד התמדה אישי"
-              icon={<Waves size={18} />}
+              icon={<Waves size={18} className="text-[#00FFFF]" />}
               tooltip="כמה פעמים הגעת מתוך כל האימונים שהיו מתחילת השנה."
             />
 
             <AstrodeckGauge 
               value={data.yearlyStability.percent}
               label={`יציבות שנתית ${yearConfig?.startDate ? new Date(yearConfig.startDate).getFullYear().toString() : '2026'}`}
-              icon={<Calendar size={18} />}
+              icon={<Calendar size={18} className="text-[#FF007F]" />}
               tooltip="מדד הבודק כמה שבועות היית פעיל ברצף מתחילת העונה."
               footer={
                 <p className="mt-4 text-[12px] font-bold text-white/40">
@@ -392,7 +392,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               <AstrodeckGauge 
                 value={Math.round(data.gritScore)}
                 label="מד נחישות Grit"
-                icon={<Trophy size={18} />}
+                icon={<Trophy size={18} className="text-[#FFD700]" />}
                 tooltip="זהו מדד ה'נחישות' שלך. הוא בודק כמה אתה מתמיד. הוא משלב את כמות הסשנים שעשית עם העקביות שלך (הרצף). העקביות חשובה יותר מהכמות."
                 isGrit={true}
                 footer={
@@ -405,49 +405,22 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
           </div>
 
           {/* Right Column */}
-          <div className="flex flex-col gap-12 md:gap-20">
+          <div className="flex flex-col gap-8 md:gap-12">
             <AstrodeckGauge 
               value={data.percentile}
               label="מד התמדה יחסי"
-              icon={<Target size={18} />}
+              icon={<Target size={18} className="text-[#FF007F]" />}
               tooltip="איפה אתה עומד ביחס לכל שאר המתאמנים בנבחרת."
             />
 
             <AstrodeckGauge 
               value={data.progress[1].value}
               label="מעורבות חברתית"
-              icon={<Users size={18} />}
+              icon={<Users size={18} className="text-[#00FFFF]" />}
               tooltip="השתתפות באירועים ופעילויות קהילתיות מעבר לים."
             />
           </div>
 
-        </div>
-      </motion.div>
-
-      {/* Surf Compass (Radar Chart) - Future Use - Dynamic Premium Style */}
-      <motion.div 
-        className="neo-glass-card p-[var(--spacing-md)] md:p-[var(--spacing-lg)] relative overflow-hidden transition-all duration-1000"
-      >
-          <div className="relative z-10">
-          <div className="flex flex-col items-center mb-8">
-            <div className="flex items-center gap-[var(--spacing-xs)]">
-              <div className="p-2 bg-white/10 backdrop-blur-md border border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)] mr-2">
-                <Compass size={18} className="glass-text-primary" />
-              </div>
-              <h3 className="text-lg font-black glass-text-primary">רדאר השיפור שלך</h3>
-            </div>
-            <span className="text-[12px] font-bold glass-text-secondary uppercase tracking-widest mt-1">(לשימוש עתידי)</span>
-          </div>
-
-          <div className="h-[450px] w-full relative">
-            <RadarChart />
-          </div>
-
-          <div className="mt-6 p-4 bg-white/5 backdrop-blur-md rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
-            <p className="text-[12px] glass-text-secondary font-bold text-center leading-relaxed">
-              המצפן מנתח את היכולות המקצועיות שלך בים. נתונים אלו יוזנו על ידי המדריכים לאחר הערכות תקופתיות.
-            </p>
-          </div>
         </div>
       </motion.div>
 
@@ -462,7 +435,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/10 transition-colors group relative z-10"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-white/10 backdrop-blur-md border border-black rounded-[4px] shadow-[1px_1px_0px_rgba(0,0,0,0.8)] flex items-center justify-center text-white/60 group-hover:bg-white/20 group-hover:text-white transition-all">
+            <div className="w-8 h-8 bg-white/10 backdrop-blur-md border border-black rounded-[4px] shadow-[1px_1px_0px_rgba(0,0,0,0.8)] flex items-center justify-center text-[#FF007F] group-hover:bg-white/20 group-hover:text-[#FF007F] transition-all">
               <Calendar size={16} />
             </div>
             <div className="text-right">
@@ -473,7 +446,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
             </div>
           </div>
           <div className={`transition-transform duration-300 ${isHistoryOpen ? 'rotate-[-90deg]' : ''}`}>
-            <ChevronLeft size={18} className="text-white/40 group-hover:text-white/80" />
+            <ChevronLeft size={18} className="text-slate-400 group-hover:text-slate-800" />
           </div>
         </button>
 
@@ -521,14 +494,14 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
                 {userSessions.length === 0 && (
                   <div className="py-10 text-center">
-                    <p className="text-white/30 font-bold italic text-xs">אין סשנים לתצוגה</p>
+                    <p className="text-slate-400 font-bold italic text-xs">אין סשנים לתצוגה</p>
                   </div>
                 )}
               </div>
               
               {userSessions.length > 15 && (
                 <div className="p-3 bg-black/20 text-center border-t-[1.5px] border-black">
-                  <span className="text-[12px] font-black text-white/30 uppercase tracking-widest">
+                  <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">
                     מציג 15 סשנים אחרונים
                   </span>
                 </div>
@@ -536,6 +509,33 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
             </motion.div>
           )}
         </AnimatePresence>
+      </motion.div>
+
+      {/* Surf Compass (Radar Chart) - Future Use - Dynamic Premium Style */}
+      <motion.div 
+        className="neo-glass-card p-4 md:p-6 relative overflow-hidden transition-all duration-1000"
+      >
+          <div className="relative z-10">
+          <div className="flex flex-col items-center mb-8">
+            <div className="flex items-center gap-[var(--spacing-xs)]">
+              <div className="p-2 bg-white/10 backdrop-blur-md border border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)] mr-2">
+                <Compass size={18} className="text-[#00FFFF]" />
+              </div>
+              <h3 className="text-lg font-black glass-text-primary">רדאר השיפור שלך</h3>
+            </div>
+            <span className="text-[12px] font-bold glass-text-secondary uppercase tracking-widest mt-1">(לשימוש עתידי)</span>
+          </div>
+
+          <div className="h-[450px] w-full relative">
+            <RadarChart />
+          </div>
+
+          <div className="mt-6 p-4 bg-white/5 backdrop-blur-md rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
+            <p className="text-[12px] glass-text-secondary font-bold text-center leading-relaxed">
+              המצפן מנתח את היכולות המקצועיות שלך בים. נתונים אלו יוזנו על ידי המדריכים לאחר הערכות תקופתיות.
+            </p>
+          </div>
+        </div>
       </motion.div>
 
       <AnimatePresence>

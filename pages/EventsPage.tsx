@@ -211,33 +211,33 @@ const EventsPage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-white text-right animate-in fade-in duration-700" dir="rtl">
+    <div className="min-h-screen bg-transparent text-right animate-in fade-in duration-700" dir="rtl">
       {/* Body-line Standard Header Stack */}
       <div className="surfboard-hero-container mb-6 space-y-2">
         {/* Main Title */}
         <h1 className="main-page-title">
-          <span className="surfer-title">אירועים קרובים</span>
+          <span className="surfer-title">יומן אירועים</span>
         </h1>
 
         {/* Subtitle with Emoji context */}
         <div className="flex flex-col items-center gap-4">
-          <p className="header-subtitle max-w-2xl">
+          <p className="header-subtitle max-w-2xl text-[var(--surfer-yellow)] font-bold drop-shadow-md">
             מפגשים, חוויות ורגעים שקורים מחוץ למים • {activeEvents.length} אירועים 🗓️
           </p>
           
           {currentUser && (
             <button 
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-4 px-10 py-5 bg-[var(--surfer-cyan)] text-black rounded-[8px] font-black text-md transition-all active:scale-95 group border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:bg-[var(--surfer-teal)] hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,0.9)]"
+              className="flex items-center gap-4 px-10 py-5 bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_15px_30px_-10px_var(--surfer-deep-shadow),inset_0_0_15px_var(--surfer-aqua-mist)] text-[var(--surfer-cyan)] rounded-2xl font-black text-md transition-all active:scale-95 group hover:bg-[var(--surfer-aqua-mist)]/20 hover:scale-105"
             >
-              <Plus size={24} className="group-hover:rotate-90 transition-transform text-black" />
+              <Plus size={24} className="group-hover:rotate-90 transition-transform text-[var(--surfer-yellow)]" />
               <span>הוספת אירוע</span>
             </button>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-4">
         {activeEvents.map((event) => {
           const isAttending = currentUser ? (event.attendees || []).includes(currentUser.id) : false;
           const isProcessing = processingId === event.id;
@@ -246,12 +246,12 @@ const EventsPage: React.FC = () => {
           const canEdit = isAdmin || (currentUser && event.creatorId === currentUser.id);
 
           return (
-            <div key={event.id} className={`group bg-white/10 backdrop-blur-[15px] rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] overflow-hidden hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,0.9)] transition-all duration-300 flex flex-col relative`}>
+            <div key={event.id} className={`group bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_15px_30px_-10px_var(--surfer-deep-shadow),inset_0_0_15px_var(--surfer-aqua-mist)] rounded-2xl overflow-hidden transition-all duration-500 hover:scale-105 flex flex-col relative`}>
               <div className="relative aspect-video overflow-hidden">
                 <img src={event.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
                 <div className="absolute top-6 right-6 flex flex-col gap-2 items-end">
-                  <div className="bg-white/10 backdrop-blur-[15px] px-4 py-2 rounded-xl text-center shadow-lg min-w-max">
-                    <p className="text-sm font-black glass-text-primary whitespace-nowrap tabular-nums">{formatDate(event.date)}</p>
+                  <div className="bg-[var(--surfer-aqua-mist)]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 px-4 py-2 rounded-xl text-center shadow-lg min-w-max">
+                    <p className="text-sm font-black text-white whitespace-nowrap tabular-nums">{formatDate(event.date)}</p>
                   </div>
                   <div className={`px-3 py-1 rounded-lg text-[12px] font-black uppercase tracking-wider shadow-md ${
                     event.type === 'COMMUNITY' ? 'bg-[var(--surfer-pink)] text-white' : 
@@ -263,64 +263,37 @@ const EventsPage: React.FC = () => {
                 </div>
               </div>
               <div className="p-8 flex-1 flex flex-col relative z-30">
-                {/* Attendance Button - Now under the image */}
                 <button 
                   onClick={() => handleToggleAttendance(event.id)}
                   disabled={isProcessing}
-                  className={`w-full py-4 mb-6 rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-sm flex items-center justify-center gap-3 transition-all text-white ${isAttending ? 'bg-[var(--surfer-orange)] hover:bg-[var(--surfer-pink)]' : 'bg-[var(--surfer-teal)] hover:bg-[var(--surfer-cyan)]'}`}
+                  className={`w-full py-4 mb-6 rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.2)] font-black text-sm flex items-center justify-center gap-3 transition-all text-[#000000] ${isAttending ? 'bg-[var(--surfer-orange)]' : 'bg-[var(--surfer-cyan)]'}`}
                 >
-                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-white" />}
+                  {isProcessing ? <Loader2 className="animate-spin" size={18} /> : isAttending ? <CheckCircle2 size={18} /> : <ArrowRight size={18} className="text-[#000000]" />}
                   {isAttending ? 'מבטל הגעה' : 'אני מגיע/ה'}
                 </button>
 
-                <h3 className="text-2xl font-black glass-text-primary mb-4 group-hover:text-[var(--surfer-pink)] transition-colors">{event.title}</h3>
-                <p className="glass-text-secondary font-bold text-sm mb-8 line-clamp-3">{event.description}</p>
+                <h3 className="text-2xl font-black text-[var(--surfer-magenta)] [text-shadow:0_0_10px_var(--surfer-pink)] mb-4">{event.title}</h3>
+                <p className="text-[#000000] font-bold text-sm mb-8 line-clamp-3">{event.description}</p>
                 <div className="space-y-4 mb-8">
-                  <div className="flex items-center gap-3 glass-text-secondary">
+                  <div className="flex items-center gap-3 text-[#000000]">
                     {event.type === 'COMMUNITY' ? <ShieldAlert size={16} className="text-[var(--surfer-pink)]" /> : 
-                     event.type === 'INSTRUCTOR' ? <Zap size={16} className="text-[var(--surfer-orange)]" /> : 
-                     <User size={16} className="text-[var(--surfer-cyan)]" />}
+                     event.type === 'INSTRUCTOR' ? <Zap size={16} className="text-[var(--surfer-cyan)]" /> : 
+                     <User size={16} className="text-[var(--surfer-yellow)]" />}
                     <span className="text-xs font-black">
                       {event.type === 'COMMUNITY' ? 'אירוע קהילה רשמי' : 
                        event.type === 'INSTRUCTOR' ? 'אירוע מדריך' : 
                        'אירוע חברתי'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 glass-text-secondary"><Clock size={16} className="text-[var(--surfer-pink)]" /><span className="text-xs font-black">{event.time}</span></div>
-                  <div className="flex items-center justify-between gap-3 glass-text-secondary">
+                  <div className="flex items-center gap-3 text-[#000000]"><Clock size={16} className="text-[var(--surfer-cyan)]" /><span className="text-xs font-black">{event.time}</span></div>
+                  <div className="flex items-center justify-between gap-3 text-[#000000]">
                     <div className="flex items-center gap-3">
                       <MapPin size={16} className="text-[var(--surfer-pink)]" />
                       <span className="text-xs font-black">{event.location}</span>
                     </div>
-                    {event.location && (
-                      <div className="flex items-center gap-2">
-                        <a 
-                          href={`https://waze.com/ul?q=${encodeURIComponent(event.location)}&navigate=yes`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-3 py-1.5 bg-[#33ccff]/10 text-[#33ccff] rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:bg-[#33ccff]/20 transition-all flex items-center gap-1.5 shrink-0"
-                          title="ניווט עם Waze"
-                        >
-                          <WazeIcon className="w-4 h-4" />
-                          <span className="text-xs font-bold">Waze</span>
-                        </a>
-                        <a 
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-3 py-1.5 bg-blue-500/10 text-blue-600 rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:bg-blue-500/20 transition-all flex items-center gap-1.5 shrink-0"
-                          title="ניווט עם Google Maps"
-                        >
-                          <GoogleMapsIcon className="w-4 h-4" />
-                          <span className="text-xs font-bold">Maps</span>
-                        </a>
-                      </div>
-                    )}
                   </div>
-                  <div className="flex items-center gap-3 glass-text-secondary">
-                    <Users size={16} className="text-[var(--surfer-pink)]" />
+                  <div className="flex items-center gap-3 text-[#000000]">
+                    <Users size={16} className="text-[var(--surfer-yellow)]" />
                     <span className="text-xs font-black">
                       {(event.attendees || []).filter(id => activeMemberIds.includes(id)).length} משתתפים
                     </span>
@@ -328,24 +301,24 @@ const EventsPage: React.FC = () => {
                 </div>
 
                 {/* Edit/Delete Buttons - Now at the bottom center */}
-                <div className="mt-auto pt-6 flex justify-center border-t border-black/5">
+                <div className="mt-auto pt-6 flex justify-center border-t border-black/10">
                   {canEdit && (
                     <div className="flex gap-4">
                       <button 
                         onClick={() => handleEdit(event)} 
                         title="עריכת אירוע"
-                        className="p-3 bg-white text-[#006994] border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:bg-slate-50 transition-all active:scale-90 flex items-center justify-center"
+                        className="p-3 bg-[var(--surfer-aqua-mist)]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 text-[#000000] rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.1)] hover:bg-[var(--surfer-aqua-mist)]/40 transition-all active:scale-90 flex items-center justify-center"
                       >
-                        <Pencil size={20} />
+                        <Pencil size={20} className="text-[var(--surfer-cyan)]" />
                         <span className="mr-2 font-black text-xs">עריכה</span>
                       </button>
                       {canDelete && (
                         <button 
                           onClick={() => handleDelete(event.id)} 
                           title="מחיקת אירוע"
-                          className="p-3 bg-white text-red-500 border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:bg-red-50 transition-all active:scale-90 flex items-center justify-center"
+                          className="p-3 bg-[var(--surfer-pink)]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 text-[#000000] rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.1)] hover:bg-[var(--surfer-pink)]/30 transition-all active:scale-90 flex items-center justify-center"
                         >
-                          <Trash2 size={20} />
+                          <Trash2 size={20} className="text-[var(--surfer-pink)]" />
                           <span className="mr-2 font-black text-xs">מחיקה</span>
                         </button>
                       )}
@@ -360,109 +333,69 @@ const EventsPage: React.FC = () => {
 
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in">
-           <div className="bg-white/10 backdrop-blur-[15px] w-full max-w-2xl rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] p-12 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto glass-text-primary">
-             <button onClick={() => { setShowModal(false); resetForm(); }} className="absolute top-8 left-8 p-3 text-black bg-[var(--surfer-cyan)] rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:bg-[var(--surfer-teal)] active:scale-95 transition-all"><X size={24} /></button>
+           <div className="bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_20px_50px_-10px_var(--surfer-deep-shadow)] w-full max-w-2xl rounded-3xl p-12 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto text-white">
+             <button onClick={() => { setShowModal(false); resetForm(); }} className="absolute top-8 left-8 p-3 text-white bg-[var(--surfer-aqua-mist)]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 rounded-xl hover:bg-[var(--surfer-aqua-mist)]/40 active:scale-95 transition-all"><X size={24} /></button>
              <h3 className="text-3xl font-black mb-8">{editingEvent ? 'עריכת אירוע' : 'יצירת אירוע'}</h3>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-4">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">בחר סוג אירוע</label>
-                  <div className={`grid grid-cols-3 gap-3 p-2 rounded-3xl border-2 transition-colors ${
-                    eventType === 'MEMBER' ? 'bg-[#00D9E6]/10 border-[#00D9E6]' :
-                    eventType === 'INSTRUCTOR' ? 'bg-[#FF9F1C]/10 border-[#FF9F1C]' :
-                    eventType === 'COMMUNITY' ? 'bg-[#FF2D60]/10 border-[#FF2D60]' :
-                    'bg-slate-50 border-slate-100'
-                  }`}>
+                  <label className="text-xs font-black text-white/50 uppercase tracking-widest mr-2">בחר סוג אירוע</label>
+                  <div className={`grid grid-cols-3 gap-3 p-2 rounded-3xl border-t border-l border-white/30 border-r border-b border-white/10 bg-black/10 transition-colors`}>
                     <button 
                       type="button"
                       onClick={() => { setEventType('MEMBER'); setShowTypeWarning(false); }}
-                      className={`relative p-3 rounded-[8px] border-[2px] border-black transition-all flex flex-col items-center gap-2 text-center group ${
+                      className={`relative p-3 rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 transition-all flex flex-col items-center gap-2 text-center group ${
                         eventType === 'MEMBER' 
-                          ? 'bg-[#00D9E6] text-white shadow-[2px_2px_0px_rgba(0,0,0,0.8)]' 
-                          : 'bg-white text-slate-400 hover:bg-slate-50'
+                          ? 'bg-[var(--surfer-cyan)] text-black shadow-[0_5px_15px_rgba(0,0,0,0.2)]' 
+                          : 'bg-white/5 text-white/50 hover:bg-white/10'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                        eventType === 'MEMBER' ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-300 group-hover:text-[#00D9E6]'
+                        eventType === 'MEMBER' ? 'bg-black/20 text-black' : 'bg-white/5 text-white/30 group-hover:text-[var(--surfer-cyan)]'
                       }`}>
                         <User size={16} />
                       </div>
-                      <div>
-                        <p className="font-black text-[12px] mb-0.5">אירוע חבר</p>
-                      </div>
-                      {eventType === 'MEMBER' && (
-                        <div className="absolute top-2 left-2">
-                          <CheckCircle2 size={12} className="text-white" />
-                        </div>
-                      )}
+                      <p className="font-black text-[12px] mb-0.5">אירוע חבר</p>
                     </button>
 
                     <button 
                       type="button"
                       onClick={() => { setEventType('INSTRUCTOR'); setShowTypeWarning(false); }}
-                      className={`relative p-3 rounded-[8px] border-[2px] border-black transition-all flex flex-col items-center gap-2 text-center group ${
+                      className={`relative p-3 rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 transition-all flex flex-col items-center gap-2 text-center group ${
                         eventType === 'INSTRUCTOR' 
-                          ? 'bg-[#FF9F1C] text-white shadow-[2px_2px_0px_rgba(0,0,0,0.8)]' 
-                          : 'bg-white text-slate-400 hover:bg-slate-50'
+                          ? 'bg-[var(--surfer-orange)] text-white shadow-[0_5px_15px_rgba(0,0,0,0.2)]' 
+                          : 'bg-white/5 text-white/50 hover:bg-white/10'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                        eventType === 'INSTRUCTOR' ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-300 group-hover:text-[#FF9F1C]'
+                        eventType === 'INSTRUCTOR' ? 'bg-white/20 text-white' : 'bg-white/5 text-white/30 group-hover:text-[var(--surfer-orange)]'
                       }`}>
                         <Zap size={16} />
                       </div>
-                      <div>
-                        <p className="font-black text-[12px] mb-0.5">אירוע מדריך</p>
-                      </div>
-                      {eventType === 'INSTRUCTOR' && (
-                        <div className="absolute top-2 left-2">
-                          <CheckCircle2 size={12} className="text-white" />
-                        </div>
-                      )}
+                      <p className="font-black text-[12px] mb-0.5">אירוע מדריך</p>
                     </button>
 
                     <button 
                       type="button"
                       onClick={() => { setEventType('COMMUNITY'); setShowTypeWarning(false); }}
-                      className={`relative p-3 rounded-[8px] border-[2px] border-black transition-all flex flex-col items-center gap-2 text-center group ${
+                      className={`relative p-3 rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 transition-all flex flex-col items-center gap-2 text-center group ${
                         eventType === 'COMMUNITY' 
-                          ? 'bg-[#FF2D60] text-white shadow-[2px_2px_0px_rgba(0,0,0,0.8)]' 
-                          : 'bg-white text-slate-400 hover:bg-slate-50'
+                          ? 'bg-[var(--surfer-pink)] text-white shadow-[0_5px_15px_rgba(0,0,0,0.2)]' 
+                          : 'bg-white/5 text-white/50 hover:bg-white/10'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                        eventType === 'COMMUNITY' ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-300 group-hover:text-[#FF2D60]'
+                        eventType === 'COMMUNITY' ? 'bg-white/20 text-white' : 'bg-white/5 text-white/30 group-hover:text-[var(--surfer-pink)]'
                       }`}>
                         <Users size={16} />
                       </div>
-                      <div>
-                        <p className="font-black text-[12px] mb-0.5">אירוע קהילה</p>
-                      </div>
-                      {eventType === 'COMMUNITY' && (
-                        <div className="absolute top-2 left-2">
-                          <CheckCircle2 size={12} className="text-white" />
-                        </div>
-                      )}
+                      <p className="font-black text-[12px] mb-0.5">אירוע קהילה</p>
                     </button>
                   </div>
                   
                   {showTypeWarning && (
-                    <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-[12px] font-black animate-bounce">
+                    <div className="p-4 bg-[var(--surfer-pink)]/20 border-t border-l border-white/30 border-r border-b border-white/10 rounded-2xl flex items-center gap-3 text-white text-[12px] font-black animate-bounce">
                       <ShieldAlert size={16} />
                       <p>נא לבחור את סוג האירוע</p>
-                    </div>
-                  )}
-
-                  {eventType === 'COMMUNITY' && !canManageCommunityEvents && (
-                    <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-center gap-3 text-orange-700 text-[12px] font-black animate-in slide-in-from-top-2">
-                      <ShieldAlert size={16} />
-                      <p>רק רכז או מדריך יכולים ליצור אירוע רשמי של הקהילה.</p>
-                    </div>
-                  )}
-
-                  {eventType === 'INSTRUCTOR' && !canManageInstructorEvents && (
-                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3 text-amber-700 text-[12px] font-black animate-in slide-in-from-top-2">
-                      <Zap size={16} />
-                      <p>הלו... אתה עדיין לא מדריך. 😉</p>
                     </div>
                   )}
                 </div>
@@ -474,22 +407,22 @@ const EventsPage: React.FC = () => {
                     ></div>
                   )}
                   <div className={`space-y-6 transition-opacity ${!eventType ? 'opacity-40' : 'opacity-100'}`}>
-                    <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="כותרת האירוע" className="w-full p-5 bg-white/50 backdrop-blur-sm rounded-[8px] font-black outline-none border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.1)] focus:shadow-[4px_4px_0px_rgba(0,0,0,0.2)] transition-all" />
-                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="תיאור האירוע" className="w-full p-5 bg-white/50 backdrop-blur-sm rounded-[8px] font-bold outline-none border-[1.5px] border-black h-32 resize-none shadow-[2px_2px_0px_rgba(0,0,0,0.1)] focus:shadow-[4px_4px_0px_rgba(0,0,0,0.2)] transition-all" />
+                    <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="כותרת האירוע" className="w-full p-5 bg-white/5 backdrop-blur-sm rounded-xl font-black outline-none border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.1)] focus:shadow-[0_10px_20px_rgba(0,0,0,0.2)] transition-all" />
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="תיאור האירוע" className="w-full p-5 bg-white/5 backdrop-blur-sm rounded-xl font-bold outline-none border-t border-l border-white/30 border-r border-b border-white/10 h-32 resize-none shadow-[0_5px_15px_rgba(0,0,0,0.1)] focus:shadow-[0_10px_20px_rgba(0,0,0,0.2)] transition-all" />
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-2">תאריך</label>
-                        <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full p-5 bg-white/50 backdrop-blur-sm rounded-[8px] font-black outline-none border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.1)] transition-all" />
+                        <label className="text-[12px] font-black text-white/50 uppercase tracking-widest mr-2">תאריך</label>
+                        <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full p-5 bg-white/5 backdrop-blur-sm rounded-xl font-black outline-none border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-all" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-2">שעה</label>
-                        <TimePicker required value={time} onChangeValue={setTime} className="w-full p-5 bg-white/50 backdrop-blur-sm rounded-[8px] font-black outline-none border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.1)] transition-all" />
+                        <label className="text-[12px] font-black text-white/50 uppercase tracking-widest mr-2">שעה</label>
+                        <TimePicker required value={time} onChangeValue={setTime} className="w-full p-5 bg-white/5 backdrop-blur-sm rounded-xl font-black outline-none border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-all" />
                       </div>
                     </div>
-                    <input type="text" ref={locationInputRef} value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-white/50 backdrop-blur-sm rounded-[8px] font-black outline-none border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.1)] transition-all" />
+                    <input type="text" ref={locationInputRef} value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-white/5 backdrop-blur-sm rounded-xl font-black outline-none border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-all" />
                     <div className="space-y-4">
-                      <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">תמונת רקע</label>
-                      <div className="relative group/img aspect-video rounded-3xl overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-4 transition-all hover:border-[#006994]/40">
+                      <label className="text-[12px] font-black text-white/50 uppercase tracking-widest mr-4">תמונת רקע</label>
+                      <div className="relative group/img aspect-video rounded-3xl overflow-hidden border-t border-l border-white/30 border-r border-b border-white/10 bg-white/5 flex flex-col items-center justify-center gap-4 transition-all hover:border-[var(--surfer-cyan)]/40">
                         {imageUrl ? (
                           <>
                             <img src={imageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Preview" />
@@ -497,7 +430,7 @@ const EventsPage: React.FC = () => {
                               <button 
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="px-6 py-3 bg-white text-[#006994] rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] font-black text-sm flex items-center gap-2 active:scale-95"
+                                className="px-6 py-3 bg-white text-[var(--surfer-cyan)] rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.2)] font-black text-sm flex items-center gap-2 active:scale-95"
                               >
                                 <Camera size={18} />
                                 החלפת תמונת רקע
@@ -508,9 +441,9 @@ const EventsPage: React.FC = () => {
                           <button 
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="flex flex-col items-center gap-2 text-slate-400 hover:text-[#006994] transition-colors"
+                            className="flex flex-col items-center gap-2 text-white/50 hover:text-[var(--surfer-cyan)] transition-colors"
                           >
-                            <div className="p-4 bg-white rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
+                            <div className="p-4 bg-white/5 rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.2)]">
                               <Camera size={32} />
                             </div>
                             <span className="font-black text-xs">לחץ להעלאת תמונה</span>
@@ -518,9 +451,9 @@ const EventsPage: React.FC = () => {
                         )}
                         
                         {isUploading && (
-                          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
-                            <Loader2 className="animate-spin text-[#006994]" size={32} />
-                            <span className="font-black text-[#006994] text-[12px] uppercase tracking-widest">מעלה תמונה...</span>
+                          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
+                            <Loader2 className="animate-spin text-[var(--surfer-cyan)]" size={32} />
+                            <span className="font-black text-[var(--surfer-cyan)] text-[12px] uppercase tracking-widest">מעלה תמונה...</span>
                           </div>
                         )}
                       </div>
@@ -537,7 +470,7 @@ const EventsPage: React.FC = () => {
                 <button 
                   type="submit" 
                   disabled={isSaving || !eventType || (eventType === 'COMMUNITY' && !canManageCommunityEvents) || (eventType === 'INSTRUCTOR' && !canManageInstructorEvents)} 
-                  className="flex items-center justify-center gap-4 px-10 py-5 bg-[var(--surfer-cyan)] text-black rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-xl transition-all active:scale-95 group w-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--surfer-teal)]"
+                  className="flex items-center justify-center gap-4 px-10 py-5 bg-[var(--surfer-cyan)] text-black rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_rgba(0,0,0,0.3)] font-black text-xl transition-all active:scale-95 group w-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--surfer-teal)]"
                 >
                    {isSaving ? <Loader2 className="animate-spin" size={24} /> : editingEvent ? <CheckCircle2 size={24} className="text-black" /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-black" />}
                    {editingEvent ? 'שמור שינויים' : 'צור אירוע חדש'}

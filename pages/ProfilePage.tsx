@@ -30,7 +30,7 @@ import { processImage } from '../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { hashPassword } from '../utils/crypto';
 import { updateMemberAddress, loadGoogleMaps } from '../utils/googlePlaces';
-import { GlassButton } from '../components/GlassButton';
+import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 
 const SocialInput = ({ 
   label, name, value, onChange, icon: Icon, placeholder, brandColor, ensureAbsoluteUrl,
@@ -354,7 +354,7 @@ const ProfilePage: React.FC = () => {
             <div className="lg:col-span-7 space-y-10">
               <section>
                 <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-                  <User size={14} /> פרטי התקשרות
+                  <User size={14} className="text-[#00FFFF]" /> פרטי התקשרות
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -368,7 +368,7 @@ const ProfilePage: React.FC = () => {
                   <div className="space-y-2">
                     <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">טלפון נייד</label>
                     <div className="relative">
-                      <Phone size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                      <Phone size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#FFD700]" />
                       <input 
                         type="tel" 
                         value={formData.mobile} 
@@ -380,7 +380,7 @@ const ProfilePage: React.FC = () => {
                   <div className="space-y-2">
                     <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">תאריך יום הולדת</label>
                     <div className="relative">
-                      <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                      <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#FF007F]" />
                       <input 
                         type="date" 
                         value={formData.birthday || ''} 
@@ -392,7 +392,7 @@ const ProfilePage: React.FC = () => {
                   <div className="space-y-2">
                     <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">מגדר</label>
                     <div className="relative">
-                      <User size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                      <User size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#00FFFF]" />
                       <button 
                         type="button"
                         onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
@@ -436,7 +436,7 @@ const ProfilePage: React.FC = () => {
                   <div className="space-y-2">
                     <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">כתובת מגורים (חובה)</label>
                     <div className="relative">
-                      <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300" />
+                      <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#00FFFF]" />
                       <input 
                         type="text" 
                         id="address-input"
@@ -464,7 +464,7 @@ const ProfilePage: React.FC = () => {
 
               <section>
                 <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-                  <Sparkles size={14} /> נוכחות דיגיטלית
+                  <Sparkles size={14} className="text-[#FFD700]" /> נוכחות דיגיטלית
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <SocialInput label="Instagram" value={formData.instagramUrl} onChange={(v: string) => handleFieldChange('instagramUrl', v)} icon={Instagram} brandColor="#E4405F" ensureAbsoluteUrl={ensureAbsoluteUrl} placeholder="קישור לפרופיל אינסטגרם" />
@@ -481,7 +481,7 @@ const ProfilePage: React.FC = () => {
                   <div className="flex justify-between items-center px-4">
                     <label className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">הסיפור שלי</label>
                     <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="text-[12px] font-black text-black bg-[var(--surfer-cyan)] flex items-center gap-1.5 hover:bg-[var(--surfer-teal)] hover:text-white px-3 py-1.5 rounded-[8px] transition-all border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
-                      {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} className="text-[#00FFFF]" />} שדרג ביוגרפיה עם AI
+                      {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} className="text-[#FFD700]" />} שדרג ביוגרפיה עם AI
                     </button>
                   </div>
                   <textarea 
