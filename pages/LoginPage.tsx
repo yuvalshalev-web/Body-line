@@ -190,6 +190,12 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     setError('');
     
+    if (selectedGroup !== "הרצליה") {
+      setError('הגישה לקבוצת ' + selectedGroup + ' טרם נפתחה במערכת.');
+      setIsLoading(false);
+      return;
+    }
+
     if (!validateMobileNumber(joinMobile)) {
       setMobileError('נא להזין מספר נייד תקין (10 ספרות, מתחיל ב-05)');
       setIsLoading(false);
@@ -273,40 +279,41 @@ const LoginPage: React.FC = () => {
                    </div>
                  )}
                </div>
-              <input 
-                type="email" required value={email} onChange={e => setEmail(e.target.value)} 
-                className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none"
-                placeholder="אימייל חבר"
-              />
-              <div className="relative">
+              <div className="relative w-full">
+                <input 
+                  type="email" required value={email} onChange={e => setEmail(e.target.value)} 
+                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14 placeholder-white/50 text-right"
+                  placeholder="אימייל חבר"
+                />
+                <Mail size={20} className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 pointer-events-none ${email ? 'text-[#00FFFF]' : 'text-white/40'}`} />
+              </div>
+              <div className="relative w-full">
                 <input 
                   type={showPassword ? "text" : "password"} 
                   required value={password} onChange={e => setPassword(e.target.value)} 
-                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14"
+                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14 placeholder-white/50 text-right"
                   placeholder="סיסמה"
                 />
                 <button 
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                  className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 hover:text-white ${password ? 'text-[#00FFFF]' : 'text-white/40'}`}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
 
               {/* Location Selection Dropdown */}
-              <div className="relative">
+              <div className="relative w-full">
                 <button 
                   type="button"
                   onClick={() => setIsGroupMenuOpen(!isGroupMenuOpen)}
-                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none flex items-center justify-between group hover:bg-white/10 transition-all"
+                  className="w-full pr-6 pl-14 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none flex items-center justify-end gap-2 group hover:bg-white/10 transition-all text-right"
                 >
-                  <div className="flex items-center gap-3">
-                    <MapPin size={20} className="text-[#00FFFF]" />
-                    <span>{selectedGroup}</span>
-                  </div>
                   <ChevronDown size={20} className={`text-white/40 transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
+                  <span>{selectedGroup}</span>
                 </button>
+                <MapPin size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#00FFFF] pointer-events-none" />
 
                 {isGroupMenuOpen && (
                   <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
@@ -317,6 +324,11 @@ const LoginPage: React.FC = () => {
                         onClick={() => {
                           setSelectedGroup(group);
                           setIsGroupMenuOpen(false);
+                          if (group !== "הרצליה") {
+                            setError('הגישה לקבוצת ' + group + ' טרם נפתחה במערכת.');
+                          } else {
+                            setError('');
+                          }
                         }}
                         className={`w-full px-6 py-4 text-right font-bold transition-all hover:bg-white/10 ${
                           selectedGroup === group ? 'text-[#00FFFF] bg-white/5' : 'text-white/70'
@@ -330,27 +342,29 @@ const LoginPage: React.FC = () => {
               </div>
 
               {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
-              <GlassButton type="submit" disabled={isLoading} className="w-fit mx-auto">
-                {isLoading ? <Loader2 className="animate-spin" /> : <LogIn size={24} className="text-[#00FFFF]" />}
-                כניסה
-              </GlassButton>
+              <div className="flex justify-center">
+                <GlassButton type="submit" disabled={isLoading} className="!px-8 !py-4 bg-[#FFD700]/20 border-[#FFD700]/30 text-[#00FFFF] font-black w-fit">
+                  {isLoading ? <Loader2 className="animate-spin" /> : <LogIn size={24} className="text-[#FFD700]" />}
+                  <span className="text-lg">כניסה</span>
+                </GlassButton>
+              </div>
               
               <div className="pt-4 flex justify-center">
                 <button 
                   type="button" 
                   onClick={() => setMode('JOIN')} 
-                  className="group relative flex items-center gap-3 bg-white/5 border border-white/10 text-white px-8 py-4 rounded-2xl font-black overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(0,255,255,0.3)]"
+                  className="group relative flex items-center gap-2 bg-white/5 border border-white/10 text-white px-6 py-3 rounded-2xl font-black overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(0,255,255,0.2)]"
                 >
                   {/* אפקט "נצנוץ" בציאן ברקע במעבר עכבר */}
                   <div className="absolute inset-0 bg-gradient-to-r from-[#00FFFF]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
                   {/* האייקון עם הנפשה קטנה */}
                   <UserPlus 
-                    size={22} 
+                    size={18} 
                     className="text-[#00FFFF] transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" 
                   />
                   
-                  <span className="relative z-10 text-lg">בקשת הצטרפות לקהילה</span>
+                  <span className="relative z-10 text-base">בקש להצטרף</span>
                 </button>
               </div>
             </form>
@@ -371,7 +385,7 @@ const LoginPage: React.FC = () => {
                     required 
                     value={newPassword} 
                     onChange={e => setNewPassword(e.target.value)} 
-                    className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14"
+                    className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14 placeholder-white/50"
                     placeholder="סיסמה חדשה"
                   />
                 </div>
@@ -381,7 +395,7 @@ const LoginPage: React.FC = () => {
                     required 
                     value={confirmPassword} 
                     onChange={e => setConfirmPassword(e.target.value)} 
-                    className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14"
+                    className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14 placeholder-white/50"
                     placeholder="אימות סיסמה"
                   />
                   <button 
@@ -434,52 +448,50 @@ const LoginPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
-                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
+                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none placeholder-white/50 text-right" />
+                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none placeholder-white/50 text-right" />
                   </div>
-                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="אימייל" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
-                  <div className="grid grid-cols-2 gap-4">
-                    <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none" />
-                    <div className="relative">
-                      <button 
-                        type="button"
-                        onClick={() => setIsGenderMenuOpen(!isGenderMenuOpen)}
-                        className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none flex items-center justify-between group hover:bg-white/10 transition-all"
-                      >
-                        <span className={joinGender ? 'text-white' : 'text-white/40'}>{joinGender || 'מגדר'}</span>
-                        <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
-                      </button>
+                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="אימייל" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none placeholder-white/50 text-right" />
+                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none placeholder-white/50 text-right" />
+                  <div className="relative w-full">
+                    <button 
+                      type="button"
+                      onClick={() => setIsGenderMenuOpen(!isGenderMenuOpen)}
+                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none flex items-center justify-end gap-2 group hover:bg-white/10 transition-all text-right"
+                    >
+                      <span className={joinGender ? 'text-white' : 'text-white/40'}>{joinGender || 'מגדר'}</span>
+                      <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
 
-                      <AnimatePresence>
-                        {isGenderMenuOpen && (
-                          <>
-                            <div className="fixed inset-0 z-[60]" onClick={() => setIsGenderMenuOpen(false)} />
-                            <motion.div 
-                              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                              className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-[70] overflow-hidden"
-                            >
-                              {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
-                                <button
-                                  key={g}
-                                  type="button"
-                                  onClick={() => {
-                                    setJoinGender(g);
-                                    setIsGenderMenuOpen(false);
-                                  }}
-                                  className={`w-full px-6 py-4 text-right font-bold transition-all hover:bg-white/10 ${
-                                    joinGender === g ? 'text-[#00FFFF] bg-white/5' : 'text-white/70'
-                                  }`}
-                                >
-                                  {g}
-                                </button>
-                              ))}
-                            </motion.div>
-                          </>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                    <AnimatePresence>
+                      {isGenderMenuOpen && (
+                        <>
+                          <div className="fixed inset-0 z-[60]" onClick={() => setIsGenderMenuOpen(false)} />
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                            className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-[70] overflow-hidden"
+                          >
+                            {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
+                              <button
+                                key={g}
+                                type="button"
+                                onClick={() => {
+                                  setJoinGender(g);
+                                  setIsGenderMenuOpen(false);
+                                }}
+                                className={`w-full px-6 py-4 text-right font-bold transition-all hover:bg-white/10 ${
+                                  joinGender === g ? 'text-[#00FFFF] bg-white/5' : 'text-white/70'
+                                }`}
+                              >
+                                {g}
+                              </button>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
                   </div>
                   {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
                   <GlassButton type="submit" disabled={isLoading || isProcessingImage} className="w-fit mx-auto">

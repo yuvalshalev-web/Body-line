@@ -455,48 +455,34 @@ const CommunityAnalytics: React.FC = () => {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 relative" dir="rtl">
       <div className="relative z-10 space-y-12">
-      {/* Unified Header */}
-      <div className="hidden">
-        <div className="px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 backdrop-blur-md flex items-center gap-2 shadow-lg">
-          <TrendingUp size={12} className="text-blue-400" />
-          <span className="text-xs font-black tracking-widest text-blue-100">COMMUNITY PULSE ANALYTICS</span>
+        <div className="hidden">
+          <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200 tracking-tighter leading-none uppercase drop-shadow-2xl">
+            מבט על הקהילה
+          </h1>
+          <p className="max-w-2xl text-xl font-bold text-blue-200/70">
+            ניתוח מעמיק של נתוני הקהילה, דמוגרפיה והתמדה.
+          </p>
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200 tracking-tighter leading-none uppercase drop-shadow-2xl">
-          מבט על הקהילה
-        </h1>
-
-        <p className="max-w-2xl text-xl font-bold text-blue-200/70">
-          ניטור בזמן אמת של חיוניות הקהילה והרכב החברים. 📈
-        </p>
-      </div>
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-      {/* Top Row: Age Distribution + Distance Distribution */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Age Distribution Card */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="glass-panel p-8 relative group min-h-[550px] flex flex-col items-center justify-center rounded-[3rem]"
+            className="home-glass-card p-8 relative group min-h-[550px] flex flex-col items-center justify-center rounded-[3rem]"
           >
             {/* Background elements that need clipping */}
             <div className="absolute inset-0 overflow-hidden rounded-[3rem] pointer-events-none">
-              {/* Glossy Shimmer Effect */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
             </div>
             
             <div className="w-full flex items-center justify-between mb-8 relative z-10 px-2">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[var(--surfer-cyan)] shadow-inner border border-white/10">
+                <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[#004D40] shadow-inner border border-black/10">
                   <Sparkles size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black glass-text-primary tracking-tight">התפלגות חברים לפי גיל</h3>
-                  <p className="glass-text-secondary text-[8px] font-bold uppercase tracking-[0.3em]">Community Aura • Ocean Analytics</p>
+                  <h3 className="text-xl font-black home-title tracking-tight">התפלגות חברים לפי גיל</h3>
+                  <p className="home-data-text text-[8px] font-bold uppercase tracking-[0.3em] opacity-60">Community Aura • Ocean Analytics</p>
                 </div>
               </div>
             </div>
@@ -505,11 +491,6 @@ const CommunityAnalytics: React.FC = () => {
             <div className="w-full flex-1 relative flex items-center justify-center min-h-[350px]">
               <svg width="100%" height="100%" viewBox="50 50 900 900" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible max-w-[400px]">
                 <defs>
-                  <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
-                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                  </filter>
-                  
                   <linearGradient id="neon-turquoise" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0%" stopColor="#4FD1C5" />
                     <stop offset="100%" stopColor="#38B2AC" />
@@ -556,7 +537,7 @@ const CommunityAnalytics: React.FC = () => {
                     const startAngle = currentAngle;
                     const endAngle = currentAngle + angleSize;
                     currentAngle += angleSize;
- 
+
                     const midAngle = startAngle + angleSize / 2;
                     const rad = (midAngle * Math.PI) / 180;
                     
@@ -581,16 +562,6 @@ const CommunityAnalytics: React.FC = () => {
 
                     return (
                       <g key={`group-${i}`}>
-                        {/* Glow Layer */}
-                        <path
-                          d={d}
-                          fill="none"
-                          stroke={g.glow}
-                          strokeWidth={strokeWidth + 4}
-                          strokeLinecap="round"
-                          opacity="0.2"
-                          style={{ filter: 'blur(10px)' }}
-                        />
                         {/* Main Segment */}
                         <motion.path
                           d={d}
@@ -607,14 +578,14 @@ const CommunityAnalytics: React.FC = () => {
                         {/* Callout Line */}
                         <g>
                           {/* Anchor Dot */}
-                          <circle cx={sx} cy={sy} r="2" fill={g.glow} opacity="0.8" />
+                          <circle cx={sx} cy={sy} r="2" fill="#000000" opacity="0.3" />
                           
                           <motion.path
                             d={`M ${sx} ${sy} L ${mx} ${my} L ${ex} ${ey}`}
                             fill="none"
-                            stroke={g.glow}
+                            stroke="#000000"
                             strokeWidth="1.5"
-                            opacity="0.6"
+                            opacity="0.2"
                             initial={{ pathLength: 0 }}
                             animate={{ pathLength: 1 }}
                             transition={{ duration: 0.8, delay: 1 + i * 0.1 }}
@@ -632,9 +603,8 @@ const CommunityAnalytics: React.FC = () => {
                             y={ey} 
                             textAnchor={Math.cos(rad) > 0 ? "start" : "end"} 
                             dominantBaseline="middle" 
-                            fill={g.glow} 
+                            fill="#4A0033" 
                             className="font-black text-3xl"
-                            style={{ filter: `drop-shadow(0 0 8px ${g.glow}66)` }}
                           >
                             {Math.round(percentage * 100)}%
                           </text>
@@ -643,7 +613,7 @@ const CommunityAnalytics: React.FC = () => {
                             y={ey + 28} 
                             textAnchor={Math.cos(rad) > 0 ? "start" : "end"} 
                             dominantBaseline="middle" 
-                            fill="#2D3748" 
+                            fill="#000000" 
                             opacity="0.8"
                             className="font-bold text-base uppercase tracking-[0.2em]"
                           >
@@ -658,7 +628,7 @@ const CommunityAnalytics: React.FC = () => {
                 {/* Central Core */}
                 <g>
                   {/* Light Inner Circle for Contrast */}
-                  <circle cx="500" cy="500" r="230" fill="white" fillOpacity="0.9" />
+                  <circle cx="500" cy="500" r="230" fill="white" fillOpacity="0.8" />
                   
                   {/* Glass Reflection Overlay */}
                   <circle cx="500" cy="500" r="280" fill="url(#glass-gradient)" opacity="0.1" pointerEvents="none" />
@@ -672,18 +642,18 @@ const CommunityAnalytics: React.FC = () => {
  
                   <foreignObject x="280" y="280" width="440" height="440">
                     <div className="w-full h-full flex flex-col items-center justify-center text-center">
-                      <Waves size={48} className="text-[var(--surfer-cyan)] logo-pulse mb-2" />
-                      <span className="glass-text-secondary text-xs font-black uppercase tracking-[0.4em] mb-2">Community Total</span>
+                      <Waves size={48} className="text-[#008080] mb-2" />
+                      <span className="home-data-text text-xs font-black uppercase tracking-[0.4em] mb-2 opacity-60">Community Total</span>
                       <motion.span 
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="glass-text-primary text-8xl font-black tracking-tighter drop-shadow-[0_4px_10px_rgba(0,0,0,0.05)]"
+                        className="home-title text-8xl font-black tracking-tighter"
                       >
                         {stats.activeCount}
                       </motion.span>
                       <div className="flex items-center gap-2 mt-4">
-                        <div className="w-3 h-3 rounded-full bg-[var(--surfer-cyan)] animate-pulse shadow-sm" />
-                        <span className="text-xs text-[var(--surfer-cyan)]/60 font-black uppercase tracking-[0.2em]">Active Pulse</span>
+                        <div className="w-3 h-3 rounded-full bg-[#008080] animate-pulse shadow-sm" />
+                        <span className="text-xs text-[#008080] font-black uppercase tracking-[0.2em]">Active Pulse</span>
                       </div>
                     </div>
                   </foreignObject>
@@ -696,24 +666,21 @@ const CommunityAnalytics: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="glass-panel p-8 flex flex-col min-h-[550px] relative group rounded-[3rem]"
+            className="home-glass-card p-8 flex flex-col min-h-[550px] relative group rounded-[3rem]"
           >
             {/* Background elements that need clipping */}
             <div className="absolute inset-0 overflow-hidden rounded-[3rem] pointer-events-none">
-              {/* Glossy Shimmer Effect */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              
               {/* Background Glow */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
             </div>
 
             <div className="flex items-center gap-3 mb-8 relative z-10">
-              <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[var(--surfer-cyan)] shadow-inner border border-white/10">
+              <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[#004D40] shadow-inner border border-black/10">
                 <Activity size={24} />
               </div>
               <div>
-                <h3 className="text-xl font-black glass-text-primary tracking-tight">פיזור גיאוגרפי של החברים</h3>
-                <p className="glass-text-secondary text-[8px] font-bold uppercase tracking-[0.3em]">Distance Distribution • Ocean Analytics</p>
+                <h3 className="text-xl font-black home-title tracking-tight">פיזור גיאוגרפי של החברים</h3>
+                <p className="home-data-text text-[8px] font-bold uppercase tracking-[0.3em] opacity-60">Distance Distribution • Ocean Analytics</p>
               </div>
             </div>
 
@@ -725,18 +692,18 @@ const CommunityAnalytics: React.FC = () => {
                     dataKey="label" 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: 'rgba(0,0,0,0.5)', fontSize: 12, fontWeight: 700 }}
+                    tick={{ fill: '#000000', fontSize: 12, fontWeight: 900 }}
                     dy={10}
                   />
                   <YAxis hide />
                   <Tooltip 
-                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="glass-effect p-3 rounded-xl border border-white/20 shadow-2xl">
-                            <p className="text-xs font-black glass-text-primary mb-1">{payload[0].payload.label} ק"מ</p>
-                            <p className="text-lg font-black text-[var(--surfer-cyan)]">{payload[0].value} <span className="text-[12px] opacity-60">חברים</span></p>
+                          <div className="home-glass-card p-3 rounded-xl border border-black/10">
+                            <p className="text-xs font-black home-title mb-1">{payload[0].payload.label} ק"מ</p>
+                            <p className="text-lg font-black home-metric">{payload[0].value} <span className="text-[12px] opacity-60">חברים</span></p>
                           </div>
                         );
                       }
@@ -757,23 +724,23 @@ const CommunityAnalytics: React.FC = () => {
             </div>
 
             <div className="mt-6 grid grid-cols-3 gap-4 relative z-10">
-              <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
-                <p className="text-[12px] font-black text-[var(--surfer-cyan)] uppercase tracking-widest mb-1 opacity-70">חי״ר (0-20 ק״מ)</p>
-                <p className="text-xl font-black glass-text-primary flex items-baseline gap-1">
+              <div className="p-4 rounded-2xl glass-effect border border-black/10 shadow-sm group/stat hover:bg-white/10 transition-all">
+                <p className="text-[12px] font-black home-metric uppercase tracking-widest mb-1 opacity-70">חי״ר (0-20 ק״מ)</p>
+                <p className="text-xl font-black home-title flex items-baseline gap-1">
                   {stats.near}
                   <span className="text-[12px] font-bold opacity-40">חברים</span>
                 </p>
               </div>
-              <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
-                <p className="text-[12px] font-black text-[var(--surfer-orange)] uppercase tracking-widest mb-1 opacity-70">שיריון (21-100 ק״מ)</p>
-                <p className="text-xl font-black glass-text-primary flex items-baseline gap-1">
+              <div className="p-4 rounded-2xl glass-effect border border-black/10 shadow-sm group/stat hover:bg-white/10 transition-all">
+                <p className="text-[12px] font-black text-[#B8860B] uppercase tracking-widest mb-1 opacity-70">שיריון (21-100 ק״מ)</p>
+                <p className="text-xl font-black home-title flex items-baseline gap-1">
                   {stats.medium}
                   <span className="text-[12px] font-bold opacity-40">חברים</span>
                 </p>
               </div>
-              <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
-                <p className="text-[12px] font-black text-[var(--surfer-pink)] uppercase tracking-widest mb-1 opacity-70">חיל אויר (100+ ק״מ)</p>
-                <p className="text-xl font-black glass-text-primary flex items-baseline gap-1">
+              <div className="p-4 rounded-2xl glass-effect border border-black/10 shadow-sm group/stat hover:bg-white/10 transition-all">
+                <p className="text-[12px] font-black home-title uppercase tracking-widest mb-1 opacity-70">חיל אויר (100+ ק״מ)</p>
+                <p className="text-xl font-black home-title flex items-baseline gap-1">
                   {stats.far}
                   <span className="text-[12px] font-bold opacity-40">חברים</span>
                 </p>
@@ -785,7 +752,7 @@ const CommunityAnalytics: React.FC = () => {
         {/* Churn & Retention Card - Moved here per user request */}
         <motion.div 
           whileHover={{ scale: 1.005 }}
-          className="glass-panel p-10 rounded-[3rem] transition-all duration-500 relative group lg:col-span-2"
+          className="home-glass-card p-10 rounded-[3rem] transition-all duration-500 relative group lg:col-span-2"
         >
           {/* Background elements that need clipping */}
           <div className="absolute inset-0 overflow-hidden rounded-[3rem] pointer-events-none">
@@ -802,9 +769,9 @@ const CommunityAnalytics: React.FC = () => {
                   <div className="w-10 h-10 rounded-xl glass-effect flex items-center justify-center text-[var(--surfer-pink)] shadow-inner border border-white/10">
                     <UserMinus size={20} />
                   </div>
-                  <h4 className="text-xl font-black glass-text-primary tracking-tight">דופק נמוך (בסיכון נטישה)</h4>
+                  <h4 className="text-xl font-black home-title tracking-tight">דופק נמוך (בסיכון נטישה)</h4>
                 </div>
-                <span className="text-[12px] font-black glass-text-secondary uppercase tracking-widest glass-effect px-4 py-1.5 rounded-full border border-white/10 shadow-sm">
+                <span className="text-[12px] font-black home-data-text uppercase tracking-widest glass-effect px-4 py-1.5 rounded-full border border-black/10 shadow-sm">
                   לא נראו מעל 30 יום
                 </span>
               </div>
@@ -812,7 +779,7 @@ const CommunityAnalytics: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {stats.lowPulseMembers.length > 0 ? (
                   stats.lowPulseMembers.map(member => (
-                    <div key={member.id} className="flex items-center justify-between p-6 rounded-2xl glass-effect border border-white/10 hover:bg-white/10 transition-all group/item shadow-lg">
+                    <div key={member.id} className="flex items-center justify-between p-6 rounded-2xl home-glass-card border border-black/10 hover:bg-white/10 transition-all group/item shadow-lg">
                       <div className="flex items-center gap-4">
                         <img 
                           src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}&background=random`} 
@@ -820,18 +787,18 @@ const CommunityAnalytics: React.FC = () => {
                           className="w-12 h-12 rounded-xl border-2 border-white/20 shadow-inner object-cover"
                         />
                         <div>
-                          <p className="text-base font-black glass-text-primary">{member.firstName} {member.lastName}</p>
-                          <p className="text-[12px] font-bold glass-text-secondary italic">פעם אחרונה: {member.joinedAt}</p>
+                          <p className="text-base font-black home-title">{member.firstName} {member.lastName}</p>
+                          <p className="text-[12px] font-bold home-data-text italic">פעם אחרונה: {member.joinedAt}</p>
                         </div>
                       </div>
-                      <button className="p-3 rounded-xl glass-effect text-white/50 opacity-0 group-hover/item:opacity-100 transition-all hover:bg-white/20 hover:text-white">
+                      <button className="p-3 rounded-xl glass-effect text-[#004D40] opacity-0 group-hover/item:opacity-100 transition-all hover:bg-white/20">
                         <MessageSquare size={18} />
                       </button>
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-2 p-12 text-center border border-dashed border-white/10 rounded-3xl glass-effect">
-                    <p className="glass-text-secondary font-black uppercase tracking-[0.3em] text-sm">כל החברים פעילים בדופק גבוה ✨</p>
+                  <div className="col-span-2 p-12 text-center border border-dashed border-black/10 rounded-3xl glass-effect">
+                    <p className="home-data-text font-black uppercase tracking-[0.3em] text-sm">כל החברים פעילים בדופק גבוה ✨</p>
                   </div>
                 )}
               </div>
@@ -845,7 +812,7 @@ const CommunityAnalytics: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="lg:col-span-2 glass-panel p-10 rounded-[4rem] transition-all duration-500 relative group"
+          className="lg:col-span-2 home-glass-card p-10 rounded-[4rem] transition-all duration-500 relative group"
         >
             {/* Background elements that need clipping */}
             <div className="absolute inset-0 overflow-hidden rounded-[4rem] pointer-events-none">
@@ -859,8 +826,8 @@ const CommunityAnalytics: React.FC = () => {
                   <Activity size={24} />
                 </div>
                 <div>
-                  <h3 className="glass-text-primary font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי קבוצות גיל</h3>
-                  <p className="glass-text-secondary text-[12px] tracking-[0.3em] mt-1 font-black uppercase">SESSION VITALITY METRICS-8</p>
+                  <h3 className="home-title font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי קבוצות גיל</h3>
+                  <p className="home-data-text text-[12px] tracking-[0.3em] mt-1 font-black uppercase">SESSION VITALITY METRICS-8</p>
                 </div>
               </div>
             </div>
@@ -1049,7 +1016,7 @@ const CommunityAnalytics: React.FC = () => {
                         </g>
 
                         {/* Text Elements */}
-                        <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="14" className="antialiased">{group.label}</text>
+                        <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="#4A0033" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="14" className="antialiased">{group.label}</text>
 
                         {/* Yearly Retention Marker (Rendered last to be on top) */}
                         <motion.g
@@ -1134,7 +1101,7 @@ const CommunityAnalytics: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-2 glass-panel p-10 rounded-[4rem] transition-all duration-500 relative group"
+          className="lg:col-span-2 home-glass-card p-10 rounded-[4rem] transition-all duration-500 relative group"
         >
           {/* Background elements that need clipping */}
           <div className="absolute inset-0 overflow-hidden rounded-[4rem] pointer-events-none">
@@ -1148,8 +1115,8 @@ const CommunityAnalytics: React.FC = () => {
                 <Heart size={24} />
               </div>
               <div>
-                <h3 className="glass-text-primary font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי מגדר</h3>
-                <p className="glass-text-secondary text-[12px] tracking-[0.3em] mt-1 font-black uppercase">COMMUNITY INSIGHTS • GENDER DYNAMICS</p>
+                <h3 className="home-title font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי מגדר</h3>
+                <p className="home-data-text text-[12px] tracking-[0.3em] mt-1 font-black uppercase">COMMUNITY INSIGHTS • GENDER DYNAMICS</p>
               </div>
             </div>
           </div>
@@ -1336,7 +1303,7 @@ const CommunityAnalytics: React.FC = () => {
                       </g>
 
                       {/* Text Elements */}
-                      <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="white" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="14" className="antialiased">{group.label}</text>
+                      <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="#4A0033" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="14" className="antialiased">{group.label}</text>
 
                       {/* Yearly Retention Marker (Rendered last to be on top) */}
                       <motion.g
@@ -1389,7 +1356,7 @@ const CommunityAnalytics: React.FC = () => {
                     <span className={`text-[10px] px-3 py-0.5 rounded-full font-black border antialiased ${categoryColor}`}>
                       {categoryLabel}
                     </span>
-                    <span className="text-[12px] font-black glass-text-primary uppercase tracking-widest mt-1">
+                    <span className="text-[12px] font-black home-title uppercase tracking-widest mt-1">
                       {group.count} חברים
                     </span>
                   </div>
@@ -1403,7 +1370,7 @@ const CommunityAnalytics: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-2 glass-panel p-10 rounded-[4rem] mt-12 relative overflow-hidden group"
+          className="lg:col-span-2 home-glass-card p-10 rounded-[4rem] mt-12 relative overflow-hidden group"
         >
           {/* Glossy Shimmer for the whole container */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-30 pointer-events-none" />
@@ -1414,8 +1381,8 @@ const CommunityAnalytics: React.FC = () => {
                 <UserMinus size={24} />
               </div>
               <div>
-                <h3 className="glass-text-primary font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעורי עזיבה Churn rate</h3>
-                <p className="glass-text-secondary text-[12px] tracking-[0.3em] mt-1 font-black uppercase">COMMUNITY INSIGHTS • ATTRITION</p>
+                <h3 className="home-title font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעורי עזיבה Churn rate</h3>
+                <p className="home-data-text text-[12px] tracking-[0.3em] mt-1 font-black uppercase">COMMUNITY INSIGHTS • ATTRITION</p>
               </div>
             </div>
           </div>
@@ -1435,8 +1402,6 @@ const CommunityAnalytics: React.FC = () => {
             />
           </div>
         </motion.div>
-
-      </div>
 
       </div>
     </div>
@@ -1460,7 +1425,7 @@ export const Astrodeck = ({ label, value, icon: Icon, path, external, color, neo
       target={external ? "_blank" : undefined} 
       className={`block h-full group relative w-full aspect-square max-w-[220px] mx-auto transition-all duration-300 ${neoBrutal ? 'hover:translate-x-[2px] hover:translate-y-[2px]' : 'hover:scale-105 hover:-translate-y-2'}`}
     >
-      <svg viewBox="0 0 400 400" className={`w-full h-full ${neoBrutal ? 'bg-white/10 backdrop-blur-[15px] border-[2px] border-black rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)]' : 'backdrop-blur-[10px] rounded-[24px]'}`}>
+      <svg viewBox="0 0 400 400" className={`w-full h-full ${neoBrutal ? 'home-glass-card' : 'backdrop-blur-[10px] rounded-[24px]'}`}>
         <defs>
           <pattern id="diamond-pad-texture" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
             <rect width="16" height="16" fill="rgba(0,0,0,0.05)" />
@@ -1498,14 +1463,14 @@ export const Astrodeck = ({ label, value, icon: Icon, path, external, color, neo
         />
 
         {/* Base Color Fill */}
-        <path d={padPath} fill="rgba(0, 112, 133, 0.1)" stroke="var(--surfer-deep-teal)" strokeWidth="2" strokeLinejoin="round" />
+        <path d={padPath} fill="rgba(0, 112, 133, 0.05)" stroke="rgba(0,0,0,0.1)" strokeWidth="1" strokeLinejoin="round" />
         
         {/* Glassmorphism Overlay */}
         <path d={padPath} fill="url(#glass-lens-pad)" opacity="0.8" className="pointer-events-none" />
         <path d={padPath} fill="url(#glass-shine-pad)" opacity="0.6" className="pointer-events-none" />
 
         {/* Grip Bars Overlay */}
-        <g fill="rgba(255,255,255,0.4)" opacity="0.2" pointerEvents="none">
+        <g fill="rgba(0,0,0,0.1)" opacity="0.1" pointerEvents="none">
           <rect x="170" y="80" width="60" height="6" rx="3" />
           <rect x="170" y="100" width="60" height="6" rx="3" />
           <rect x="170" y="120" width="60" height="6" rx="3" />
@@ -1518,32 +1483,13 @@ export const Astrodeck = ({ label, value, icon: Icon, path, external, color, neo
         </g>
 
         {/* Rough Texture Overlay */}
-        <path d={padPath} fill="#121212" filter="url(#rough-texture-pad)" opacity="0.25" className="pointer-events-none" />
-        
-        {/* Pad Outline for definition */}
-        <path 
-          d={padPath} 
-          fill="none" 
-          stroke="rgba(255,255,255,0.3)" 
-          strokeWidth="1" 
-          opacity="0.5"
-        />
-
-        {/* Charcoal Outline */}
-        <path 
-          d={padPath} 
-          fill="none" 
-          stroke="#121212" 
-          strokeWidth="1.2" 
-          strokeLinejoin="round"
-          className="pointer-events-none"
-        />
+        <path d={padPath} fill="#121212" filter="url(#rough-texture-pad)" opacity="0.1" className="pointer-events-none" />
       </svg>
       
       <div className="absolute inset-0 flex flex-col items-center justify-center p-4 z-10 pointer-events-none">
-        <Icon size={32} className={`mb-3 ${color} drop-shadow-md transition-transform duration-500 group-hover:scale-110`} />
-        <p className="text-4xl font-black text-[var(--surfer-deep-teal)] mb-1 leading-none drop-shadow-sm">{value}</p>
-        <p className="text-[12px] font-black uppercase tracking-widest text-[var(--surfer-deep-teal)]/70 mt-1 drop-shadow-sm text-center">{label}</p>
+        <Icon size={32} className={`mb-3 ${color} transition-transform duration-500 group-hover:scale-110`} />
+        <p className="text-4xl font-black home-metric mb-1 leading-none">{value}</p>
+        <p className="text-[12px] font-black uppercase tracking-widest home-label mt-1 text-center">{label}</p>
       </div>
     </Link>
   );

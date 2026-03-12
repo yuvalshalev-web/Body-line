@@ -160,7 +160,7 @@ const DashboardPage: React.FC = () => {
     <div className="space-y-16 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
       {/* Hero & Attendees Group */}
       <div className="space-y-6">
-        <section className="relative w-full min-h-[500px] md:min-h-[900px] lg:min-h-[1200px] rounded-[8px] overflow-hidden border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)]">
+        <section className="relative w-full min-h-[500px] md:min-h-[900px] lg:min-h-[1200px] rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
           <div className="absolute inset-0 bg-slate-900">
             <img 
               src={siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
@@ -188,7 +188,7 @@ const DashboardPage: React.FC = () => {
                      { label: 'דקות', value: countdown.minutes },
                      { label: 'שניות', value: countdown.seconds }
                    ].map((item, i) => (
-                     <div key={i} className="flex flex-col items-center bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black px-3 py-2 md:px-5 md:py-3 rounded-[8px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] min-w-[60px] md:min-w-[80px]">
+                     <div key={i} className="flex flex-col items-center bg-white/10 backdrop-blur-[15px] border border-white/20 px-3 py-2 md:px-5 md:py-3 rounded-2xl shadow-lg min-w-[60px] md:min-w-[80px]">
                        <span className="text-2xl md:text-4xl font-black text-[var(--surfer-yellow)]" style={{ fontFamily: "'Heebo', sans-serif" }}>{item.value}</span>
                        <span className="text-[9px] md:text-[12px] uppercase font-bold tracking-tighter opacity-80 text-white">{item.label}</span>
                      </div>
@@ -208,7 +208,11 @@ const DashboardPage: React.FC = () => {
                    aria-label={isUserAttending ? "בטל הגעה" : "אני מגיע/ה"}
                  >
                    <div className="pulse-halo"></div>
-                   {isProcessing && <Loader2 className="animate-spin text-white/50" size={32} />}
+                   {isProcessing ? (
+                     <Loader2 className="animate-spin text-white/50" size={32} />
+                   ) : (
+                      null
+                   )}
                  </button>
                  <motion.span 
                    className="secondary-label"
@@ -228,10 +232,10 @@ const DashboardPage: React.FC = () => {
 
         {/* Confirmed Members Bar - Positioned below Hero, above AstroDecks */}
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-          <div className="neo-glass-card p-6 md:p-10 flex flex-col items-center justify-center gap-8 overflow-hidden relative">
+          <div className="home-glass-card p-6 md:p-10 flex flex-col items-center justify-center gap-8 overflow-hidden relative">
             {/* Decorative background glows - enhanced for Glassmorphism */}
-            <div className="absolute left-1/4 top-0 w-64 h-64 bg-cyan-500/10 blur-[120px] pointer-events-none" />
-            <div className="absolute right-1/4 bottom-0 w-64 h-64 bg-amber-500/10 blur-[120px] pointer-events-none" />
+            <div className="absolute left-1/4 top-0 w-64 h-64 bg-cyan-500/5 blur-[120px] pointer-events-none" />
+            <div className="absolute right-1/4 bottom-0 w-64 h-64 bg-amber-500/5 blur-[120px] pointer-events-none" />
 
             <div className="flex flex-col items-center gap-6 relative z-10 w-full">
               {/* Centered Avatars */}
@@ -241,12 +245,12 @@ const DashboardPage: React.FC = () => {
                     {a.avatar ? (
                       <img 
                         src={a.avatar} 
-                        className="w-12 h-12 md:w-14 md:h-14 rounded-[8px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] object-cover transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6" 
+                        className="w-12 h-12 md:w-14 md:h-14 rounded-xl border border-white/20 shadow-md object-cover transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6" 
                         alt="" 
                         loading="lazy" 
                       />
                     ) : (
-                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-[8px] bg-gradient-to-br from-slate-700 to-slate-900 border-[1.5px] border-black flex items-center justify-center text-xs text-white font-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6">
+                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 border border-white/20 flex items-center justify-center text-xs text-white font-black shadow-md transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6">
                         {a.firstName.charAt(0)}
                       </div>
                     )}
@@ -257,17 +261,17 @@ const DashboardPage: React.FC = () => {
                   </Link>
                 ))}
                 {attendees.length > 12 && (
-                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-[8px] bg-slate-800/80 backdrop-blur-md border-[1.5px] border-black flex items-center justify-center text-xs text-white font-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] z-10">
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-slate-800/80 backdrop-blur-md border border-white/20 flex items-center justify-center text-xs text-white font-black shadow-md z-10">
                     +{attendees.length - 12}
                   </div>
                 )}
               </div>
               
               <div className="text-center space-y-2">
-                <h4 className="text-2xl md:text-3xl font-black glass-text-primary tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+                <h4 className="text-2xl md:text-3xl font-black home-title tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
                   הכוכבים שאישרו הגעה
                 </h4>
-                <p className="text-sm md:text-base font-bold glass-text-secondary uppercase tracking-widest opacity-80" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+                <p className="text-sm md:text-base font-bold home-data-text uppercase tracking-widest" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
                   {attendees.length} גולשים כבר בפנים. מה איתך?
                 </p>
               </div>
@@ -275,7 +279,7 @@ const DashboardPage: React.FC = () => {
 
             <button 
               onClick={() => setShowAttendees(true)} 
-              className="px-10 py-4 bg-[var(--surfer-yellow)] text-black rounded-[8px] font-black text-xs md:text-sm uppercase tracking-[0.2em] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] transition-all relative z-10"
+              className="px-10 py-4 bg-[var(--surfer-yellow)] text-black rounded-2xl font-black text-xs md:text-sm uppercase tracking-[0.2em] shadow-lg hover:scale-105 active:scale-95 transition-all relative z-10"
             >
               צפה ברשימה המלאה
             </button>
@@ -286,12 +290,12 @@ const DashboardPage: React.FC = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
         {[
-          { label: 'נבחרת הגלישה', value: activeMembers.length, icon: Users, path: '/directory', color: 'text-emerald-600', neoBrutal: true },
-          { label: 'תמונות', value: galleryItems.length, icon: ImageIcon, path: '/gallery', color: 'text-rose-600', neoBrutal: true },
-          { label: 'אירועים', value: activeEventsCount, icon: Calendar, path: '/events', color: 'text-indigo-600', neoBrutal: true },
-          { label: 'פוסטים', value: news.length, icon: Newspaper, path: '/posts', color: 'text-amber-600', neoBrutal: true },
-          { label: 'תחזית גלים', value: 'GoSurf', icon: Waves, path: 'https://gosurf.co.il', external: true, color: 'text-sky-600', neoBrutal: true },
-          { label: 'BeachCam', value: 'Live', icon: Video, path: 'https://beachcam.co.il', external: true, color: 'text-violet-600', neoBrutal: true }
+          { label: 'נבחרת הגלישה', value: activeMembers.length, icon: Users, path: '/directory', color: 'home-icon-yellow', neoBrutal: false },
+          { label: 'תמונות', value: galleryItems.length, icon: ImageIcon, path: '/gallery', color: 'home-icon-yellow', neoBrutal: false },
+          { label: 'אירועים', value: activeEventsCount, icon: Calendar, path: '/events', color: 'home-icon-yellow', neoBrutal: false },
+          { label: 'פוסטים', value: news.length, icon: Newspaper, path: '/posts', color: 'home-icon-yellow', neoBrutal: false },
+          { label: 'תחזית גלים', value: 'GoSurf', icon: Waves, path: 'https://gosurf.co.il', external: true, color: 'home-icon-yellow', neoBrutal: false },
+          { label: 'BeachCam', value: 'Live', icon: Video, path: 'https://beachcam.co.il', external: true, color: 'home-icon-yellow', neoBrutal: false }
         ].map((card, i) => (
           <Astrodeck key={i} {...card} />
         ))}
@@ -301,27 +305,27 @@ const DashboardPage: React.FC = () => {
       <section className="space-y-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-4 bg-[var(--surfer-pink)]/20 text-[#FF007F] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]"><Newspaper size={24} /></div>
-            <h3 className="text-3xl font-black glass-text-primary tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>פוסטים אחרונים</h3>
+            <div className="p-4 bg-[var(--surfer-pink)]/20 text-[#4A0033] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(122,21,85,0.3)]"><Newspaper size={24} /></div>
+            <h3 className="text-3xl font-black home-title tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>פוסטים אחרונים</h3>
           </div>
-          <Link to="/posts" className="glass-text-secondary font-black text-xs uppercase tracking-widest hover:text-slate-950 transition-colors">צפה בהכל</Link>
+          <Link to="/posts" className="home-label font-black text-xs uppercase tracking-widest hover:text-slate-950 transition-colors">צפה בהכל</Link>
         </div>
         
         <div className="max-w-xl mx-auto">
           {randomPost ? (
-            <Link to="/posts" className={`group neo-glass-card overflow-hidden hover:shadow-[2px_2px_0px_rgba(0,0,0,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-300 flex flex-col ${isRefreshingPost ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+            <Link to="/posts" className={`group home-glass-card overflow-hidden transition-all duration-300 flex flex-col ${isRefreshingPost ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
               {randomPost.imageUrl && (
                 <div className="aspect-video overflow-hidden border-b-[2px] border-black">
                   <img src={randomPost.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
                 </div>
               )}
               <div className="p-8 flex-1 flex flex-col">
-                <div className="flex items-center gap-2 text-[12px] font-black glass-text-secondary uppercase tracking-widest mb-4">
-                  <Calendar size={12} />
+                <div className="flex items-center gap-2 text-[12px] font-black home-data-text uppercase tracking-widest mb-4">
+                  <Calendar size={12} className="home-icon-yellow" />
                   {randomPost.date}
                 </div>
-                <h4 className="text-xl font-black glass-text-primary mb-4 group-hover:text-[var(--surfer-pink)] transition-colors line-clamp-2" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.title}</h4>
-                <p className="glass-text-secondary font-bold text-sm line-clamp-3 mb-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.content}</p>
+                <h4 className="text-xl font-black home-title mb-4 group-hover:text-[var(--surfer-pink)] transition-colors line-clamp-2" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.title}</h4>
+                <p className="home-data-text font-bold text-sm line-clamp-3 mb-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.content}</p>
                 <div className="mt-auto flex items-center gap-3">
                   {randomPost.authorAvatar ? (
                     <img src={randomPost.authorAvatar} className="w-6 h-6 rounded-full object-cover border border-black" alt="" />
@@ -330,41 +334,41 @@ const DashboardPage: React.FC = () => {
                       <UserCircle size={12} />
                     </div>
                   )}
-                  <span className="text-[12px] font-black glass-text-secondary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.authorName}</span>
+                  <span className="text-[12px] font-black home-data-text" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.authorName}</span>
                 </div>
               </div>
             </Link>
           ) : (
-            <div className="py-20 text-center neo-glass-card border-dashed">
-              <p className="glass-text-secondary font-bold">אין פוסטים להצגה</p>
+            <div className="py-20 text-center home-glass-card border-dashed">
+              <p className="home-data-text font-bold">אין פוסטים להצגה</p>
             </div>
           )}
         </div>
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <section className="neo-glass-card p-12 relative min-h-[400px]">
+        <section className="home-glass-card p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]"><Quote size={24} /></div>
-              <h3 className="text-2xl font-black glass-text-primary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>חוכמת הליין-אפ</h3>
+              <div className="p-4 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(122,21,85,0.3)]"><Quote size={24} /></div>
+              <h3 className="text-2xl font-black home-title" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>חוכמת הליין-אפ</h3>
            </div>
            {randomQuotes.map((item, idx) => (
              <div key={idx} className="p-10 bg-white/5 backdrop-blur-[15px] border-[1.5px] border-black rounded-[8px] transition-all animate-in fade-in">
-               <p className="text-2xl font-black glass-text-primary leading-tight italic" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>"{item.text}"</p>
-               <p className="text-lg font-bold glass-text-secondary italic mt-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>— {item.author}</p>
+               <p className="text-2xl font-black home-data-text leading-tight italic" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>"{item.text}"</p>
+               <p className="text-lg font-bold home-title italic mt-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>— {item.author}</p>
              </div>
            ))}
         </section>
 
-        <section className="neo-glass-card p-12 relative min-h-[400px]">
+        <section className="home-glass-card p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-[var(--surfer-cyan)]/20 text-[#00FFFF] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]"><BookOpen size={24} /></div>
-              <h3 className="text-2xl font-black glass-text-primary" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מילון מונחים</h3>
+              <div className="p-4 bg-[var(--surfer-cyan)]/20 text-[#00FFFF] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(122,21,85,0.3)]"><BookOpen size={24} /></div>
+              <h3 className="text-2xl font-black home-title" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מילון מונחים</h3>
            </div>
            {randomGlossary.map((item, idx) => (
              <div key={idx} className="p-10 bg-white/5 backdrop-blur-[15px] border-[1.5px] border-black rounded-[8px] transition-all animate-in fade-in">
-               <h4 className="text-4xl font-black glass-text-primary mb-4" dir="ltr" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.term}</h4>
-               <p className="text-xl font-bold glass-text-secondary italic border-r-4 border-[var(--surfer-cyan)]/30 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.definition}</p>
+               <h4 className="text-4xl font-black home-metric mb-4" dir="ltr" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.term}</h4>
+               <p className="text-xl font-bold home-data-text italic border-r-4 border-[#004D40]/30 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.definition}</p>
              </div>
            ))}
         </section>
@@ -391,7 +395,7 @@ const DashboardPage: React.FC = () => {
                   </div>
                 ))}
               </div>
-              <button onClick={() => setShowAttendees(false)} className="w-full mt-8 py-4 bg-[var(--surfer-cyan)] text-black rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-lg transition-all active:scale-95 hover:bg-[var(--surfer-teal)]">סגור</button>
+              <button onClick={() => setShowAttendees(false)} className="w-full mt-8 py-4 bg-[var(--surfer-cyan)] text-black rounded-2xl shadow-lg font-black text-lg transition-all active:scale-95 hover:bg-[var(--surfer-teal)]">סגור</button>
            </div>
         </div>
       )}

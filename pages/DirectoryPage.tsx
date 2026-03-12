@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
   ChevronDown, 
@@ -159,7 +159,7 @@ const DirectoryPage: React.FC = () => {
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
   // Handle URL ID parameter for direct profile access
-  React.useEffect(() => {
+  useEffect(() => {
     const memberId = searchParams.get('id');
     if (memberId && members.length > 0) {
       const member = members.find(m => m.id === memberId);
@@ -213,7 +213,7 @@ const DirectoryPage: React.FC = () => {
   const isAdmin = currentUser?.role === 'Admin';
 
   // Progress Bar Logic
-  React.useEffect(() => {
+  useEffect(() => {
     if ((window as any).updateProgressBar) {
       (window as any).updateProgressBar(30);
       const timer = setTimeout(() => (window as any).updateProgressBar(100), 800);

@@ -375,13 +375,64 @@
     6px 6px 0px rgba(0,0,0,0.1);
 }
 
-.neo-glass-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
-  border: var(--neo-glass-border);
-  border-radius: var(--neo-glass-radius);
-  box-shadow: var(--neo-glass-shadow);
+/* --- HOME PAGE DESIGN RULES (THE "DARK ANCHOR" & MATERIAL DEPTH) --- */
+.home-glass-card {
+  background: rgba(178, 235, 242, 0.08) !important; /* Aqua Mist @ 8% */
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 24px !important;
+  box-shadow: 
+    0 15px 35px rgba(122, 21, 85, 0.25),
+    0 5px 15px rgba(122, 21, 85, 0.15),
+    inset 0 0 20px rgba(255, 255, 255, 0.05) !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+
+.home-glass-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 25px 50px rgba(122, 21, 85, 0.35),
+    0 10px 20px rgba(122, 21, 85, 0.2);
+}
+
+.home-title {
+  color: #4A0033 !important; /* Deepest Magenta */
+  font-weight: 900 !important;
+  text-shadow: none !important;
+}
+
+.home-data-text {
+  color: #000000 !important; /* Pure Black for absolute legibility */
+  font-weight: 800 !important;
+  text-shadow: none !important;
+}
+
+.home-metric {
+  color: #004D40 !important; /* Deepest Teal */
+  font-weight: 900 !important;
+  text-shadow: none !important;
+}
+
+.home-label {
+  color: #1a1a1a !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+.home-icon-yellow {
+  color: #FFD700 !important; /* Sunshine Yellow mid-tone */
+  filter: drop-shadow(0 0 2px rgba(0,0,0,0.1));
+}
+
+.home-glow-title {
+  /* Glow is reserved ONLY for large titles */
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.3) !important;
+}
+
 
 .wax-comb-mask {
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 560 1000' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='black' fill-rule='evenodd' d='M 0,250 C 0,50 140,0 280,0 C 420,0 560,50 560,250 L 560,920 L 540,1000 L 520,920 L 500,1000 L 480,920 L 460,1000 L 440,920 L 420,1000 L 400,920 L 380,1000 L 360,920 L 340,1000 L 320,920 L 300,1000 L 280,920 L 260,1000 L 240,920 L 220,1000 L 200,920 L 180,1000 L 160,920 L 140,1000 L 120,920 L 100,1000 L 80,920 L 60,1000 L 40,920 L 20,1000 L 0,920 Z M 280,40 A 40,40 0 1,0 280,120 A 40,40 0 1,0 280,40 Z'/%3E%3C/svg%3E");
@@ -439,12 +490,20 @@ body {
 }
 
 /* חוק הברזל החדש לכל הכפתורים באתר */
-button, .btn {
+button:not(.w-full), .btn:not(.w-full) {
   display: inline-flex !important; /* מבטל התפרסות על כל הרוחב */
   width: auto !important;         /* מבטל רוחב קבוע אם הוגדר */
   flex: none !important;          /* מבטל מתיחה של flex-1 */
   padding: 12px 24px !important;  /* יחס 1:2, דורס מחלקות Tailwind */
   white-space: nowrap !important; /* מונע שבירת טקסט */
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+button.w-full, .btn.w-full {
+  display: flex !important;
+  width: 100% !important;
+  padding: 12px 24px !important;
   align-items: center !important;
   justify-content: center !important;
 }
@@ -935,9 +994,9 @@ button, .btn {
 
 /* --- Surfer Action Hotspot System --- */
 @keyframes surfer-pulse {
-  0% { transform: scale(1); opacity: 0.5; box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
-  70% { transform: scale(1.8); opacity: 0; box-shadow: 0 0 0 30px rgba(255, 255, 255, 0); }
-  100% { transform: scale(1); opacity: 0; box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+  0% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 0 0 rgba(241, 209, 121, 0.4); }
+  70% { transform: scale(1.5); opacity: 0; box-shadow: 0 0 0 40px rgba(241, 209, 121, 0); }
+  100% { transform: scale(1); opacity: 0; box-shadow: 0 0 0 0 rgba(241, 209, 121, 0); }
 }
 
 .surfer-hotspot-container {
@@ -961,18 +1020,27 @@ button, .btn {
 .surfer-hotspot {
   width: clamp(100px, 25vw, 140px) !important;
   height: clamp(100px, 25vw, 140px) !important;
+  aspect-ratio: 1 / 1 !important;
   padding: 0 !important;
   background: transparent;
-  border: none;
+  backdrop-filter: blur(10px);
+  border: 2px solid transparent;
   cursor: pointer;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50% !important;
-  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   outline: none;
   -webkit-tap-highlight-color: transparent;
+  overflow: visible;
+}
+
+.surfer-hotspot:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+  border-color: var(--surfer-yellow);
 }
 
 .surfer-hotspot:active {
@@ -981,11 +1049,12 @@ button, .btn {
 
 .pulse-halo {
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  animation: surfer-pulse 4s infinite ease-out;
+  inset: -4px;
+  border-radius: 50% !important;
+  border: 2px solid transparent;
+  animation: surfer-pulse 3s infinite cubic-bezier(0.4, 0, 0.6, 1);
   pointer-events: none;
+  z-index: -1;
 }
 
 .secondary-label {
