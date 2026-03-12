@@ -88,7 +88,7 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
       className="group cursor-pointer relative" 
       onClick={onClick}
     >
-      <div className="bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_15px_30px_-10px_var(--surfer-deep-shadow),inset_0_0_15px_var(--surfer-aqua-mist)] rounded-2xl flex flex-col h-full transition-all duration-500 overflow-hidden relative">
+      <div className="luxury-card flex flex-col h-full transition-all duration-500 overflow-hidden relative">
         {/* Top Half: Avatar with Feathered Edges */}
         <div className="relative aspect-square w-full overflow-hidden">
           {member.avatar ? (

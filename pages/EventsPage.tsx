@@ -246,7 +246,7 @@ const EventsPage: React.FC = () => {
           const canEdit = isAdmin || (currentUser && event.creatorId === currentUser.id);
 
           return (
-            <div key={event.id} className={`group bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_15px_30px_-10px_var(--surfer-deep-shadow),inset_0_0_15px_var(--surfer-aqua-mist)] rounded-2xl overflow-hidden transition-all duration-500 hover:scale-105 flex flex-col relative`}>
+            <div key={event.id} className="luxury-card group flex flex-col relative">
               <div className="relative aspect-video overflow-hidden">
                 <img src={event.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
                 <div className="absolute top-6 right-6 flex flex-col gap-2 items-end">

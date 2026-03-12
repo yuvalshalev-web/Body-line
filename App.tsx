@@ -313,7 +313,7 @@ const App: React.FC = () => {
 
       {/* Main Content Area */}
       <FloatingMenu onOpenDrawer={() => setIsDrawerOpen(true)} />
-      <main className={`flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto pb-32 relative z-10 ${location.pathname === '/profile' ? 'profile-page-bg' : ''}`}>
+      <main className={`flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto pb-32 relative z-10 ${location.pathname === '/' ? 'luxury-bg' : ''} ${location.pathname === '/events' ? 'luxury-bg' : ''} ${location.pathname === '/gallery' ? 'luxury-bg' : ''} ${location.pathname === '/directory' ? 'luxury-bg' : ''}`}>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<DashboardPage />} />

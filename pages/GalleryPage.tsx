@@ -196,7 +196,7 @@ const GalleryPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-4">
         {galleryItems.map((item) => (
           <div key={item.id} 
-            className={`relative group aspect-square overflow-hidden bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_15px_30px_-10px_var(--surfer-deep-shadow),inset_0_0_15px_var(--surfer-aqua-mist)] rounded-2xl transition-all duration-500 cursor-zoom-in hover:scale-105 ${deletingId === item.id ? 'opacity-30' : ''}`}
+            className="luxury-card relative group aspect-square overflow-hidden cursor-zoom-in hover:scale-105 transition-all duration-500"
             onClick={() => setSelectedImage(item.imageUrl)}
           >
             <img 
@@ -206,13 +206,13 @@ const GalleryPage: React.FC = () => {
               loading="lazy" 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-               <div className="flex items-center gap-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300 bg-[var(--surfer-aqua-mist)]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 p-2 rounded-xl self-start">
-                  <div className="w-8 h-8 rounded-full bg-[var(--surfer-cyan)] flex items-center justify-center text-white">
+               <div className="flex items-center gap-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300 bg-white/20 backdrop-blur-[20px] border border-white/30 p-2 rounded-xl self-start">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white">
                     <User size={16} />
                   </div>
                   <div>
-                    <p className="text-[var(--surfer-magenta)] font-black text-xs">{item.uploaderName}</p>
-                    <p className="text-[var(--surfer-yellow)] text-[10px] font-bold uppercase tracking-widest">רגע מהמים</p>
+                    <p className="text-white font-black text-xs">{item.uploaderName}</p>
+                    <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest">רגע מהמים</p>
                   </div>
                </div>
                
@@ -223,7 +223,7 @@ const GalleryPage: React.FC = () => {
                      handleDelete(item); 
                    }}
                    disabled={deletingId === item.id}
-                   className="absolute top-4 left-4 p-3 bg-[var(--surfer-pink)] text-white rounded-xl shadow-[0_5px_15px_rgba(255,45,96,0.4)] hover:bg-rose-600 transition-all z-20 disabled:opacity-50 active:scale-90 flex items-center justify-center"
+                   className="absolute top-4 left-4 p-3 bg-rose-500 text-white rounded-xl shadow-lg hover:bg-rose-600 transition-all z-20 disabled:opacity-50 active:scale-90 flex items-center justify-center"
                    title="מחיקת תמונה"
                  >
                    {deletingId === item.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
