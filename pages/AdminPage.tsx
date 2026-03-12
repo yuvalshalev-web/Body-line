@@ -837,6 +837,7 @@ const AdminPage: React.FC = () => {
                     <thead className="bg-[var(--aqua-mist)]/10 border-b border-[var(--vibrant-cyan)]/5">
                       <tr>
                         <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">משתמש</th>
+                        <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">זהות</th>
                         <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">סטטוס</th>
                         <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest text-center">עריכה</th>
                       </tr>
@@ -879,6 +880,15 @@ const AdminPage: React.FC = () => {
                                   : 'bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)]/60'
                             }`}>
                               {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
+                            </span>
+                          </td>
+                          <td className="px-8 py-6">
+                            <span className={`px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest ${
+                              (member as any).status === 'suspended'
+                                ? 'bg-red-50 text-red-600'
+                                : 'bg-emerald-50 text-emerald-600'
+                            }`}>
+                              {(member as any).status === 'suspended' ? 'מושעה' : 'פעיל'}
                             </span>
                           </td>
                           <td className="px-8 py-6">
@@ -939,7 +949,7 @@ const AdminPage: React.FC = () => {
                   <thead className="bg-[var(--aqua-mist)]/10 border-b border-[var(--vibrant-cyan)]/5">
                     <tr>
                       <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">משתמש מושעה</th>
-                      <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">תפקיד</th>
+                      <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">זהות</th>
                       <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest text-center">פעולות</th>
                     </tr>
                   </thead>
@@ -982,7 +992,7 @@ const AdminPage: React.FC = () => {
                         </td>
                         <td className="px-8 py-6">
                           <span className="px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)]/40">
-                            {member.role === 'Admin' ? 'מנהל' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
+                            {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
                           </span>
                         </td>
                         <td className="px-8 py-6">

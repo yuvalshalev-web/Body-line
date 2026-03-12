@@ -100,7 +100,7 @@ const SurferCardPage: React.FC = () => {
 
           return (
             <motion.div 
-              className="p-4 md:p-6 rounded-[8px] bg-white/10 backdrop-blur-[15px] text-[#2B2B2E] transition-all duration-1000 relative border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)]"
+              className="p-4 md:p-6 rounded-[2rem] bg-cyan-50/5 backdrop-blur-[20px] transition-all duration-1000 relative border-t border-l border-white/30 shadow-[10px_10px_20px_rgba(122,21,85,0.2),-5px_-5px_10px_rgba(255,255,255,0.1)]"
             >
               {/* Decorative background elements */}
               <div className="absolute -right-20 -top-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
@@ -147,10 +147,10 @@ const SurferCardPage: React.FC = () => {
                   </div>
                   
                   <div className="flex-1 text-center md:text-right">
-                    <h3 className="text-2xl md:text-[38px] font-black mb-5 leading-none tracking-tighter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] text-[#2B2B2E]">
+                    <h3 className="text-2xl md:text-[38px] font-black mb-5 leading-none tracking-tighter text-[#7A1555]">
                       אנחנו לא מודדים הישגים. <br className="hidden md:block" /> אנחנו חוגגים נוכחות.
                     </h3>
-                    <p className="font-bold text-[#333333] text-sm md:text-lg leading-relaxed max-w-2xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
+                    <p className="font-bold text-[#00426a] text-sm md:text-lg leading-relaxed max-w-2xl">
                       גולשים נבנים מהתמדה, והים מתגמל מתמידים.<br />
                       ככל שתגיע ליותר סשנים, תתקדם במסע שלך ותפתח עוד ועוד אפשרויות חדשות.
                     </p>
@@ -184,7 +184,7 @@ const SurferCardPage: React.FC = () => {
                         <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[10px] border-t-black drop-shadow-sm" />
                       </motion.div>
 
-                      <div className="relative w-full h-full flex items-center">
+                      <div className="relative w-full h-[20px] flex items-center rounded-full bg-cyan-50/10 border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] overflow-hidden">
                         {/* Progress Liquid - Same percentage as Marker */}
                         <motion.div 
                           initial={{ width: 0 }}
@@ -192,11 +192,9 @@ const SurferCardPage: React.FC = () => {
                             width: `${progressPercent}%` 
                           }}
                           transition={{ duration: 2, ease: "circOut" }}
-                          className="h-[20px] rounded-[4px] relative z-10 opacity-80 backdrop-blur-[4px] overflow-hidden"
+                          className="h-[20px] rounded-full relative z-10 backdrop-blur-[20px] overflow-hidden border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)]"
                           style={{ 
-                            background: 'linear-gradient(90deg, #00F2FE 0%, #4FACFE 50%, #00F2FE 100%)',
-                            border: '1.5px solid black',
-                            boxShadow: '2px 2px 0px rgba(0,0,0,0.8)'
+                            background: 'linear-gradient(90deg, #3dbbd3 0%, #7A1555 100%)'
                           }}
                         >
                           {/* Shimmer Effect Overlay */}
@@ -235,13 +233,13 @@ const SurferCardPage: React.FC = () => {
                                   style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
                                 >
                                   {/* Identical Circle Node */}
-                                  <div className={`w-4 h-4 rounded-[2px] transition-all duration-1000 border-[1.5px] border-black relative ${
+                                  <div className={`w-4 h-4 rounded-full transition-all duration-1000 border-[1.5px] border-white/50 relative ${
                                     isCurrent || isPassed
-                                      ? 'bg-white shadow-[2px_2px_0px_rgba(0,0,0,0.8)]' 
-                                      : 'bg-slate-800/50'
+                                      ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]' 
+                                      : 'bg-white/20'
                                   }`}>
                                     {isCurrent && (
-                                      <div className="absolute inset-[-6px] border-[1.5px] border-black rounded-[4px] animate-pulse blur-[1px]" />
+                                      <div className="absolute inset-[-6px] border-[1.5px] border-white/30 rounded-full animate-pulse blur-[1px]" />
                                     )}
                                   </div>
                                 </div>
@@ -305,54 +303,54 @@ const SurferCardPage: React.FC = () => {
 
                 {/* Stats Grid - Moved from PlayerCard */}
                 <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 border-t-[1.5px] border-black pt-6">
-                  <div className="flex flex-col group relative items-center p-3 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
-                    <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
-                      <Crown size={13} className="text-[#FFD700]" /> מעמד
-                      <Info size={12} className="text-slate-400" />
-                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-black/80 backdrop-blur-md text-white text-xs rounded shadow-lg z-50">
+                  <div className="flex flex-col group relative items-center p-3 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem]">
+                    <span className="text-[13px] text-[#00426a] font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
+                      <Crown size={13} className="text-[#FFDE45]" /> מעמד
+                      <Info size={12} className="text-[#00426a]" />
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-white/90 backdrop-blur-md text-[#00426a] text-xs rounded shadow-lg z-50">
                         הדרגה הנוכחית שלך בנבחרת.
                       </div>
                     </span>
-                    <span className="text-xl md:text-2xl font-black text-amber-600 truncate max-w-full px-2">
+                    <span className="text-xl md:text-2xl font-black text-[#7A1555] truncate max-w-full px-2">
                       {currentRank}
                     </span>
                   </div>
 
-                  <div className="flex flex-col group relative items-center p-3 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
-                    <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
-                      <Waves size={13} className="text-[#00FFFF]" /> סשנים
-                      <Info size={12} className="text-slate-400" />
-                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-black/80 backdrop-blur-md text-white text-xs rounded shadow-lg z-50">
+                  <div className="flex flex-col group relative items-center p-3 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem]">
+                    <span className="text-[13px] text-[#00426a] font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
+                      <Waves size={13} className="text-[#3dbbd3]" /> סשנים
+                      <Info size={12} className="text-[#00426a]" />
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-white/90 backdrop-blur-md text-[#00426a] text-xs rounded shadow-lg z-50">
                         מספר הסשנים הכולל שהשתתפת בהם עד כה.
                       </div>
                     </span>
-                    <span className="text-3xl font-black text-[var(--ocean-2)] tabular-nums">
+                    <span className="text-3xl font-black text-[#007085] tabular-nums">
                       <Counter value={userData?.totalSessions || 0} />
                     </span>
                   </div>
 
-                  <div className="flex flex-col group relative items-center p-3 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
-                    <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
-                      <Target size={13} className="text-[#FF007F]" /> {userData?.nextRankName ? `סשנים ל${userData.nextRankName}` : 'הגעת לפסגה'}
-                      <Info size={12} className="text-slate-400" />
-                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-black/80 backdrop-blur-md text-white text-xs rounded shadow-lg z-50">
+                  <div className="flex flex-col group relative items-center p-3 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem]">
+                    <span className="text-[13px] text-[#00426a] font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
+                      <Target size={13} className="text-[#FF2D60]" /> {userData?.nextRankName ? `סשנים ל${userData.nextRankName}` : 'הגעת לפסגה'}
+                      <Info size={12} className="text-[#00426a]" />
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-white/90 backdrop-blur-md text-[#00426a] text-xs rounded shadow-lg z-50">
                         {userData?.nextRankName ? `מספר הסשנים שנותרו עד למעמד ${userData.nextRankName}` : 'כל הכבוד! הגעת למעמד הגבוה ביותר.'}
                       </div>
                     </span>
-                    <span className="text-3xl font-black text-emerald-600 tabular-nums">
+                    <span className="text-3xl font-black text-[#007085] tabular-nums">
                       {userData?.nextRankName ? <Counter value={userData.sessionsToNextRank} /> : 'MAX'}
                     </span>
                   </div>
 
-                  <div className="flex flex-col group relative items-center p-3 bg-white/5 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
-                    <span className="text-[13px] text-slate-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1 cursor-help">
-                      <Flame size={13} className="text-[#FFD700]" /> רצף
-                      <Info size={12} className="text-slate-400" />
-                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-black/80 backdrop-blur-md text-white text-xs rounded shadow-lg z-50">
+                  <div className="flex flex-col group relative items-center p-3 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem]">
+                    <span className="text-[13px] text-[#00426a] font-black uppercase tracking-widest mb-1 flex items-center gap-1 cursor-help">
+                      <Flame size={13} className="text-[#FFDE45]" /> רצף
+                      <Info size={12} className="text-[#00426a]" />
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-white/90 backdrop-blur-md text-[#00426a] text-xs rounded shadow-lg z-50">
                         מספר השבועות הרצופים בהם הגעת לסשן.
                       </div>
                     </span>
-                    <span className="text-3xl font-black text-[var(--ocean-1)] tabular-nums">
+                    <span className="text-3xl font-black text-[#7A1555] tabular-nums">
                       <Counter value={userData?.streak || 0} />
                     </span>
                   </div>

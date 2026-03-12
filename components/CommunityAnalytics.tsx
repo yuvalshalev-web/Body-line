@@ -1423,7 +1423,7 @@ export const Astrodeck = ({ label, value, icon: Icon, path, external, color, neo
     <Link 
       to={path} 
       target={external ? "_blank" : undefined} 
-      className={`block h-full group relative w-full aspect-square max-w-[220px] mx-auto transition-all duration-300 ${neoBrutal ? 'hover:translate-x-[2px] hover:translate-y-[2px]' : 'hover:scale-105 hover:-translate-y-2'}`}
+      className={`block h-full group relative w-full aspect-square max-w-[266px] mx-auto transition-all duration-300 ${neoBrutal ? 'hover:translate-x-[2px] hover:translate-y-[2px]' : 'hover:scale-105 hover:-translate-y-2'}`}
     >
       <svg viewBox="0 0 400 400" className={`w-full h-full ${neoBrutal ? 'home-glass-card' : 'backdrop-blur-[10px] rounded-[24px]'}`}>
         <defs>

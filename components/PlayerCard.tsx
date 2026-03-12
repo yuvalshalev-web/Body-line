@@ -147,7 +147,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
               סטטוס: {member.isActive !== false ? 'פעיל' : 'לא פעיל'}
             </span>
             <span className="inline-flex px-3 py-1 bg-white/10 backdrop-blur-md glass-text-primary rounded-[4px] text-[12px] font-black uppercase tracking-widest border border-black shadow-[1px_1px_0px_rgba(0,0,0,0.8)]">
-              תפקיד: {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
+              זהות: {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
             </span>
           </div>
         </div>
@@ -256,12 +256,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
                       if (p < 25) return <span>עוד לא התייבש לך החלב על השפתיים, <strong>אפרוחית</strong>! 🐥</span>;
                       if (p < 50) return <span>את <strong>פרגית</strong> צעירה, תהני! 🐔</span>;
                       if (p <= 60) return <span>מזל טוב, את <strong>מלכת הלול</strong>! 👑✨</span>;
-                      return <span><strong>צב מנוסה</strong>, מגה גלופלקס לקחת? 🐢</span>;
+                      return <span><strong>צב מנוסה אתה באחוזון הגיל ה-85 של הקבוצה</strong>, מגה גלופלקס לקחת? 🐢</span>;
                     } else {
                       if (p < 25) return <span>עוד לא התייבש לך החלב על השפתיים 🍼</span>;
                       if (p < 50) return <span>אתה <strong>עגל צעיר</strong>, תהנה 🐮</span>;
                       if (p <= 60) return <span>מזל טוב, אתה <strong>שור אמיתי</strong>! 🐂</span>;
-                      return <span><strong>צב מנוסה</strong>, מגה גלופלקס לקחת? 🐢</span>;
+                      return <span><strong>צב מנוסה אתה באחוזון הגיל ה-85 של הקבוצה</strong>, מגה גלופלקס לקחת? 🐢</span>;
                     }
                   })()}
                 </div>
@@ -288,7 +288,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
                         }
                       })()}
                     </h2>
-                    <p className="text-md font-bold text-slate-700">הגעת לאחוזון גיל {agePercentile.roundedPercentile}%</p>
+                    <p className="text-md font-bold text-slate-700">צב מנוסה אתה באחוזון הגיל ה-85 של הקבוצה</p>
                     <button 
                       className="mt-6 px-8 py-2 bg-[#006994] text-white rounded-[8px] border-[2px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] font-black text-sm uppercase tracking-widest transition-all active:scale-95"
                       onClick={() => setShowPopup(false)}

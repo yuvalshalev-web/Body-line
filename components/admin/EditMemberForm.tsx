@@ -224,7 +224,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           {/* Role Management */}
           <div className="mt-16 w-full max-w-lg space-y-8">
             <div className="flex flex-col items-center gap-6">
-              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">סטטוס תפקיד במערכת</label>
+              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">זהות במערכת</label>
               
               <div 
                 className="relative w-full p-1.5 glass-panel rounded-[2rem] border border-white/40 flex items-center overflow-hidden shadow-xl bg-white/20 backdrop-blur-2xl"
@@ -290,7 +290,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               <div className="flex flex-col gap-6">
                 <div className="flex justify-between items-center">
                   <h3 className={`font-black text-[13px] uppercase tracking-widest transition-colors ${editingMember.isActive !== false ? 'text-[#007085]' : 'text-rose-600'}`}>
-                    סטטוס חשבון במערכת
+                    סטטוס חבר במערכת
                   </h3>
                   <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-sm ${
                     editingMember.isActive !== false ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'

@@ -544,8 +544,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const toggleSessionAttendance = async (userId: string) => {
     const member = members.find(m => m.id === userId);
-    if (member && !member.isActive) {
-      showAlert("משתמש מושעה אינו יכול לאשר הגעה", "שגיאה");
+    if (!member || member.isActive === false || (member as any).status === 'suspended' || (member as any).status === 'left') {
+      showAlert("משתמש שאינו פעיל או שאינו קיים אינו יכול לאשר הגעה", "שגיאה");
       return;
     }
     const isCurrentlyAttending = attendeeIds.includes(userId);

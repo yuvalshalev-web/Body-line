@@ -167,9 +167,31 @@
   --surfer-sunshine-yellow: #FFDE45;
 }
 
+.profile-page-bg {
+  background-color: #fcfcfc !important;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E"),
+    radial-gradient(at 0% 0%, rgba(175, 238, 238, 0.1) 0px, transparent 60%),
+    radial-gradient(at 100% 100%, rgba(175, 238, 238, 0.1) 0px, transparent 60%) !important;
+}
+
 .surfer-image-feather {
   mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+.micro-grain {
+  position: relative;
+}
+.micro-grain::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
 }
 
 .tangible-surfer-card {
@@ -1023,7 +1045,6 @@ button.w-full, .btn.w-full {
   aspect-ratio: 1 / 1 !important;
   padding: 0 !important;
   background: transparent;
-  backdrop-filter: blur(10px);
   border: 2px solid transparent;
   cursor: pointer;
   position: relative;
@@ -1051,7 +1072,7 @@ button.w-full, .btn.w-full {
   position: absolute;
   inset: -4px;
   border-radius: 50% !important;
-  border: 2px solid transparent;
+  border: 2px solid var(--surfer-yellow);
   animation: surfer-pulse 3s infinite cubic-bezier(0.4, 0, 0.6, 1);
   pointer-events: none;
   z-index: -1;
@@ -1710,12 +1731,12 @@ main.bg-slate-50 {
 .progress-container {
     direction: ltr !important;
     background: rgba(255, 255, 255, 0.05);
-    border: 2px solid black;
-    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 9999px;
     height: 36px;
     position: relative;
-    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(8px);
+    box-shadow: inset 2px 2px 5px rgba(122, 21, 85, 0.1), 0 4px 10px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(20px);
     display: flex;
     align-items: center;
 }

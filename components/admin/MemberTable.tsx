@@ -78,7 +78,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
                   <span className={`px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest ${
                     isArchive ? 'bg-[#f7c1ea]/10 text-[#f063c1]/40' : 'bg-[#ff009f]/5 text-[#ff009f]'
                   }`}>
-                    {member.role === 'Admin' ? 'מנהל' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
+                    {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
                   </span>
                 </td>
                 <td className="px-8 py-6">

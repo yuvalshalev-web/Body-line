@@ -38,13 +38,13 @@ const SocialInput = ({
   const hasValue = !!(value && value.trim());
   return (
     <div className="group">
-      <label className="block text-[12px] font-black text-slate-400 mb-2 uppercase tracking-widest pr-3">{label}</label>
+      <label className="block text-[12px] font-black text-[#00426a] mb-2 uppercase tracking-widest pr-3">{label}</label>
       <div className="relative">
         <Icon size={18} className="absolute right-5 top-1/2 -translate-y-1/2" style={{ color: hasValue ? brandColor : '#cbd5e1' }} />
         <input
           type="text"
           placeholder={placeholder}
-          className="w-full pr-14 pl-12 py-4 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black text-sm outline-none focus:bg-white/20 transition-all glass-text-primary"
+          className="w-full pr-14 pl-12 py-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -320,17 +320,15 @@ const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-[4rem] overflow-hidden relative">
+      <div className="rounded-[2rem] overflow-hidden relative border border-white/50">
         <div className="h-12 relative">
-          {/* Removed background image layer here */}
         </div>
         
-        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-6 bg-white/10 backdrop-blur-[15px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] rounded-[8px] relative z-20">
+        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-6 bg-white/95 backdrop-blur-[30px] border border-white/60 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.5)] rounded-[2.5rem] relative z-20">
           <div className="flex flex-col md:flex-row items-end gap-8 mb-16">
             <div className="relative group">
-              {/* Removed banner image that was obscuring the watermark */}
               
-              <div className="w-44 h-44 rounded-[8px] overflow-hidden border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] group-hover:scale-[1.02] transition-transform duration-500 bg-slate-100 flex items-center justify-center relative z-10">
+              <div className="w-44 h-44 rounded-[1.5rem] overflow-hidden border border-white/50 shadow-[0_10px_30px_rgba(0,0,0,0.1)] group-hover:scale-[1.02] transition-transform duration-500 bg-slate-100 flex items-center justify-center relative z-10">
                 {isProcessingImage ? (
                   <Loader2 className="animate-spin text-indigo-500" size={32} />
                 ) : formData.avatar ? (
@@ -339,67 +337,67 @@ const ProfilePage: React.FC = () => {
                   <User size={64} className="text-slate-300" />
                 )}
               </div>
-              <label className="absolute bottom-2 left-2 p-3 bg-[var(--surfer-cyan)] text-black rounded-[8px] cursor-pointer hover:bg-[var(--surfer-teal)] hover:text-white transition-all border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] z-20">
+              <label className="absolute bottom-2 left-2 p-3 bg-[var(--surfer-cyan)] text-black rounded-[1rem] cursor-pointer hover:bg-[var(--surfer-teal)] hover:text-white transition-all border border-white/50 shadow-[0_5px_15px_rgba(0,0,0,0.1)] z-20">
                 <Camera size={20} className="text-[#00FFFF]" />
                 <input type="file" className="hidden" accept="image/*" onChange={handleAvatarSelect} disabled={isProcessingImage} />
               </label>
             </div>
             <div className="flex-1 mb-4 text-center md:text-right">
-               <h3 className="text-4xl font-black text-[#2B2B2E] tracking-tight mb-2">{formData.firstName} {formData.lastName}</h3>
-               <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{formData.role === 'Admin' ? 'רכז מערכת' : 'חבר נבחרת'}</p>
+               <h3 className="text-4xl font-black text-[#7A1555] tracking-tight mb-2">{formData.firstName} {formData.lastName}</h3>
+               <p className="text-[#00426a] font-bold uppercase tracking-widest text-xs">{formData.role === 'Admin' ? 'רכז' : 'חבר נבחרת'}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             <div className="lg:col-span-7 space-y-10">
               <section>
-                <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-                  <User size={14} className="text-[#00FFFF]" /> פרטי התקשרות
+                <h4 className="text-xs font-black text-[#00426a] uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                  <User size={14} className="text-[#3dbbd3]" /> פרטי התקשרות
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">שם פרטי</label>
-                    <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-5 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all glass-text-primary" />
+                    <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">שם פרטי</label>
+                    <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">שם משפחה</label>
-                    <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-5 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all glass-text-primary" />
+                    <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">שם משפחה</label>
+                    <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">טלפון נייד</label>
+                    <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">טלפון נייד</label>
                     <div className="relative">
-                      <Phone size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#FFD700]" />
+                      <Phone size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#FFDE45]" />
                       <input 
                         type="tel" 
                         value={formData.mobile} 
                         onChange={handleMobileChange} 
-                        className="w-full pr-14 pl-6 py-5 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all glass-text-primary" 
+                        className="w-full pr-14 pl-6 py-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" 
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">תאריך יום הולדת</label>
+                    <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">תאריך יום הולדת</label>
                     <div className="relative">
-                      <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#FF007F]" />
+                      <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#FF2D60]" />
                       <input 
                         type="date" 
                         value={formData.birthday || ''} 
                         onChange={e => handleFieldChange('birthday', e.target.value)} 
-                        className="w-full pr-14 pl-6 py-5 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all cursor-pointer glass-text-primary" 
+                        className="w-full pr-14 pl-6 py-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all cursor-pointer text-[#000000]" 
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">מגדר</label>
+                    <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">מגדר</label>
                     <div className="relative">
-                      <User size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#00FFFF]" />
+                      <User size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#3dbbd3]" />
                       <button 
                         type="button"
                         onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                        className="w-full pr-14 pl-12 py-5 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black text-sm outline-none focus:bg-white/20 transition-all flex items-center justify-between group glass-text-primary"
+                        className="w-full pr-14 pl-12 py-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black text-sm outline-none focus:bg-cyan-50/10 transition-all flex items-center justify-between group text-[#000000]"
                       >
                         <span>{formData.gender || 'בחר מגדר'}</span>
-                        <ChevronDown size={18} className={`text-slate-300 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown size={18} className={`text-[#00426a] transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
                       </button>
 
                       <AnimatePresence>
@@ -410,7 +408,7 @@ const ProfilePage: React.FC = () => {
                               initial={{ opacity: 0, y: -10, scale: 0.95 }}
                               animate={{ opacity: 1, y: 0, scale: 1 }}
                               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                              className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-[15px] rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] z-[70] overflow-hidden"
+                              className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-[20px] rounded-[1rem] border-t border-l border-white/30 shadow-[5px_5px_15px_rgba(122,21,85,0.3)] z-[70] overflow-hidden"
                             >
                               {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
                                 <button
@@ -420,8 +418,8 @@ const ProfilePage: React.FC = () => {
                                     handleFieldChange('gender', g);
                                     setIsGenderDropdownOpen(false);
                                   }}
-                                  className={`w-full px-6 py-4 text-right font-black transition-all hover:bg-indigo-50 ${
-                                    formData.gender === g ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'
+                                  className={`w-full px-6 py-4 text-right font-black transition-all hover:bg-cyan-50 ${
+                                    formData.gender === g ? 'text-[#7A1555] bg-cyan-50/50' : 'text-[#00426a]'
                                   }`}
                                 >
                                   {g}
@@ -434,9 +432,9 @@ const ProfilePage: React.FC = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">כתובת מגורים (חובה)</label>
+                    <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">כתובת מגורים (חובה)</label>
                     <div className="relative">
-                      <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#00FFFF]" />
+                      <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#3dbbd3]" />
                       <input 
                         type="text" 
                         id="address-input"
@@ -447,7 +445,7 @@ const ProfilePage: React.FC = () => {
                           setIsDirty(true);
                         }} 
                         placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
-                        className="w-full pr-14 pl-6 py-5 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all glass-text-primary" 
+                        className="w-full pr-14 pl-6 py-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" 
                         required
                         autoComplete="off"
                       />
@@ -457,14 +455,14 @@ const ProfilePage: React.FC = () => {
                     <input type="hidden" id="house_num" ref={houseNumRef} />
                     <input type="hidden" id="lat" ref={latRef} />
                     <input type="hidden" id="lng" ref={lngRef} />
-                    <p className="text-[12px] text-slate-400 pr-3 font-bold">חובה לבחור את הכתובת מתוך הרשימה שנפתחת כדי שנוכל לחשב מרחק מהמועדון.</p>
+                    <p className="text-[12px] text-[#00426a] pr-3 font-bold">חובה לבחור את הכתובת מתוך הרשימה שנפתחת כדי שנוכל לחשב מרחק מהמועדון.</p>
                   </div>
                 </div>
               </section>
 
               <section>
-                <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-                  <Sparkles size={14} className="text-[#FFD700]" /> נוכחות דיגיטלית
+                <h4 className="text-xs font-black text-[#007085] uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                  <Sparkles size={14} className="text-[#FFDE45]" /> נוכחות דיגיטלית
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <SocialInput label="Instagram" value={formData.instagramUrl} onChange={(v: string) => handleFieldChange('instagramUrl', v)} icon={Instagram} brandColor="#E4405F" ensureAbsoluteUrl={ensureAbsoluteUrl} placeholder="קישור לפרופיל אינסטגרם" />
@@ -479,15 +477,15 @@ const ProfilePage: React.FC = () => {
             <div className="lg:col-span-5">
                <div className="sticky top-24 space-y-4">
                   <div className="flex justify-between items-center px-4">
-                    <label className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">הסיפור שלי</label>
-                    <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="text-[12px] font-black text-black bg-[var(--surfer-cyan)] flex items-center gap-1.5 hover:bg-[var(--surfer-teal)] hover:text-white px-3 py-1.5 rounded-[8px] transition-all border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
-                      {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} className="text-[#FFD700]" />} שדרג ביוגרפיה עם AI
+                    <label className="text-xs font-black text-[#007085] uppercase tracking-[0.2em]">הסיפור שלי</label>
+                    <button type="button" onClick={handleGenerateBio} disabled={isGeneratingBio} className="text-[12px] font-black text-black bg-[var(--surfer-cyan)] flex items-center gap-1.5 hover:bg-[var(--surfer-teal)] hover:text-white px-3 py-1.5 rounded-[1rem] transition-all border-t border-l border-white/30 shadow-[2px_2px_5px_rgba(122,21,85,0.3)]">
+                      {isGeneratingBio ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} className="text-[#FFDE45]" />} שדרג ביוגרפיה עם AI
                     </button>
                   </div>
                   <textarea 
                     value={formData.bio} 
                     onChange={e => handleFieldChange('bio', e.target.value)} 
-                    className="w-full p-8 bg-white/10 backdrop-blur-[15px] border-[2px] border-black shadow-[inset_2px_2px_4px_rgba(0,0,0,0.1),4px_4px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-bold h-[32rem] resize-none outline-none focus:bg-white/20 transition-all text-lg leading-relaxed glass-text-primary" 
+                    className="w-full p-8 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1),5px_5px_15px_rgba(122,21,85,0.2)] rounded-[1rem] font-bold h-[32rem] resize-none outline-none focus:bg-cyan-50/10 transition-all text-lg leading-relaxed text-[#000000]" 
                     placeholder="ספר קצת על עצמך, על הגלישה, על החיים..." 
                   />
                </div>
@@ -498,7 +496,7 @@ const ProfilePage: React.FC = () => {
              <button 
                type="submit" 
                disabled={isSaving || !isDirty} 
-               className="w-full max-w-xs mx-auto flex items-center justify-center gap-4 px-10 py-5 bg-[var(--surfer-cyan)] text-black rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-xl transition-all hover:bg-[var(--surfer-teal)] hover:text-white hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,0.9)] active:scale-95 disabled:opacity-50"
+               className="w-full max-w-xs mx-auto flex items-center justify-center gap-4 px-10 py-5 bg-[var(--surfer-cyan)] text-black rounded-[1rem] border-t border-l border-white/30 shadow-[5px_5px_15px_rgba(122,21,85,0.3)] font-black text-xl transition-all hover:bg-[var(--surfer-teal)] hover:text-white hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[8px_8px_20px_rgba(122,21,85,0.4)] active:scale-95 disabled:opacity-50"
              >
                  {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
                  שמור שינויים
@@ -507,7 +505,7 @@ const ProfilePage: React.FC = () => {
              <button 
                type="button" 
                onClick={() => setShowPasswordModal(true)}
-               className="w-full max-w-xs mx-auto flex items-center justify-center gap-4 px-10 py-5 bg-white/10 backdrop-blur-[15px] text-black rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-xl transition-all hover:bg-white/20 hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[6px_6px_0px_rgba(0,0,0,0.9)] active:scale-95"
+               className="w-full max-w-xs mx-auto flex items-center justify-center gap-4 px-10 py-5 bg-cyan-50/5 backdrop-blur-[20px] text-[#00426a] rounded-[1rem] border-t border-l border-white/30 shadow-[5px_5px_15px_rgba(122,21,85,0.3)] font-black text-xl transition-all hover:bg-cyan-50/10 hover:translate-y-[-2px] hover:translate-x-[-2px] hover:shadow-[8px_8px_20px_rgba(122,21,85,0.4)] active:scale-95"
              >
                <Key size={24} />
                החלפת סיסמה

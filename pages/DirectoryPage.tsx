@@ -120,10 +120,10 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
               e.stopPropagation();
               window.open(`tel:${member.mobile}`, '_self');
             }}
-            className="absolute bottom-1.5 left-1.5 w-8 h-8 flex items-center justify-center bg-white/10 backdrop-blur-md rounded-full shadow-lg hover:scale-110 transition-all duration-300 z-30 cursor-pointer"
+            className="absolute bottom-2 left-2 w-8 h-8 flex items-center justify-center bg-white/50 backdrop-blur-md rounded-full shadow-lg z-30 cursor-pointer border border-white/50 lg:w-8 lg:h-8 lg:opacity-0 lg:translate-y-2 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 lg:transition-all lg:duration-300"
             title="חיוג מהיר"
           >
-            <PhoneIcon className="w-8 h-8" />
+            <PhoneIcon className="w-5 h-5 lg:w-6 lg:h-6" />
           </div>
         )}
 
@@ -136,10 +136,10 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
               const phone = member.mobile?.replace(/[^0-9]/g, '');
               window.open(`https://wa.me/${phone}`, '_blank');
             }}
-            className="absolute bottom-1.5 right-1.5 w-8 h-8 flex items-center justify-center bg-white/10 backdrop-blur-md rounded-full shadow-lg hover:scale-110 transition-all duration-300 z-30 cursor-pointer"
+            className="absolute bottom-2 right-2 w-8 h-8 flex items-center justify-center bg-white/50 backdrop-blur-md rounded-full shadow-lg z-30 cursor-pointer border border-white/50 lg:w-8 lg:h-8 lg:opacity-0 lg:translate-y-2 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 lg:transition-all lg:duration-300"
             title="שלח הודעה מהירה"
           >
-            <WhatsAppIcon className="w-8 h-8" />
+            <WhatsAppIcon className="w-5 h-5 lg:w-6 lg:h-6" />
           </div>
         )}
       </div>
@@ -591,10 +591,10 @@ const DirectoryPage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 40 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 40 }}
-              className="w-full max-w-5xl max-h-[95vh] rounded-3xl overflow-hidden relative flex flex-col md:flex-row m-0 bg-[#B2EBF2]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_20px_50px_-10px_#7A1555]" 
+              className="w-full max-w-5xl max-h-[95vh] rounded-3xl overflow-hidden relative flex flex-col md:flex-row m-0 bg-gradient-to-br from-stone-50 via-white to-cyan-50/20 backdrop-blur-[20px] border border-white/50 shadow-[0_25px_60px_rgba(0,0,0,0.2)]" 
               onClick={e => e.stopPropagation()}
             >
-             <button onClick={closeMemberModal} className="absolute top-4 right-4 md:top-6 md:right-6 p-2 rounded-xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(122,21,85,0.4)] text-white hover:bg-[#B2EBF2]/40 transition-all z-50"><X size={20} /></button>
+             <button onClick={closeMemberModal} className="absolute top-4 right-4 md:top-6 md:right-6 p-2 rounded-xl bg-white/50 backdrop-blur-[20px] border border-white/50 shadow-[0_5px_15px_rgba(0,0,0,0.1)] text-[#00426a] hover:bg-white/80 transition-all z-50"><X size={20} /></button>
              <div className="md:w-[40%] relative h-[30vh] md:h-auto overflow-hidden bg-slate-100 flex-shrink-0 border-b-2 md:border-b-0 md:border-l-2 border-white/20">
                 {selectedMember.avatar ? (
                   <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={`${selectedMember.firstName} ${selectedMember.lastName}`} />
@@ -607,49 +607,49 @@ const DirectoryPage: React.FC = () => {
                 <div className="absolute bottom-8 right-8 left-8">
                    <div className="flex items-center gap-3 mb-2">
                      <div className="h-px w-8 bg-[#FFDE45]"></div>
-                     <span className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-[0.3em]">Profile</span>
+                     <span className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-[0.3em]">פרופיל</span>
                    </div>
-                   <h3 className="text-4xl md:text-5xl font-black text-[#FF2D60] drop-shadow-[0_0_10px_rgba(255,45,96,0.6)] tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
+                   <h3 className="text-4xl md:text-5xl font-black text-white drop-shadow-[0_0_10px_rgba(0,0,0,0.6)] tracking-tighter leading-none">{selectedMember.firstName} {selectedMember.lastName}</h3>
                 </div>
              </div>
 
              <div className="flex-1 p-6 md:p-12 overflow-y-auto custom-scrollbar text-right relative">
                <div className="max-w-xl mx-auto space-y-10">
                <div className="grid grid-cols-3 gap-4">
-                 <div className="space-y-1 text-center p-3 rounded-2xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555]">
-                   <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-widest">Role</p>
-                   <p className="font-black text-[#3dbbd3] drop-shadow-[0_0_10px_rgba(0,217,230,0.6)] text-sm">{selectedMember.role}</p>
+                 <div className="space-y-1 text-center p-3 rounded-2xl bg-white/50 backdrop-blur-[20px] border border-white/50 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)]">
+                   <p className="text-[9px] font-black text-[#00426a] uppercase tracking-widest">זהות</p>
+                   <p className="font-black text-[#00426a] text-sm">{selectedMember.role === 'Admin' ? 'רכז' : selectedMember.role}</p>
                  </div>
-                 <div className="space-y-1 text-center p-3 rounded-2xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555]">
-                   <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-widest">Sessions</p>
-                   <p className="font-black text-[#3dbbd3] drop-shadow-[0_0_10px_rgba(0,217,230,0.6)] text-sm">{selectedMember.totalAttendance || 0}</p>
+                 <div className="space-y-1 text-center p-3 rounded-2xl bg-white/50 backdrop-blur-[20px] border border-white/50 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)]">
+                   <p className="text-[9px] font-black text-[#00426a] uppercase tracking-widest">סשנים</p>
+                   <p className="font-black text-[#00426a] text-sm">{selectedMember.totalAttendance || 0}</p>
                  </div>
-                 <div className="space-y-1 text-center p-3 rounded-2xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555]">
-                   <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-widest">Joined</p>
-                   <p className="font-black text-[#3dbbd3] drop-shadow-[0_0_10px_rgba(0,217,230,0.6)] text-sm">{formatDate(selectedMember.joinedAt)}</p>
+                 <div className="space-y-1 text-center p-3 rounded-2xl bg-white/50 backdrop-blur-[20px] border border-white/50 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)]">
+                   <p className="text-[9px] font-black text-[#00426a] uppercase tracking-widest">הצטרפות</p>
+                   <p className="font-black text-[#00426a] text-sm">{formatDate(selectedMember.joinedAt)}</p>
                  </div>
                </div>
 
                <div className="space-y-3">
-                 <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-[0.3em]">About</p>
-                 <p className="text-lg font-bold text-[#3dbbd3] drop-shadow-[0_0_10px_rgba(0,217,230,0.6)] leading-snug tracking-tight italic">
+                 <p className="text-[9px] font-black text-[#00426a] uppercase tracking-[0.3em]">אודות</p>
+                 <p className="text-lg font-bold text-[#00426a] leading-snug tracking-tight italic">
                    "{selectedMember.bio || 'חבר בקהילת הגולשים של חבל זוג. חולק את התשוקה לים ולגלים.'}"
                  </p>
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="p-5 rounded-2xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555] flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#B2EBF2]/20 border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_-5px_#7A1555] flex items-center justify-center text-[#FFDE45]"><Phone size={18} /></div>
+                 <div className="p-5 rounded-2xl bg-white/50 backdrop-blur-[20px] border border-white/50 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-white/50 border border-white/50 shadow-[0_5px_15px_-5px_rgba(0,0,0,0.1)] flex items-center justify-center text-[#00426a]"><Phone size={18} /></div>
                     <div className="overflow-hidden">
-                       <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-widest mb-0.5">Mobile</p>
-                       <p className="font-black text-[#3dbbd3] drop-shadow-[0_0_10px_rgba(0,217,230,0.6)] text-sm">{selectedMember.mobile}</p>
+                       <p className="text-[9px] font-black text-[#00426a] uppercase tracking-widest mb-0.5">נייד</p>
+                       <p className="font-black text-[#00426a] text-sm">{selectedMember.mobile}</p>
                     </div>
                  </div>
-                 <div className="p-5 rounded-2xl bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555] flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#B2EBF2]/20 border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_-5px_#7A1555] flex items-center justify-center text-[#FFDE45]"><Mail size={18} /></div>
+                 <div className="p-5 rounded-2xl bg-white/50 backdrop-blur-[20px] border border-white/50 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-white/50 border border-white/50 shadow-[0_5px_15px_-5px_rgba(0,0,0,0.1)] flex items-center justify-center text-[#00426a]"><Mail size={18} /></div>
                     <div className="overflow-hidden">
-                       <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-widest mb-0.5">Email</p>
-                       <p className="font-black text-[#3dbbd3] drop-shadow-[0_0_10px_rgba(0,217,230,0.6)] text-sm truncate">{selectedMember.email}</p>
+                       <p className="text-[9px] font-black text-[#00426a] uppercase tracking-widest mb-0.5">אימייל</p>
+                       <p className="font-black text-[#00426a] text-sm truncate">{selectedMember.email}</p>
                     </div>
                  </div>
                </div>
@@ -659,7 +659,7 @@ const DirectoryPage: React.FC = () => {
                    onClick={() => openWhatsAppModal(selectedMember.firstName, selectedMember.lastName)}
                    whileHover={{ scale: 1.05 }}
                    whileTap={{ scale: 0.95 }}
-                   className="w-16 h-16 rounded-full bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555] flex items-center justify-center text-[#25D366] hover:bg-[#B2EBF2]/40 transition-all"
+                   className="w-16 h-16 rounded-full bg-white/50 backdrop-blur-[20px] border border-white/50 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] flex items-center justify-center text-[#25D366] hover:bg-white/80 transition-all"
                    title="שלח הודעת WhatsApp"
                  >
                    <WhatsAppIcon className="w-8 h-8 drop-shadow-[0_0_8px_rgba(37,211,102,0.6)]" />
@@ -669,7 +669,7 @@ const DirectoryPage: React.FC = () => {
                    onClick={() => window.open(`tel:${selectedMember.mobile}`, '_self')}
                    whileHover={{ scale: 1.05 }}
                    whileTap={{ scale: 0.95 }}
-                   className="w-16 h-16 rounded-full bg-[#B2EBF2]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_-5px_#7A1555] flex items-center justify-center text-[#3dbbd3] hover:bg-[#B2EBF2]/40 transition-all"
+                   className="w-16 h-16 rounded-full bg-white/50 backdrop-blur-[20px] border border-white/50 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] flex items-center justify-center text-[#00426a] hover:bg-white/80 transition-all"
                    title="Call"
                  >
                    <PhoneIcon className="w-8 h-8 drop-shadow-[0_0_8px_rgba(61,187,211,0.6)]" />
@@ -677,7 +677,7 @@ const DirectoryPage: React.FC = () => {
                </div>
 
                <div className="space-y-4">
-                 <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-[0.3em] text-center">Social Connect</p>
+                 <p className="text-[9px] font-black text-[#FFDE45] drop-shadow-[0_0_8px_rgba(255,222,69,0.5)] uppercase tracking-[0.3em] text-center">רשתות חברתיות</p>
                  <div className="flex justify-center gap-4">
                    <a 
                      href={selectedMember.instagramUrl ? ensureAbsoluteUrl(selectedMember.instagramUrl) : '#'} 
@@ -871,7 +871,7 @@ const DirectoryPage: React.FC = () => {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">תפקיד</label>
+                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">זהות</label>
                           <div className="relative">
                             <button 
                               type="button"

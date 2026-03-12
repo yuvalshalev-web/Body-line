@@ -35,6 +35,7 @@ const CommunityHeatMap: React.FC = () => {
   const { members, siteConfig } = useData();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
+  const isMounted = useRef(true);
   const [stats, setStats] = useState<Stats>({ 
     near: 0, 
     medium: 0, 
@@ -42,159 +43,202 @@ const CommunityHeatMap: React.FC = () => {
     bins: [] 
   });
 
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
+
   const initHeatMap = () => {
-    if (!mapRef.current) return;
+    const L = (window as any).L;
+    console.log("L instance:", L);
+    if (!isMounted.current || !mapRef.current || typeof L === 'undefined') return;
 
-    // Center on "חוף הבית" (Home Beach)
-    const homeLat = siteConfig.home_break?.lat || 32.1624;
-    const homeLng = siteConfig.home_break?.lng || 34.8447;
-    const homeLatLng = L.latLng(homeLat, homeLng);
+    try {
+      // Center on "חוף הבית" (Home Beach)
+      const homeLat = siteConfig?.home_break?.lat || 32.1624;
+      const homeLng = siteConfig?.home_break?.lng || 34.8447;
+      const homeLatLng = L.latLng(homeLat, homeLng);
 
-    if (!mapInstance.current) {
-      // Initialize map
-      mapInstance.current = L.map(mapRef.current, {
-        center: [homeLat, homeLng],
-        zoom: 11,
-        zoomControl: true,
-        scrollWheelZoom: true
-      });
-
-      // Add tile layer (OpenStreetMap)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(mapInstance.current);
-
-      // Force a resize check
-      setTimeout(() => {
-        if (mapInstance.current) {
-          mapInstance.current.invalidateSize();
-        }
-      }, 100);
-    }
-
-    // Clear existing layers except tiles
-    mapInstance.current.eachLayer((layer: any) => {
-      if (layer instanceof L.Circle || (L.HeatLayer && layer instanceof L.HeatLayer)) {
-        mapInstance.current.removeLayer(layer);
-      }
-    });
-
-    // Prepare data for heatmap and stats
-    const activeMembers = getBodyLineStats(members).activeMembers;
-    const heatPoints: [number, number, number][] = [];
-    
-    let nearCount = 0;
-    let mediumCount = 0;
-    let farCount = 0;
-
-    // Initialize 10 bins with continuous ranges
-    const binDefinitions = [
-      { label: '0-10', min: 0, max: 10, color: '#10b981' },
-      { label: '10-20', min: 10, max: 20, color: '#10b981' },
-      { label: '20-30', min: 20, max: 30, color: '#f59e0b' },
-      { label: '30-40', min: 30, max: 40, color: '#f59e0b' },
-      { label: '40-50', min: 40, max: 50, color: '#f59e0b' },
-      { label: '50-60', min: 50, max: 60, color: '#f59e0b' },
-      { label: '60-70', min: 60, max: 70, color: '#f59e0b' },
-      { label: '70-80', min: 70, max: 80, color: '#f59e0b' },
-      { label: '80-90', min: 80, max: 90, color: '#f59e0b' },
-      { label: '90+', min: 90, max: Infinity, color: '#ef4444' },
-    ];
-
-    const binCounts = binDefinitions.map(b => ({ ...b, count: 0 }));
-    let mappedCount = 0;
-
-    activeMembers.forEach(member => {
-      const coords = getCoordinates(member.city, member.lat, member.lng);
-      if (coords) {
-        mappedCount++;
-        const memberLatLng = L.latLng(coords[0], coords[1]);
-        const distanceKm = homeLatLng.distanceTo(memberLatLng) / 1000;
-
-        // Operational stats calculation
-        if (distanceKm <= 20) nearCount++;
-        else if (distanceKm <= 100) mediumCount++;
-        else farCount++;
-
-        // Bin calculation for chart - using continuous ranges
-        const binIndex = binDefinitions.findIndex(b => distanceKm >= b.min && distanceKm < b.max);
-        if (binIndex !== -1) {
-          binCounts[binIndex].count++;
-        } else if (distanceKm >= 90) {
-          binCounts[9].count++; 
+      if (!mapInstance.current) {
+        const rect = mapRef.current.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+          // If container has no size, retry later
+          setTimeout(initHeatMap, 200);
+          return;
         }
 
-        // [lat, lng, intensity]
-        heatPoints.push([coords[0], coords[1], 0.8]); 
-      }
-    });
+        // Initialize map
+        mapInstance.current = L.map(mapRef.current, {
+          center: [homeLat, homeLng],
+          zoom: 11,
+          zoomControl: true,
+          scrollWheelZoom: true
+        });
 
-    console.log(`HeatMap Debug: Total Members: ${members.length}, Active: ${activeMembers.length}, Mapped: ${mappedCount}`);
-
-    setStats({ 
-      near: nearCount, 
-      medium: mediumCount, 
-      far: farCount,
-      bins: binCounts.map(b => ({ label: b.label, count: b.count, color: b.color }))
-    });
-
-    // Add home marker
-    L.marker([homeLat, homeLng]).addTo(mapInstance.current).bindPopup('חוף הבית');
-
-    // Add distance circles every 10km up to 100km
-    for (let i = 1; i <= 10; i++) {
-      const radius = i * 10000; // 10km, 20km, ...
-      const distanceKm = i * 10;
-      
-      L.circle([homeLat, homeLng], {
-        radius: radius,
-        color: distanceKm <= 20 ? '#10b981' : (distanceKm <= 60 ? '#f59e0b' : '#ef4444'),
-        fill: false,
-        weight: 1,
-        dashArray: i % 2 === 0 ? null : '5, 5',
-        opacity: 0.4 - (i * 0.03), // Outer rings are more subtle
-        interactive: false
-      }).addTo(mapInstance.current);
-    }
-
-    // Add heatmap layer
-    const heatLayerFn = (L as any).heatLayer;
-    
-    if (heatLayerFn && heatPoints.length > 0) {
-      heatLayerFn(heatPoints, {
-        radius: 45, // Increased radius
-        blur: 20,
-        maxZoom: 10,
-        max: 1.0,
-        gradient: {
-          0.4: '#3b82f6', // blue
-          0.6: '#10b981', // green
-          0.8: '#f59e0b', // yellow/orange
-          1.0: '#ef4444'  // red
-        }
-      }).addTo(mapInstance.current);
-    } else if (heatPoints.length > 0) {
-      // Fallback: Add glowing pulses for each point if heatmap fails
-      heatPoints.forEach(p => {
-        L.circleMarker([p[0], p[1]], {
-          radius: 12,
-          fillColor: '#3b82f6',
-          color: '#fff',
-          weight: 2,
-          opacity: 0.8,
-          fillOpacity: 0.4,
-          className: 'pulse-marker'
+        // Add tile layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
         }).addTo(mapInstance.current);
-      });
-    }
 
-    // Adjust view to fit data or default radius
-    if (heatPoints.length > 0) {
-      const bounds = L.latLngBounds(heatPoints.map(p => [p[0], p[1]]));
-      mapInstance.current.fitBounds(bounds.pad(0.1));
-    } else {
-      const focusCircle = L.circle([homeLat, homeLng], { radius: 25000 });
-      mapInstance.current.fitBounds(focusCircle.getBounds(), { padding: [20, 20] });
+        // Force a resize check
+        setTimeout(() => {
+          if (isMounted.current && mapInstance.current) {
+            mapInstance.current.invalidateSize();
+          }
+        }, 100);
+      }
+
+      const map = mapInstance.current;
+      console.log("Map before whenReady: map exists");
+      if (map) {
+        console.log("Map has layerPointToLatLng:", typeof map.layerPointToLatLng === 'function');
+      }
+      if (!map || !isMounted.current || !map.getContainer()) return;
+
+      // Clear existing layers except tiles
+      map.eachLayer((layer: any) => {
+        // Only remove layers that are NOT tile layers
+        if (!(layer instanceof L.TileLayer)) {
+          map.removeLayer(layer);
+        }
+      });
+
+      // Prepare data for heatmap and stats
+      const activeMembers = getBodyLineStats(members).activeMembers;
+      const heatPoints: [number, number, number][] = [];
+      
+      let nearCount = 0;
+      let mediumCount = 0;
+      let farCount = 0;
+
+      // Initialize 10 bins with continuous ranges
+      const binDefinitions = [
+        { label: '0-10', min: 0, max: 10, color: '#10b981' },
+        { label: '10-20', min: 10, max: 20, color: '#10b981' },
+        { label: '20-30', min: 20, max: 30, color: '#f59e0b' },
+        { label: '30-40', min: 30, max: 40, color: '#f59e0b' },
+        { label: '40-50', min: 40, max: 50, color: '#f59e0b' },
+        { label: '50-60', min: 50, max: 60, color: '#f59e0b' },
+        { label: '60-70', min: 60, max: 70, color: '#f59e0b' },
+        { label: '70-80', min: 70, max: 80, color: '#f59e0b' },
+        { label: '80-90', min: 80, max: 90, color: '#f59e0b' },
+        { label: '90+', min: 90, max: Infinity, color: '#ef4444' },
+      ];
+
+      const binCounts = binDefinitions.map(b => ({ ...b, count: 0 }));
+      let mappedCount = 0;
+
+      activeMembers.forEach(member => {
+        if (!isMounted.current) return;
+        const coords = getCoordinates(member.city, member.lat, member.lng);
+        if (coords) {
+          mappedCount++;
+          const memberLatLng = L.latLng(coords[0], coords[1]);
+          const distanceKm = homeLatLng.distanceTo(memberLatLng) / 1000;
+
+          // Operational stats calculation
+          if (distanceKm <= 20) nearCount++;
+          else if (distanceKm <= 100) mediumCount++;
+          else farCount++;
+
+          // Bin calculation for chart - using continuous ranges
+          const binIndex = binDefinitions.findIndex(b => distanceKm >= b.min && distanceKm < b.max);
+          if (binIndex !== -1) {
+            binCounts[binIndex].count++;
+          } else if (distanceKm >= 90) {
+            binCounts[9].count++; 
+          }
+
+          // [lat, lng, intensity]
+          heatPoints.push([coords[0], coords[1], 0.8]); 
+        }
+      });
+
+      if (isMounted.current) {
+        setStats({ 
+          near: nearCount, 
+          medium: mediumCount, 
+          far: farCount,
+          bins: binCounts.map(b => ({ label: b.label, count: b.count, color: b.color }))
+        });
+      }
+
+      // Add home marker
+      L.marker([homeLat, homeLng]).addTo(map).bindPopup('חוף הבית');
+
+      // Add distance circles every 10km up to 100km
+      for (let i = 1; i <= 10; i++) {
+        const radius = i * 10000; // 10km, 20km, ...
+        const distanceKm = i * 10;
+        
+        L.circle([homeLat, homeLng], {
+          radius: radius,
+          color: distanceKm <= 20 ? '#10b981' : (distanceKm <= 60 ? '#f59e0b' : '#ef4444'),
+          fill: false,
+          weight: 1,
+          dashArray: i % 2 === 0 ? null : '5, 5',
+          opacity: 0.4 - (i * 0.03), // Outer rings are more subtle
+          interactive: false
+        }).addTo(map);
+      }
+
+      // Add heatmap layer
+      if (typeof L.heatLayer === 'function' && heatPoints.length > 0) {
+        map.whenReady(() => {
+          setTimeout(() => {
+            try {
+              if (!map || !map.getContainer()) {
+                console.error("Map is invalid in whenReady");
+                return;
+              }
+              if (typeof map.layerPointToLatLng !== 'function') {
+                console.error("Map is missing layerPointToLatLng");
+                return;
+              }
+              console.log("Adding heatmap layer with points:", heatPoints.length);
+              const layer = L.heatLayer(heatPoints, {
+                radius: 45, // Increased radius
+                blur: 20,
+                maxZoom: 10,
+                max: 1.0,
+                gradient: {
+                  0.4: '#3b82f6', // blue
+                  0.6: '#10b981', // green
+                  0.8: '#f59e0b', // yellow/orange
+                  1.0: '#ef4444'  // red
+                }
+              });
+              layer.addTo(map);
+            } catch (e: any) {
+              console.error("Error adding heatmap layer:", e.message || e);
+            }
+          }, 1000);
+        });
+      } else if (heatPoints.length > 0) {
+        // Fallback: Add glowing pulses for each point if heatmap fails
+        heatPoints.forEach(p => {
+          L.circleMarker([p[0], p[1]], {
+            radius: 12,
+            fillColor: '#3b82f6',
+            color: '#fff',
+            weight: 2,
+            opacity: 0.8,
+            fillOpacity: 0.4,
+            className: 'pulse-marker'
+          }).addTo(map);
+        });
+      }
+
+      // Adjust view to fit data or default radius
+      if (heatPoints.length > 0) {
+        const bounds = L.latLngBounds(heatPoints.map(p => [p[0], p[1]]));
+        map.fitBounds(bounds.pad(0.1));
+      } else {
+        const focusCircle = L.circle([homeLat, homeLng], { radius: 25000 });
+        map.fitBounds(focusCircle.getBounds(), { padding: [20, 20] });
+      }
+    } catch (error: any) {
+      console.error("Error initializing heatmap:", error.message || error);
     }
   };
 

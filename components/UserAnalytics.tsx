@@ -530,7 +530,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
             <RadarChart />
           </div>
 
-          <div className="mt-6 p-4 bg-white/5 backdrop-blur-md rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
+          <div className="mt-12 p-4 bg-white/5 backdrop-blur-md rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
             <p className="text-[12px] glass-text-secondary font-bold text-center leading-relaxed">
               המצפן מנתח את היכולות המקצועיות שלך בים. נתונים אלו יוזנו על ידי המדריכים לאחר הערכות תקופתיות.
             </p>

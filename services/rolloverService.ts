@@ -1,6 +1,6 @@
 
 import { getDb } from '../services/firebase';
-import { doc, getDoc, updateDoc, writeBatch, increment, collection, Timestamp, addDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, writeBatch, increment, collection, Timestamp, addDoc, getDocs } from 'firebase/firestore';
 
 export const getNextThursday = () => {
   const now = new Date();
@@ -38,13 +38,22 @@ export const finalizeThursdaySession = async (weeklyHistory: any[], yearConfig: 
     }
     
     const data = sessionSnap.data() as any;
-    const attendees = data.attendees || [];
+    const rawAttendees = data.attendees || [];
     const sessionDateStr = data.date;
 
     if (!sessionDateStr) {
       await addRolloverLog('finalizeThursdaySession', 'failed', 'Session date missing');
       return;
     }
+
+    // Fetch members to filter active ones
+    const membersSnap = await getDocs(collection(db, 'members'));
+    const members = membersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const activeMemberIds = members
+      .filter((m: any) => m.isActive !== false && m.status !== 'suspended' && m.status !== 'left')
+      .map((m: any) => m.id);
+
+    const attendees = rawAttendees.filter((id: string) => activeMemberIds.includes(id));
     const sessionDate = new Date(sessionDateStr);
     
     // Normalize sessionDate to Thursday 07:00

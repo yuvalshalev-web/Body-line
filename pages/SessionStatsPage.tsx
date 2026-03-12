@@ -371,8 +371,8 @@ const SessionStatsPage: React.FC = () => {
     // 7. Gender Analytics
     const genderStatsObj = {
       men: { label: 'גברים', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-blue-500', hex: '#3b82f6' },
-      women: { label: 'נשים', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-pink-500', hex: '#ec4899' },
-      unspecified: { label: 'לא צוין', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-gray-400', hex: '#9ca3af' }
+      women: { label: 'נשים', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-red-500', hex: '#ef4444' },
+      unspecified: { label: 'לא צוין', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-yellow-400', hex: '#facc15' }
     };
 
     activeMembers.forEach(m => {
@@ -768,7 +768,16 @@ const SessionStatsPage: React.FC = () => {
                 <div className="mt-10 pt-6 border-t border-slate-200">
                   <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
                     <p className="text-xs text-[#1A365D] leading-relaxed text-center font-bold">
-                      💡 <strong className="text-[#2D3748]">תובנת אימפקט:</strong> קבוצת הנשים שומרת על אחוזי התמדה גבוהים, מה שמעיד על חיבור עמוק לקהילה למרות הייצוג המספרי הקטן.
+                      💡 <strong className="text-[#2D3748]">תובנת אימפקט:</strong> {(() => {
+                        const women = stats.genderImpact.find(g => g.key === 'women');
+                        const men = stats.genderImpact.find(g => g.key === 'men');
+                        if (women && men && women.retention > men.retention) {
+                          return `קבוצת הנשים שומרת על אחוזי התמדה גבוהים (${women.retention}%) לעומת הגברים (${men.retention}%), מה שמעיד על חיבור עמוק לקהילה.`;
+                        } else if (women && men) {
+                          return `קבוצת הנשים מציגה אחוזי התמדה של ${women.retention}%.`;
+                        }
+                        return "ניתוח נתוני התמדה לפי מגדר.";
+                      })()}
                     </p>
                   </div>
                 </div>
