@@ -114,7 +114,7 @@ export const calculateUserStats = (
     { name: "פופ-אפיסט", min: 0 },
     { name: "תופס פינה", min: 5 },
     { name: "ליין-אפיסט", min: 10 },
-    { name: "כריש פטיש", min: 20 },
+    { name: "שואו-אפיסט", min: 20 },
     { name: "קלי סלייטר", min: 40 }
   ];
 

@@ -1701,29 +1701,39 @@ main.bg-slate-50 {
 
 .gt-tooltip {
     visibility: hidden;
-    width: 180px;
+    width: 200px; /* מעט רחב יותר לקריאות */
     background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: var(--gt-blur);
-    color: #333;
+    backdrop-filter: blur(10px);
+    color: #000;
     text-align: center;
-    border: 1px solid var(--gt-accent);
-    border-radius: 10px;
-    padding: 10px;
+    border: 1px solid var(--gt-accent, #3dbbd3);
+    border-radius: 12px;
+    padding: 12px;
     position: absolute;
-    z-index: 9999;
-    bottom: 140%; /* מרחק מהאייקון */
+    /* חוק אוניברסלי: תמיד בשכבה העליונה ביותר */
+    z-index: 2147483647 !important; 
+    bottom: 140%;
     left: 50%;
     transform: translateX(-50%);
     opacity: 0;
     font-size: 13px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    pointer-events: none; /* שלא יפריע לעכבר */
+    font-weight: 600;
+    line-height: 1.4;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 /* הפעלת האנימציה במעבר עכבר */
 .gt-info-wrapper:hover .gt-tooltip {
     visibility: visible;
-    animation: tooltipFadeIn 0.3s ease-out forwards;
+    opacity: 1;
+    transform: translate(-50%, -10px); /* תנועה קלה למעלה */
+}
+
+/* הבטחת נראות אוניברסלית - מניעת הסתרה על ידי קונטיינרים */
+.gt-info-wrapper {
+    isolation: isolate; /* יצירת stacking context נקי */
 }
 
 .gauge-container {

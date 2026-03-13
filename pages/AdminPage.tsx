@@ -1310,7 +1310,7 @@ const AdminPage: React.FC = () => {
                 const isPastEvent = eventDate < new Date();
 
                 return (
-                  <div key={event.id} className={`bg-white border border-[var(--vibrant-cyan)]/5 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-[var(--vibrant-cyan)]/5 transition-all flex items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
+                  <div key={event.id} className={`bg-white border border-[var(--vibrant-cyan)]/5 rounded-[3rem] p-6 shadow-sm hover:shadow-xl hover:shadow-[var(--vibrant-cyan)]/5 transition-all flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
                     
                     {isPastEvent && (
                       <div className="absolute -right-12 top-6 transform rotate-45 bg-slate-100 text-slate-400 text-[12px] font-black uppercase tracking-widest px-12 py-1 shadow-sm z-10">
@@ -1318,15 +1318,36 @@ const AdminPage: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="flex items-center gap-6">
-                      <div className={`p-4 rounded-2xl flex items-center justify-center font-black min-w-max ${isPastEvent ? 'bg-slate-100 text-slate-400' : 'bg-[var(--vibrant-cyan)]/10 text-[var(--vibrant-cyan)]'}`}>
-                        <span className="text-sm whitespace-nowrap tabular-nums">{formatDate(event.date)}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <h4 className={`text-xl font-black mb-1 ${isPastEvent ? 'text-slate-500 line-through decoration-slate-300' : 'text-[var(--deep-teal-sea)]'}`}>{event.title}</h4>
+                    <div className="flex items-center gap-6 flex-1">
+                      {/* Event Image - Smart Display */}
+                      {event.imageUrl ? (
+                        <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden flex-shrink-0 shadow-md border border-white/20">
+                          <img 
+                            src={event.imageUrl} 
+                            alt={event.title} 
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      ) : (
+                        <div className={`w-24 h-24 sm:w-32 sm:h-32 rounded-2xl flex items-center justify-center font-black flex-shrink-0 ${isPastEvent ? 'bg-slate-100 text-slate-400' : 'bg-[var(--vibrant-cyan)]/10 text-[var(--vibrant-cyan)]'}`}>
+                          <span className="text-sm whitespace-nowrap tabular-nums">{formatDate(event.date)}</span>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          {event.imageUrl && (
+                             <span className={`px-2 py-0.5 rounded-md text-[10px] font-black whitespace-nowrap ${isPastEvent ? 'bg-slate-100 text-slate-400' : 'bg-[var(--vibrant-cyan)]/10 text-[var(--vibrant-cyan)]'}`}>
+                              {formatDate(event.date)}
+                            </span>
+                          )}
+                          <h4 className={`text-xl font-black truncate ${isPastEvent ? 'text-slate-500 line-through decoration-slate-300' : 'text-[var(--deep-teal-sea)]'}`}>{event.title}</h4>
+                        </div>
                         <div className="flex items-center gap-2">
-                          <p className="text-xs font-bold text-[var(--turquoise-teal)]/60">{event.location}</p>
-                          <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider ${
+                          <p className="text-xs font-bold text-[var(--turquoise-teal)]/60 truncate">{event.location}</p>
+                          <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider whitespace-nowrap ${
                             event.type === 'COMMUNITY' ? 'bg-[var(--vibrant-cyan)] text-white' : 
                             event.type === 'INSTRUCTOR' ? 'bg-amber-500 text-white' : 
                             'bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)]/60'
@@ -1336,7 +1357,7 @@ const AdminPage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 mt-4 sm:mt-0">
                       {!isPastEvent && (
                         <button 
                           onClick={() => handleEditEvent(event)}
@@ -1576,6 +1597,26 @@ const AdminPage: React.FC = () => {
                           className="w-full bg-white/40 backdrop-blur-md border border-white/20 rounded-xl p-3 text-xl font-bold text-[var(--deep-teal-sea)] focus:ring-2 focus:ring-[var(--surfer-cyan)] outline-none transition-all"
                         />
                       </div>
+                      <button
+                        onClick={() => {
+                          const newSession = {
+                            dayOfWeek: newSessionDay,
+                            time: newSessionTime,
+                            isActive: false
+                          };
+                          
+                          // Prevent duplicates when adding the new session
+                          if (!weeklySessions.some(s => s.dayOfWeek === newSession.dayOfWeek && s.time === newSession.time)) {
+                            setWeeklySessions([...weeklySessions, newSession]);
+                            showSuccess('הסשן נוסף לרשימה (יש לשמור נתונים)');
+                          } else {
+                            showError('סשן זה כבר קיים ברשימה');
+                          }
+                        }}
+                        className="px-6 py-3 bg-[var(--surfer-cyan)] text-white rounded-xl font-black text-sm hover:bg-[var(--deep-teal-sea)] transition-all shadow-lg shadow-[var(--surfer-cyan)]/20 active:scale-95"
+                      >
+                        הוסף סשן
+                      </button>
                     </div>
                   </div>
 
@@ -1585,21 +1626,7 @@ const AdminPage: React.FC = () => {
                       onClick={async () => {
                         setIsSavingSessions(true);
                         try {
-                          const newSession = {
-                            dayOfWeek: newSessionDay,
-                            time: newSessionTime,
-                            isActive: false
-                          };
-                          
-                          let updatedSessions = [...weeklySessions];
-                          
-                          // Prevent duplicates when adding the new session
-                          if (!weeklySessions.some(s => s.dayOfWeek === newSession.dayOfWeek && s.time === newSession.time)) {
-                            updatedSessions.push(newSession);
-                            setWeeklySessions(updatedSessions);
-                          }
-
-                          await updateSiteConfig({ weeklySessions: updatedSessions });
+                          await updateSiteConfig({ weeklySessions });
                           showSuccess('מועדי הסשנים נשמרו בהצלחה');
                         } catch (err) {
                           console.error(err);

@@ -171,6 +171,10 @@ const App: React.FC = () => {
   // and the next 4 for admin nav, to keep the routing intact while changing the visuals.
   const navItems = [
     { path: '/', ...menuItems[0], text: 'דף הבית' },
+    { path: '/directory', ...menuItems[1], text: 'נבחרת הכוכבים' },
+    { path: '/gallery', ...menuItems[2], text: 'גלריית תמונות' },
+    { path: '/events', ...menuItems[3], text: 'אירועים' },
+    { path: '/posts', ...menuItems[4], text: 'פוסטים' },
     { path: '/world-news', ...menuItems[5], text: 'חדשות מהעולם' },
     { path: '/surfer-card', ...menuItems[6], text: 'דשבורד אישי' },
     { path: '/profile', ...menuItems[7], text: 'פרופיל אישי' }

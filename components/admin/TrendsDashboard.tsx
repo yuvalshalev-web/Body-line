@@ -31,7 +31,6 @@ import {
 } from 'lucide-react';
 import { getOperationalXAxisProps } from '../../src/utils/chartHelpers';
 import OperationalChartHeader from '../OperationalChartHeader';
-import SeasonalPersistenceRow from './SeasonalPersistenceRow';
 import { calculateDistance } from '../../utils/distanceCalculator';
 import { getCoordinates } from '../../src/utils/geocoding';
 
@@ -817,7 +816,6 @@ const TrendsDashboard: React.FC = () => {
             </div>
           </div>
         </div>
-        <SeasonalPersistenceRow />
 
         {yearConfig && (
           <OperationalChartHeader 

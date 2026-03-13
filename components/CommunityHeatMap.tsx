@@ -200,8 +200,8 @@ const CommunityHeatMap: React.FC = () => {
                 console.log("Map panes not ready or destroyed, skipping heatmap layer addition");
                 return;
               }
-              if (typeof map.layerPointToLatLng !== 'function') {
-                console.error("Map is missing layerPointToLatLng");
+              if (!map || typeof map.layerPointToLatLng !== 'function') {
+                console.log("Map is not ready or missing layerPointToLatLng, skipping heatmap layer");
                 return;
               }
               console.log("Adding heatmap layer with points:", heatPoints.length);
@@ -309,15 +309,15 @@ const CommunityHeatMap: React.FC = () => {
         <div className="flex gap-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-emerald-500" />
-            <span className="text-[12px] font-bold glass-text-secondary">זמינות מיידית (0-20)</span>
+            <span className="text-[12px] font-bold glass-text-secondary">חי"ר (0-20)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-amber-500" />
-            <span className="text-[12px] font-bold glass-text-secondary">דורש התראה (21-100)</span>
+            <span className="text-[12px] font-bold glass-text-secondary">שיריון (21-100)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-red-500" />
-            <span className="text-[12px] font-bold glass-text-secondary">מרוחקים (100+)</span>
+            <span className="text-[12px] font-bold glass-text-secondary">חיל אויר (100+)</span>
           </div>
         </div>
       </div>
@@ -348,7 +348,7 @@ const CommunityHeatMap: React.FC = () => {
             <div className="glass-effect p-4 rounded-2xl border border-white/20 shadow-xl backdrop-blur-xl">
               <div className="flex items-center gap-3 mb-1">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[12px] font-black glass-text-primary uppercase tracking-widest">זמינות מיידית</span>
+                <span className="text-[12px] font-black glass-text-primary uppercase tracking-widest">חי"ר</span>
               </div>
               <p className="text-xl font-black glass-text-primary">{stats.near} <span className="text-xs font-normal opacity-50">חברים</span></p>
               {/* Debug Info */}

@@ -253,33 +253,6 @@ export const OceanPulse: React.FC = () => {
           </p>
         </div>
       </div>
-
-      {/* Seasonal Grit Score Row */}
-      <div className="home-glass-card p-8 space-y-6">
-        <h2 className="text-2xl font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>אחוזי התמדה קהילתיים לפי עונות השנה</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {seasonalGrit.map((s, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 bg-white/50 rounded-2xl border border-black/5 relative overflow-hidden group">
-              {/* Subtle background glow */}
-              <div 
-                className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-500" 
-                style={{ backgroundColor: s.color }}
-              />
-              <div className="p-3 rounded-[12px] border border-black/5 shadow-inner relative z-10" style={{ backgroundColor: `${s.color}20` }}>
-                <s.icon 
-                  className="filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" 
-                  size={20} 
-                  style={{ color: s.color }}
-                />
-              </div>
-              <div className="flex flex-col relative z-10">
-                <span className="text-xs font-black text-[#000000]/40 uppercase tracking-widest" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{s.name}</span>
-                <span className="text-xl font-black text-[#000000]">{s.score}%</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };

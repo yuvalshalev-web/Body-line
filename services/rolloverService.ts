@@ -2,17 +2,62 @@
 import { getDb } from '../services/firebase';
 import { doc, getDoc, updateDoc, writeBatch, increment, collection, Timestamp, addDoc, getDocs } from 'firebase/firestore';
 
-export const getNextThursday = () => {
+export const getNextSessionDate = (weeklySessions?: any[]) => {
   const now = new Date();
-  const resultDate = new Date(now);
-  const day = now.getDay();
-  let daysToAdd = (4 - day + 7) % 7;
-  if (daysToAdd === 0 && (now.getHours() > 7 || (now.getHours() === 7 && now.getMinutes() >= 0))) {
-    daysToAdd = 7;
+  
+  const activeSessions = weeklySessions?.filter(s => s.isActive !== false) || [];
+  if (activeSessions.length === 0) {
+    // Fallback to next Thursday 07:00
+    const resultDate = new Date(now);
+    const day = now.getDay();
+    let daysToAdd = (4 - day + 7) % 7;
+    if (daysToAdd === 0 && (now.getHours() > 7 || (now.getHours() === 7 && now.getMinutes() >= 0))) {
+      daysToAdd = 7;
+    }
+    resultDate.setDate(now.getDate() + daysToAdd);
+    resultDate.setHours(7, 0, 0, 0);
+    return resultDate.toISOString();
   }
-  resultDate.setDate(now.getDate() + daysToAdd);
-  resultDate.setHours(7, 0, 0, 0);
-  return resultDate.toISOString();
+
+  // Find the closest next session
+  let closestDate: Date | null = null;
+  let minDiff = Infinity;
+
+  activeSessions.forEach(session => {
+    const { dayOfWeek, time } = session;
+    if (time && typeof dayOfWeek === 'number') {
+      const [hourStr, minuteStr] = time.split(':');
+      const hour = parseInt(hourStr, 10);
+      const minute = parseInt(minuteStr, 10);
+
+      const candidate = new Date(now);
+      const currentDay = now.getDay();
+      let daysToAdd = (dayOfWeek - currentDay + 7) % 7;
+      
+      // If it's the same day, check if the time has passed
+      if (daysToAdd === 0) {
+        if (now.getHours() > hour || (now.getHours() === hour && now.getMinutes() >= minute)) {
+          daysToAdd = 7;
+        }
+      }
+      
+      candidate.setDate(now.getDate() + daysToAdd);
+      candidate.setHours(hour, minute, 0, 0);
+
+      const diff = candidate.getTime() - now.getTime();
+      if (diff > 0 && diff < minDiff) {
+        minDiff = diff;
+        closestDate = candidate;
+      }
+    }
+  });
+
+  if (closestDate) {
+    return (closestDate as Date).toISOString();
+  }
+
+  // Fallback
+  return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
 };
 
 export const addRolloverLog = async (action: string, status: 'success' | 'failed', details: string, updatedMembersCount?: number) => {
@@ -26,14 +71,14 @@ export const addRolloverLog = async (action: string, status: 'success' | 'failed
   });
 };
 
-export const finalizeThursdaySession = async (weeklyHistory: any[], yearConfig: { startDate: string; endDate: string } | null) => {
+export const finalizeSession = async (weeklyHistory: any[], yearConfig: { startDate: string; endDate: string } | null, waterTemp?: number, weeklySessions?: any[]) => {
   const db = getDb();
   const sessionRef = doc(db, 'site_data', 'active_session');
   
   try {
     const sessionSnap = await getDoc(sessionRef);
     if (!sessionSnap.exists()) {
-      await addRolloverLog('finalizeThursdaySession', 'failed', 'Active session not found');
+      await addRolloverLog('finalizeSession', 'failed', 'Active session not found');
       return;
     }
     
@@ -42,7 +87,7 @@ export const finalizeThursdaySession = async (weeklyHistory: any[], yearConfig: 
     const sessionDateStr = data.date;
 
     if (!sessionDateStr) {
-      await addRolloverLog('finalizeThursdaySession', 'failed', 'Session date missing');
+      await addRolloverLog('finalizeSession', 'failed', 'Session date missing');
       return;
     }
 
@@ -55,12 +100,6 @@ export const finalizeThursdaySession = async (weeklyHistory: any[], yearConfig: 
 
     const attendees = rawAttendees.filter((id: string) => activeMemberIds.includes(id));
     const sessionDate = new Date(sessionDateStr);
-    
-    // Normalize sessionDate to Thursday 07:00
-    const sDay = sessionDate.getDay();
-    const sDiff = 4 - sDay;
-    sessionDate.setDate(sessionDate.getDate() + sDiff);
-    sessionDate.setHours(7, 0, 0, 0);
 
     // Season check
     if (yearConfig) {
@@ -68,7 +107,7 @@ export const finalizeThursdaySession = async (weeklyHistory: any[], yearConfig: 
       const start = new Date(yearConfig.startDate);
       const end = new Date(yearConfig.endDate);
       if (now < start || now > end) {
-        await addRolloverLog('finalizeThursdaySession', 'success', 'Skipped: Outside of active season');
+        await addRolloverLog('finalizeSession', 'success', 'Skipped: Outside of active season');
         return;
       }
     }
@@ -76,12 +115,7 @@ export const finalizeThursdaySession = async (weeklyHistory: any[], yearConfig: 
     // Idempotency check / Overwrite existing
     const existingHistoryItem = weeklyHistory.find(d => {
       const dDate = d.date?.toDate ? d.date.toDate() : new Date(d.date);
-      const dDay = dDate.getDay();
-      const dDiff = 4 - dDay;
-      const dThursday = new Date(dDate);
-      dThursday.setDate(dThursday.getDate() + dDiff);
-      dThursday.setHours(7, 0, 0, 0);
-      return dThursday.toDateString() === sessionDate.toDateString();
+      return dDate.toDateString() === sessionDate.toDateString();
     });
 
     const batch = writeBatch(db);
@@ -110,13 +144,22 @@ export const finalizeThursdaySession = async (weeklyHistory: any[], yearConfig: 
       });
     }
 
+    // Determine category based on temp
+    let category = 'Transition';
+    if (waterTemp !== undefined) {
+      if (waterTemp < 20) category = 'Penguin';
+      else if (waterTemp > 27) category = 'Jellyfish';
+    }
+
     // 2. Create or Update weekly_history entry
     if (existingHistoryItem) {
       const historyRef = doc(db, 'weekly_history', existingHistoryItem.id);
       batch.update(historyRef, {
         participantsCount: attendees.length,
         participantIds: attendees,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        waterTemp: waterTemp || existingHistoryItem.waterTemp || null,
+        category: category
       });
     } else {
       const historyRef = doc(collection(db, 'weekly_history'));
@@ -125,22 +168,24 @@ export const finalizeThursdaySession = async (weeklyHistory: any[], yearConfig: 
         participantsCount: attendees.length,
         participantIds: attendees,
         timestamp: new Date().toISOString(),
-        instructorName: 'מדריך חבל זוג'
+        instructorName: 'מדריך חבל זוג',
+        waterTemp: waterTemp || null,
+        category: category
       });
     }
 
     // 3. Reset active session
-    const nextThurs = getNextThursday();
-    batch.update(sessionRef, {
+    const nextSessionDate = getNextSessionDate(weeklySessions);
+    batch.set(sessionRef, {
       attendees: [],
-      date: nextThurs
-    });
+      date: nextSessionDate
+    }, { merge: true });
 
     await batch.commit();
-    await addRolloverLog('finalizeThursdaySession', 'success', `Archived session with ${attendees.length} attendees`, attendees.length);
+    await addRolloverLog('finalizeSession', 'success', `Archived session with ${attendees.length} attendees. Temp: ${waterTemp}°C, Category: ${category}`, attendees.length);
   } catch (error: any) {
     console.error("Finalize session error:", error);
-    await addRolloverLog('finalizeThursdaySession', 'failed', error.message);
+    await addRolloverLog('finalizeSession', 'failed', error.message);
     throw error;
   }
 };

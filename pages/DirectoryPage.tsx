@@ -29,7 +29,8 @@ import {
   ShieldAlert,
   LayoutGrid,
   List,
-  MessageCircle
+  MessageCircle,
+  Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -457,7 +458,15 @@ const DirectoryPage: React.FC = () => {
                 <div className="w-12 h-12 glass-effect !rounded-full flex items-center justify-center text-[#FF2D60]">
                   <ShieldAlert size={24} />
                 </div>
-                <h3 className="text-sm font-black glass-text-secondary uppercase tracking-[0.5em] whitespace-nowrap">צוות קדמי</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-black glass-text-secondary uppercase tracking-[0.5em] whitespace-nowrap">צוות קדמי</h3>
+                  <div className="gt-info-wrapper relative cursor-help">
+                    <Info size={14} className="text-[#FF2D60]/40 hover:text-[#FF2D60] transition-colors" />
+                    <div className="gt-tooltip">
+                      צוות הרכזים והמנהלים של הקהילה.
+                    </div>
+                  </div>
+                </div>
                 <div className="h-px flex-1 bg-white/20"></div>
               </div>
               <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-12" : "space-y-8"}>
@@ -501,7 +510,15 @@ const DirectoryPage: React.FC = () => {
                 <div className="w-12 h-12 glass-effect !rounded-full flex items-center justify-center text-[#00AFC2]">
                   <Sparkles size={24} />
                 </div>
-                <h3 className="text-sm font-black glass-text-secondary uppercase tracking-[0.5em] whitespace-nowrap">מדריכים</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-black glass-text-secondary uppercase tracking-[0.5em] whitespace-nowrap">מדריכים</h3>
+                  <div className="gt-info-wrapper relative cursor-help">
+                    <Info size={14} className="text-[#00AFC2]/40 hover:text-[#00AFC2] transition-colors" />
+                    <div className="gt-tooltip">
+                      צוות המדריכים המקצועי של חבל זוג.
+                    </div>
+                  </div>
+                </div>
                 <div className="h-px flex-1 bg-white/20"></div>
               </div>
               <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-12" : "space-y-8"}>
@@ -545,7 +562,15 @@ const DirectoryPage: React.FC = () => {
                 <div className="w-12 h-12 glass-effect !rounded-full flex items-center justify-center text-emerald-500">
                   <Users size={24} />
                 </div>
-                <h3 className="text-sm font-black glass-text-secondary uppercase tracking-[0.5em] whitespace-nowrap">חברי הקהילה</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-black glass-text-secondary uppercase tracking-[0.5em] whitespace-nowrap">חברי הקהילה</h3>
+                  <div className="gt-info-wrapper relative cursor-help">
+                    <Info size={14} className="text-emerald-500/40 hover:text-emerald-500 transition-colors" />
+                    <div className="gt-tooltip">
+                      כלל חברי הקהילה הרשומים והפעילים.
+                    </div>
+                  </div>
+                </div>
                 <div className="h-px flex-1 bg-white/20"></div>
               </div>
               <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-12" : "space-y-8"}>

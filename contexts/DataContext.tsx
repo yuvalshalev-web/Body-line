@@ -9,7 +9,7 @@ import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageStats';
 import { storage } from '../src/utils/storage';
 import { useModal } from './ModalContext';
-import { finalizeThursdaySession as finalizeThursdaySessionService } from '../services/rolloverService';
+import { finalizeSession as finalizeSessionService, getNextSessionDate } from '../services/rolloverService';
 
 interface DataContextType {
   members: Member[];
@@ -81,7 +81,7 @@ interface DataContextType {
   addGalleryItem: (item: Omit<GalleryItem, 'id'>) => Promise<void>;
   toggleSessionAttendance: (userId: string) => Promise<void>;
   forceResetSession: () => Promise<void>;
-  finalizeThursdaySession: () => Promise<void>;
+  finalizeSession: () => Promise<void>;
   batchAddGlossary: (items: Omit<GlossaryTerm, 'id'>[]) => Promise<void>;
   batchAddExercises: (items: Omit<Exercise, 'id'>[]) => Promise<void>;
   batchAddQuotes: (items: Omit<QuoteItem, 'id'>[]) => Promise<void>;
@@ -156,18 +156,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setDbStatus(newStatus);
   }, [dbStatus]);
 
-  const getNextThursday = () => {
-    const now = new Date();
-    const resultDate = new Date(now);
-    const day = now.getDay();
-    let daysToAdd = (4 - day + 7) % 7;
-    if (daysToAdd === 0 && (now.getHours() > 7 || (now.getHours() === 7 && now.getMinutes() >= 0))) {
-      daysToAdd = 7;
-    }
-    resultDate.setDate(now.getDate() + daysToAdd);
-    resultDate.setHours(7, 0, 0, 0);
-    return resultDate.toISOString();
-  };
+
 
   const handleFirestoreError = useCallback((error: any) => {
     // Ignore transient connection issues or intentional kill switch
@@ -304,7 +293,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const sessionDate = data.date;
         const attendees = data.attendees || [];
         setAttendeeIds(attendees);
-        setActiveSessionDate(sessionDate || getNextThursday());
+        setActiveSessionDate(sessionDate || getNextSessionDate(siteConfig?.weeklySessions));
       }
       setIsLoading(false);
     }, handleFirestoreError);
@@ -558,10 +547,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const forceResetSession = async () => {
-    const nextThurs = getNextThursday();
+    const nextSession = getNextSessionDate(siteConfig?.weeklySessions);
     await setDoc(doc(getDb(), 'site_data', 'active_session'), {
       attendees: [],
-      date: nextThurs
+      date: nextSession
     }, { merge: true });
   };
 
@@ -575,8 +564,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
-  const finalizeThursdaySession = async () => {
-    await finalizeThursdaySessionService(weeklyHistory, yearConfig);
+  const finalizeSession = async () => {
+    await finalizeSessionService(weeklyHistory, yearConfig, undefined, siteConfig?.weeklySessions);
   };
 
   const batchAddGlossary = async (items: Omit<GlossaryTerm, 'id'>[]) => {
@@ -633,10 +622,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     home_break: any,
     globalColor: string,
     h1Styles: any,
-    weeklySessions: { dayOfWeek: number, time: string }[]
+    weeklySessions: { dayOfWeek: number, time: string, isActive?: boolean }[]
   }>) => {
     setSiteConfig(prev => ({ ...prev, ...config }));
-    await setDoc(doc(getDb(), 'site_data', 'config'), config, { merge: true });
+    const db = getDb();
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'site_data', 'config'), config, { merge: true });
+    
+    if (config.weeklySessions) {
+      const nextSessionDate = getNextSessionDate(config.weeklySessions);
+      batch.set(doc(db, 'site_data', 'active_session'), { date: nextSessionDate }, { merge: true });
+    }
+    
+    await batch.commit();
   };
 
   const updateYearConfig = async (config: { startDate: string; endDate: string }) => {
@@ -693,7 +691,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, forceResetSession,
-      finalizeThursdaySession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember
+      finalizeSession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember
     }}>
       {children}
     </DataContext.Provider>

@@ -2,11 +2,11 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
-import cron from "node-cron";
+import cron, { ScheduledTask } from "node-cron";
 import Parser from 'rss-parser';
-import { finalizeThursdaySession as finalizeThursdaySessionService } from "./services/rolloverService.js";
+import { finalizeSession as finalizeSessionService } from "./services/rolloverService.js";
 import { getDb } from "./services/firebase.js";
-import { collection, query, getDocs, orderBy, limit } from "firebase/firestore";
+import { collection, query, getDocs, orderBy, limit, onSnapshot, doc, getDoc } from "firebase/firestore";
 
 const parser = new Parser();
 
@@ -17,8 +17,9 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // Cron job: Every Thursday at 07:01
-  cron.schedule('1 7 * * 4', async () => {
+  let activeCronJobs: ScheduledTask[] = [];
+
+  const runRollover = async (weeklySessions: any[]) => {
     console.log('Running scheduled Rollover...');
     const db = getDb();
     
@@ -26,16 +27,77 @@ async function startServer() {
     const historySnap = await getDocs(query(collection(db, 'weekly_history'), orderBy('timestamp', 'desc'), limit(100)));
     const weeklyHistory = historySnap.docs.map(d => ({ id: d.id, ...d.data() }));
     
-    const configSnap = await getDocs(collection(db, 'site_config'));
-    const configData = configSnap.docs[0]?.data() as any;
-    const yearConfig = configData?.yearConfig || null;
+    const yearConfigSnap = await getDoc(doc(db, 'site_data', 'year_config'));
+    const yearConfig = yearConfigSnap.exists() ? yearConfigSnap.data() as any : null;
+
+    // Fetch current water temp for the session
+    let waterTemp = 22; // Default
+    try {
+      const lat = 32.16;
+      const lng = 34.84;
+      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=sea_surface_temperature&timezone=auto`;
+      const marineRes = await fetch(marineUrl);
+      if (marineRes.ok) {
+        const marineData = await marineRes.json();
+        waterTemp = marineData.current.sea_surface_temperature;
+      }
+    } catch (e) {
+      console.error('Failed to fetch water temp for rollover:', e);
+    }
 
     try {
-      await finalizeThursdaySessionService(weeklyHistory, yearConfig);
-      console.log('Rollover completed successfully.');
+      await finalizeSessionService(weeklyHistory, yearConfig, waterTemp, weeklySessions);
+      console.log('Rollover completed successfully with temp:', waterTemp);
     } catch (e) {
       console.error('Rollover failed:', e);
     }
+  };
+
+  const setupCronJobs = (weeklySessions: any[]) => {
+    // Stop existing jobs
+    activeCronJobs.forEach(job => job.stop());
+    activeCronJobs = [];
+
+    const activeSessions = weeklySessions?.filter(s => s.isActive !== false) || [];
+
+    if (activeSessions.length === 0) {
+      console.log('No active sessions found. Rollover cron jobs are disabled.');
+      return;
+    }
+
+    activeSessions.forEach(session => {
+      const { dayOfWeek, time } = session;
+      if (time && typeof dayOfWeek === 'number') {
+        const [hourStr, minuteStr] = time.split(':');
+        let hour = parseInt(hourStr, 10);
+        let minute = parseInt(minuteStr, 10);
+
+        // Add 1 minute to the session time for the rollover
+        minute += 1;
+        if (minute >= 60) {
+          minute -= 60;
+          hour = (hour + 1) % 24;
+        }
+
+        const cronExpression = `${minute} ${hour} * * ${dayOfWeek}`;
+        console.log(`Scheduling rollover for day ${dayOfWeek} at ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} (Cron: ${cronExpression})`);
+        
+        const job = cron.schedule(cronExpression, () => runRollover(weeklySessions));
+        activeCronJobs.push(job);
+      }
+    });
+  };
+
+  // Listen to site_data/config changes to update cron jobs dynamically
+  const db = getDb();
+  onSnapshot(doc(db, 'site_data', 'config'), (snapshot) => {
+    if (snapshot.exists()) {
+      const configData = snapshot.data() as any;
+      const weeklySessions = configData?.weeklySessions || [{ dayOfWeek: 4, time: '07:00', isActive: true }];
+      setupCronJobs(weeklySessions);
+    }
+  }, (error) => {
+    console.error('Failed to listen to site_data/config for cron jobs:', error);
   });
 
   app.use(express.json());

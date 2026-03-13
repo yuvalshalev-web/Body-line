@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import PlayerCard from '../components/PlayerCard';
 import UserAnalytics from '../components/UserAnalytics';
+import TribeStatus from '../components/dashboard/TribeStatus';
 import { Trophy, Waves, Target, Crown, WifiOff, Flame, Info } from 'lucide-react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import { useState, useEffect } from 'react';
@@ -59,7 +60,7 @@ const SurferCardPage: React.FC = () => {
             'פופ-אפיסט': { bg: 'from-[#021626] to-[#010d17]', glow: 'rgba(0, 242, 254, 0.2)', trophy: '#E5E7EB' },
             'תופס פינה': { bg: 'from-[#021626] to-[#010d17]', glow: 'rgba(0, 242, 254, 0.2)', trophy: '#E5E7EB' },
             'ליין-אפיסט': { bg: 'from-[#06402b] to-[#065f46]', glow: 'rgba(6, 95, 70, 0.5)', trophy: '#E5E7EB' },
-            'כריש פטיש': { bg: 'from-[#1e1b4b] to-[#312e81]', glow: 'rgba(67, 56, 202, 0.6)', trophy: '#E5E7EB' },
+            'שואו-אפיסט': { bg: 'from-[#1e1b4b] to-[#312e81]', glow: 'rgba(67, 56, 202, 0.6)', trophy: '#E5E7EB' },
             'קלי סלייטר': { bg: 'from-[#92400e] via-[#b45309] to-[#92400e]', glow: 'rgba(251, 191, 36, 0.8)', trophy: '#FFD700' }
           };
 
@@ -115,7 +116,7 @@ const SurferCardPage: React.FC = () => {
                         scale: [1, 1.6, 1],
                         opacity: [0.5, 0.9, 0.5],
                         backgroundColor: currentRank === 'קלי סלייטר' ? 'rgba(255, 215, 0, 0.6)' : 
-                                       currentRank === 'כריש פטיש' ? 'rgba(106, 90, 205, 0.4)' : 
+                                       currentRank === 'שואו-אפיסט' ? 'rgba(106, 90, 205, 0.4)' : 
                                        'rgba(255, 255, 255, 0.2)'
                       }}
                       transition={{ duration: 4, repeat: Infinity }}
@@ -359,6 +360,11 @@ const SurferCardPage: React.FC = () => {
             </motion.div>
           );
         })()}
+      </div>
+
+      {/* Tribe Status Section */}
+      <div className="mb-12">
+        <TribeStatus />
       </div>
 
       {/* Detailed Analytics below */}

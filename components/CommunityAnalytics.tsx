@@ -43,56 +43,107 @@ const CommunityAnalytics: React.FC = () => {
     const logoImg = new Image();
     logoImg.src = 'https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/site_assets%2FextraLogo_1771271649909?alt=media';
 
+    let animationFrameId: number;
+    const startTime = Date.now();
+
     const render = () => {
+      const elapsed = Date.now() - startTime;
+      const pulseCycle = 4000; // 4 seconds per full cycle
+      
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 1. ציור הטבעות (המרחקים)
+      // 1. ציור הטבעות (המרחקים) - Elite Alabaster marble texture
+      const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+      gradient.addColorStop(0.5, 'rgba(245, 245, 245, 0.7)');
+      gradient.addColorStop(1, 'rgba(230, 230, 230, 0.5)');
+      
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // Frosted, translucent crystal glass ripples
       const rings = [
-          { r: maxRadius, color: '#f1f3f5', label: '20+ ק"מ' }, // חיצונית
-          { r: maxRadius * 0.7, color: '#dee2e6', label: '10 ק"מ' },
-          { r: maxRadius * 0.4, color: '#ced4da', label: '5 ק"מ' },
-          { r: maxRadius * 0.15, color: 'transparent', label: 'Local' } // בולזאיי - שקוף כי נשים לוגו
+          { r: maxRadius, label: '25km' },
+          { r: maxRadius * 0.6, label: '10km' },
+          { r: maxRadius * 0.3, label: '3km' }
       ];
 
       rings.forEach(ring => {
           ctx.beginPath();
           ctx.arc(centerX, centerY, ring.r, 0, Math.PI * 2);
-          ctx.fillStyle = ring.color;
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
           ctx.fill();
-          ctx.strokeStyle = '#fff';
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.lineWidth = 2;
           ctx.stroke();
+          
+          // Etched labels
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+          ctx.font = 'bold 14px Inter';
+          ctx.textAlign = 'center';
+          ctx.fillText(ring.label, centerX, centerY - ring.r + 20);
       });
 
-      // Draw Logo
-      if (logoImg.complete) {
-        const logoSize = 40;
-        // Center the logo in the middle of the radar
-        const newX = centerX;
-        const newY = centerY;
+      // --- RADAR PULSE ANIMATION ---
+      const rippleCount = 3;
+      for (let i = 0; i < rippleCount; i++) {
+        // Offset each ripple's start time
+        const offset = (i / rippleCount) * pulseCycle;
+        const progress = ((elapsed + offset) % pulseCycle) / pulseCycle;
         
+        // Ease-out expansion
+        const rippleRadius = progress * maxRadius;
+        // Fade out as it expands
+        const opacity = (1 - progress) * 0.4;
+        
+        if (rippleRadius > 24) { // Don't show inside the logo sphere
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, rippleRadius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(54, 140, 176, ${opacity})`; // #368cb0
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+
+      // Draw Logo in a pulsating crystal sphere
+      const logoSize = 48;
+      const coreGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, logoSize);
+      coreGradient.addColorStop(0, 'rgba(0, 251, 255, 0.6)'); // Ocean Cyan
+      coreGradient.addColorStop(1, 'rgba(0, 251, 255, 0)');
+      
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, logoSize, 0, Math.PI * 2);
+      ctx.fillStyle = coreGradient;
+      ctx.fill();
+
+      if (logoImg.complete) {
         ctx.save();
         ctx.beginPath();
-        ctx.arc(newX, newY, logoSize / 2, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
         ctx.clip();
-        ctx.drawImage(logoImg, newX - logoSize / 2, newY - logoSize / 2, logoSize, logoSize);
+        ctx.drawImage(logoImg, centerX - logoSize / 2, centerY - logoSize / 2, logoSize, logoSize);
         ctx.restore();
         
-        // Logo border
+        // Glass reflection on the sphere
         ctx.beginPath();
-        ctx.arc(newX, newY, logoSize / 2, 0, Math.PI * 2);
-        ctx.strokeStyle = '#007bff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
+        const glassGrad = ctx.createLinearGradient(centerX - logoSize/2, centerY - logoSize/2, centerX + logoSize/2, centerY + logoSize/2);
+        glassGrad.addColorStop(0, 'rgba(255,255,255,0.8)');
+        glassGrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+        ctx.fillStyle = glassGrad;
+        ctx.fill();
       } else {
-        // Fallback blue dot if logo not loaded
+        // Fallback
         ctx.beginPath();
-        ctx.arc(centerX, centerY, maxRadius * 0.15, 0, Math.PI * 2);
-        ctx.fillStyle = '#007bff';
+        ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#00fbff';
         ctx.fill();
       }
 
-      // 2. ציור חברי הקהילה כנקודות
+      // 2. ציור חברי הקהילה כטיפות מים
       const membersWithCanvasPos = members.map((member, index) => {
           let distance = 0;
           const coords = getCoordinates(member.city, member.lat, member.lng);
@@ -100,43 +151,55 @@ const CommunityAnalytics: React.FC = () => {
           if (homeLat && homeLng && coords) {
             distance = calculateDistance(homeLat, homeLng, coords[0], coords[1]);
           } else {
-            // Mock distance if no real address or city data
             distance = member.distance || (Math.random() * 30);
           }
           
           const distanceLimit = 30;
           let relativeRadius = (distance / distanceLimit) * maxRadius;
           
-          // Ensure points are outside the logo area but inside the board
-          const minRadius = 25; 
-          if (relativeRadius < minRadius) relativeRadius = minRadius + (Math.random() * 5);
-          if (relativeRadius > maxRadius) relativeRadius = maxRadius - 5;
+          const minRadius = 35; 
+          if (relativeRadius < minRadius) relativeRadius = minRadius;
+          if (relativeRadius > maxRadius) relativeRadius = maxRadius - 10;
 
-          // זווית רנדומלית כדי שהנקודות לא יהיו אחת על השניה
           const angle = (index * 137.5) * (Math.PI / 180); 
 
           const x = centerX + relativeRadius * Math.cos(angle);
           const y = centerY + relativeRadius * Math.sin(angle);
 
-          // הוספת אנימציית "Pop" למשתמש האחרון
-          let radius = 5;
-          if (index === members.length - 1) {
-            radius = 8; // הגדלה זמנית
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = "#00fbff";
-          } else {
-            ctx.shadowBlur = 0;
-          }
-
-          ctx.beginPath();
-          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          // Water Droplet (Circle)
+          const dropRadius = 6;
           
-          ctx.fillStyle = '#ff3e00'; // צבע הנקודה
+          // Color mapping: Green for close, Red for far
+          const ratio = Math.min(distance / 25, 1);
+          const r = Math.round(34 + ratio * (239 - 34));
+          const g = Math.round(197 + ratio * (68 - 197));
+          const b = Math.round(94 + ratio * (68 - 94));
+          const dropColor = `rgb(${r}, ${g}, ${b})`;
+
+          ctx.save();
+          ctx.translate(x, y);
+          
+          // Circle shape
+          ctx.beginPath();
+          ctx.arc(0, 0, dropRadius, 0, Math.PI * 2);
+          
+          const dropGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, dropRadius);
+          dropGrad.addColorStop(0, dropColor);
+          dropGrad.addColorStop(1, `rgba(${r},${g},${b},0.8)`);
+          
+          ctx.fillStyle = dropGrad;
+          ctx.shadowColor = `rgba(${r},${g},${b},0.5)`;
+          ctx.shadowBlur = 8;
           ctx.fill();
-          ctx.shadowBlur = 0; // Reset shadow
-          ctx.strokeStyle = '#fff';
-          ctx.lineWidth = 1;
-          ctx.stroke();
+          
+          // Brilliant highlight
+          ctx.beginPath();
+          ctx.arc(-dropRadius*0.3, -dropRadius*0.2, dropRadius*0.2, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.shadowBlur = 0;
+          ctx.fill();
+          
+          ctx.restore();
 
           return { ...member, canvasX: x, canvasY: y, calculatedDistance: distance };
       });
@@ -159,19 +222,27 @@ const CommunityAnalytics: React.FC = () => {
               const dist = Math.sqrt((mouseX - m.canvasX)**2 + (mouseY - m.canvasY)**2);
               if (dist < 7) {
                   tooltip.style.display = 'block';
-                  tooltip.style.left = visualX + 10 + 'px';
-                  tooltip.style.top = visualY + 10 + 'px';
-                  tooltip.style.padding = '8px';
-                  tooltip.style.background = 'white';
-                  tooltip.style.borderRadius = '12px';
-                  tooltip.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                  tooltip.style.left = visualX + 15 + 'px';
+                  tooltip.style.top = visualY + 15 + 'px';
+                  tooltip.style.padding = '10px 14px';
+                  tooltip.style.background = 'rgba(255, 255, 255, 0.98)';
+                  tooltip.style.backdropFilter = 'blur(12px)';
+                  tooltip.style.borderRadius = '16px';
+                  tooltip.style.border = '1.5px solid #00E5FF';
+                  tooltip.style.boxShadow = '0 12px 30px rgba(0,0,0,0.12)';
+                  tooltip.style.minWidth = '150px';
+                  
                   tooltip.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <img src="${m.avatar || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" />
-                      <div style="text-align: right;">
-                        <div style="font-weight: bold; color: #333;">${m.firstName} ${m.lastName}</div>
-                        <div style="font-size: 12px; color: #666;">${m.calculatedDistance.toFixed(2)} ק"מ מהחוף</div>
-                        <div style="font-size: 11px; color: #888; margin-top: 4px; font-weight: 600;">כתובת: [ ${m.full_address || m.city || 'לא צוינה'} ]</div>
+                    <div style="display: flex; flex-direction: column; gap: 2px; text-align: right;">
+                      <div style="font-weight: 900; color: #000; font-size: 14px; margin-bottom: 0px; line-height: 1.2;">${m.firstName} ${m.lastName}</div>
+                      
+                      <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin: 2px 0;">
+                        <div style="font-size: 12px; font-weight: 700; color: #444;">${m.calculatedDistance.toFixed(2)} ק"מ</div>
+                        <img src="${m.avatar || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;" />
+                      </div>
+                      
+                      <div style="font-size: 10px; color: #777; font-weight: 700; margin-top: 2px; border-top: 1px solid #f5f5f5; padding-top: 4px; line-height: 1.1;">
+                        ${m.full_address || m.city || 'לא צוינה'}
                       </div>
                     </div>
                   `;
@@ -182,12 +253,18 @@ const CommunityAnalytics: React.FC = () => {
       };
 
       canvas.onmousemove = handleMouseMove as any;
+      animationFrameId = requestAnimationFrame(render);
     };
 
-    logoImg.onload = render;
-    render(); // Initial render
+    logoImg.onload = () => {
+      animationFrameId = requestAnimationFrame(render);
+    };
+    
+    // Start even if logo takes time
+    animationFrameId = requestAnimationFrame(render);
 
     return () => {
+      cancelAnimationFrame(animationFrameId);
       canvas.onmousemove = null;
     };
   }, [members, siteConfig]);
@@ -1020,14 +1097,13 @@ const CommunityAnalytics: React.FC = () => {
         </motion.div>
 
         {/* Community Radius Widget */}
-        <div className="glass-panel p-8 rounded-[3rem] border border-white/20 shadow-soft flex flex-col items-center mt-8">
-          <div className="flex items-center gap-2 mb-6 w-full text-right">
-              <h3 className="text-xl font-black text-[#2B2B2E] tracking-tight">רדיוס הקהילה</h3>
-              <Activity className="w-5 h-5 text-[#2B2B2E]" />
-          </div>
-          <div className="w-[450px] relative darts-wrapper flex flex-col items-center">
-            <h4 className="text-center mb-4">פיזור גיאוגרפי</h4>
-            <canvas ref={canvasRef} id="dartsBoard" width="450" height="450" className="rounded-full rotate-slow" />
+        <div className="home-glass-card p-8 rounded-[3rem] border border-white/40 shadow-[0_20px_40px_rgba(0,0,0,0.1)] flex flex-col items-center mt-8 relative overflow-hidden backdrop-blur-xl bg-white/30">
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--surfer-cyan)]/10 to-transparent pointer-events-none" />
+          
+          <h3 className="text-3xl font-black text-[#000000] tracking-tight mb-8 z-10" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>רדיוס הקהילה</h3>
+          
+          <div className="w-[450px] relative darts-wrapper flex flex-col items-center z-10">
+            <canvas ref={canvasRef} id="dartsBoard" width="450" height="450" className="rounded-full" />
             <div id="darts-tooltip" ref={tooltipRef} className="absolute hidden pointer-events-none z-50 whitespace-pre-line text-sm text-center"></div>
           </div>
         </div>

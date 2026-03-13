@@ -606,7 +606,15 @@ const SessionStatsPage: React.FC = () => {
               </div>
               
               <div className="flex flex-col items-center">
-                <span className="text-[10px] font-black text-[#000000]/40 uppercase tracking-widest mb-1">{s.name}</span>
+                <div className="flex items-center gap-1 mb-1">
+                  <span className="text-[10px] font-black text-[#000000]/40 uppercase tracking-widest">{s.name}</span>
+                  <div className="gt-info-wrapper relative cursor-help">
+                    <Info size={10} className="text-black/20 hover:text-black/40 transition-colors" />
+                    <div className="gt-tooltip">
+                      אחוז ההתמדה הקהילתי בעונת ה{s.name}.
+                    </div>
+                  </div>
+                </div>
                 <div className="flex items-baseline gap-0.5">
                   <span className="text-3xl font-black text-[#000000]">{s.score}%</span>
                 </div>
@@ -889,7 +897,15 @@ const SessionStatsPage: React.FC = () => {
               <div className="bg-[#DDE1E4] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
                 <div className="flex items-center gap-4 mb-10">
                   <div className="p-3 bg-white text-[#38B2AC] rounded-xl shadow-sm border border-slate-100"><Activity size={20} /></div>
-                  <h3 className="text-2xl font-black text-[#2D3748] tracking-tighter">מדדי פעילות לפי גיל</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-2xl font-black text-[#2D3748] tracking-tighter">מדדי פעילות לפי גיל</h3>
+                    <div className="gt-info-wrapper relative cursor-help">
+                      <Info size={16} className="text-slate-400 hover:text-slate-600 transition-colors" />
+                      <div className="gt-tooltip">
+                        פילוח אחוזי השתתפות לפי קבוצות גיל בטווחי זמן שונים.
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="overflow-hidden rounded-3xl border border-slate-100">
@@ -934,10 +950,16 @@ const SessionStatsPage: React.FC = () => {
                   <div className="p-3 bg-white text-[#1A365D] rounded-xl shadow-sm border border-slate-100">
                     <Activity size={20} />
                   </div>
-                  <div>
+                  <div className="flex items-center gap-2">
                     <h3 className="text-2xl font-black text-[#2D3748] tracking-tighter">דופק הקהילה (Pulse)</h3>
-                    <p className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest">מגמת נוכחות שבועית</p>
+                    <div className="gt-info-wrapper relative cursor-help">
+                      <Info size={16} className="text-slate-400 hover:text-slate-600 transition-colors" />
+                      <div className="gt-tooltip">
+                        מגמת נוכחות שבועית מצטברת של כלל הקהילה.
+                      </div>
+                    </div>
                   </div>
+                  <p className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest">מגמת נוכחות שבועית</p>
                 </div>
                 
                 <div className="h-[400px] w-full mt-6">
@@ -1003,10 +1025,16 @@ const SessionStatsPage: React.FC = () => {
                     <div className="p-3 bg-white text-[#D69E2E] rounded-xl shadow-sm border border-slate-100">
                       <Award size={20} />
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                       <h3 className="text-2xl font-black text-[#2D3748] tracking-tighter">מדד נחישות (Grit Leaderboard)</h3>
-                      <p className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest">טופ 50 גולשים</p>
+                      <div className="gt-info-wrapper relative cursor-help">
+                        <Info size={16} className="text-slate-400 hover:text-slate-600 transition-colors" />
+                        <div className="gt-tooltip">
+                          דירוג המבוסס על שקלול של כמות הגעה לסשנים ורצף הגעה (Streaks).
+                        </div>
+                      </div>
                     </div>
+                    <p className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest">טופ 50 גולשים</p>
                   </div>
                   <div className="relative group min-w-[300px]">
                     <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />

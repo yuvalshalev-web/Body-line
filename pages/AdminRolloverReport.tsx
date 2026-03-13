@@ -16,7 +16,7 @@ interface RolloverLog {
 }
 
 const AdminRolloverReport: React.FC = () => {
-  const { finalizeThursdaySession } = useData();
+  const { finalizeSession } = useData();
   const [logs, setLogs] = useState<RolloverLog[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -87,7 +87,7 @@ const AdminRolloverReport: React.FC = () => {
     setShowConfirm(false);
     setIsRunning(true);
     try {
-      await finalizeThursdaySession();
+      await finalizeSession();
     } catch (error) {
       console.error("Manual run failed", error);
     } finally {
@@ -224,7 +224,7 @@ const AdminRolloverReport: React.FC = () => {
               </div>
 
               <h3 className="font-black text-lg uppercase mb-4 text-[#7A1555]">סטטיסטיקות מעודכנות</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                 {[
                   { id: 'avg_session', label: 'ממוצע סשנים' },
                   { id: 'grit_score', label: 'מדד Grit' },
@@ -242,6 +242,27 @@ const AdminRolloverReport: React.FC = () => {
                         {isFailure && <XCircle size={16} className="text-[#FBC02D]" />}
                       </div>
                       <span className="font-bold text-sm text-[#000000]">{stat.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <h3 className="font-black text-lg uppercase mb-4 text-[#7A1555]">עדכון קטגוריות עונתיות</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { id: 'water_temp', label: 'טמפרטורת מים' },
+                  { id: 'seasonal_cat', label: 'סיווג קטגוריה' },
+                  { id: 'grit_update', label: 'עדכון Grit עונתי' },
+                  { id: 'leaderboard_sync', label: 'סנכרון טבלאות' }
+                ].map((item) => {
+                  const log = logs.find(l => l.action === 'FINALIZETHURSDAYSESSION' && l.status === 'success');
+                  const isDone = !!log;
+                  return (
+                    <div key={item.id} className="flex items-center gap-3 p-3 bg-[#F5F5F0] border border-black/10 rounded-xl">
+                      <div className={`w-6 h-6 border border-black/20 rounded flex items-center justify-center ${isDone ? 'bg-[#7A1555]' : 'bg-white'}`}>
+                        {isDone && <CheckCircle2 size={16} className="text-[#FBC02D]" />}
+                      </div>
+                      <span className="font-bold text-sm text-[#000000]">{item.label}</span>
                     </div>
                   );
                 })}

@@ -20,6 +20,7 @@ import {
 import { CoastalDashboard } from '../components/CoastalDashboard';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { getNextSessionDate } from '../services/rolloverService';
 import { getBodyLineStats } from '../src/utils/bodyLineStats';
 import { SURF_QUOTES } from '../data/surfQuotes';
 import { SURF_DICTIONARY } from '../data/surfDictionary';
@@ -35,7 +36,7 @@ const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
 const DashboardPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { 
-    members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate
+    members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig
   } = useData();
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -114,15 +115,16 @@ const DashboardPage: React.FC = () => {
   useEffect(() => {
     const updateCountdown = () => {
       const now = new Date();
-      const target = activeSessionDate ? new Date(activeSessionDate) : new Date();
-      if (!activeSessionDate) {
-        let daysToAdd = (4 - now.getDay() + 7) % 7;
-        if (daysToAdd === 0 && now.getHours() >= 7) daysToAdd = 7;
-        target.setDate(now.getDate() + daysToAdd);
-        target.setHours(7, 0, 0, 0);
+      let targetDateStr = activeSessionDate;
+      
+      if (!targetDateStr) {
+        // Fallback to dynamic next session date based on siteConfig
+        targetDateStr = getNextSessionDate(siteConfig?.weeklySessions);
       }
       
+      const target = new Date(targetDateStr);
       const diff = target.getTime() - now.getTime();
+      
       if (diff <= 0) {
         setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
         return;
@@ -138,7 +140,7 @@ const DashboardPage: React.FC = () => {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [activeSessionDate]);
+  }, [activeSessionDate, siteConfig?.weeklySessions]);
 
   const handleToggle = async () => {
     if (!currentUser) return;
