@@ -17,7 +17,8 @@ import {
   Newspaper,
   UserCircle
 } from 'lucide-react';
-import { Astrodeck } from '../components/CommunityAnalytics';
+import { OceanPulse } from '../components/OceanPulse';
+import { CoastalDashboard } from '../components/CoastalDashboard';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { getBodyLineStats } from '../src/utils/bodyLineStats';
@@ -268,10 +269,10 @@ const DashboardPage: React.FC = () => {
               </div>
               
               <div className="text-center space-y-2">
-                <h4 className="text-2xl md:text-3xl font-black home-title tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+                <h4 className="text-2xl md:text-3xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
                   הכוכבים שאישרו הגעה
                 </h4>
-                <p className="text-sm md:text-base font-bold home-data-text uppercase tracking-widest" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+                <p className="text-sm md:text-base font-bold text-[#000000] uppercase tracking-widest" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
                   {attendees.length} גולשים כבר בפנים. מה איתך?
                 </p>
               </div>
@@ -287,88 +288,53 @@ const DashboardPage: React.FC = () => {
         </section>
       </div>
 
-
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-        {[
-          { label: 'נבחרת הגלישה', value: activeMembers.length, icon: Users, path: '/directory', color: 'home-icon-yellow', neoBrutal: false },
-          { label: 'תמונות', value: galleryItems.length, icon: ImageIcon, path: '/gallery', color: 'home-icon-yellow', neoBrutal: false },
-          { label: 'אירועים', value: activeEventsCount, icon: Calendar, path: '/events', color: 'home-icon-yellow', neoBrutal: false },
-          { label: 'פוסטים', value: news.length, icon: Newspaper, path: '/posts', color: 'home-icon-yellow', neoBrutal: false },
-          { label: 'תחזית גלים', value: 'GoSurf', icon: Waves, path: 'https://gosurf.co.il', external: true, color: 'home-icon-yellow', neoBrutal: false },
-          { label: 'BeachCam', value: 'Live', icon: Video, path: 'https://beachcam.co.il', external: true, color: 'home-icon-yellow', neoBrutal: false }
-        ].map((card, i) => (
-          <Astrodeck key={i} {...card} />
-        ))}
-      </div>
-
-      {/* Latest Posts Section */}
-      <section className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-[var(--surfer-pink)]/20 text-[#4A0033] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(122,21,85,0.3)]"><Newspaper size={24} /></div>
-            <h3 className="text-3xl font-black home-title tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>פוסטים אחרונים</h3>
+      <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="p-3 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(122,21,85,0.3)]">
+            <Waves size={20} />
           </div>
-          <Link to="/posts" className="home-label font-black text-xs uppercase tracking-widest hover:text-slate-950 transition-colors">צפה בהכל</Link>
+          <h3 className="text-2xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>תצפית חוף מרכז</h3>
         </div>
-        
-        <div className="max-w-xl mx-auto">
-          {randomPost ? (
-            <Link to="/posts" className={`group home-glass-card overflow-hidden transition-all duration-300 flex flex-col ${isRefreshingPost ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
-              {randomPost.imageUrl && (
-                <div className="aspect-video overflow-hidden border-b-[2px] border-black">
-                  <img src={randomPost.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="" />
-                </div>
-              )}
-              <div className="p-8 flex-1 flex flex-col">
-                <div className="flex items-center gap-2 text-[12px] font-black home-data-text uppercase tracking-widest mb-4">
-                  <Calendar size={12} className="home-icon-yellow" />
-                  {randomPost.date}
-                </div>
-                <h4 className="text-xl font-black home-title mb-4 group-hover:text-[var(--surfer-pink)] transition-colors line-clamp-2" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.title}</h4>
-                <p className="home-data-text font-bold text-sm line-clamp-3 mb-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.content}</p>
-                <div className="mt-auto flex items-center gap-3">
-                  {randomPost.authorAvatar ? (
-                    <img src={randomPost.authorAvatar} className="w-6 h-6 rounded-full object-cover border border-black" alt="" />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-white/10 border border-black flex items-center justify-center text-slate-400">
-                      <UserCircle size={12} />
-                    </div>
-                  )}
-                  <span className="text-[12px] font-black home-data-text" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{randomPost.authorName}</span>
-                </div>
-              </div>
-            </Link>
-          ) : (
-            <div className="py-20 text-center home-glass-card border-dashed">
-              <p className="home-data-text font-bold">אין פוסטים להצגה</p>
-            </div>
-          )}
+        <CoastalDashboard />
+      </section>
+
+      <section className="space-y-8">
+        <div className="flex items-center gap-4">
+          <div className="p-4 bg-[var(--surfer-cyan)]/20 rounded-[8px] border border-black/10 shadow-sm">
+            <Waves className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
+          </div>
+          <h3 className="text-3xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>דופק האוקיינוס</h3>
         </div>
+        <OceanPulse />
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <section className="home-glass-card p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(122,21,85,0.3)]"><Quote size={24} /></div>
-              <h3 className="text-2xl font-black home-title" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>חוכמת הליין-אפ</h3>
+              <div className="p-4 bg-[var(--surfer-yellow)]/20 rounded-[8px] border border-black/10 shadow-sm">
+                <Quote className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
+              </div>
+              <h3 className="text-2xl font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>חוכמת הליין-אפ</h3>
            </div>
            {randomQuotes.map((item, idx) => (
-             <div key={idx} className="p-10 bg-white/5 backdrop-blur-[15px] border-[1.5px] border-black rounded-[8px] transition-all animate-in fade-in">
-               <p className="text-2xl font-black home-data-text leading-tight italic" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>"{item.text}"</p>
-               <p className="text-lg font-bold home-title italic mt-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>— {item.author}</p>
+             <div key={idx} className="p-10 bg-white/10 backdrop-blur-[15px] border border-black/10 rounded-2xl transition-all animate-in fade-in">
+               <p className="text-2xl font-black text-[#000000] leading-tight italic" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>"{item.text}"</p>
+               <p className="text-lg font-bold text-[#000000]/60 italic mt-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>— {item.author}</p>
              </div>
            ))}
         </section>
 
         <section className="home-glass-card p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-[var(--surfer-cyan)]/20 text-[#00FFFF] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(122,21,85,0.3)]"><BookOpen size={24} /></div>
-              <h3 className="text-2xl font-black home-title" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מילון מונחים</h3>
+              <div className="p-4 bg-[var(--surfer-cyan)]/20 rounded-[8px] border border-black/10 shadow-sm">
+                <BookOpen className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
+              </div>
+              <h3 className="text-2xl font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מילון מונחים</h3>
            </div>
            {randomGlossary.map((item, idx) => (
-             <div key={idx} className="p-10 bg-white/5 backdrop-blur-[15px] border-[1.5px] border-black rounded-[8px] transition-all animate-in fade-in">
-               <h4 className="text-4xl font-black home-metric mb-4" dir="ltr" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.term}</h4>
-               <p className="text-xl font-bold home-data-text italic border-r-4 border-[#004D40]/30 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.definition}</p>
+             <div key={idx} className="p-10 bg-white/10 backdrop-blur-[15px] border border-black/10 rounded-2xl transition-all animate-in fade-in">
+               <h4 className="text-4xl font-black text-[#000000] mb-4" dir="ltr" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.term}</h4>
+               <p className="text-xl font-bold text-[#000000]/70 italic border-r-4 border-black/20 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.definition}</p>
              </div>
            ))}
         </section>

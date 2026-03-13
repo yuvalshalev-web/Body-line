@@ -117,7 +117,7 @@ const NewsPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-transparent text-right p-6 md:p-12 animate-in fade-in" dir="rtl" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+    <div className="relative min-h-screen luxury-bg text-right p-6 md:p-12 animate-in fade-in" dir="rtl" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
       {/* Body-line Standard Header Stack */}
       <div className="surfboard-hero-container mb-10 space-y-4">
         {/* Top Badge */}
@@ -139,7 +139,7 @@ const NewsPage: React.FC = () => {
           
           <GlassButton 
             onClick={() => { setShowSuccess(false); setErrorMsg(null); setEditingItem(null); setTitle(''); setContent(''); setCategory('Update'); setSelectedImage(null); setShowCreateModal(true); }}
-            className="flex items-center gap-4 px-10 py-5 bg-[var(--surfer-cyan)]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 rounded-2xl font-black text-md shadow-xl active:scale-95 group text-[#000000]"
+                        className="flex items-center gap-4 px-10 py-5 bg-[var(--surfer-cyan)]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 rounded-2xl font-black text-md shadow-xl active:scale-95 group !text-[var(--surfer-deep-teal)]"
           >
             <Plus size={24} className="group-hover:rotate-90 transition-transform text-[var(--surfer-cyan)]" />
             <span>פרסום פוסט חדש</span>
@@ -150,7 +150,7 @@ const NewsPage: React.FC = () => {
       <div className="grid grid-cols-1 gap-12">
         {news.length > 0 ? (
           [...news].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((item) => (
-            <article key={item.id} className="group flex flex-col lg:flex-row gap-8 bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_15px_30px_-10px_var(--surfer-deep-shadow)] rounded-[2.5rem] p-4 hover:shadow-2xl transition-all relative">
+            <article key={item.id} className="group flex flex-col lg:flex-row gap-8 luxury-card p-4 hover:shadow-2xl transition-all relative">
               {(currentUser?.role === 'Admin' || item.authorId === currentUser?.id) && (
                 <div className="absolute top-8 left-8 flex gap-2 z-20">
                   <button onClick={() => handleEdit(item)} className="p-3 bg-[var(--surfer-aqua-mist)]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 text-[#000000] rounded-2xl hover:bg-[var(--surfer-cyan)] hover:text-white shadow-sm"><Pencil size={18} /></button>

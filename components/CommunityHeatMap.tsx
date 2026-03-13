@@ -185,10 +185,10 @@ const CommunityHeatMap: React.FC = () => {
       // Add heatmap layer
       if (typeof L.heatLayer === 'function' && heatPoints.length > 0) {
         map.whenReady(() => {
-          setTimeout(() => {
+          const timeoutId = setTimeout(() => {
             try {
-              if (!map || !map.getContainer()) {
-                console.error("Map is invalid in whenReady");
+              if (!isMounted.current || !map || !map.getContainer()) {
+                console.log("Map or component unmounted, skipping heatmap layer addition");
                 return;
               }
               if (typeof map.layerPointToLatLng !== 'function') {
@@ -208,11 +208,16 @@ const CommunityHeatMap: React.FC = () => {
                   1.0: '#ef4444'  // red
                 }
               });
-              layer.addTo(map);
+              
+              if (isMounted.current && map && map.getContainer()) {
+                layer.addTo(map);
+              }
             } catch (e: any) {
               console.error("Error adding heatmap layer:", e.message || e);
             }
           }, 1000);
+          
+          // Store timeout ID to clear it if needed (though we check isMounted)
         });
       } else if (heatPoints.length > 0) {
         // Fallback: Add glowing pulses for each point if heatmap fails

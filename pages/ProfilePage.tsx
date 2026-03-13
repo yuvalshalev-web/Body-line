@@ -295,7 +295,7 @@ const ProfilePage: React.FC = () => {
 
   console.log("ProfilePage rendering");
   return (
-    <div className="min-h-screen w-full relative">
+    <div className="min-h-screen w-full luxury-bg">
       <div className="max-w-6xl mx-auto pt-2 pb-10 text-right animate-in fade-in" dir="rtl">
 
       {/* Body-line Standard Header Stack */}
@@ -324,7 +324,7 @@ const ProfilePage: React.FC = () => {
         <div className="h-12 relative">
         </div>
         
-        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-6 bg-white/95 backdrop-blur-[30px] border border-white/60 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.5)] rounded-[2.5rem] relative z-20">
+        <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-6 luxury-card border border-white/60 rounded-[2.5rem] relative z-20">
           <div className="flex flex-col md:flex-row items-end gap-8 mb-16">
             <div className="relative group">
               

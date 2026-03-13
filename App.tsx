@@ -171,10 +171,6 @@ const App: React.FC = () => {
   // and the next 4 for admin nav, to keep the routing intact while changing the visuals.
   const navItems = [
     { path: '/', ...menuItems[0], text: 'דף הבית' },
-    { path: '/directory', ...menuItems[1], text: 'נבחרת הכוכבים' },
-    { path: '/gallery', ...menuItems[2], text: 'גלריית תמונות' },
-    { path: '/events', ...menuItems[3], text: 'אירועים' },
-    { path: '/posts', ...menuItems[4], text: 'פוסטים ועדכונים' },
     { path: '/world-news', ...menuItems[5], text: 'חדשות מהעולם' },
     { path: '/surfer-card', ...menuItems[6], text: 'דשבורד אישי' },
     { path: '/profile', ...menuItems[7], text: 'פרופיל אישי' }
@@ -313,7 +309,7 @@ const App: React.FC = () => {
 
       {/* Main Content Area */}
       <FloatingMenu onOpenDrawer={() => setIsDrawerOpen(true)} />
-      <main className={`flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto pb-32 relative z-10 ${location.pathname === '/' ? 'luxury-bg' : ''} ${location.pathname === '/events' ? 'luxury-bg' : ''} ${location.pathname === '/gallery' ? 'luxury-bg' : ''} ${location.pathname === '/directory' ? 'luxury-bg' : ''}`}>
+      <main className={`flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto pb-32 relative z-10 ${location.pathname === '/' ? 'luxury-bg' : ''} ${location.pathname === '/events' ? 'luxury-bg' : ''} ${location.pathname === '/gallery' ? 'luxury-bg' : ''} ${location.pathname === '/directory' ? 'luxury-bg' : ''} ${location.pathname === '/posts' ? 'luxury-bg' : ''}`}>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<DashboardPage />} />
