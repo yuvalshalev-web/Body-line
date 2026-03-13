@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Users, 
@@ -16,9 +16,181 @@ import { useData } from '../contexts/DataContext';
 import { parseDate } from '../src/utils/dateUtils';
 import { AstrodeckGauge } from './UserAnalytics';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { calculateDistance } from '../utils/distanceCalculator';
+import { getCoordinates } from '../src/utils/geocoding';
 
 const CommunityAnalytics: React.FC = () => {
   const { members, weeklyHistory, siteConfig, isLoading } = useData();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!members || members.length === 0 || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const maxRadius = 182; // רדיוס הטבעת החיצונית (הוגדל ב-30% מ-140)
+
+    // Home Break Coords with defaults if missing
+    const homeLat = siteConfig.home_break?.lat || 32.1624;
+    const homeLng = siteConfig.home_break?.lng || 34.8447;
+
+    // Load Logo
+    const logoImg = new Image();
+    logoImg.src = 'https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/site_assets%2FextraLogo_1771271649909?alt=media';
+
+    const render = () => {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1. ציור הטבעות (המרחקים)
+      const rings = [
+          { r: maxRadius, color: '#f1f3f5', label: '20+ ק"מ' }, // חיצונית
+          { r: maxRadius * 0.7, color: '#dee2e6', label: '10 ק"מ' },
+          { r: maxRadius * 0.4, color: '#ced4da', label: '5 ק"מ' },
+          { r: maxRadius * 0.15, color: 'transparent', label: 'Local' } // בולזאיי - שקוף כי נשים לוגו
+      ];
+
+      rings.forEach(ring => {
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, ring.r, 0, Math.PI * 2);
+          ctx.fillStyle = ring.color;
+          ctx.fill();
+          ctx.strokeStyle = '#fff';
+          ctx.stroke();
+      });
+
+      // Draw Logo
+      if (logoImg.complete) {
+        const logoSize = 40;
+        // Center the logo in the middle of the radar
+        const newX = centerX;
+        const newY = centerY;
+        
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(newX, newY, logoSize / 2, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(logoImg, newX - logoSize / 2, newY - logoSize / 2, logoSize, logoSize);
+        ctx.restore();
+        
+        // Logo border
+        ctx.beginPath();
+        ctx.arc(newX, newY, logoSize / 2, 0, Math.PI * 2);
+        ctx.strokeStyle = '#007bff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        // Fallback blue dot if logo not loaded
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, maxRadius * 0.15, 0, Math.PI * 2);
+        ctx.fillStyle = '#007bff';
+        ctx.fill();
+      }
+
+      // 2. ציור חברי הקהילה כנקודות
+      const membersWithCanvasPos = members.map((member, index) => {
+          let distance = 0;
+          const coords = getCoordinates(member.city, member.lat, member.lng);
+          
+          if (homeLat && homeLng && coords) {
+            distance = calculateDistance(homeLat, homeLng, coords[0], coords[1]);
+          } else {
+            // Mock distance if no real address or city data
+            distance = member.distance || (Math.random() * 30);
+          }
+          
+          const distanceLimit = 30;
+          let relativeRadius = (distance / distanceLimit) * maxRadius;
+          
+          // Ensure points are outside the logo area but inside the board
+          const minRadius = 25; 
+          if (relativeRadius < minRadius) relativeRadius = minRadius + (Math.random() * 5);
+          if (relativeRadius > maxRadius) relativeRadius = maxRadius - 5;
+
+          // זווית רנדומלית כדי שהנקודות לא יהיו אחת על השניה
+          const angle = (index * 137.5) * (Math.PI / 180); 
+
+          const x = centerX + relativeRadius * Math.cos(angle);
+          const y = centerY + relativeRadius * Math.sin(angle);
+
+          // הוספת אנימציית "Pop" למשתמש האחרון
+          let radius = 5;
+          if (index === members.length - 1) {
+            radius = 8; // הגדלה זמנית
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = "#00fbff";
+          } else {
+            ctx.shadowBlur = 0;
+          }
+
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          
+          ctx.fillStyle = '#ff3e00'; // צבע הנקודה
+          ctx.fill();
+          ctx.shadowBlur = 0; // Reset shadow
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          return { ...member, canvasX: x, canvasY: y, calculatedDistance: distance };
+      });
+
+      // 3. הוספת אינטראקציה (נגיעה/עכבר)
+      const handleMouseMove = (e: MouseEvent) => {
+          const mouseX = e.offsetX;
+          const mouseY = e.offsetY;
+          const tooltip = tooltipRef.current;
+          
+          if (!tooltip) return;
+
+          // Get visual coordinates relative to the container for the tooltip
+          const containerRect = canvas.parentElement?.getBoundingClientRect();
+          const visualX = containerRect ? e.clientX - containerRect.left : e.offsetX;
+          const visualY = containerRect ? e.clientY - containerRect.top : e.offsetY;
+
+          let found = false;
+          membersWithCanvasPos.forEach(m => {
+              const dist = Math.sqrt((mouseX - m.canvasX)**2 + (mouseY - m.canvasY)**2);
+              if (dist < 7) {
+                  tooltip.style.display = 'block';
+                  tooltip.style.left = visualX + 10 + 'px';
+                  tooltip.style.top = visualY + 10 + 'px';
+                  tooltip.style.padding = '8px';
+                  tooltip.style.background = 'white';
+                  tooltip.style.borderRadius = '12px';
+                  tooltip.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                  tooltip.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <img src="${m.avatar || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" />
+                      <div style="text-align: right;">
+                        <div style="font-weight: bold; color: #333;">${m.firstName} ${m.lastName}</div>
+                        <div style="font-size: 12px; color: #666;">${m.calculatedDistance.toFixed(2)} ק"מ מהחוף</div>
+                        <div style="font-size: 11px; color: #888; margin-top: 4px; font-weight: 600;">כתובת: [ ${m.full_address || m.city || 'לא צוינה'} ]</div>
+                      </div>
+                    </div>
+                  `;
+                  found = true;
+              }
+          });
+          if (!found) tooltip.style.display = 'none';
+      };
+
+      canvas.onmousemove = handleMouseMove as any;
+    };
+
+    logoImg.onload = render;
+    render(); // Initial render
+
+    return () => {
+      canvas.onmousemove = null;
+    };
+  }, [members, siteConfig]);
 
   const stats = useMemo(() => {
     if (!members.length) return null;
@@ -807,564 +979,8 @@ const CommunityAnalytics: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Vitality Retention Card - Tachometer Gauges */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="lg:col-span-2 home-glass-card p-10 rounded-[4rem] transition-all duration-500 relative group"
-        >
-            {/* Background elements that need clipping */}
-            <div className="absolute inset-0 overflow-hidden rounded-[4rem] pointer-events-none">
-              {/* Glossy Shimmer Effect */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-            </div>
 
-            <div className="flex items-center justify-between mb-12 relative z-10">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center text-[var(--surfer-cyan)] shadow-inner border border-white/10">
-                  <Activity size={24} />
-                </div>
-                <div>
-                  <h3 className="home-title font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי קבוצות גיל</h3>
-                  <p className="home-data-text text-[12px] tracking-[0.3em] mt-1 font-black uppercase">SESSION VITALITY METRICS-8</p>
-                </div>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 relative z-10">
-              {stats.cohorts.map((group: any, idx: number) => {
-                const retention = group.retention;
-                
-                let categoryLabel = "";
-                let categoryColor = "";
-                if (retention < 50) {
-                  categoryLabel = "תיירים";
-                  categoryColor = "text-red-400 bg-red-500/10 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]";
-                } else if (retention < 70) {
-                  categoryLabel = "אקונומי פלוס";
-                  categoryColor = "text-amber-400 bg-amber-500/10 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]";
-                } else if (retention < 85) {
-                  categoryLabel = "ביזנס קלאס";
-                  categoryColor = "text-blue-400 bg-blue-500/10 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]";
-                } else {
-                  categoryLabel = "פירסט קלאס";
-                  categoryColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]";
-                }
-                
-                return (
-                  <div key={idx} className="flex flex-col items-center relative group/gauge hover:z-50 z-10">
-                    {/* Category Sign (Clock Style) */}
-                    <div className="mb-4 bg-[#fdfdfd] border border-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.3)] px-4 py-0.5 min-w-[100px] flex justify-center items-center relative z-20">
-                      <span className="text-black font-black text-[11px] uppercase tracking-[0.15em] antialiased">
-                        {group.label} {group.count}
-                      </span>
-                    </div>
-
-                    {/* Gauge Container */}
-                    <div className="relative w-full max-w-[280px] mx-auto flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-4 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-                      <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
-                        <defs>
-                          {/* Frosted Glass Background Filter */}
-                          <filter id={`frosted-glass-age-${idx}`} x="-20%" y="-20%" width="140%" height="140%">
-                            <feGaussianBlur stdDeviation="8" result="blur" />
-                            <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" in="blur" result="goo" />
-                            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-                          </filter>
-
-                          {/* Brushed Metal for Needle */}
-                          <linearGradient id={`brushed-metal-age-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#f8fafc" />
-                            <stop offset="25%" stopColor="#94a3b8" />
-                            <stop offset="50%" stopColor="#e2e8f0" />
-                            <stop offset="75%" stopColor="#475569" />
-                            <stop offset="100%" stopColor="#cbd5e1" />
-                          </linearGradient>
-
-                          {/* Liquid Light Gradient (Vitality) */}
-                          <linearGradient id={`liquid-light-age-${idx}`} x1="35" y1="165" x2="165" y2="165" gradientUnits="userSpaceOnUse">
-                            <stop offset="0%" stopColor="#ef4444" />
-                            <stop offset="30%" stopColor="#f59e0b" />
-                            <stop offset="60%" stopColor="#eab308" />
-                            <stop offset="85%" stopColor="#84cc16" />
-                            <stop offset="100%" stopColor="#39FF14" />
-                          </linearGradient>
-
-                          {/* Glossy Highlight */}
-                          <radialGradient id={`glass-lens-age-${idx}`} cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
-                            <stop offset="0%" stopColor="white" stopOpacity="0.3" />
-                            <stop offset="50%" stopColor="white" stopOpacity="0.05" />
-                            <stop offset="100%" stopColor="white" stopOpacity="0.0" />
-                          </radialGradient>
-
-                          <linearGradient id={`glass-shine-age-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="white" stopOpacity="0.2" />
-                            <stop offset="50%" stopColor="white" stopOpacity="0.02" />
-                            <stop offset="100%" stopColor="white" stopOpacity="0.0" />
-                          </linearGradient>
-                        </defs>
-
-                        {/* Frosted Glass Background */}
-                        <circle cx="100" cy="100" r="92" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
-                        <circle cx="100" cy="100" r="92" fill="none" stroke="rgba(0, 0, 0, 0.5)" strokeWidth="2" />
-
-                        {/* Empty Glass Tube */}
-                        <path 
-                          d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
-                          fill="none" 
-                          stroke="rgba(255, 255, 255, 0.03)" 
-                          strokeWidth="12" 
-                          strokeLinecap="round" 
-                        />
-                        <path 
-                          d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
-                          fill="none" 
-                          stroke="rgba(0, 0, 0, 0.4)" 
-                          strokeWidth="12" 
-                          strokeLinecap="round" 
-                          style={{ filter: 'blur(1px)' }}
-                          opacity="0.6"
-                        />
-
-                        {/* Liquid Light (Filled) */}
-                        <motion.path 
-                          d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
-                          fill="none" 
-                          stroke={`url(#liquid-light-age-${idx})`} 
-                          strokeWidth="8" 
-                          strokeLinecap="round" 
-                          pathLength="100"
-                          strokeDasharray="100"
-                          initial={{ strokeDashoffset: 100 }}
-                          animate={{ strokeDashoffset: 100 - group.retention }}
-                          transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
-                          style={{ filter: 'drop-shadow(0px 0px 8px rgba(57,255,20,0.4))' }}
-                        />
-
-                        {/* Tick Marks and Numbers */}
-                        {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((val) => {
-                          const angle = -45 + (val / 100) * 270;
-                          const rad = (angle * Math.PI) / 180;
-                          const isMajor = val % 20 === 0;
-                          
-                          // Tick marks
-                          const outerR = 82;
-                          const innerR = isMajor ? 72 : 77;
-                          const x1 = 100 - Math.cos(rad) * outerR;
-                          const y1 = 100 - Math.sin(rad) * outerR;
-                          const x2 = 100 - Math.cos(rad) * innerR;
-                          const y2 = 100 - Math.sin(rad) * innerR;
-
-                          // Numbers
-                          const textR = 58;
-                          const tx = 100 - Math.cos(rad) * textR;
-                          const ty = 100 - Math.sin(rad) * textR;
-
-                          return (
-                            <g key={val}>
-                              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.3)" strokeWidth={isMajor ? 1.5 : 0.5} style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.8))' }} />
-                              {isMajor && (
-                                <g>
-                                  <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.85)" fontSize="10" fontFamily="'Helvetica Neue', Helvetica, Arial, sans-serif" fontWeight="200" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.8), -1px -1px 1px rgba(255,255,255,0.2)' }}>
-                                    {val}
-                                  </text>
-                                </g>
-                              )}
-                            </g>
-                          );
-                        })}
-
-                        {/* Yearly Retention Marker moved to end of SVG for top z-index */}
-                        {/* Thin Sharp Needle */}
-                        <motion.g
-                          initial={{ rotate: -135 }}
-                          animate={{ rotate: -135 + (group.retention / 100) * 270 }}
-                          style={{ transformOrigin: "100px 100px" }}
-                          transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
-                        >
-                          <circle cx="100" cy="100" r="100" fill="none" />
-                          <polygon 
-                            points="98.5,100 101.5,100 100,18" 
-                            fill={`url(#brushed-metal-age-${idx})`}
-                            style={{ filter: `drop-shadow(0px 4px 6px rgba(0,0,0,0.5))` }}
-                          />
-                          {/* Illuminated Tip */}
-                          <circle cx="100" cy="18" r="2.5" fill="#ffffff" style={{ filter: 'drop-shadow(0px 0px 4px #ffffff)' }} />
-                        </motion.g>
-
-                        {/* Center Pivot */}
-                        <circle cx="100" cy="100" r="8" fill={`url(#brushed-metal-age-${idx})`} style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))' }} />
-                        <circle cx="100" cy="100" r="3" fill="#0F172A" />
-
-                        {/* Glassmorphism Overlay - Lens Effect & Shine */}
-                        <circle cx="100" cy="100" r="92" fill={`url(#glass-lens-age-${idx})`} className="pointer-events-none" opacity="0.8" />
-                        <circle cx="100" cy="100" r="92" fill={`url(#glass-shine-age-${idx})`} className="pointer-events-none" opacity="0.6" />
-                        <circle cx="100" cy="100" r="92" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" className="pointer-events-none" />
-
-                        {/* Digital Percentage Boxes - Side by Side */}
-                        <g transform="translate(48, 110)">
-                          {/* Yearly Box */}
-                          <rect width="50" height="32" rx="4" fill="rgba(255, 255, 255, 0.05)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
-                          <text x="25" y="12" textAnchor="middle" dominantBaseline="middle" fill="#4A5568" fontSize="8" fontFamily="Inter, sans-serif" fontWeight="bold">שנתי</text>
-                          <text x="25" y="24" textAnchor="middle" dominantBaseline="middle" fill="#D69E2E" fontSize="13" fontWeight="black" fontFamily="monospace" style={{ filter: 'drop-shadow(0px 0px 2px rgba(214,158,46,0.4))', letterSpacing: '-0.5px' }}>{group.yearlyRetention}%</text>
-                        </g>
-                        <g transform="translate(102, 110)">
-                          {/* Octo Box */}
-                          <rect width="50" height="32" rx="4" fill="rgba(255, 255, 255, 0.05)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
-                          <text x="25" y="12" textAnchor="middle" dominantBaseline="middle" fill="#4A5568" fontSize="8" fontFamily="Inter, sans-serif" fontWeight="bold">אוקטו (8)</text>
-                          <text x="25" y="24" textAnchor="middle" dominantBaseline="middle" fill="#2D3748" fontSize="13" fontWeight="black" fontFamily="monospace" style={{ filter: 'drop-shadow(0px 0px 2px rgba(0,0,0,0.1))', letterSpacing: '-0.5px' }}>{group.retention}%</text>
-                        </g>
-
-                        {/* Text Elements */}
-                        <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="#4A0033" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="14" className="antialiased">{group.label}</text>
-
-                        {/* Yearly Retention Marker (Rendered last to be on top) */}
-                        <motion.g
-                          className="group/marker cursor-pointer outline-none"
-                          tabIndex={0}
-                          onTouchStart={() => {}}
-                          initial={{ rotate: -135 }}
-                          animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
-                          style={{ transformOrigin: "100px 100px" }}
-                          transition={{ duration: 1.5, ease: "easeOut" }}
-                        >
-                          {/* Invisible hit area for easier hover */}
-                          <circle cx="100" cy="-5" r="32" fill="transparent" />
-                          
-                          {/* Pulsing Glow */}
-                          <motion.circle 
-                            cx="100" cy="-5" r="8" 
-                            fill="rgba(255,222,69,0.3)" 
-                            animate={{ scale: [1, 1.8, 1], opacity: [0.8, 0, 0.8] }} 
-                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} 
-                          />
-                          {/* Isosceles Triangle Pointer */}
-                          <polygon 
-                            points="94,-12 106,-12 100,2" 
-                            fill="#FFDE45"
-                            stroke="#FFFFFF"
-                            strokeWidth="1"
-                            style={{ filter: 'drop-shadow(0px 2px 6px rgba(255,222,69,0.8))' }}
-                          />
-                          
-                          {/* Tooltip (Counter-rotated to stay upright) */}
-                          <g 
-                            className="opacity-0 group-hover/marker:opacity-100 group-focus/marker:opacity-100 transition-opacity duration-300 pointer-events-none"
-                            style={{ transform: `rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}deg)`, transformOrigin: '100px -44px' }}
-                          >
-                            <rect x="40" y="-70" width="120" height="52" rx="10" fill="rgba(15, 23, 42, 0.95)" stroke="#FFDE45" strokeWidth="1.5" style={{ filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.6))' }} />
-                            <text x="100" y="-52" textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize="14" fontWeight="bold" fontFamily="Inter, sans-serif">
-                              שנתי
-                            </text>
-                            <text x="100" y="-30" textAnchor="middle" dominantBaseline="middle" fill="#FFDE45" fontSize="22" fontWeight="black" fontFamily="monospace" style={{ letterSpacing: '0.5px' }}>
-                              {group.yearlyRetention}%
-                            </text>
-                          </g>
-                        </motion.g>
-                      </svg>
-                    </div>
-                    
-                    {/* Status Labels */}
-                    <div className="mt-6 flex flex-col items-center gap-2 h-12">
-                      <div className={`px-4 py-1 rounded-full border ${categoryColor}`}>
-                        <span className="text-[12px] font-black uppercase tracking-widest antialiased">
-                          {categoryLabel}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Footer Indicators */}
-            <div className="mt-16 pt-8 border-t border-white/5 flex flex-wrap justify-center gap-6 md:justify-between items-center w-full relative z-10">
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">תיירים (&lt;50%)</span>
-                <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]" />
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">אקונומי פלוס (50-69%)</span>
-                <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">ביזנס קלאס (70-84%)</span>
-                <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">פירסט קלאס (85%+)</span>
-                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
-              </div>
-            </div>
-          </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-2 home-glass-card p-10 rounded-[4rem] transition-all duration-500 relative group"
-        >
-          {/* Background elements that need clipping */}
-          <div className="absolute inset-0 overflow-hidden rounded-[4rem] pointer-events-none">
-            {/* Glossy Shimmer Effect */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-          </div>
-          
-          <div className="flex items-center justify-between mb-12 relative z-10">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center text-[var(--surfer-pink)] shadow-inner border border-white/10">
-                <Heart size={24} />
-              </div>
-              <div>
-                <h3 className="home-title font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי מגדר</h3>
-                <p className="home-data-text text-[12px] tracking-[0.3em] mt-1 font-black uppercase">COMMUNITY INSIGHTS • GENDER DYNAMICS</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-row flex-nowrap items-center justify-around gap-2 relative z-10 overflow-x-auto">
-            {stats.genderCohorts.map((group: any, idx: number) => {
-              const retention = group.value;
-              
-              let categoryLabel = "";
-              let categoryColor = "";
-              if (retention < 50) {
-                categoryLabel = "תיירים";
-                categoryColor = "text-red-400 bg-red-500/20 border-red-500/30 shadow-[0_0_12px_rgba(239,68,68,0.4)]";
-              } else if (retention < 70) {
-                categoryLabel = "אקונומי פלוס";
-                categoryColor = "text-amber-400 bg-amber-500/20 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.4)]";
-              } else if (retention < 85) {
-                categoryLabel = "ביזנס קלאס";
-                categoryColor = "text-blue-400 bg-blue-500/20 border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.4)]";
-              } else {
-                categoryLabel = "פירסט קלאס";
-                categoryColor = "text-emerald-400 bg-emerald-500/20 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.4)]";
-              }
-              
-              return (
-                <div key={idx} className="flex-1 flex flex-col items-center relative group/gauge w-full max-w-[280px] hover:z-50 z-10">
-                  {/* Category Sign (Clock Style) */}
-                  <div className="mb-4 bg-[#fdfdfd] border border-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.3)] px-4 py-0.5 min-w-[100px] flex justify-center items-center relative z-20">
-                    <span className="text-black font-black text-[11px] uppercase tracking-[0.15em] antialiased">
-                      {group.label} {group.count}
-                    </span>
-                  </div>
-
-                  {/* Gauge Container */}
-                  <div className="relative w-full flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-4 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-                    <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
-                      <defs>
-                        {/* Frosted Glass Background Filter */}
-                        <filter id={`frosted-glass-gender-${idx}`} x="-20%" y="-20%" width="140%" height="140%">
-                          <feGaussianBlur stdDeviation="8" result="blur" />
-                          <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" in="blur" result="goo" />
-                          <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-                        </filter>
-
-                        {/* Brushed Metal for Needle */}
-                        <linearGradient id={`brushed-metal-gender-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#f8fafc" />
-                          <stop offset="25%" stopColor="#94a3b8" />
-                          <stop offset="50%" stopColor="#e2e8f0" />
-                          <stop offset="75%" stopColor="#475569" />
-                          <stop offset="100%" stopColor="#cbd5e1" />
-                        </linearGradient>
-
-                        {/* Liquid Light Gradient (Ocean) */}
-                        <linearGradient id={`liquid-light-gender-${idx}`} x1="0" y1="200" x2="200" y2="0" gradientUnits="userSpaceOnUse">
-                          <stop offset="0%" stopColor="#1A365D" />
-                          <stop offset="50%" stopColor="#2C5282" />
-                          <stop offset="100%" stopColor="#63B3ED" />
-                        </linearGradient>
-
-                        {/* Glossy Highlight */}
-                        <radialGradient id={`glass-lens-gender-${idx}`} cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
-                          <stop offset="0%" stopColor="white" stopOpacity="0.3" />
-                          <stop offset="50%" stopColor="white" stopOpacity="0.05" />
-                          <stop offset="100%" stopColor="white" stopOpacity="0.0" />
-                        </radialGradient>
-
-                        <linearGradient id={`glass-shine-gender-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="white" stopOpacity="0.2" />
-                          <stop offset="50%" stopColor="white" stopOpacity="0.02" />
-                          <stop offset="100%" stopColor="white" stopOpacity="0.0" />
-                        </linearGradient>
-                      </defs>
-
-                      {/* Frosted Glass Background */}
-                      <circle cx="100" cy="100" r="92" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
-                      <circle cx="100" cy="100" r="92" fill="none" stroke="rgba(0, 0, 0, 0.5)" strokeWidth="2" />
-
-                      {/* Empty Glass Tube */}
-                      <path 
-                        d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
-                        fill="none" 
-                        stroke="rgba(255, 255, 255, 0.03)" 
-                        strokeWidth="12" 
-                        strokeLinecap="round" 
-                      />
-                      <path 
-                        d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
-                        fill="none" 
-                        stroke="rgba(0, 0, 0, 0.4)" 
-                        strokeWidth="12" 
-                        strokeLinecap="round" 
-                        style={{ filter: 'blur(1px)' }}
-                        opacity="0.6"
-                      />
-
-                      {/* Liquid Light (Filled) */}
-                      <motion.path 
-                        d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
-                        fill="none" 
-                        stroke={`url(#liquid-light-gender-${idx})`} 
-                        strokeWidth="8" 
-                        strokeLinecap="round" 
-                        pathLength="100"
-                        strokeDasharray="100"
-                        initial={{ strokeDashoffset: 100 }}
-                        animate={{ strokeDashoffset: 100 - group.value }}
-                        transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
-                        style={{ filter: 'drop-shadow(0px 0px 8px rgba(99,179,237,0.4))' }}
-                      />
-
-                      {/* Tick Marks and Numbers */}
-                      {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((val) => {
-                        const angle = -45 + (val / 100) * 270;
-                        const rad = (angle * Math.PI) / 180;
-                        const isMajor = val % 20 === 0;
-                        
-                        // Tick marks
-                        const outerR = 82;
-                        const innerR = isMajor ? 72 : 77;
-                        const x1 = 100 - Math.cos(rad) * outerR;
-                        const y1 = 100 - Math.sin(rad) * outerR;
-                        const x2 = 100 - Math.cos(rad) * innerR;
-                        const y2 = 100 - Math.sin(rad) * innerR;
-
-                        // Numbers
-                        const textR = 58;
-                        const tx = 100 - Math.cos(rad) * textR;
-                        const ty = 100 - Math.sin(rad) * textR;
-
-                        return (
-                          <g key={val}>
-                            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.3)" strokeWidth={isMajor ? 1.5 : 0.5} style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.8))' }} />
-                            {isMajor && (
-                              <g>
-                                <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.85)" fontSize="10" fontFamily="'Helvetica Neue', Helvetica, Arial, sans-serif" fontWeight="200" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.8), -1px -1px 1px rgba(255,255,255,0.2)' }}>
-                                  {val}
-                                </text>
-                              </g>
-                            )}
-                          </g>
-                        );
-                      })}
-
-                      {/* Yearly Retention Marker moved to end of SVG for top z-index */}
-                      {/* Thin Sharp Needle */}
-                      <motion.g
-                        initial={{ rotate: -135 }}
-                        animate={{ rotate: -135 + (group.value / 100) * 270 }}
-                        style={{ transformOrigin: "100px 100px" }}
-                        transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
-                      >
-                        <circle cx="100" cy="100" r="100" fill="none" />
-                        <polygon 
-                          points="98.5,100 101.5,100 100,18" 
-                          fill={`url(#brushed-metal-gender-${idx})`}
-                          style={{ filter: `drop-shadow(0px 4px 6px rgba(0,0,0,0.5))` }}
-                        />
-                        {/* Illuminated Tip */}
-                        <circle cx="100" cy="18" r="2.5" fill="#ffffff" style={{ filter: 'drop-shadow(0px 0px 4px #ffffff)' }} />
-                      </motion.g>
-
-                      {/* Center Pivot */}
-                      <circle cx="100" cy="100" r="8" fill={`url(#brushed-metal-gender-${idx})`} style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))' }} />
-                      <circle cx="100" cy="100" r="3" fill="#0F172A" />
-
-                      {/* Glassmorphism Overlay - Lens Effect & Shine */}
-                      <circle cx="100" cy="100" r="92" fill={`url(#glass-lens-gender-${idx})`} className="pointer-events-none" opacity="0.8" />
-                      <circle cx="100" cy="100" r="92" fill={`url(#glass-shine-gender-${idx})`} className="pointer-events-none" opacity="0.6" />
-                      <circle cx="100" cy="100" r="92" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" className="pointer-events-none" />
-
-                      {/* Digital Percentage Boxes - Side by Side */}
-                      <g transform="translate(48, 110)">
-                        {/* Yearly Box */}
-                        <rect width="50" height="32" rx="4" fill="rgba(255, 255, 255, 0.05)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
-                        <text x="25" y="12" textAnchor="middle" dominantBaseline="middle" fill="#4A5568" fontSize="8" fontFamily="Inter, sans-serif" fontWeight="bold">שנתי</text>
-                        <text x="25" y="24" textAnchor="middle" dominantBaseline="middle" fill="#D69E2E" fontSize="13" fontWeight="black" fontFamily="monospace" style={{ filter: 'drop-shadow(0px 0px 2px rgba(214,158,46,0.4))', letterSpacing: '-0.5px' }}>{group.yearlyRetention}%</text>
-                      </g>
-                      <g transform="translate(102, 110)">
-                        {/* Octo Box */}
-                        <rect width="50" height="32" rx="4" fill="rgba(255, 255, 255, 0.05)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
-                        <text x="25" y="12" textAnchor="middle" dominantBaseline="middle" fill="#4A5568" fontSize="8" fontFamily="Inter, sans-serif" fontWeight="bold">אוקטו (8)</text>
-                        <text x="25" y="24" textAnchor="middle" dominantBaseline="middle" fill="#2D3748" fontSize="13" fontWeight="black" fontFamily="monospace" style={{ filter: 'drop-shadow(0px 0px 2px rgba(0,0,0,0.1))', letterSpacing: '-0.5px' }}>{group.value}%</text>
-                      </g>
-
-                      {/* Text Elements */}
-                      <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="#4A0033" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="14" className="antialiased">{group.label}</text>
-
-                      {/* Yearly Retention Marker (Rendered last to be on top) */}
-                      <motion.g
-                        className="group/marker cursor-pointer outline-none"
-                        tabIndex={0}
-                        onTouchStart={() => {}}
-                        initial={{ rotate: -135 }}
-                        animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
-                        style={{ transformOrigin: "100px 100px" }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
-                      >
-                        {/* Invisible hit area for easier hover */}
-                        <circle cx="100" cy="-5" r="32" fill="transparent" />
-                        
-                        {/* Pulsing Glow */}
-                        <motion.circle 
-                          cx="100" cy="-5" r="8" 
-                          fill="rgba(255,222,69,0.3)" 
-                          animate={{ scale: [1, 1.8, 1], opacity: [0.8, 0, 0.8] }} 
-                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} 
-                        />
-                        {/* Isosceles Triangle Pointer */}
-                        <polygon 
-                          points="94,-12 106,-12 100,2" 
-                          fill="#FFDE45"
-                          stroke="#FFFFFF"
-                          strokeWidth="1"
-                          style={{ filter: 'drop-shadow(0px 2px 6px rgba(255,222,69,0.8))' }}
-                        />
-                        
-                        {/* Tooltip (Counter-rotated to stay upright) */}
-                        <g 
-                          className="opacity-0 group-hover/marker:opacity-100 group-focus/marker:opacity-100 transition-opacity duration-300 pointer-events-none"
-                          style={{ transform: `rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}deg)`, transformOrigin: '100px -44px' }}
-                        >
-                          <rect x="40" y="-70" width="120" height="52" rx="10" fill="rgba(15, 23, 42, 0.95)" stroke="#FFDE45" strokeWidth="1.5" style={{ filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.6))' }} />
-                          <text x="100" y="-52" textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize="14" fontWeight="bold" fontFamily="Inter, sans-serif">
-                            שנתי
-                          </text>
-                          <text x="100" y="-30" textAnchor="middle" dominantBaseline="middle" fill="#FFDE45" fontSize="22" fontWeight="black" fontFamily="monospace" style={{ letterSpacing: '0.5px' }}>
-                            {group.yearlyRetention}%
-                          </text>
-                        </g>
-                      </motion.g>
-                    </svg>
-                  </div>
-                  
-                  {/* Labels below gauge */}
-                  <div className="mt-4 flex flex-col items-center gap-2 h-12">
-                    <span className={`text-[10px] px-3 py-0.5 rounded-full font-black border antialiased ${categoryColor}`}>
-                      {categoryLabel}
-                    </span>
-                    <span className="text-[12px] font-black home-title uppercase tracking-widest mt-1">
-                      {group.count} חברים
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
 
         {/* Churn Buckets Section - Unified Background */}
         <motion.div 
@@ -1402,6 +1018,19 @@ const CommunityAnalytics: React.FC = () => {
             />
           </div>
         </motion.div>
+
+        {/* Community Radius Widget */}
+        <div className="glass-panel p-8 rounded-[3rem] border border-white/20 shadow-soft flex flex-col items-center mt-8">
+          <div className="flex items-center gap-2 mb-6 w-full text-right">
+              <h3 className="text-xl font-black text-[#2B2B2E] tracking-tight">רדיוס הקהילה</h3>
+              <Activity className="w-5 h-5 text-[#2B2B2E]" />
+          </div>
+          <div className="w-[450px] relative darts-wrapper flex flex-col items-center">
+            <h4 className="text-center mb-4">פיזור גיאוגרפי</h4>
+            <canvas ref={canvasRef} id="dartsBoard" width="450" height="450" className="rounded-full rotate-slow" />
+            <div id="darts-tooltip" ref={tooltipRef} className="absolute hidden pointer-events-none z-50 whitespace-pre-line text-sm text-center"></div>
+          </div>
+        </div>
 
       </div>
     </div>

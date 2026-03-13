@@ -181,11 +181,30 @@ export const CoastalDashboard: React.FC = () => {
           href="https://gosurf.co.il/forecast/herzliya-marina" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="p-6 flex flex-col items-center text-center gap-2 hover:bg-black/5 transition-colors group"
+          className="p-6 flex flex-col items-center text-center gap-2 hover:bg-[var(--surfer-cyan)]/5 active:bg-[var(--surfer-cyan)]/10 transition-all duration-300 group cursor-pointer relative overflow-hidden"
         >
-          <Waves className="text-[var(--surfer-cyan)] mb-1 group-hover:scale-110 transition-transform" size={28} />
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] leading-none">Forecast</span>
-          <span className="text-lg font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>תחזית גלים</span>
+          {/* Subtle Pulse for Mobile Interactivity */}
+          <motion.div
+            animate={{
+              opacity: [0, 0.08, 0],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute inset-0 bg-[var(--surfer-cyan)] pointer-events-none"
+          />
+
+          {/* Subtle Hover Glow */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          <Waves className="text-[var(--surfer-cyan)] mb-1 group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 relative z-10" size={28} />
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] leading-none relative z-10">Forecast</span>
+          <span className="text-lg font-black text-[#000000] relative z-10" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>תחזית גלים</span>
+          
+          {/* Interaction Indicator */}
+          <div className="absolute bottom-2 w-8 h-0.5 bg-[var(--surfer-cyan)]/30 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
         </a>
 
         {/* Live Cam Tile */}
@@ -193,11 +212,31 @@ export const CoastalDashboard: React.FC = () => {
           href="https://beachcam.co.il" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="p-6 flex flex-col items-center text-center gap-2 hover:bg-black/5 transition-colors group"
+          className="p-6 flex flex-col items-center text-center gap-2 hover:bg-[var(--surfer-yellow)]/5 active:bg-[var(--surfer-yellow)]/10 transition-all duration-300 group cursor-pointer relative overflow-hidden"
         >
-          <Video className="text-[var(--surfer-yellow)] mb-1 group-hover:scale-110 transition-transform" size={28} />
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] leading-none">Live Stream</span>
-          <span className="text-lg font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מצלמת חוף</span>
+          {/* Subtle Pulse for Mobile Interactivity */}
+          <motion.div
+            animate={{
+              opacity: [0, 0.08, 0],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 2
+            }}
+            className="absolute inset-0 bg-[var(--surfer-yellow)] pointer-events-none"
+          />
+
+          {/* Subtle Hover Glow */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          <Video className="text-[var(--surfer-yellow)] mb-1 group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 relative z-10" size={28} />
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] leading-none relative z-10">Live Stream</span>
+          <span className="text-lg font-black text-[#000000] relative z-10" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מצלמת חוף</span>
+          
+          {/* Interaction Indicator */}
+          <div className="absolute bottom-2 w-8 h-0.5 bg-[var(--surfer-yellow)]/30 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
         </a>
       </div>
 

@@ -17,7 +17,6 @@ import {
   Newspaper,
   UserCircle
 } from 'lucide-react';
-import { OceanPulse } from '../components/OceanPulse';
 import { CoastalDashboard } from '../components/CoastalDashboard';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -298,15 +297,6 @@ const DashboardPage: React.FC = () => {
         <CoastalDashboard />
       </section>
 
-      <section className="space-y-8">
-        <div className="flex items-center gap-4">
-          <div className="p-4 bg-[var(--surfer-cyan)]/20 rounded-[8px] border border-black/10 shadow-sm">
-            <Waves className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
-          </div>
-          <h3 className="text-3xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>דופק האוקיינוס</h3>
-        </div>
-        <OceanPulse />
-      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <section className="home-glass-card p-12 relative min-h-[400px]">

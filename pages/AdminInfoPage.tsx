@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { TrendingUp, Waves, Server, ShieldAlert, Users, Activity, Book } from 'lucide-react';
+import { TrendingUp, Waves, Server, ShieldAlert, Users, Activity, Book, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CommunityAnalytics from '../components/CommunityAnalytics';
 import CommunityHeatMap from '../components/CommunityHeatMap';
@@ -10,8 +10,9 @@ import SessionStatsPage from './SessionStatsPage';
 import TrendsDashboard from '../components/admin/TrendsDashboard';
 import GlassNavigationBar from '../components/GlassNavigationBar';
 import AdminHelpPage from '../components/admin/AdminHelpPage';
+import SeasonalPersistence from '../components/admin/SeasonalPersistence';
 
-type Tab = 'community' | 'trends' | 'attendance' | 'system' | 'help';
+type Tab = 'community' | 'trends' | 'attendance' | 'system' | 'help' | 'seasonal';
 
 const SnorkelIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg 
@@ -38,7 +39,8 @@ const AdminInfoPage: React.FC = () => {
 
   const tabs = [
     { id: 'community', label: 'דופק הקהילה', icon: <TrendingUp size={20} /> },
-    { id: 'trends', label: 'טרנדים והתמדה', icon: <Activity size={20} /> },
+    { id: 'trends', label: 'התמדה קבוצתית', icon: <Activity size={20} /> },
+    { id: 'seasonal', label: 'התמדה עונתית', icon: <Calendar size={20} /> },
     { id: 'attendance', label: 'צוללים לסשנים', icon: <Waves size={20} /> },
     { id: 'system', label: 'חדר מכונות', icon: <Server size={20} /> },
     { id: 'help', label: 'מדריך אנליטיקה', icon: <Book size={20} /> },
@@ -91,6 +93,7 @@ const AdminInfoPage: React.FC = () => {
               </div>
             )}
             {activeTab === 'trends' && <TrendsDashboard />}
+            {activeTab === 'seasonal' && <SeasonalPersistence />}
             {activeTab === 'attendance' && <SessionStatsPage />}
             {activeTab === 'system' && <SystemMonitor />}
             {activeTab === 'help' && <AdminHelpPage />}

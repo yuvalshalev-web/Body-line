@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, ComposedChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, ComposedChart, Bar, Cell } from 'recharts';
 import { Waves, Sun, Snowflake, Leaf, Loader2, Calendar } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { calculateSeasonalGrit } from '../src/utils/analytics';
+import { getBodyLineStats } from '../src/utils/bodyLineStats';
 
 export const OceanPulse: React.FC = () => {
-  const { weeklyHistory } = useData();
+  const { weeklyHistory, members } = useData();
   const [loading, setLoading] = useState(true);
   const [currentOceanData, setCurrentOceanData] = useState<any>(null);
   const [correlationData, setCorrelationData] = useState<any[]>([]);
@@ -29,10 +31,11 @@ export const OceanPulse: React.FC = () => {
 
         // 2. Fetch historical data for correlation
         if (weeklyHistory && weeklyHistory.length > 0) {
-          // Filter out sessions with missing or invalid dates
+          // Filter out sessions with missing or invalid dates, and future dates
+          const now = new Date();
           const validHistory = weeklyHistory.filter(session => {
             const d = parseDate(session.date);
-            return d instanceof Date && !isNaN(d.getTime());
+            return d instanceof Date && !isNaN(d.getTime()) && d <= now && (session.participantsCount || 0) > 0;
           });
 
           if (validHistory.length === 0) {
@@ -46,8 +49,7 @@ export const OceanPulse: React.FC = () => {
               const dateA = parseDate(a.date);
               const dateB = parseDate(b.date);
               return dateA.getTime() - dateB.getTime();
-            })
-            .slice(-12); // Last 12 sessions
+            });
 
           const firstDate = parseDate(sortedHistory[0].date);
           const lastDate = parseDate(sortedHistory[sortedHistory.length - 1].date);
@@ -76,6 +78,9 @@ export const OceanPulse: React.FC = () => {
               return {
                 date: sDate.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }),
                 temp: temp,
+                tempCold: temp !== null && temp < 20 ? temp : null,
+                tempModerate: temp !== null && temp >= 20 && temp <= 26 ? temp : null,
+                tempHot: temp !== null && temp > 26 ? temp : null,
                 attendance: session.participantsCount || 0
               };
             });
@@ -92,12 +97,48 @@ export const OceanPulse: React.FC = () => {
     fetchData();
   }, [weeklyHistory]);
 
-  const seasonalData = [
-    { season: 'אביב', retention: '88%', icon: Leaf },
-    { season: 'קיץ', retention: '95%', icon: Sun },
-    { season: 'סתיו', retention: '82%', icon: Waves },
-    { season: 'חורף', retention: '75%', icon: Snowflake },
-  ];
+  const seasonalGrit = useMemo(() => {
+    const calculatedScores = calculateSeasonalGrit(weeklyHistory, members);
+    
+    const seasonsConfig = [
+      { name: 'סתיו', icon: Waves, color: 'var(--surfer-orange)' },
+      { name: 'חורף', icon: Snowflake, color: 'var(--surfer-cyan)' },
+      { name: 'אביב', icon: Leaf, color: 'var(--surfer-teal)' },
+      { name: 'קיץ', icon: Sun, color: 'var(--surfer-yellow)' },
+    ];
+
+    return seasonsConfig.map(config => {
+      const scoreData = calculatedScores.find(s => s.name === config.name);
+      return {
+        ...config,
+        score: scoreData ? scoreData.score : 0
+      };
+    });
+  }, [weeklyHistory]);
+
+  const getThermalColor = (temp: number | null) => {
+    if (temp === null) return '#ccc';
+    
+    // Green (#2ECC71) to Yellow (#F1C40F) to Red (#E74C3C)
+    // Range: 15 to 30
+    const min = 15;
+    const mid = 22.5;
+    const max = 30;
+    
+    const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
+    const t = clamp(temp, min, max);
+    
+    if (t < mid) {
+      // Interpolate Green to Yellow
+      const ratio = (t - min) / (mid - min);
+      // Simple interpolation for demonstration
+      return ratio > 0.5 ? '#F1C40F' : '#2ECC71';
+    } else {
+      // Interpolate Yellow to Red
+      const ratio = (t - mid) / (max - mid);
+      return ratio > 0.5 ? '#E74C3C' : '#F1C40F';
+    }
+  };
 
   if (loading) {
     return (
@@ -153,7 +194,8 @@ export const OceanPulse: React.FC = () => {
                 yAxisId="right"
                 dataKey="attendance" 
                 name="נוכחות"
-                fill="#f59e0b" 
+                fill="#f59e0b"
+                fillOpacity={0.8}
                 radius={[4, 4, 0, 0]}
                 barSize={30}
               />
@@ -162,10 +204,44 @@ export const OceanPulse: React.FC = () => {
                 type="monotone" 
                 dataKey="temp" 
                 name="טמפרטורת מים"
-                stroke="#000000" 
+                stroke="#cbd5e1" 
+                strokeWidth={2} 
+                dot={false}
+                activeDot={false}
+                legendType="none"
+              />
+              <Line 
+                yAxisId="left"
+                type="monotone" 
+                dataKey="tempCold" 
+                name="טמפרטורת מים (קר)"
+                stroke="#0ea5e9" 
                 strokeWidth={4} 
-                dot={{ r: 6, fill: '#000000', strokeWidth: 2, stroke: '#fff' }}
+                dot={{ r: 6, fill: '#0ea5e9', strokeWidth: 2, stroke: '#fff' }}
                 activeDot={{ r: 10 }}
+                connectNulls={false}
+              />
+              <Line 
+                yAxisId="left"
+                type="monotone" 
+                dataKey="tempModerate" 
+                name="טמפרטורת מים (מתון)"
+                stroke="#22c55e" 
+                strokeWidth={4} 
+                dot={{ r: 6, fill: '#22c55e', strokeWidth: 2, stroke: '#fff' }}
+                activeDot={{ r: 10 }}
+                connectNulls={false}
+              />
+              <Line 
+                yAxisId="left"
+                type="monotone" 
+                dataKey="tempHot" 
+                name="טמפרטורת מים (חם)"
+                stroke="#ef4444" 
+                strokeWidth={4} 
+                dot={{ r: 6, fill: '#ef4444', strokeWidth: 2, stroke: '#fff' }}
+                activeDot={{ r: 10 }}
+                connectNulls={false}
               />
             </ComposedChart>
           </ResponsiveContainer>
@@ -178,16 +254,31 @@ export const OceanPulse: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {seasonalData.map((s, i) => (
-          <div key={i} className="home-glass-card p-6 flex flex-col items-center justify-center gap-4">
-            <div className="p-3 bg-[var(--surfer-cyan)]/20 rounded-[8px] border border-black/10 shadow-sm">
-              <s.icon className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
+      {/* Seasonal Grit Score Row */}
+      <div className="home-glass-card p-8 space-y-6">
+        <h2 className="text-2xl font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>אחוזי התמדה קהילתיים לפי עונות השנה</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {seasonalGrit.map((s, i) => (
+            <div key={i} className="flex items-center gap-4 p-4 bg-white/50 rounded-2xl border border-black/5 relative overflow-hidden group">
+              {/* Subtle background glow */}
+              <div 
+                className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-500" 
+                style={{ backgroundColor: s.color }}
+              />
+              <div className="p-3 rounded-[12px] border border-black/5 shadow-inner relative z-10" style={{ backgroundColor: `${s.color}20` }}>
+                <s.icon 
+                  className="filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" 
+                  size={20} 
+                  style={{ color: s.color }}
+                />
+              </div>
+              <div className="flex flex-col relative z-10">
+                <span className="text-xs font-black text-[#000000]/40 uppercase tracking-widest" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{s.name}</span>
+                <span className="text-xl font-black text-[#000000]">{s.score}%</span>
+              </div>
             </div>
-            <span className="text-lg font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{s.season}</span>
-            <span className="text-3xl font-black text-[#000000]">{s.retention}</span>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

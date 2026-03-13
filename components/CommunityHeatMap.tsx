@@ -35,6 +35,7 @@ const CommunityHeatMap: React.FC = () => {
   const { members, siteConfig } = useData();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
+  const heatmapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMounted = useRef(true);
   const [stats, setStats] = useState<Stats>({ 
     near: 0, 
@@ -185,10 +186,18 @@ const CommunityHeatMap: React.FC = () => {
       // Add heatmap layer
       if (typeof L.heatLayer === 'function' && heatPoints.length > 0) {
         map.whenReady(() => {
-          const timeoutId = setTimeout(() => {
+          if (heatmapTimeoutRef.current) {
+            clearTimeout(heatmapTimeoutRef.current);
+          }
+          heatmapTimeoutRef.current = setTimeout(() => {
             try {
-              if (!isMounted.current || !map || !map.getContainer()) {
+              if (!isMounted.current || !map || !map.getContainer() || mapInstance.current !== map) {
                 console.log("Map or component unmounted, skipping heatmap layer addition");
+                return;
+              }
+              // Check if panes exist (Leaflet map might be removed)
+              if (!map._panes || !map._panes.overlayPane) {
+                console.log("Map panes not ready or destroyed, skipping heatmap layer addition");
                 return;
               }
               if (typeof map.layerPointToLatLng !== 'function') {
@@ -209,7 +218,7 @@ const CommunityHeatMap: React.FC = () => {
                 }
               });
               
-              if (isMounted.current && map && map.getContainer()) {
+              if (isMounted.current && map && map.getContainer() && mapInstance.current === map) {
                 layer.addTo(map);
               }
             } catch (e: any) {
@@ -265,6 +274,9 @@ const CommunityHeatMap: React.FC = () => {
     tryInit();
 
     return () => {
+      if (heatmapTimeoutRef.current) {
+        clearTimeout(heatmapTimeoutRef.current);
+      }
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;

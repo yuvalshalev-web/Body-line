@@ -2,6 +2,9 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Waves, 
+  Snowflake,
+  Leaf,
+  Sun,
   Users, 
   TrendingUp, 
   Award, 
@@ -20,6 +23,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { getBodyLineStats } from '../src/utils/bodyLineStats';
+import { calculateSeasonalGrit } from '../src/utils/analytics';
 import { 
   BarChart, 
   Bar, 
@@ -75,6 +79,7 @@ const SessionStatsPage: React.FC = () => {
     key: 'gritScore',
     direction: 'desc'
   });
+  const [showAudit, setShowAudit] = useState(false);
 
   const stats = useMemo(() => {
     if (!weeklyHistory || weeklyHistory.length === 0 || !yearConfig) return null;
@@ -506,6 +511,29 @@ const SessionStatsPage: React.FC = () => {
       })
       .slice(0, 50);
 
+    // 12. Seasonal Grit Score Calculation
+    const seasonalGrit = useMemo(() => {
+      const calculatedScores = calculateSeasonalGrit(weeklyHistory, members);
+      
+      const seasonsConfig = [
+        { name: 'סתיו', icon: Waves, color: 'var(--surfer-orange)' },
+        { name: 'חורף', icon: Snowflake, color: 'var(--surfer-cyan)' },
+        { name: 'אביב', icon: Leaf, color: 'var(--surfer-teal)' },
+        { name: 'קיץ', icon: Sun, color: 'var(--surfer-yellow)' },
+      ];
+
+      return seasonsConfig.map(config => {
+        const scoreData = calculatedScores.find(s => s.name === config.name);
+        return {
+          ...config,
+          score: scoreData ? scoreData.score : 0,
+          actuals: scoreData ? scoreData.actuals : 0,
+          capacity: scoreData ? scoreData.capacity : 0,
+          sessionCount: scoreData ? scoreData.sessionCount : 0
+        };
+      });
+    }, [weeklyHistory, members]);
+
     return {
       activeMembersCount: activeMembers.length,
       totalSessions: filteredSessions.length,
@@ -528,7 +556,8 @@ const SessionStatsPage: React.FC = () => {
       currentWeek,
       currentMonth,
       cancelledSessionsCount,
-      yearConfig
+      yearConfig,
+      seasonalGrit
     };
   }, [weeklyHistory, members, yearConfig, gritSortConfig, gritSearchTerm]);
 
@@ -558,6 +587,79 @@ const SessionStatsPage: React.FC = () => {
 
       {/* Sea-Time & Progress Bar Row */}
       <div className="flex flex-col md:flex-row gap-8 items-center justify-center mb-12 w-full">
+        {/* Seasonal Grit Score Grid (2x2) */}
+        <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+          {stats?.seasonalGrit.map((s, i) => (
+            <div key={i} className="home-glass-card p-6 flex flex-col items-center justify-center gap-3 relative overflow-hidden group">
+              {/* Subtle background glow */}
+              <div 
+                className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-500" 
+                style={{ backgroundColor: s.color }}
+              />
+              
+              <div className="p-3 rounded-[12px] border border-black/5 shadow-inner" style={{ backgroundColor: `${s.color}20` }}>
+                <s.icon 
+                  className="filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" 
+                  size={24} 
+                  style={{ color: s.color }}
+                />
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] font-black text-[#000000]/40 uppercase tracking-widest mb-1">{s.name}</span>
+                <div className="flex items-baseline gap-0.5">
+                  <span className="text-3xl font-black text-[#000000]">{s.score}%</span>
+                </div>
+              </div>
+              
+              {/* Beveled edge effect */}
+              <div className="absolute inset-0 border border-white/20 rounded-2xl pointer-events-none" />
+            </div>
+          ))}
+        </div>
+
+        {/* Audit Report Toggle */}
+        <div className="flex flex-col items-center gap-4">
+          <button 
+            onClick={() => setShowAudit(!showAudit)}
+            className="text-[10px] font-black text-[#000000]/40 uppercase tracking-widest hover:text-[#000000] transition-colors flex items-center gap-2"
+          >
+            {showAudit ? 'הסתר פירוט חישוב' : 'הצג פירוט חישוב עונתי (Audit)'}
+          </button>
+          
+          {showAudit && (
+            <div className="home-glass-card p-4 w-full max-w-md animate-in fade-in slide-in-from-top-2 duration-300">
+              <table className="w-full text-right text-[11px] font-bold">
+                <thead>
+                  <tr className="border-b border-black/10">
+                    <th className="pb-2">עונה</th>
+                    <th className="pb-2">סשנים</th>
+                    <th className="pb-2">השתתפויות</th>
+                    <th className="pb-2">פוטנציאל</th>
+                    <th className="pb-2">תוצאה</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats?.seasonalGrit.map((s, i) => (
+                    <tr key={i} className="border-b border-black/5 last:border-0">
+                      <td className="py-2">{s.name}</td>
+                      <td className="py-2">{s.sessionCount}</td>
+                      <td className="py-2">{s.actuals}</td>
+                      <td className="py-2">{s.capacity}</td>
+                      <td className="py-2 font-black">{s.score}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="text-[9px] text-[#000000]/40 mt-3 leading-tight">
+                * פוטנציאל (Capacity) מחושב כסכום החברים שהיו פעילים בכל סשן בנפרד.
+                <br />
+                * השתתפויות (Actuals) הוא סך כל המשתתפים שרשומים ביומן.
+              </p>
+            </div>
+          )}
+        </div>
+
         <div className="relative group">
           <div className="absolute inset-0 bg-blue-500/10 blur-2xl group-hover:bg-blue-500/20 transition-all duration-500" />
           <div className="relative bg-[#DDE1E4] p-8 rounded-[3rem] text-center min-w-[280px] shadow-soft border border-slate-200">

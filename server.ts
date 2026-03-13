@@ -87,6 +87,7 @@ async function startServer() {
 
   // API Route to fetch ocean data (water temp)
   app.get("/api/ocean-data", async (req, res) => {
+    console.log("Fetching ocean data...");
     try {
       // Using Open-Meteo Marine API for reliable coastal data in Israel (Herzliya area)
       const lat = 32.16;
@@ -117,6 +118,7 @@ async function startServer() {
   });
 
   app.get("/api/ocean-data/historical", async (req, res) => {
+    console.log("Fetching historical ocean data...", req.query);
     try {
       const { start, end } = req.query;
       if (!start || !end) {
@@ -146,11 +148,10 @@ async function startServer() {
       const lng = 34.84;
       
       // Fetch Marine Data (Wave Height, Water Temp)
-      // Switching to http to bypass SSL issues in specific environments
-      const marineUrl = `http://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=wave_height,sea_surface_temperature&timezone=auto`;
+      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=wave_height,sea_surface_temperature&timezone=auto`;
       
       // Fetch Weather Data (Wind, UV Index)
-      const weatherUrl = `http://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
 
       const [marineRes, weatherRes] = await Promise.all([
         fetch(marineUrl, { headers: { 'User-Agent': 'SurferApp/1.0' } }),

@@ -224,3 +224,82 @@ export const calculateUserStats = (
     nextRankName: nextRank ? nextRank.name : null
   };
 };
+
+export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) => {
+  if (!weeklyHistory || weeklyHistory.length === 0 || !members) return [];
+
+  // Helper to safely parse dates from Firestore
+  const parseDate = (date: any) => {
+    if (!date) return new Date(NaN);
+    if (typeof date.toDate === 'function') return date.toDate();
+    if (typeof date.seconds === 'number') return new Date(date.seconds * 1000);
+    return new Date(date);
+  };
+
+  // Filter and normalize sessions
+  const sessionsByDate = new Map<string, { date: Date, count: number }>();
+  weeklyHistory.forEach(session => {
+    const sessionDate = parseDate(session.date);
+    if (isNaN(sessionDate.getTime())) return;
+    
+    const day = sessionDate.getDay();
+    const diff = 4 - day;
+    const thursdayDate = new Date(sessionDate);
+    thursdayDate.setDate(thursdayDate.getDate() + diff);
+    thursdayDate.setHours(7, 0, 0, 0);
+    
+    const dateKey = thursdayDate.toDateString();
+    const currentCount = session.participantsCount || 0;
+    if (!sessionsByDate.has(dateKey) || currentCount > sessionsByDate.get(dateKey)!.count) {
+      sessionsByDate.set(dateKey, { date: thursdayDate, count: currentCount });
+    }
+  });
+
+  const normalizedSessions = Array.from(sessionsByDate.values());
+
+  // Seasons definition
+  const seasons = [
+    { name: 'סתיו', months: [8, 9, 10] },
+    { name: 'חורף', months: [11, 0, 1] },
+    { name: 'אביב', months: [2, 3, 4] },
+    { name: 'קיץ', months: [5, 6, 7] },
+  ];
+
+  return seasons.map(season => {
+    const seasonSessions = normalizedSessions.filter(s => {
+      const month = s.date.getMonth();
+      return season.months.includes(month);
+    });
+
+    if (seasonSessions.length === 0) return { name: season.name, score: 0 };
+
+    let totalActuals = 0;
+    let totalCapacity = 0;
+
+    seasonSessions.forEach(s => {
+      // Calculate how many members were active AT THE TIME of this session
+      const activeAtTime = members.filter(m => {
+        const joinedDate = new Date(m.joinedAt);
+        if (joinedDate > s.date) return false;
+        
+        if (m.deactivatedAt) {
+          const deactivatedDate = new Date(m.deactivatedAt);
+          if (deactivatedDate < s.date) return false;
+        }
+        return true;
+      }).length;
+
+      totalActuals += s.count;
+      totalCapacity += activeAtTime;
+    });
+
+    const avgScore = totalCapacity > 0 ? Math.round((totalActuals / totalCapacity) * 100) : 0;
+    return { 
+      name: season.name, 
+      score: Math.min(100, avgScore),
+      actuals: totalActuals,
+      capacity: totalCapacity,
+      sessionCount: seasonSessions.length
+    };
+  });
+};
