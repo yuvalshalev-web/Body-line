@@ -291,7 +291,7 @@ const DashboardPage: React.FC = () => {
 
       <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
         <div className="flex items-center gap-4 mb-4">
-          <div className="p-3 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(122,21,85,0.3)]">
+          <div className="p-3 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-xl border border-white/20 shadow-lg shadow-[var(--surfer-yellow)]/10">
             <Waves size={20} />
           </div>
           <h3 className="text-2xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>תצפית חוף מרכז</h3>
@@ -303,13 +303,13 @@ const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <section className="home-glass-card p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-[var(--surfer-yellow)]/20 rounded-[8px] border border-black/10 shadow-sm">
+              <div className="p-4 bg-[var(--surfer-yellow)]/20 rounded-xl border border-white/20 shadow-sm">
                 <Quote className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
               </div>
               <h3 className="text-2xl font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>חוכמת הליין-אפ</h3>
            </div>
            {randomQuotes.map((item, idx) => (
-             <div key={idx} className="p-10 bg-white/10 backdrop-blur-[15px] border border-black/10 rounded-2xl transition-all animate-in fade-in">
+             <div key={idx} className="p-10 bg-white/10 backdrop-blur-[15px] border border-white/20 rounded-2xl transition-all animate-in fade-in shadow-lg shadow-black/5">
                <p className="text-2xl font-black text-[#000000] leading-tight italic" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>"{item.text}"</p>
                <p className="text-lg font-bold text-[#000000]/60 italic mt-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>— {item.author}</p>
              </div>
@@ -318,15 +318,15 @@ const DashboardPage: React.FC = () => {
 
         <section className="home-glass-card p-12 relative min-h-[400px]">
            <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-[var(--surfer-cyan)]/20 rounded-[8px] border border-black/10 shadow-sm">
+              <div className="p-4 bg-[var(--surfer-cyan)]/20 rounded-xl border border-white/20 shadow-sm">
                 <BookOpen className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
               </div>
               <h3 className="text-2xl font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מילון מונחים</h3>
            </div>
            {randomGlossary.map((item, idx) => (
-             <div key={idx} className="p-10 bg-white/10 backdrop-blur-[15px] border border-black/10 rounded-2xl transition-all animate-in fade-in">
+             <div key={idx} className="p-10 bg-white/10 backdrop-blur-[15px] border border-white/20 rounded-2xl transition-all animate-in fade-in shadow-lg shadow-black/5">
                <h4 className="text-4xl font-black text-[#000000] mb-4" dir="ltr" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.term}</h4>
-               <p className="text-xl font-bold text-[#000000]/70 italic border-r-4 border-black/20 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.definition}</p>
+               <p className="text-xl font-bold text-[#000000]/70 italic border-r-4 border-white/30 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.definition}</p>
              </div>
            ))}
         </section>
@@ -334,15 +334,15 @@ const DashboardPage: React.FC = () => {
 
       {showAttendees && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in" onClick={() => setShowAttendees(false)}>
-           <div className="bg-white/10 backdrop-blur-[15px] border-[2px] border-black shadow-[6px_6px_0px_rgba(0,0,0,0.9)] rounded-[8px] w-full max-w-lg p-10 animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+           <div className="bg-white/10 backdrop-blur-[15px] border border-white/20 shadow-2xl shadow-black/20 rounded-2xl w-full max-w-lg p-10 animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
               <h3 className="text-3xl font-black mb-8 glass-text-primary">נבחרת הסשן</h3>
               <div className="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar">
                 {attendees.map(a => (
-                  <div key={a.id} className="flex items-center gap-4 p-4 bg-white/5 backdrop-blur-[15px] border-[1.5px] border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
+                  <div key={a.id} className="flex items-center gap-4 p-4 bg-white/5 backdrop-blur-[15px] border border-white/10 rounded-xl shadow-md shadow-black/5">
                     {a.avatar ? (
-                      <img src={a.avatar} className="w-12 h-12 rounded-[8px] border border-black object-cover" alt="" loading="lazy" />
+                      <img src={a.avatar} className="w-12 h-12 rounded-xl border border-white/20 object-cover" alt="" loading="lazy" />
                     ) : (
-                      <div className="w-12 h-12 rounded-[8px] bg-white/10 border border-black flex items-center justify-center text-slate-400">
+                      <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-slate-400">
                         <UserCircle size={24} />
                       </div>
                     )}

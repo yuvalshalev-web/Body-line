@@ -610,7 +610,7 @@ const SurfingSessionAttendance: React.FC = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     onClick={() => toggleUser(user.id)}
-                    className={`relative cursor-pointer group rounded-[8px] p-4 transition-all duration-300 flex flex-col items-center border-[2px] border-black backdrop-blur-[15px] shadow-[4px_4px_0px_rgba(0,0,0,0.8)] ${
+                    className={`relative cursor-pointer group rounded-xl p-4 transition-all duration-300 flex flex-col items-center border border-white/20 backdrop-blur-[15px] shadow-lg shadow-black/5 ${
                       isSelected 
                         ? 'bg-slate-200' 
                         : 'bg-[rgba(255,255,255,0.1)]'

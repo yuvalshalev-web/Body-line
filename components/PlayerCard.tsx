@@ -111,7 +111,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl -z-10" />
       
       <div className="relative">
-        <div className="w-28 h-28 rounded-[8px] overflow-hidden border-[2px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] bg-white/10 backdrop-blur-md rotate-3">
+        <div className="w-28 h-28 rounded-xl overflow-hidden border border-white/20 shadow-lg shadow-black/5 bg-white/10 backdrop-blur-md rotate-3">
           {member.avatar ? (
             <img src={member.avatar} alt="" className="w-full h-full object-cover" />
           ) : (
@@ -121,7 +121,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
           )}
         </div>
         {stats.isTop10 && (
-          <div className="absolute -top-2 -right-2 w-10 h-10 bg-amber-400 rounded-full flex items-center justify-center text-white shadow-[2px_2px_0px_rgba(0,0,0,0.8)] border-[1.5px] border-black animate-bounce">
+          <div className="absolute -top-2 -right-2 w-10 h-10 bg-amber-400 rounded-full flex items-center justify-center text-white shadow-md border border-white/30 animate-bounce">
             <Crown size={20} />
           </div>
         )}
@@ -136,17 +136,17 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             <span className="flex items-center gap-1"><Calendar size={14} /> הצטרף ב-{stats.joiningDate}</span>
           </div>
           <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-            <span className="inline-flex px-3 py-1 bg-indigo-50 text-indigo-600 rounded-[4px] text-[12px] font-black uppercase tracking-widest border border-black shadow-[1px_1px_0px_rgba(0,0,0,0.8)]">
+            <span className="inline-flex px-3 py-1 bg-indigo-50 text-indigo-600 rounded-md text-[12px] font-black uppercase tracking-widest border border-indigo-100 shadow-sm">
               מעמד: {stats.rank}
             </span>
             <span className={`inline-flex px-3 py-1 rounded-[4px] text-[12px] font-black uppercase tracking-widest border shadow-[1px_1px_0px_rgba(0,0,0,0.8)] ${
               member.isActive !== false 
-                ? 'bg-emerald-50 text-emerald-600 border-black' 
-                : 'bg-rose-50 text-rose-600 border-black'
+                ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                : 'bg-rose-50 text-rose-600 border-rose-100'
             }`}>
               סטטוס: {member.isActive !== false ? 'פעיל' : 'לא פעיל'}
             </span>
-            <span className="inline-flex px-3 py-1 bg-white/10 backdrop-blur-md glass-text-primary rounded-[4px] text-[12px] font-black uppercase tracking-widest border border-black shadow-[1px_1px_0px_rgba(0,0,0,0.8)]">
+            <span className="inline-flex px-3 py-1 bg-white/10 backdrop-blur-md glass-text-primary rounded-md text-[12px] font-black uppercase tracking-widest border border-white/20 shadow-sm">
               זהות: {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
             </span>
           </div>
@@ -203,7 +203,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
                     <p className="text-md font-bold text-slate-700">מרחק מהבית: {driftPercentile.distanceKm} ק"מ</p>
                     <p className="text-sm text-slate-500 mt-1">אתה באחוזון ה-{driftPercentile.roundedPercentile} של המרחק מהחוף</p>
                     <button 
-                      className="mt-6 px-8 py-2 bg-[#006994] text-white rounded-[8px] border-[2px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] font-black text-sm uppercase tracking-widest transition-all active:scale-95"
+                      className="mt-6 px-8 py-2 bg-[#006994] text-white rounded-xl border border-white/20 shadow-lg shadow-black/10 font-black text-sm uppercase tracking-widest transition-all active:scale-95"
                       onClick={() => setShowDriftPopup(false)}
                     >
                       סגור

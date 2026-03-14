@@ -46,7 +46,7 @@ const SeasonalPersistenceRow: React.FC = () => {
             style={{ backgroundColor: s.color }}
           />
           
-          <div className="p-3 rounded-[12px] border border-black/5 shadow-inner" style={{ backgroundColor: `${s.color}20` }}>
+          <div className="p-3 rounded-xl border border-white/20 shadow-inner" style={{ backgroundColor: `${s.color}20` }}>
             <s.icon 
               className="filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" 
               size={24} 

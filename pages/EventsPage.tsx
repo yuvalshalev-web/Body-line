@@ -301,7 +301,7 @@ const EventsPage: React.FC = () => {
                 </div>
 
                 {/* Edit/Delete Buttons - Now at the bottom center */}
-                <div className="mt-auto pt-6 flex justify-center border-t border-black/10">
+                <div className="mt-auto pt-6 flex justify-center border-t border-white/10">
                   {canEdit && (
                     <div className="flex gap-4">
                       <button 

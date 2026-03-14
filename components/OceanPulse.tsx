@@ -153,7 +153,7 @@ export const OceanPulse: React.FC = () => {
       {/* Correlation Chart */}
       <div className="home-glass-card p-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-[var(--surfer-cyan)]/20 rounded-[8px] border border-black/10 shadow-sm">
+          <div className="p-3 bg-[var(--surfer-cyan)]/20 rounded-xl border border-white/20 shadow-sm">
             <Calendar className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={20} />
           </div>
           <h3 className="text-2xl font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>קורלציית טמפרטורה לנוכחות בסשנים</h3>
@@ -246,7 +246,7 @@ export const OceanPulse: React.FC = () => {
             </ComposedChart>
           </ResponsiveContainer>
         </div>
-        <div className="mt-6 p-4 bg-white/10 rounded-xl border border-black/10">
+        <div className="mt-6 p-4 bg-white/10 rounded-xl border border-white/20">
           <p className="text-sm text-[#000000]/70 font-medium leading-relaxed" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
             גרף זה מציג את הקשר בין טמפרטורת המים ביום הסשן (נמדד ב-07:00 בבוקר) לבין כמות המשתתפים שהגיעו בפועל. 
             ניתן לראות מגמות עונתיות והשפעה של תנאי הים על היענות הקהילה.

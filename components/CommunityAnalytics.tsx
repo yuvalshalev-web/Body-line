@@ -726,7 +726,7 @@ const CommunityAnalytics: React.FC = () => {
             
             <div className="w-full flex items-center justify-between mb-8 relative z-10 px-2">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[#004D40] shadow-inner border border-black/10">
+                <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[#004D40] shadow-inner border border-white/20">
                   <Sparkles size={24} />
                 </div>
                 <div>
@@ -924,7 +924,7 @@ const CommunityAnalytics: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3 mb-8 relative z-10">
-              <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[#004D40] shadow-inner border border-black/10">
+              <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[#004D40] shadow-inner border border-white/20">
                 <Activity size={24} />
               </div>
               <div>
@@ -950,7 +950,7 @@ const CommunityAnalytics: React.FC = () => {
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="home-glass-card p-3 rounded-xl border border-black/10">
+                          <div className="home-glass-card p-3 rounded-xl border border-white/20">
                             <p className="text-xs font-black home-title mb-1">{payload[0].payload.label} ק"מ</p>
                             <p className="text-lg font-black home-metric">{payload[0].value} <span className="text-[12px] opacity-60">חברים</span></p>
                           </div>
@@ -973,21 +973,21 @@ const CommunityAnalytics: React.FC = () => {
             </div>
 
             <div className="mt-6 grid grid-cols-3 gap-4 relative z-10">
-              <div className="p-4 rounded-2xl glass-effect border border-black/10 shadow-sm group/stat hover:bg-white/10 transition-all">
+              <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
                 <p className="text-[12px] font-black home-metric uppercase tracking-widest mb-1 opacity-70">חי״ר (0-20 ק״מ)</p>
                 <p className="text-xl font-black home-title flex items-baseline gap-1">
                   {stats.near}
                   <span className="text-[12px] font-bold opacity-40">חברים</span>
                 </p>
               </div>
-              <div className="p-4 rounded-2xl glass-effect border border-black/10 shadow-sm group/stat hover:bg-white/10 transition-all">
+              <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
                 <p className="text-[12px] font-black text-[#B8860B] uppercase tracking-widest mb-1 opacity-70">שיריון (21-100 ק״מ)</p>
                 <p className="text-xl font-black home-title flex items-baseline gap-1">
                   {stats.medium}
                   <span className="text-[12px] font-bold opacity-40">חברים</span>
                 </p>
               </div>
-              <div className="p-4 rounded-2xl glass-effect border border-black/10 shadow-sm group/stat hover:bg-white/10 transition-all">
+              <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
                 <p className="text-[12px] font-black home-title uppercase tracking-widest mb-1 opacity-70">חיל אויר (100+ ק״מ)</p>
                 <p className="text-xl font-black home-title flex items-baseline gap-1">
                   {stats.far}
@@ -1020,7 +1020,7 @@ const CommunityAnalytics: React.FC = () => {
                   </div>
                   <h4 className="text-xl font-black home-title tracking-tight">דופק נמוך (בסיכון נטישה)</h4>
                 </div>
-                <span className="text-[12px] font-black home-data-text uppercase tracking-widest glass-effect px-4 py-1.5 rounded-full border border-black/10 shadow-sm">
+                <span className="text-[12px] font-black home-data-text uppercase tracking-widest glass-effect px-4 py-1.5 rounded-full border border-white/20 shadow-sm">
                   לא נראו מעל 30 יום
                 </span>
               </div>
@@ -1028,7 +1028,7 @@ const CommunityAnalytics: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {stats.lowPulseMembers.length > 0 ? (
                   stats.lowPulseMembers.map(member => (
-                    <div key={member.id} className="flex items-center justify-between p-6 rounded-2xl home-glass-card border border-black/10 hover:bg-white/10 transition-all group/item shadow-lg">
+                    <div key={member.id} className="flex items-center justify-between p-6 rounded-2xl home-glass-card border border-white/20 hover:bg-white/10 transition-all group/item shadow-lg">
                       <div className="flex items-center gap-4">
                         <img 
                           src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}&background=random`} 
@@ -1046,7 +1046,7 @@ const CommunityAnalytics: React.FC = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-2 p-12 text-center border border-dashed border-black/10 rounded-3xl glass-effect">
+                  <div className="col-span-2 p-12 text-center border border-dashed border-white/20 rounded-3xl glass-effect">
                     <p className="home-data-text font-black uppercase tracking-[0.3em] text-sm">כל החברים פעילים בדופק גבוה ✨</p>
                   </div>
                 )}

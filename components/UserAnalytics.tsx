@@ -435,7 +435,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/10 transition-colors group relative z-10"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-white/10 backdrop-blur-md border border-black rounded-[4px] shadow-[1px_1px_0px_rgba(0,0,0,0.8)] flex items-center justify-center text-[#FF007F] group-hover:bg-white/20 group-hover:text-[#FF007F] transition-all">
+            <div className="w-8 h-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-md shadow-sm flex items-center justify-center text-[#FF007F] group-hover:bg-white/20 group-hover:text-[#FF007F] transition-all">
               <Calendar size={16} />
             </div>
             <div className="text-right">
@@ -457,7 +457,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="border-t-[1.5px] border-black relative z-10"
+              className="border-t border-white/20 relative z-10"
             >
               <div className="divide-y-[1.5px] divide-black max-h-[400px] overflow-y-auto custom-scrollbar">
                 {userSessions.slice(0, 15).map((session, idx) => {
@@ -500,7 +500,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               </div>
               
               {userSessions.length > 15 && (
-                <div className="p-3 bg-black/20 text-center border-t-[1.5px] border-black">
+                <div className="p-3 bg-black/20 text-center border-t border-white/20">
                   <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">
                     מציג 15 סשנים אחרונים
                   </span>
@@ -518,7 +518,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
           <div className="relative z-10">
           <div className="flex flex-col items-center mb-8">
             <div className="flex items-center gap-[var(--spacing-xs)]">
-              <div className="p-2 bg-white/10 backdrop-blur-md border border-black rounded-[8px] shadow-[2px_2px_0px_rgba(0,0,0,0.8)] mr-2">
+              <div className="p-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-sm mr-2">
                 <Compass size={18} className="text-[#00FFFF]" />
               </div>
               <h3 className="text-lg font-black glass-text-primary">רדאר השיפור שלך</h3>
@@ -530,7 +530,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
             <RadarChart />
           </div>
 
-          <div className="mt-12 p-4 bg-white/5 backdrop-blur-md rounded-[8px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
+          <div className="mt-12 p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/20 shadow-md shadow-black/5">
             <p className="text-[12px] glass-text-secondary font-bold text-center leading-relaxed">
               המצפן מנתח את היכולות המקצועיות שלך בים. נתונים אלו יוזנו על ידי המדריכים לאחר הערכות תקופתיות.
             </p>

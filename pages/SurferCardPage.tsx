@@ -124,7 +124,7 @@ const SurferCardPage: React.FC = () => {
                     />
                     
                     {/* Trophy Container */}
-                    <div className="w-14 h-14 bg-white/20 rounded-[8px] flex items-center justify-center backdrop-blur-2xl shrink-0 shadow-[2px_2px_0px_rgba(0,0,0,0.8)] border-[1.5px] border-black relative z-10 overflow-hidden group">
+                    <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-2xl shrink-0 shadow-lg shadow-black/5 border border-white/20 relative z-10 overflow-hidden group">
                       <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-40" />
                       
                       {/* The Trophy Icon */}
@@ -177,7 +177,7 @@ const SurferCardPage: React.FC = () => {
                         className="absolute top-[-50px] flex flex-col items-center pointer-events-none z-[60]"
                         style={{ transform: 'translateX(-50%)' }}
                       >
-                        <div className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-[4px] border border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] mb-1">
+                        <div className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-md border border-white/20 shadow-sm mb-1">
                           <span className="text-[12px] font-black text-[#2B2B2E] uppercase tracking-widest whitespace-nowrap">
                             מיקומך הנוכחי
                           </span>
@@ -303,7 +303,7 @@ const SurferCardPage: React.FC = () => {
                 </div>
 
                 {/* Stats Grid - Moved from PlayerCard */}
-                <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 border-t-[1.5px] border-black pt-6">
+                <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/20 pt-6">
                   <div className="flex flex-col group relative items-center p-3 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem]">
                     <span className="text-[13px] text-[#00426a] font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
                       <Crown size={13} className="text-[#FFDE45]" /> מעמד
@@ -368,9 +368,9 @@ const SurferCardPage: React.FC = () => {
       </div>
 
       {/* Detailed Analytics below */}
-      <div className="mt-16 border-t-[2px] border-black pt-16">
+      <div className="mt-16 border-t border-white/20 pt-16">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-white/10 backdrop-blur-[10px] border-[1.5px] border-black rounded-[8px] flex items-center justify-center text-[#00FFFF] shadow-[2px_2px_0px_rgba(0,0,0,0.8)]">
+          <div className="w-10 h-10 bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-xl flex items-center justify-center text-[#00FFFF] shadow-md shadow-black/5">
             <Waves size={20} />
           </div>
           <h2 className="text-2xl font-black text-[var(--ocean-bg)] tracking-tight">ניתוח ביצועים מעמיק</h2>

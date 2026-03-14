@@ -232,19 +232,19 @@ const TribeStatus: React.FC = () => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative w-full rounded-3xl shadow-xl border border-gray-100 bg-white"
+      className="relative w-full rounded-3xl shadow-xl shadow-black/5 border border-white/40 bg-white/60 backdrop-blur-md"
     >
       {/* Background Wrapper to contain the radar pulse without clipping tooltips */}
       <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
         {/* Radar Pulse Background */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-20">
-          <div className="absolute inset-0 rounded-full border border-black/20" />
-          <div className="absolute inset-8 rounded-full border border-black/20" />
-          <div className="absolute inset-16 rounded-full border border-black/20" />
-          <div className="absolute inset-24 rounded-full border border-black/20" />
-          <div className="absolute inset-32 rounded-full border border-black/20" />
-          <div className="absolute inset-40 rounded-full border border-black/20" />
-          <div className="absolute top-1/4 right-1/4 text-black/40 font-mono text-sm tracking-widest rotate-45">Radar Pulse</div>
+          <div className="absolute inset-0 rounded-full border border-black/5" />
+          <div className="absolute inset-8 rounded-full border border-black/5" />
+          <div className="absolute inset-16 rounded-full border border-black/5" />
+          <div className="absolute inset-24 rounded-full border border-black/5" />
+          <div className="absolute inset-32 rounded-full border border-black/5" />
+          <div className="absolute inset-40 rounded-full border border-black/5" />
+          <div className="absolute top-1/4 right-1/4 text-black/20 font-mono text-sm tracking-widest rotate-45">Radar Pulse</div>
         </div>
       </div>
 

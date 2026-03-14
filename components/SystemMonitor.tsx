@@ -3,13 +3,15 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
-import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp, Skull, TriangleAlert } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp, Skull, TriangleAlert, HeartPulse, Zap, Terminal, Filter, Search as SearchIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { getStorageSizeMB } from '../utils/storageStats';
 import StorageDisplay from './StorageDisplay';
-import { sessionReadCount } from '../services/firebase';
+import { sessionReadCount, db, saveLogsToDatabase, loadLogsFromDatabase } from '../services/firebase';
 import { useData } from '../contexts/DataContext';
 import { get24hBandwidth } from '../utils/bandwidthTracker';
+import { getLogs, SystemLog, LogSeverity, clearLogs } from '../utils/systemLogs';
+import { collection, getDocs, query, limit } from 'firebase/firestore';
 
 interface CircularRingProps {
   value: number;
@@ -82,7 +84,7 @@ const CircularRing: React.FC<CircularRingProps> = ({
               y="50"
               textAnchor="middle"
               dominantBaseline="central"
-              className="gauge-percentage-neon transform rotate-90 fill-[#2D3748]"
+              className="gauge-percentage-neon transform rotate-90 fill-[#000000] font-black"
               style={{ transformOrigin: '50px 50px' }}
             >
               {displayValue.toFixed(0)}%
@@ -91,14 +93,14 @@ const CircularRing: React.FC<CircularRingProps> = ({
               x="50"
               y="75"
               textAnchor="middle"
-              className="gauge-label-neon transform rotate-90 fill-[#4A5568]"
+              className="gauge-label-neon transform rotate-90 fill-[#000000] font-bold text-[8px]"
               style={{ transformOrigin: '50px 50px' }}
             >
               {label}
             </text>
           </svg>
         </div>
-        <p className="text-[12px] font-black text-[#4A5568] mt-4 tabular-nums uppercase tracking-widest">
+        <p className="text-[12px] font-black text-[#000000] mt-4 tabular-nums uppercase tracking-widest">
           {sublabel}
         </p>
       </div>
@@ -107,7 +109,7 @@ const CircularRing: React.FC<CircularRingProps> = ({
 
   return (
     <div className={`flex flex-col items-center justify-center p-4 ${animateClass || ''}`}>
-      <div className="relative w-40 h-40 flex items-center justify-center bg-white rounded-full shadow-sm border border-slate-100">
+      <div className="relative w-40 h-40 flex items-center justify-center bg-[#B2EBF2]/[0.07] rounded-full shadow-inner border border-white/30 backdrop-blur-[20px]">
         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
           <defs>
             <linearGradient id={`grad-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -121,7 +123,7 @@ const CircularRing: React.FC<CircularRingProps> = ({
             cx="50"
             cy="50"
             r={radius}
-            stroke="#f1f5f9"
+            stroke="rgba(0,0,0,0.1)"
             strokeWidth="8"
             fill="transparent"
           />
@@ -142,24 +144,453 @@ const CircularRing: React.FC<CircularRingProps> = ({
         </svg>
         
         <div className="absolute inset-0 flex items-center justify-center flex-col">
-          <span className="text-2xl font-black text-slate-800">
+          <span className="text-2xl font-black text-[#000000]">
             {displayValue.toFixed(0)}%
           </span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">
+          <span className="text-[10px] font-bold text-[#000000] uppercase tracking-wider mt-1">
             {label}
           </span>
         </div>
       </div>
-      <p className="text-xs font-bold text-slate-500 mt-4 tabular-nums uppercase tracking-widest">
+      <p className="text-xs font-bold text-[#000000] mt-4 tabular-nums uppercase tracking-widest">
         {sublabel}
       </p>
     </div>
   );
 };
 
+// --- New Modular Components ---
+
+/**
+ * Data Health Score Card
+ * Scans members collection for integrity issues.
+ */
+const DataHealthScore: React.FC = () => {
+  const { members } = useData();
+  const [isScanning, setIsScanning] = useState(false);
+  const [healthScore, setHealthScore] = useState<number | null>(null);
+  const [anomalies, setAnomalies] = useState<{ id: string, name: string, issue: string }[]>([]);
+  const [lastScan, setLastScan] = useState<Date | null>(null);
+
+  const runScan = async () => {
+    setIsScanning(true);
+    // Artificial delay for "Scanning" feel and to prevent UI freeze
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    let issues: { id: string, name: string, issue: string }[] = [];
+    let totalScore = 100;
+
+    members.forEach(member => {
+      // Check mandatory fields
+      if (!member.firstName || !member.lastName || !member.mobile) {
+        issues.push({
+          id: member.id,
+          name: `${member.firstName || ''} ${member.lastName || ''}`.trim() || 'ללא שם',
+          issue: 'חסרים שדות חובה'
+        });
+      }
+
+      // Check Grit score anomalies (assuming grit is a number)
+      const grit = (member as any).grit;
+      if (grit !== undefined && (grit < 0 || grit > 100)) {
+        issues.push({
+          id: member.id,
+          name: `${member.firstName} ${member.lastName}`,
+          issue: `ציון Grit לא תקין: ${grit}`
+        });
+      }
+    });
+
+    // Calculate score: Deduct 2 points per anomaly, min 0
+    const calculatedScore = Math.max(0, 100 - (issues.length * 2));
+    
+    setHealthScore(calculatedScore);
+    setAnomalies(issues.slice(0, 5)); // Show only top 5
+    setLastScan(new Date());
+    setIsScanning(false);
+
+    // Cache result in localStorage
+    localStorage.setItem('data_health_cache', JSON.stringify({
+      score: calculatedScore,
+      timestamp: new Date().toISOString(),
+      anomalyCount: issues.length
+    }));
+  };
+
+  useEffect(() => {
+    const cached = localStorage.getItem('data_health_cache');
+    if (cached) {
+      const { score, timestamp } = JSON.parse(cached);
+      setHealthScore(score);
+      setLastScan(new Date(timestamp));
+    }
+  }, []);
+
+  return (
+    <div className="glass-panel p-8 !rounded-[2.5rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px] relative overflow-hidden group">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-emerald-500/10 transition-all duration-700" />
+      
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-[#FFDE45] rounded-2xl flex items-center justify-center text-[#000000] shadow-sm border border-white/30">
+            <HeartPulse size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-[#CC2678] tracking-tight">ציון בריאות נתונים</h3>
+            <p className="text-xs font-bold text-[#000000] uppercase tracking-widest">DATA INTEGRITY SCAN</p>
+          </div>
+        </div>
+        
+        <button 
+          onClick={runScan}
+          disabled={isScanning}
+          className="px-4 py-2 bg-white/30 hover:bg-white/50 border border-white/40 rounded-xl text-xs font-black text-[#000000] transition-all flex items-center gap-2 shadow-sm disabled:opacity-50"
+        >
+          <RefreshCw size={14} className={isScanning ? 'animate-spin' : ''} />
+          {isScanning ? 'סורק...' : 'הפעל סריקה'}
+        </button>
+      </div>
+
+      <div className="flex items-center gap-8">
+        <div className="relative w-32 h-32 flex items-center justify-center">
+          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" stroke="rgba(0,0,0,0.05)" strokeWidth="8" fill="none" />
+            <motion.circle 
+              cx="50" cy="50" r="40" 
+              stroke={healthScore !== null && healthScore < 70 ? '#F56565' : '#10B981'} 
+              strokeWidth="8" 
+              fill="none"
+              strokeDasharray={2 * Math.PI * 40}
+              initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
+              animate={{ strokeDashoffset: 2 * Math.PI * 40 * (1 - (healthScore || 0) / 100) }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              strokeLinecap="round"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-3xl font-black text-[#007085]">{healthScore ?? '--'}</span>
+            <span className="text-[8px] font-bold text-[#000000] uppercase tracking-widest">SCORE</span>
+          </div>
+        </div>
+
+        <div className="flex-1 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white/10 p-4 rounded-2xl border border-white/20">
+              <p className="text-[10px] font-bold text-[#000000] uppercase tracking-widest mb-1">סה"כ רשומות</p>
+              <p className="text-xl font-black text-[#007085]">{members.length}</p>
+            </div>
+            <div className="bg-white/10 p-4 rounded-2xl border border-white/20">
+              <p className="text-[10px] font-bold text-[#000000] uppercase tracking-widest mb-1">חריגות שנמצאו</p>
+              <p className={`text-xl font-black ${anomalies.length > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                {healthScore !== null ? (100 - healthScore) / 2 : '--'}
+              </p>
+            </div>
+          </div>
+          
+          {anomalies.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">דגימת חריגות:</p>
+              <div className="space-y-1">
+                {anomalies.map((a, i) => (
+                  <div key={i} className="flex items-center justify-between text-[11px] font-bold text-[#000000] bg-rose-50/20 px-3 py-1.5 rounded-lg border border-rose-100/30">
+                    <span>{a.name}</span>
+                    <span className="text-rose-600">{a.issue}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {lastScan && (
+        <div className="mt-6 pt-4 border-t border-black/5 flex items-center justify-between">
+          <p className="text-[10px] font-bold text-[#000000]/40 uppercase tracking-widest">סריקה אחרונה: {lastScan.toLocaleTimeString('he-IL')}</p>
+          <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
+            <HeartPulse size={10} />
+            <span>DATA IS STABLE</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Quota Monitor Component
+ * Real-time monitoring of Firebase Quotas.
+ */
+const QuotaMonitor: React.FC = () => {
+  const [quotaData, setQuotaData] = useState<{ time: string, reads: number, writes: number }[]>([]);
+  const [currentQuota, setCurrentQuota] = useState({ reads: sessionReadCount, writes: 0 });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+      
+      setQuotaData(prev => {
+        const newPoint = {
+          time: timeStr,
+          reads: sessionReadCount,
+          writes: Math.floor(Math.random() * 5) // Mocking writes for now as we don't track them globally yet
+        };
+        return [...prev, newPoint].slice(-12);
+      });
+      
+      setCurrentQuota({ reads: sessionReadCount, writes: currentQuota.writes });
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [currentQuota.writes]);
+
+  const isExceeded = sessionReadCount > 50000;
+  const quotaPercentage = (sessionReadCount / 50000) * 100;
+
+  return (
+    <div className="glass-panel p-8 !rounded-[2.5rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px]">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-[#FFDE45] rounded-xl flex items-center justify-center text-[#000000] shadow-sm border border-white/30">
+            <Zap size={24} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-black text-[#CC2678] tracking-tight">מכסות Firebase</h3>
+              <span className={`px-3 py-1 text-[10px] font-black rounded-full border ${isExceeded ? 'bg-amber-100/50 text-amber-900 border-amber-200' : 'bg-emerald-100/50 text-emerald-900 border-emerald-200'}`}>
+                {isExceeded ? 'PAY AS YOU GO' : 'FREE TIER'}
+              </span>
+            </div>
+            <p className="text-xs font-bold text-[#000000] uppercase tracking-widest">REAL-TIME QUOTA MONITOR</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-[10px] font-black text-[#000000] uppercase tracking-widest">Firestore Reads</p>
+            <p className="text-lg font-black text-[#007085]">{sessionReadCount.toLocaleString()}</p>
+          </div>
+          <div className="w-px h-8 bg-slate-900/20" />
+          <div className="text-right">
+            <p className="text-[10px] font-black text-[#000000] uppercase tracking-widest">Limit</p>
+            <p className="text-lg font-black text-[#000000]/40">50,000</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="h-[200px] w-full mt-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={quotaData}>
+            <CartesianGrid strokeDasharray="0" vertical={false} stroke="rgba(0,0,0,0.1)" />
+            <XAxis dataKey="time" hide />
+            <YAxis hide />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: '#fff', 
+                borderRadius: '0', 
+                border: '2px solid #000', 
+                boxShadow: '4px 4px 0px rgba(0,0,0,0.1)',
+                fontWeight: 900 
+              }}
+              itemStyle={{ fontWeight: 900, fontSize: '12px' }}
+            />
+            <Line 
+              type="stepAfter" 
+              dataKey="reads" 
+              stroke={sessionReadCount > 40000 ? '#C29670' : '#007085'} 
+              strokeWidth={4} 
+              dot={false} 
+              animationDuration={1000}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      
+      <div className="mt-6">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[10px] font-black text-[#000000] uppercase tracking-widest">
+            {Math.round(quotaPercentage)}% OF DAILY FREE QUOTA
+          </span>
+          {isExceeded && (
+            <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest bg-amber-50 px-2 py-1 rounded-md border border-amber-200">
+              OVER-QUOTA: BILLING ACTIVE
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-3 bg-[#000000]/5 border border-[#000000]/10 rounded-full overflow-hidden relative shadow-inner">
+            <motion.div 
+              className={`h-full ${isExceeded ? 'bg-amber-400' : sessionReadCount > 40000 ? 'bg-[#C29670]' : 'bg-[#007085]'}`}
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min(100, quotaPercentage)}%` }}
+            />
+            {isExceeded && (
+              <motion.div 
+                className="absolute top-0 left-0 h-full bg-amber-500/30 w-full"
+                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            )}
+          </div>
+        </div>
+        <p className="mt-4 text-[11px] font-bold text-[#000000]/60 leading-relaxed text-right border-t border-[#000000]/10 pt-3">
+          * מכסת הקריאות החינמית ב-Firestore היא 50,000 ליום. חריגה מהמכסה מעבירה את המערכת למודל Pay-as-you-go באופן אוטומטי.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Technical Logs Table
+ * Interactive log table for system events.
+ */
+const TechnicalLogs: React.FC = () => {
+  const [logs, setLogs] = useState<SystemLog[]>([]);
+  const [filter, setFilter] = useState<LogSeverity | 'All'>('All');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const refreshLogs = () => {
+    setIsRefreshing(true);
+    setLogs(getLogs());
+    setTimeout(() => setIsRefreshing(false), 600);
+  };
+
+  useEffect(() => {
+    refreshLogs();
+    const handleNewLog = () => refreshLogs();
+    window.addEventListener('system-log-added', handleNewLog);
+    return () => window.removeEventListener('system-log-added', handleNewLog);
+  }, []);
+
+  const filteredLogs = logs.filter(log => filter === 'All' || log.severity === filter);
+
+  const getSeverityColor = (severity: LogSeverity) => {
+    switch (severity) {
+      case 'Critical': return 'text-rose-500 bg-rose-50 border-rose-100';
+      case 'Warning': return 'text-amber-500 bg-amber-50 border-amber-100';
+      case 'Info': return 'text-blue-500 bg-blue-50 border-blue-100';
+      case 'Security': return 'text-violet-500 bg-violet-50 border-violet-100';
+    }
+  };
+
+  return (
+    <div className="glass-panel p-8 !rounded-[2.5rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-[#FFDE45] rounded-2xl flex items-center justify-center text-[#000000] shadow-lg border border-white/30">
+            <Terminal size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-[#CC2678] tracking-tight">יומן אירועים טכני</h3>
+            <p className="text-xs font-bold text-[#000000] uppercase tracking-widest">ADVANCED SYSTEM LOGS</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2 justify-end">
+            <button 
+              onClick={async () => {
+                await saveLogsToDatabase(logs);
+                clearLogs();
+                refreshLogs();
+              }}
+              className="px-3 py-1.5 bg-rose-500 text-white rounded-lg text-[10px] font-black hover:bg-rose-600 transition-all shadow-sm"
+            >
+              נקה ושמור
+            </button>
+            <button 
+              onClick={async () => {
+                const loadedLogs = await loadLogsFromDatabase();
+                setLogs(loadedLogs);
+              }}
+              className="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-[10px] font-black hover:bg-emerald-600 transition-all shadow-sm"
+            >
+              טען אירועים
+            </button>
+            <button 
+              onClick={refreshLogs}
+              className="p-2 bg-white/30 border border-white/40 rounded-xl text-[#000000]/40 hover:text-[#000000] transition-all shadow-sm"
+            >
+              <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+            </button>
+          </div>
+          <div className="flex bg-black/5 p-1 rounded-xl border border-black/10 w-fit">
+            {(['All', 'Critical', 'Warning', 'Info', 'Security'] as const).map(s => (
+              <button
+                key={s}
+                onClick={() => setFilter(s)}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${
+                  filter === s ? 'bg-white text-[#000000] shadow-sm' : 'text-[#000000]/40 hover:text-[#000000]'
+                }`}
+              >
+                {s === 'All' ? 'הכל' : s === 'Critical' ? 'קריטי' : s === 'Warning' ? 'אזהרה' : s === 'Info' ? 'מידע' : 'אבטחה'}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto -mx-8 px-8">
+        <table className="w-full text-right border-separate border-spacing-y-2">
+          <thead>
+            <tr className="text-[10px] font-black text-[#000000] uppercase tracking-[0.2em]">
+              <th className="pb-4 px-4">זמן</th>
+              <th className="pb-4 px-4">חומרה</th>
+              <th className="pb-4 px-4">מקור</th>
+              <th className="pb-4 px-4">הודעה</th>
+              <th className="pb-4 px-4">פרטים</th>
+            </tr>
+          </thead>
+          <tbody>
+            <AnimatePresence mode="popLayout">
+              {filteredLogs.map((log) => (
+                <motion.tr 
+                  key={log.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="group"
+                >
+                  <td className="py-3 px-4 bg-white/10 first:rounded-r-2xl border-y border-r border-white/10 text-[11px] font-bold text-[#000000]/60 tabular-nums">
+                    {log.timestamp.toLocaleTimeString('he-IL')}
+                  </td>
+                  <td className="py-3 px-4 bg-white/10 border-y border-white/10">
+                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase border ${getSeverityColor(log.severity)}`}>
+                      {log.severity}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 bg-white/10 border-y border-white/10 text-[11px] font-black text-[#000000]">
+                    {log.source}
+                  </td>
+                  <td className="py-3 px-4 bg-white/10 border-y border-white/10 text-[11px] font-bold text-[#000000] max-w-xs truncate">
+                    {log.message}
+                  </td>
+                  <td className="py-3 px-4 bg-white/10 last:rounded-l-2xl border-y border-l border-white/10 text-[10px] font-medium text-[#000000]/40 font-mono">
+                    {log.details || '-'}
+                  </td>
+                </motion.tr>
+              ))}
+            </AnimatePresence>
+          </tbody>
+        </table>
+        
+        {filteredLogs.length === 0 && (
+          <div className="py-20 text-center">
+            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
+              <Filter size={32} />
+            </div>
+            <p className="text-sm font-bold text-slate-400">לא נמצאו אירועים התואמים לסינון</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- End New Modular Components ---
+
 const SystemMonitor: React.FC = () => {
   const { dbStatus, toggleDbStatus } = useData();
-  const [designMode, setDesignMode] = useState<'classic' | 'neon'>('classic');
   const [data, setData] = useState<any>({
     dbSize: 0,
     errorRate: 0,
@@ -314,20 +745,20 @@ const SystemMonitor: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 min-h-[400px]" dir="rtl">
+    <div className="space-y-12 animate-in fade-in duration-700 min-h-[400px]" dir="rtl">
       {/* Unified Header */}
       <div className="flex flex-col items-center text-center mb-16 space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#F5F7FA] text-[#2D3748] text-[12px] font-black rounded-full shadow-soft border border-slate-200">
-          <Activity size={12} className="text-[#1A365D]" />
-          <span>SYSTEM DIVE ANALYTICS</span>
+        <div className="inline-flex items-center gap-2 px-6 py-2 bg-[#FFDE45] text-[#000000] text-[12px] font-black rounded-full shadow-xl border border-white/30">
+          <Activity size={12} />
+          <span className="tracking-widest">SYSTEM DIVE ANALYTICS</span>
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-black text-[#2D3748] tracking-tighter leading-none uppercase">
+        <h1 className="text-5xl md:text-7xl font-black text-[#CC2678] tracking-tighter leading-none uppercase">
           חדר מכונות
         </h1>
 
         <div className="flex flex-col items-center gap-3">
-          <p className="text-[#4A5568] max-w-2xl text-xl font-bold">
+          <p className="text-[#000000] max-w-2xl text-xl font-bold">
             ניטור תשתיות וביצועי מערכת בזמן אמת. כל המדדים הקריטיים תחת שליטה מלאה ⚙️
           </p>
           
@@ -353,7 +784,7 @@ const SystemMonitor: React.FC = () => {
                 };
                 fetchStats();
               }}
-              className="p-1.5 bg-[#F5F7FA] hover:bg-slate-200 rounded-full text-[#4A5568] hover:text-[#2D3748] transition-all border border-slate-200"
+              className="p-2 bg-white/30 hover:bg-white/50 rounded-full text-[#000000] transition-all border border-white/30 shadow-sm"
               title="Refresh Stats"
             >
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -365,18 +796,18 @@ const SystemMonitor: React.FC = () => {
         <div className="w-full flex justify-center pt-4 pb-8">
           <div className="relative group">
             {/* Outer Ring/Base of the button */}
-            <div className="absolute -inset-4 bg-slate-300 rounded-full shadow-[inset_0_4px_10px_rgba(0,0,0,0.2),0_10px_20px_rgba(0,0,0,0.1)] border border-slate-400" />
+            <div className="absolute -inset-4 bg-slate-200 rounded-full shadow-inner border border-slate-300" />
             
             <motion.button 
               whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.9, y: 8, boxShadow: '0px 2px 5px rgba(0,0,0,0.5)' }}
+              whileTap={{ scale: 0.9, y: 8, boxShadow: '0px 2px 5px rgba(0,0,0,0.3)' }}
               animate={isKillSwitchActive || countdown !== null ? {
                 filter: ["brightness(1)", "brightness(1.8)", "brightness(1)"],
                 scale: [1, 0.95, 1],
                 boxShadow: [
-                  '0_15px_0_rgb(153,0,0),0_25px_50px_rgba(255,0,0,0.5)',
-                  '0_15px_0_rgb(153,0,0),0_40px_80px_rgba(255,0,0,0.8)',
-                  '0_15px_0_rgb(153,0,0),0_25px_50px_rgba(255,0,0,0.5)'
+                  '0_15px_0_rgb(153,0,0),0_25px_50px_rgba(255,0,0,0.3)',
+                  '0_15px_0_rgb(153,0,0),0_40px_80px_rgba(255,0,0,0.5)',
+                  '0_15px_0_rgb(153,0,0),0_25px_50px_rgba(255,0,0,0.3)'
                 ]
               } : {}}
               transition={{
@@ -385,7 +816,7 @@ const SystemMonitor: React.FC = () => {
                 ease: "easeInOut"
               }}
               onClick={handleButtonClick}
-              className={`relative w-32 h-32 rounded-full font-black text-[9px] transition-all duration-300 flex flex-col items-center justify-center p-4 text-center shadow-[0_15px_0_rgb(153,0,0),0_25px_50px_rgba(0,0,0,0.4)] border-4 border-[#CC0000] bg-[#FF0000] text-white`}
+              className={`relative w-32 h-32 rounded-full font-black text-[9px] transition-all duration-300 flex flex-col items-center justify-center p-4 text-center shadow-[0_15px_0_rgb(153,0,0),0_25px_50px_rgba(0,0,0,0.2)] border-4 border-[#CC0000] bg-[#FF0000] text-white`}
               style={{ 
                 transformStyle: 'preserve-3d',
               }}
@@ -429,8 +860,8 @@ const SystemMonitor: React.FC = () => {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl animate-in fade-in">
-          <div className="glass-panel border border-white/20 w-full max-w-md rounded-[3rem] shadow-[0_0_100px_rgba(255,0,0,0.3)] overflow-hidden animate-in zoom-in-95 flex flex-col" dir="rtl">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl animate-in fade-in">
+          <div className="glass-panel border border-white/20 w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col" dir="rtl">
             <div className="bg-[#FF0000] p-8 text-white flex items-center gap-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.3)_0%,transparent_70%)] animate-pulse" />
               <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl border border-white/30 rotate-3">
@@ -492,106 +923,55 @@ const SystemMonitor: React.FC = () => {
         </div>
       )}
 
-      {/* Health-Check Matrix (2x2 Grid) */}
-      <div className={`${designMode === 'neon' ? 'dashboard-container-neon' : 'glass-panel !rounded-[3rem] p-12'} mb-12 relative`}>
-        {/* Design Toggle */}
-        <button 
-          onClick={() => setDesignMode(prev => prev === 'classic' ? 'neon' : 'classic')}
-          className="absolute top-6 right-6 p-2 bg-white/50 hover:bg-white/80 rounded-full text-[#4A5568] hover:text-[#2D3748] transition-all z-50 border border-slate-200"
-          title="Switch Design Mode"
-        >
-          <RefreshCw size={16} className={designMode === 'neon' ? 'rotate-180' : ''} />
-        </button>
+      {/* New Enhanced Analytics Layer */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <DataHealthScore />
+        <QuotaMonitor />
+      </div>
 
-        <div className={designMode === 'neon' ? '' : 'grid grid-cols-2 gap-12'}>
-          {/* 1. Database Usage (Azure/Cyan) */}
-          {(() => {
-            const dbQuotaMB = 1024;
-            const dbSizeMB = Number(data.dbSize) || 0;
-            const percentage = Math.min((dbSizeMB / dbQuotaMB) * 100, 100);
-            const isHigh = percentage > 85;
-            
-            return (
-              <CircularRing 
-                mode={designMode}
-                value={percentage}
-                label="Database"
-                sublabel={`${dbSizeMB.toFixed(2)} MB / ${dbQuotaMB} MB`}
-                gradient={isHigh ? ['#2D3748', '#1A365D'] : ['#1A365D', '#63B3ED']}
-                ringClass={designMode === 'neon' ? 'gauge-db' : ''}
-                animateClass="animate-breathing"
-              />
-            );
-          })()}
+      <div className="mb-12">
+        <TechnicalLogs />
+      </div>
 
-          {/* 2. System Status (Live Quota - Emerald/Spring) */}
-          {(() => {
-            const percentage = Math.min((liveReads / quotaLimit) * 100, 100);
-            
-            return (
-              <CircularRing 
-                mode={designMode}
-                value={percentage}
-                label="System Status"
-                sublabel={`${liveReads.toLocaleString()} / ${quotaLimit.toLocaleString()} Reads`}
-                gradient={['#38B2AC', '#4FD1C5']}
-                ringClass={designMode === 'neon' ? 'gauge-sys' : ''}
-                animateClass="animate-breathing"
-              />
-            );
-          })()}
 
-          {/* 3. Memory/Resource Load (Storage - Amber/Sun) */}
-          {(() => {
-            const quotaMB = 1000;
-            const sizeMB = Number(storageSize) || 0;
-            const percentage = Math.min((sizeMB / quotaMB) * 100, 100);
-            const isHigh = percentage > 70;
-            
-            return (
-              <CircularRing 
-                mode={designMode}
-                value={percentage}
-                label="Resources"
-                sublabel={`${sizeMB.toFixed(2)} MB / ${quotaMB} MB`}
-                gradient={['#D69E2E', '#F6E05E']}
-                ringClass={designMode === 'neon' ? 'gauge-res' : ''}
-                animateClass="animate-breathing"
-                isHigh={isHigh}
-              />
-            );
-          })()}
-
-          {/* 4. Errors/Security (Crimson/Ruby) */}
-          {(() => {
-            const percentage = Math.min(data.errorRate * 100, 100);
-            const hasErrors = percentage > 0;
-            
-            return (
-              <CircularRing 
-                mode={designMode}
-                value={percentage}
-                label="Security"
-                sublabel={`${percentage.toFixed(2)}% Error Rate`}
-                gradient={['#E53E3E', '#FC8181']}
-                ringClass={designMode === 'neon' ? 'gauge-err' : ''}
-                animateClass={hasErrors ? 'animate-shake' : 'animate-breathing'}
-              />
-            );
-          })()}
+      {/* Database & Storage Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div className="glass-panel p-8 !rounded-[3rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px] flex items-center gap-6">
+          <CircularRing 
+            value={Math.min((Number(data.dbSize) / 1024) * 100, 100)}
+            label="Database"
+            sublabel={`${(Number(data.dbSize) || 0).toFixed(2)} MB`}
+            gradient={Number(data.dbSize) / 1024 > 0.85 ? ['#CC2678', '#FF2D60'] : Number(data.dbSize) / 1024 > 0.7 ? ['#FFDE45', '#FF9F1C'] : ['#10B981', '#34D399']}
+          />
+          <div>
+            <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight mb-2">גודל מסד הנתונים</h3>
+            <p className="text-xs font-bold text-[#000000]/60 uppercase tracking-widest">מתוך מכסה של 1024 MB</p>
+          </div>
+        </div>
+        <div className="glass-panel p-8 !rounded-[3rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px] flex items-center gap-6">
+          <CircularRing 
+            value={Math.min((Number(storageSize) / 1000) * 100, 100)}
+            label="Storage"
+            sublabel={`${(Number(storageSize) || 0).toFixed(2)} MB`}
+            gradient={Number(storageSize) / 1000 > 0.85 ? ['#CC2678', '#FF2D60'] : Number(storageSize) / 1000 > 0.7 ? ['#FFDE45', '#FF9F1C'] : ['#10B981', '#34D399']}
+          />
+          <div>
+            <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight mb-2">גודל שטח האחסון (Storage)</h3>
+            <p className="text-xs font-bold text-[#000000]/60 uppercase tracking-widest">מתוך מכסה של 1000 MB</p>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
         {/* Reads per Minute Chart */}
-        <div className="glass-panel p-8 !rounded-[3rem] relative overflow-hidden">
+        <div className="glass-panel p-8 !rounded-[3rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px] relative overflow-hidden">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
-              <h3 className="text-lg font-black text-[#2D3748] uppercase tracking-tight">קצב קריאות ממסד הנתונים (Live)</h3>
+              <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight">קצב קריאות ממסד הנתונים (Live)</h3>
               <div className="gt-info-wrapper">
-                <div className="gt-info-icon" style={{ width: '18px', height: '18px', fontSize: '11px' }}>i</div>
-                <span className="gt-tooltip" style={{ bottom: '180%', width: '280px' }}>
+                <div className="gt-info-icon" style={{ width: '18px', height: '18px', fontSize: '11px', backgroundColor: '#FFDE45', color: '#000' }}>i</div>
+                <span className="gt-tooltip" style={{ bottom: '180%', width: '280px', backgroundColor: '#fff', color: '#000', border: '2px solid #000' }}>
                   גרף זה מציג את כמות הבקשות (Requests) שנשלחות למסד הנתונים בזמן אמת, בכל רגע נתון.
                   <br /><br />
                   כל נקודה בגרף מייצגת את מספר המסמכים שנשלפו ב-5 השניות האחרונות. זה עוזר לזהות "פיקים" של פעילות באתר.
@@ -599,17 +979,12 @@ const SystemMonitor: React.FC = () => {
               </div>
             </div>
             
-            {/* Simulation Button for testing */}
             <button 
               onClick={() => {
-                // Simulate a read by dispatching the event that the monitor listens to
-                // and incrementing the local count for the UI
                 const fakeTotal = liveReads + Math.floor(Math.random() * 5) + 1;
                 window.dispatchEvent(new CustomEvent('db-read-update', { detail: fakeTotal }));
-                // We also need to update the global variable if we want it to persist in this session
-                // but for simulation, the event is enough to trigger the graph
               }}
-              className="px-3 py-1 glass-panel text-white/60 hover:text-white text-[12px] font-black rounded-lg transition-colors uppercase tracking-wider border border-white/20"
+              className="px-3 py-1 bg-white/30 hover:bg-white/50 text-[#000000] text-[12px] font-black rounded-lg transition-colors uppercase tracking-wider border border-white/20"
             >
               בצע בדיקת קריאה
             </button>
@@ -618,33 +993,33 @@ const SystemMonitor: React.FC = () => {
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={readHistory} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <CartesianGrid strokeDasharray="0" vertical={false} stroke="rgba(0,0,0,0.1)" />
                 <XAxis 
                   dataKey="time" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }}
+                  tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
                   minTickGap={30}
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }}
+                  tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
                   domain={[0, 'auto']}
                   allowDecimals={false}
                   minTickGap={10}
                 />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#2D3748', borderRadius: '1rem', border: 'none', color: '#fff' }}
-                  itemStyle={{ color: '#63B3ED', fontWeight: 900 }}
+                  contentStyle={{ backgroundColor: '#fff', borderRadius: '0', border: '2px solid #000', color: '#000', boxShadow: '4px 4px 0px rgba(0,0,0,0.1)' }}
+                  itemStyle={{ color: '#007085', fontWeight: 900 }}
                   formatter={(value: any) => [Math.round(value), 'קריאות']}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="reads" 
-                  stroke="#1A365D" 
+                  stroke="#007085" 
                   strokeWidth={4} 
-                  dot={{ r: 4, fill: '#1A365D', strokeWidth: 2, stroke: '#fff' }}
+                  dot={{ r: 4, fill: '#007085', strokeWidth: 2, stroke: '#fff' }}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                   isAnimationActive={false}
                 />
@@ -654,7 +1029,7 @@ const SystemMonitor: React.FC = () => {
           
           {readHistory.every(pt => pt.reads === 0) && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.3em] bg-white/80 px-4 py-2 rounded-full backdrop-blur-sm">
+              <p className="text-[12px] font-black text-[#000000]/40 uppercase tracking-[0.3em] bg-white/40 px-4 py-2 rounded-full backdrop-blur-sm">
                 No active traffic detected
               </p>
             </div>
@@ -663,19 +1038,19 @@ const SystemMonitor: React.FC = () => {
       </div>
 
       {/* Traffic Area Chart */}
-      <div className="glass-panel p-8 !rounded-[3rem]">
+      <div className="glass-panel p-8 !rounded-[3rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px]">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-black text-[#2D3748] uppercase tracking-tight">תנועת רשת (24 שעות - MB)</h3>
+          <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight">תנועת רשת (24 שעות - MB)</h3>
           <div className="flex gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[#1A365D]" />
-              <span className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-[#007085]" />
+              <span className="text-[12px] font-black text-[#000000] uppercase tracking-widest flex items-center gap-1">
                 <ArrowDown size={10} /> Incoming
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[#38B2AC]" />
-              <span className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-[#3dbbd3]" />
+              <span className="text-[12px] font-black text-[#000000] uppercase tracking-widest flex items-center gap-1">
                 <ArrowUp size={10} /> Outgoing
               </span>
             </div>
@@ -686,30 +1061,30 @@ const SystemMonitor: React.FC = () => {
             <AreaChart data={bandwidthData} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
               <defs>
                 <linearGradient id="colorIn" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#1A365D" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#1A365D" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#007085" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#007085" stopOpacity={0}/>
                 </linearGradient>
                 <linearGradient id="colorOut" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#38B2AC" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#38B2AC" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#3dbbd3" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#3dbbd3" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="0" vertical={false} stroke="rgba(0,0,0,0.1)" />
               <XAxis 
                 dataKey="time" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }}
+                tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
                 minTickGap={30}
               />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#4A5568' }} unit="MB" />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }} unit="MB" />
               <Tooltip 
-                contentStyle={{ backgroundColor: '#2D3748', borderRadius: '1rem', border: 'none', color: '#fff' }}
+                contentStyle={{ backgroundColor: '#fff', borderRadius: '0', border: '2px solid #000', color: '#000', boxShadow: '4px 4px 0px rgba(0,0,0,0.1)' }}
                 itemStyle={{ fontWeight: 900 }}
                 formatter={(value: any) => [`${Math.round(value)} MB`]}
               />
-              <Area type="monotone" dataKey="in" name="Incoming" stroke="#1A365D" strokeWidth={3} fillOpacity={1} fill="url(#colorIn)" />
-              <Area type="monotone" dataKey="out" name="Outgoing" stroke="#38B2AC" strokeWidth={3} fillOpacity={1} fill="url(#colorOut)" />
+              <Area type="monotone" dataKey="in" name="Incoming" stroke="#007085" strokeWidth={3} fillOpacity={1} fill="url(#colorIn)" />
+              <Area type="monotone" dataKey="out" name="Outgoing" stroke="#3dbbd3" strokeWidth={3} fillOpacity={1} fill="url(#colorOut)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>

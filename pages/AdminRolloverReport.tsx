@@ -129,7 +129,7 @@ const AdminRolloverReport: React.FC = () => {
             </h1>
           </div>
           <h2 className="text-6xl md:text-8xl font-black text-black leading-none tracking-tighter uppercase">
-            סגירת סשן <span className="text-white" style={{ WebkitTextStroke: '2px black' }}>שבועית</span>
+            סגירת סשן <span className="text-white">שבועית</span>
           </h2>
         </header>
 
@@ -162,7 +162,7 @@ const AdminRolloverReport: React.FC = () => {
             { label: 'זמן ריצה', value: stats.lastRunTime, sub: `ממוצע: ${stats.avgRunTime}`, color: 'bg-white' },
             { label: 'אחוז הצלחה', value: `${stats.successRate.toFixed(0)}%`, sub: 'מתחילת השנה', color: 'bg-white' }
           ].map((stat, i) => (
-            <div key={i} className={`backdrop-blur-xl border border-white/20 p-6 rounded-3xl shadow-lg transition-all ${stat.color}`}>
+            <div key={i} className="bg-white/40 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg hover:shadow-2xl transition-all">
               <div className="font-['IBM_Plex_Mono'] text-[12px] font-black uppercase mb-4 text-[#7A1555]">{stat.label}</div>
               <div className="text-4xl font-black leading-none mb-2 text-[#000000]">{stat.value}</div>
               <div className="font-bold text-[12px] uppercase tracking-wider text-[#000000]/70">{stat.sub}</div>
@@ -174,15 +174,15 @@ const AdminRolloverReport: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10 items-start">
           
           {/* Steps Log */}
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-lg overflow-hidden">
-            <div className="p-6 border-b border-black/10 bg-[#7A1555]/5 flex items-center justify-between">
+          <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl shadow-lg overflow-hidden">
+            <div className="p-6 border-b border-[#7A1555]/10 bg-[#7A1555]/5 flex items-center justify-between">
               <span className="font-black text-xl uppercase tracking-tight text-[#7A1555]">LOG // לוג שלבים</span>
               <span className="bg-[#7A1555] text-[#FBC02D] px-3 py-1 rounded-full font-black text-sm">
                 {logs.filter(l => l.status === 'success').length}/{logs.length} OK
               </span>
             </div>
 
-            <div className="p-6 border-b border-black/10 bg-white">
+            <div className="p-6 border-b border-[#7A1555]/10 bg-white">
               <h3 className="font-black text-lg uppercase mb-4 text-[#7A1555]">רשומות שנשמרו</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                 {[
@@ -193,8 +193,8 @@ const AdminRolloverReport: React.FC = () => {
                 ].map((record) => {
                   const isDone = logs.some(l => l.action.includes(record.label) && l.status === 'success');
                   return (
-                    <div key={record.id} className="flex items-center gap-3 p-3 bg-[#F5F5F0] border border-black/10 rounded-xl">
-                      <div className={`w-6 h-6 border border-black/20 rounded flex items-center justify-center ${isDone ? 'bg-[#7A1555]' : 'bg-white'}`}>
+                    <div key={record.id} className="flex items-center gap-3 p-3 bg-white/40 backdrop-blur-md border border-white/20 rounded-xl">
+                      <div className={`w-6 h-6 border border-white/30 rounded flex items-center justify-center ${isDone ? 'bg-[#7A1555]' : 'bg-white'}`}>
                         {isDone && <CheckCircle2 size={16} className="text-[#FBC02D]" />}
                       </div>
                       <span className="font-bold text-sm text-[#000000]">{record.label}</span>
@@ -213,8 +213,8 @@ const AdminRolloverReport: React.FC = () => {
                 ].map((counter) => {
                   const isDone = logs.some(l => l.action.includes('איפוס') && l.details.includes(counter.label) && l.status === 'success');
                   return (
-                    <div key={counter.id} className="flex items-center gap-3 p-3 bg-[#F5F5F0] border border-black/10 rounded-xl">
-                      <div className={`w-6 h-6 border border-black/20 rounded flex items-center justify-center ${isDone ? 'bg-[#7A1555]' : 'bg-white'}`}>
+                    <div key={counter.id} className="flex items-center gap-3 p-3 bg-white/40 backdrop-blur-md border border-white/20 rounded-xl">
+                      <div className={`w-6 h-6 border border-white/30 rounded flex items-center justify-center ${isDone ? 'bg-[#7A1555]' : 'bg-white'}`}>
                         {isDone && <CheckCircle2 size={16} className="text-[#FBC02D]" />}
                       </div>
                       <span className="font-bold text-sm text-[#000000]">{counter.label}</span>
@@ -236,8 +236,8 @@ const AdminRolloverReport: React.FC = () => {
                   const isFailure = log?.status === 'failure';
                   
                   return (
-                    <div key={stat.id} className="flex items-center gap-3 p-3 bg-[#F5F5F0] border border-black/10 rounded-xl">
-                      <div className={`w-6 h-6 border border-black/20 rounded flex items-center justify-center ${isSuccess ? 'bg-[#7A1555]' : isFailure ? 'bg-[#FF2D60]' : 'bg-white'}`}>
+                    <div key={stat.id} className="flex items-center gap-3 p-3 bg-white/40 backdrop-blur-md border border-white/20 rounded-xl">
+                      <div className={`w-6 h-6 border border-white/30 rounded flex items-center justify-center ${isSuccess ? 'bg-[#7A1555]' : isFailure ? 'bg-[#FF2D60]' : 'bg-white'}`}>
                         {isSuccess && <CheckCircle2 size={16} className="text-[#FBC02D]" />}
                         {isFailure && <XCircle size={16} className="text-[#FBC02D]" />}
                       </div>
@@ -258,8 +258,8 @@ const AdminRolloverReport: React.FC = () => {
                   const log = logs.find(l => l.action === 'FINALIZETHURSDAYSESSION' && l.status === 'success');
                   const isDone = !!log;
                   return (
-                    <div key={item.id} className="flex items-center gap-3 p-3 bg-[#F5F5F0] border border-black/10 rounded-xl">
-                      <div className={`w-6 h-6 border border-black/20 rounded flex items-center justify-center ${isDone ? 'bg-[#7A1555]' : 'bg-white'}`}>
+                    <div key={item.id} className="flex items-center gap-3 p-3 bg-white/40 backdrop-blur-md border border-white/20 rounded-xl">
+                      <div className={`w-6 h-6 border border-white/30 rounded flex items-center justify-center ${isDone ? 'bg-[#7A1555]' : 'bg-white'}`}>
                         {isDone && <CheckCircle2 size={16} className="text-[#FBC02D]" />}
                       </div>
                       <span className="font-bold text-sm text-[#000000]">{item.label}</span>
@@ -269,11 +269,11 @@ const AdminRolloverReport: React.FC = () => {
               </div>
             </div>
 
-            <div className="divide-y divide-black/10 max-h-[800px] overflow-y-auto">
-              <div className="h-8 bg-[#F5F5F0]/50 border-b border-black/5"></div>
-              <h4 className="p-4 font-black text-[#7A1555] uppercase bg-[#F5F5F0]">סגירת סשן (Finalize)</h4>
+            <div className="divide-y divide-white/10 max-h-[800px] overflow-y-auto">
+              <div className="h-8 bg-white/20 backdrop-blur-sm border-b border-white/10"></div>
+              <h4 className="p-4 font-black text-[#7A1555] uppercase bg-white/40 backdrop-blur-md">סגירת סשן (Finalize)</h4>
               {logs.filter(l => l.action === 'FINALIZETHURSDAYSESSION').map((log) => (
-                <div key={log.id} className="p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 hover:bg-[#F5F5F0] transition-colors group">
+                <div key={log.id} className="p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 hover:bg-white/40 transition-colors group">
                   <div className={`shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform ${
                     log.status === 'success' ? 'bg-[#7A1555]' :
                     log.status === 'failure' ? 'bg-[#FF2D60]' :
@@ -296,7 +296,7 @@ const AdminRolloverReport: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2 sm:gap-0 border-t sm:border-t-0 border-black/5 pt-2 sm:pt-0 shrink-0">
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2 sm:gap-0 border-t sm:border-t-0 border-white/10 pt-2 sm:pt-0 shrink-0">
                     <div className="font-['IBM_Plex_Mono'] text-sm md:text-base font-black text-black whitespace-nowrap">
                       {new Date(log.timestamp).toLocaleDateString('he-IL')}
                     </div>
@@ -307,11 +307,11 @@ const AdminRolloverReport: React.FC = () => {
                 </div>
               ))}
 
-              <div className="h-8 bg-[#F5F5F0]/50 border-y border-black/5"></div>
+              <div className="h-8 bg-white/20 backdrop-blur-sm border-y border-white/10"></div>
 
-              <h4 className="p-4 font-black text-[#7A1555] uppercase bg-[#F5F5F0] border-t border-black/10">מערכת ועדכונים</h4>
+              <h4 className="p-4 font-black text-[#7A1555] uppercase bg-white/40 backdrop-blur-md border-t border-white/20">מערכת ועדכונים</h4>
               {logs.filter(l => l.action !== 'FINALIZETHURSDAYSESSION').map((log) => (
-                <div key={log.id} className="p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 hover:bg-[#F5F5F0] transition-colors group">
+                <div key={log.id} className="p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6 hover:bg-white/40 transition-colors group">
                   <div className={`shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform ${
                     log.status === 'success' ? 'bg-[#7A1555]' :
                     log.status === 'failure' ? 'bg-[#FF2D60]' :
@@ -327,7 +327,7 @@ const AdminRolloverReport: React.FC = () => {
                       <span className="break-words">{log.details}</span>
                     </div>
                   </div>
-                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2 sm:gap-0 border-t sm:border-t-0 border-black/5 pt-2 sm:pt-0 shrink-0">
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2 sm:gap-0 border-t sm:border-t-0 border-white/10 pt-2 sm:pt-0 shrink-0">
                     <div className="font-['IBM_Plex_Mono'] text-sm md:text-base font-black text-black whitespace-nowrap">
                       {new Date(log.timestamp).toLocaleDateString('he-IL')}
                     </div>
@@ -353,7 +353,7 @@ const AdminRolloverReport: React.FC = () => {
             <button 
               onClick={() => setShowConfirm(true)}
               disabled={isRunning}
-              className="group relative border-2 border-black bg-[#FFDE45] p-6 rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[6px] active:translate-y-[6px] transition-all disabled:opacity-50"
+              className="group relative border border-[#7A1555]/20 bg-[#FFDE45] p-6 rounded-2xl shadow-xl shadow-[#7A1555]/10 active:scale-95 transition-all disabled:opacity-50"
             >
               <div className="flex items-center justify-center gap-4">
                 {isRunning ? <Loader2 className="animate-spin" size={28} strokeWidth={3} /> : <Play size={28} fill="currentColor" />}
@@ -366,7 +366,7 @@ const AdminRolloverReport: React.FC = () => {
             {/* Confirmation Modal */}
             {showConfirm && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
-                <div className="bg-[#FFD700] border-4 border-black p-8 rounded-3xl shadow-[0_0_40px_rgba(255,215,0,0.6)] max-w-md w-full text-center">
+                <div className="bg-[#FFD700]/80 backdrop-blur-xl border border-white/30 p-8 rounded-3xl shadow-2xl shadow-[#FFD700]/20 max-w-md w-full text-center">
                   <h2 className="text-5xl font-black uppercase mb-6 tracking-tighter text-black">עצור!</h2>
                   <p className="text-xl font-black mb-8 leading-relaxed text-black">
                     לחיצה על 'הרץ עכשיו' כרגע היא כמו לזרוק רימון הלם ליציע של לה פמיליה: זה יסתיים בבלגן אטומי, הרבה רעש ועצורים (במערכת). האם אתה מרגיש בר מזל היום?
@@ -374,13 +374,13 @@ const AdminRolloverReport: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <button 
                       onClick={() => setShowConfirm(false)}
-                      className="border-2 border-black p-4 rounded-xl font-black uppercase hover:bg-black/10 text-black"
+                      className="border border-[#7A1555]/20 p-4 rounded-xl font-black uppercase hover:bg-[#7A1555]/5 text-[#7A1555]"
                     >
                       לא, החזר את הניצרה
                     </button>
                     <button 
                       onClick={handleRunNow}
-                      className="border-2 border-black p-4 rounded-xl font-black uppercase bg-black text-[#FFD700] hover:bg-black/90"
+                      className="border border-[#7A1555]/20 p-4 rounded-xl font-black uppercase bg-[#7A1555] text-[#FFD700] hover:bg-[#7A1555]/90"
                     >
                       כן, זרוק!
                     </button>
@@ -390,27 +390,27 @@ const AdminRolloverReport: React.FC = () => {
             )}
 
             {/* Health Card */}
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-lg overflow-hidden">
-              <div className="p-6 border-b border-black/10 bg-[#7A1555]/5">
+            <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl shadow-lg overflow-hidden">
+              <div className="p-6 border-b border-white/10 bg-[#7A1555]/5">
                 <span className="font-black text-2xl md:text-3xl uppercase tracking-tight text-[#7A1555]">HEALTH // כרטיס בריאות</span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-right">
                   <thead>
-                    <tr className="border-b border-black/10 bg-[#F5F5F0]">
+                    <tr className="border-b border-white/10 bg-white/40 backdrop-blur-md">
                       <th className="p-6 font-black text-lg md:text-xl uppercase text-[#7A1555]">פרמטר</th>
                       <th className="p-6 font-black text-lg md:text-xl uppercase text-center text-[#7A1555]">לפני</th>
                       <th className="p-6 font-black text-lg md:text-xl uppercase text-center text-[#7A1555]">אחרי</th>
                       <th className="p-6"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-black/10">
+                  <tbody className="divide-y divide-white/10">
                     {[
                       { label: 'חברים שעודכנו', before: '-', after: stats.membersUpdated },
                       { label: 'מונים מאופסים', before: stats.countersReset, after: '0' },
                       { label: 'זמן ריצה כולל', before: '-', after: stats.runTime }
                     ].map((row, i) => (
-                      <tr key={i} className="hover:bg-[#F5F5F0]">
+                      <tr key={i} className="hover:bg-white/40">
                         <td className="p-6 font-bold text-xl md:text-2xl text-[#000000]">{row.label}</td>
                         <td className="p-6 font-['IBM_Plex_Mono'] text-xl md:text-2xl text-center font-bold text-[#000000]/40">{row.before}</td>
                         <td className="p-6 font-['IBM_Plex_Mono'] text-xl md:text-2xl text-center font-black text-[#7A1555]">{row.after}</td>
@@ -423,18 +423,18 @@ const AdminRolloverReport: React.FC = () => {
             </div>
 
             {/* History Panel */}
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-lg overflow-hidden">
-              <div className="p-6 border-b border-black/10 bg-[#7A1555]/5 flex justify-between items-center">
+            <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl shadow-lg overflow-hidden">
+              <div className="p-6 border-b border-white/10 bg-[#7A1555]/5 flex justify-between items-center">
                 <span className="font-black text-2xl md:text-3xl uppercase tracking-tight text-[#7A1555]">HISTORY // היסטוריה</span>
                 <span className="bg-[#7A1555] text-[#FBC02D] px-3 py-1 rounded-full font-black text-sm md:text-base">
                   {logs.filter(l => l.status === 'success').length} WEEKS
                 </span>
               </div>
-              <div className="divide-y divide-black/10">
+              <div className="divide-y divide-white/10">
                 {logs.filter(l => l.status === 'success').slice(0, 4).map((log) => (
-                  <div key={log.id} className="p-6 flex items-center justify-between hover:bg-[#F5F5F0] group cursor-pointer">
+                  <div key={log.id} className="p-6 flex items-center justify-between hover:bg-white/40 group cursor-pointer">
                     <div className="flex items-center gap-6">
-                      <div className="w-4 h-4 border border-black/20 bg-[#7A1555] rounded-sm group-hover:rotate-45 transition-transform" />
+                      <div className="w-4 h-4 border border-white/30 bg-[#7A1555] rounded-sm group-hover:rotate-45 transition-transform" />
                       <span className="font-['IBM_Plex_Mono'] font-black text-xl md:text-2xl text-[#000000]">
                         {new Date(log.timestamp).toLocaleDateString('he-IL')}
                       </span>

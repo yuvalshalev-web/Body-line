@@ -629,7 +629,7 @@ const AdminPage: React.FC = () => {
                     onClick={() => {
                       setActiveTab(item.id as any);
                     }}
-                    className="group bg-white p-8 rounded-[2.5rem] border border-[var(--vibrant-cyan)]/10 shadow-sm hover:shadow-2xl hover:shadow-[var(--turquoise-teal)]/10 transition-all duration-500 text-right relative overflow-hidden"
+                    className="group bg-white/40 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/20 shadow-lg hover:shadow-2xl hover:shadow-[var(--turquoise-teal)]/20 transition-all duration-500 text-right relative overflow-hidden"
                   >
                     <div className={`absolute top-0 left-0 w-2 h-full ${item.color} opacity-20 group-hover:opacity-100 transition-opacity`} />
                     <div className="flex items-start justify-between mb-6">
@@ -657,7 +657,7 @@ const AdminPage: React.FC = () => {
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Join Requests Summary Card */}
             <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
-              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -684,7 +684,7 @@ const AdminPage: React.FC = () => {
                <input 
                  type="text" 
                  placeholder="חיפוש לפי שם או אימייל..." 
-                 className="w-full pr-16 pl-6 py-6 bg-[var(--aqua-mist)]/10 rounded-[2.5rem] border-none font-black focus:ring-2 ring-[var(--vibrant-cyan)]/30 shadow-sm"
+                 className="w-full pr-16 pl-6 py-6 bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/20 font-black focus:ring-2 ring-[var(--vibrant-cyan)]/30 shadow-lg"
                  value={searchTerm}
                  onChange={e => setSearchTerm(e.target.value)}
                />
@@ -693,7 +693,7 @@ const AdminPage: React.FC = () => {
             {filteredRequests.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredRequests.map(req => (
-                  <div key={req.id} className={`bg-white border border-[var(--vibrant-cyan)]/5 rounded-[3rem] p-8 shadow-sm hover:shadow-xl hover:shadow-[var(--vibrant-cyan)]/5 transition-all group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50' : ''}`}>
+                  <div key={req.id} className={`bg-white/40 backdrop-blur-md border border-white/20 rounded-[3rem] p-8 shadow-lg hover:shadow-2xl hover:shadow-[var(--vibrant-cyan)]/10 transition-all group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50' : ''}`}>
                     <div className="flex items-start gap-5 mb-8">
                        {req.avatar ? (
                          <img src={req.avatar} className="w-16 h-16 rounded-2xl object-cover shadow-md" alt="" />
@@ -775,7 +775,7 @@ const AdminPage: React.FC = () => {
               };
               return (
                 <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
-                  <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                  <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
                     <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                     
                     <div className="flex items-center gap-6 relative z-10">
@@ -831,7 +831,7 @@ const AdminPage: React.FC = () => {
                 onClose={() => setEditingMember(null)}
               />
             ) : (
-              <div className="bg-white border border-[var(--vibrant-cyan)]/5 rounded-[3rem] overflow-hidden shadow-sm">
+              <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-[3rem] overflow-hidden shadow-xl">
                 <div className="overflow-x-auto">
                   <table className="w-full text-right">
                     <thead className="bg-[var(--aqua-mist)]/10 border-b border-[var(--vibrant-cyan)]/5">
@@ -919,7 +919,7 @@ const AdminPage: React.FC = () => {
               const suspendedCount = members.filter(m => m.isActive === false).length;
               return (
                 <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
-                  <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                  <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
                     <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                     
                     <div className="flex items-center gap-6 relative z-10">
@@ -943,7 +943,7 @@ const AdminPage: React.FC = () => {
               );
             })()}
 
-            <div className="bg-white border border-[var(--vibrant-cyan)]/5 rounded-[3rem] overflow-hidden shadow-sm">
+            <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-[3rem] overflow-hidden shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-right">
                   <thead className="bg-[var(--aqua-mist)]/10 border-b border-[var(--vibrant-cyan)]/5">
@@ -1043,7 +1043,7 @@ const AdminPage: React.FC = () => {
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Posts Summary Card */}
             <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
-              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -1075,7 +1075,7 @@ const AdminPage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {news.map(item => (
-                <div key={item.id} className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm flex flex-col relative group">
+                <div key={item.id} className="bg-white/40 backdrop-blur-md rounded-[2rem] p-6 border border-white/20 shadow-lg flex flex-col relative group">
                   {item.imageUrl && (
                     <img src={item.imageUrl} className="w-full h-40 object-cover rounded-xl mb-4" alt="" />
                   )}
@@ -1159,7 +1159,7 @@ const AdminPage: React.FC = () => {
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Gallery Summary Card */}
             <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
-              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -1274,7 +1274,7 @@ const AdminPage: React.FC = () => {
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Events Summary Card */}
             <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
-              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -1310,7 +1310,7 @@ const AdminPage: React.FC = () => {
                 const isPastEvent = eventDate < new Date();
 
                 return (
-                  <div key={event.id} className={`bg-white border border-[var(--vibrant-cyan)]/5 rounded-[3rem] p-6 shadow-sm hover:shadow-xl hover:shadow-[var(--vibrant-cyan)]/5 transition-all flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
+                  <div key={event.id} className={`bg-white/40 backdrop-blur-md border border-white/20 rounded-[3rem] p-6 shadow-lg hover:shadow-2xl hover:shadow-[var(--vibrant-cyan)]/10 transition-all flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
                     
                     {isPastEvent && (
                       <div className="absolute -right-12 top-6 transform rotate-45 bg-slate-100 text-slate-400 text-[12px] font-black uppercase tracking-widest px-12 py-1 shadow-sm z-10">
@@ -1429,7 +1429,7 @@ const AdminPage: React.FC = () => {
 
             {/* Habal Zug Year Config Widget */}
             <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group">
-              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -1490,7 +1490,7 @@ const AdminPage: React.FC = () => {
 
             {/* Weekly Sessions Config Widget */}
             <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-6">
-              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-start justify-between gap-8 relative overflow-hidden">
+              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-start justify-between gap-8 relative overflow-hidden shadow-xl">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10 lg:w-1/3">
@@ -1648,7 +1648,7 @@ const AdminPage: React.FC = () => {
 
             {/* Home Break Config Widget */}
             <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-6">
-              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -1756,7 +1756,7 @@ const AdminPage: React.FC = () => {
 
             {/* Navigation Position Toggle Widget */}
             <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-6">
-              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -1773,7 +1773,7 @@ const AdminPage: React.FC = () => {
 
             {/* Global Color Picker Widget */}
             <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-3xl shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-6 inline-block">
-              <div className="bg-white/95 backdrop-blur-xl p-4 rounded-[1.8rem] relative overflow-hidden flex items-center gap-6">
+              <div className="bg-white/40 backdrop-blur-md p-4 rounded-[1.8rem] border border-white/20 relative overflow-hidden flex items-center gap-6 shadow-xl">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div>
@@ -1801,7 +1801,7 @@ const AdminPage: React.FC = () => {
 
             {/* H1 Ultra Design Studio Widget */}
             <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-10">
-              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-[2.8rem] relative overflow-hidden">
+              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 relative overflow-hidden shadow-xl">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 mb-10 relative z-10">
@@ -2052,7 +2052,7 @@ const AdminPage: React.FC = () => {
                 </div>
             </section>
 
-            <div className="bg-white border border-[var(--vibrant-cyan)]/10 rounded-[4rem] p-12 shadow-sm">
+            <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-[4rem] p-12 shadow-xl">
              <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-4">
                    <div className="p-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl shadow-lg"><RotateCcw size={24} /></div>
@@ -2072,7 +2072,7 @@ const AdminPage: React.FC = () => {
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {Object.entries(siteAssets || {}).map(([key, value]: [string, any]) => (
-                   <div key={key} className="p-6 bg-[var(--aqua-mist)]/10 rounded-[2rem] border border-[var(--vibrant-cyan)]/5 flex items-center justify-between group">
+                   <div key={key} className="p-6 bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/20 flex items-center justify-between group shadow-lg">
                       <div className="flex items-center gap-4">
                          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center overflow-hidden shadow-sm border border-[var(--vibrant-cyan)]/10 relative group/avatar">
                             {typeof value === 'string' && value.startsWith('http') ? (
@@ -2131,19 +2131,19 @@ const AdminPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {/* 1. Primary Button */}
-                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">כפתור ראשי</p>
                     <button className="gt-btn-primary">לחץ כאן</button>
                   </div>
 
                   {/* 2. Glass Button */}
-                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">כפתור זכוכית</p>
                     <button className="gt-btn-glass">כפתור שקוף</button>
                   </div>
 
                   {/* 3. Toggle */}
-                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">מפסק טורקיז (Toggle)</p>
                     <div className="gt-toggle-container">
                       <div className="gt-toggle" />
@@ -2153,7 +2153,7 @@ const AdminPage: React.FC = () => {
                   </div>
 
                   {/* 4. Segmented Control */}
-                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">בקר מקטעים (Segmented)</p>
                     <div className="gt-segmented">
                       <div className="gt-segment-item active">LIST</div>
@@ -2162,13 +2162,13 @@ const AdminPage: React.FC = () => {
                   </div>
 
                   {/* 5. Real Slider */}
-                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
+                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4 w-full">
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">סליידר אמיתי</p>
                     <input type="range" className="gt-slider-input w-full" defaultValue="50" />
                   </div>
 
                   {/* 6. Stepper */}
-                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">מונה (Stepper)</p>
                     <div className="gt-stepper">
                       <div className="gt-step-btn minus">-</div>
@@ -2178,13 +2178,13 @@ const AdminPage: React.FC = () => {
                   </div>
 
                   {/* 7. Input Field */}
-                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
+                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4 w-full">
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">שדה טקסט (Input)</p>
                     <input type="text" className="gt-input" placeholder="הקלד כאן..." />
                   </div>
 
                   {/* 8. Select/Dropdown */}
-                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
+                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4 w-full">
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">תפריט בחירה (Select)</p>
                     <select className="gt-select">
                       <option>אופציה 1</option>
@@ -2194,7 +2194,7 @@ const AdminPage: React.FC = () => {
                   </div>
 
                   {/* 9. Checkbox */}
-                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">צ'קבוקס (Checkbox)</p>
                     <div className="flex items-center gap-2">
                       <input type="checkbox" className="gt-checkbox" id="gt-check-demo" />
@@ -2203,7 +2203,7 @@ const AdminPage: React.FC = () => {
                   </div>
 
                   {/* 10. Sample Card */}
-                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4 w-full">
+                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4 w-full">
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">כרטיס לדוגמה (Card)</p>
                     <div className="gt-card w-full">
                       <h4 className="font-black text-[var(--deep-teal-sea)] mb-2">כותרת כרטיס</h4>
@@ -2212,7 +2212,7 @@ const AdminPage: React.FC = () => {
                   </div>
 
                   {/* 11. Status Badge */}
-                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">תווית סטטוס (Badge)</p>
                     <div className="flex gap-2">
                       <span className="gt-badge">פעיל</span>
@@ -2221,7 +2221,7 @@ const AdminPage: React.FC = () => {
                   </div>
 
                   {/* 12. Tooltip */}
-                  <div className="p-8 bg-[#f8f9fa] rounded-[2.5rem] border border-black/5 flex flex-col items-center gap-4">
+                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">אייקון מידע (Tooltip)</p>
                     <div className="gt-info-wrapper">
                       <div className="gt-info-icon">i</div>
@@ -2246,7 +2246,7 @@ const AdminPage: React.FC = () => {
       {/* Edit Asset Modal */}
       {editingAsset && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-[var(--deep-teal-sea)]/60 backdrop-blur-md animate-in fade-in">
-          <div className="bg-white w-full max-w-lg rounded-[3.5rem] shadow-2xl p-10 animate-in zoom-in-95">
+          <div className="bg-white/60 backdrop-blur-xl w-full max-w-lg rounded-[3.5rem] shadow-2xl p-10 border border-white/30 animate-in zoom-in-95">
             <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] mb-2">עדכון נכס: {editingAsset.key}</h3>
             <p className="text-[var(--turquoise-teal)]/60 font-bold text-sm mb-8">הזן כתובת URL חדשה עבור הנכס</p>
             
@@ -2309,7 +2309,7 @@ const AdminPage: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-white w-full max-w-lg rounded-[3.5rem] shadow-2xl overflow-hidden relative"
+            className="bg-white/60 backdrop-blur-xl w-full max-w-lg rounded-[3.5rem] shadow-2xl border border-white/30 overflow-hidden relative"
             onClick={e => e.stopPropagation()}
           >
             <div className="bg-rose-500 p-10 text-white text-center relative overflow-hidden">
@@ -2382,7 +2382,7 @@ const AdminPage: React.FC = () => {
       {/* Success Modal for Approved Member */}
       {approvedUser && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-[#4a002e]/60 backdrop-blur-md animate-in fade-in">
-           <div className="bg-white w-full max-w-md rounded-[3.5rem] shadow-2xl p-10 md:p-14 text-center animate-in zoom-in-95 relative overflow-hidden">
+           <div className="bg-white/60 backdrop-blur-xl w-full max-w-md rounded-[3.5rem] shadow-2xl p-10 md:p-14 border border-white/30 text-center animate-in zoom-in-95 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff009f]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
               
               <div className="w-20 h-20 bg-[var(--vibrant-cyan)] text-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-[var(--vibrant-cyan)]/10">

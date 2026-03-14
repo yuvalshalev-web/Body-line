@@ -66,7 +66,7 @@ export const AngryBird: React.FC<{ className?: string; delay?: number }> = ({ cl
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: [0, 1.2, 1], opacity: 1 }}
         transition={{ delay: delay + 0.8, duration: 0.4 }}
-        className="absolute -top-12 -right-16 bg-white px-3 py-1 rounded-xl border-2 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] z-[10001] whitespace-nowrap"
+        className="absolute -top-12 -right-16 bg-white px-3 py-1 rounded-xl border border-slate-200 shadow-xl z-[10001] whitespace-nowrap"
       >
         <span className="text-[10px] font-black text-black tracking-tighter uppercase">"RAAAEEOHA"</span>
         {/* Bubble Tail */}

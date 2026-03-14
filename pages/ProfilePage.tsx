@@ -536,7 +536,7 @@ const ProfilePage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-white/10 backdrop-blur-[15px] border-[2px] border-black shadow-[6px_6px_0px_rgba(0,0,0,0.9)] rounded-[8px] overflow-hidden"
+              className="relative w-full max-w-md bg-white/10 backdrop-blur-[15px] border border-white/20 shadow-2xl shadow-black/20 rounded-2xl overflow-hidden"
             >
               <div className="p-8">
                 <div className="flex justify-between items-center mb-8">
@@ -559,7 +559,7 @@ const ProfilePage: React.FC = () => {
                       type="password"
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
-                      className="w-full p-4 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all glass-text-primary"
+                      className="w-full p-4 bg-white/10 backdrop-blur-[15px] border border-white/20 shadow-inner rounded-xl font-black outline-none focus:bg-white/20 transition-all glass-text-primary"
                       placeholder="הזן סיסמה חדשה"
                       required
                       minLength={6}
@@ -571,7 +571,7 @@ const ProfilePage: React.FC = () => {
                       type="password"
                       value={confirmPassword}
                       onChange={e => setConfirmPassword(e.target.value)}
-                      className="w-full p-4 bg-white/10 backdrop-blur-[15px] border-[1.5px] border-black shadow-[2px_2px_0px_rgba(0,0,0,0.8)] rounded-[8px] font-black outline-none focus:bg-white/20 transition-all glass-text-primary"
+                      className="w-full p-4 bg-white/10 backdrop-blur-[15px] border border-white/20 shadow-inner rounded-xl font-black outline-none focus:bg-white/20 transition-all glass-text-primary"
                       placeholder="הזן שוב את הסיסמה"
                       required
                       minLength={6}
@@ -581,7 +581,7 @@ const ProfilePage: React.FC = () => {
                   <button 
                     type="submit"
                     disabled={isChangingPassword || !newPassword || !confirmPassword}
-                    className="w-full flex items-center justify-center gap-4 px-8 py-4 bg-[var(--surfer-cyan)] text-black rounded-[8px] border-[2px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.8)] font-black text-lg transition-all hover:bg-[var(--surfer-teal)] hover:text-white active:scale-95 disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-4 px-8 py-4 bg-[var(--surfer-cyan)] text-black rounded-xl border border-white/20 shadow-lg shadow-black/10 font-black text-lg transition-all hover:bg-[var(--surfer-teal)] hover:text-white active:scale-95 disabled:opacity-50"
                   >
                     {isChangingPassword ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                     עדכן סיסמה

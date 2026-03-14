@@ -104,7 +104,7 @@ const SeasonalPersistence: React.FC = () => {
 
       <section className="space-y-8">
         <div className="flex items-center gap-4">
-          <div className="p-4 bg-[var(--surfer-cyan)]/20 rounded-[8px] border border-black/10 shadow-sm">
+          <div className="p-4 bg-[var(--surfer-cyan)]/20 rounded-xl border border-white/20 shadow-lg shadow-black/5">
             <Waves className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
           </div>
           <div className="flex items-center gap-2">
@@ -122,7 +122,7 @@ const SeasonalPersistence: React.FC = () => {
 
       <section className="space-y-8">
         <div className="flex items-center gap-4">
-          <div className="p-4 bg-[var(--surfer-orange)]/20 rounded-[8px] border border-black/10 shadow-sm">
+          <div className="p-4 bg-[var(--surfer-orange)]/20 rounded-xl border border-white/20 shadow-lg shadow-black/5">
             <Zap className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
           </div>
           <div className="flex items-center gap-2">

@@ -11,17 +11,17 @@ export const RespectLocalsSign: React.FC = () => {
       {/* Sign Container (Diamond) */}
       <motion.div
         whileHover={{ scale: 1.02, rotate: 46 }}
-        className="relative w-64 h-64 rotate-45 bg-[#F5A623] border-[10px] border-black flex items-center justify-center shadow-[0_20px_40px_rgba(0,0,0,0.4)] overflow-hidden"
+        className="relative w-64 h-64 rotate-45 bg-[#F5A623] border-[6px] border-black/80 flex items-center justify-center shadow-2xl overflow-hidden"
         style={{
           // Realistic distressed texture
           backgroundImage: `
-            radial-gradient(circle at 20% 30%, rgba(0,0,0,0.15) 0%, transparent 2px),
-            radial-gradient(circle at 80% 60%, rgba(0,0,0,0.15) 0%, transparent 2px),
-            linear-gradient(45deg, transparent 45%, rgba(0,0,0,0.05) 48%, rgba(0,0,0,0.05) 52%, transparent 55%),
-            linear-gradient(-45deg, transparent 45%, rgba(0,0,0,0.05) 48%, rgba(0,0,0,0.05) 52%, transparent 55%)
+            radial-gradient(circle at 20% 30%, rgba(0,0,0,0.1) 0%, transparent 2px),
+            radial-gradient(circle at 80% 60%, rgba(0,0,0,0.1) 0%, transparent 2px),
+            linear-gradient(45deg, transparent 45%, rgba(0,0,0,0.03) 48%, rgba(0,0,0,0.03) 52%, transparent 55%),
+            linear-gradient(-45deg, transparent 45%, rgba(0,0,0,0.03) 48%, rgba(0,0,0,0.03) 52%, transparent 55%)
           `,
           backgroundSize: '40px 40px, 60px 60px, 100% 100%, 100% 100%',
-          boxShadow: 'inset 0 0 40px rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.4)'
+          boxShadow: 'inset 0 0 40px rgba(0,0,0,0.05), 0 20px 40px rgba(0,0,0,0.2)'
         }}
       >
         {/* Rust spots */}
@@ -35,7 +35,7 @@ export const RespectLocalsSign: React.FC = () => {
         <div className="absolute top-[60%] left-[20%] w-[60%] h-[2px] bg-black/30 -rotate-6" />
         
         {/* Inner border */}
-        <div className="absolute inset-2 border-[4px] border-black rounded-xl"></div>
+        <div className="absolute inset-2 border-[2px] border-black/40 rounded-xl"></div>
 
         {/* Rust/Dirt Overlays */}
         <div className="absolute inset-0 opacity-20 pointer-events-none" 

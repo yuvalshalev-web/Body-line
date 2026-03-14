@@ -314,26 +314,28 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <FloatingMenu onOpenDrawer={() => setIsDrawerOpen(true)} />
       <main className={`flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto pb-32 relative z-10 ${location.pathname === '/' ? 'luxury-bg' : ''} ${location.pathname === '/events' ? 'luxury-bg' : ''} ${location.pathname === '/gallery' ? 'luxury-bg' : ''} ${location.pathname === '/directory' ? 'luxury-bg' : ''} ${location.pathname === '/posts' ? 'luxury-bg' : ''}`}>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/directory" element={<DirectoryPage />} />
-            <Route path="/gallery" element={<GalleryPage />} />
-            <Route path="/events" element={<EventsPage />} />
-            <Route path="/posts" element={<NewsPage />} />
-            <Route path="/world-news" element={<SurfingNewsPage />} />
-            <Route path="/surfer-card" element={<SurferCardPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            {(currentUser.role === 'Admin' || currentUser.role === 'Instructor') && (
-              <>
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/admin-info" element={<AdminInfoPage />} />
-                <Route path="/attendance" element={<SurfingSessionAttendance />} />
-              </>
-            )}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/directory" element={<DirectoryPage />} />
+              <Route path="/gallery" element={<GalleryPage />} />
+              <Route path="/events" element={<EventsPage />} />
+              <Route path="/posts" element={<NewsPage />} />
+              <Route path="/world-news" element={<SurfingNewsPage />} />
+              <Route path="/surfer-card" element={<SurferCardPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              {(currentUser.role === 'Admin' || currentUser.role === 'Instructor') && (
+                <>
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/admin-info" element={<AdminInfoPage />} />
+                  <Route path="/attendance" element={<SurfingSessionAttendance />} />
+                </>
+              )}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </main>
     </div>
   );

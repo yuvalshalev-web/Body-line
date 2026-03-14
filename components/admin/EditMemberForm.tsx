@@ -155,7 +155,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
   };
 
   return (
-    <div className="glass-panel border border-white/30 rounded-[4rem] p-8 md:p-12 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.2)] max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-700 relative overflow-hidden backdrop-blur-3xl">
+    <div className="glass-panel border border-white/20 rounded-[4rem] p-8 md:p-12 shadow-2xl shadow-black/20 max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-700 relative overflow-hidden backdrop-blur-3xl">
       {/* Background Decorative Elements - Surfers Theme Atmosphere */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
         <div className="absolute -top-24 -left-24 w-[500px] h-[500px] bg-[#3dbbd3]/15 rounded-full blur-[120px] animate-pulse" />
@@ -300,7 +300,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 p-1.5 glass-effect rounded-[1.75rem] relative h-16 items-center border border-white/30 overflow-hidden shadow-inner bg-black/5">
+                <div className="grid grid-cols-2 p-1.5 glass-effect rounded-[1.75rem] relative h-16 items-center border border-white/20 overflow-hidden shadow-inner bg-white/5">
                   <motion.div 
                     className={`absolute top-1.5 bottom-1.5 rounded-[1.25rem] z-0 ${
                       editingMember.isActive !== false ? 'bg-gradient-to-br from-[#2DA95C] to-[#007085] shadow-lg' : 'bg-gradient-to-br from-[#FF2D60] to-[#CC2678] shadow-lg'
@@ -357,7 +357,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="text"
               value={editingMember.firstName || ''}
               onChange={(e) => setEditingMember({ ...editingMember, firstName: e.target.value })}
-              className="w-full p-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 focus:shadow-xl transition-all outline-none shadow-sm border border-white/40"
+              className="w-full p-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 focus:shadow-xl transition-all outline-none shadow-lg shadow-black/5 border border-white/20"
             />
           </div>
 
@@ -367,7 +367,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="text"
               value={editingMember.lastName || ''}
               onChange={(e) => setEditingMember({ ...editingMember, lastName: e.target.value })}
-              className="w-full p-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 focus:shadow-xl transition-all outline-none shadow-sm border border-white/40"
+              className="w-full p-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 focus:shadow-xl transition-all outline-none shadow-lg shadow-black/5 border border-white/20"
             />
           </div>
 
@@ -377,7 +377,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="email"
               value={editingMember.email}
               onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
-              className="w-full p-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 focus:shadow-xl transition-all outline-none shadow-sm border border-white/40"
+              className="w-full p-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 focus:shadow-xl transition-all outline-none shadow-lg shadow-black/5 border border-white/20"
             />
           </div>
         </div>
@@ -389,7 +389,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               <button 
                 type="button"
                 onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                className="w-full p-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 transition-all outline-none flex items-center justify-between group shadow-sm border border-white/40"
+                className="w-full p-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 transition-all outline-none flex items-center justify-between group shadow-lg shadow-black/5 border border-white/20"
               >
                 <span>{editingMember.gender || 'בחר מגדר'}</span>
                 <ChevronDown size={20} className={`text-[#00AFC2] transition-transform duration-500 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
@@ -433,7 +433,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
               type="text"
               value={editingMember.mobile}
               onChange={(e) => setEditingMember({ ...editingMember, mobile: formatMobileNumber(e.target.value) })}
-              className="w-full p-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 focus:shadow-xl transition-all text-left outline-none shadow-sm border border-white/40"
+              className="w-full p-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 focus:shadow-xl transition-all text-left outline-none shadow-lg shadow-black/5 border border-white/20"
               dir="ltr"
             />
           </div>
@@ -446,7 +446,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 type="date"
                 value={editingMember.birthday || ''}
                 onChange={(e) => setEditingMember({ ...editingMember, birthday: e.target.value })}
-                className="w-full pr-16 pl-6 py-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 transition-all outline-none cursor-pointer shadow-sm border border-white/40"
+                className="w-full pr-16 pl-6 py-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 transition-all outline-none cursor-pointer shadow-lg shadow-black/5 border border-white/20"
               />
             </div>
           </div>
@@ -461,7 +461,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 defaultValue={editingMember.full_address || ''} 
                 onChange={() => setIsPlaceSelected(false)} 
                 placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
-                className="w-full pr-16 pl-6 py-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 transition-all outline-none shadow-sm border border-white/40" 
+                className="w-full pr-16 pl-6 py-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 transition-all outline-none shadow-lg shadow-black/5 border border-white/20" 
                 autoComplete="off"
               />
             </div>
@@ -473,7 +473,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           <textarea 
             value={editingMember.bio}
             onChange={(e) => setEditingMember({ ...editingMember, bio: e.target.value })}
-            className="w-full p-8 glass-input rounded-[3rem] font-bold glass-text-primary focus:bg-white/20 transition-all min-h-[160px] outline-none shadow-sm border border-white/40 leading-relaxed"
+            className="w-full p-8 glass-input rounded-[3rem] font-bold glass-text-primary focus:bg-white/20 transition-all min-h-[160px] outline-none shadow-lg shadow-black/5 border border-white/20 leading-relaxed"
             placeholder="ספר קצת על עצמך..."
           />
         </div>
@@ -505,7 +505,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                   value={(editingMember as any)[social.id] || ''}
                   onChange={(e) => setEditingMember({ ...editingMember, [social.id]: e.target.value })}
                   placeholder={social.placeholder}
-                  className="w-full p-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 focus:shadow-xl transition-all text-left outline-none shadow-sm border border-white/40"
+                  className="w-full p-6 glass-input rounded-3xl font-bold glass-text-primary focus:bg-white/20 focus:shadow-xl transition-all text-left outline-none shadow-lg shadow-black/5 border border-white/20"
                   dir="ltr"
                 />
               </div>

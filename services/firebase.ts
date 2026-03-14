@@ -1,8 +1,9 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getDocs, Query, QuerySnapshot, initializeFirestore, persistentLocalCache } from 'firebase/firestore';
+import { getDocs, Query, QuerySnapshot, initializeFirestore, collection, addDoc, query, orderBy, limit, deleteDoc, writeBatch, doc } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { trackBandwidth } from '../utils/bandwidthTracker';
+import { addLog, SystemLog } from '../utils/systemLogs';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCzzpZyz8rBhtnskhbkXB7_dTfHgXLPHfs",
@@ -46,6 +47,36 @@ export const setDbStatus = (status: 'ONLINE' | 'OFFLINE') => {
   }
 };
 
+export const saveLogsToDatabase = async (logs: SystemLog[]) => {
+  const batch = writeBatch(db);
+  const logsCollection = collection(db, 'system_logs');
+  
+  logs.forEach(log => {
+    const docRef = doc(logsCollection, log.id);
+    batch.set(docRef, {
+      ...log,
+      timestamp: log.timestamp.toISOString()
+    });
+  });
+  
+  await batch.commit();
+};
+
+export const loadLogsFromDatabase = async (): Promise<SystemLog[]> => {
+  const logsCollection = collection(db, 'system_logs');
+  const q = query(logsCollection, orderBy('timestamp', 'desc'), limit(100));
+  const snapshot = await getDocs(q);
+  
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      ...data,
+      id: doc.id,
+      timestamp: new Date(data.timestamp)
+    } as SystemLog;
+  });
+};
+
 /**
  * Wrapper חכם לשליפת מסמכים שסופר קריאות בזמן אמת
  */
@@ -56,32 +87,38 @@ export const trackedGetDocs = async (query: Query): Promise<QuerySnapshot> => {
 
     if (db_status === 'OFFLINE' && !isLoginQuery) {
       console.warn('Database is OFFLINE. Blocking Firebase read.');
+      addLog('Database is OFFLINE. Blocking Firebase read.', 'Warning', 'Database');
       throw new Error('QUOTA_EXCEEDED_OR_KILL_SWITCH');
     }
 
-    const snapshot = await getDocs(query);
-    // Firebase מחייב על כל מסמך שחזר + 1 על השאילתה עצמה
-    const reads = snapshot.size || 1; 
-    sessionReadCount += reads;
-    
-    // Estimate bandwidth: Average doc size 1.5KB + overhead
-    const estimatedInBytes = reads * 1536; 
-    trackBandwidth(estimatedInBytes, 'in');
-    // Outgoing query overhead (approx 200 bytes)
-    trackBandwidth(200, 'out');
-    
-    // Persist to localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('db_read_stats', JSON.stringify({
-        count: sessionReadCount,
-        date: new Date().toDateString()
-      }));
+    try {
+      const snapshot = await getDocs(query);
+      // Firebase מחייב על כל מסמך שחזר + 1 על השאילתה עצמה
+      const reads = snapshot.size || 1; 
+      sessionReadCount += reads;
+      
+      // Estimate bandwidth: Average doc size 1.5KB + overhead
+      const estimatedInBytes = reads * 1536; 
+      trackBandwidth(estimatedInBytes, 'in');
+      // Outgoing query overhead (approx 200 bytes)
+      trackBandwidth(200, 'out');
+      
+      // Persist to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('db_read_stats', JSON.stringify({
+          count: sessionReadCount,
+          date: new Date().toDateString()
+        }));
+      }
+      
+      // עדכון אירוע מותאם אישית כדי שחדר המכונות יתעדכן
+      window.dispatchEvent(new CustomEvent('db-read-update', { detail: sessionReadCount }));
+      
+      return snapshot;
+    } catch (error) {
+      addLog(`Firebase Read Error: ${error instanceof Error ? error.message : String(error)}`, 'Critical', 'Database');
+      throw error;
     }
-    
-    // עדכון אירוע מותאם אישית כדי שחדר המכונות יתעדכן
-    window.dispatchEvent(new CustomEvent('db-read-update', { detail: sessionReadCount }));
-    
-    return snapshot;
 };
 
 export { db, auth, storage };

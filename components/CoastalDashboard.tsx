@@ -104,7 +104,7 @@ export const CoastalDashboard: React.FC = () => {
         className="absolute inset-0 bg-gradient-to-br from-[var(--surfer-cyan)]/10 to-transparent pointer-events-none"
       />
 
-      <div className="p-4 border-b border-black/10 flex items-center justify-between bg-white/20 relative z-10">
+      <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/20 relative z-10">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-[var(--surfer-cyan)]/20 rounded-xl relative overflow-hidden">
             <motion.div 
@@ -175,7 +175,7 @@ export const CoastalDashboard: React.FC = () => {
       </div>
 
       {/* Bottom Grid: Forecast & Live Cam */}
-      <div className="grid grid-cols-2 border-t border-black/10 divide-x divide-x-reverse divide-black/10 relative z-10">
+      <div className="grid grid-cols-2 border-t border-white/10 divide-x divide-x-reverse divide-white/10 relative z-10">
         {/* Forecast Tile */}
         <a 
           href="https://gosurf.co.il/forecast/herzliya-marina" 
@@ -240,7 +240,7 @@ export const CoastalDashboard: React.FC = () => {
         </a>
       </div>
 
-      <div className="p-4 bg-black/5 border-t border-black/10 flex justify-center relative z-10">
+      <div className="p-4 bg-black/5 border-t border-white/10 flex justify-center relative z-10">
         <a 
           href="https://ims.gov.il/he/coasts" 
           target="_blank" 
