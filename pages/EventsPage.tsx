@@ -333,149 +333,155 @@ const EventsPage: React.FC = () => {
 
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in">
-           <div className="bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_20px_50px_-10px_var(--surfer-deep-shadow)] w-full max-w-2xl rounded-3xl p-12 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto text-white">
-             <button onClick={() => { setShowModal(false); resetForm(); }} className="absolute top-8 left-8 p-3 text-white bg-[var(--surfer-aqua-mist)]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 rounded-xl hover:bg-[var(--surfer-aqua-mist)]/40 active:scale-95 transition-all"><X size={24} /></button>
-             <h3 className="text-3xl font-black mb-8">{editingEvent ? 'עריכת אירוע' : 'יצירת אירוע'}</h3>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-4">
-                  <label className="text-xs font-black text-white/50 uppercase tracking-widest mr-2">בחר סוג אירוע</label>
-                  <div className={`grid grid-cols-3 gap-3 p-2 rounded-3xl border-t border-l border-white/30 border-r border-b border-white/10 bg-black/10 transition-colors`}>
-                    <button 
-                      type="button"
-                      onClick={() => { setEventType('MEMBER'); setShowTypeWarning(false); }}
-                      className={`relative p-3 rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 transition-all flex flex-col items-center gap-2 text-center group ${
-                        eventType === 'MEMBER' 
-                          ? 'bg-[var(--surfer-cyan)] text-black shadow-[0_5px_15px_rgba(0,0,0,0.2)]' 
-                          : 'bg-white/5 text-white/50 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                        eventType === 'MEMBER' ? 'bg-black/20 text-black' : 'bg-white/5 text-white/30 group-hover:text-[var(--surfer-cyan)]'
-                      }`}>
-                        <User size={16} />
-                      </div>
-                      <p className="font-black text-[12px] mb-0.5">אירוע חבר</p>
-                    </button>
+           <div 
+             className="bg-gradient-to-br from-[#FFFFFF] via-[#F8FAFC] to-[#B2EBF2]/40 border-t border-l border-white/80 shadow-[0_30px_60px_-15px_rgba(122,21,85,0.5),0_20px_40px_-10px_rgba(122,21,85,0.3)] w-full max-w-2xl rounded-3xl p-12 relative animate-in zoom-in-95 max-h-[90vh] overflow-y-auto"
+           >
+             <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none rounded-3xl" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+             
+             <div className="relative z-10">
+               <button onClick={() => { setShowModal(false); resetForm(); }} className="absolute -top-4 -left-4 p-3 text-[#000000] bg-white/80 backdrop-blur-xl border-t border-l border-white/60 rounded-xl shadow-[0_8px_16px_rgba(122,21,85,0.15),0_4px_8px_rgba(122,21,85,0.1)] hover:bg-white active:scale-95 transition-all"><X size={24} /></button>
+               <h3 className="text-3xl font-black mb-8 text-[#7A1555] drop-shadow-[0_0_15px_rgba(122,21,85,0.15)]">{editingEvent ? 'עריכת אירוע' : 'יצירת אירוע'}</h3>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="space-y-4">
+                    <label className="text-xs font-black text-[#004D40] uppercase tracking-widest mr-2">בחר סוג אירוע</label>
+                    <div className={`grid grid-cols-3 gap-3 p-2 rounded-3xl border-t border-l border-white/60 bg-white/40 backdrop-blur-xl shadow-[0_12px_32px_rgba(122,21,85,0.15),0_4px_12px_rgba(122,21,85,0.05)] transition-colors`}>
+                      <button 
+                        type="button"
+                        onClick={() => { setEventType('MEMBER'); setShowTypeWarning(false); }}
+                        className={`relative p-3 rounded-xl border-t border-l border-white/60 transition-all flex flex-col items-center gap-2 text-center group ${
+                          eventType === 'MEMBER' 
+                            ? 'bg-[var(--surfer-cyan)] text-[#000000] shadow-[0_8px_24px_rgba(122,21,85,0.3),0_4px_12px_rgba(122,21,85,0.2)]' 
+                            : 'bg-white/60 text-[#000000] hover:bg-white/90 shadow-[0_4px_12px_rgba(122,21,85,0.1),0_2px_6px_rgba(122,21,85,0.05)]'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                          eventType === 'MEMBER' ? 'bg-black/20 text-[#000000]' : 'bg-black/5 text-[var(--surfer-yellow)] group-hover:text-[var(--surfer-cyan)]'
+                        }`}>
+                          <User size={16} />
+                        </div>
+                        <p className="font-black text-[12px] mb-0.5 text-[#000000]">אירוע חבר</p>
+                      </button>
 
-                    <button 
-                      type="button"
-                      onClick={() => { setEventType('INSTRUCTOR'); setShowTypeWarning(false); }}
-                      className={`relative p-3 rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 transition-all flex flex-col items-center gap-2 text-center group ${
-                        eventType === 'INSTRUCTOR' 
-                          ? 'bg-[var(--surfer-orange)] text-white shadow-[0_5px_15px_rgba(0,0,0,0.2)]' 
-                          : 'bg-white/5 text-white/50 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                        eventType === 'INSTRUCTOR' ? 'bg-white/20 text-white' : 'bg-white/5 text-white/30 group-hover:text-[var(--surfer-orange)]'
-                      }`}>
-                        <Zap size={16} />
-                      </div>
-                      <p className="font-black text-[12px] mb-0.5">אירוע מדריך</p>
-                    </button>
+                      <button 
+                        type="button"
+                        onClick={() => { setEventType('INSTRUCTOR'); setShowTypeWarning(false); }}
+                        className={`relative p-3 rounded-xl border-t border-l border-white/60 transition-all flex flex-col items-center gap-2 text-center group ${
+                          eventType === 'INSTRUCTOR' 
+                            ? 'bg-[var(--surfer-orange)] text-[#000000] shadow-[0_8px_24px_rgba(122,21,85,0.3),0_4px_12px_rgba(122,21,85,0.2)]' 
+                            : 'bg-white/60 text-[#000000] hover:bg-white/90 shadow-[0_4px_12px_rgba(122,21,85,0.1),0_2px_6px_rgba(122,21,85,0.05)]'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                          eventType === 'INSTRUCTOR' ? 'bg-white/40 text-[#000000]' : 'bg-black/5 text-[var(--surfer-yellow)] group-hover:text-[var(--surfer-orange)]'
+                        }`}>
+                          <Zap size={16} />
+                        </div>
+                        <p className="font-black text-[12px] mb-0.5 text-[#000000]">אירוע מדריך</p>
+                      </button>
 
-                    <button 
-                      type="button"
-                      onClick={() => { setEventType('COMMUNITY'); setShowTypeWarning(false); }}
-                      className={`relative p-3 rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 transition-all flex flex-col items-center gap-2 text-center group ${
-                        eventType === 'COMMUNITY' 
-                          ? 'bg-[var(--surfer-pink)] text-white shadow-[0_5px_15px_rgba(0,0,0,0.2)]' 
-                          : 'bg-white/5 text-white/50 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                        eventType === 'COMMUNITY' ? 'bg-white/20 text-white' : 'bg-white/5 text-white/30 group-hover:text-[var(--surfer-pink)]'
-                      }`}>
-                        <Users size={16} />
+                      <button 
+                        type="button"
+                        onClick={() => { setEventType('COMMUNITY'); setShowTypeWarning(false); }}
+                        className={`relative p-3 rounded-xl border-t border-l border-white/60 transition-all flex flex-col items-center gap-2 text-center group ${
+                          eventType === 'COMMUNITY' 
+                            ? 'bg-[var(--surfer-pink)] text-[#000000] shadow-[0_8px_24px_rgba(122,21,85,0.3),0_4px_12px_rgba(122,21,85,0.2)]' 
+                            : 'bg-white/60 text-[#000000] hover:bg-white/90 shadow-[0_4px_12px_rgba(122,21,85,0.1),0_2px_6px_rgba(122,21,85,0.05)]'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                          eventType === 'COMMUNITY' ? 'bg-white/40 text-[#000000]' : 'bg-black/5 text-[var(--surfer-yellow)] group-hover:text-[var(--surfer-pink)]'
+                        }`}>
+                          <Users size={16} />
+                        </div>
+                        <p className="font-black text-[12px] mb-0.5 text-[#000000]">אירוע קהילה</p>
+                      </button>
+                    </div>
+                    
+                    {showTypeWarning && (
+                      <div className="p-4 bg-[var(--surfer-pink)]/20 border-t border-l border-white/60 rounded-2xl flex items-center gap-3 text-[#000000] text-[12px] font-black animate-bounce shadow-[0_8px_16px_rgba(122,21,85,0.15)]">
+                        <ShieldAlert size={16} className="text-[var(--surfer-pink)]" />
+                        <p>נא לבחור את סוג האירוע</p>
                       </div>
-                      <p className="font-black text-[12px] mb-0.5">אירוע קהילה</p>
-                    </button>
+                    )}
                   </div>
-                  
-                  {showTypeWarning && (
-                    <div className="p-4 bg-[var(--surfer-pink)]/20 border-t border-l border-white/30 border-r border-b border-white/10 rounded-2xl flex items-center gap-3 text-white text-[12px] font-black animate-bounce">
-                      <ShieldAlert size={16} />
-                      <p>נא לבחור את סוג האירוע</p>
-                    </div>
-                  )}
-                </div>
-                <div className="relative group">
-                  {!eventType && (
-                    <div 
-                      className="absolute inset-0 z-10 cursor-pointer" 
-                      onClick={() => setShowTypeWarning(true)}
-                    ></div>
-                  )}
-                  <div className={`space-y-6 transition-opacity ${!eventType ? 'opacity-40' : 'opacity-100'}`}>
-                    <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="כותרת האירוע" className="w-full p-5 bg-white/5 backdrop-blur-sm rounded-xl font-black outline-none border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.1)] focus:shadow-[0_10px_20px_rgba(0,0,0,0.2)] transition-all" />
-                    <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="תיאור האירוע" className="w-full p-5 bg-white/5 backdrop-blur-sm rounded-xl font-bold outline-none border-t border-l border-white/30 border-r border-b border-white/10 h-32 resize-none shadow-[0_5px_15px_rgba(0,0,0,0.1)] focus:shadow-[0_10px_20px_rgba(0,0,0,0.2)] transition-all" />
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-[12px] font-black text-white/50 uppercase tracking-widest mr-2">תאריך</label>
-                        <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full p-5 bg-white/5 backdrop-blur-sm rounded-xl font-black outline-none border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-all" />
+                  <div className="relative group">
+                    {!eventType && (
+                      <div 
+                        className="absolute inset-0 z-10 cursor-pointer" 
+                        onClick={() => setShowTypeWarning(true)}
+                      ></div>
+                    )}
+                    <div className={`space-y-6 transition-opacity ${!eventType ? 'opacity-40' : 'opacity-100'}`}>
+                      <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="כותרת האירוע" className="w-full p-5 bg-white/70 backdrop-blur-xl rounded-xl font-black text-[#004D40] placeholder:text-[#004D40]/40 outline-none border-t border-l border-white/80 shadow-[0_12px_24px_rgba(122,21,85,0.12),0_4px_8px_rgba(122,21,85,0.05)] focus:shadow-[0_16px_32px_rgba(122,21,85,0.2),0_8px_16px_rgba(122,21,85,0.1)] transition-all" />
+                      <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="תיאור האירוע" className="w-full p-5 bg-white/70 backdrop-blur-xl rounded-xl font-bold text-[#004D40] placeholder:text-[#004D40]/40 outline-none border-t border-l border-white/80 h-32 resize-none shadow-[0_12px_24px_rgba(122,21,85,0.12),0_4px_8px_rgba(122,21,85,0.05)] focus:shadow-[0_16px_32px_rgba(122,21,85,0.2),0_8px_16px_rgba(122,21,85,0.1)] transition-all" />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[12px] font-black text-[#004D40] uppercase tracking-widest mr-2">תאריך</label>
+                          <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full p-5 bg-white/70 backdrop-blur-xl rounded-xl font-black text-[#004D40] outline-none border-t border-l border-white/80 shadow-[0_12px_24px_rgba(122,21,85,0.12),0_4px_8px_rgba(122,21,85,0.05)] focus:shadow-[0_16px_32px_rgba(122,21,85,0.2),0_8px_16px_rgba(122,21,85,0.1)] transition-all" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[12px] font-black text-[#004D40] uppercase tracking-widest mr-2">שעה</label>
+                          <TimePicker required value={time} onChangeValue={setTime} className="w-full p-5 bg-white/70 backdrop-blur-xl rounded-xl font-black text-[#004D40] outline-none border-t border-l border-white/80 shadow-[0_12px_24px_rgba(122,21,85,0.12),0_4px_8px_rgba(122,21,85,0.05)] focus:shadow-[0_16px_32px_rgba(122,21,85,0.2),0_8px_16px_rgba(122,21,85,0.1)] transition-all" />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-[12px] font-black text-white/50 uppercase tracking-widest mr-2">שעה</label>
-                        <TimePicker required value={time} onChangeValue={setTime} className="w-full p-5 bg-white/5 backdrop-blur-sm rounded-xl font-black outline-none border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-all" />
-                      </div>
-                    </div>
-                    <input type="text" ref={locationInputRef} value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-white/5 backdrop-blur-sm rounded-xl font-black outline-none border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-all" />
-                    <div className="space-y-4">
-                      <label className="text-[12px] font-black text-white/50 uppercase tracking-widest mr-4">תמונת רקע</label>
-                      <div className="relative group/img aspect-video rounded-3xl overflow-hidden border-t border-l border-white/30 border-r border-b border-white/10 bg-white/5 flex flex-col items-center justify-center gap-4 transition-all hover:border-[var(--surfer-cyan)]/40">
-                        {imageUrl ? (
-                          <>
-                            <img src={imageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Preview" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                              <button 
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="px-6 py-3 bg-white text-[var(--surfer-cyan)] rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.2)] font-black text-sm flex items-center gap-2 active:scale-95"
-                              >
-                                <Camera size={18} />
-                                החלפת תמונת רקע
-                              </button>
+                      <input type="text" ref={locationInputRef} value={location} onChange={e => setLocation(e.target.value)} placeholder="מיקום (למשל: חוף זבולון)" className="w-full p-5 bg-white/70 backdrop-blur-xl rounded-xl font-black text-[#004D40] placeholder:text-[#004D40]/40 outline-none border-t border-l border-white/80 shadow-[0_12px_24px_rgba(122,21,85,0.12),0_4px_8px_rgba(122,21,85,0.05)] focus:shadow-[0_16px_32px_rgba(122,21,85,0.2),0_8px_16px_rgba(122,21,85,0.1)] transition-all" />
+                      <div className="space-y-4">
+                        <label className="text-[12px] font-black text-[#004D40] uppercase tracking-widest mr-4">תמונת רקע</label>
+                        <div className="relative group/img aspect-video rounded-3xl overflow-hidden border-t border-l border-white/80 bg-white/50 backdrop-blur-xl shadow-[0_16px_40px_rgba(122,21,85,0.15),0_8px_16px_rgba(122,21,85,0.1)] flex flex-col items-center justify-center gap-4 transition-all hover:border-[var(--surfer-cyan)]/40">
+                          {imageUrl ? (
+                            <>
+                              <img src={imageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Preview" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                <button 
+                                  type="button"
+                                  onClick={() => fileInputRef.current?.click()}
+                                  className="px-6 py-3 bg-white/90 backdrop-blur-xl text-[#000000] rounded-xl border-t border-l border-white/80 shadow-[0_8px_24px_rgba(122,21,85,0.2),0_4px_12px_rgba(122,21,85,0.1)] font-black text-sm flex items-center gap-2 active:scale-95"
+                                >
+                                  <Camera size={18} className="text-[var(--surfer-pink)]" />
+                                  <span className="text-[#000000]">החלפת תמונת רקע</span>
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <button 
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="flex flex-col items-center gap-2 text-[#000000] hover:text-[var(--surfer-cyan)] transition-colors"
+                            >
+                              <div className="p-4 bg-white/80 rounded-xl border-t border-l border-white/80 shadow-[0_8px_24px_rgba(122,21,85,0.15),0_4px_12px_rgba(122,21,85,0.1)]">
+                                <Camera size={32} className="text-[var(--surfer-yellow)]" />
+                              </div>
+                              <span className="font-black text-xs text-[#000000]">לחץ להעלאת תמונה</span>
+                            </button>
+                          )}
+                          
+                          {isUploading && (
+                            <div className="absolute inset-0 bg-white/90 backdrop-blur-xl flex flex-col items-center justify-center gap-3 z-10">
+                              <Loader2 className="animate-spin text-[var(--surfer-pink)]" size={32} />
+                              <span className="font-black text-[#000000] text-[12px] uppercase tracking-widest">מעלה תמונה...</span>
                             </div>
-                          </>
-                        ) : (
-                          <button 
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="flex flex-col items-center gap-2 text-white/50 hover:text-[var(--surfer-cyan)] transition-colors"
-                          >
-                            <div className="p-4 bg-white/5 rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_5px_15px_rgba(0,0,0,0.2)]">
-                              <Camera size={32} />
-                            </div>
-                            <span className="font-black text-xs">לחץ להעלאת תמונה</span>
-                          </button>
-                        )}
-                        
-                        {isUploading && (
-                          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
-                            <Loader2 className="animate-spin text-[var(--surfer-cyan)]" size={32} />
-                            <span className="font-black text-[var(--surfer-cyan)] text-[12px] uppercase tracking-widest">מעלה תמונה...</span>
-                          </div>
-                        )}
+                          )}
+                        </div>
+                        <input 
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleImageUpload}
+                          accept="image/*"
+                          className="hidden"
+                        />
                       </div>
-                      <input 
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleImageUpload}
-                        accept="image/*"
-                        className="hidden"
-                      />
                     </div>
                   </div>
-                </div>
-                <button 
-                  type="submit" 
-                  disabled={isSaving || !eventType || (eventType === 'COMMUNITY' && !canManageCommunityEvents) || (eventType === 'INSTRUCTOR' && !canManageInstructorEvents)} 
-                  className="flex items-center justify-center gap-4 px-10 py-5 bg-[var(--surfer-cyan)] text-black rounded-xl border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_10px_25px_rgba(0,0,0,0.3)] font-black text-xl transition-all active:scale-95 group w-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--surfer-teal)]"
-                >
-                   {isSaving ? <Loader2 className="animate-spin" size={24} /> : editingEvent ? <CheckCircle2 size={24} className="text-black" /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-black" />}
-                   {editingEvent ? 'שמור שינויים' : 'צור אירוע חדש'}
-                </button>
-             </form>
+                  <button 
+                    type="submit" 
+                    disabled={isSaving || !eventType || (eventType === 'COMMUNITY' && !canManageCommunityEvents) || (eventType === 'INSTRUCTOR' && !canManageInstructorEvents)} 
+                    className="flex items-center justify-center gap-4 px-10 py-5 bg-[var(--surfer-cyan)] text-[#000000] rounded-xl border-t border-l border-white/80 shadow-[0_16px_40px_rgba(122,21,85,0.3),0_8px_16px_rgba(122,21,85,0.2)] font-black text-xl transition-all active:scale-95 group w-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--surfer-teal)]"
+                  >
+                     {isSaving ? <Loader2 className="animate-spin" size={24} /> : editingEvent ? <CheckCircle2 size={24} className="text-[#000000]" /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-[#000000]" />}
+                     <span className="text-[#000000]">{editingEvent ? 'שמור שינויים' : 'צור אירוע חדש'}</span>
+                  </button>
+                </form>
+             </div>
            </div>
         </div>
       )}

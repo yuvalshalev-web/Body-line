@@ -31,6 +31,7 @@ import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { hashPassword } from '../utils/crypto';
 import { loadGoogleMaps } from '../utils/googlePlaces';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
+import { SurfMatchEngine } from '../components/SurfMatchEngine';
 
 const SocialInput = ({ 
   label, name, value, onChange, icon: Icon, placeholder, brandColor, ensureAbsoluteUrl,
@@ -483,6 +484,8 @@ const ProfilePage: React.FC = () => {
                   <SocialInput label="Twitter / X" value={formData.twitterUrl} onChange={(v: string) => handleFieldChange('twitterUrl', v)} icon={Twitter} brandColor="#1DA1F2" ensureAbsoluteUrl={ensureAbsoluteUrl} placeholder="קישור לפרופיל טוויטר" />
                 </div>
               </section>
+
+              <SurfMatchEngine formData={formData} onChange={handleFieldChange} isSaving={isSaving} isDirty={isDirty} />
             </div>
 
             <div className="lg:col-span-5">

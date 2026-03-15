@@ -421,19 +421,6 @@ const DirectoryPage: React.FC = () => {
               <span className="text-[10px] font-black glass-text-secondary uppercase tracking-widest mt-0.5">רכזים</span>
             </div>
           </div>
-          
-          {isAdmin && (
-            <>
-              <div className="hidden sm:block w-px h-8 bg-white/20" />
-              <button 
-                onClick={() => setIsAddMemberModalOpen(true)}
-                className="glass-effect px-6 py-3 !rounded-full flex items-center gap-2 text-[#00AFC2] font-black text-[11px] uppercase tracking-widest hover:bg-white/20 transition-all"
-              >
-                <Plus size={14} />
-                <span>הוסף כוכב +</span>
-              </button>
-            </>
-          )}
         </div>
       </div>
 

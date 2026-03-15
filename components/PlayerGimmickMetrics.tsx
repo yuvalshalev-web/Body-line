@@ -120,15 +120,9 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
             </div>
             
             <div className="text-center text-sm secondary-detail-text">
-              {driftPercentile.roundedPercentile < 20 ? (
-                <span>אתה <strong className="metric-value-text">מקומי אמיתי</strong>! רק {driftPercentile.distanceKm} ק"מ מהחוף. 🪐</span>
-              ) : driftPercentile.roundedPercentile > 90 ? (
-                <span>וואו, איזה <strong className="metric-value-text">סחף</strong>! {driftPercentile.distanceKm} ק"מ? כבוד על ההתמדה! 🚗</span>
-              ) : (
-                <span>מרחק מהחוף: <strong className="metric-value-text">{driftPercentile.distanceKm} ק"מ</strong>. אתה קרוב יותר מ-{100 - driftPercentile.roundedPercentile}% מהקהילה.</span>
-              )}
+              {member.gender === 'נקבה' ? 'את גרה' : 'אתה גר'} במרחק {driftPercentile.distanceKm} ק"מ מחוף הבית – {member.gender === 'נקבה' ? 'קרובה' : 'קרוב'} יותר מ-{100 - driftPercentile.roundedPercentile}% מהקהילה
             </div>
-            <div className="text-[10px] secondary-detail-text text-center mt-3">(לחץ עליי לסיבוב דאווין)</div>
+            <div className="text-[10px] secondary-detail-text text-center mt-3">({member.gender === 'נקבה' ? 'לחצי' : 'לחץ'} עליי לסיבוב דאווין)</div>
           </div>
 
           {/* Drift Popup Modal */}
@@ -138,8 +132,9 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
                 <h2 className="text-2xl font-black name-title-text mb-3">
                   סיבוב דאווין 🌊
                 </h2>
-                <p className="text-lg font-bold secondary-detail-text">מרחק מהבית: {driftPercentile.distanceKm} ק"מ</p>
-                <p className="text-sm secondary-detail-text mt-1">אתה באחוזון ה-{driftPercentile.roundedPercentile} של המרחק מהחוף</p>
+                <p className="text-lg font-bold secondary-detail-text">
+                  {member.gender === 'נקבה' ? 'את גרה' : 'אתה גר'} במרחק {driftPercentile.distanceKm} ק"מ מחוף הבית – {member.gender === 'נקבה' ? 'קרובה' : 'קרוב'} יותר מ-{100 - driftPercentile.roundedPercentile}% מהקהילה
+                </p>
                 <button 
                   className="mt-6 px-8 py-2 bg-ocean text-black rounded-xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 shadow-[0_4px_10px_rgba(0,217,230,0.4)]"
                   onClick={() => setShowDriftPopup(false)}
@@ -183,20 +178,7 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
             </div>
             
             <div id="dynamicComment" className="text-center text-sm secondary-detail-text">
-              {(() => {
-                const p = agePercentile.roundedPercentile;
-                if (member.gender === 'נקבה') {
-                  if (p < 25) return <span>עוד לא התייבש לך החלב על השפתיים, <strong className="metric-value-text">אפרוחית</strong>! 🐥</span>;
-                  if (p < 50) return <span>את <strong className="metric-value-text">פרגית</strong> צעירה, תהני! 🐔</span>;
-                  if (p < 90) return <span>מזל טוב, את <strong className="metric-value-text">מלכת הלול</strong>! 👑✨</span>;
-                  return <span><strong className="metric-value-text">את וינטג' אמיתית (אחוזון {p})</strong>! מגה גלופלקס לקחת? 🍷🐢</span>;
-                } else {
-                  if (p < 25) return <span>עוד לא התייבש לך החלב על השפתיים 🍼</span>;
-                  if (p < 50) return <span>אתה <strong className="metric-value-text">עגל צעיר</strong>, תהנה 🐮</span>;
-                  if (p < 90) return <span>מזל טוב, אתה <strong className="metric-value-text">שור אמיתי</strong>! 🐂</span>;
-                  return <span><strong className="metric-value-text">אתה וינטג' אמיתי (אחוזון {p})</strong>! מגה גלופלקס לקחת? 🍷🐢</span>;
-                }
-              })()}
+              {member.gender === 'נקבה' ? 'את' : 'אתה'} באחוזון הגיל ה-{agePercentile.roundedPercentile}% של הקבוצה
             </div>
             <div className="text-[10px] secondary-detail-text text-center mt-3">(לחצי עליי לסיבוב דאווין)</div>
           </div>
@@ -222,7 +204,7 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
                   })()}
                 </h2>
                 <p className="text-lg font-bold secondary-detail-text">
-                  {member.gender === 'נקבה' ? 'את' : 'אתה'} באחוזון הגיל ה-{agePercentile.roundedPercentile} של הקבוצה
+                  {member.gender === 'נקבה' ? 'את' : 'אתה'} באחוזון הגיל ה-{agePercentile.roundedPercentile}% של הקבוצה
                 </p>
                 <button 
                   className="mt-6 px-8 py-2 bg-sand text-black rounded-xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 shadow-[0_4px_10px_rgba(243,208,118,0.4)]"

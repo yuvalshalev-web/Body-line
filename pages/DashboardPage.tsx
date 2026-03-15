@@ -18,6 +18,8 @@ import {
   UserCircle
 } from 'lucide-react';
 import { CoastalDashboard } from '../components/CoastalDashboard';
+import { WaterTempCard } from '../components/WaterTempCard';
+import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { getNextSessionDate } from '../services/rolloverService';
@@ -36,7 +38,7 @@ const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
 const DashboardPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { 
-    members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig
+    members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember
   } = useData();
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -305,6 +307,23 @@ const DashboardPage: React.FC = () => {
           <h3 className="text-2xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>תצפית חוף מרכז</h3>
         </div>
         <CoastalDashboard />
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <DailySurfRecommendation 
+            member={currentUser} 
+            currentWaveHeight={1.2} 
+            onSaveRecommendation={async (vol, length) => {
+              if (currentUser) {
+                await updateMember(currentUser.id, {
+                  recommendedBoardVolume: vol,
+                  recommendedBoardLength: length
+                });
+              }
+            }}
+          />
+          <WaterTempCard 
+            lastUpdated={Date.now() - 300000} 
+          />
+        </div>
       </section>
 
 

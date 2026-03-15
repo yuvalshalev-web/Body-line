@@ -11,6 +11,7 @@ import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { processImage } from '../utils/imageProcessor';
+import emailjs from '@emailjs/browser';
 
 const groups = ["הרצליה", "אשדוד", "אשקלון", "כינרת", "קריות", "תל אביב"];
 
@@ -27,6 +28,9 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isGroupMenuOpen, setIsGroupMenuOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(groups[0]);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [showSeaWaterAlert, setShowSeaWaterAlert] = useState(false);
+  const [resetSuccessMessage, setResetSuccessMessage] = useState('');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -115,7 +119,12 @@ const LoginPage: React.FC = () => {
         if (!requestSnapshot.empty) {
           setError('בקשת ההצטרפות שלך עדיין בטיפול. תקבל הודעה כשהיא תאושר.');
         } else {
-          setError('אימייל זה אינו רשום במערכת');
+          setFailedAttempts(prev => prev + 1);
+          if (failedAttempts + 1 >= 3) {
+            setShowSeaWaterAlert(true);
+          } else {
+            setError('אימייל זה אינו רשום במערכת');
+          }
         }
         setIsLoading(false);
         return;
@@ -127,7 +136,12 @@ const LoginPage: React.FC = () => {
       const isPasswordValid = await verifyPassword(password, memberData.password || '');
 
       if (!isPasswordValid) {
-        setError('הסיסמה שהזנת אינה נכונה');
+        setFailedAttempts(prev => prev + 1);
+        if (failedAttempts + 1 >= 3) {
+          setShowSeaWaterAlert(true);
+        } else {
+          setError('הסיסמה שהזנת אינה נכונה');
+        }
         setIsLoading(false);
         return;
       }
@@ -152,13 +166,98 @@ const LoginPage: React.FC = () => {
       login({ ...memberData, id: userDoc.id, loginCount: (memberData.loginCount || 0) + 1 });
     } catch (err: any) { 
       console.error(err);
-      if (err.message === 'QUOTA_EXCEEDED_OR_KILL_SWITCH') {
-        setError('המערכת במצב לא מקוון זמנית (Emergency Shutdown)');
+      setFailedAttempts(prev => prev + 1);
+      if (failedAttempts + 1 >= 3) {
+        setShowSeaWaterAlert(true);
       } else {
-        setError('שגיאת חיבור למערכת'); 
+        if (err.message === 'QUOTA_EXCEEDED_OR_KILL_SWITCH') {
+          setError('המערכת במצב לא מקוון זמנית (Emergency Shutdown)');
+        } else {
+          setError('שגיאת חיבור למערכת'); 
+        }
       }
     } finally { 
       setIsLoading(false); 
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError('נא להזין אימייל לשחזור סיסמה');
+      return;
+    }
+    
+    setIsLoading(true);
+    setError('');
+    setResetSuccessMessage('');
+    
+    try {
+      const db = getDb();
+      const normalizedEmail = email.toLowerCase().trim();
+      const qEmail = query(
+        collection(db, 'members'), 
+        where('email', '==', normalizedEmail), 
+        limit(1)
+      );
+      const emailSnapshot = await trackedGetDocs(qEmail);
+      
+      if (emailSnapshot.empty) {
+        setError('אימייל זה אינו רשום במערכת');
+        setShowSeaWaterAlert(false);
+        setFailedAttempts(0);
+        setIsLoading(false);
+        return;
+      }
+      
+      const userDoc = emailSnapshot.docs[0];
+      const memberData = userDoc.data() as Member;
+      
+      // Generate temporary password
+      const tempPass = Math.random().toString(36).slice(-8);
+      const hashedPass = await hashPassword(tempPass);
+      
+      // Update user document
+      await updateDoc(doc(db, 'members', userDoc.id), {
+        password: hashedPass,
+        isTemporary: true
+      });
+      
+      // Send Email via EmailJS
+      try {
+        // מזהי EmailJS - יש להחליף בנתונים האמיתיים מהחשבון שלך (או להגדיר ב-.env)
+        const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_34obqry';
+        const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_96js5ks';
+        const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'jwzorvUPZsJyfTZpg';
+
+        if (SERVICE_ID) {
+          await emailjs.send(
+            SERVICE_ID,
+            TEMPLATE_ID,
+            {
+              to_email: memberData.email,
+              to_name: memberData.firstName,
+              temp_password: tempPass,
+            },
+            PUBLIC_KEY
+          );
+        } else {
+          console.log('EmailJS is not configured. Simulated email send:', { to: memberData.email, tempPass });
+        }
+      } catch (emailErr) {
+        console.error('Failed to send email:', emailErr);
+        // We continue anyway so the user isn't blocked in demo mode
+      }
+      
+      // Show success message
+      setResetSuccessMessage('הסיסמה הזמנית נשלחה לכתובת האימייל שלך! 📧 (בדוק גם בתיקיית הספאם)');
+      setShowSeaWaterAlert(false);
+      setFailedAttempts(0);
+      
+    } catch (err) {
+      console.error(err);
+      setError('שגיאה בשחזור סיסמה');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -312,7 +411,6 @@ const LoginPage: React.FC = () => {
                        <Waves size={32} />
                      </div>
                      <div className="text-white text-4xl font-black italic tracking-tighter">חבל זוג</div>
-                     <div className="text-white/50 text-[12px] font-black uppercase tracking-[0.3em]">HERZLIYA SURF CLUB</div>
                    </div>
                  )}
                </div>
@@ -378,7 +476,19 @@ const LoginPage: React.FC = () => {
                 )}
               </div>
 
-              {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
+              {error && (
+                <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3">
+                  <AlertCircle size={16} />
+                  {error}
+                </div>
+              )}
+              
+              {resetSuccessMessage && (
+                <div className="p-4 bg-emerald-500/20 text-emerald-200 text-xs font-black flex items-center gap-3 rounded-xl border border-emerald-500/30">
+                  <CheckCircle2 size={16} />
+                  {resetSuccessMessage}
+                </div>
+              )}
               
               {isDbEmpty && (
                 <div className="p-4 bg-cyan-500/20 border border-cyan-500/30 rounded-2xl text-cyan-100 text-xs font-bold text-center space-y-3">
@@ -414,7 +524,7 @@ const LoginPage: React.FC = () => {
                 <button 
                   type="button" 
                   onClick={() => setMode('JOIN')} 
-                  className="group relative flex items-center gap-2 bg-white/5 border border-white/10 text-white px-6 py-3 rounded-2xl font-black overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(0,255,255,0.2)]"
+                  className="group relative flex items-center gap-2 bg-transparent border border-white/5 text-white/40 px-6 py-3 rounded-2xl font-black overflow-hidden transition-all duration-300 hover:text-white hover:bg-white/5 hover:border-white/10 hover:scale-105 hover:shadow-[0_0_15px_rgba(0,255,255,0.2)]"
                 >
                   {/* אפקט "נצנוץ" בציאן ברקע במעבר עכבר */}
                   <div className="absolute inset-0 bg-gradient-to-r from-[#00FFFF]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -422,7 +532,7 @@ const LoginPage: React.FC = () => {
                   {/* האייקון עם הנפשה קטנה */}
                   <UserPlus 
                     size={18} 
-                    className="text-[#00FFFF] transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" 
+                    className="text-[#00FFFF]/40 transition-all duration-300 group-hover:text-[#00FFFF] group-hover:rotate-12 group-hover:scale-110" 
                   />
                   
                   <span className="relative z-10 text-base">בקש להצטרף</span>
@@ -596,6 +706,55 @@ const LoginPage: React.FC = () => {
           )}
         </div>
       </div>
+      {/* Sea Water Alert Modal (Forgot Password) */}
+      <AnimatePresence>
+        {showSeaWaterAlert && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#1A1A24] border border-white/10 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
+            >
+              <div className="w-16 h-16 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Waves size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-white text-center mb-2">שתית מי ים?</h3>
+              <p className="text-white/70 text-center mb-6">
+                נראה שהתבלבלת בסיסמה 3 פעמים. האם תרצה שנשלח לך סיסמה זמנית לאימייל כדי שתוכל להתחבר?
+              </p>
+              
+              <div className="flex flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={handleResetPassword}
+                  disabled={isLoading}
+                  className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  {isLoading ? <Loader2 className="animate-spin" size={20} /> : <Mail size={20} />}
+                  כן, שלח לי למייל
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSeaWaterAlert(false);
+                    setFailedAttempts(0);
+                  }}
+                  disabled={isLoading}
+                  className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl transition-colors"
+                >
+                  לא, אני אנסה שוב
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

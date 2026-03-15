@@ -33,6 +33,13 @@ export interface Member {
   loginCount?: number; // Added for analytics
   birthday?: string; // YYYY-MM-DD
   gender?: Gender;
+  weight?: number; // in kg
+  height?: number; // in cm
+  surfingLevel?: 'Beginner' | 'Intermediate' | 'Advanced';
+  currentBoardVolume?: number; // in liters
+  currentBoardLength?: string; // e.g., "6'2"
+  recommendedBoardVolume?: number; // in liters
+  recommendedBoardLength?: string; // e.g., "6'2"
   street_name?: string;
   house_number?: string;
   city?: string;
