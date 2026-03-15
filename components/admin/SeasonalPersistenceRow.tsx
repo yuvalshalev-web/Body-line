@@ -13,7 +13,7 @@ const SeasonalPersistenceRow: React.FC = () => {
     
     const seasonsConfig = [
       { name: 'סתיו', icon: Waves, color: '#FF9F1C' }, // Orange
-      { name: 'חורף', icon: Snowflake, color: '#3dbbd3' }, // Cyan
+      { name: 'חורף', icon: Snowflake, color: '#FFDE45' }, // Yellow
       { name: 'אביב', icon: Leaf, color: '#2DA95C' }, // Green
       { name: 'קיץ', icon: Sun, color: '#FFDE45' }, // Yellow
     ];

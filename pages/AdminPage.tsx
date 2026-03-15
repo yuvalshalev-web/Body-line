@@ -6,7 +6,7 @@ import {
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
-  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Sparkles, Globe, Activity, AlertTriangle
+  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Sparkles, Globe, Activity, AlertTriangle, Terminal
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -26,8 +26,10 @@ import TimePicker from '../components/TimePicker';
 import { DayPicker } from '../components/DayPicker';
 import EventEditor from '../components/admin/EventEditor';
 import EditMemberForm from '../components/admin/EditMemberForm';
+import AddMemberModal from '../components/admin/AddMemberModal';
 import PostEditor from '../components/admin/PostEditor';
 import AdminRolloverReport from './AdminRolloverReport';
+import SystemMonitor from '../components/SystemMonitor';
 
 const ASSET_LABELS: Record<string, string> = {
   habalZugLogo: 'לוגו חבל זוג',
@@ -43,11 +45,11 @@ const AdminPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
-    joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember,
+    joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember, addMember,
     yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER'>('USERS');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM'>('USERS');
   const [newSessionDay, setNewSessionDay] = useState(0);
   const [newSessionTime, setNewSessionTime] = useState('07:00');
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
@@ -61,6 +63,7 @@ const AdminPage: React.FC = () => {
     ...(currentUser?.role === 'Admin' ? [
       { id: 'ARCHIVE', label: 'ארכיון', icon: <Archive size={20} /> },
       { id: 'REQUESTS', label: 'בקשות', icon: <UserCheck size={20} />, count: joinRequests.length },
+      { id: 'ENGINE_ROOM', label: 'חדר מכונות', icon: <Terminal size={20} /> },
       { id: 'SITE', label: 'הגדרות', icon: <Settings size={20} /> }
     ] : [])
   ];
@@ -68,7 +71,7 @@ const AdminPage: React.FC = () => {
   const isAdmin = currentUser?.role === 'Admin';
 
   const handleTabChange = (id: string) => {
-    if (!isAdmin && ['ARCHIVE', 'REQUESTS', 'SITE'].includes(id)) {
+    if (!isAdmin && ['ARCHIVE', 'REQUESTS', 'ENGINE_ROOM', 'SITE'].includes(id)) {
       showError('אין לך הרשאות לגשת לאזור זה');
       return;
     }
@@ -82,6 +85,25 @@ const AdminPage: React.FC = () => {
   const assetFileInputRef = useRef<HTMLInputElement>(null);
   const [replacingAssetKey, setReplacingAssetKey] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  const [newMemberData, setNewMemberData] = useState<Partial<Member>>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    mobile: '',
+    avatar: '',
+    bio: '',
+    role: 'Member',
+    gender: 'מעדיף/ה לא לציין',
+    isActive: true,
+    birthday: '',
+    instagramUrl: '',
+    facebookUrl: '',
+    linkedinUrl: '',
+    twitterUrl: '',
+    password: ''
+  });
+  const [isSaving, setIsSaving] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -403,7 +425,7 @@ const AdminPage: React.FC = () => {
 
     setIsUploadingAsset(replacingAssetKey);
     try {
-      const processed = await processImage(file, 1200, 0.85);
+      const processed = await processImage(file, 1200, 0.9, 500);
       const storage = getStorageInstance();
       const storageRef = ref(storage, `assets/site/${replacingAssetKey}_${Date.now()}`);
       
@@ -435,7 +457,7 @@ const AdminPage: React.FC = () => {
         const file = files[i];
         
         // 1. Process image
-        const processed = await processImage(file, 1920, 0.8);
+        const processed = await processImage(file, 1920, 0.8, 1000);
         
         // 2. Upload to Storage
         const storagePath = `gallery/${Date.now()}_${file.name}`;
@@ -620,6 +642,7 @@ const AdminPage: React.FC = () => {
                   { id: 'ROLLOVER', label: 'דו"ח יום חמישי', desc: 'ארכיון סשנים שבועי וסיכום נוכחות', icon: Activity, color: 'bg-[#FFD700]' },
                   ...(isAdmin ? [
                     { id: 'REQUESTS', label: 'בקשות הצטרפות', desc: `${joinRequests.length} ממתינים לאישור`, icon: UserCheck, color: 'bg-[#FF2D60]', count: joinRequests.length },
+                    { id: 'ENGINE_ROOM', label: 'חדר מכונות', desc: 'ניטור תשתיות ומערכות', icon: Terminal, color: 'bg-[#8B5CF6]' },
                     { id: 'SITE', label: 'הגדרות אתר', desc: 'לוגואים, רקעים ונכסים', icon: Settings, color: 'bg-[#00FFFF]' },
                     { id: 'ARCHIVE', label: 'ארכיון משתמשים', desc: 'ניהול חברים שהושעו', icon: Archive, color: 'bg-[#FFD700]' }
                   ] : [])
@@ -815,6 +838,15 @@ const AdminPage: React.FC = () => {
               );
             })()}
 
+            <div className="flex justify-center mt-6">
+              <button 
+                onClick={() => setIsAddMemberModalOpen(true)}
+                className="flex items-center gap-2 px-8 py-4 bg-[#FF9F1C] text-white rounded-2xl font-black text-sm hover:bg-[#FF9F1C]/90 transition-all shadow-lg shadow-[#FF9F1C]/20"
+              >
+                <Plus size={18} /> הוספת חבר
+              </button>
+            </div>
+
             {editingMember ? (
               <EditMemberForm
                 member={editingMember}
@@ -909,6 +941,15 @@ const AdminPage: React.FC = () => {
                 </div>
               </div>
             )}
+            <AddMemberModal 
+              isOpen={isAddMemberModalOpen}
+              onClose={() => setIsAddMemberModalOpen(false)}
+              newMemberData={newMemberData}
+              setNewMemberData={setNewMemberData}
+              isSaving={isSaving}
+              setIsSaving={setIsSaving}
+              addMember={addMember}
+            />
           </div>
         )}
 
@@ -1036,6 +1077,12 @@ const AdminPage: React.FC = () => {
                 </table>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'ENGINE_ROOM' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            <SystemMonitor />
           </div>
         )}
 
@@ -1555,8 +1602,7 @@ const AdminPage: React.FC = () => {
                           ⚠️ אזהרה: אל תעשו את זה לעצמכם (או לנו)
                         </h3>
                         <p className="text-center text-slate-600 mb-8 font-medium leading-relaxed">
-                          מחיקת סשן עלולה לגרום לנתונים להיעלם, לפעילות להיעצר ולמפתחים שלנו 
-                          לפתח מיגרנה קשה בניסיון להציל את המצב. בטוח שאתה רוצה להמשיך?
+                          מחיקת הסשן עלולה למחוק נתונים, לעצור פעילויות, ואולי לגרום למפתחים שלנו לדיכאון תכנותי כרוני… אתה עדיין רוצה להמשיך?
                         </p>
                         <div className="flex gap-4">
                           <button
@@ -1767,6 +1813,29 @@ const AdminPage: React.FC = () => {
                     <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">מיקום תפריט הניווט</h3>
                     <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">החלפה בין תפריט עליון לתחתון</p>
                   </div>
+                </div>
+
+                <div className="inline-flex w-max self-start lg:self-auto bg-white/50 backdrop-blur p-1 rounded-xl relative z-10 border border-white/40 shadow-inner">
+                  <button
+                    onClick={() => updateSiteConfig({ navPosition: 'bottom' })}
+                    className={`px-6 py-2 rounded-lg text-sm font-black transition-all duration-300 ${
+                      (siteConfig?.navPosition || 'bottom') === 'bottom'
+                        ? 'bg-white text-[var(--deep-teal-sea)] shadow-md'
+                        : 'text-[var(--deep-teal-sea)]/60 hover:text-[var(--deep-teal-sea)] hover:bg-white/30'
+                    }`}
+                  >
+                    תחתון
+                  </button>
+                  <button
+                    onClick={() => updateSiteConfig({ navPosition: 'top' })}
+                    className={`px-6 py-2 rounded-lg text-sm font-black transition-all duration-300 ${
+                      siteConfig?.navPosition === 'top'
+                        ? 'bg-white text-[var(--deep-teal-sea)] shadow-md'
+                        : 'text-[var(--deep-teal-sea)]/60 hover:text-[var(--deep-teal-sea)] hover:bg-white/30'
+                    }`}
+                  >
+                    עליון
+                  </button>
                 </div>
               </div>
             </div>

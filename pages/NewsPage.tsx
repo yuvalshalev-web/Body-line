@@ -32,7 +32,7 @@ const NewsPage: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       try {
-        const processed = await processImage(file, 1200, 0.85);
+        const processed = await processImage(file, 1200, 0.9, 800);
         setSelectedImage(processed);
         setErrorMsg(null);
       } catch (err: any) {

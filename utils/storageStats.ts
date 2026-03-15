@@ -1,10 +1,9 @@
 import { doc, updateDoc, increment, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { ref, listAll, getMetadata } from 'firebase/storage';
+import { db, getStorageInstance } from '../services/firebase';
 
 /**
  * Updates the global storage statistics in Firestore.
- * This should be called after every successful file upload.
- * @param bytes The size of the uploaded file in bytes.
  */
 export const updateStorageStats = async (bytes: number) => {
   try {
@@ -49,15 +48,24 @@ export const getStorageSizeMB = async (): Promise<number> => {
 
 /**
  * מעדכן את מונה האחסון ב-Firestore לאחר העלאה
- * @param {number} fileSizeInBytes - גודל הקובץ שהועלה (file.size)
  */
 export const syncStorageOnUpload = async (fileSizeInBytes: number) => {
   try {
     const statsRef = doc(db, "admin", "storage_metadata");
-    await updateDoc(statsRef, {
-      totalBytes: increment(fileSizeInBytes),
-      updatedAt: new Date().toISOString()
-    });
+    const statsDoc = await getDoc(statsRef);
+    
+    if (!statsDoc.exists()) {
+      await setDoc(statsRef, {
+        totalBytes: fileSizeInBytes,
+        updatedAt: new Date().toISOString(),
+        initialized: true
+      });
+    } else {
+      await updateDoc(statsRef, {
+        totalBytes: increment(fileSizeInBytes),
+        updatedAt: new Date().toISOString()
+      });
+    }
     console.log("✅ המונה עודכן: נוספו " + fileSizeInBytes + " בתים");
   } catch (error) {
     console.error("❌ שגיאה בעדכון המונה:", error);
@@ -66,19 +74,65 @@ export const syncStorageOnUpload = async (fileSizeInBytes: number) => {
 
 /**
  * מעדכן את מונה האחסון ב-Firestore לאחר מחיקה
- * @param {number} fileSizeInBytes - גודל הקובץ שנמחק
  */
 export const syncStorageOnDelete = async (fileSizeInBytes: number) => {
   try {
     const statsRef = doc(db, "admin", "storage_metadata");
-    // שימוש ב-increment עם ערך שלילי כדי להחסיר
-    await updateDoc(statsRef, {
-      totalBytes: increment(-fileSizeInBytes),
-      updatedAt: new Date().toISOString()
-    });
+    const statsDoc = await getDoc(statsRef);
+    
+    if (!statsDoc.exists()) {
+      await setDoc(statsRef, {
+        totalBytes: 0,
+        updatedAt: new Date().toISOString(),
+        initialized: true
+      });
+    } else {
+      await updateDoc(statsRef, {
+        totalBytes: increment(-fileSizeInBytes),
+        updatedAt: new Date().toISOString()
+      });
+    }
     console.log("🗑️ המונה עודכן: הוסרו " + fileSizeInBytes + " בתים");
   } catch (error) {
     console.error("❌ שגיאה בעדכון המונה לאחר מחיקה:", error);
+  }
+};
+
+/**
+ * סורק את כל תיקיות האחסון ומחשב מחדש את הגודל הכולל
+ */
+export const recalculateStorageFromStorage = async (): Promise<number> => {
+  try {
+    const storage = getStorageInstance();
+    const folders = ['gallery', 'news', 'events', 'assets/site', 'assets/logo'];
+    let totalBytes = 0;
+
+    for (const folder of folders) {
+      const folderRef = ref(storage, folder);
+      try {
+        const res = await listAll(folderRef);
+        for (const item of res.items) {
+          const meta = await getMetadata(item);
+          totalBytes += meta.size || 0;
+        }
+      } catch (e) {
+        console.warn(`Could not list folder ${folder}:`, e);
+      }
+    }
+
+    const statsRef = doc(db, "admin", "storage_metadata");
+    await setDoc(statsRef, {
+      totalBytes,
+      updatedAt: new Date().toISOString(),
+      initialized: true,
+      recalculatedAt: new Date().toISOString()
+    });
+
+    console.log(`📊 Storage recalculated: ${totalBytes} bytes`);
+    return totalBytes;
+  } catch (error) {
+    console.error("Error recalculating storage:", error);
+    return 0;
   }
 };
 
@@ -98,7 +152,6 @@ export const initializeStorageStats = async () => {
       console.log("✅ Storage stats initialized with 11,450,000 bytes");
     }
   } catch (error: any) {
-    // If it's a connection error, just log a warning instead of a scary error
     if (error?.code === 'unavailable' || error?.message?.includes('offline')) {
       console.warn("⚠️ Storage stats initialization deferred: Client is offline.");
     } else {

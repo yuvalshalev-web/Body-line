@@ -58,18 +58,6 @@ const SurfingSessionAttendance: React.FC = () => {
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
   const [showManualDatePicker, setShowManualDatePicker] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [activeSessionStatus, setActiveSessionStatus] = useState<'active' | 'suspended'>('active');
-
-  useEffect(() => {
-    const db = getDb();
-    const unsub = onSnapshot(doc(db, 'site_data', 'active_session'), (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data() as any;
-        setActiveSessionStatus(data.status || 'active');
-      }
-    });
-    return unsub;
-  }, []);
 
   const confirmedIds = editingHistorySession ? localConfirmedIds : new Set(attendeeIds);
 
@@ -333,36 +321,62 @@ const SurfingSessionAttendance: React.FC = () => {
       participantIds: attendeeIds || [],
       instructorName: 'מדריך חבל זוג',
       isUpcoming: true,
-      status: activeSessionStatus
+      status: (attendeeIds?.length || 0) > 0 ? 'active' : 'suspended'
     };
 
-    // Filter out any history item that has the EXACT SAME date as the active session
-    // so we don't show duplicates. The active session takes precedence.
-    const filteredHistory = history.filter(s => {
+    // Map history for easy lookup by date string
+    const historyMap = new Map();
+    history.forEach(s => {
       const d = s.date instanceof Timestamp ? s.date.toDate() : new Date(s.date);
       const dDay = d.getDay();
       const dDiff = 4 - dDay;
       const dThursday = new Date(d);
       dThursday.setDate(dThursday.getDate() + dDiff);
       dThursday.setHours(7, 0, 0, 0);
-      return dThursday.toDateString() !== activeDate.toDateString();
+      historyMap.set(dThursday.toDateString(), s);
     });
 
-    const list = [upcomingSession, ...filteredHistory];
+    const list: any[] = [upcomingSession];
+    
+    // Add all Thursdays from the year config that aren't the upcoming session
+    thursdays.forEach(t => {
+      const dateStr = t.toDateString();
+      if (dateStr === activeDate.toDateString()) return;
+
+      if (historyMap.has(dateStr)) {
+        list.push(historyMap.get(dateStr));
+      } else {
+        // Add "empty" historical session placeholder
+        list.push({
+          id: `empty-${t.getTime()}`,
+          date: Timestamp.fromDate(t),
+          participantsCount: 0,
+          participantIds: [],
+          instructorName: 'מדריך חבל זוג',
+          isEmpty: true,
+          status: 'suspended'
+        });
+      }
+    });
 
     return list.sort((a, b) => {
       const da = a.date instanceof Timestamp ? a.date.toDate() : new Date(a.date);
       const db = b.date instanceof Timestamp ? b.date.toDate() : new Date(b.date);
       return db.getTime() - da.getTime();
     });
-  }, [history, attendeeIds, activeSessionDate, activeSessionStatus]);
+  }, [history, attendeeIds, activeSessionDate, thursdays]);
 
   const loadHistorySession = (session: SessionHistory) => {
     setEditingHistorySession(session);
     if (session.id === 'upcoming') {
       setLocalConfirmedIds(new Set(attendeeIds || []));
     } else {
-      setLocalConfirmedIds(new Set(session.participantIds));
+      // Filter out super admin if they were in the historical record
+      const filteredIds = (session.participantIds || []).filter(id => {
+        const member = globalMembers.find(m => m.id === id);
+        return !!member; // globalMembers is already filtered
+      });
+      setLocalConfirmedIds(new Set(filteredIds));
     }
     setView('current');
     setShowHistoryDropdown(false);
@@ -426,55 +440,6 @@ const SurfingSessionAttendance: React.FC = () => {
       loadHistorySession(newSession);
     }
     setShowManualDatePicker(false);
-  };
-
-  const seedHistory = async () => {
-    const startStr = yearConfig?.startDate || '2026-01-01';
-    showConfirm({
-      message: `האם לייצר היסטוריית סשנים אוטומטית מתאריך ${startStr}?`,
-      onConfirm: async () => {
-        setIsSaving(true);
-        try {
-          const db = getDb();
-          const startDate = new Date(startStr);
-          const today = new Date();
-          let current = new Date(startDate);
-          
-          // Find first Thursday
-          while (current.getDay() !== 4) {
-            current.setDate(current.getDate() + 1);
-          }
-          current.setHours(7, 0, 0, 0);
-
-          const batch = [];
-          while (current <= today) {
-            const participantsCount = Math.floor(Math.random() * 15) + 5;
-            const randomParticipants = globalMembers
-              .sort(() => 0.5 - Math.random())
-              .slice(0, participantsCount)
-              .map(u => u.id);
-
-            batch.push(addDoc(collection(db, 'weekly_history'), {
-              date: Timestamp.fromDate(new Date(current)),
-              participantsCount,
-              participantIds: randomParticipants,
-              instructorName: 'מדריך חבל זוג',
-              createdAt: new Date().toISOString()
-            }));
-            
-            current.setDate(current.getDate() + 7);
-          }
-
-          await Promise.all(batch);
-          showSuccess('היסטוריה יוצרה בהצלחה');
-        } catch (error) {
-          console.error("Error seeding history:", error);
-          showError('שגיאה בייצור היסטוריה');
-        } finally {
-          setIsSaving(false);
-        }
-      }
-    });
   };
 
   const formatDate = (date: any) => {
@@ -549,7 +514,7 @@ const SurfingSessionAttendance: React.FC = () => {
               <button 
                 onClick={handleFinalConfirm}
                 disabled={isSaving || !hasUnsavedChanges}
-                className="flex-1 px-6 py-3 bg-[#00FFFF] text-[#006994] rounded-[16px] font-black text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale"
+                className="flex-1 px-6 py-3 bg-[#FF2D60] text-white rounded-[16px] font-black text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale"
               >
                 {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                 שמור שינויים
@@ -720,33 +685,15 @@ const SurfingSessionAttendance: React.FC = () => {
                       </div>
 
                       <div className="flex items-center justify-between md:justify-end gap-8">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input 
-                            type="checkbox"
-                            checked={session.status !== 'suspended'}
-                            onChange={async (e) => {
-                              const newStatus = e.target.checked ? 'active' : 'suspended';
-                              try {
-                                const db = getDb();
-                                if (session.id === 'upcoming') {
-                                  await setDoc(doc(db, 'site_data', 'active_session'), { status: newStatus }, { merge: true });
-                                } else {
-                                  await updateDoc(doc(db, 'weekly_history', session.id), { status: newStatus });
-                                }
-                              } catch (error) {
-                                console.error("Error updating session status:", error);
-                                showError('שגיאה בעדכון סטטוס הסשן');
-                              }
-                            }}
-                            className="w-6 h-6 rounded-md border-2 border-[#006994] accent-[#006994] cursor-pointer"
-                          />
-                          <span className="text-xs font-black text-[#006994]">
-                            {session.status !== 'suspended' ? 'פעיל' : 'מושעה'}
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${session.participantsCount > 0 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`} />
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${session.participantsCount > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                            {session.participantsCount > 0 ? 'פעיל' : 'לא פעיל'}
                           </span>
-                        </label>
+                        </div>
                         <div className="flex -space-x-3 space-x-reverse">
                           {session.participantIds.length > 0 ? (
-                            session.participantIds.slice(0, 3).map((uid, i) => {
+                            session.participantIds.slice(0, 3).map((uid: string, i: number) => {
                               const user = globalMembers.find(u => u.id === uid);
                               return (
                                 <div key={i} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-slate-100 shadow-sm">
@@ -800,12 +747,6 @@ const SurfingSessionAttendance: React.FC = () => {
               <div className="py-20 text-center bg-white/40 rounded-[3rem] border-2 border-dashed border-[#006994]/10">
                 <History size={48} className="mx-auto mb-4 text-[#006994]/20" />
                 <p className="text-[#4E8294] font-bold mb-6">אין היסטוריית סשנים זמינה</p>
-                <button 
-                  onClick={seedHistory}
-                  className="px-6 py-3 bg-[#006994] text-white rounded-xl font-black text-xs hover:bg-[#00FFFF] hover:text-[#006994] transition-all"
-                >
-                  ייצר היסטוריה מתחילת 2026
-                </button>
               </div>
             )}
           </div>

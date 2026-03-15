@@ -48,12 +48,12 @@ export const AstrodeckGauge: React.FC<{
     <div className={`flex-1 w-full flex flex-col items-center text-center group/pad ${isGrit ? 'relative' : ''}`}>
       
       <div className="flex items-center gap-2 mb-4">
-        <div className={`${isGrit ? 'text-[var(--surfer-cyan)]' : 'text-[var(--surfer-teal)]'} group-hover/pad:text-white transition-colors`}>
+        <div className={`${isGrit ? 'text-[var(--surfer-cyan)]' : 'text-[var(--surfer-teal)]'} group-hover/pad:text-sunshine-yellow transition-colors`}>
           {icon}
         </div>
-        <h3 className={`text-[11px] font-black uppercase tracking-[0.15em] glass-text-primary`}>{label}</h3>
+        <h3 className={`text-[11px] font-black uppercase tracking-[0.15em] name-title-text`}>{label}</h3>
         <div className="gt-info-wrapper">
-          <Info size={14} className="glass-text-secondary hover:text-white transition-colors" />
+          <Info size={14} className="text-sunshine-yellow hover:opacity-80 transition-colors" />
           <span className="gt-tooltip" style={{ bottom: '160%', width: '200px' }}>{tooltip}</span>
         </div>
       </div>
@@ -302,7 +302,7 @@ export const AstrodeckGauge: React.FC<{
           <motion.span 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-3xl font-black text-white tabular-nums tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+            className="text-3xl font-black metric-value-text tabular-nums tracking-tighter"
           >
             {value}%
           </motion.span>
@@ -356,7 +356,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
     <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700 min-h-[400px]" dir="rtl">
       {/* Unified Modern Dashboard - Dynamic Premium Style matching Surfer Card */}
       <motion.div 
-        className="neo-glass-card p-4 md:p-6 relative transition-all duration-1000"
+        className="tangible-glass-card surfer-theme-bg p-4 md:p-6 relative transition-all duration-1000"
       >
         {/* Decorative background elements */}
         <div className="absolute -right-20 -top-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
@@ -379,7 +379,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               icon={<Calendar size={18} className="text-[#FF007F]" />}
               tooltip="מדד הבודק כמה שבועות היית פעיל ברצף מתחילת העונה."
               footer={
-                <p className="mt-4 text-[12px] font-bold text-white/40">
+                <p className="mt-4 text-[12px] font-bold secondary-detail-text">
                   היית פעיל ב-{data.yearlyStability.activeWeeks} מתוך {data.yearlyStability.totalWeeks} שבועות השנה.
                 </p>
               }
@@ -396,7 +396,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                 tooltip="זהו מדד ה'נחישות' שלך. הוא בודק כמה אתה מתמיד. הוא משלב את כמות הסשנים שעשית עם העקביות שלך (הרצף). העקביות חשובה יותר מהכמות."
                 isGrit={true}
                 footer={
-                  <p className="mt-4 text-[12px] font-bold text-white/40">
+                  <p className="mt-4 text-[12px] font-bold secondary-detail-text">
                     ממוצע הקהילה: {Math.round(data.averageGrit)}
                   </p>
                 }
@@ -426,7 +426,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
       {/* Session History - Collapsible Dropbox Style - Dynamic Premium Style */}
       <motion.div 
-        className="neo-glass-card relative overflow-hidden transition-all duration-1000"
+        className="tangible-glass-card surfer-theme-bg relative overflow-hidden transition-all duration-1000"
         onMouseLeave={() => setIsHistoryOpen(false)}
       >
         <button 
@@ -439,14 +439,14 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               <Calendar size={16} />
             </div>
             <div className="text-right">
-              <h3 className="text-sm font-black glass-text-primary">היסטוריית סשנים</h3>
-              <p className="text-[12px] font-bold glass-text-secondary uppercase tracking-wider">
+              <h3 className="text-sm font-black name-title-text">היסטוריית סשנים</h3>
+              <p className="text-[12px] font-bold secondary-detail-text uppercase tracking-wider">
                 {isHistoryOpen ? 'לחץ לסגירה' : `צפה ב-${userSessions.length} סשנים אחרונים`}
               </p>
             </div>
           </div>
           <div className={`transition-transform duration-300 ${isHistoryOpen ? 'rotate-[-90deg]' : ''}`}>
-            <ChevronLeft size={18} className="text-slate-400 group-hover:text-slate-800" />
+            <ChevronLeft size={18} className="text-sunshine-yellow group-hover:opacity-80" />
           </div>
         </button>
 
@@ -473,20 +473,20 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                       className="group px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-white/10 transition-all"
                     >
                       <div className="flex items-center gap-4">
-                        <Waves size={14} className="glass-text-secondary group-hover:text-[var(--surfer-cyan)] transition-colors" />
+                        <Waves size={14} className="text-sunshine-yellow transition-colors" />
                         <div className="flex flex-col">
-                          <span className="font-bold glass-text-primary text-xs">{formattedDate}</span>
-                          <span className="text-[12px] glass-text-secondary font-medium">
+                          <span className="font-bold secondary-detail-text text-xs">{formattedDate}</span>
+                          <span className="text-[12px] secondary-detail-text font-medium">
                             {session.instructorName || 'מדריך חבל זוג'}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 text-[12px] glass-text-secondary font-black">
+                        <div className="flex items-center gap-1 text-[12px] secondary-detail-text font-black">
                           <Users size={10} />
                           <span>{session.participantIds?.length || 0}</span>
                         </div>
-                        <ChevronLeft size={14} className="glass-text-secondary group-hover:text-[var(--surfer-cyan)] group-hover:translate-x-[-2px] transition-all" />
+                        <ChevronLeft size={14} className="text-sunshine-yellow group-hover:translate-x-[-2px] transition-all" />
                       </div>
                     </div>
                   );
@@ -494,14 +494,14 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
                 {userSessions.length === 0 && (
                   <div className="py-10 text-center">
-                    <p className="text-slate-400 font-bold italic text-xs">אין סשנים לתצוגה</p>
+                    <p className="secondary-detail-text font-bold italic text-xs">אין סשנים לתצוגה</p>
                   </div>
                 )}
               </div>
               
               {userSessions.length > 15 && (
                 <div className="p-3 bg-black/20 text-center border-t border-white/20">
-                  <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">
+                  <span className="text-[12px] font-black secondary-detail-text uppercase tracking-widest">
                     מציג 15 סשנים אחרונים
                   </span>
                 </div>
@@ -513,7 +513,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
       {/* Surf Compass (Radar Chart) - Future Use - Dynamic Premium Style */}
       <motion.div 
-        className="neo-glass-card p-4 md:p-6 relative overflow-hidden transition-all duration-1000"
+        className="tangible-glass-card surfer-theme-bg p-4 md:p-6 relative overflow-hidden transition-all duration-1000"
       >
           <div className="relative z-10">
           <div className="flex flex-col items-center mb-8">
@@ -521,9 +521,9 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               <div className="p-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-sm mr-2">
                 <Compass size={18} className="text-[#00FFFF]" />
               </div>
-              <h3 className="text-lg font-black glass-text-primary">רדאר השיפור שלך</h3>
+              <h3 className="text-lg font-black name-title-text">רדאר השיפור שלך</h3>
             </div>
-            <span className="text-[12px] font-bold glass-text-secondary uppercase tracking-widest mt-1">(לשימוש עתידי)</span>
+            <span className="text-[12px] font-bold secondary-detail-text uppercase tracking-widest mt-1">(לשימוש עתידי)</span>
           </div>
 
           <div className="h-[450px] w-full relative">
@@ -531,7 +531,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
           </div>
 
           <div className="mt-12 p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/20 shadow-md shadow-black/5">
-            <p className="text-[12px] glass-text-secondary font-bold text-center leading-relaxed">
+            <p className="text-[12px] secondary-detail-text font-bold text-center leading-relaxed">
               המצפן מנתח את היכולות המקצועיות שלך בים. נתונים אלו יוזנו על ידי המדריכים לאחר הערכות תקופתיות.
             </p>
           </div>

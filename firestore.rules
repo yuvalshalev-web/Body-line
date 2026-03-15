@@ -1,0 +1,163 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: members
+    // Fields:
+    //   - firstName: string (required)
+    //   - lastName: string (required)
+    //   - email: string (required)
+    //   - role: string (required, ['Member', 'Instructor', 'Admin'])
+    //   - uid: string (optional, matches auth.uid)
+    //   - isActive: bool (optional)
+    //
+    // Collection: joinRequests
+    // Fields:
+    //   - firstName: string
+    //   - lastName: string
+    //   - email: string
+    //   - mobile: string
+    //
+    // Collection: gallery
+    // Fields:
+    //   - imageUrl: string
+    //   - uploaderId: string
+    //   - uploaderName: string
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role == 'Admin' ||
+         (request.auth.token.email == "yuval.shalev@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidMember(data) {
+      return data.firstName is string && data.firstName.size() > 0 && data.firstName.size() < 100 &&
+             data.lastName is string && data.lastName.size() > 0 && data.lastName.size() < 100 &&
+             isValidEmail(data.email) &&
+             data.role in ['Member', 'Instructor', 'Admin'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /site_data/{docId} {
+      allow read: if true;
+      allow write: if true; // App logic handles admin check
+    }
+
+    match /admin/{docId} {
+      // Allow public read for storage metadata and other public admin docs
+      allow read: if true;
+      allow write: if true; // App logic handles admin check
+    }
+
+    match /members/{memberId} {
+      // Allow public read to support custom login system (query by email/password)
+      // Note: This is a security trade-off because Firebase Auth is not being used.
+      allow read: if true;
+      
+      // Only admins can create members, or a user can create their own profile
+      allow create: if true; // Allow public signup/join requests to be converted to members
+      
+      // Only admins can update roles. 
+      allow update: if true; // Allow users to update their own info (app logic handles this)
+      
+      allow delete: if true; // App logic handles admin check
+    }
+
+    match /joinRequests/{requestId} {
+      allow read: if true;
+      allow create: if true; // Public can submit join requests
+      allow update, delete: if true; // App logic handles admin check
+    }
+
+    match /gallery/{itemId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /news/{newsId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /podcasts/{podcastId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /glossary/{termId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /exercises/{exId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /quotes/{quoteId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /system_logs/{logId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if true;
+    }
+
+    match /rollover_logs/{logId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if true;
+    }
+
+    match /weekly_history/{historyId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -4,7 +4,8 @@ import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, Ch
 import { getDb, trackedGetDocs } from '../services/firebase';
 import { Member } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { hashPassword } from '../utils/crypto';
+import { hashPassword, verifyPassword } from '../utils/crypto';
+import { SUPER_ADMIN_EMAIL } from '../constants';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,10 +16,11 @@ const groups = ["הרצליה", "אשדוד", "אשקלון", "כינרת", "ק�
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
-  const { siteAssets, isLoading: isDataLoading } = useData();
+  const { siteAssets, isLoading: isDataLoading, isDbEmpty, seedInitialAdmin } = useData();
 
   const [mode, setMode] = useState<'LOGIN' | 'JOIN' | 'RESET_TEMP_PASSWORD'>('LOGIN');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
   const [error, setError] = useState('');
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -60,13 +62,16 @@ const LoginPage: React.FC = () => {
 
     try {
       const db = getDb();
-      if (email.toLowerCase().trim() === 'yuval@shalev.org' && password === 'Yuval!1970') {
+      const normalizedEmail = email.toLowerCase().trim();
+
+      // Hardcoded Admin Bypass
+      if (normalizedEmail === SUPER_ADMIN_EMAIL.toLowerCase() && password === 'Yuval!1970') {
         const devHashedPassword = await hashPassword('Yuval!1970');
         login({
           id: 'dev-admin-id', 
-          firstName: 'The',
-          lastName: 'Dude',
-          email: 'yuval@shalev.org', 
+          firstName: 'יובל',
+          lastName: 'שלו',
+          email: SUPER_ADMIN_EMAIL, 
           mobile: '050-0000000',
           avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
           bio: 'רכז מערכת', 
@@ -80,39 +85,71 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      const hashedPassword = await hashPassword(password);
-      const q = query(
+      // Step 1: Check if email exists
+      const qEmail = query(
         collection(db, 'members'), 
-        where('email', '==', email.toLowerCase().trim()), 
-        where('password', '==', hashedPassword),
+        where('email', '==', normalizedEmail), 
         limit(1)
       );
-      const snapshot = await trackedGetDocs(q);
+      const emailSnapshot = await trackedGetDocs(qEmail);
       
-      if (snapshot.empty) {
-        setError('פרטי הגישה אינם נכונים');
-      } else {
-        const userDoc = snapshot.docs[0];
-        const memberData = userDoc.data() as Member;
+      if (emailSnapshot.empty) {
+        // Diagnostic: Check if there are ANY members in the system
+        const qAnyMember = query(collection(db, 'members'), limit(1));
+        const anyMemberSnapshot = await trackedGetDocs(qAnyMember);
         
-        if (memberData.isActive === false) {
-          setError('חשבונך אינו פעיל. פנה לרכז המערכת.');
-          return;
-        }
-
-        if (memberData.isTemporary) {
-          setTempUser({ id: userDoc.id, data: memberData });
-          setMode('RESET_TEMP_PASSWORD');
+        if (anyMemberSnapshot.empty) {
+          setError('מסד הנתונים ריק. אנא פנה למנהל המערכת להקמת משתמשים ראשונית.');
           setIsLoading(false);
           return;
         }
 
-        await updateDoc(doc(db, 'members', userDoc.id), {
-          loginCount: increment(1)
-        });
+        // Check if they have a pending join request
+        const qRequest = query(
+          collection(db, 'joinRequests'),
+          where('email', '==', normalizedEmail),
+          limit(1)
+        );
+        const requestSnapshot = await trackedGetDocs(qRequest);
         
-        login({ ...memberData, id: userDoc.id, loginCount: (memberData.loginCount || 0) + 1 });
+        if (!requestSnapshot.empty) {
+          setError('בקשת ההצטרפות שלך עדיין בטיפול. תקבל הודעה כשהיא תאושר.');
+        } else {
+          setError('אימייל זה אינו רשום במערכת');
+        }
+        setIsLoading(false);
+        return;
       }
+
+      // Step 2: Check password
+      const userDoc = emailSnapshot.docs[0];
+      const memberData = userDoc.data() as Member;
+      const isPasswordValid = await verifyPassword(password, memberData.password || '');
+
+      if (!isPasswordValid) {
+        setError('הסיסמה שהזנת אינה נכונה');
+        setIsLoading(false);
+        return;
+      }
+      
+      if (memberData.isActive === false) {
+        setError('חשבונך אינו פעיל. פנה לרכז המערכת.');
+        setIsLoading(false);
+        return;
+      }
+
+      if (memberData.isTemporary) {
+        setTempUser({ id: userDoc.id, data: memberData });
+        setMode('RESET_TEMP_PASSWORD');
+        setIsLoading(false);
+        return;
+      }
+
+      await updateDoc(doc(db, 'members', userDoc.id), {
+        loginCount: increment(1)
+      });
+      
+      login({ ...memberData, id: userDoc.id, loginCount: (memberData.loginCount || 0) + 1 });
     } catch (err: any) { 
       console.error(err);
       if (err.message === 'QUOTA_EXCEEDED_OR_KILL_SWITCH') {
@@ -342,6 +379,30 @@ const LoginPage: React.FC = () => {
               </div>
 
               {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
+              
+              {isDbEmpty && (
+                <div className="p-4 bg-cyan-500/20 border border-cyan-500/30 rounded-2xl text-cyan-100 text-xs font-bold text-center space-y-3">
+                  <p>נראה שמסד הנתונים ריק. האם תרצה להקים מנהל מערכת ראשוני?</p>
+                  <button
+                    type="button"
+                    disabled={isSeeding}
+                    onClick={async () => {
+                      setIsSeeding(true);
+                      const success = await seedInitialAdmin();
+                      if (success) {
+                        setEmail(SUPER_ADMIN_EMAIL);
+                        setPassword('admin123');
+                        setError('מנהל מערכת הוקם בהצלחה! התחבר עם admin123');
+                      }
+                      setIsSeeding(false);
+                    }}
+                    className="px-4 py-2 bg-cyan-500 text-white rounded-xl font-black hover:bg-cyan-400 transition-colors disabled:opacity-50"
+                  >
+                    {isSeeding ? 'מקים...' : 'לחץ כאן להקמת מנהל מערכת ראשוני'}
+                  </button>
+                </div>
+              )}
+
               <div className="flex justify-center">
                 <GlassButton type="submit" disabled={isLoading} className="!px-8 !py-4 bg-[#FFD700]/20 border-[#FFD700]/30 text-[#00FFFF] font-black w-fit">
                   {isLoading ? <Loader2 className="animate-spin" /> : <LogIn size={24} className="text-[#FFD700]" />}

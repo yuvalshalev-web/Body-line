@@ -237,7 +237,7 @@ export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) =
   };
 
   // Filter and normalize sessions
-  const sessionsByDate = new Map<string, { date: Date, count: number }>();
+  const sessionsByDate = new Map<string, { date: Date, count: number, participantIds: string[] }>();
   weeklyHistory.forEach(session => {
     const sessionDate = parseDate(session.date);
     if (isNaN(sessionDate.getTime())) return;
@@ -251,7 +251,11 @@ export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) =
     const dateKey = thursdayDate.toDateString();
     const currentCount = session.participantsCount || 0;
     if (!sessionsByDate.has(dateKey) || currentCount > sessionsByDate.get(dateKey)!.count) {
-      sessionsByDate.set(dateKey, { date: thursdayDate, count: currentCount });
+      sessionsByDate.set(dateKey, { 
+        date: thursdayDate, 
+        count: currentCount,
+        participantIds: session.participantIds || []
+      });
     }
   });
 
@@ -265,7 +269,7 @@ export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) =
     { name: 'קיץ', months: [5, 6, 7] },
   ];
 
-  return seasons.map(season => {
+  const results = seasons.map(season => {
     const seasonSessions = normalizedSessions.filter(s => {
       const month = s.date.getMonth();
       return season.months.includes(month);
@@ -302,4 +306,6 @@ export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) =
       sessionCount: seasonSessions.length
     };
   });
+
+  return results;
 };

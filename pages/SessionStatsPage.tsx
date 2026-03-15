@@ -81,6 +81,28 @@ const SessionStatsPage: React.FC = () => {
   });
   const [showAudit, setShowAudit] = useState(false);
 
+  const seasonalGrit = useMemo(() => {
+    const calculatedScores = calculateSeasonalGrit(weeklyHistory, members);
+    
+    const seasonsConfig = [
+      { name: 'סתיו', icon: Waves, color: 'var(--surfer-orange)' },
+      { name: 'חורף', icon: Snowflake, color: 'var(--surfer-cyan)' },
+      { name: 'אביב', icon: Leaf, color: 'var(--surfer-teal)' },
+      { name: 'קיץ', icon: Sun, color: 'var(--surfer-yellow)' },
+    ];
+
+    return seasonsConfig.map(config => {
+      const scoreData = calculatedScores.find(s => s.name === config.name);
+      return {
+        ...config,
+        score: scoreData ? scoreData.score : 0,
+        actuals: scoreData ? scoreData.actuals : 0,
+        capacity: scoreData ? scoreData.capacity : 0,
+        sessionCount: scoreData ? scoreData.sessionCount : 0
+      };
+    });
+  }, [weeklyHistory, members]);
+
   const stats = useMemo(() => {
     if (!weeklyHistory || weeklyHistory.length === 0 || !yearConfig) return null;
 
@@ -511,29 +533,6 @@ const SessionStatsPage: React.FC = () => {
       })
       .slice(0, 50);
 
-    // 12. Seasonal Grit Score Calculation
-    const seasonalGrit = useMemo(() => {
-      const calculatedScores = calculateSeasonalGrit(weeklyHistory, members);
-      
-      const seasonsConfig = [
-        { name: 'סתיו', icon: Waves, color: 'var(--surfer-orange)' },
-        { name: 'חורף', icon: Snowflake, color: 'var(--surfer-cyan)' },
-        { name: 'אביב', icon: Leaf, color: 'var(--surfer-teal)' },
-        { name: 'קיץ', icon: Sun, color: 'var(--surfer-yellow)' },
-      ];
-
-      return seasonsConfig.map(config => {
-        const scoreData = calculatedScores.find(s => s.name === config.name);
-        return {
-          ...config,
-          score: scoreData ? scoreData.score : 0,
-          actuals: scoreData ? scoreData.actuals : 0,
-          capacity: scoreData ? scoreData.capacity : 0,
-          sessionCount: scoreData ? scoreData.sessionCount : 0
-        };
-      });
-    }, [weeklyHistory, members]);
-
     return {
       activeMembersCount: activeMembers.length,
       totalSessions: filteredSessions.length,
@@ -559,7 +558,7 @@ const SessionStatsPage: React.FC = () => {
       yearConfig,
       seasonalGrit
     };
-  }, [weeklyHistory, members, yearConfig, gritSortConfig, gritSearchTerm]);
+  }, [weeklyHistory, members, yearConfig, gritSortConfig, gritSearchTerm, seasonalGrit]);
 
   if (isLoading) {
     return (
@@ -579,9 +578,6 @@ const SessionStatsPage: React.FC = () => {
       {/* Unified Header */}
       <header className="mb-8 relative">
         <div className="space-y-2">
-          <p className="text-[#4A5568] max-w-2xl text-xl font-bold">
-            ניתוח עומק של ביצועי הנבחרת, מגמות נוכחות ופילוח גולשים. 🌊
-          </p>
         </div>
       </header>
 

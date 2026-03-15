@@ -151,7 +151,7 @@ const CommunityAnalytics: React.FC = () => {
           if (homeLat && homeLng && coords) {
             distance = calculateDistance(homeLat, homeLng, coords[0], coords[1]);
           } else {
-            distance = member.distance || (Math.random() * 30);
+            distance = member.distance || 0;
           }
           
           const distanceLimit = 30;
@@ -773,7 +773,7 @@ const CommunityAnalytics: React.FC = () => {
                   ];
                   const total = stats.activeCount || 1;
                   const radius = 280; 
-                  const strokeWidth = 85; 
+                  const strokeWidth = 90; 
                   const centerX = 500;
                   const centerY = 500;
                   
@@ -944,7 +944,13 @@ const CommunityAnalytics: React.FC = () => {
                     tick={{ fill: '#000000', fontSize: 12, fontWeight: 900 }}
                     dy={10}
                   />
-                  <YAxis hide />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#000000', fontSize: 10, fontWeight: 900 }}
+                    allowDecimals={false}
+                    width={30}
+                  />
                   <Tooltip 
                     cursor={{ fill: 'rgba(0,0,0,0.05)' }}
                     content={({ active, payload }) => {

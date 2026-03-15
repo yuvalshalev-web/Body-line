@@ -41,7 +41,7 @@ const GalleryPage: React.FC = () => {
       
       try {
         setUploadStatus(`מבצע אופטימיזציה ${fileIndexText}...`);
-        const { blob } = await processImage(file, 1200, 0.85);
+        const { blob } = await processImage(file, 1600, 0.9, 800);
         completedSteps++;
         setUploadProgress(Math.round((completedSteps / totalSteps) * 100));
 

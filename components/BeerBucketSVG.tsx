@@ -180,7 +180,7 @@ export const BeerBucketSVG: React.FC<{ className?: string }> = ({ className = ""
         </g>
 
         {/* --- ICE --- */}
-        <g opacity="0.85">
+        <g opacity="0.9">
           {/* Mist */}
           <ellipse cx="200" cy="150" rx="140" ry="40" fill="white" opacity="0.3" filter="url(#frost-effect)" />
           

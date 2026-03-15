@@ -1,6 +1,7 @@
 
 import { getDb } from '../services/firebase';
 import { doc, getDoc, updateDoc, writeBatch, increment, collection, Timestamp, addDoc, getDocs } from 'firebase/firestore';
+import { SUPER_ADMIN_EMAIL } from '../constants';
 
 export const getNextSessionDate = (weeklySessions?: any[]) => {
   const now = new Date();
@@ -93,7 +94,10 @@ export const finalizeSession = async (weeklyHistory: any[], yearConfig: { startD
 
     // Fetch members to filter active ones
     const membersSnap = await getDocs(collection(db, 'members'));
-    const members = membersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const members = membersSnap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter((m: any) => m.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase());
+    
     const activeMemberIds = members
       .filter((m: any) => m.isActive !== false && m.status !== 'suspended' && m.status !== 'left')
       .map((m: any) => m.id);
@@ -148,7 +152,7 @@ export const finalizeSession = async (weeklyHistory: any[], yearConfig: { startD
     let category = 'Transition';
     if (waterTemp !== undefined) {
       if (waterTemp < 20) category = 'Penguin';
-      else if (waterTemp > 27) category = 'Jellyfish';
+      else if (waterTemp > 27) category = 'Clownfish';
     }
 
     // 2. Create or Update weekly_history entry

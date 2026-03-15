@@ -37,6 +37,12 @@ import { getCoordinates } from '../../src/utils/geocoding';
 const TrendsDashboard: React.FC = () => {
   const { members, weeklyHistory, yearConfig, siteAssets, siteConfig } = useData();
 
+  const RETENTION_THRESHOLDS = {
+    TOURIST: 50,
+    ECONOMY: 70,
+    BUSINESS: 90,
+  };
+
   const stats = useMemo(() => {
     if (!members.length) return null;
 
@@ -542,8 +548,8 @@ const TrendsDashboard: React.FC = () => {
           if (homeLat && homeLng && coords) {
             distance = calculateDistance(homeLat, homeLng, coords[0], coords[1]);
           } else {
-            // Mock distance if no real address or city data
-            distance = member.distance || (Math.random() * 30);
+            // No real address or city data
+            distance = member.distance || 0;
           }
           
           const distanceLimit = 30;
@@ -706,10 +712,9 @@ const TrendsDashboard: React.FC = () => {
             weekEntry[group.id] = groupMembers.length > 0 ? Math.round((groupAttendees / groupMembers.length) * 100) : 0;
             weekEntry[`${group.id}_count`] = groupAttendees;
           } else {
-            // Mock data for future/missing weeks to maintain the trend visualization
-            const seed = (safety * 7) % 100;
-            weekEntry[group.id] = iter > today ? null : (40 + Math.sin(safety / 5) * 20 + (seed % 10));
-            weekEntry[`${group.id}_count`] = iter > today ? null : Math.floor(Math.random() * 20);
+            // No history for this week
+            weekEntry[group.id] = null;
+            weekEntry[`${group.id}_count`] = null;
           }
         });
         
@@ -790,31 +795,6 @@ const TrendsDashboard: React.FC = () => {
               <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">ניתוח שנת חבל זוג • 7 קבוצות מיקוד</p>
             </div>
           </div>
-
-          <div className="flex items-center gap-6">
-            <div className="flex bg-slate-100 p-1 rounded-full">
-              <button
-                onClick={() => setViewMode('unified')}
-                className={`px-6 py-2 rounded-full text-[12px] font-black uppercase tracking-widest transition-all ${
-                  viewMode === 'unified' 
-                    ? 'glass-panel text-white shadow-sm border border-white/20' 
-                    : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                גרף מאוחד
-              </button>
-              <button
-                onClick={() => setViewMode('split')}
-                className={`px-6 py-2 rounded-full text-[12px] font-black uppercase tracking-widest transition-all ${
-                  viewMode === 'split' 
-                    ? 'glass-panel text-white shadow-sm border border-white/20' 
-                    : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                גרף מפוצל
-              </button>
-            </div>
-          </div>
         </div>
 
         {yearConfig && (
@@ -859,13 +839,13 @@ const TrendsDashboard: React.FC = () => {
               
               let categoryLabel = "";
               let categoryColor = "";
-              if (retention < 50) {
+              if (retention < RETENTION_THRESHOLDS.TOURIST) {
                 categoryLabel = "תיירים";
                 categoryColor = "text-red-400 bg-red-500/10 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]";
-              } else if (retention < 70) {
+              } else if (retention < RETENTION_THRESHOLDS.ECONOMY) {
                 categoryLabel = "אקונומי פלוס";
                 categoryColor = "text-amber-400 bg-amber-500/10 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]";
-              } else if (retention < 85) {
+              } else if (retention < RETENTION_THRESHOLDS.BUSINESS) {
                 categoryLabel = "ביזנס קלאס";
                 categoryColor = "text-blue-400 bg-blue-500/10 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]";
               } else {
@@ -907,7 +887,7 @@ const TrendsDashboard: React.FC = () => {
                           <stop offset="0%" stopColor="#ef4444" />
                           <stop offset="30%" stopColor="#f59e0b" />
                           <stop offset="60%" stopColor="#eab308" />
-                          <stop offset="85%" stopColor="#84cc16" />
+                          <stop offset="90%" stopColor="#84cc16" />
                           <stop offset="100%" stopColor="#39FF14" />
                         </linearGradient>
 
@@ -986,7 +966,7 @@ const TrendsDashboard: React.FC = () => {
                             <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.3)" strokeWidth={isMajor ? 1.5 : 0.5} style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.8))' }} />
                             {isMajor && (
                               <g>
-                                <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.85)" fontSize="10" fontFamily="'Helvetica Neue', Helvetica, Arial, sans-serif" fontWeight="200" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.8), -1px -1px 1px rgba(255,255,255,0.2)' }}>
+                                <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.9)" fontSize="10" fontFamily="'Helvetica Neue', Helvetica, Arial, sans-serif" fontWeight="200" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.8), -1px -1px 1px rgba(255,255,255,0.2)' }}>
                                   {val}
                                 </text>
                               </g>
@@ -1101,19 +1081,19 @@ const TrendsDashboard: React.FC = () => {
           {/* Footer Indicators */}
           <div className="mt-16 pt-8 border-t border-white/5 flex flex-wrap justify-center gap-6 md:justify-between items-center w-full relative z-10">
             <div className="flex items-center gap-3">
-              <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">תיירים (&lt;50%)</span>
+              <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">תיירים (&lt;{RETENTION_THRESHOLDS.TOURIST}%)</span>
               <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]" />
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">אקונומי פלוס (50-69%)</span>
+              <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">אקונומי פלוס ({RETENTION_THRESHOLDS.TOURIST}-{RETENTION_THRESHOLDS.ECONOMY - 1}%)</span>
               <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">ביזנס קלאס (70-84%)</span>
+              <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">ביזנס קלאס ({RETENTION_THRESHOLDS.ECONOMY}-{RETENTION_THRESHOLDS.BUSINESS - 1}%)</span>
               <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">פירסט קלאס (85%+)</span>
+              <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">פירסט קלאס ({RETENTION_THRESHOLDS.BUSINESS}%+)</span>
               <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
             </div>
           </div>
@@ -1151,13 +1131,13 @@ const TrendsDashboard: React.FC = () => {
               
               let categoryLabel = "";
               let categoryColor = "";
-              if (retention < 50) {
+              if (retention < RETENTION_THRESHOLDS.TOURIST) {
                 categoryLabel = "תיירים";
                 categoryColor = "text-red-400 bg-red-500/20 border-red-500/30 shadow-[0_0_12px_rgba(239,68,68,0.4)]";
-              } else if (retention < 70) {
+              } else if (retention < RETENTION_THRESHOLDS.ECONOMY) {
                 categoryLabel = "אקונומי פלוס";
                 categoryColor = "text-amber-400 bg-amber-500/20 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.4)]";
-              } else if (retention < 85) {
+              } else if (retention < RETENTION_THRESHOLDS.BUSINESS) {
                 categoryLabel = "ביזנס קלאס";
                 categoryColor = "text-blue-400 bg-blue-500/20 border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.4)]";
               } else {
@@ -1276,7 +1256,7 @@ const TrendsDashboard: React.FC = () => {
                             <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.3)" strokeWidth={isMajor ? 1.5 : 0.5} style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.8))' }} />
                             {isMajor && (
                               <g>
-                                <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.85)" fontSize="10" fontFamily="'Helvetica Neue', Helvetica, Arial, sans-serif" fontWeight="200" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.8), -1px -1px 1px rgba(255,255,255,0.2)' }}>
+                                <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.9)" fontSize="10" fontFamily="'Helvetica Neue', Helvetica, Arial, sans-serif" fontWeight="200" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.8), -1px -1px 1px rgba(255,255,255,0.2)' }}>
                                   {val}
                                 </text>
                               </g>
@@ -1389,6 +1369,42 @@ const TrendsDashboard: React.FC = () => {
             })}
           </div>
         </motion.div>
+
+      {/* View Mode Switcher - Repositioned above graphs */}
+      <div className="flex flex-col items-center gap-4 mb-8 mt-4">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-8 h-px bg-slate-200" />
+          <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">ניתוח מגמות והתמדה</span>
+          <div className="w-8 h-px bg-slate-200" />
+        </div>
+        <div dir="ltr" className="relative flex bg-white/10 backdrop-blur-xl p-1.5 rounded-full shadow-2xl border border-white/20">
+          {/* Animated Colorful Bubble */}
+          <div className="absolute inset-1.5 flex pointer-events-none">
+            <motion.div
+              className="w-1/2 h-full rounded-full bg-gradient-to-r from-[var(--surfer-cyan)] via-[var(--surfer-pink)] to-[var(--surfer-orange)] shadow-lg shadow-pink-500/40"
+              animate={{ x: viewMode === 'unified' ? '0%' : '100%' }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
+          </div>
+
+          <button
+            onClick={() => setViewMode('unified')}
+            className={`relative z-10 px-10 py-3 rounded-full text-[14px] font-black uppercase tracking-widest transition-colors duration-300 ${
+              viewMode === 'unified' ? 'text-white' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            גרף מאוחד
+          </button>
+          <button
+            onClick={() => setViewMode('split')}
+            className={`relative z-10 px-10 py-3 rounded-full text-[14px] font-black uppercase tracking-widest transition-colors duration-300 ${
+              viewMode === 'split' ? 'text-white' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            גרף מפוצל
+          </button>
+        </div>
+      </div>
 
       <AnimatePresence mode="wait">
         {viewMode === 'unified' ? (

@@ -50,8 +50,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
           return prev;
         });
-      } else {
-        // User was deleted
+      } else if (currentUser.id !== 'dev-admin-id') {
+        // User was deleted (and it's not the hardcoded dev admin)
         logout();
       }
     }, (error) => {

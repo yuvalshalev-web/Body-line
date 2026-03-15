@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Users, 
@@ -49,6 +49,13 @@ const DashboardPage: React.FC = () => {
   const [isRefreshingGlossary, setIsRefreshingGlossary] = useState(false);
   const [isRefreshingPost, setIsRefreshingPost] = useState(false);
 
+  const newsRef = useRef(news);
+  useEffect(() => { newsRef.current = news; }, [news]);
+  const glossaryRef = useRef(glossary);
+  useEffect(() => { glossaryRef.current = glossary; }, [glossary]);
+  const quotesRef = useRef(quotes);
+  useEffect(() => { quotesRef.current = quotes; }, [quotes]);
+
   const activeMembers = useMemo(() => getBodyLineStats(members).activeMembers, [members]);
   const attendees = useMemo(() => activeMembers.filter(m => attendeeIds.includes(m.id)).sort((a, b) => {
     const aLast = a.lastName || '';
@@ -65,34 +72,34 @@ const DashboardPage: React.FC = () => {
   const isUserAttending = useMemo(() => currentUser ? attendeeIds.includes(currentUser.id) : false, [attendeeIds, currentUser]);
 
   const refreshPost = useCallback(() => {
-    if (news.length === 0) return;
+    if (newsRef.current.length === 0) return;
     setIsRefreshingPost(true);
     setTimeout(() => {
-      const randomIndex = Math.floor(Math.random() * news.length);
-      setRandomPost(news[randomIndex]);
+      const randomIndex = Math.floor(Math.random() * newsRef.current.length);
+      setRandomPost(newsRef.current[randomIndex]);
       setIsRefreshingPost(false);
     }, 400);
-  }, [news]);
+  }, []);
 
   const refreshGlossary = useCallback(() => {
     setIsRefreshingGlossary(true);
     setTimeout(() => {
-      const source = glossary.length > 0 ? glossary : SURF_DICTIONARY;
+      const source = glossaryRef.current.length > 0 ? glossaryRef.current : SURF_DICTIONARY;
       const shuffled = [...source].sort(() => 0.5 - Math.random());
       setRandomGlossary(shuffled.slice(0, 1));
       setIsRefreshingGlossary(false);
     }, 400);
-  }, [glossary]);
+  }, []);
 
   const refreshQuote = useCallback(() => {
     setIsRefreshingQuotes(true);
     setTimeout(() => {
-      const source = quotes.length > 0 ? quotes : SURF_QUOTES;
+      const source = quotesRef.current.length > 0 ? quotesRef.current : SURF_QUOTES;
       const shuffled = [...source].sort(() => 0.5 - Math.random());
       setRandomQuotes(shuffled.slice(0, 1));
       setIsRefreshingQuotes(false);
     }, 400);
-  }, [quotes]);
+  }, []);
 
   useEffect(() => {
     refreshGlossary();
@@ -243,11 +250,11 @@ const DashboardPage: React.FC = () => {
               {/* Centered Avatars */}
               <div className="flex justify-center -space-x-3 md:-space-x-4 space-x-reverse">
                 {attendees.slice(0, 12).map(a => (
-                  <Link to={`/directory?id=${a.id}`} key={a.id} className="relative group">
+                  <Link to={`/directory?id=${a.id}`} key={a.id} className="relative group feathered-avatar-hover">
                     {a.avatar ? (
                       <img 
                         src={a.avatar} 
-                        className="w-12 h-12 md:w-14 md:h-14 rounded-xl border border-white/20 shadow-md object-cover transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6" 
+                        className="w-12 h-12 md:w-14 md:h-14 rounded-xl border border-white/20 shadow-md object-cover transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6 feathered-avatar" 
                         alt="" 
                         loading="lazy" 
                       />
@@ -338,9 +345,9 @@ const DashboardPage: React.FC = () => {
               <h3 className="text-3xl font-black mb-8 glass-text-primary">נבחרת הסשן</h3>
               <div className="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar">
                 {attendees.map(a => (
-                  <div key={a.id} className="flex items-center gap-4 p-4 bg-white/5 backdrop-blur-[15px] border border-white/10 rounded-xl shadow-md shadow-black/5">
+                  <div key={a.id} className="flex items-center gap-4 p-4 bg-white/5 backdrop-blur-[15px] border border-white/10 rounded-xl shadow-md shadow-black/5 feathered-avatar-hover">
                     {a.avatar ? (
-                      <img src={a.avatar} className="w-12 h-12 rounded-xl border border-white/20 object-cover" alt="" loading="lazy" />
+                      <img src={a.avatar} className="w-12 h-12 rounded-xl border border-white/20 object-cover feathered-avatar" alt="" loading="lazy" />
                     ) : (
                       <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-slate-400">
                         <UserCircle size={24} />

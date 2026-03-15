@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Waves, Snowflake, Sun, Zap, Info } from 'lucide-react';
+import { Waves, Snowflake, Sun, Zap, Info, Trophy } from 'lucide-react';
 import { OceanPulse } from '../OceanPulse';
 import SeasonalPersistenceRow from './SeasonalPersistenceRow';
 import { useData } from '../../contexts/DataContext';
@@ -9,7 +9,7 @@ const SeasonalPersistence: React.FC = () => {
   const { members, weeklyHistory } = useData();
 
   const leaderboards = useMemo(() => {
-    if (!members || !weeklyHistory) return { penguins: [], jellyfish: [], sharks: [] };
+    if (!members || !weeklyHistory) return { penguins: [], jellyfish: [], sharks: [], orcas: [] };
 
     // Helper to get water temp (actual or estimated by month)
     const getTemp = (session: any) => {
@@ -92,7 +92,18 @@ const SeasonalPersistence: React.FC = () => {
       .sort((a, b) => a.variance - b.variance || b.totalAttendance - a.totalAttendance)
       .slice(0, 5);
 
-    return { penguins, jellyfish, sharks };
+    // Orca: Top 5 in all three categories
+    const orcas = memberStats
+      .filter(m => {
+        const isTopPenguin = penguins.some(p => p.id === m.id);
+        const isTopJellyfish = jellyfish.some(j => j.id === m.id);
+        const isTopShark = sharks.some(s => s.id === m.id);
+        return isTopPenguin && isTopJellyfish && isTopShark;
+      })
+      .sort((a, b) => b.totalAttendance - a.totalAttendance)
+      .slice(0, 5);
+
+    return { penguins, jellyfish, sharks, orcas };
   }, [members, weeklyHistory]);
 
   return (
@@ -138,7 +149,7 @@ const SeasonalPersistence: React.FC = () => {
         <SeasonalPersistenceRow />
       </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {/* Column 1: Penguins */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -197,7 +208,7 @@ const SeasonalPersistence: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Column 2: Jellyfish */}
+        {/* Column 2: Clownfish */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -210,7 +221,7 @@ const SeasonalPersistence: React.FC = () => {
               <div className="flex items-center gap-3">
                 <Sun className="text-orange-600" size={28} />
                 <div className="flex items-center gap-2">
-                  <h4 className="text-xl font-black text-[#000000]">🪼 מדוזות</h4>
+                  <h4 className="text-xl font-black text-[#000000]">🐠 דגי ליצן</h4>
                   <div className="gt-info-wrapper relative cursor-help">
                     <Info size={14} className="text-orange-600/40 hover:text-orange-600 transition-colors" />
                     <div className="gt-tooltip">
@@ -312,6 +323,66 @@ const SeasonalPersistence: React.FC = () => {
             </div>
             <div className="mt-6 pt-4 border-t border-cyan-900/10 text-[10px] font-bold text-cyan-900/40 text-center uppercase tracking-tighter">
               Metric: Annual Seasonal Variance
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Column 4: Orcas */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="relative group h-full"
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-yellow-400/20 to-amber-600/10 rounded-[2rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity" />
+          <div className="relative h-full glass-panel p-6 rounded-[2rem] border border-white/30 shadow-xl flex flex-col bg-gradient-to-b from-yellow-400/5 to-amber-600/5">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <Trophy className="text-amber-600" size={28} />
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xl font-black text-[#000000]">🐋 אורקה</h4>
+                  <div className="gt-info-wrapper relative cursor-help">
+                    <Info size={14} className="text-amber-600/40 hover:text-amber-600 transition-colors" />
+                    <div className="gt-tooltip">
+                      גולשי על הנמצאים בטופ 5 של כל שלוש הקטגוריות (פינגווינים, דגי ליצן וכרישים).
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <span className="text-[10px] uppercase tracking-widest font-bold text-amber-600/60 bg-amber-600/10 px-2 py-1 rounded-full">Apex Predator</span>
+            </div>
+            
+            <div className="space-y-4 flex-grow">
+              {leaderboards.orcas.map((m, i) => (
+                <div key={m.id} className="flex items-center justify-between p-3 bg-white/40 rounded-xl border border-white/50 hover:bg-white/60 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-black text-amber-600/40 w-4">{i + 1}</span>
+                    <div className="w-10 h-10 rounded-full border-2 border-amber-400/20 overflow-hidden bg-amber-50">
+                      {m.avatar ? (
+                        <img src={m.avatar} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-amber-400 font-bold">
+                          {m.firstName[0]}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-bold text-[#000000] leading-tight">{m.firstName} {m.lastName}</div>
+                      <div className="text-[10px] text-amber-600 font-bold uppercase">Apex Status</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-black text-[#000000]">{m.totalAttendance}</div>
+                    <div className="text-[8px] font-bold text-amber-600/60">Sessions</div>
+                  </div>
+                </div>
+              ))}
+              {leaderboards.orcas.length === 0 && (
+                <div className="text-center py-12 text-black/40 font-bold italic">טרם נמצאו גולשי על העונה</div>
+              )}
+            </div>
+            <div className="mt-6 pt-4 border-t border-yellow-600/10 text-[10px] font-bold text-yellow-600/40 text-center uppercase tracking-tighter">
+              Requirement: Top 5 in All Lists
             </div>
           </div>
         </motion.div>

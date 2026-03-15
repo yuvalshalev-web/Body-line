@@ -325,16 +325,18 @@ const ProfilePage: React.FC = () => {
         </div>
         
         <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-6 luxury-card border border-white/60 rounded-[2.5rem] relative z-20">
-          <div className="flex flex-col md:flex-row items-end gap-8 mb-16">
+          <div className="flex flex-col items-center gap-8 mb-16 text-center">
             <div className="relative group">
               
               <div className="w-44 h-44 rounded-[1.5rem] overflow-hidden border border-white/50 shadow-[0_10px_30px_rgba(0,0,0,0.1)] group-hover:scale-[1.02] transition-transform duration-500 bg-slate-100 flex items-center justify-center relative z-10">
                 {isProcessingImage ? (
                   <Loader2 className="animate-spin text-indigo-500" size={32} />
                 ) : formData.avatar ? (
-                  <img src={formData.avatar} className="w-full h-full object-cover" alt="" loading="lazy" />
+                  <img src={formData.avatar} className="w-full h-full object-cover feathered-avatar feathered-avatar-hover" alt="" loading="lazy" />
                 ) : (
-                  <User size={64} className="text-slate-300" />
+                  <div className="w-full h-full flex items-center justify-center feathered-avatar">
+                    <User size={64} className="text-slate-300" />
+                  </div>
                 )}
               </div>
               <label className="absolute bottom-2 left-2 p-3 bg-[var(--surfer-cyan)] text-black rounded-[1rem] cursor-pointer hover:bg-[var(--surfer-teal)] hover:text-white transition-all border border-white/50 shadow-[0_5px_15px_rgba(0,0,0,0.1)] z-20">
@@ -342,7 +344,7 @@ const ProfilePage: React.FC = () => {
                 <input type="file" className="hidden" accept="image/*" onChange={handleAvatarSelect} disabled={isProcessingImage} />
               </label>
             </div>
-            <div className="flex-1 mb-4 text-center md:text-right">
+            <div className="flex-1 mb-4">
                <h3 className="text-4xl font-black text-[#7A1555] tracking-tight mb-2">{formData.firstName} {formData.lastName}</h3>
                <p className="text-[#00426a] font-bold uppercase tracking-widest text-xs">{formData.role === 'Admin' ? 'רכז' : 'חבר נבחרת'}</p>
             </div>

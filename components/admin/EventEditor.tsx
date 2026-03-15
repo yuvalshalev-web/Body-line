@@ -72,7 +72,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
 
     setIsUploading(true);
     try {
-      const processed = await processImage(file, 1200, 0.85);
+      const processed = await processImage(file, 1200, 0.9, 800);
       const storage = getStorageInstance();
       const storageRef = ref(storage, `events/${Date.now()}_${file.name}`);
       

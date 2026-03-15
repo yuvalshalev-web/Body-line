@@ -95,12 +95,12 @@ const MemberCard: React.FC<{ member: Member, idx: number, onClick: () => void }>
           {member.avatar ? (
             <img 
               src={member.avatar} 
-              className="w-full h-full object-cover surfer-image-feather" 
+              className="w-full h-full object-cover feathered-avatar feathered-avatar-hover" 
               alt={`${member.firstName} ${member.lastName}`}
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[var(--surfer-aqua-mist)]/20 to-[var(--surfer-pink)]/20 flex items-center justify-center surfer-image-feather">
+            <div className="w-full h-full bg-gradient-to-br from-[var(--surfer-aqua-mist)]/20 to-[var(--surfer-pink)]/20 flex items-center justify-center feathered-avatar">
               <UserCircle size={64} strokeWidth={0.5} className="text-[var(--surfer-deep-teal)]/20" />
             </div>
           )}
@@ -482,7 +482,7 @@ const DirectoryPage: React.FC = () => {
                     >
                       <div className="flex items-center gap-6">
                         <div className="w-16 h-16 tangible-bevel-inset !rounded-full p-1">
-                          <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-full h-full rounded-full object-cover" alt="" />
+                          <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-full h-full rounded-full object-cover feathered-avatar feathered-avatar-hover" alt="" />
                         </div>
                         <div>
                           <p className="text-lg font-black neon-text-pink">{member.firstName} {member.lastName}</p>
@@ -534,7 +534,7 @@ const DirectoryPage: React.FC = () => {
                     >
                       <div className="flex items-center gap-6">
                         <div className="w-16 h-16 tangible-bevel-inset !rounded-full p-1">
-                          <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-full h-full rounded-full object-cover" alt="" />
+                          <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-full h-full rounded-full object-cover feathered-avatar feathered-avatar-hover" alt="" />
                         </div>
                         <div>
                           <p className="text-lg font-black text-[#00426a]">{member.firstName} {member.lastName}</p>
@@ -586,7 +586,7 @@ const DirectoryPage: React.FC = () => {
                     >
                       <div className="flex items-center gap-6">
                         <div className="w-16 h-16 tangible-bevel-inset !rounded-full p-1">
-                          <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-full h-full rounded-full object-cover" alt="" />
+                          <img src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}`} className="w-full h-full rounded-full object-cover feathered-avatar feathered-avatar-hover" alt="" />
                         </div>
                         <div>
                           <p className="text-lg font-black text-[#00426a]">{member.firstName} {member.lastName}</p>
@@ -622,9 +622,9 @@ const DirectoryPage: React.FC = () => {
              <button onClick={closeMemberModal} className="absolute top-4 right-4 md:top-6 md:right-6 p-2 rounded-xl bg-white/50 backdrop-blur-[20px] border border-white/50 shadow-[0_5px_15px_rgba(0,0,0,0.1)] text-[#00426a] hover:bg-white/80 transition-all z-50"><X size={20} /></button>
              <div className="md:w-[40%] relative h-[30vh] md:h-auto overflow-hidden bg-slate-100 flex-shrink-0 border-b-2 md:border-b-0 md:border-l-2 border-white/20">
                 {selectedMember.avatar ? (
-                  <img src={selectedMember.avatar} className="w-full h-full object-cover" alt={`${selectedMember.firstName} ${selectedMember.lastName}`} />
+                  <img src={selectedMember.avatar} className="w-full h-full object-cover feathered-avatar feathered-avatar-hover" alt={`${selectedMember.firstName} ${selectedMember.lastName}`} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-300">
+                  <div className="w-full h-full flex items-center justify-center text-slate-300 feathered-avatar">
                     <UserCircle size={120} strokeWidth={0.5} />
                   </div>
                 )}
@@ -746,12 +746,12 @@ const DirectoryPage: React.FC = () => {
       </AnimatePresence>
       <AnimatePresence>
         {isAddMemberModalOpen && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-12 modal-overlay animate-in fade-in" onClick={() => setIsAddMemberModalOpen(false)}>
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-0 md:p-12 modal-overlay animate-in fade-in micro-grain bg-[radial-gradient(ellipse_at_top_right,_#FDFDFD_0%,_#E0F7FA_100%)]" onClick={() => setIsAddMemberModalOpen(false)}>
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 40 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 40 }}
-              className="tangible-surfer-card w-full max-w-7xl h-full md:h-auto md:max-h-[90vh] !rounded-[3rem] shadow-2xl overflow-hidden relative flex flex-col" 
+              className="tangible-surfer-card w-full max-w-7xl h-full md:h-auto md:max-h-[90vh] !rounded-[3rem] shadow-[0_60px_100px_-30px_rgba(122,21,85,0.6)] border-t border-l border-white/30 bg-[#B2EBF2]/10 backdrop-blur-[20px] overflow-hidden relative flex flex-col" 
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
@@ -761,8 +761,8 @@ const DirectoryPage: React.FC = () => {
                     <Plus size={24} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black neon-text-pink tracking-tighter">הוספת חבר חדש</h3>
-                    <p className="text-[12px] font-black neon-text-yellow uppercase tracking-widest">יצירת פרופיל משתמש ידני</p>
+                    <h3 className="text-2xl font-black text-[#7A1555] tracking-tighter">הוספת חבר חדש</h3>
+                    <p className="text-[12px] font-black text-[#000000] uppercase tracking-widest">יצירת פרופיל משתמש ידני</p>
                   </div>
                 </div>
                 <button onClick={() => setIsAddMemberModalOpen(false)} className="p-3 tangible-bevel-inset hover:bg-white/20 !rounded-full text-white/40 hover:text-white transition-all">
@@ -775,16 +775,18 @@ const DirectoryPage: React.FC = () => {
                 <div className="max-w-5xl mx-auto">
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                     {/* Left Column: Avatar & Bio */}
-                    <div className="lg:col-span-4 space-y-8">
+                    <div className="lg:col-span-4 space-y-8 luxury-slab p-8">
                       <div className="flex flex-col items-center">
                         <div className="relative group">
                           <div className="w-48 h-48 glass-effect !rounded-full p-2 flex items-center justify-center overflow-hidden">
                             {isProcessingImage ? (
                               <Loader2 className="animate-spin text-[#00AFC2]" size={32} />
                             ) : newMemberData.avatar ? (
-                              <img src={newMemberData.avatar} className="w-full h-full object-cover rounded-full" alt="" />
+                              <img src={newMemberData.avatar} className="w-full h-full object-cover rounded-full feathered-avatar feathered-avatar-hover" alt="" />
                             ) : (
-                              <UserCircle size={80} className="text-white/20" strokeWidth={0.5} />
+                              <div className="w-full h-full flex items-center justify-center feathered-avatar">
+                                <UserCircle size={80} className="text-white/20" strokeWidth={0.5} />
+                              </div>
                             )}
                           </div>
                           <label className="absolute bottom-2 left-2 p-3 bg-[#00AFC2] text-white !rounded-full cursor-pointer shadow-lg hover:scale-110 transition-all">
@@ -845,53 +847,62 @@ const DirectoryPage: React.FC = () => {
                     </div>
 
                     {/* Right Column: Fields */}
-                    <div className="lg:col-span-8 space-y-10">
+                    <div className="lg:col-span-8 space-y-10 luxury-slab p-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">שם פרטי</label>
+                          <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">שם פרטי</label>
                           <input 
                             type="text" 
                             value={newMemberData.firstName} 
                             onChange={e => setNewMemberData(prev => ({ ...prev, firstName: e.target.value }))}
-                            className="w-full p-5 glass-effect !rounded-full font-black outline-none focus:bg-white/10 transition-all glass-text-primary" 
+                            className="w-full p-5 bg-white/50 border border-white/30 !rounded-full font-black outline-none focus:bg-white/80 transition-all text-[#000000]" 
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">שם משפחה</label>
+                          <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">שם משפחה</label>
                           <input 
                             type="text" 
                             value={newMemberData.lastName} 
                             onChange={e => setNewMemberData(prev => ({ ...prev, lastName: e.target.value }))}
-                            className="w-full p-5 glass-effect !rounded-full font-black outline-none focus:bg-white/10 transition-all glass-text-primary" 
+                            className="w-full p-5 bg-white/50 border border-white/30 !rounded-full font-black outline-none focus:bg-white/80 transition-all text-[#000000]" 
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">אימייל</label>
+                          <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">אימייל</label>
                           <input 
                             type="email" 
                             value={newMemberData.email} 
                             onChange={e => setNewMemberData(prev => ({ ...prev, email: e.target.value }))}
-                            className="w-full p-5 glass-effect !rounded-full font-black outline-none focus:bg-white/10 transition-all glass-text-primary" 
+                            className="w-full p-5 bg-white/50 border border-white/30 !rounded-full font-black outline-none focus:bg-white/80 transition-all text-[#000000]" 
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">טלפון נייד</label>
+                          <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">טלפון נייד</label>
                           <input 
                             type="tel" 
                             value={newMemberData.mobile} 
                             onChange={e => setNewMemberData(prev => ({ ...prev, mobile: formatMobileNumber(e.target.value) }))}
-                            className="w-full p-5 glass-effect !rounded-full font-black outline-none focus:bg-white/10 transition-all glass-text-primary" 
+                            className="w-full p-5 bg-white/50 border border-white/30 !rounded-full font-black outline-none focus:bg-white/80 transition-all text-[#000000]" 
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">תאריך לידה</label>
+                          <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">כתובת מגורים</label>
+                          <input 
+                            type="text" 
+                            value={newMemberData.full_address || ''} 
+                            onChange={e => setNewMemberData(prev => ({ ...prev, full_address: e.target.value }))}
+                            className="w-full p-5 bg-white/50 border border-white/30 !rounded-full font-black outline-none focus:bg-white/80 transition-all text-[#000000]" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">תאריך לידה</label>
                           <div className="relative">
-                            <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-white/40" />
+                            <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-[#00426a]" />
                             <input 
                               type="date" 
                               value={newMemberData.birthday || ''} 
                               onChange={e => setNewMemberData(prev => ({ ...prev, birthday: e.target.value }))} 
-                              className="w-full p-5 pr-12 glass-effect !rounded-full font-black outline-none focus:bg-white/10 transition-all glass-text-primary [color-scheme:dark]" 
+                              className="w-full p-5 pr-12 bg-white/50 border border-white/30 !rounded-full font-black outline-none focus:bg-white/80 transition-all text-[#000000] [color-scheme:light]" 
                             />
                           </div>
                         </div>
@@ -903,8 +914,8 @@ const DirectoryPage: React.FC = () => {
                               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                               className="w-full p-5 glass-effect !rounded-full font-black text-sm outline-none transition-all flex items-center justify-between group hover:bg-white/10"
                             >
-                              <span className="glass-text-primary">{newMemberData.role === 'Admin' ? 'רכז' : newMemberData.role === 'Instructor' ? 'מדריך' : 'חבר'}</span>
-                              <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
+                              <span className="text-[#000000]">{newMemberData.role === 'Admin' ? 'רכז' : newMemberData.role === 'Instructor' ? 'מדריך' : 'חבר'}</span>
+                              <ChevronDown size={18} className="text-[#00426a] transition-transform duration-300" />
                             </button>
 
                             <AnimatePresence>
@@ -1072,6 +1083,7 @@ const DirectoryPage: React.FC = () => {
                         gender: 'מעדיף/ה לא לציין',
                         isActive: true,
                         birthday: '',
+                        full_address: '',
                         instagramUrl: '',
                         facebookUrl: '',
                         linkedinUrl: '',

@@ -59,16 +59,16 @@ export const WaxButton: React.FC<WaxButtonProps> = ({ color, size = 150, onClick
       
       <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-lg" style={{ padding: '4%' }}>
         <defs>
-          <path id={`outer-circle-${uniqueId}`} d="M 15,100 A 85,85 0 1,1 15,99.9" />
+          <path id={`outer-circle-${uniqueId}`} d="M 10,100 A 90,90 0 1,1 10,99.9" />
           <path id={`mr-zogs-${uniqueId}`} d="M 25,100 A 75,75 0 0,1 175,100" />
           <path id={`best-${uniqueId}`} d="M 175,100 A 75,75 0 0,1 25,100" />
         </defs>
 
         {/* Outer Black Ring */}
-        <circle cx="100" cy="100" r="95" fill="rgba(20, 20, 20, 0.85)" />
+        <circle cx="100" cy="100" r="95" fill="rgba(20, 20, 20, 0.9)" />
         
         {/* Outer Text */}
-        <text fontSize="8.5" fill="rgba(255,255,255,0.95)" fontWeight="bold" fontFamily="Arial, sans-serif">
+        <text fontSize="9" fill="rgba(255,255,255,0.95)" fontWeight="bold" fontFamily="Arial, sans-serif">
           <textPath href={`#outer-circle-${uniqueId}`} textLength="530" lengthAdjust="spacingAndGlyphs" startOffset="0%">
             SEX WAX INC. • BOX 1222 • CARPINTERIA • CA 93014 • NON-TOXIC • NET WT. 75 GRAMS • {config.text1} SURF WAX • 
           </textPath>
@@ -79,17 +79,17 @@ export const WaxButton: React.FC<WaxButtonProps> = ({ color, size = 150, onClick
         
         {/* Inner Borders */}
         <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" />
-        <circle cx="100" cy="100" r="77" fill="none" stroke="rgba(20,20,20,0.85)" strokeWidth="2" />
+        <circle cx="100" cy="100" r="77" fill="none" stroke="rgba(20,20,20,0.9)" strokeWidth="2" />
 
         {/* Top Text */}
-        <text fontSize="26" fill="rgba(20,20,20,0.85)" fontWeight="900" fontFamily="Arial Black, Impact, sans-serif">
+        <text fontSize="26" fill="rgba(20,20,20,0.9)" fontWeight="900" fontFamily="Arial Black, Impact, sans-serif">
           <textPath href={`#mr-zogs-${uniqueId}`} startOffset="50%" textAnchor="middle">
             ★ MR. ZOGS ★
           </textPath>
         </text>
 
         {/* Middle Black Rectangle */}
-        <rect x="12" y="82" width="176" height="36" fill="rgba(20,20,20,0.85)" />
+        <rect x="12" y="82" width="176" height="36" fill="rgba(20,20,20,0.9)" />
         <rect x="14" y="84" width="172" height="32" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" />
         
         {/* SEX WAX Text */}
@@ -98,23 +98,23 @@ export const WaxButton: React.FC<WaxButtonProps> = ({ color, size = 150, onClick
         </text>
 
         {/* ORIGINAL Text & Squiggle */}
-        <text x="100" y="74" fill="rgba(20,20,20,0.85)" fontSize="11" fontWeight="900" fontFamily="Arial Black, sans-serif" textAnchor="middle" letterSpacing="1">
+        <text x="100" y="74" fill="rgba(20,20,20,0.9)" fontSize="11" fontWeight="900" fontFamily="Arial Black, sans-serif" textAnchor="middle" letterSpacing="1">
           ORIGINAL
         </text>
-        <path d="M 85,62 Q 90,57 95,62 T 105,62 T 115,62" fill="none" stroke="rgba(20,20,20,0.85)" strokeWidth="2" strokeLinecap="round" />
+        <path d="M 90,62 Q 95,57 100,62 T 110,62 T 120,62" fill="none" stroke="rgba(20,20,20,0.9)" strokeWidth="2" strokeLinecap="round" />
 
         {/* NEVER SPOILS Text & Squiggles */}
-        <text x="100" y="132" fill="rgba(20,20,20,0.85)" fontSize="9" fontWeight="900" fontFamily="Arial Black, sans-serif" textAnchor="middle" letterSpacing="1">
+        <text x="100" y="132" fill="rgba(20,20,20,0.9)" fontSize="9" fontWeight="900" fontFamily="Arial Black, sans-serif" textAnchor="middle" letterSpacing="1">
           NEVER
         </text>
-        <text x="100" y="142" fill="rgba(20,20,20,0.85)" fontSize="9" fontWeight="900" fontFamily="Arial Black, sans-serif" textAnchor="middle" letterSpacing="1">
+        <text x="100" y="142" fill="rgba(20,20,20,0.9)" fontSize="9" fontWeight="900" fontFamily="Arial Black, sans-serif" textAnchor="middle" letterSpacing="1">
           SPOILS
         </text>
-        <path d="M 75,135 Q 70,130 65,135" fill="none" stroke="rgba(20,20,20,0.85)" strokeWidth="2" strokeLinecap="round" />
-        <path d="M 125,135 Q 130,130 135,135" fill="none" stroke="rgba(20,20,20,0.85)" strokeWidth="2" strokeLinecap="round" />
+        <path d="M 75,135 Q 70,130 65,135" fill="none" stroke="rgba(20,20,20,0.9)" strokeWidth="2" strokeLinecap="round" />
+        <path d="M 125,135 Q 130,130 135,135" fill="none" stroke="rgba(20,20,20,0.9)" strokeWidth="2" strokeLinecap="round" />
 
         {/* Bottom Text */}
-        <text fontSize="14" fill="rgba(20,20,20,0.85)" fontWeight="900" fontFamily="Arial Black, Impact, sans-serif">
+        <text fontSize="14" fill="rgba(20,20,20,0.9)" fontWeight="900" fontFamily="Arial Black, Impact, sans-serif">
           <textPath href={`#best-${uniqueId}`} startOffset="50%" textAnchor="middle">
             ★ THE BEST FOR YOUR STICK ★
           </textPath>

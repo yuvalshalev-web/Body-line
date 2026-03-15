@@ -76,7 +76,7 @@ const AdminHelpPage = () => {
         }
         .logic-card:hover { transform: translateY(-5px); }
         .icon-wrapper { font-size: 2.5rem; margin-bottom: 15px; }
-        .logic-card h3 { color: #3dbbd3; margin-bottom: 15px; }
+        .logic-card h3 { color: #FF2D60; margin-bottom: 15px; }
         .logic-card ul { padding-right: 20px; font-size: 0.9rem; line-height: 1.6; }
         .admin-help-container p,
         .admin-help-container li,

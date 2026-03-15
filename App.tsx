@@ -1,4 +1,4 @@
-import React, { useState, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useCallback, lazy, Suspense, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { useData } from './contexts/DataContext';
@@ -186,6 +186,8 @@ const App: React.FC = () => {
     { path: '/attendance', ...menuItems[10], text: 'יומן סשנים' }
   ];
 
+  const mainRef = useRef<HTMLElement>(null);
+
   return (
     <div className="min-h-screen flex flex-col font-['Yehuda_CLM'] relative" dir="rtl">
       {/* Global Progress Bar */}
@@ -222,7 +224,7 @@ const App: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[85%] sm:w-[60%] md:w-[50%] max-w-[400px] z-[10002] shadow-2xl flex flex-col floating-menu-drawer"
+              className="fixed top-0 right-0 bottom-0 w-[90%] sm:w-[60%] md:w-[50%] max-w-[400px] z-[10002] shadow-2xl flex flex-col floating-menu-drawer"
               style={{
                 backgroundImage: 'url("/src/assets/wood-texture.jpg")',
                 backgroundSize: 'cover',
@@ -312,8 +314,11 @@ const App: React.FC = () => {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <FloatingMenu onOpenDrawer={() => setIsDrawerOpen(true)} />
-      <main className={`flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto pb-32 relative z-10 ${location.pathname === '/' ? 'luxury-bg' : ''} ${location.pathname === '/events' ? 'luxury-bg' : ''} ${location.pathname === '/gallery' ? 'luxury-bg' : ''} ${location.pathname === '/directory' ? 'luxury-bg' : ''} ${location.pathname === '/posts' ? 'luxury-bg' : ''}`}>
+      <FloatingMenu onOpenDrawer={() => setIsDrawerOpen(true)} scrollRef={mainRef} />
+      <main 
+        ref={mainRef}
+        className={`flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto pb-32 relative z-10 ${location.pathname === '/' ? 'luxury-bg' : ''} ${location.pathname === '/events' ? 'luxury-bg' : ''} ${location.pathname === '/gallery' ? 'luxury-bg' : ''} ${location.pathname === '/directory' ? 'luxury-bg' : ''} ${location.pathname === '/posts' ? 'luxury-bg' : ''}`}
+      >
         <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>
             <Routes>

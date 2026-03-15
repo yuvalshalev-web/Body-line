@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { ref, deleteObject, getMetadata } from 'firebase/storage';
 import { getDb, trackedGetDocs, setDbStatus, db_status, getStorageInstance } from '../services/firebase';
@@ -8,6 +8,7 @@ import { SUPER_ADMIN_EMAIL } from '../constants';
 import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageStats';
 import { storage } from '../src/utils/storage';
+import { useAuth } from './AuthContext';
 import { useModal } from './ModalContext';
 import { finalizeSession as finalizeSessionService, getNextSessionDate } from '../services/rolloverService';
 
@@ -24,7 +25,7 @@ interface DataContextType {
   weeklyHistory: any[];
   siteAssets: any;
   siteConfig: { 
-    navPosition: 'standard',
+    navPosition: 'bottom' | 'top',
     home_break?: {
       formatted: string;
       lat: number | null;
@@ -88,7 +89,7 @@ interface DataContextType {
   clearCollection: (collectionName: string) => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
   updateSiteConfig: (config: Partial<{ 
-    navPosition: 'standard',
+    navPosition: 'bottom' | 'top',
     home_break: any,
     globalColor: string,
     h1Styles: any,
@@ -97,11 +98,14 @@ interface DataContextType {
   updateYearConfig: (config: { startDate: string; endDate: string }) => Promise<void>;
   archiveMember: (id: string) => Promise<void>;
   addMember: (member: Omit<Member, 'id'>) => Promise<void>;
+  isDbEmpty: boolean;
+  seedInitialAdmin: () => Promise<boolean>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { currentUser } = useAuth();
   const { showAlert } = useModal();
   const [members, setMembers] = useState<Member[]>([]);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
@@ -115,7 +119,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [weeklyHistory, setWeeklyHistory] = useState<any[]>([]);
   const [siteAssets, setSiteAssets] = useState<any>({});
   const [siteConfig, setSiteConfig] = useState<{ 
-    navPosition: 'standard',
+    navPosition: 'bottom' | 'top',
     home_break?: any,
     globalColor?: string,
     h1Styles?: {
@@ -138,10 +142,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     },
     weeklySessions?: { dayOfWeek: number, time: string, isActive?: boolean }[];
   }>(() => {
-    return { navPosition: 'standard', weeklySessions: [{ dayOfWeek: 4, time: '07:00', isActive: false }] };
+    return { navPosition: 'bottom', weeklySessions: [{ dayOfWeek: 4, time: '07:00', isActive: false }] };
   });
+  const siteConfigRef = useRef(siteConfig);
+
+  useEffect(() => {
+    siteConfigRef.current = siteConfig;
+  }, [siteConfig]);
+
   const [yearConfig, setYearConfig] = useState<{ startDate: string; endDate: string } | null>(null);
   const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
+  const [isDbEmpty, setIsDbEmpty] = useState(false);
   const [activeSessionDate, setActiveSessionDate] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [hasQuotaError, setHasQuotaError] = useState(false);
@@ -187,19 +198,37 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     const db = getDb();
-    initializeStorageStats();
     
-    // 1. Initial Placeholder from Cache (Freshness check: 2 mins)
-    const cachedMembers = storage.get('cached_members_v3');
-    if (cachedMembers) setMembers(cachedMembers);
-    
-    const cachedHistory = storage.get('cached_history_v3');
-    if (cachedHistory) setWeeklyHistory(cachedHistory);
+    // 1. Public Data Listeners (Always active)
+    const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (doc) => {
+      if (doc.exists()) setSiteAssets(doc.data());
+    }, handleFirestoreError);
 
-    // 2. One-time fetches for static-ish data
-    const fetchData = async () => {
-      try {
-        // Glossary & Exercises (with 24h localStorage caching)
+    const unsubConfig = onSnapshot(doc(db, 'site_data', 'config'), (doc) => {
+      if (doc.exists()) setSiteConfig(doc.data() as any);
+    }, handleFirestoreError);
+
+    const unsubYearConfig = onSnapshot(doc(db, 'site_data', 'year_config'), (doc) => {
+      if (doc.exists()) setYearConfig(doc.data() as { startDate: string; endDate: string });
+    }, handleFirestoreError);
+
+    // 2. Auth-dependent Data
+    let unsubs: (() => void)[] = [unsubAssets, unsubConfig, unsubYearConfig];
+
+    if (currentUser) {
+      if (currentUser.role === 'Admin') {
+        initializeStorageStats();
+      }
+      
+      // Initial Placeholder from Cache (Freshness check: 2 mins)
+      const cachedMembers = storage.get('cached_members_v3');
+      if (cachedMembers) setMembers(cachedMembers);
+      
+      const cachedHistory = storage.get('cached_history_v3');
+      if (cachedHistory) setWeeklyHistory(cachedHistory);
+
+      // One-time fetches for static-ish data
+      const fetchData = async () => {
         try {
           // Glossary
           const cachedGlossary = storage.get('cached_glossary_v2');
@@ -223,86 +252,77 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             storage.set('cached_exercises_v2', exData, 24);
           }
           
-          // Quotes (still one-time fetch, but not cached in localStorage yet as per request)
+          // Quotes
           const qSnap = await trackedGetDocs(collection(db, 'quotes'));
           setQuotes(qSnap.docs.map(d => ({ id: d.id, ...d.data() } as QuoteItem)));
         } catch (e: any) {
-          if (e.message !== 'QUOTA_EXCEEDED_OR_KILL_SWITCH') throw e;
+          if (e.message !== 'QUOTA_EXCEEDED_OR_KILL_SWITCH') handleFirestoreError(e);
         }
+      };
 
-      } catch (err) {
-        handleFirestoreError(err);
-      }
-    };
+      fetchData();
 
-    fetchData();
+      // Real-time listeners for dynamic data
+      const unsubMembers = onSnapshot(query(collection(db, 'members'), limit(200)), (snapshot) => {
+        const mData = snapshot.docs
+          .map(d => ({ id: d.id, ...d.data() } as Member))
+          .filter(m => m.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase());
+        
+        setMembers(mData);
+        setIsDbEmpty(snapshot.empty);
+        storage.set('cached_members_v3', mData, 2 / 60);
+      }, handleFirestoreError);
 
-    // 3. Real-time listeners for dynamic data (Background Fetch)
-    // Members (with 2-min placeholder cache)
-    const unsubMembers = onSnapshot(query(collection(db, 'members'), limit(200)), (snapshot) => {
-      const mData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member));
-      setMembers(mData);
-      storage.set('cached_members_v3', mData, 2 / 60); // 2 mins cache
-    }, handleFirestoreError);
+      const unsubHistory = onSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
+        const hData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setWeeklyHistory(hData);
+        storage.set('cached_history_v3', hData, 2 / 60);
+      }, handleFirestoreError);
 
-    // Weekly History (with 2-min placeholder cache)
-    const unsubHistory = onSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
-      const hData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      setWeeklyHistory(hData);
-      storage.set('cached_history_v3', hData, 2 / 60); // 2 mins cache
-    }, handleFirestoreError);
+      const unsubRequests = onSnapshot(query(collection(db, 'joinRequests'), limit(200)), (snapshot) => {
+        setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
+      }, handleFirestoreError);
+      
+      const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
+        setEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event)));
+      }, handleFirestoreError);
+      
+      const unsubNews = onSnapshot(query(collection(db, 'news'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
+        setNews(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as NewsItem)));
+      }, handleFirestoreError);
+      
+      const unsubPodcasts = onSnapshot(query(collection(db, 'podcasts'), orderBy('publishedAt', 'desc'), limit(200)), (snapshot) => {
+        setPodcasts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Podcast)));
+      }, handleFirestoreError);
+      
+      const unsubGallery = onSnapshot(query(collection(db, 'gallery'), orderBy('timestamp', 'desc'), limit(50)), (snapshot) => {
+        setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
+      }, handleFirestoreError);
 
-    const unsubRequests = onSnapshot(query(collection(db, 'joinRequests'), limit(200)), (snapshot) => {
-      setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
-    }, handleFirestoreError);
-    
-    const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
-      setEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event)));
-    }, handleFirestoreError);
-    
-    const unsubNews = onSnapshot(query(collection(db, 'news'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
-      setNews(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as NewsItem)));
-    }, handleFirestoreError);
-    
-    const unsubPodcasts = onSnapshot(query(collection(db, 'podcasts'), orderBy('publishedAt', 'desc'), limit(200)), (snapshot) => {
-      setPodcasts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Podcast)));
-    }, handleFirestoreError);
-    
-    const unsubGallery = onSnapshot(query(collection(db, 'gallery'), orderBy('timestamp', 'desc'), limit(50)), (snapshot) => {
-      setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
-    }, handleFirestoreError);
-    
-    const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (doc) => {
-      if (doc.exists()) setSiteAssets(doc.data());
-    }, handleFirestoreError);
+      const unsubAttendees = onSnapshot(doc(db, 'site_data', 'active_session'), async (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data() as any;
+          const sessionDate = data.date;
+          const attendees = data.attendees || [];
+          setAttendeeIds(attendees);
+          setActiveSessionDate(sessionDate || getNextSessionDate(siteConfigRef.current?.weeklySessions));
+        }
+        setIsLoading(false);
+      }, handleFirestoreError);
 
-    const unsubConfig = onSnapshot(doc(db, 'site_data', 'config'), (doc) => {
-      if (doc.exists()) setSiteConfig(doc.data() as any);
-    }, handleFirestoreError);
-
-    const unsubYearConfig = onSnapshot(doc(db, 'site_data', 'year_config'), (doc) => {
-      if (doc.exists()) setYearConfig(doc.data() as { startDate: string; endDate: string });
-    }, handleFirestoreError);
+      unsubs.push(unsubMembers, unsubHistory, unsubRequests, unsubEvents, unsubNews, unsubPodcasts, unsubGallery, unsubAttendees);
+    } else {
+      // Not logged in
+      setIsLoading(false);
+    }
 
     const timeoutId = setTimeout(() => setIsLoading(false), 4000);
 
-    const unsubAttendees = onSnapshot(doc(db, 'site_data', 'active_session'), async (snapshot) => {
-      clearTimeout(timeoutId);
-      if (snapshot.exists()) {
-        const data = snapshot.data() as any;
-        const sessionDate = data.date;
-        const attendees = data.attendees || [];
-        setAttendeeIds(attendees);
-        setActiveSessionDate(sessionDate || getNextSessionDate(siteConfig?.weeklySessions));
-      }
-      setIsLoading(false);
-    }, handleFirestoreError);
-
     return () => {
       clearTimeout(timeoutId);
-      unsubMembers(); unsubHistory(); unsubRequests(); unsubEvents(); unsubNews(); unsubGallery(); unsubAssets(); unsubConfig(); unsubYearConfig(); unsubAttendees();
+      unsubs.forEach(unsub => unsub());
     };
-  }, [handleFirestoreError, dbStatus]);
+  }, [handleFirestoreError, dbStatus, currentUser]);
 
   const updateMember = async (member: Member) => {
     const { id, ...data } = member;
@@ -390,13 +410,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       
       const reqData = requestSnap.data() as JoinRequest;
+      const normalizedEmail = (reqData.email || '').toLowerCase().trim();
       const tempPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = await hashPassword(tempPassword);
       
       const newMemberData = {
         firstName: reqData.firstName || '',
         lastName: reqData.lastName || '',
-        email: reqData.email || '', 
+        email: normalizedEmail, 
         mobile: reqData.mobile || '', 
         avatar: reqData.avatar || '', 
         bio: reqData.bio || '',
@@ -618,7 +639,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateSiteConfig = async (config: Partial<{ 
-    navPosition: 'standard',
+    navPosition: 'bottom' | 'top',
     home_break: any,
     globalColor: string,
     h1Styles: any,
@@ -679,6 +700,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const membersRef = collection(db, 'members');
     await addDoc(membersRef, {
       ...memberData,
+      email: memberData.email.toLowerCase().trim(),
       joinedAt: memberData.joinedAt || getCurrentDateFormatted(),
       isActive: memberData.isActive !== undefined ? memberData.isActive : true,
       loginCount: 0,
@@ -686,13 +708,55 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
-  return (
-    <DataContext.Provider value={{ 
+  const seedInitialAdmin = async () => {
+    try {
+      setIsLoading(true);
+      const db = getDb();
+      const hashedPassword = await hashPassword('admin123');
+      const adminData = {
+        firstName: 'מנהל',
+        lastName: 'מערכת',
+        email: SUPER_ADMIN_EMAIL,
+        mobile: '0500000000',
+        role: 'Admin' as const,
+        password: hashedPassword,
+        joinedAt: getCurrentDateFormatted(),
+        isActive: true,
+        loginCount: 0,
+        totalAttendance: 0,
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin',
+        bio: 'מנהל מערכת ראשוני',
+        gender: 'זכר',
+        isTemporary: true
+      };
+      
+      await addDoc(collection(db, 'members'), adminData);
+      setIsDbEmpty(false);
+      return true;
+    } catch (err) {
+      console.error('Error seeding admin:', err);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const contextValue = React.useMemo(() => ({ 
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, forceResetSession,
-      finalizeSession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember
-    }}>
+      finalizeSession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
+      isDbEmpty, seedInitialAdmin
+    }), [
+      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
+      updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
+      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, forceResetSession,
+      finalizeSession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
+      isDbEmpty, seedInitialAdmin
+    ]);
+
+  return (
+    <DataContext.Provider value={contextValue}>
       {children}
     </DataContext.Provider>
   );

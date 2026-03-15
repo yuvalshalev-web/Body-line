@@ -14,7 +14,7 @@ export const SignPost: React.FC<{ className?: string }> = ({ className = "" }) =
             <stop offset="15%" stopColor="#5d4037" />
             <stop offset="40%" stopColor="#4e342e" />
             <stop offset="60%" stopColor="#5d4037" />
-            <stop offset="85%" stopColor="#4e342e" />
+            <stop offset="90%" stopColor="#4e342e" />
             <stop offset="100%" stopColor="#3e2723" />
           </linearGradient>
           
@@ -22,7 +22,7 @@ export const SignPost: React.FC<{ className?: string }> = ({ className = "" }) =
             {/* Organic grain lines */}
             <path d="M0 20 Q 30 25 60 20 M0 60 Q 20 50 60 70 M0 110 Q 40 120 60 100 M0 160 Q 15 170 60 150" 
                   stroke="rgba(0,0,0,0.3)" strokeWidth="1.5" fill="none" />
-            <path d="M0 40 Q 35 35 60 45 M0 85 Q 25 95 60 80 M0 135 Q 45 130 60 140 M0 185 Q 10 195 60 180" 
+            <path d="M0 40 Q 35 35 60 45 M0 90 Q 25 95 60 80 M0 135 Q 45 130 60 140 M0 185 Q 10 195 60 180" 
                   stroke="rgba(0,0,0,0.2)" strokeWidth="1" fill="none" />
             
             {/* Knots */}
@@ -57,7 +57,7 @@ export const SignPost: React.FC<{ className?: string }> = ({ className = "" }) =
         <rect x="5" y="0" width="50" height="1000" fill="url(#wood-grain-complex)" opacity="0.6" filter="url(#inner-shadow)" />
 
         {/* Vertical Weathering Cracks */}
-        <path d="M 25 0 L 28 150 M 35 200 L 32 450 M 20 500 L 22 850 M 40 900 L 38 1000" 
+        <path d="M 25 0 L 28 150 M 35 200 L 32 450 M 20 500 L 22 900 M 40 900 L 38 1000" 
               stroke="rgba(0,0,0,0.4)" strokeWidth="1.5" fill="none" opacity="0.5" />
         <path d="M 15 100 L 12 300 M 45 400 L 48 650 M 10 700 L 13 950" 
               stroke="rgba(0,0,0,0.3)" strokeWidth="1" fill="none" opacity="0.4" />
@@ -79,7 +79,7 @@ export const SignPost: React.FC<{ className?: string }> = ({ className = "" }) =
       <div className="absolute top-[82%] left-[25%] w-5 h-4 rounded-full bg-black/20 blur-[2px] rotate-45" />
       
       {/* Rusty Nails where signs might be attached */}
-      {[15, 25, 35, 45, 55, 65, 75, 85].map((top) => (
+      {[15, 25, 35, 45, 55, 65, 75, 90].map((top) => (
         <div 
           key={top}
           className="absolute w-2 h-2 rounded-full bg-[#8b4513] shadow-[inset_0_1px_2px_rgba(0,0,0,0.8),0_1px_1px_rgba(255,255,255,0.2)]"

@@ -5,14 +5,13 @@ import { TrendingUp, Waves, Server, ShieldAlert, Users, Activity, Book, Calendar
 import { useAuth } from '../contexts/AuthContext';
 import CommunityAnalytics from '../components/CommunityAnalytics';
 import CommunityHeatMap from '../components/CommunityHeatMap';
-import SystemMonitor from '../components/SystemMonitor';
 import SessionStatsPage from './SessionStatsPage';
 import TrendsDashboard from '../components/admin/TrendsDashboard';
 import GlassNavigationBar from '../components/GlassNavigationBar';
 import AdminHelpPage from '../components/admin/AdminHelpPage';
 import SeasonalPersistence from '../components/admin/SeasonalPersistence';
 
-type Tab = 'community' | 'trends' | 'attendance' | 'system' | 'help' | 'seasonal';
+type Tab = 'community' | 'trends' | 'attendance' | 'help' | 'seasonal';
 
 const SnorkelIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg 
@@ -42,7 +41,6 @@ const AdminInfoPage: React.FC = () => {
     { id: 'trends', label: 'התמדה קבוצתית', icon: <Activity size={20} /> },
     { id: 'seasonal', label: 'התמדה עונתית', icon: <Calendar size={20} /> },
     { id: 'attendance', label: 'צוללים לסשנים', icon: <Waves size={20} /> },
-    { id: 'system', label: 'חדר מכונות', icon: <Server size={20} /> },
     { id: 'help', label: 'מדריך אנליטיקה', icon: <Book size={20} /> },
   ];
 
@@ -95,7 +93,6 @@ const AdminInfoPage: React.FC = () => {
             {activeTab === 'trends' && <TrendsDashboard />}
             {activeTab === 'seasonal' && <SeasonalPersistence />}
             {activeTab === 'attendance' && <SessionStatsPage />}
-            {activeTab === 'system' && <SystemMonitor />}
             {activeTab === 'help' && <AdminHelpPage />}
           </motion.div>
         </AnimatePresence>

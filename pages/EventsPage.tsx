@@ -112,7 +112,7 @@ const EventsPage: React.FC = () => {
 
     setIsUploading(true);
     try {
-      const processed = await processImage(file, 1200, 0.85);
+      const processed = await processImage(file, 1200, 0.9);
       const storage = getStorageInstance();
       const storageRef = ref(storage, `events/${Date.now()}_${file.name}`);
       

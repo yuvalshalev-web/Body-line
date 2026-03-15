@@ -9,12 +9,13 @@
 export const processImage = async (
   file: File, 
   maxWidth = 800, 
-  quality = 0.6
+  quality = 0.6,
+  targetSizeKB = 50
 ): Promise<{ blob: Blob; dataUrl: string }> => {
   return new Promise((resolve, reject) => {
     // ולידציה בסיסית לגודל קובץ מקורי
-    if (file.size > 5 * 1024 * 1024) {
-       return reject(new Error('הקובץ גדול מדי. הגודל המקסימלי המותר הוא 5MB.'));
+    if (file.size > 10 * 1024 * 1024) {
+       return reject(new Error('הקובץ גדול מדי. הגודל המקסימלי המותר הוא 10MB.'));
     }
 
     const reader = new FileReader();
@@ -27,8 +28,6 @@ export const processImage = async (
         let width = img.width;
         let height = img.height;
 
-        // For profile pictures, we want them small (under 50KB)
-        // 800px width is plenty for a profile pic
         if (width > maxWidth) {
           height = (maxWidth / width) * height;
           width = maxWidth;
@@ -41,13 +40,12 @@ export const processImage = async (
 
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Try to get it under 50KB by adjusting quality if needed
         const compress = (q: number) => {
           canvas.toBlob(
             (blob) => {
               if (blob) {
                 // If blob is still too large and quality is high enough, try again
-                if (blob.size > 50 * 1024 && q > 0.1) {
+                if (blob.size > targetSizeKB * 1024 && q > 0.1) {
                   compress(q - 0.1);
                 } else {
                   const dataUrl = canvas.toDataURL('image/webp', q);

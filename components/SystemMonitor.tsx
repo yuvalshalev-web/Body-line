@@ -5,13 +5,13 @@ import {
 } from 'recharts';
 import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp, Skull, TriangleAlert, HeartPulse, Zap, Terminal, Filter, Search as SearchIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { getStorageSizeMB } from '../utils/storageStats';
+import { getStorageSizeMB, recalculateStorageFromStorage } from '../utils/storageStats';
 import StorageDisplay from './StorageDisplay';
 import { sessionReadCount, db, saveLogsToDatabase, loadLogsFromDatabase } from '../services/firebase';
 import { useData } from '../contexts/DataContext';
 import { get24hBandwidth } from '../utils/bandwidthTracker';
 import { getLogs, SystemLog, LogSeverity, clearLogs } from '../utils/systemLogs';
-import { collection, getDocs, query, limit } from 'firebase/firestore';
+import { doc, onSnapshot, collection, getDocs, query, limit } from 'firebase/firestore';
 
 interface CircularRingProps {
   value: number;
@@ -333,7 +333,7 @@ const QuotaMonitor: React.FC = () => {
         const newPoint = {
           time: timeStr,
           reads: sessionReadCount,
-          writes: Math.floor(Math.random() * 5) // Mocking writes for now as we don't track them globally yet
+          writes: 0 // We don't track writes globally yet
         };
         return [...prev, newPoint].slice(-12);
       });
@@ -448,11 +448,20 @@ const TechnicalLogs: React.FC = () => {
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [filter, setFilter] = useState<LogSeverity | 'All'>('All');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const refreshLogs = () => {
     setIsRefreshing(true);
     setLogs(getLogs());
     setTimeout(() => setIsRefreshing(false), 600);
+  };
+
+  const copyToClipboard = (log: SystemLog) => {
+    const textToCopy = `[${log.timestamp.toLocaleString('he-IL')}] ${log.severity} | ${log.source} | ${log.message} | ${log.details || ''}`;
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setCopiedId(log.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
   };
 
   useEffect(() => {
@@ -474,7 +483,7 @@ const TechnicalLogs: React.FC = () => {
   };
 
   return (
-    <div className="glass-panel p-8 !rounded-[2.5rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px]">
+    <div className="glass-panel p-8 !rounded-[2.5rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px] h-[70vh] flex flex-col">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-[#FFDE45] rounded-2xl flex items-center justify-center text-[#000000] shadow-lg border border-white/30">
@@ -530,7 +539,7 @@ const TechnicalLogs: React.FC = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto -mx-8 px-8">
+      <div className="overflow-x-auto overflow-y-auto -mx-8 px-8 flex-1 custom-scrollbar">
         <table className="w-full text-right border-separate border-spacing-y-2">
           <thead>
             <tr className="text-[10px] font-black text-[#000000] uppercase tracking-[0.2em]">
@@ -562,10 +571,27 @@ const TechnicalLogs: React.FC = () => {
                   <td className="py-3 px-4 bg-white/10 border-y border-white/10 text-[11px] font-black text-[#000000]">
                     {log.source}
                   </td>
-                  <td className="py-3 px-4 bg-white/10 border-y border-white/10 text-[11px] font-bold text-[#000000] max-w-xs truncate">
+                  <td 
+                    className="py-3 px-4 bg-white/10 border-y border-white/10 text-[11px] font-bold text-[#000000] max-w-xs truncate cursor-pointer hover:bg-white/20 transition-colors relative"
+                    onClick={() => copyToClipboard(log)}
+                    title="לחץ להעתקת פרטי האירוע"
+                  >
                     {log.message}
+                    {copiedId === log.id && (
+                      <motion.span 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="absolute -top-6 right-0 bg-emerald-500 text-white text-[8px] px-2 py-1 rounded-md font-black shadow-lg z-50"
+                      >
+                        הועתק!
+                      </motion.span>
+                    )}
                   </td>
-                  <td className="py-3 px-4 bg-white/10 last:rounded-l-2xl border-y border-l border-white/10 text-[10px] font-medium text-[#000000]/40 font-mono">
+                  <td 
+                    className="py-3 px-4 bg-white/10 last:rounded-l-2xl border-y border-l border-white/10 text-[10px] font-medium text-[#000000]/40 font-mono cursor-pointer hover:bg-white/20 transition-colors"
+                    onClick={() => copyToClipboard(log)}
+                    title="לחץ להעתקת פרטי האירוע"
+                  >
                     {log.details || '-'}
                   </td>
                 </motion.tr>
@@ -597,6 +623,7 @@ const SystemMonitor: React.FC = () => {
     traffic: []
   });
   const [storageSize, setStorageSize] = useState<number>(0);
+  const [isRecalculating, setIsRecalculating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [liveReads, setLiveReads] = useState(sessionReadCount);
   const [readHistory, setReadHistory] = useState<{ time: string, reads: number }[]>(() => {
@@ -674,18 +701,29 @@ const SystemMonitor: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const statsRef = doc(db, "admin", "storage_metadata");
+    const unsubscribe = onSnapshot(statsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const totalBytes = snapshot.data().totalBytes || 0;
+        const mb = totalBytes / (1024 * 1024);
+        setStorageSize(mb);
+      }
+    }, (error) => {
+      console.error("Error listening to storage stats in SystemMonitor:", error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [statsRes, realStorageSize] = await Promise.all([
-          fetch('/api/stats/system'),
-          getStorageSizeMB()
-        ]);
+        const statsRes = await fetch('/api/stats/system');
         
         if (!statsRes.ok) throw new Error(`Server error: ${statsRes.status}`);
         
         const statsJson = await statsRes.json();
         setData(statsJson);
-        setStorageSize(realStorageSize);
       } catch (err) {
         console.error('Error fetching system stats:', err);
       } finally {
@@ -768,14 +806,10 @@ const SystemMonitor: React.FC = () => {
                 setLoading(true);
                 const fetchStats = async () => {
                   try {
-                    const [statsRes, realStorageSize] = await Promise.all([
-                      fetch('/api/stats/system'),
-                      getStorageSizeMB()
-                    ]);
+                    const statsRes = await fetch('/api/stats/system');
                     if (!statsRes.ok) throw new Error(`Server error: ${statsRes.status}`);
                     const statsJson = await statsRes.json();
                     setData(statsJson);
-                    setStorageSize(realStorageSize);
                   } catch (err) {
                     console.error('Error fetching system stats:', err);
                   } finally {
@@ -788,6 +822,23 @@ const SystemMonitor: React.FC = () => {
               title="Refresh Stats"
             >
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            </button>
+
+            <button 
+              onClick={async () => {
+                setIsRecalculating(true);
+                try {
+                  await recalculateStorageFromStorage();
+                } finally {
+                  setIsRecalculating(false);
+                }
+              }}
+              disabled={isRecalculating}
+              className="flex items-center gap-2 px-4 py-2 bg-white/30 hover:bg-white/50 rounded-xl text-[#000000] text-xs font-black transition-all border border-white/30 shadow-sm disabled:opacity-50"
+              title="Recalculate Storage"
+            >
+              <RefreshCw size={12} className={isRecalculating ? 'animate-spin' : ''} />
+              <span>סנכרון שטח אחסון</span>
             </button>
           </div>
         </div>
@@ -941,7 +992,7 @@ const SystemMonitor: React.FC = () => {
             value={Math.min((Number(data.dbSize) / 1024) * 100, 100)}
             label="Database"
             sublabel={`${(Number(data.dbSize) || 0).toFixed(2)} MB`}
-            gradient={Number(data.dbSize) / 1024 > 0.85 ? ['#CC2678', '#FF2D60'] : Number(data.dbSize) / 1024 > 0.7 ? ['#FFDE45', '#FF9F1C'] : ['#10B981', '#34D399']}
+            gradient={Number(data.dbSize) / 1024 > 0.9 ? ['#CC2678', '#FF2D60'] : Number(data.dbSize) / 1024 > 0.7 ? ['#FFDE45', '#FF9F1C'] : ['#10B981', '#34D399']}
           />
           <div>
             <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight mb-2">גודל מסד הנתונים</h3>
@@ -953,7 +1004,7 @@ const SystemMonitor: React.FC = () => {
             value={Math.min((Number(storageSize) / 1000) * 100, 100)}
             label="Storage"
             sublabel={`${(Number(storageSize) || 0).toFixed(2)} MB`}
-            gradient={Number(storageSize) / 1000 > 0.85 ? ['#CC2678', '#FF2D60'] : Number(storageSize) / 1000 > 0.7 ? ['#FFDE45', '#FF9F1C'] : ['#10B981', '#34D399']}
+            gradient={Number(storageSize) / 1000 > 0.9 ? ['#CC2678', '#FF2D60'] : Number(storageSize) / 1000 > 0.7 ? ['#FFDE45', '#FF9F1C'] : ['#10B981', '#34D399']}
           />
           <div>
             <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight mb-2">גודל שטח האחסון (Storage)</h3>
@@ -981,8 +1032,8 @@ const SystemMonitor: React.FC = () => {
             
             <button 
               onClick={() => {
-                const fakeTotal = liveReads + Math.floor(Math.random() * 5) + 1;
-                window.dispatchEvent(new CustomEvent('db-read-update', { detail: fakeTotal }));
+                const newTotal = sessionReadCount + 1;
+                window.dispatchEvent(new CustomEvent('db-read-update', { detail: newTotal }));
               }}
               className="px-3 py-1 bg-white/30 hover:bg-white/50 text-[#000000] text-[12px] font-black rounded-lg transition-colors uppercase tracking-wider border border-white/20"
             >

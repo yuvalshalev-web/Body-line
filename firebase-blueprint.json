@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "Member": {
+      "title": "Member",
+      "description": "A member of the community",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string" },
+        "mobile": { "type": "string" },
+        "avatar": { "type": "string" },
+        "bio": { "type": "string" },
+        "role": { "type": "string", "enum": ["Member", "Instructor", "Admin"] },
+        "joinedAt": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "birthday": { "type": "string" },
+        "gender": { "type": "string" },
+        "full_address": { "type": "string" }
+      },
+      "required": ["firstName", "lastName", "email", "role"]
+    },
+    "JoinRequest": {
+      "title": "JoinRequest",
+      "description": "A request to join the community",
+      "type": "object",
+      "properties": {
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string" },
+        "mobile": { "type": "string" },
+        "requestedAt": { "type": "string" }
+      }
+    },
+    "GalleryItem": {
+      "title": "GalleryItem",
+      "description": "An item in the shared gallery",
+      "type": "object",
+      "properties": {
+        "imageUrl": { "type": "string" },
+        "uploaderId": { "type": "string" },
+        "uploaderName": { "type": "string" },
+        "caption": { "type": "string" },
+        "timestamp": { "type": "string" }
+      }
+    },
+    "Event": {
+      "title": "Event",
+      "description": "A community event",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "location": { "type": "string" },
+        "type": { "type": "string", "enum": ["COMMUNITY", "MEMBER", "INSTRUCTOR"] }
+      }
+    }
+  },
+  "firestore": {
+    "members": {
+      "schema": "Member",
+      "description": "Collection of community members"
+    },
+    "joinRequests": {
+      "schema": "JoinRequest",
+      "description": "Collection of join requests"
+    },
+    "gallery": {
+      "schema": "GalleryItem",
+      "description": "Shared gallery items"
+    },
+    "events": {
+      "schema": "Event",
+      "description": "Community events"
+    },
+    "system_logs": {
+      "schema": "object",
+      "description": "System logs"
+    }
+  }
+}

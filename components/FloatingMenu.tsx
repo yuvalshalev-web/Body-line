@@ -1,55 +1,65 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Users, Image as ImageIcon, Calendar, Trophy, UserCircle, LogOut, Newspaper, Menu } from 'lucide-react';
-import { motion, useAnimation, useMotionValue } from 'motion/react';
+import { motion, useAnimation, AnimatePresence } from 'motion/react';
+import { useData } from '../contexts/DataContext';
 
 interface FloatingMenuProps {
   onOpenDrawer: () => void;
+  scrollRef?: React.RefObject<HTMLElement>;
 }
 
-const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer }) => {
+const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer, scrollRef }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { siteConfig } = useData();
+  const isTop = siteConfig?.navPosition === 'top';
   const menuRef = useRef<HTMLDivElement>(null);
   const controls = useAnimation();
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const [constraints, setConstraints] = useState({ top: 0, left: 0, right: 0, bottom: 0 });
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  // Scroll to hide/show logic
+  useEffect(() => {
+    const scrollContainer = scrollRef?.current;
+    if (!scrollContainer) return;
+
+    const handleScroll = () => {
+      const currentScrollY = scrollContainer.scrollTop;
+      
+      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+        // Scrolling down
+        if (isVisible) {
+          setIsVisible(false);
+          controls.start({ 
+            y: isTop ? -150 : 150, 
+            opacity: 0,
+            transition: { duration: 0.3, ease: "easeInOut" } 
+          });
+        }
+      } else {
+        // Scrolling up
+        if (!isVisible) {
+          setIsVisible(true);
+          controls.start({ 
+            y: 0, 
+            opacity: 1,
+            transition: { type: 'spring', stiffness: 300, damping: 30 } 
+          });
+        }
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    scrollContainer.addEventListener('scroll', handleScroll);
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, [scrollRef, isVisible, controls, isTop]);
 
   // Reset position on route change
   useEffect(() => {
-    controls.start({ x: 0, y: 0, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 30 } });
+    setIsVisible(true);
+    controls.start({ y: 0, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 30 } });
   }, [location.pathname, controls]);
-
-  // Calculate drag constraints
-  useEffect(() => {
-    const updateConstraints = () => {
-      if (menuRef.current) {
-        const rect = menuRef.current.getBoundingClientRect();
-        const currentX = x.get();
-        const currentY = y.get();
-        
-        const originalLeft = rect.left - currentX;
-        const originalTop = rect.top - currentY;
-        const originalRight = rect.right - currentX;
-        const originalBottom = rect.bottom - currentY;
-
-        setConstraints({
-          top: -originalTop + 10,
-          left: -originalLeft + 10,
-          right: window.innerWidth - originalRight - 10,
-          bottom: window.innerHeight - originalBottom - 10,
-        });
-      }
-    };
-
-    const timeoutId = setTimeout(updateConstraints, 100);
-    window.addEventListener('resize', updateConstraints);
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('resize', updateConstraints);
-    };
-  }, [x, y]);
 
   const menuItems = [
     { 
@@ -117,19 +127,30 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer }) => {
   return (
     <motion.div 
       ref={menuRef}
-      drag
-      dragMomentum={false}
-      dragConstraints={constraints}
       animate={controls}
-      style={{ x, y }}
-      initial={{ y: 100, opacity: 0 }}
-      className="fixed bottom-6 left-1 right-1 md:left-auto md:right-auto md:w-max md:mx-auto z-[9999] 
-                 bg-white/90 backdrop-blur-3xl border border-white/60 
-                 rounded-[40px] p-1 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.25)] flex items-center gap-0 floating-menu-container cursor-grab active:cursor-grabbing
-                 max-w-[calc(100vw-8px)]"
+      initial={{ y: isTop ? -100 : 100, opacity: 0 }}
+      drag={!isTop} // Only drag if at bottom
+      dragConstraints={{ top: -50, bottom: 50, left: -50, right: 50 }}
+      dragElastic={0.1}
+      whileDrag={{ scale: 1.02, cursor: 'grabbing' }}
+      className={`fixed ${isTop ? 'top-6' : 'bottom-8'} left-1/2 -translate-x-1/2 z-[9999] 
+                 w-[95%] max-w-[500px] md:w-max
+                 bg-white/80 backdrop-blur-2xl border border-white/40 
+                 rounded-[32px] p-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] 
+                 flex items-center gap-1 floating-menu-container
+                 cursor-grab active:cursor-grabbing hover:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.4)] transition-shadow duration-300`}
     >
       <nav className="flex justify-around items-center gap-0 w-full">
-        {/* Profile Item */}
+        {/* Menu Button (Right side in RTL) */}
+        <button
+          onClick={onOpenDrawer}
+          className="flex flex-col items-center gap-0.5 p-1.5 px-1.5 min-[360px]:px-2.5 sm:px-4 rounded-[32px] border border-slate-200/60 text-slate-700 bg-slate-100/60 hover:bg-slate-200/90 hover:scale-110 active:scale-95 transition-all duration-300 group"
+        >
+          <Menu size={21} className="sm:size-[28px] drop-shadow-md group-hover:rotate-12 transition-transform" />
+          <span className="text-[13px] sm:text-[17px] font-black opacity-80 leading-none font-['Yehuda_CLM']">תפריט</span>
+        </button>
+
+        {/* Navigation Items */}
         {menuItems.slice().reverse().map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
@@ -149,14 +170,14 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer }) => {
               )}
               
               <Icon 
-                size={18} 
-                className={`z-10 transition-all duration-500 sm:size-[24px] ${
+                size={21} 
+                className={`z-10 transition-all duration-500 sm:size-[28px] ${
                   isActive 
                     ? 'text-white drop-shadow-[0_3px_6px_rgba(0,0,0,0.4)]' 
                     : `${item.glow} group-hover:rotate-12 group-hover:scale-110`
                 }`} 
               />
-              <span className={`text-[9px] sm:text-[11px] font-black z-10 tracking-tighter leading-none font-['Miriwin'] ${isActive ? 'text-white' : 'opacity-90'}`}>
+              <span className={`text-[13px] sm:text-[17px] font-black z-10 tracking-tighter leading-none font-['Yehuda_CLM'] ${isActive ? 'text-white' : 'opacity-90'}`}>
                 {item.label}
               </span>
 
@@ -172,15 +193,6 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer }) => {
             </button>
           );
         })}
-        
-        {/* Menu Button */}
-        <button
-          onClick={onOpenDrawer}
-          className="flex flex-col items-center gap-0.5 p-1.5 px-1.5 min-[360px]:px-2.5 sm:px-4 rounded-[32px] border border-slate-200/60 text-slate-700 bg-slate-100/60 hover:bg-slate-200/90 hover:scale-110 active:scale-95 transition-all duration-300"
-        >
-          <Menu size={18} className="sm:size-[24px] drop-shadow-md" />
-          <span className="text-[9px] sm:text-[11px] font-black opacity-80 leading-none font-['Miriwin']">תפריט</span>
-        </button>
       </nav>
     </motion.div>
   );

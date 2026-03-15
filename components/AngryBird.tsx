@@ -10,7 +10,7 @@ export const AngryBird: React.FC<{ className?: string; delay?: number }> = ({ cl
       className={`relative flex flex-col items-center origin-bottom z-[10000] ${className}`}
     >
       {/* Angry Bird SVG - Inline to guarantee rendering */}
-      <div className="relative w-[85px] h-[85px]">
+      <div className="relative w-[90px] h-[90px]">
         <motion.svg 
           viewBox="0 0 100 100" 
           className="w-full h-full drop-shadow-2xl relative z-[10000]"
@@ -30,14 +30,14 @@ export const AngryBird: React.FC<{ className?: string; delay?: number }> = ({ cl
           <path d="M 15 65 L 5 75 L 15 75 Z" fill="#331111" />
 
           {/* Body */}
-          <path d="M 50 15 C 25 15 15 35 15 60 C 15 85 35 95 60 95 C 85 95 95 75 95 50 C 95 25 75 15 50 15 Z" fill="#e23e33" />
+          <path d="M 50 15 C 25 15 15 35 15 60 C 15 90 35 95 60 95 C 90 95 95 75 95 50 C 95 25 75 15 50 15 Z" fill="#e23e33" />
           
           {/* Head Feathers */}
           <path d="M 45 18 C 40 5 55 0 55 15 Z" fill="#e23e33" />
           <path d="M 55 18 C 55 5 70 8 65 20 Z" fill="#e23e33" />
 
           {/* Belly */}
-          <path d="M 30 75 C 35 90 75 95 85 75 C 85 65 75 60 55 65 C 35 70 30 70 30 75 Z" fill="#f1edd5" />
+          <path d="M 30 75 C 35 90 75 95 90 75 C 90 65 75 60 55 65 C 35 70 30 70 30 75 Z" fill="#f1edd5" />
 
           {/* Spots */}
           <circle cx="35" cy="65" r="4" fill="#b12a21" opacity="0.6" />
@@ -56,8 +56,8 @@ export const AngryBird: React.FC<{ className?: string; delay?: number }> = ({ cl
           <path d="M 45 42 L 70 52 L 92 45 L 92 55 L 70 60 L 45 52 Z" fill="#331111" />
 
           {/* Beak */}
-          <path d="M 60 65 L 85 75 L 70 85 Z" fill="#ffde45" />
-          <path d="M 60 65 L 85 75 L 75 75 Z" fill="#f59e0b" />
+          <path d="M 60 65 L 90 75 L 70 90 Z" fill="#ffde45" />
+          <path d="M 60 65 L 90 75 L 75 75 Z" fill="#f59e0b" />
         </motion.svg>
       </div>
 

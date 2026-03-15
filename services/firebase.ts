@@ -1,24 +1,16 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getDocs, Query, QuerySnapshot, initializeFirestore, collection, addDoc, query, orderBy, limit, deleteDoc, writeBatch, doc } from 'firebase/firestore';
+import { initializeFirestore, getDocs, Query, QuerySnapshot, collection, addDoc, query, orderBy, limit, deleteDoc, writeBatch, doc } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { trackBandwidth } from '../utils/bandwidthTracker';
 import { addLog, SystemLog } from '../utils/systemLogs';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCzzpZyz8rBhtnskhbkXB7_dTfHgXLPHfs",
-  authDomain: "body-line-67637.firebaseapp.com",
-  projectId: "body-line-67637",
-  storageBucket: "body-line-67637.firebasestorage.app",
-  messagingSenderId: "993710849249",
-  appId: "1:993710849249:web:c93118f11d0b073ed48ba0",
-  measurementId: "G-6KKFY0N55H"
-};
+import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-});
+  experimentalForceLongPolling: true
+}, firebaseConfig.firestoreDatabaseId);
 
 const auth = getAuth(app);
 const storage = getStorage(app);
@@ -77,13 +69,68 @@ export const loadLogsFromDatabase = async (): Promise<SystemLog[]> => {
   });
 };
 
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId: string | undefined;
+    email: string | null | undefined;
+    emailVerified: boolean | undefined;
+    isAnonymous: boolean | undefined;
+    tenantId: string | null | undefined;
+    providerInfo: {
+      providerId: string;
+      displayName: string | null;
+      email: string | null;
+      photoUrl: string | null;
+    }[];
+  }
+}
+
+export const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null) => {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData.map(provider => ({
+        providerId: provider.providerId,
+        displayName: provider.displayName,
+        email: provider.email,
+        photoUrl: provider.photoURL
+      })) || []
+    },
+    operationType,
+    path
+  };
+  
+  const jsonError = JSON.stringify(errInfo);
+  console.error('Firestore Error: ', jsonError);
+  addLog(`Firestore Error: ${errInfo.error}`, 'Critical', 'Database', jsonError);
+  throw new Error(jsonError);
+};
+
 /**
  * Wrapper חכם לשליפת מסמכים שסופר קריאות בזמן אמת
  */
 export const trackedGetDocs = async (query: Query): Promise<QuerySnapshot> => {
     // בדיקת Kill Switch
     // מאפשרים קריאה רק אם מדובר בבדיקת לוגין (members) כדי למנוע נעילה מוחלטת של מנהלים
-    const isLoginQuery = (query as any)._query?.path?.segments?.includes('members');
+    const path = (query as any)._query?.path?.segments?.join('/') || 'unknown';
+    const isLoginQuery = path.includes('members');
 
     if (db_status === 'OFFLINE' && !isLoginQuery) {
       console.warn('Database is OFFLINE. Blocking Firebase read.');
@@ -116,8 +163,8 @@ export const trackedGetDocs = async (query: Query): Promise<QuerySnapshot> => {
       
       return snapshot;
     } catch (error) {
-      addLog(`Firebase Read Error: ${error instanceof Error ? error.message : String(error)}`, 'Critical', 'Database');
-      throw error;
+      handleFirestoreError(error, OperationType.GET, path);
+      throw error; // handleFirestoreError already throws, but for TS
     }
 };
 

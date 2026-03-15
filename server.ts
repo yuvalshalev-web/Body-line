@@ -267,23 +267,14 @@ async function startServer() {
   
   // Module A: Community Pulse
   app.get("/api/stats/community", (req, res) => {
-    // Mocking community data for now
-    // In a real app, this would query Firestore
+    // Returning empty/zeroed data instead of mock data
     const data = {
-      heatmap: Array.from({ length: 52 }, (_, i) => ({
-        week: i + 1,
-        days: Array.from({ length: 7 }, () => Math.floor(Math.random() * 20))
-      })),
-      growth: [
-        { month: 'Jan', new: 10, veterans: 50 },
-        { month: 'Feb', new: 15, veterans: 55 },
-        { month: 'Mar', new: 8, veterans: 65 },
-        { month: 'Apr', new: 20, veterans: 70 },
-      ],
+      heatmap: [],
+      growth: [],
       venn: {
-        surfing: 80,
-        social: 60,
-        overlap: 40
+        surfing: 0,
+        social: 0,
+        overlap: 0
       }
     };
     res.json(data);
@@ -292,40 +283,33 @@ async function startServer() {
   // Module B: Personal User Insights
   app.get("/api/stats/user/:id", (req, res) => {
     const { id } = req.params;
-    // Mocking user data
+    // Returning zeroed data instead of mock data
     const data = {
       userId: id,
       attendance: {
-        sea: 42,
-        social: 12
+        sea: 0,
+        social: 0
       },
-      streak: 5,
-      rank: "Local", // Rookie, Local, Legend
-      gritScore: 88,
-      totalSessions: 54,
-      attendancePercent: 92,
-      isTop10: true,
-      joiningDate: "01/09/2023",
-      ageGroup: "U18",
-      progress: [
-        { name: 'Sea', value: 75, color: '#006994' },
-        { name: 'Social', value: 40, color: '#40E0D0' }
-      ]
+      streak: 0,
+      rank: "Rookie",
+      gritScore: 0,
+      totalSessions: 0,
+      attendancePercent: 0,
+      isTop10: false,
+      joiningDate: "",
+      ageGroup: "",
+      progress: []
     };
     res.json(data);
   });
 
   // Get all members attendance for percentile calculation
   app.get("/api/stats/community/attendance", (req, res) => {
-    // Mocking a list of attendance counts for all members
-    // In a real app, this would be a query like:
-    // db.collection('users').get().then(snap => snap.docs.map(d => d.data().totalSessions))
-    const counts = Array.from({ length: 150 }, () => Math.floor(Math.random() * 100));
-    // Ensure the current user's count is in there or similar
-    res.json({ counts });
+    // Returning empty list instead of mock data
+    res.json({ counts: [] });
   });
 
-  // Module C: System & Infrastructure
+    // Module C: System & Infrastructure
   app.get("/api/stats/system", (req, res) => {
     // Calculate real error rate from history (last 1 hour or last 1000 requests)
     const now = Date.now();
@@ -341,26 +325,26 @@ async function startServer() {
       calculatedErrorRate = 0.001; 
     }
 
-    // Mocking other system data
+    // System data - using real request counts where possible
     const data = {
       visitors: {
-        daily: 120 + Math.floor(Math.random() * 10),
-        weekly: 850
+        daily: totalRequests,
+        weekly: totalRequests // Placeholder for weekly
       },
-      dbSize: 4.2 + (Math.random() * 0.1), // MB
-      storageSize: 156.4, // MB
+      dbSize: 0, // Real-time DB size not available via client SDK
+      storageSize: 0, // Real-time storage size not available via client SDK
       errorRate: calculatedErrorRate,
       traffic: [
-        { time: '00:00', value: 10 },
-        { time: '04:00', value: 5 },
-        { time: '08:00', value: 45 },
-        { time: '12:00', value: 80 },
-        { time: '16:00', value: 110 },
-        { time: '20:00', value: 60 },
+        { time: '00:00', value: 0 },
+        { time: '04:00', value: 0 },
+        { time: '08:00', value: 0 },
+        { time: '12:00', value: 0 },
+        { time: '16:00', value: 0 },
+        { time: '20:00', value: totalRequests },
       ],
       performance: {
-        server: 94,
-        db: 88
+        server: 100,
+        db: 100
       }
     };
     res.json(data);
