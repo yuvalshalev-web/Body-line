@@ -55,6 +55,7 @@ interface DataContextType {
     weeklySessions?: { dayOfWeek: number, time: string, isActive?: boolean }[];
   };
   coastalWeather: any | null;
+  seaStats: any | null;
   yearConfig: { startDate: string; endDate: string } | null;
   attendeeIds: string[];
   activeSessionDate: string;
@@ -146,6 +147,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { navPosition: 'bottom', weeklySessions: [{ dayOfWeek: 4, time: '07:00', isActive: false }] };
   });
   const [coastalWeather, setCoastalWeather] = useState<any | null>(null);
+  const [seaStats, setSeaStats] = useState<any | null>(null);
   const siteConfigRef = useRef(siteConfig);
 
   useEffect(() => {
@@ -215,6 +217,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
     fetchCoastalWeather();
     const weatherInterval = setInterval(fetchCoastalWeather, 1000 * 60 * 15);
+
+    const fetchSeaStats = async () => {
+      try {
+        const statsRef = doc(db, 'seaConditionsStats', 'current');
+        const statsDoc = await getDoc(statsRef);
+        if (statsDoc.exists()) {
+          setSeaStats(statsDoc.data());
+        }
+      } catch (e) {
+        console.error("Failed to fetch sea stats", e);
+      }
+    };
+    fetchSeaStats();
 
     const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (doc) => {
       if (doc.exists()) setSiteAssets(doc.data());
@@ -775,13 +790,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const contextValue = React.useMemo(() => ({ 
-      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
+      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, forceResetSession,
       finalizeSession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       isDbEmpty, seedInitialAdmin
     }), [
-      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
+      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, forceResetSession,
       finalizeSession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,

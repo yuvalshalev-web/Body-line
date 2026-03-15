@@ -1,19 +1,27 @@
 
 import React, { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Waves, 
   Thermometer, 
-  Sun, 
-  Wind, 
   Navigation, 
   Loader2,
   AlertTriangle,
   Video,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Snowflake,
+  Crown,
+  Feather,
+  Wind,
+  Moon,
+  Sun,
+  Droplets,
+  ShieldAlert,
+  Zap
 } from 'lucide-react';
 
+import { WetsuitIcon } from './WetsuitIcon';
 import { getDoc, doc, setDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useData } from '../contexts/DataContext';
@@ -43,6 +51,45 @@ interface SeaStats {
 export const CoastalDashboard: React.FC = () => {
   const [data, setData] = useState<CoastalData | null>(null);
   const [stats, setStats] = useState<SeaStats | null>(null);
+  const getAdvice = (uv: number) => {
+    if (uv <= 2) return { 
+      text: "הגנה מינימלית. אין חשש להימצא בשמש.", 
+      color: "text-emerald-700", 
+      stroke: "stroke-emerald-700", 
+      bg: "bg-emerald-500",
+      icon: <Sun className="animate-spin-slow w-12 h-12 text-emerald-600" />
+    };
+    if (uv <= 5) return { 
+      text: "זמן להתמרח. יש להשתדל להימצא בצל בשעות הצהריים, לבוש מלא ככל הניתן, שימוש בקרם הגנה, משקפי שמש וכובע.", 
+      color: "text-yellow-700", 
+      stroke: "stroke-yellow-700", 
+      bg: "bg-yellow-500",
+      icon: <Droplets className="animate-sparkle w-12 h-12 text-yellow-600" />
+    };
+    if (uv <= 7) return { 
+      text: "חובה כובע ולייקרה. יש להשתדל להימצא בצל בשעות הצהריים, לבוש מלא ככל הניתן, שימוש בקרם הגנה, משקפי שמש וכובע.", 
+      color: "text-orange-700", 
+      stroke: "stroke-orange-700", 
+      bg: "bg-orange-500",
+      icon: <AlertTriangle className="animate-hat-pulse w-12 h-12 text-orange-600" />
+    };
+    if (uv <= 10) return { 
+      text: "חובה הגנה מקסימלית. יש צורך בהתגוננות מיוחדת. אין להימצא כלל בשמש ללא לבוש מלא ככל הניתן, שימוש בקרם הגנה, משקפי שמש וכובע. להימנע משהיה בחוץ בשעות הצהריים.", 
+      color: "text-red-700", 
+      stroke: "stroke-red-700", 
+      bg: "bg-red-600",
+      icon: <AlertTriangle className="animate-pulse w-12 h-12 text-red-600" />
+    };
+    return { 
+      text: "סכנת כוויה מיידית. יש צורך בהתגוננות מיוחדת. אין להימצא כלל בשמש ללא לבוש מלא ככל הניתן, שימוש בקרם הגנה, משקפי שמש וכובע. להימנע משהיה בחוץ בשעות הצהריים.", 
+      color: "text-purple-700", 
+      stroke: "stroke-purple-700", 
+      bg: "bg-purple-600",
+      icon: <ShieldAlert className="animate-pulse w-12 h-12 text-purple-600" />
+    };
+  };
+
+  const advice = data ? getAdvice(data.uvIndex) : null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -216,122 +263,169 @@ export const CoastalDashboard: React.FC = () => {
       </div>
 
       <div className="relative z-10 p-4 md:p-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {/* Wave Height */}
           <motion.div 
-            whileHover={{ scale: 1.02, y: -5 }}
-            className="col-span-2 row-span-2 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_30px_60px_-15px_rgba(8,145,178,0.15)] rounded-3xl p-6 flex flex-col justify-center items-center relative overflow-hidden transition-all duration-500 group"
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-between relative transition-all duration-500 group"
           >
-            <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <Waves className="text-cyan-500 mb-4 drop-shadow-[0_0_15px_rgba(6,182,212,0.2)]" size={56} strokeWidth={1.5} />
-            <span className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2 z-10">גובה גלים</span>
-            <div className="flex items-baseline gap-2 z-10">
-              <span className="text-7xl md:text-8xl font-black text-slate-800 tracking-tighter drop-shadow-sm">{data.waveHeight.toFixed(1)}</span>
-              <span className="text-3xl font-bold text-slate-400">מ'</span>
+            <div className="flex flex-col items-center gap-1 mb-2">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">גובה גלים</span>
+              <span className="text-4xl font-black text-slate-900 tracking-tighter">
+                {data.waveHeight.toFixed(1)} <span className="text-xl font-bold text-slate-400">m</span>
+              </span>
             </div>
-            
-            {/* Range Bar */}
-            {stats && (() => {
-              const min = stats.minWaveHeight;
-              const max = stats.maxWaveHeight;
-              const current = data.waveHeight;
-              const pct = max === min ? 50 : Math.max(0, Math.min(100, ((current - min) / (max - min)) * 100));
-              return (
-                <div className="w-full mt-8 px-4 z-10">
-                  <div className="relative h-2 bg-slate-200/80 rounded-full shadow-inner" dir="ltr">
-                    <motion.div 
-                      initial={{ width: 0 }} 
-                      animate={{ width: `${pct}%` }} 
-                      transition={{ duration: 1.2, ease: "easeOut" }} 
-                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-300 to-cyan-500 rounded-full" 
-                    />
-                    <motion.div 
-                      initial={{ left: 0 }} 
-                      animate={{ left: `${pct}%` }} 
-                      transition={{ type: "spring", stiffness: 60, damping: 15, delay: 0.2 }} 
-                      className="absolute top-1/2 -translate-y-1/2 -ml-2.5 w-5 h-5 bg-white border-[4px] border-cyan-500 rounded-full shadow-md" 
-                    />
-                  </div>
-                  <div className="flex justify-between items-center mt-3 text-[11px] font-bold text-slate-500" dir="ltr">
-                    <span>מינימום {min.toFixed(1)} מ'</span>
-                    <span>מקסימום {max.toFixed(1)} מ'</span>
-                  </div>
+
+            {/* Annual Axis Gradient */}
+            <div className="relative w-full h-12 flex items-center mt-2" dir="ltr">
+              <div className="absolute w-full h-4 bg-gradient-to-r from-sky-200 via-cyan-500 to-blue-950 rounded-full" />
+              
+              {/* Markers */}
+              <div className="absolute w-full flex justify-between -top-8 text-[10px] font-bold text-slate-500">
+                <div className="flex flex-col items-center gap-1">
+                  <Waves className="w-5 h-5 text-sky-300" />
+                  <span>{stats?.minWaveHeight.toFixed(1)}m</span>
                 </div>
-              );
-            })()}
+                <div className="flex flex-col items-center gap-1">
+                  <Crown className="w-3 h-3 text-amber-500" />
+                  <span>{stats?.maxWaveHeight.toFixed(1)}m</span>
+                </div>
+              </div>
+
+              {/* Tracker */}
+              {stats && (() => {
+                const min = stats.minWaveHeight;
+                const max = stats.maxWaveHeight;
+                const current = data.waveHeight;
+                const progress = max === min ? 50 : Math.max(0, Math.min(100, ((current - min) / (max - min)) * 100));
+                return (
+                  <motion.div 
+                    className="absolute w-6 h-6 bg-white rounded-full border-4 border-white shadow-lg"
+                    style={{ left: `${progress}%`, transform: 'translateX(-50%)' }}
+                    initial={{ left: '0%' }}
+                    animate={{ left: `${progress}%` }}
+                  />
+                );
+              })()}
+            </div>
           </motion.div>
 
           {/* Wind */}
           <motion.div 
             whileHover={{ scale: 1.05, y: -5 }}
-            className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-center relative transition-all duration-500 group"
+            className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-between relative transition-all duration-500 group"
           >
-            <div className="relative mb-3">
-              <Wind className="text-slate-400 group-hover:text-cyan-500 transition-colors" size={32} strokeWidth={1.5} />
-              <Navigation 
-                className="absolute -top-2 -right-2 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]" 
-                size={18} 
-                style={{ transform: `rotate(${data.windDirection}deg)` }}
-              />
-            </div>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 text-center">רוח ({getWindDirection(data.windDirection)})</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-black text-slate-800">{data.windSpeed.toFixed(0)}</span>
-              <span className="text-sm font-bold text-slate-400">קמ"ש</span>
+            <div className="flex flex-col items-center gap-1 mb-2">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">מהירות רוח</span>
+              <span className="text-4xl font-black text-slate-900 tracking-tighter">
+                {data.windSpeed.toFixed(0)} <span className="text-xl font-bold text-slate-400">kts</span>
+              </span>
             </div>
 
-            {/* Range Bar */}
-            {stats && (() => {
-              const min = stats.minWindSpeed;
-              const max = stats.maxWindSpeed;
-              const current = data.windSpeed;
-              const pct = max === min ? 50 : Math.max(0, Math.min(100, ((current - min) / (max - min)) * 100));
-              return (
-                <div className="w-full mt-auto pt-5">
-                  <div className="relative h-1.5 bg-slate-200/80 rounded-full shadow-inner" dir="ltr">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1.2, ease: "easeOut" }} className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-300 to-amber-500 rounded-full" />
-                    <motion.div initial={{ left: 0 }} animate={{ left: `${pct}%` }} transition={{ type: "spring", stiffness: 60, damping: 15, delay: 0.2 }} className="absolute top-1/2 -translate-y-1/2 -ml-2 w-4 h-4 bg-white border-[3px] border-amber-500 rounded-full shadow-md z-10" />
-                  </div>
-                  <div className="flex justify-between items-center mt-2 text-[9px] font-bold text-slate-400" dir="ltr">
-                    <span>מינימום {min.toFixed(0)}</span>
-                    <span>מקסימום {max.toFixed(0)}</span>
-                  </div>
+            {/* Annual Axis Gradient */}
+            <div className="relative w-full h-12 flex items-center mt-2" dir="ltr">
+              <div className="absolute w-full h-4 rounded-full" style={{ background: 'linear-gradient(to right, #bae6fd, #4ade80, #facc15, #ef4444, #7e22ce)' }} />
+              
+              {/* Markers */}
+              <div className="absolute w-full flex justify-between -top-8 text-[10px] font-bold text-slate-500">
+                <div className="flex flex-col items-center gap-1">
+                  <Feather className="w-5 h-5 text-sky-300" />
+                  <span>{stats?.minWindSpeed.toFixed(0)}</span>
                 </div>
-              );
-            })()}
+                <div className="flex flex-col items-center gap-1">
+                  <div className="relative">
+                    <Wind className="w-5 h-5 text-purple-900" />
+                    <Crown className="w-3 h-3 text-amber-500 absolute -top-2 -right-2" />
+                  </div>
+                  <span>{stats?.maxWindSpeed.toFixed(0)}</span>
+                </div>
+              </div>
+
+              {/* Tracker */}
+              {stats && (() => {
+                const min = stats.minWindSpeed;
+                const max = stats.maxWindSpeed;
+                const current = data.windSpeed;
+                const progress = max === min ? 50 : Math.max(0, Math.min(100, ((current - min) / (max - min)) * 100));
+                const isStrong = current > 25;
+                return (
+                  <motion.div 
+                    className="absolute w-6 h-6 bg-white rounded-full border-4 border-white shadow-lg"
+                    style={{ left: `${progress}%`, transform: 'translateX(-50%)' }}
+                    initial={{ left: '0%' }}
+                    animate={{ left: `${progress}%` }}
+                    whileHover={isStrong ? { x: [-2, 2, -2, 2, 0] } : {}}
+                    transition={isStrong ? { repeat: Infinity, duration: 0.1 } : {}}
+                  />
+                );
+              })()}
+            </div>
           </motion.div>
 
           {/* Water Temp */}
           <motion.div 
             whileHover={{ scale: 1.05, y: -5 }}
-            className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-center relative transition-all duration-500 group"
+            className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-between relative transition-all duration-500 group"
           >
-            <Thermometer className="text-cyan-500 mb-2 group-hover:text-cyan-600 transition-colors" size={32} strokeWidth={1.5} />
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 text-center">טמפ' מים</span>
-            <div className="flex items-baseline gap-1 mb-2">
-              <span className="text-3xl font-black text-slate-800">{data.waterTemp.toFixed(1)}</span>
-              <span className="text-sm font-bold text-slate-400">°C</span>
-            </div>
-            <div className="bg-slate-100/80 rounded-full px-3 py-1 border border-slate-200 backdrop-blur-sm">
-              <span className="text-[10px] font-bold text-slate-600">4/3 מומלץ</span>
+            <div className="flex flex-col items-center gap-1 mb-2">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">טמפ' מים</span>
+              <span className="text-4xl font-black text-slate-900 tracking-tighter">
+                {data.waterTemp.toFixed(1)} <span className="text-xl font-bold text-slate-400">°C</span>
+              </span>
             </div>
 
-            {/* Range Bar */}
-            {stats && (() => {
-              const min = stats.minWaterTemp;
-              const max = stats.maxWaterTemp;
-              const current = data.waterTemp;
-              const pct = max === min ? 50 : Math.max(0, Math.min(100, ((current - min) / (max - min)) * 100));
+            {/* Annual Axis Gradient */}
+            <div className="relative w-full h-12 flex items-center mt-2" dir="ltr">
+              <div className="absolute w-full h-4 bg-gradient-to-l from-amber-400 via-teal-400 to-blue-900 rounded-full" />
+              
+              {/* Markers */}
+              <div className="absolute w-full flex justify-between -top-8 text-[10px] font-bold text-slate-500">
+                <div className="flex flex-col items-center gap-1">
+                  <div className="relative">
+                    <Sun className="w-5 h-5 text-amber-500" />
+                    <Crown className="w-3 h-3 text-amber-600 absolute -top-2 -right-2" />
+                  </div>
+                  <span>{stats?.maxWaterTemp.toFixed(1)}°</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <Snowflake className="w-5 h-5 text-blue-500" />
+                  <span>{stats?.minWaterTemp.toFixed(1)}°</span>
+                </div>
+              </div>
+
+              {/* Tracker */}
+              {stats && (() => {
+                const min = stats.minWaterTemp;
+                const max = stats.maxWaterTemp;
+                const current = data.waterTemp;
+                const progress = max === min ? 50 : Math.max(0, Math.min(100, ((current - min) / (max - min)) * 100));
+                return (
+                  <motion.div 
+                    className="absolute w-6 h-6 bg-white rounded-full border-4 border-white shadow-lg"
+                    style={{ left: `${progress}%`, transform: 'translateX(-50%)' }}
+                    initial={{ left: '0%' }}
+                    animate={{ left: `${progress}%` }}
+                  />
+                );
+              })()}
+            </div>
+            
+            {/* Wetsuit Recommendation */}
+            {(() => {
+              const waterTemp = data.waterTemp;
+              let label = 'חליפה מלאה';
+              let type: 'full' | 'shorty' | 'lycra' = 'full';
+              
+              if (waterTemp < 16) { label = 'חליפה מלאה (4/3mm)'; type = 'full'; }
+              else if (waterTemp <= 19) { label = 'חליפה מלאה (4/3mm)'; type = 'full'; }
+              else if (waterTemp <= 23) { label = 'חליפה מלאה (3/2mm)'; type = 'full'; }
+              else if (waterTemp <= 27) { label = 'שורטי (Shorty 2mm)'; type = 'shorty'; }
+              else { label = 'לייקרה קלה'; type = 'lycra'; }
+              
               return (
-                <div className="w-full mt-auto pt-4">
-                  <div className="relative h-1.5 bg-slate-200/80 rounded-full shadow-inner" dir="ltr">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1.2, ease: "easeOut" }} className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full" />
-                    <motion.div initial={{ left: 0 }} animate={{ left: `${pct}%` }} transition={{ type: "spring", stiffness: 60, damping: 15, delay: 0.2 }} className="absolute top-1/2 -translate-y-1/2 -ml-2 w-4 h-4 bg-white border-[3px] border-blue-500 rounded-full shadow-md z-10" />
-                  </div>
-                  <div className="flex justify-between items-center mt-2 text-[9px] font-bold text-slate-400" dir="ltr">
-                    <span>מינימום {min.toFixed(1)}°</span>
-                    <span>מקסימום {max.toFixed(1)}°</span>
-                  </div>
+                <div className="mt-4 flex items-center gap-2">
+                  <WetsuitIcon type={type} className="w-8 h-8 text-slate-800" />
+                  <span className="text-xs font-bold text-slate-800">{label}</span>
                 </div>
               );
             })()}
@@ -339,39 +433,23 @@ export const CoastalDashboard: React.FC = () => {
 
           {/* UV Index */}
           <motion.div 
-            whileHover={{ scale: 1.02, y: -5 }}
-            className="col-span-2 md:col-span-2 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col justify-between relative transition-all duration-500 group"
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-center relative transition-all duration-500 group"
           >
-            <div className="flex items-center gap-4 mb-2">
-              <Sun className="text-amber-500 group-hover:rotate-90 transition-transform duration-700 drop-shadow-sm" size={36} strokeWidth={1.5} />
-              <div className="flex flex-col items-start">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">אינדקס קרינה</span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black text-slate-800">{data.uvIndex.toFixed(1)}</span>
-                  <span className={`text-xs font-bold uppercase tracking-tighter px-2 py-0.5 rounded-md bg-white/80 shadow-sm border border-slate-100 ${uv.color}`}>{uv.label}</span>
-                </div>
-              </div>
+            <div className="flex flex-col items-center gap-1 mb-4">
+              <span className="text-4xl font-black text-slate-900 tracking-tighter">
+                {data.uvIndex.toFixed(1)}
+              </span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">אינדקס קרינה בזמן אמת</span>
             </div>
-
-            {/* Range Bar */}
-            {stats && (() => {
-              const min = stats.minUvIndex;
-              const max = stats.maxUvIndex;
-              const current = data.uvIndex;
-              const pct = max === min ? 50 : Math.max(0, Math.min(100, ((current - min) / (max - min)) * 100));
-              return (
-                <div className="w-full mt-auto pt-3">
-                  <div className="relative h-1.5 bg-slate-200/80 rounded-full shadow-inner" dir="ltr">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1.2, ease: "easeOut" }} className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-300 to-orange-500 rounded-full" />
-                    <motion.div initial={{ left: 0 }} animate={{ left: `${pct}%` }} transition={{ type: "spring", stiffness: 60, damping: 15, delay: 0.2 }} className="absolute top-1/2 -translate-y-1/2 -ml-2 w-4 h-4 bg-white border-[3px] border-orange-500 rounded-full shadow-md z-10" />
-                  </div>
-                  <div className="flex justify-between items-center mt-2 text-[10px] font-bold text-slate-500" dir="ltr">
-                    <span>מינימום {min.toFixed(1)}</span>
-                    <span>מקסימום {max.toFixed(1)}</span>
-                  </div>
+            {advice && (
+              <div className="flex items-center gap-2 text-center">
+                <div className="p-2 bg-slate-100 rounded-xl">
+                  {advice.icon}
                 </div>
-              );
-            })()}
+                <p className={`text-xs font-bold ${advice.color}`}>{advice.text}</p>
+              </div>
+            )}
           </motion.div>
         </div>
       </div>

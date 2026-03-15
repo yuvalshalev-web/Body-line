@@ -123,11 +123,14 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
     const { feet, inches } = parseLength(currentBoardLength);
     const currLenInches = feet * 12 + inches;
     
-    const volDiff = Math.abs(currentBoardVolume - recVol);
-    const lenDiff = Math.abs(currLenInches - recLenInches);
+    const volDiff = currentBoardVolume - recVol;
+    // If we have more volume, penalty is smaller. If less, penalty is larger.
+    const volPenalty = volDiff >= 0 ? volDiff * 1 : Math.abs(volDiff) * 3;
+    const volScore = Math.max(0, 100 - volPenalty);
     
-    const volScore = Math.max(0, 100 - (volDiff * 5));
-    const lenScore = Math.max(0, 100 - (lenDiff * 3));
+    // Length penalty - reduced sensitivity
+    const lenDiff = Math.abs(currLenInches - recLenInches);
+    const lenScore = Math.max(0, 100 - (lenDiff * 2));
     
     matchScore = Math.round((volScore * 0.7) + (lenScore * 0.3));
     

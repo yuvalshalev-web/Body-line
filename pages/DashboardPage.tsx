@@ -38,7 +38,7 @@ const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
 const DashboardPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { 
-    members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember
+    members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats
   } = useData();
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -304,7 +304,7 @@ const DashboardPage: React.FC = () => {
           <div className="p-3 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-xl border border-white/20 shadow-lg shadow-[var(--surfer-yellow)]/10">
             <Waves size={20} />
           </div>
-          <h3 className="text-2xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>תצפית חוף מרכז</h3>
+          <h3 className="text-2xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מצב הים – עכשיו ושיאי השנה</h3>
         </div>
         <CoastalDashboard />
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -313,7 +313,8 @@ const DashboardPage: React.FC = () => {
             currentWaveHeight={1.2} 
             onSaveRecommendation={async (vol, length) => {
               if (currentUser) {
-                await updateMember(currentUser.id, {
+                await updateMember({
+                  ...currentUser,
                   recommendedBoardVolume: vol,
                   recommendedBoardLength: length
                 });
