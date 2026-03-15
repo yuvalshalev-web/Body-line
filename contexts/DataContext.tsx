@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
-import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp, runTransaction } from 'firebase/firestore';
 import { ref, deleteObject, getMetadata } from 'firebase/storage';
 import { getDb, trackedGetDocs, setDbStatus, db_status, getStorageInstance } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../src/utils/dateUtils';
@@ -403,52 +403,68 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const db = getDb();
       const requestRef = doc(db, 'joinRequests', id);
-      const requestSnap = await getDoc(requestRef);
+      const memberRef = doc(db, 'members', id);
       
-      if (!requestSnap.exists()) {
-        return null;
+      const result = await runTransaction(db, async (transaction) => {
+        const requestSnap = await transaction.get(requestRef);
+        const memberSnap = await transaction.get(memberRef);
+        
+        if (!requestSnap.exists()) {
+          // If member exists but request doesn't, it was likely already approved
+          if (memberSnap.exists()) {
+            console.log('DataContext: Member already exists, likely already approved.');
+            return { alreadyApproved: true };
+          }
+          return null;
+        }
+        
+        const reqData = requestSnap.data() as JoinRequest;
+        const normalizedEmail = (reqData.email || '').toLowerCase().trim();
+        const tempPassword = Math.random().toString(36).slice(-8);
+        const hashedPassword = await hashPassword(tempPassword);
+        
+        const newMemberData = {
+          firstName: reqData.firstName || '',
+          lastName: reqData.lastName || '',
+          email: normalizedEmail, 
+          mobile: reqData.mobile || '', 
+          avatar: reqData.avatar || '', 
+          bio: reqData.bio || '',
+          gender: reqData.gender || 'מעדיף/ה לא לציין',
+          role: 'Member', 
+          joinedAt: getCurrentDateFormatted(), 
+          isActive: true,
+          password: hashedPassword, 
+          isTemporary: true, 
+          loginCount: 0, 
+          totalAttendance: 0,
+          facebookUrl: reqData.facebookUrl || '',
+          instagramUrl: reqData.instagramUrl || '',
+          tiktokUrl: reqData.tiktokUrl || '',
+          linkedinUrl: reqData.linkedinUrl || '',
+          twitterUrl: reqData.twitterUrl || '',
+          websiteUrl: reqData.websiteUrl || ''
+        };
+        
+        transaction.set(memberRef, newMemberData);
+        transaction.delete(requestRef);
+        
+        return { 
+          firstName: newMemberData.firstName,
+          lastName: newMemberData.lastName,
+          email: newMemberData.email, 
+          mobile: newMemberData.mobile, 
+          tempPassword 
+        };
+      });
+
+      if (result && 'alreadyApproved' in result) {
+        return null; // Treat as already processed
       }
       
-      const reqData = requestSnap.data() as JoinRequest;
-      const normalizedEmail = (reqData.email || '').toLowerCase().trim();
-      const tempPassword = Math.random().toString(36).slice(-8);
-      const hashedPassword = await hashPassword(tempPassword);
-      
-      const newMemberData = {
-        firstName: reqData.firstName || '',
-        lastName: reqData.lastName || '',
-        email: normalizedEmail, 
-        mobile: reqData.mobile || '', 
-        avatar: reqData.avatar || '', 
-        bio: reqData.bio || '',
-        gender: reqData.gender || 'מעדיף/ה לא לציין',
-        role: 'Member', 
-        joinedAt: getCurrentDateFormatted(), 
-        isActive: true,
-        password: hashedPassword, 
-        isTemporary: true, 
-        loginCount: 0, 
-        totalAttendance: 0,
-        facebookUrl: reqData.facebookUrl || '',
-        instagramUrl: reqData.instagramUrl || '',
-        tiktokUrl: reqData.tiktokUrl || '',
-        linkedinUrl: reqData.linkedinUrl || '',
-        twitterUrl: reqData.twitterUrl || '',
-        websiteUrl: reqData.websiteUrl || ''
-      };
-      
-      const memberRef = doc(db, 'members', id);
-      await setDoc(memberRef, newMemberData);
-      await deleteDoc(requestRef);
-      
-      return { 
-        firstName: newMemberData.firstName,
-        lastName: newMemberData.lastName,
-        email: newMemberData.email, 
-        mobile: newMemberData.mobile, 
-        tempPassword 
-      };
+      return result as { firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null;
     } catch (err: any) {
+      console.error('Error in approveRequest:', err);
       throw err;
     }
   };

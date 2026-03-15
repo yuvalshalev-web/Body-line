@@ -155,6 +155,16 @@ service cloud.firestore {
       allow write: if true;
     }
     
+    match /seaConditions/{conditionId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /seaConditionsStats/{statId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
     // Default deny
     match /{path=**} {
       allow read, write: if false;

@@ -746,7 +746,7 @@ const TrendsDashboard: React.FC = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-[#2D3748] p-4 rounded-2xl border-none shadow-xl text-white text-right" dir="rtl">
+        <div className="luxury-card p-4 rounded-2xl shadow-xl text-white text-right" dir="rtl">
           <p className="text-xs font-black mb-1 border-b border-white/10 pb-2">{data.fullDate}</p>
           <p className="text-[12px] font-bold text-blue-300 mb-2">חודש {data.activityMonth} לשנת חבל זוג</p>
           <div className="space-y-1.5">
@@ -784,7 +784,7 @@ const TrendsDashboard: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Header & Switcher */}
-      <div className="glass-panel p-10 rounded-[3.5rem] border border-white/20 shadow-soft">
+      <div className="luxury-slab p-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600">
@@ -813,7 +813,7 @@ const TrendsDashboard: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="lg:col-span-2 home-glass-card p-10 rounded-[4rem] transition-all duration-500 relative group"
+        className="lg:col-span-2 luxury-slab p-10 transition-all duration-500 relative group"
       >
           {/* Background elements that need clipping */}
           <div className="absolute inset-0 overflow-hidden rounded-[4rem] pointer-events-none">
@@ -823,7 +823,7 @@ const TrendsDashboard: React.FC = () => {
 
           <div className="flex items-center justify-between mb-12 relative z-10">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center text-[var(--surfer-cyan)] shadow-inner border border-white/10">
+              <div className="w-12 h-12 rounded-2xl luxury-card flex items-center justify-center text-[var(--surfer-cyan)]">
                 <Activity size={24} />
               </div>
               <div>
@@ -1105,7 +1105,7 @@ const TrendsDashboard: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="lg:col-span-2 home-glass-card p-10 rounded-[4rem] transition-all duration-500 relative group"
+        className="lg:col-span-2 luxury-slab p-10 transition-all duration-500 relative group"
       >
           {/* Background elements that need clipping */}
           <div className="absolute inset-0 overflow-hidden rounded-[4rem] pointer-events-none">
@@ -1115,7 +1115,7 @@ const TrendsDashboard: React.FC = () => {
 
           <div className="flex items-center justify-between mb-12 relative z-10">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center text-[var(--surfer-pink)] shadow-inner border border-white/10">
+              <div className="w-12 h-12 rounded-2xl luxury-card flex items-center justify-center text-[var(--surfer-pink)]">
                 <Heart size={24} />
               </div>
               <div>
@@ -1377,7 +1377,7 @@ const TrendsDashboard: React.FC = () => {
           <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">ניתוח מגמות והתמדה</span>
           <div className="w-8 h-px bg-slate-200" />
         </div>
-        <div dir="ltr" className="relative flex bg-white/10 backdrop-blur-xl p-1.5 rounded-full shadow-2xl border border-white/20">
+        <div dir="ltr" className="relative flex luxury-card p-1.5 rounded-full">
           {/* Animated Colorful Bubble */}
           <div className="absolute inset-1.5 flex pointer-events-none">
             <motion.div
@@ -1413,7 +1413,7 @@ const TrendsDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="glass-panel p-10 rounded-[3.5rem] border border-white/20 shadow-soft h-[500px]"
+            className="luxury-slab p-10 h-[500px]"
           >
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
@@ -1511,7 +1511,7 @@ const TrendsDashboard: React.FC = () => {
             className="grid grid-cols-1 gap-8"
           >
             {groups.map(group => (
-              <div key={group.id} className="glass-panel p-10 rounded-[3.5rem] border border-white/20 shadow-soft h-[350px] flex flex-col">
+              <div key={group.id} className="luxury-slab p-10 h-[350px] flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xs font-black text-[#2B2B2E] uppercase tracking-widest">{group.label}</h4>
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.color }} />

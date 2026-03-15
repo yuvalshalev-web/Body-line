@@ -227,7 +227,7 @@ const DataHealthScore: React.FC = () => {
   }, []);
 
   return (
-    <div className="glass-panel p-8 !rounded-[2.5rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px] relative overflow-hidden group">
+    <div className="luxury-slab p-8 relative overflow-hidden group">
       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-emerald-500/10 transition-all duration-700" />
       
       <div className="flex items-center justify-between mb-8">
@@ -348,7 +348,7 @@ const QuotaMonitor: React.FC = () => {
   const quotaPercentage = (sessionReadCount / 50000) * 100;
 
   return (
-    <div className="glass-panel p-8 !rounded-[2.5rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px]">
+    <div className="luxury-slab p-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-[#FFDE45] rounded-xl flex items-center justify-center text-[#000000] shadow-sm border border-white/30">
@@ -483,7 +483,7 @@ const TechnicalLogs: React.FC = () => {
   };
 
   return (
-    <div className="glass-panel p-8 !rounded-[2.5rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px] h-[70vh] flex flex-col">
+    <div className="luxury-slab p-8 h-[70vh] flex flex-col">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-[#FFDE45] rounded-2xl flex items-center justify-center text-[#000000] shadow-lg border border-white/30">
@@ -912,7 +912,7 @@ const SystemMonitor: React.FC = () => {
       {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl animate-in fade-in">
-          <div className="glass-panel border border-white/20 w-full max-w-md rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col" dir="rtl">
+          <div className="luxury-slab border border-white/20 w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col" dir="rtl">
             <div className="bg-[#FF0000] p-8 text-white flex items-center gap-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.3)_0%,transparent_70%)] animate-pulse" />
               <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl border border-white/30 rotate-3">
@@ -987,7 +987,7 @@ const SystemMonitor: React.FC = () => {
 
       {/* Database & Storage Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        <div className="glass-panel p-8 !rounded-[3rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px] flex items-center gap-6">
+        <div className="luxury-slab p-8 flex items-center gap-6">
           <CircularRing 
             value={Math.min((Number(data.dbSize) / 1024) * 100, 100)}
             label="Database"
@@ -999,7 +999,7 @@ const SystemMonitor: React.FC = () => {
             <p className="text-xs font-bold text-[#000000]/60 uppercase tracking-widest">מתוך מכסה של 1024 MB</p>
           </div>
         </div>
-        <div className="glass-panel p-8 !rounded-[3rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px] flex items-center gap-6">
+        <div className="luxury-slab p-8 flex items-center gap-6">
           <CircularRing 
             value={Math.min((Number(storageSize) / 1000) * 100, 100)}
             label="Storage"
@@ -1015,7 +1015,7 @@ const SystemMonitor: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-8">
         {/* Reads per Minute Chart */}
-        <div className="glass-panel p-8 !rounded-[3rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px] relative overflow-hidden">
+        <div className="luxury-slab p-8 relative overflow-hidden">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
@@ -1089,7 +1089,7 @@ const SystemMonitor: React.FC = () => {
       </div>
 
       {/* Traffic Area Chart */}
-      <div className="glass-panel p-8 !rounded-[3rem] border-t border-l border-white/30 shadow-[0_10px_20px_rgba(122,21,85,0.2),0_6px_6px_rgba(122,21,85,0.23)] bg-[#B2EBF2]/[0.07] backdrop-blur-[20px]">
+      <div className="luxury-slab p-8">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight">תנועת רשת (24 שעות - MB)</h3>
           <div className="flex gap-4">

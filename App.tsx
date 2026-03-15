@@ -63,6 +63,7 @@ const App: React.FC = () => {
   const location = useLocation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const mainRef = useRef<HTMLElement>(null);
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -185,8 +186,6 @@ const App: React.FC = () => {
     { path: '/admin-info', ...menuItems[9], text: 'דופק חבל זוג' },
     { path: '/attendance', ...menuItems[10], text: 'יומן סשנים' }
   ];
-
-  const mainRef = useRef<HTMLElement>(null);
 
   return (
     <div className="min-h-screen flex flex-col font-['Yehuda_CLM'] relative" dir="rtl">

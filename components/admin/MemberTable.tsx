@@ -32,7 +32,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
   });
 
   return (
-    <div className="bg-[rgba(255,255,255,0.1)] backdrop-blur-[12px] border border-[rgba(255,255,255,0.2)] rounded-[16px] overflow-hidden shadow-sm">
+    <div className="luxury-slab overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-right">
           <thead className="bg-[rgba(255,255,255,0.05)] border-b border-[rgba(255,255,255,0.1)]">
@@ -58,7 +58,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
                       />
                     ) : (
                       <div 
-                        className="w-12 h-12 rounded-xl bg-[#f7c1ea]/20 flex items-center justify-center text-[#f063c1]/20 cursor-pointer hover:bg-[#f7c1ea]/30 transition-colors"
+                        className="w-12 h-12 rounded-xl luxury-card flex items-center justify-center text-[#f063c1]/20 cursor-pointer hover:bg-white/10 transition-colors"
                         onClick={() => onEdit(member)}
                       >
                         <UserCircle size={24} />
@@ -76,7 +76,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
                 </td>
                 <td className="px-8 py-6">
                   <span className={`px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest ${
-                    isArchive ? 'bg-[#f7c1ea]/10 text-[#f063c1]/40' : 'bg-[#ff009f]/5 text-[#ff009f]'
+                    isArchive ? 'luxury-card text-[#f063c1]/40' : 'luxury-card text-[#ff009f]'
                   }`}>
                     {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
                   </span>
@@ -85,7 +85,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
                   <div className="flex items-center justify-center gap-2">
                     <button 
                       onClick={() => onEdit(member)}
-                      className="w-10 h-10 glass-panel border border-white/20 rounded-xl flex items-center justify-center text-white/60 hover:text-white hover:border-white/40 hover:shadow-lg transition-all"
+                      className="w-10 h-10 luxury-card rounded-xl flex items-center justify-center text-black/60 hover:text-black hover:shadow-lg transition-all"
                       title="עריכה"
                     >
                       <Pencil size={18} />
@@ -93,7 +93,7 @@ const MemberTable: React.FC<MemberTableProps> = ({
                     {onToggleStatus && (
                       <button 
                         onClick={() => onToggleStatus(member)}
-                        className={`w-10 h-10 glass-panel border border-white/20 rounded-xl flex items-center justify-center transition-all hover:shadow-lg ${
+                        className={`w-10 h-10 luxury-card rounded-xl flex items-center justify-center transition-all hover:shadow-lg ${
                           isArchive ? 'text-emerald-500 hover:text-emerald-600' : 'text-rose-500 hover:text-rose-600'
                         }`}
                         title={isArchive ? 'החזר לפעילות' : 'העבר לארכיון'}

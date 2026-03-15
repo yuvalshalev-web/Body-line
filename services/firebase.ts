@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore, getDocs, Query, QuerySnapshot, collection, addDoc, query, orderBy, limit, deleteDoc, writeBatch, doc } from 'firebase/firestore';
+import { getFirestore, getDocs, Query, QuerySnapshot, collection, addDoc, query, orderBy, limit, deleteDoc, writeBatch, doc } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { trackBandwidth } from '../utils/bandwidthTracker';
 import { addLog, SystemLog } from '../utils/systemLogs';
@@ -8,9 +8,7 @@ import { addLog, SystemLog } from '../utils/systemLogs';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
-const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true
-}, firebaseConfig.firestoreDatabaseId);
+const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 
 const auth = getAuth(app);
 const storage = getStorage(app);

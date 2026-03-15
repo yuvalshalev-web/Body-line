@@ -108,11 +108,11 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-[#FDFBF7] w-full max-w-2xl rounded-[3rem] shadow-2xl p-10 max-h-[90vh] overflow-y-auto border border-white/60"
+        className="luxury-slab w-full max-w-2xl p-10 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-3xl font-black text-[#2B2B2E]">עריכת אירוע</h3>
-          <button onClick={onClose} className="p-3 glass-effect hover:bg-white/10 rounded-full text-white/60 hover:text-rose-500 transition-all active:scale-95">
+          <button onClick={onClose} className="p-3 luxury-card hover:bg-white/10 rounded-full text-white/60 hover:text-rose-500 transition-all active:scale-95">
             <X size={24} />
           </button>
         </div>
@@ -124,7 +124,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
+              className="w-full luxury-card px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all"
               placeholder="הכנס כותרת..."
             />
           </div>
@@ -134,7 +134,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
             <textarea 
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all h-32 resize-none shadow-sm"
+              className="w-full luxury-card px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all h-32 resize-none"
               placeholder="תאר את האירוע..."
             />
           </div>
@@ -146,7 +146,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
+                className="w-full luxury-card px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all"
               />
             </div>
             <div className="space-y-2">
@@ -154,7 +154,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
               <TimePicker 
                 value={form.time}
                 onChangeValue={(time) => setForm({ ...form, time })}
-                className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
+                className="w-full luxury-card px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all"
               />
             </div>
           </div>
@@ -174,7 +174,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
                   className={`flex-1 py-4 rounded-2xl font-black text-xs transition-all border ${
                     form.type === t.id 
                       ? 'bg-[#D4A373] text-white border-[#D4A373] shadow-md' 
-                      : 'bg-white/40 text-slate-400 border-white/60 hover:bg-white/60'
+                      : 'luxury-card text-slate-400 hover:bg-white/60'
                   }`}
                 >
                   {t.label}
@@ -190,21 +190,21 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
               ref={locationInputRef}
               value={form.location}
               onChange={(e) => setForm({ ...form, location: e.target.value })}
-              className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
+              className="w-full luxury-card px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all"
               placeholder="איפה זה קורה?"
             />
           </div>
 
           <div className="space-y-4">
             <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תמונת רקע</label>
-            <div className="relative group/img aspect-video rounded-[2rem] overflow-hidden border-2 border-dashed border-[#D4A373]/20 bg-white/40 backdrop-blur-md flex flex-col items-center justify-center gap-4 transition-all hover:border-[#D4A373]/40 shadow-sm">
+            <div className="relative group/img aspect-video rounded-[2rem] overflow-hidden border-2 border-dashed border-[#D4A373]/20 luxury-card flex flex-col items-center justify-center gap-4 transition-all hover:border-[#D4A373]/40">
               {form.imageUrl ? (
                 <>
                   <img src={form.imageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Preview" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                     <button 
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-8 py-4 glass-panel text-white rounded-2xl font-black text-sm shadow-2xl flex items-center gap-3 active:scale-95 hover:bg-white/20 transition-all border border-white/20"
+                      className="px-8 py-4 luxury-card text-white rounded-2xl font-black text-sm shadow-2xl flex items-center gap-3 active:scale-95 hover:bg-white/20 transition-all"
                     >
                       <Camera size={20} />
                       החלפת תמונת רקע
@@ -216,7 +216,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
                   onClick={() => fileInputRef.current?.click()}
                   className="flex flex-col items-center gap-4 text-slate-400 hover:text-[#D4A373] transition-all group/btn"
                 >
-                  <div className="p-6 glass-panel rounded-[1.5rem] shadow-sm border border-white/20 group-hover/btn:scale-110 transition-transform">
+                  <div className="p-6 luxury-card rounded-[1.5rem] shadow-sm group-hover/btn:scale-110 transition-transform">
                     <Camera size={40} strokeWidth={1.5} />
                   </div>
                   <span className="font-black text-xs uppercase tracking-widest">לחץ להעלאת תמונה</span>
@@ -243,7 +243,7 @@ const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose }) => 
         <div className="grid grid-cols-2 gap-6 mt-12">
           <button 
             onClick={onClose}
-            className="py-5 glass-effect text-white/60 rounded-2xl font-black text-sm hover:text-white hover:bg-white/10 transition-all active:scale-95"
+            className="py-5 luxury-card text-white/60 rounded-2xl font-black text-sm hover:text-white hover:bg-white/10 transition-all active:scale-95"
           >
             ביטול
           </button>

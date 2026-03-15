@@ -118,7 +118,7 @@ const AdminRolloverReport: React.FC = () => {
   const latestStatus = logs.length > 0 ? logs[0].status : 'success';
 
   return (
-    <div className="w-full bg-[#F5F5F0] text-black font-['Yehuda_CLM'] p-4 md:p-8 relative overflow-hidden rounded-[3rem] animate-in fade-in slide-in-from-bottom-4" dir="rtl">
+    <div className="w-full luxury-bg text-black font-['Yehuda_CLM'] p-4 md:p-8 relative overflow-hidden rounded-[3rem] animate-in fade-in slide-in-from-bottom-4" dir="rtl">
       {/* Grid Pattern Removed */}
       <div className="max-w-6xl mx-auto relative z-10">
         {/* Header Section */}
@@ -134,7 +134,7 @@ const AdminRolloverReport: React.FC = () => {
         </header>
 
         {/* Status Banner */}
-        <div className={`p-6 mb-10 flex items-center gap-6 bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg ${getStatusStyles(latestStatus)}`}>
+        <div className={`p-6 mb-10 flex items-center gap-6 luxury-slab ${getStatusStyles(latestStatus)}`}>
           <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-[#7A1555]">
             {getIcon(latestStatus)}
           </div>
@@ -162,7 +162,7 @@ const AdminRolloverReport: React.FC = () => {
             { label: 'זמן ריצה', value: stats.lastRunTime, sub: `ממוצע: ${stats.avgRunTime}`, color: 'bg-white' },
             { label: 'אחוז הצלחה', value: `${stats.successRate.toFixed(0)}%`, sub: 'מתחילת השנה', color: 'bg-white' }
           ].map((stat, i) => (
-            <div key={i} className="bg-white/40 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-lg hover:shadow-2xl transition-all">
+            <div key={i} className="luxury-card p-6 transition-all">
               <div className="font-['IBM_Plex_Mono'] text-[12px] font-black uppercase mb-4 text-[#7A1555]">{stat.label}</div>
               <div className="text-4xl font-black leading-none mb-2 text-[#000000]">{stat.value}</div>
               <div className="font-bold text-[12px] uppercase tracking-wider text-[#000000]/70">{stat.sub}</div>
@@ -174,7 +174,7 @@ const AdminRolloverReport: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10 items-start">
           
           {/* Steps Log */}
-          <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl shadow-lg overflow-hidden">
+          <div className="luxury-slab overflow-hidden">
             <div className="p-6 border-b border-[#7A1555]/10 bg-[#7A1555]/5 flex items-center justify-between">
               <span className="font-black text-xl uppercase tracking-tight text-[#7A1555]">LOG // לוג שלבים</span>
               <span className="bg-[#7A1555] text-[#FBC02D] px-3 py-1 rounded-full font-black text-sm">
@@ -193,7 +193,7 @@ const AdminRolloverReport: React.FC = () => {
                 ].map((record) => {
                   const isDone = logs.some(l => l.action.includes(record.label) && l.status === 'success');
                   return (
-                    <div key={record.id} className="flex items-center gap-3 p-3 bg-white/40 backdrop-blur-md border border-white/20 rounded-xl">
+                    <div key={record.id} className="flex items-center gap-3 p-3 luxury-card">
                       <div className={`w-6 h-6 border border-white/30 rounded flex items-center justify-center ${isDone ? 'bg-[#7A1555]' : 'bg-white'}`}>
                         {isDone && <CheckCircle2 size={16} className="text-[#FBC02D]" />}
                       </div>
@@ -213,7 +213,7 @@ const AdminRolloverReport: React.FC = () => {
                 ].map((counter) => {
                   const isDone = logs.some(l => l.action.includes('איפוס') && l.details.includes(counter.label) && l.status === 'success');
                   return (
-                    <div key={counter.id} className="flex items-center gap-3 p-3 bg-white/40 backdrop-blur-md border border-white/20 rounded-xl">
+                    <div key={counter.id} className="flex items-center gap-3 p-3 luxury-card">
                       <div className={`w-6 h-6 border border-white/30 rounded flex items-center justify-center ${isDone ? 'bg-[#7A1555]' : 'bg-white'}`}>
                         {isDone && <CheckCircle2 size={16} className="text-[#FBC02D]" />}
                       </div>
@@ -236,7 +236,7 @@ const AdminRolloverReport: React.FC = () => {
                   const isFailure = log?.status === 'failure';
                   
                   return (
-                    <div key={stat.id} className="flex items-center gap-3 p-3 bg-white/40 backdrop-blur-md border border-white/20 rounded-xl">
+                    <div key={stat.id} className="flex items-center gap-3 p-3 luxury-card">
                       <div className={`w-6 h-6 border border-white/30 rounded flex items-center justify-center ${isSuccess ? 'bg-[#7A1555]' : isFailure ? 'bg-[#FF2D60]' : 'bg-white'}`}>
                         {isSuccess && <CheckCircle2 size={16} className="text-[#FBC02D]" />}
                         {isFailure && <XCircle size={16} className="text-[#FBC02D]" />}
@@ -258,7 +258,7 @@ const AdminRolloverReport: React.FC = () => {
                   const log = logs.find(l => l.action === 'FINALIZETHURSDAYSESSION' && l.status === 'success');
                   const isDone = !!log;
                   return (
-                    <div key={item.id} className="flex items-center gap-3 p-3 bg-white/40 backdrop-blur-md border border-white/20 rounded-xl">
+                    <div key={item.id} className="flex items-center gap-3 p-3 luxury-card">
                       <div className={`w-6 h-6 border border-white/30 rounded flex items-center justify-center ${isDone ? 'bg-[#7A1555]' : 'bg-white'}`}>
                         {isDone && <CheckCircle2 size={16} className="text-[#FBC02D]" />}
                       </div>
@@ -353,7 +353,7 @@ const AdminRolloverReport: React.FC = () => {
             <button 
               onClick={() => setShowConfirm(true)}
               disabled={isRunning}
-              className="group relative border border-[#7A1555]/20 bg-[#FFDE45] p-6 rounded-2xl shadow-xl shadow-[#7A1555]/10 active:scale-95 transition-all disabled:opacity-50"
+              className="group relative luxury-card bg-[#FFDE45] p-6 active:scale-95 transition-all disabled:opacity-50"
             >
               <div className="flex items-center justify-center gap-4">
                 {isRunning ? <Loader2 className="animate-spin" size={28} strokeWidth={3} /> : <Play size={28} fill="currentColor" />}
@@ -366,7 +366,7 @@ const AdminRolloverReport: React.FC = () => {
             {/* Confirmation Modal */}
             {showConfirm && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
-                <div className="bg-[#FFD700]/80 backdrop-blur-xl border border-white/30 p-8 rounded-3xl shadow-2xl shadow-[#FFD700]/20 max-w-md w-full text-center">
+                <div className="luxury-slab p-8 max-w-md w-full text-center">
                   <h2 className="text-5xl font-black uppercase mb-6 tracking-tighter text-black">עצור!</h2>
                   <p className="text-xl font-black mb-8 leading-relaxed text-black">
                     לחיצה על 'הרץ עכשיו' כרגע היא כמו לזרוק רימון הלם ליציע של לה פמיליה: זה יסתיים בבלגן אטומי, הרבה רעש ועצורים (במערכת). האם אתה מרגיש בר מזל היום?
@@ -390,7 +390,7 @@ const AdminRolloverReport: React.FC = () => {
             )}
 
             {/* Health Card */}
-            <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl shadow-lg overflow-hidden">
+            <div className="luxury-slab overflow-hidden">
               <div className="p-6 border-b border-white/10 bg-[#7A1555]/5">
                 <span className="font-black text-2xl md:text-3xl uppercase tracking-tight text-[#7A1555]">HEALTH // כרטיס בריאות</span>
               </div>
@@ -423,7 +423,7 @@ const AdminRolloverReport: React.FC = () => {
             </div>
 
             {/* History Panel */}
-            <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl shadow-lg overflow-hidden">
+            <div className="luxury-slab overflow-hidden">
               <div className="p-6 border-b border-white/10 bg-[#7A1555]/5 flex justify-between items-center">
                 <span className="font-black text-2xl md:text-3xl uppercase tracking-tight text-[#7A1555]">HISTORY // היסטוריה</span>
                 <span className="bg-[#7A1555] text-[#FBC02D] px-3 py-1 rounded-full font-black text-sm md:text-base">

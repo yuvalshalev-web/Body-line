@@ -41,6 +41,7 @@ import { processImage } from '../utils/imageProcessor';
 import { generateBio } from '../services/geminiService';
 import { hashPassword } from '../utils/crypto';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
+import { loadGoogleMaps, extractAddressData } from '../utils/googlePlaces';
 
 type SortOption = 'name-asc' | 'attendance' | 'newest';
 
@@ -204,12 +205,65 @@ const DirectoryPage: React.FC = () => {
     gender: 'מעדיף/ה לא לציין',
     isActive: true,
     birthday: '',
+    full_address: '',
     instagramUrl: '',
     facebookUrl: '',
     linkedinUrl: '',
     twitterUrl: '',
     password: ''
   });
+
+  const addressInputRef = React.useRef<HTMLInputElement>(null);
+  const autocompleteRef = React.useRef<any>(null);
+
+  useEffect(() => {
+    const initAutocomplete = () => {
+      if (addressInputRef.current && window.google?.maps?.places && !autocompleteRef.current) {
+        try {
+          autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+            componentRestrictions: { country: "il" },
+            fields: ["address_components", "geometry", "formatted_address"]
+          });
+
+          autocompleteRef.current.addListener('place_changed', () => {
+            const place = autocompleteRef.current.getPlace();
+            
+            if (place.formatted_address) {
+              const addressData = extractAddressData(place);
+
+              setNewMemberData(prev => ({ 
+                ...prev, 
+                full_address: addressData.formatted,
+                city: addressData.city,
+                street_name: addressData.street,
+                house_number: addressData.houseNum,
+                country: addressData.country,
+                lat: addressData.lat,
+                lng: addressData.lng
+              }));
+            }
+          });
+        } catch (e) {
+          console.error("Failed to initialize Autocomplete:", e);
+        }
+      }
+    };
+
+    if (isAddMemberModalOpen) {
+      loadGoogleMaps()
+        .then(initAutocomplete)
+        .catch(err => {
+          console.warn("Google Maps loading failed:", err.message);
+        });
+    }
+
+    return () => {
+      if (autocompleteRef.current && window.google) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        autocompleteRef.current = null;
+      }
+    };
+  }, [isAddMemberModalOpen, setNewMemberData]);
 
   const isAdmin = currentUser?.role === 'Admin';
 
@@ -889,6 +943,7 @@ const DirectoryPage: React.FC = () => {
                           <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">כתובת מגורים</label>
                           <input 
                             type="text" 
+                            ref={addressInputRef}
                             value={newMemberData.full_address || ''} 
                             onChange={e => setNewMemberData(prev => ({ ...prev, full_address: e.target.value }))}
                             className="w-full p-5 bg-white/50 border border-white/30 !rounded-full font-black outline-none focus:bg-white/80 transition-all text-[#000000]" 

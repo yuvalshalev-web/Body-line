@@ -168,18 +168,18 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-16 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
       {/* Hero & Attendees Group */}
-      <div className="space-y-6">
-        <section className="relative w-full min-h-[500px] md:min-h-[900px] lg:min-h-[1200px] rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-          <div className="absolute inset-0 bg-slate-900">
+      <div className="space-y-20 md:space-y-6">
+        <section className="relative w-full min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] rounded-3xl border border-white/10 shadow-2xl">
+          <div className="absolute inset-0 bg-transparent rounded-3xl overflow-hidden">
             <img 
-              src={siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
-              className="w-full h-full object-cover opacity-60" 
+              src={siteAssets.loginBg || siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
+              className="w-full h-full object-contain" 
               style={{ objectPosition: 'center 5%' }}
               alt="Hero"
               loading="lazy"
             />
           </div>
-          <div className="relative z-10 min-h-[500px] md:min-h-[900px] lg:min-h-[1200px] flex flex-col items-center justify-between p-6 md:p-12 text-center">
+          <div className="relative z-10 min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] flex flex-col items-center justify-between p-6 md:p-12 text-center">
              {/* Top Section: Quote & Title & Countdown */}
              <div className="w-full pt-4 md:pt-8 flex flex-col items-center">
                <p className="text-white font-semibold italic text-sm md:text-2xl max-w-2xl mx-auto tracking-[0.08em] leading-relaxed mb-6 md:mb-10 drop-shadow-lg">
@@ -224,7 +224,8 @@ const DashboardPage: React.FC = () => {
                    )}
                  </button>
                  <motion.span 
-                   className="secondary-label"
+                   className="secondary-label w-max mt-6"
+                   style={{ color: isUserAttending ? '#FF2D60' : '#A2FF00' }}
                    animate={{ opacity: [1, 0.4, 1], scale: [1, 1.02, 1] }}
                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                  >

@@ -58,6 +58,33 @@
         "location": { "type": "string" },
         "type": { "type": "string", "enum": ["COMMUNITY", "MEMBER", "INSTRUCTOR"] }
       }
+    },
+    "SeaConditions": {
+      "title": "SeaConditions",
+      "description": "Historical sea conditions data",
+      "type": "object",
+      "properties": {
+        "timestamp": { "type": "string", "format": "date-time" },
+        "waveHeight": { "type": "number" },
+        "waterTemp": { "type": "number" },
+        "windSpeed": { "type": "number" },
+        "uvIndex": { "type": "number" }
+      }
+    },
+    "SeaConditionsStats": {
+      "title": "SeaConditionsStats",
+      "description": "Historical peaks for sea conditions",
+      "type": "object",
+      "properties": {
+        "maxWaveHeight": { "type": "number" },
+        "minWaveHeight": { "type": "number" },
+        "maxWaterTemp": { "type": "number" },
+        "minWaterTemp": { "type": "number" },
+        "maxWindSpeed": { "type": "number" },
+        "minWindSpeed": { "type": "number" },
+        "maxUvIndex": { "type": "number" },
+        "minUvIndex": { "type": "number" }
+      }
     }
   },
   "firestore": {
@@ -80,6 +107,14 @@
     "system_logs": {
       "schema": "object",
       "description": "System logs"
+    },
+    "seaConditions": {
+      "schema": "SeaConditions",
+      "description": "Historical sea conditions data"
+    },
+    "seaConditionsStats": {
+      "schema": "SeaConditionsStats",
+      "description": "Historical peaks for sea conditions"
     }
   }
 }

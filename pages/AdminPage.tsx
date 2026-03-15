@@ -537,15 +537,6 @@ const AdminPage: React.FC = () => {
       
       if (result) {
         setApprovedUser(result);
-        const message = encodeURIComponent(formatWhatsAppMessage(`${result.firstName} ${result.lastName}`, result.email, result.tempPassword));
-        const cleanMobile = result.mobile.replace(/\D/g, '');
-        const finalMobile = cleanMobile.startsWith('0') ? '972' + cleanMobile.substring(1) : cleanMobile;
-        const waUrl = `https://wa.me/${finalMobile}?text=${message}`;
-        
-        const win = window.open(waUrl, '_blank');
-        if (!win) {
-          showAlert('הבקשה אושרה! אך חוסם הפופ-אפים מנע את פתיחת וואטסאפ. נא ללחוץ על הכפתור בפאנל שייפתח.');
-        }
       } else {
         showError('הבקשה כבר אינה קיימת או שאושרה על ידי מנהל אחר.');
       }
@@ -597,7 +588,7 @@ const AdminPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[var(--aqua-mist)]/20 text-right space-y-12 pb-20 pt-8" dir="rtl">
+    <div className="relative min-h-screen luxury-bg text-right space-y-12 pb-20 pt-8" dir="rtl">
       <div className="max-w-7xl mx-auto">
         {/* Body-line Standard Header Stack */}
         <div className="surfboard-hero-container mb-6 space-y-2">
@@ -652,7 +643,7 @@ const AdminPage: React.FC = () => {
                     onClick={() => {
                       setActiveTab(item.id as any);
                     }}
-                    className="group bg-white/40 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/20 shadow-lg hover:shadow-2xl hover:shadow-[var(--turquoise-teal)]/20 transition-all duration-500 text-right relative overflow-hidden"
+                    className="group luxury-card p-8 transition-all duration-500 text-right relative overflow-hidden"
                   >
                     <div className={`absolute top-0 left-0 w-2 h-full ${item.color} opacity-20 group-hover:opacity-100 transition-opacity`} />
                     <div className="flex items-start justify-between mb-6">
@@ -679,8 +670,8 @@ const AdminPage: React.FC = () => {
         {activeTab === 'REQUESTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Join Requests Summary Card */}
-            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
-              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
+            <div className="luxury-slab p-[2px] group">
+              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -707,7 +698,7 @@ const AdminPage: React.FC = () => {
                <input 
                  type="text" 
                  placeholder="חיפוש לפי שם או אימייל..." 
-                 className="w-full pr-16 pl-6 py-6 bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/20 font-black focus:ring-2 ring-[var(--vibrant-cyan)]/30 shadow-lg"
+                 className="w-full pr-16 pl-6 py-6 luxury-card font-black focus:ring-2 ring-[var(--vibrant-cyan)]/30"
                  value={searchTerm}
                  onChange={e => setSearchTerm(e.target.value)}
                />
@@ -716,7 +707,7 @@ const AdminPage: React.FC = () => {
             {filteredRequests.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredRequests.map(req => (
-                  <div key={req.id} className={`bg-white/40 backdrop-blur-md border border-white/20 rounded-[3rem] p-8 shadow-lg hover:shadow-2xl hover:shadow-[var(--vibrant-cyan)]/10 transition-all group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50' : ''}`}>
+                  <div key={req.id} className={`luxury-card p-8 group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50' : ''}`}>
                     <div className="flex items-start gap-5 mb-8">
                        {req.avatar ? (
                          <img src={req.avatar} className="w-16 h-16 rounded-2xl object-cover shadow-md" alt="" />
@@ -797,8 +788,8 @@ const AdminPage: React.FC = () => {
                 coordinators: members.filter(m => m.role === 'Admin').length,
               };
               return (
-                <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
-                  <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
+                <div className="luxury-slab p-[2px] group">
+                  <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
                     <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                     
                     <div className="flex items-center gap-6 relative z-10">
@@ -863,7 +854,7 @@ const AdminPage: React.FC = () => {
                 onClose={() => setEditingMember(null)}
               />
             ) : (
-              <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-[3rem] overflow-hidden shadow-xl">
+              <div className="luxury-card overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-right">
                     <thead className="bg-[var(--aqua-mist)]/10 border-b border-[var(--vibrant-cyan)]/5">
@@ -959,8 +950,8 @@ const AdminPage: React.FC = () => {
             {(() => {
               const suspendedCount = members.filter(m => m.isActive === false).length;
               return (
-                <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
-                  <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
+                <div className="luxury-slab p-[2px] group">
+                  <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
                     <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                     
                     <div className="flex items-center gap-6 relative z-10">
@@ -984,7 +975,7 @@ const AdminPage: React.FC = () => {
               );
             })()}
 
-            <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-[3rem] overflow-hidden shadow-xl">
+            <div className="luxury-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-right">
                   <thead className="bg-[var(--aqua-mist)]/10 border-b border-[var(--vibrant-cyan)]/5">
@@ -1089,8 +1080,8 @@ const AdminPage: React.FC = () => {
         {activeTab === 'POSTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Posts Summary Card */}
-            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
-              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
+            <div className="luxury-slab p-[2px] group">
+              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -1122,7 +1113,7 @@ const AdminPage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {news.map(item => (
-                <div key={item.id} className="bg-white/40 backdrop-blur-md rounded-[2rem] p-6 border border-white/20 shadow-lg flex flex-col relative group">
+                <div key={item.id} className="luxury-card p-6 flex flex-col relative group">
                   {item.imageUrl && (
                     <img src={item.imageUrl} className="w-full h-40 object-cover rounded-xl mb-4" alt="" />
                   )}
@@ -1205,8 +1196,8 @@ const AdminPage: React.FC = () => {
         {activeTab === 'GALLERY' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Gallery Summary Card */}
-            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
-              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
+            <div className="luxury-slab p-[2px] group">
+              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -1320,8 +1311,8 @@ const AdminPage: React.FC = () => {
         {activeTab === 'EVENTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Events Summary Card */}
-            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--turquoise-teal)]/10 group">
-              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
+            <div className="luxury-slab p-[2px] group">
+              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -1357,7 +1348,7 @@ const AdminPage: React.FC = () => {
                 const isPastEvent = eventDate < new Date();
 
                 return (
-                  <div key={event.id} className={`bg-white/40 backdrop-blur-md border border-white/20 rounded-[3rem] p-6 shadow-lg hover:shadow-2xl hover:shadow-[var(--vibrant-cyan)]/10 transition-all flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
+                  <div key={event.id} className={`luxury-card p-6 flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
                     
                     {isPastEvent && (
                       <div className="absolute -right-12 top-6 transform rotate-45 bg-slate-100 text-slate-400 text-[12px] font-black uppercase tracking-widest px-12 py-1 shadow-sm z-10">
@@ -1475,8 +1466,8 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Habal Zug Year Config Widget */}
-            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group">
-              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
+            <div className="luxury-slab p-[2px] group">
+              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -1536,8 +1527,8 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Weekly Sessions Config Widget */}
-            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-6">
-              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-start justify-between gap-8 relative overflow-hidden shadow-xl">
+            <div className="luxury-slab p-[2px] group mb-6">
+              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-start justify-between gap-8 relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10 lg:w-1/3">
@@ -1693,8 +1684,8 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Home Break Config Widget */}
-            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-6">
-              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
+            <div className="luxury-slab p-[2px] group mb-6">
+              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -1801,8 +1792,8 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Navigation Position Toggle Widget */}
-            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-6">
-              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden shadow-xl">
+            <div className="luxury-slab p-[2px] group mb-6">
+              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 relative z-10">
@@ -1841,8 +1832,8 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Global Color Picker Widget */}
-            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-3xl shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-6 inline-block">
-              <div className="bg-white/40 backdrop-blur-md p-4 rounded-[1.8rem] border border-white/20 relative overflow-hidden flex items-center gap-6 shadow-xl">
+            <div className="luxury-slab p-[2px] group mb-6 inline-block">
+              <div className="luxury-card p-4 flex items-center gap-6 relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div>
@@ -1869,8 +1860,8 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* H1 Ultra Design Studio Widget */}
-            <div className="bg-[var(--deep-teal-sea)] p-[2px] rounded-[3rem] shadow-2xl shadow-[var(--vibrant-cyan)]/10 group mb-10">
-              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2.8rem] border border-white/20 relative overflow-hidden shadow-xl">
+            <div className="luxury-slab p-[2px] group mb-10">
+              <div className="luxury-card p-8 relative overflow-hidden">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
                 
                 <div className="flex items-center gap-6 mb-10 relative z-10">

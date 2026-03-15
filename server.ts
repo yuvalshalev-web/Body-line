@@ -225,7 +225,7 @@ async function startServer() {
       const marineData = await marineRes.json();
       const weatherData = await weatherRes.json();
 
-      res.json({
+      const result = {
         waterTemp: marineData.current.sea_surface_temperature,
         waveHeight: marineData.current.wave_height,
         windSpeed: weatherData.current.wind_speed_10m,
@@ -234,7 +234,9 @@ async function startServer() {
         timestamp: marineData.current.time,
         location: "חוף מרכז",
         source: "IMS / Open-Meteo"
-      });
+      };
+
+      res.json(result);
     } catch (err) {
       console.error("Coastal weather fetch failed:", err);
       res.status(500).json({ error: "Failed to fetch coastal weather" });

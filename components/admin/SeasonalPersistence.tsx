@@ -107,7 +107,7 @@ const SeasonalPersistence: React.FC = () => {
   }, [members, weeklyHistory]);
 
   return (
-    <div className="glass-panel p-8 rounded-[3rem] border border-white/20 shadow-soft space-y-12">
+    <div className="luxury-slab p-8 rounded-[3rem] shadow-soft space-y-12">
       <header className="space-y-2">
         <h2 className="text-2xl font-black text-[#2B2B2E]">התמדה עונתית</h2>
         <p className="text-sm text-black/60 font-medium">ניתוח ביצועים ודירוגי קהילה לפי תנאים תרמיים</p>
@@ -157,7 +157,7 @@ const SeasonalPersistence: React.FC = () => {
           className="relative group h-full"
         >
           <div className="absolute inset-0 bg-gradient-to-b from-blue-400/10 to-blue-600/5 rounded-[2rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity" />
-          <div className="relative h-full glass-panel p-6 rounded-[2rem] border border-white/30 shadow-xl flex flex-col">
+          <div className="relative h-full luxury-card p-6 rounded-[2rem] flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Snowflake className="text-blue-600" size={28} />
@@ -176,7 +176,7 @@ const SeasonalPersistence: React.FC = () => {
             
             <div className="space-y-4 flex-grow">
               {leaderboards.penguins.map((m, i) => (
-                <div key={m.id} className="flex items-center justify-between p-3 bg-white/40 rounded-xl border border-white/50 hover:bg-white/60 transition-colors">
+                <div key={m.id} className="flex items-center justify-between p-3 luxury-card rounded-xl hover:bg-white/60 transition-colors">
                   <div className="flex items-center gap-3">
                     <span className="text-lg font-black text-blue-600/40 w-4">{i + 1}</span>
                     <div className="w-10 h-10 rounded-full border-2 border-blue-200 overflow-hidden bg-blue-50">
@@ -216,7 +216,7 @@ const SeasonalPersistence: React.FC = () => {
           className="relative group h-full"
         >
           <div className="absolute inset-0 bg-gradient-to-b from-orange-400/10 to-red-600/5 rounded-[2rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity" />
-          <div className="relative h-full glass-panel p-6 rounded-[2rem] border border-white/30 shadow-xl flex flex-col">
+          <div className="relative h-full luxury-card p-6 rounded-[2rem] flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Sun className="text-orange-600" size={28} />
@@ -235,7 +235,7 @@ const SeasonalPersistence: React.FC = () => {
             
             <div className="space-y-4 flex-grow">
               {leaderboards.jellyfish.map((m, i) => (
-                <div key={m.id} className="flex items-center justify-between p-3 bg-white/40 rounded-xl border border-white/50 hover:bg-white/60 transition-colors">
+                <div key={m.id} className="flex items-center justify-between p-3 luxury-card rounded-xl hover:bg-white/60 transition-colors">
                   <div className="flex items-center gap-3">
                     <span className="text-lg font-black text-orange-600/40 w-4">{i + 1}</span>
                     <div className="w-10 h-10 rounded-full border-2 border-orange-200 overflow-hidden bg-orange-50">
@@ -275,7 +275,7 @@ const SeasonalPersistence: React.FC = () => {
           className="relative group h-full"
         >
           <div className="absolute inset-0 bg-gradient-to-b from-cyan-900/20 to-blue-900/10 rounded-[2rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity" />
-          <div className="relative h-full glass-panel p-6 rounded-[2rem] border border-white/30 shadow-xl flex flex-col bg-gradient-to-b from-cyan-900/5 to-blue-900/5">
+          <div className="relative h-full luxury-card p-6 rounded-[2rem] flex flex-col bg-gradient-to-b from-cyan-900/5 to-blue-900/5">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Zap className="text-cyan-700" size={28} />
@@ -335,7 +335,7 @@ const SeasonalPersistence: React.FC = () => {
           className="relative group h-full"
         >
           <div className="absolute inset-0 bg-gradient-to-b from-yellow-400/20 to-amber-600/10 rounded-[2rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity" />
-          <div className="relative h-full glass-panel p-6 rounded-[2rem] border border-white/30 shadow-xl flex flex-col bg-gradient-to-b from-yellow-400/5 to-amber-600/5">
+          <div className="relative h-full luxury-card p-6 rounded-[2rem] flex flex-col bg-gradient-to-b from-yellow-400/5 to-amber-600/5">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Trophy className="text-amber-600" size={28} />

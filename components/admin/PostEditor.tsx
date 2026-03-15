@@ -70,11 +70,11 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-[#FDFBF7] w-full max-w-2xl rounded-[3rem] shadow-2xl p-10 max-h-[90vh] overflow-y-auto border border-white/60"
+        className="luxury-slab w-full max-w-2xl p-10 max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-8">
           <h3 className="text-3xl font-black text-[#2B2B2E]">עריכת פוסט</h3>
-          <button onClick={onClose} className="p-3 glass-effect hover:bg-white/10 rounded-full text-white/60 hover:text-rose-500 transition-all active:scale-95">
+          <button onClick={onClose} className="p-3 luxury-card hover:bg-white/10 rounded-full text-white/60 hover:text-rose-500 transition-all active:scale-95">
             <X size={24} />
           </button>
         </div>
@@ -86,7 +86,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
+              className="w-full luxury-card px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all"
               placeholder="הכנס כותרת..."
             />
           </div>
@@ -96,7 +96,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
             <textarea 
               value={form.content}
               onChange={(e) => setForm({ ...form, content: e.target.value })}
-              className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all h-32 resize-none shadow-sm"
+              className="w-full luxury-card px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all h-32 resize-none"
               placeholder="הכנס תוכן..."
             />
           </div>
@@ -108,7 +108,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
+                className="w-full luxury-card px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all"
               />
             </div>
             <div className="space-y-2">
@@ -116,7 +116,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
               <select 
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value as any })}
-                className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm appearance-none"
+                className="w-full luxury-card px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all appearance-none"
               >
                 <option value="Update">עדכון</option>
                 <option value="Activity">פעילות</option>
@@ -133,14 +133,14 @@ const PostEditor: React.FC<PostEditorProps> = ({ post, onSave, onClose }) => {
               type="text"
               value={form.authorName}
               onChange={(e) => setForm({ ...form, authorName: e.target.value })}
-              className="w-full bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all shadow-sm"
+              className="w-full luxury-card px-6 py-4 font-bold text-[#2B2B2E] focus:bg-white/60 focus:ring-4 ring-[#D4A373]/10 outline-none transition-all"
               placeholder="שם המחבר..."
             />
           </div>
 
           <div className="space-y-2">
             <label className="text-[12px] font-black text-[#D4A373] uppercase tracking-widest mr-4">תמונת נושא</label>
-            <div className="relative group rounded-[2rem] overflow-hidden bg-white/40 backdrop-blur-md border border-white/60 aspect-video shadow-sm">
+            <div className="relative group rounded-[2rem] overflow-hidden luxury-card aspect-video">
               {form.imageUrl ? (
                 <img src={form.imageUrl} className="w-full h-full object-cover" alt="" />
               ) : (

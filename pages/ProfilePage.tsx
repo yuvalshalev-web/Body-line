@@ -29,7 +29,7 @@ import { generateBio } from '../services/geminiService';
 import { processImage } from '../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { hashPassword } from '../utils/crypto';
-import { updateMemberAddress, loadGoogleMaps } from '../utils/googlePlaces';
+import { loadGoogleMaps } from '../utils/googlePlaces';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 
 const SocialInput = ({ 
@@ -96,61 +96,70 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const initAutocomplete = () => {
-      if (addressInputRef.current && window.google?.maps?.places && !autocompleteRef.current) {
+      if (addressInputRef.current && window.google?.maps?.places) {
         try {
-          autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
-            componentRestrictions: { country: "il" },
-            fields: ["address_components", "geometry", "formatted_address"]
-          });
+          // If already initialized, we clear listeners to re-attach them to the latest scope
+          if (autocompleteRef.current) {
+            window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+          } else {
+            autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+              componentRestrictions: { country: "il" },
+              fields: ["address_components", "geometry", "formatted_address"]
+            });
+          }
 
           autocompleteRef.current.addListener('place_changed', () => {
             const place = autocompleteRef.current.getPlace();
             
             if (!place.geometry) {
+              console.log("Autocomplete: No geometry found for selected place");
               setIsPlaceSelected(false);
               return;
             }
 
+            console.log("Autocomplete: Place selected successfully", place.formatted_address);
             setIsPlaceSelected(true);
+            setIsDirty(true);
+            
             if (addressInputRef.current) {
               addressInputRef.current.value = place.formatted_address || '';
             }
             
-            if (currentUser) {
-              // Populate hidden fields
-              const addressComponents = place.address_components || [];
-              const city = addressComponents.find((c: any) => c.types.includes('locality'))?.long_name || '';
-              const street = addressComponents.find((c: any) => c.types.includes('route'))?.long_name || '';
-              const houseNum = addressComponents.find((c: any) => c.types.includes('street_number'))?.long_name || '';
-              const lat = place.geometry?.location?.lat() || 0;
-              const lng = place.geometry?.location?.lng() || 0;
+            // Populate hidden fields and update local state
+            const addressComponents = place.address_components || [];
+            const city = addressComponents.find((c: any) => c.types.includes('locality'))?.long_name || '';
+            const street = addressComponents.find((c: any) => c.types.includes('route'))?.long_name || '';
+            const houseNum = addressComponents.find((c: any) => c.types.includes('street_number'))?.long_name || '';
+            const country = addressComponents.find((c: any) => c.types.includes('country'))?.long_name || '';
+            const lat = place.geometry?.location?.lat() || 0;
+            const lng = place.geometry?.location?.lng() || 0;
 
-              const fields = [
-                { ref: cityRef, value: city },
-                { ref: streetRef, value: street },
-                { ref: houseNumRef, value: houseNum },
-                { ref: latRef, value: lat.toString() },
-                { ref: lngRef, value: lng.toString() }
-              ];
+            const fields = [
+              { ref: cityRef, value: city },
+              { ref: streetRef, value: street },
+              { ref: houseNumRef, value: houseNum },
+              { ref: latRef, value: lat.toString() },
+              { ref: lngRef, value: lng.toString() }
+            ];
 
-              fields.forEach(({ ref, value }) => {
-                if (ref.current) {
-                  ref.current.value = value;
-                  // Dispatch input event to trigger React state/form validation
-                  ref.current.dispatchEvent(new Event('input', { bubbles: true }));
-                }
-              });
+            fields.forEach(({ ref, value }) => {
+              if (ref.current) {
+                ref.current.value = value;
+                ref.current.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+            });
 
-              updateMemberAddress(currentUser.id, place).then(addressData => {
-                setFormData(prev => prev ? { ...prev, ...addressData, city, street, house_num: houseNum, lat, lng } : null);
-                setToast({ msg: 'הכתובת עודכנה בהצלחה!', type: 'success' });
-                setTimeout(() => setToast(null), 3000);
-              }).catch(err => {
-                console.error(err);
-                setToast({ msg: 'שגיאה בעדכון הכתובת', type: 'error' });
-                setTimeout(() => setToast(null), 3000);
-              });
-            }
+            // Update local formData instead of immediate DB update
+            setFormData(prev => prev ? { 
+              ...prev, 
+              full_address: place.formatted_address,
+              city, 
+              street_name: street, 
+              house_number: houseNum, 
+              country,
+              lat, 
+              lng 
+            } : null);
           });
         } catch (e) {
           console.error("Failed to initialize Autocomplete:", e);
@@ -179,7 +188,7 @@ const ProfilePage: React.FC = () => {
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
     };
-  }, [currentUser]);
+  }, [currentUser?.id]);
 
   if (!formData) return <div className="text-black">Loading...</div>;
 

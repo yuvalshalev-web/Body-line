@@ -25,10 +25,10 @@ const AssetEditor: React.FC<AssetEditorProps> = ({
   const [replacingKey, setReplacingKey] = useState<string | null>(null);
 
   return (
-    <div className="glass-panel border border-white/20 rounded-[4rem] p-12 shadow-sm">
+    <div className="luxury-slab rounded-[4rem] p-12">
       <div className="flex items-center justify-between mb-10">
         <div className="flex items-center gap-4">
-          <div className="p-4 bg-[#ff009f] text-white rounded-2xl shadow-lg"><RotateCcw size={24} /></div>
+          <div className="p-4 bg-indigo-500 text-white rounded-2xl shadow-lg"><RotateCcw size={24} /></div>
           <div>
             <h3 className="text-2xl font-black text-[#4a002e]">הגדרות ונכסי אתר</h3>
             <p className="text-[#f063c1]/60 font-bold">צפייה ועדכון הנכסים הוויזואליים של המערכת</p>
@@ -36,7 +36,7 @@ const AssetEditor: React.FC<AssetEditorProps> = ({
         </div>
         <button 
           onClick={onReset}
-          className="px-6 py-3 bg-[#f7c1ea]/10 text-[#ff009f] rounded-2xl font-black text-xs hover:bg-[#f7c1ea]/20 transition-all flex items-center gap-2 active:scale-95"
+          className="px-6 py-3 luxury-card text-[#ff009f] rounded-2xl font-black text-xs hover:bg-white/10 transition-all flex items-center gap-2 active:scale-95"
         >
           <RotateCcw size={14} />
           איפוס לברירת מחדל
@@ -45,9 +45,9 @@ const AssetEditor: React.FC<AssetEditorProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {Object.entries(siteAssets || {}).map(([key, value]: [string, any]) => (
-          <div key={key} className="p-6 bg-[#f7c1ea]/10 rounded-[2rem] border border-[#ff009f]/5 flex items-center justify-between group">
+          <div key={key} className="p-6 luxury-card rounded-[2rem] flex items-center justify-between group">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 glass-panel rounded-2xl flex items-center justify-center overflow-hidden shadow-sm border border-white/20 relative group/avatar">
+              <div className="w-16 h-16 luxury-slab rounded-2xl flex items-center justify-center overflow-hidden relative group/avatar">
                 {typeof value === 'string' && value.startsWith('http') ? (
                   <img src={value} className="w-full h-full object-contain p-2" alt="" />
                 ) : (
@@ -107,12 +107,12 @@ const AssetEditor: React.FC<AssetEditorProps> = ({
 
       <AnimatePresence>
         {editingAsset && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-[#4a002e]/60 backdrop-blur-md animate-in fade-in">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 luxury-bg backdrop-blur-md animate-in fade-in">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="glass-panel border border-white/20 w-full max-w-lg rounded-[3.5rem] shadow-2xl p-10"
+              className="luxury-slab w-full max-w-lg rounded-[3.5rem] p-10"
             >
               <h3 className="text-2xl font-black text-[#4a002e] mb-2">עדכון נכס: {editingAsset.key}</h3>
               <p className="text-[#f063c1]/60 font-bold text-sm mb-8">הזן כתובת URL חדשה עבור הנכס</p>
@@ -124,7 +124,7 @@ const AssetEditor: React.FC<AssetEditorProps> = ({
                     type="text"
                     value={editingAsset.value}
                     onChange={(e) => setEditingAsset({ ...editingAsset, value: e.target.value })}
-                    className="w-full p-5 bg-[#f7c1ea]/10 border border-[#ff009f]/10 rounded-2xl font-black text-[#4a002e] outline-none focus:ring-2 ring-[#ff009f]/20 transition-all"
+                    className="w-full p-5 luxury-card rounded-2xl font-black text-[#4a002e] outline-none focus:ring-2 ring-[#ff009f]/20 transition-all"
                     placeholder="https://..."
                   />
                 </div>
@@ -142,7 +142,7 @@ const AssetEditor: React.FC<AssetEditorProps> = ({
                     await onUpdate(editingAsset.key, editingAsset.value);
                     setEditingAsset(null);
                   }}
-                  className="py-4 bg-[#ff009f] text-white rounded-2xl font-black text-sm shadow-lg hover:bg-[#4a002e] transition-all flex items-center justify-center gap-2"
+                  className="py-4 bg-indigo-500 text-white rounded-2xl font-black text-sm shadow-lg hover:bg-indigo-600 transition-all flex items-center justify-center gap-2"
                 >
                   <Save size={18} />
                   שמור שינויים

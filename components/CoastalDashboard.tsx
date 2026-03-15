@@ -9,8 +9,13 @@ import {
   Navigation, 
   Loader2,
   AlertTriangle,
-  Video
+  Video,
+  TrendingUp,
+  TrendingDown
 } from 'lucide-react';
+
+import { getDoc, doc, setDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 interface CoastalData {
   waterTemp: number;
@@ -23,18 +28,94 @@ interface CoastalData {
   source: string;
 }
 
+interface SeaStats {
+  maxWaveHeight: number;
+  minWaveHeight: number;
+  maxWaterTemp: number;
+  minWaterTemp: number;
+  maxWindSpeed: number;
+  minWindSpeed: number;
+  maxUvIndex: number;
+  minUvIndex: number;
+}
+
 export const CoastalDashboard: React.FC = () => {
   const [data, setData] = useState<CoastalData | null>(null);
+  const [stats, setStats] = useState<SeaStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/coastal-weather');
-        if (!res.ok) throw new Error('Failed to fetch coastal data');
-        const json = await res.json();
-        setData(json);
+        setLoading(true);
+        const weatherRes = await fetch('/api/coastal-weather');
+        
+        if (!weatherRes.ok) throw new Error('Failed to fetch coastal data');
+        const weatherJson = await weatherRes.json();
+        setData(weatherJson);
+        
+        // Fetch current stats
+        const statsRef = doc(db, 'seaConditionsStats', 'current');
+        const statsDoc = await getDoc(statsRef);
+        
+        let currentStats: SeaStats;
+
+        if (!statsDoc.exists()) {
+          // Initialize stats if they don't exist
+          currentStats = {
+            maxWaveHeight: weatherJson.waveHeight,
+            minWaveHeight: weatherJson.waveHeight,
+            maxWaterTemp: weatherJson.waterTemp,
+            minWaterTemp: weatherJson.waterTemp,
+            maxWindSpeed: weatherJson.windSpeed,
+            minWindSpeed: weatherJson.windSpeed,
+            maxUvIndex: weatherJson.uvIndex,
+            minUvIndex: weatherJson.uvIndex
+          };
+          await setDoc(statsRef, currentStats);
+          setStats(currentStats);
+        } else {
+          currentStats = statsDoc.data() as SeaStats;
+          
+          // Check if we need to update any peaks
+          const needsUpdate = 
+            weatherJson.waveHeight > currentStats.maxWaveHeight ||
+            weatherJson.waveHeight < currentStats.minWaveHeight ||
+            weatherJson.waterTemp > currentStats.maxWaterTemp ||
+            weatherJson.waterTemp < currentStats.minWaterTemp ||
+            weatherJson.windSpeed > currentStats.maxWindSpeed ||
+            weatherJson.windSpeed < currentStats.minWindSpeed ||
+            weatherJson.uvIndex > currentStats.maxUvIndex ||
+            weatherJson.uvIndex < currentStats.minUvIndex;
+
+          if (needsUpdate) {
+            const newStats = {
+              maxWaveHeight: Math.max(currentStats.maxWaveHeight, weatherJson.waveHeight),
+              minWaveHeight: Math.min(currentStats.minWaveHeight, weatherJson.waveHeight),
+              maxWaterTemp: Math.max(currentStats.maxWaterTemp, weatherJson.waterTemp),
+              minWaterTemp: Math.min(currentStats.minWaterTemp, weatherJson.waterTemp),
+              maxWindSpeed: Math.max(currentStats.maxWindSpeed, weatherJson.windSpeed),
+              minWindSpeed: Math.min(currentStats.minWindSpeed, weatherJson.windSpeed),
+              maxUvIndex: Math.max(currentStats.maxUvIndex, weatherJson.uvIndex),
+              minUvIndex: Math.min(currentStats.minUvIndex, weatherJson.uvIndex)
+            };
+            await updateDoc(statsRef, newStats);
+            setStats(newStats);
+          } else {
+            setStats(currentStats);
+          }
+        }
+        
+        // Optionally log the condition to history (fire and forget)
+        addDoc(collection(db, 'seaConditions'), {
+          timestamp: new Date().toISOString(),
+          waveHeight: weatherJson.waveHeight,
+          waterTemp: weatherJson.waterTemp,
+          windSpeed: weatherJson.windSpeed,
+          uvIndex: weatherJson.uvIndex
+        }).catch(console.error);
+
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -46,6 +127,8 @@ export const CoastalDashboard: React.FC = () => {
     const interval = setInterval(fetchData, 1000 * 60 * 15); // Refresh every 15 mins
     return () => clearInterval(interval);
   }, []);
+
+  // ... (rest of the component)
 
   if (loading) {
     return (
@@ -125,8 +208,14 @@ export const CoastalDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-x-reverse divide-black/10 relative z-10">
-        {/* Wave Height */}
+      <div className="relative z-10 pt-2">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+          <span className="bg-white/90 backdrop-blur-md px-4 py-1 rounded-full text-[11px] font-black text-slate-700 uppercase tracking-widest border border-white/50 shadow-sm whitespace-nowrap">
+            נתונים עדכניים
+          </span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-x-reverse divide-black/10">
+          {/* Wave Height */}
         <div className="p-5 flex flex-col items-center text-center gap-2 hover:bg-black/5 transition-colors group">
           <Waves className="text-blue-500 mb-1 group-hover:scale-110 transition-transform" size={24} />
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">גובה גלים</span>
@@ -173,6 +262,115 @@ export const CoastalDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      </div>
+
+      {/* Historical Peaks Section */}
+      {stats && (
+        <div className="border-t border-white/10 relative z-10 bg-gradient-to-b from-white/5 to-transparent pt-4">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+            <span className="bg-white/90 backdrop-blur-md px-4 py-1 rounded-full text-[11px] font-black text-slate-700 uppercase tracking-widest border border-white/50 shadow-sm whitespace-nowrap">
+              שיאי עונה
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-x-reverse divide-white/10">
+            
+            {/* Wave Height Peaks */}
+            <div className="p-4 flex flex-col gap-3">
+              <div className="flex justify-between items-center bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all hover:bg-white/20">
+                <div className="flex items-center gap-1.5">
+                  <TrendingUp size={12} className="text-blue-500" />
+                  <span className="text-[10px] font-bold text-slate-600">מקסימום</span>
+                </div>
+                <div className="flex items-baseline gap-0.5 text-blue-600">
+                  <span className="text-sm font-black">{stats.maxWaveHeight.toFixed(1)}</span>
+                  <span className="text-[9px] font-bold">מ'</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center bg-black/5 backdrop-blur-md border border-white/10 rounded-xl p-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all hover:bg-black/10">
+                <div className="flex items-center gap-1.5">
+                  <TrendingDown size={12} className="text-blue-400" />
+                  <span className="text-[10px] font-bold text-slate-500">מינימום</span>
+                </div>
+                <div className="flex items-baseline gap-0.5 text-blue-400">
+                  <span className="text-sm font-black">{stats.minWaveHeight.toFixed(1)}</span>
+                  <span className="text-[9px] font-bold">מ'</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Water Temp Peaks */}
+            <div className="p-4 flex flex-col gap-3">
+              <div className="flex justify-between items-center bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all hover:bg-white/20">
+                <div className="flex items-center gap-1.5">
+                  <TrendingUp size={12} className="text-red-500" />
+                  <span className="text-[10px] font-bold text-slate-600">מקסימום</span>
+                </div>
+                <div className="flex items-baseline gap-0.5 text-red-500">
+                  <span className="text-sm font-black">{stats.maxWaterTemp.toFixed(1)}</span>
+                  <span className="text-[9px] font-bold">°C</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center bg-black/5 backdrop-blur-md border border-white/10 rounded-xl p-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all hover:bg-black/10">
+                <div className="flex items-center gap-1.5">
+                  <TrendingDown size={12} className="text-cyan-500" />
+                  <span className="text-[10px] font-bold text-slate-500">מינימום</span>
+                </div>
+                <div className="flex items-baseline gap-0.5 text-cyan-500">
+                  <span className="text-sm font-black">{stats.minWaterTemp.toFixed(1)}</span>
+                  <span className="text-[9px] font-bold">°C</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Wind Peaks */}
+            <div className="p-4 flex flex-col gap-3">
+              <div className="flex justify-between items-center bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all hover:bg-white/20">
+                <div className="flex items-center gap-1.5">
+                  <TrendingUp size={12} className="text-orange-500" />
+                  <span className="text-[10px] font-bold text-slate-600">מקסימום</span>
+                </div>
+                <div className="flex items-baseline gap-0.5 text-orange-500">
+                  <span className="text-sm font-black">{stats.maxWindSpeed.toFixed(0)}</span>
+                  <span className="text-[9px] font-bold">קמ"ש</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center bg-black/5 backdrop-blur-md border border-white/10 rounded-xl p-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all hover:bg-black/10">
+                <div className="flex items-center gap-1.5">
+                  <TrendingDown size={12} className="text-emerald-500" />
+                  <span className="text-[10px] font-bold text-slate-500">מינימום</span>
+                </div>
+                <div className="flex items-baseline gap-0.5 text-emerald-500">
+                  <span className="text-sm font-black">{stats.minWindSpeed.toFixed(0)}</span>
+                  <span className="text-[9px] font-bold">קמ"ש</span>
+                </div>
+              </div>
+            </div>
+
+            {/* UV Peaks */}
+            <div className="p-4 flex flex-col gap-3">
+              <div className="flex justify-between items-center bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all hover:bg-white/20">
+                <div className="flex items-center gap-1.5">
+                  <TrendingUp size={12} className="text-purple-500" />
+                  <span className="text-[10px] font-bold text-slate-600">מקסימום</span>
+                </div>
+                <div className="flex items-baseline gap-0.5 text-purple-600">
+                  <span className="text-sm font-black">{stats.maxUvIndex.toFixed(1)}</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center bg-black/5 backdrop-blur-md border border-white/10 rounded-xl p-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all hover:bg-black/10">
+                <div className="flex items-center gap-1.5">
+                  <TrendingDown size={12} className="text-yellow-500" />
+                  <span className="text-[10px] font-bold text-slate-500">מינימום</span>
+                </div>
+                <div className="flex items-baseline gap-0.5 text-yellow-600">
+                  <span className="text-sm font-black">{stats.minUvIndex.toFixed(1)}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* Bottom Grid: Forecast & Live Cam */}
       <div className="grid grid-cols-2 border-t border-white/10 divide-x divide-x-reverse divide-white/10 relative z-10">

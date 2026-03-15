@@ -155,7 +155,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
   };
 
   return (
-    <div className="glass-panel border border-white/20 rounded-[4rem] p-8 md:p-12 shadow-2xl shadow-black/20 max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-700 relative overflow-hidden backdrop-blur-3xl">
+    <div className="luxury-slab p-8 md:p-12 max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-700 relative overflow-hidden">
       {/* Background Decorative Elements - Surfers Theme Atmosphere */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
         <div className="absolute -top-24 -left-24 w-[500px] h-[500px] bg-[#FF2D60]/15 rounded-full blur-[120px] animate-pulse" />
@@ -345,7 +345,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 type="text"
                 value={editingMember.firstName || ''}
                 onChange={(e) => setEditingMember({ ...editingMember, firstName: e.target.value })}
-                className="w-full p-6 bg-slate-50 rounded-3xl font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10 transition-all outline-none border border-slate-200"
+                className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10 transition-all outline-none"
               />
             </div>
 
@@ -355,7 +355,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 type="text"
                 value={editingMember.lastName || ''}
                 onChange={(e) => setEditingMember({ ...editingMember, lastName: e.target.value })}
-                className="w-full p-6 bg-slate-50 rounded-3xl font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10 transition-all outline-none border border-slate-200"
+                className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10 transition-all outline-none"
               />
             </div>
 
@@ -365,7 +365,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 type="email"
                 value={editingMember.email}
                 onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
-                className="w-full p-6 bg-slate-50 rounded-3xl font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10 transition-all outline-none border border-slate-200"
+                className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10 transition-all outline-none"
               />
             </div>
 
@@ -375,7 +375,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 type="text"
                 value={editingMember.mobile}
                 onChange={(e) => setEditingMember({ ...editingMember, mobile: formatMobileNumber(e.target.value) })}
-                className="w-full p-6 bg-slate-50 rounded-3xl font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10 transition-all text-left outline-none border border-slate-200"
+                className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10 transition-all text-left outline-none"
                 dir="ltr"
               />
             </div>
@@ -386,7 +386,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 <button 
                   type="button"
                   onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                  className="w-full p-6 bg-slate-50 rounded-3xl font-bold text-slate-700 focus:bg-white transition-all outline-none flex items-center justify-between border border-slate-200"
+                  className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all outline-none flex items-center justify-between"
                 >
                   <span>{editingMember.gender || 'בחר מגדר'}</span>
                   <ChevronDown size={20} className={`text-[#00AFC2] transition-transform duration-500 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
@@ -432,7 +432,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                   type="date"
                   value={editingMember.birthday || ''}
                   onChange={(e) => setEditingMember({ ...editingMember, birthday: e.target.value })}
-                  className="w-full pr-16 pl-6 py-6 bg-slate-50 rounded-3xl font-bold text-slate-700 focus:bg-white transition-all outline-none border border-slate-200"
+                  className="w-full pr-16 pl-6 py-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all outline-none"
                 />
               </div>
             </div>
@@ -448,7 +448,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 defaultValue={editingMember.full_address || ''} 
                 onChange={() => setIsPlaceSelected(false)} 
                 placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
-                className="w-full pr-16 pl-6 py-6 bg-slate-50 rounded-3xl font-bold text-slate-700 focus:bg-white transition-all outline-none border border-slate-200" 
+                className="w-full pr-16 pl-6 py-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all outline-none" 
                 autoComplete="off"
               />
             </div>
@@ -459,7 +459,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
             <textarea 
               value={editingMember.bio}
               onChange={(e) => setEditingMember({ ...editingMember, bio: e.target.value })}
-              className="w-full p-8 bg-slate-50 rounded-[2.5rem] font-bold text-slate-700 focus:bg-white transition-all min-h-[160px] outline-none border border-slate-200 leading-relaxed"
+              className="w-full p-8 luxury-card font-bold text-slate-700 focus:bg-white transition-all min-h-[160px] outline-none leading-relaxed"
               placeholder="ספר קצת על עצמך..."
             />
           </div>
@@ -496,7 +496,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                   value={(editingMember as any)[social.id] || ''}
                   onChange={(e) => setEditingMember({ ...editingMember, [social.id]: e.target.value })}
                   placeholder={social.placeholder}
-                  className="w-full p-6 bg-slate-50 rounded-3xl font-bold text-slate-700 focus:bg-white transition-all text-left outline-none border border-slate-200"
+                  className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all text-left outline-none"
                   dir="ltr"
                 />
               </div>
@@ -587,7 +587,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-md glass-panel rounded-[2rem] shadow-2xl overflow-hidden border border-white/20"
+                className="relative w-full max-w-md luxury-slab rounded-[2rem] overflow-hidden"
               >
                 <div className="p-8">
                   <div className="flex justify-between items-center mb-8">
@@ -597,7 +597,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                     </h3>
                     <button 
                       onClick={() => setShowPasswordModal(false)}
-                      className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
                     >
                       <X size={20} />
                     </button>
@@ -605,24 +605,24 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
 
                   <form onSubmit={handlePasswordChange} className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">סיסמה חדשה</label>
+                      <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest pr-3">סיסמה חדשה</label>
                       <input 
                         type="password"
                         value={newPassword}
                         onChange={e => setNewPassword(e.target.value)}
-                        className="w-full p-4 glass-input rounded-2xl font-black outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40"
+                        className="w-full p-4 luxury-card rounded-2xl font-black outline-none focus:ring-2 ring-indigo-500/20 transition-all text-[#2B2B2E] placeholder:text-slate-400"
                         placeholder="הזן סיסמה חדשה"
                         required
                         minLength={6}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[12px] font-black glass-text-secondary uppercase tracking-widest pr-3">אימות סיסמה</label>
+                      <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest pr-3">אימות סיסמה</label>
                       <input 
                         type="password"
                         value={confirmPassword}
                         onChange={e => setConfirmPassword(e.target.value)}
-                        className="w-full p-4 glass-input rounded-2xl font-black outline-none focus:bg-white/10 transition-all glass-text-primary placeholder:text-white/40"
+                        className="w-full p-4 luxury-card rounded-2xl font-black outline-none focus:ring-2 ring-indigo-500/20 transition-all text-[#2B2B2E] placeholder:text-slate-400"
                         placeholder="הזן שוב את הסיסמה"
                         required
                         minLength={6}
@@ -632,7 +632,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                     <button 
                       type="submit"
                       disabled={isChangingPassword || !newPassword || !confirmPassword}
-                      className="w-full py-4 glass-button bg-[#00AFC2]/80 hover:bg-[#00AFC2] rounded-2xl font-black text-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      className="w-full py-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl font-black text-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
                     >
                       {isChangingPassword ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                       עדכן סיסמה

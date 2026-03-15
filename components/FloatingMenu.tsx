@@ -18,6 +18,22 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer, scrollRef }) 
   const controls = useAnimation();
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const [dragConstraints, setDragConstraints] = useState({ top: -50, bottom: 50, left: -50, right: 50 });
+
+  // Update drag constraints based on window size
+  useEffect(() => {
+    const updateConstraints = () => {
+      setDragConstraints({
+        top: isTop ? 0 : -window.innerHeight + 180,
+        bottom: isTop ? window.innerHeight - 180 : 50,
+        left: -window.innerWidth / 2 + 20,
+        right: window.innerWidth / 2 - 20
+      });
+    };
+    updateConstraints();
+    window.addEventListener('resize', updateConstraints);
+    return () => window.removeEventListener('resize', updateConstraints);
+  }, [isTop]);
 
   // Scroll to hide/show logic
   useEffect(() => {
@@ -129,25 +145,26 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer, scrollRef }) 
       ref={menuRef}
       animate={controls}
       initial={{ y: isTop ? -100 : 100, opacity: 0 }}
-      drag={!isTop} // Only drag if at bottom
-      dragConstraints={{ top: -50, bottom: 50, left: -50, right: 50 }}
+      drag={true} // Allow dragging in both modes
+      dragConstraints={dragConstraints}
       dragElastic={0.1}
+      dragMomentum={false}
       whileDrag={{ scale: 1.02, cursor: 'grabbing' }}
       className={`fixed ${isTop ? 'top-6' : 'bottom-8'} left-1/2 -translate-x-1/2 z-[9999] 
-                 w-[95%] max-w-[500px] md:w-max
+                 w-max max-w-[98vw]
                  bg-white/80 backdrop-blur-2xl border border-white/40 
-                 rounded-[32px] p-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] 
-                 flex items-center gap-1 floating-menu-container
+                 rounded-[32px] p-1 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] 
+                 flex items-center floating-menu-container
                  cursor-grab active:cursor-grabbing hover:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.4)] transition-shadow duration-300`}
     >
-      <nav className="flex justify-around items-center gap-0 w-full">
+      <nav className="flex items-center justify-center gap-0.5 sm:gap-1 w-full px-1">
         {/* Menu Button (Right side in RTL) */}
         <button
           onClick={onOpenDrawer}
-          className="flex flex-col items-center gap-0.5 p-1.5 px-1.5 min-[360px]:px-2.5 sm:px-4 rounded-[32px] border border-slate-200/60 text-slate-700 bg-slate-100/60 hover:bg-slate-200/90 hover:scale-110 active:scale-95 transition-all duration-300 group"
+          className="flex flex-col items-center gap-0.5 p-1 px-1.5 min-[360px]:px-2 sm:px-4 rounded-[28px] border border-slate-200/60 text-slate-700 bg-slate-100/60 hover:bg-slate-200/90 hover:scale-110 active:scale-95 transition-all duration-300 group shrink-0"
         >
-          <Menu size={21} className="sm:size-[28px] drop-shadow-md group-hover:rotate-12 transition-transform" />
-          <span className="text-[13px] sm:text-[17px] font-black opacity-80 leading-none font-['Yehuda_CLM']">תפריט</span>
+          <Menu size={18} className="sm:size-[24px] drop-shadow-md group-hover:rotate-12 transition-transform" />
+          <span className="text-[11px] sm:text-[15px] font-black opacity-80 leading-none font-['Yehuda_CLM']">תפריט</span>
         </button>
 
         {/* Navigation Items */}
@@ -158,7 +175,7 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer, scrollRef }) 
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-0.5 p-1.5 px-1.5 min-[360px]:px-2.5 sm:px-4 rounded-[32px] border transition-all duration-500 group relative overflow-hidden ${
+              className={`flex flex-col items-center gap-0.5 p-1 px-1.5 min-[360px]:px-2 sm:px-4 rounded-[28px] border transition-all duration-500 group relative overflow-hidden shrink-0 ${
                 isActive 
                   ? `${item.activeBg} text-white border-transparent shadow-[0_15px_25px_-5px_rgba(0,0,0,0.3)] scale-105 -translate-y-1.5` 
                   : `${item.color} ${item.bg} ${item.border} hover:scale-110 active:scale-90`
@@ -170,14 +187,14 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ onOpenDrawer, scrollRef }) 
               )}
               
               <Icon 
-                size={21} 
-                className={`z-10 transition-all duration-500 sm:size-[28px] ${
+                size={18} 
+                className={`z-10 transition-all duration-500 sm:size-[24px] ${
                   isActive 
                     ? 'text-white drop-shadow-[0_3px_6px_rgba(0,0,0,0.4)]' 
                     : `${item.glow} group-hover:rotate-12 group-hover:scale-110`
                 }`} 
               />
-              <span className={`text-[13px] sm:text-[17px] font-black z-10 tracking-tighter leading-none font-['Yehuda_CLM'] ${isActive ? 'text-white' : 'opacity-90'}`}>
+              <span className={`text-[11px] sm:text-[15px] font-black z-10 tracking-tighter leading-none font-['Yehuda_CLM'] ${isActive ? 'text-white' : 'opacity-90'}`}>
                 {item.label}
               </span>
 
