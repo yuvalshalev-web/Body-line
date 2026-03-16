@@ -207,9 +207,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const fetchCoastalWeather = async () => {
       try {
         const res = await fetch('/api/coastal-weather');
-        if (res.ok) {
-          const data = await res.json();
-          setCoastalWeather(data);
+        if (!res.ok) {
+            console.error("Coastal weather fetch failed with status", res.status);
+            return;
+        }
+        const text = await res.text();
+        try {
+            const data = JSON.parse(text);
+            setCoastalWeather(data);
+        } catch (e) {
+            console.error("Failed to parse coastal weather JSON", e, "Response text:", text);
         }
       } catch (e) {
         console.error("Failed to fetch coastal weather", e);

@@ -216,8 +216,8 @@ async function startServer() {
       const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
 
       const [marineRes, weatherRes] = await Promise.all([
-        fetch(marineUrl, { headers: { 'User-Agent': 'SurferApp/1.0' } }),
-        fetch(weatherUrl, { headers: { 'User-Agent': 'SurferApp/1.0' } })
+        fetch(marineUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' } }),
+        fetch(weatherUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' } })
       ]);
 
       if (!marineRes.ok || !weatherRes.ok) throw new Error("Failed to fetch coastal data");

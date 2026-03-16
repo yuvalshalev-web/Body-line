@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Waves, AlertTriangle, CheckCircle2, Info, Compass, Save, Loader2 } from 'lucide-react';
+import { WetsuitIcon } from './WetsuitIcon';
+import { SurfboardOverlay } from './SurfboardOverlay';
 import { Member } from '../types';
+import { SURFBOARD_CATALOG } from '../data/surfboardCatalog';
 
 interface DailySurfRecommendationProps {
   member: Member | null;
   currentWaveHeight: number; // in meters
+  waterTemp?: number;
   onSaveRecommendation?: (vol: number, length: string) => Promise<void>;
 }
 
@@ -17,7 +21,7 @@ const parseLength = (lenStr?: string) => {
   return { feet, inches };
 };
 
-export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = ({ member, currentWaveHeight, onSaveRecommendation }) => {
+export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = ({ member, currentWaveHeight, waterTemp, onSaveRecommendation }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -52,67 +56,67 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
 
   if (surfingLevel === 'Beginner') {
     if (currentWaveHeight >= 1.6) {
-      boardType = 'Softboard / Longboard';
+      boardType = 'סופטבורד (Softboard)';
       recVol = weight * 0.85;
       recLenInches = heightInches + 30;
       explanation = 'ים גבוה מדי למתחילים - מומלץ להישאר בחוץ או לגלוש רק בקצף הקרוב לחוף. בטיחות קודמת לכל!';
       isWarning = true;
     } else if (currentWaveHeight >= 0.8) {
-      boardType = 'Funboard / Softboard';
+      boardType = 'סופטבורד / פאן-בורד';
       recVol = weight * 0.8;
       recLenInches = heightInches + 30;
       explanation = 'ים בינוני, מעולה לתרגול. קח גלשן עם הרבה נפח שיעזור לך לתפוס גלים ולשמור על יציבות.';
     } else {
-      boardType = 'Longboard / Softboard';
+      boardType = 'סופטבורד (Softboard)';
       recVol = weight * 0.9;
       recLenInches = heightInches + 45;
-      explanation = 'ים נמוך ורגוע, מושלם למתחילים! סופטבורד או לונגבורד גדול יתנו לך מקסימום גלים והנאה.';
+      explanation = 'ים נמוך ורגוע, מושלם למתחילים! סופטבורד גדול ייתן לך מקסימום גלים והנאה.';
     }
   } else if (surfingLevel === 'Advanced') {
     if (currentWaveHeight > 2.5) {
-      boardType = 'Step-up / Gun';
+      boardType = 'שורטבורד (Shortboard)';
       recVol = weight * 0.45;
       recLenInches = heightInches + 12;
-      explanation = 'ים גבוה ועוצמתי. קח Step-up כדי להיכנס מוקדם לגל ולשמור על שליטה במהירויות גבוהות.';
+      explanation = 'ים גבוה ועוצמתי. קח גלשן ארוך וצר יותר כדי להיכנס מוקדם לגל ולשמור על שליטה במהירויות גבוהות.';
     } else if (currentWaveHeight >= 1.6) {
-      boardType = 'Performance Shortboard';
+      boardType = 'שורטבורד (Shortboard)';
       recVol = weight * 0.4;
       recLenInches = heightInches;
       explanation = 'תנאים מצוינים לביצועים. שורטבורד קלאסי ייתן לך את הרדיקליות שאתה מחפש.';
     } else if (currentWaveHeight >= 0.8) {
-      boardType = 'Shortboard / Fish';
+      boardType = 'שורטבורד / פיש';
       recVol = weight * 0.42;
       recLenInches = heightInches - 2;
       explanation = 'ים כיפי וורסטילי. פיש או שורטבורד קצר יעזרו לך לייצר מהירות ולשחרר זנב.';
     } else {
-      boardType = 'Groveler / Twin Fin';
+      boardType = 'פיש (Fish)';
       recVol = weight * 0.5;
       recLenInches = heightInches + 5;
-      explanation = 'ים חלש. קח גלשן רחב ושטוח (Groveler או טווין-פין) כדי לייצר מהירות גם כשאין כוח בגל.';
+      explanation = 'ים חלש. קח גלשן רחב ושטוח (פיש או טווין-פין) כדי לייצר מהירות גם כשאין כוח בגל.';
     }
   } else {
     // Intermediate
     if (currentWaveHeight > 2.5) {
-      boardType = 'Step-up';
+      boardType = 'שורטבורד (Shortboard)';
       recVol = weight * 0.5;
       recLenInches = heightInches + 10;
       explanation = 'ים גבוה מאוד ומאתגר. דורש כושר וניסיון. אם אתה נכנס, קח גלשן ארוך יותר עם אקסטרה נפח.';
       isWarning = true;
     } else if (currentWaveHeight >= 1.6) {
-      boardType = 'Shortboard / Hybrid';
+      boardType = 'שורטבורד / הייבריד';
       recVol = weight * 0.5;
       recLenInches = heightInches + 5;
       explanation = 'הים עולה. גלשן היברידי או שורטבורד עם קצת יותר נפח יעזור לך להתמודד עם העוצמה.';
     } else if (currentWaveHeight >= 0.8) {
-      boardType = 'Funboard / Fish';
+      boardType = 'פאן-בורד / פיש';
       recVol = weight * 0.6;
       recLenInches = heightInches + 20;
-      explanation = 'יום קלאסי לפאנבורד או ה-Ribeye שלך. שילוב מושלם של ציפה ויכולת תמרון.';
+      explanation = 'יום קלאסי לפאן-בורד או ה-Ribeye שלך. שילוב מושלם של ציפה ויכולת תמרון.';
     } else {
-      boardType = 'Longboard / Funboard';
+      boardType = 'לונגבורד / פאן-בורד';
       recVol = weight * 0.75;
       recLenInches = heightInches + 35;
-      explanation = 'ים נמוך. תהנה מהציפה עם לונגבורד או פאנבורד גדול כדי לא לפספס אף גל.';
+      explanation = 'ים נמוך. תהנה מהציפה עם לונגבורד או פאן-בורד גדול כדי לא לפספס אף גל.';
     }
   }
 
@@ -139,6 +143,32 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
     else matchText = 'הגלשן שלך פחות מתאים לתנאים היום.';
   }
 
+  // Wetsuit logic
+  const getWetsuit = (temp: number) => {
+    if (temp < 16) return { label: 'חליפה מלאה (4/3mm)', type: 'full' as const };
+    if (temp <= 19) return { label: 'חליפה מלאה (4/3mm)', type: 'full' as const };
+    if (temp <= 23) return { label: 'חליפה מלאה (3/2mm)', type: 'full' as const };
+    if (temp <= 27) return { label: 'שורטי (Shorty 2mm)', type: 'shorty' as const };
+    return { label: 'לייקרה קלה', type: 'lycra' as const };
+  };
+  const wetsuit = waterTemp ? getWetsuit(waterTemp) : null;
+
+  // Find matching catalog item for description
+  const catalogItem = SURFBOARD_CATALOG.find(item => 
+    boardType.includes(item.name) || boardType.includes(item.nameEn.split(' / ')[0])
+  );
+
+  const getBoardKey = (type: string) => {
+    const lower = type.toLowerCase();
+    if (lower.includes('softboard') || lower.includes('סופטבורד')) return 'softboard';
+    if (lower.includes('longboard') || lower.includes('לונגבורד')) return 'longboard';
+    if (lower.includes('funboard') || lower.includes('פאן-בורד') || lower.includes('פאנבורד')) return 'funboard';
+    if (lower.includes('shortboard') || lower.includes('שורטבורד')) return 'shortboard';
+    if (lower.includes('fish') || lower.includes('פיש')) return 'fish';
+    return 'funboard';
+  };
+  const boardKey = getBoardKey(boardType);
+
   return (
     <div className="bg-white/40 backdrop-blur-[30px] border border-white/40 rounded-[2rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] relative overflow-hidden" dir="rtl">
       {/* Background elements */}
@@ -150,7 +180,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
           <Waves className="text-[#007085]" size={24} />
         </div>
         <div>
-          <h3 className="text-2xl font-black text-[#002b44] tracking-tight">הבחירה להיום</h3>
+          <h3 className="text-2xl font-black text-[#002b44] tracking-tight">התאמה אישית לפי מדדי גוף, רמת גלישה ומצב הים</h3>
           <p className="text-[#007085] text-sm font-bold tracking-widest uppercase">המלצת ציוד יומית</p>
         </div>
       </div>
@@ -187,30 +217,40 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                       <p className="text-2xl font-black text-[#002b44]" dir="ltr">{Math.floor(recLenInches/12)}'{Math.round(recLenInches%12)}"</p>
                     </div>
                   </div>
-                  <p className="text-[#002b44]/80 text-sm leading-relaxed bg-white/50 p-4 rounded-xl border border-white/40">{explanation}</p>
+                  <div className="space-y-3">
+                    <p className="text-[#002b44]/80 text-sm leading-relaxed bg-white/50 p-4 rounded-xl border border-white/40">{explanation}</p>
+                    {catalogItem && (
+                      <div className="bg-cyan-50/50 p-4 rounded-xl border border-cyan-100/50 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <p className="text-[10px] text-cyan-700 uppercase tracking-widest font-bold">על סוג הגלשן:</p>
+                          <div className="flex gap-3">
+                            <span className="text-[9px] bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full font-bold">אורך: {catalogItem.lengthRange}</span>
+                            <span className="text-[9px] bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full font-bold">נפח: {catalogItem.volumeRange}</span>
+                          </div>
+                        </div>
+                        <p className="text-[#002b44]/70 text-xs leading-relaxed italic">{catalogItem.description}</p>
+                        <div className="pt-2 border-t border-cyan-200/30">
+                          <p className="text-[9px] text-cyan-600 font-bold uppercase mb-1">השורה התחתונה:</p>
+                          <p className="text-[#002b44]/80 text-[11px] leading-relaxed font-medium">{catalogItem.bottomLine}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
-                <div className="w-24 h-48 relative shrink-0">
-                  <svg viewBox="0 0 100 300" className="w-full h-full drop-shadow-[0_10px_20px_rgba(6,182,212,0.4)]">
-                    <defs>
-                      <linearGradient id="boardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#67e8f9" />
-                        <stop offset="100%" stopColor="#0284c7" />
-                      </linearGradient>
-                    </defs>
-                    <path 
-                      d={boardType.includes('Longboard') 
-                        ? "M50 5 C 80 5, 95 50, 95 150 C 95 260, 80 295, 50 295 C 20 295, 5 260, 5 150 C 5 50, 20 5, 50 5 Z"
-                        : boardType.includes('Funboard')
-                        ? "M50 5 C 75 5, 90 50, 90 150 C 90 260, 70 295, 50 295 C 30 295, 10 260, 10 150 C 10 50, 25 5, 50 5 Z"
-                        : "M50 5 C 65 20, 85 70, 85 150 C 85 240, 65 290, 50 295 C 35 290, 15 240, 15 150 C 15 70, 35 20, 50 5 Z"
-                      }
-                      fill="url(#boardGrad)" 
-                      stroke="rgba(255,255,255,0.5)" 
-                      strokeWidth="2" 
-                    />
-                    <line x1="50" y1="5" x2="50" y2="295" stroke="rgba(255,255,255,0.4)" strokeWidth="2" />
-                  </svg>
+                <div className="flex flex-col md:flex-row gap-6 shrink-0 items-end">
+                  {wetsuit && (
+                    <div className="flex flex-col items-center gap-3 w-full md:w-32">
+                      <div className="h-80 w-full relative flex items-center justify-center bg-white/30 backdrop-blur-sm rounded-2xl border border-white/40 p-4 drop-shadow-[0_10px_20px_rgba(0,43,68,0.1)]">
+                        <WetsuitIcon type={wetsuit.type} className="w-full h-full text-[#002b44]" />
+                      </div>
+                      <span className="text-[11px] font-bold text-[#002b44] text-center w-full leading-tight bg-white/50 px-2 py-1 rounded-lg border border-white/40">{wetsuit.label}</span>
+                    </div>
+                  )}
+                  <div className="flex flex-col items-center gap-3 w-full md:w-64">
+                    <SurfboardOverlay selectedBoardType={boardKey} />
+                    <span className="text-[11px] font-bold text-[#002b44] text-center w-full leading-tight bg-white/50 px-2 py-1 rounded-lg border border-white/40">גלשן מומלץ: {boardType}</span>
+                  </div>
                 </div>
               </div>
             )}

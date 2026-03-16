@@ -18,7 +18,6 @@ import {
   UserCircle
 } from 'lucide-react';
 import { CoastalDashboard } from '../components/CoastalDashboard';
-import { WaterTempCard } from '../components/WaterTempCard';
 import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -307,10 +306,11 @@ const DashboardPage: React.FC = () => {
           <h3 className="text-2xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מצב הים – עכשיו ושיאי השנה</h3>
         </div>
         <CoastalDashboard />
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="mt-8">
           <DailySurfRecommendation 
             member={currentUser} 
             currentWaveHeight={1.2} 
+            waterTemp={coastalWeather?.waterTemp}
             onSaveRecommendation={async (vol, length) => {
               if (currentUser) {
                 await updateMember({
@@ -320,9 +320,6 @@ const DashboardPage: React.FC = () => {
                 });
               }
             }}
-          />
-          <WaterTempCard 
-            lastUpdated={Date.now() - 300000} 
           />
         </div>
       </section>
