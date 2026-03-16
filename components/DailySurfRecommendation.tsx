@@ -5,6 +5,7 @@ import { WetsuitIcon } from './WetsuitIcon';
 import { SurfboardOverlay } from './SurfboardOverlay';
 import { Member } from '../types';
 import { SURFBOARD_CATALOG } from '../data/surfboardCatalog';
+import { calculateSurferFormula, calculateMatchScore } from '../src/utils/surfMath';
 
 interface DailySurfRecommendationProps {
   member: Member | null;
@@ -46,76 +47,60 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
 
   const { weight, height, surfingLevel, currentBoardVolume, currentBoardLength } = member;
 
-  let recVol = 0;
-  let recLenInches = 0;
+  const baseRec = calculateSurferFormula(weight, height, surfingLevel as any);
+  let recVol = baseRec.volume;
+  let recLenInches = baseRec.lengthInches;
   let boardType = '';
   let explanation = '';
   let isWarning = false;
 
-  const heightInches = height / 2.54;
-
   if (surfingLevel === 'Beginner') {
     if (currentWaveHeight >= 1.6) {
       boardType = 'סופטבורד (Softboard)';
-      recVol = weight * 0.85;
-      recLenInches = heightInches + 30;
-      explanation = 'ים גבוה מדי למתחילים - מומלץ להישאר בחוץ או לגלוש רק בקצף הקרוב לחוף. בטיחות קודמת לכל!';
+      explanation = 'ים גבוה מדי למתחילים - מומלץ להישאר בחוף או לגלוש רק בקצף הקרוב לחוף. בטיחות קודמת לכל!';
       isWarning = true;
     } else if (currentWaveHeight >= 0.8) {
       boardType = 'סופטבורד / פאן-בורד';
-      recVol = weight * 0.8;
-      recLenInches = heightInches + 30;
       explanation = 'ים בינוני, מעולה לתרגול. קח גלשן עם הרבה נפח שיעזור לך לתפוס גלים ולשמור על יציבות.';
     } else {
       boardType = 'סופטבורד (Softboard)';
-      recVol = weight * 0.9;
-      recLenInches = heightInches + 45;
       explanation = 'ים נמוך ורגוע, מושלם למתחילים! סופטבורד גדול ייתן לך מקסימום גלים והנאה.';
     }
   } else if (surfingLevel === 'Advanced') {
     if (currentWaveHeight > 2.5) {
       boardType = 'שורטבורד (Shortboard)';
-      recVol = weight * 0.45;
-      recLenInches = heightInches + 12;
+      recVol = baseRec.volume * 1.1; // Extra volume for big waves
+      recLenInches = baseRec.lengthInches + 5; // Longer for big waves
       explanation = 'ים גבוה ועוצמתי. קח גלשן ארוך וצר יותר כדי להיכנס מוקדם לגל ולשמור על שליטה במהירויות גבוהות.';
     } else if (currentWaveHeight >= 1.6) {
       boardType = 'שורטבורד (Shortboard)';
-      recVol = weight * 0.4;
-      recLenInches = heightInches;
       explanation = 'תנאים מצוינים לביצועים. שורטבורד קלאסי ייתן לך את הרדיקליות שאתה מחפש.';
     } else if (currentWaveHeight >= 0.8) {
       boardType = 'שורטבורד / פיש';
-      recVol = weight * 0.42;
-      recLenInches = heightInches - 2;
       explanation = 'ים כיפי וורסטילי. פיש או שורטבורד קצר יעזרו לך לייצר מהירות ולשחרר זנב.';
     } else {
       boardType = 'פיש (Fish)';
-      recVol = weight * 0.5;
-      recLenInches = heightInches + 5;
+      recVol = baseRec.volume * 1.2; // Extra volume for weak waves
       explanation = 'ים חלש. קח גלשן רחב ושטוח (פיש או טווין-פין) כדי לייצר מהירות גם כשאין כוח בגל.';
     }
   } else {
     // Intermediate
     if (currentWaveHeight > 2.5) {
       boardType = 'שורטבורד (Shortboard)';
-      recVol = weight * 0.5;
-      recLenInches = heightInches + 10;
+      recVol = baseRec.volume * 1.1;
+      recLenInches = baseRec.lengthInches + 5;
       explanation = 'ים גבוה מאוד ומאתגר. דורש כושר וניסיון. אם אתה נכנס, קח גלשן ארוך יותר עם אקסטרה נפח.';
       isWarning = true;
     } else if (currentWaveHeight >= 1.6) {
       boardType = 'שורטבורד / הייבריד';
-      recVol = weight * 0.5;
-      recLenInches = heightInches + 5;
       explanation = 'הים עולה. גלשן היברידי או שורטבורד עם קצת יותר נפח יעזור לך להתמודד עם העוצמה.';
     } else if (currentWaveHeight >= 0.8) {
       boardType = 'פאן-בורד / פיש';
-      recVol = weight * 0.6;
-      recLenInches = heightInches + 20;
       explanation = 'יום קלאסי לפאן-בורד או ה-Ribeye שלך. שילוב מושלם של ציפה ויכולת תמרון.';
     } else {
       boardType = 'לונגבורד / פאן-בורד';
-      recVol = weight * 0.75;
-      recLenInches = heightInches + 35;
+      recVol = baseRec.volume * 1.3;
+      recLenInches = baseRec.lengthInches + 10;
       explanation = 'ים נמוך. תהנה מהציפה עם לונגבורד או פאן-בורד גדול כדי לא לפספס אף גל.';
     }
   }
@@ -124,19 +109,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
   let matchScore = 0;
   let matchText = '';
   if (currentBoardVolume && currentBoardLength) {
-    const { feet, inches } = parseLength(currentBoardLength);
-    const currLenInches = feet * 12 + inches;
-    
-    const volDiff = currentBoardVolume - recVol;
-    // If we have more volume, penalty is smaller. If less, penalty is larger.
-    const volPenalty = volDiff >= 0 ? volDiff * 1 : Math.abs(volDiff) * 3;
-    const volScore = Math.max(0, 100 - volPenalty);
-    
-    // Length penalty - reduced sensitivity
-    const lenDiff = Math.abs(currLenInches - recLenInches);
-    const lenScore = Math.max(0, 100 - (lenDiff * 2));
-    
-    matchScore = Math.round((volScore * 0.7) + (lenScore * 0.3));
+    matchScore = calculateMatchScore(currentBoardVolume, currentBoardLength, recVol, recLenInches);
     
     if (matchScore >= 85) matchText = 'הגלשן שלך מושלם להיום!';
     else if (matchScore >= 60) matchText = 'הגלשן שלך סביר להיום, אבל לא אידיאלי.';
@@ -241,7 +214,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                 <div className="flex flex-col md:flex-row gap-6 shrink-0 items-end">
                   {wetsuit && (
                     <div className="flex flex-col items-center gap-3 w-full md:w-32">
-                      <div className="h-80 w-full relative flex items-center justify-center bg-white/30 backdrop-blur-sm rounded-2xl border border-white/40 p-4 drop-shadow-[0_10px_20px_rgba(0,43,68,0.1)]">
+                      <div className="h-[400px] w-full relative flex items-center justify-center bg-white/30 backdrop-blur-sm rounded-2xl border border-white/40 p-4 drop-shadow-[0_10px_20px_rgba(0,43,68,0.1)]">
                         <WetsuitIcon type={wetsuit.type} className="w-full h-full text-[#002b44]" />
                       </div>
                       <span className="text-[11px] font-bold text-[#002b44] text-center w-full leading-tight bg-white/50 px-2 py-1 rounded-lg border border-white/40">{wetsuit.label}</span>

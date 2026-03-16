@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { 
   User, 
   Camera, 
@@ -19,7 +19,14 @@ import {
   Phone,
   Cake,
   ChevronDown,
-  Key
+  Key,
+  ChevronRight,
+  ShieldCheck,
+  Stethoscope,
+  HeartPulse,
+  Trash2,
+  AlertTriangle,
+  HelpCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,7 +38,6 @@ import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { hashPassword } from '../utils/crypto';
 import { loadGoogleMaps } from '../utils/googlePlaces';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
-import { SurfMatchEngine } from '../components/SurfMatchEngine';
 
 const SocialInput = ({ 
   label, name, value, onChange, icon: Icon, placeholder, brandColor, ensureAbsoluteUrl,
@@ -71,6 +77,8 @@ const ProfilePage: React.FC = () => {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [toast, setToast] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -190,6 +198,32 @@ const ProfilePage: React.FC = () => {
       }
     };
   }, [currentUser?.id]);
+
+  const completionDetails = useMemo(() => {
+    if (!formData) return { percentage: 0, missing: [] };
+    const fieldMap = [
+      { label: 'שם פרטי', value: formData.firstName },
+      { label: 'שם משפחה', value: formData.lastName },
+      { label: 'טלפון נייד', value: formData.mobile },
+      { label: 'תמונת פרופיל', value: formData.avatar },
+      { label: 'הסיפור שלי (ביוגרפיה)', value: formData.bio },
+      { label: 'תאריך יום הולדת', value: formData.birthday },
+      { label: 'מגדר', value: formData.gender },
+      { label: 'כתובת מגורים', value: formData.full_address },
+      { label: 'שם איש קשר לחירום', value: formData.emergencyContactName },
+      { label: 'טלפון לחירום', value: formData.emergencyContactPhone },
+      { label: 'משקל (במחשבון השייפר)', value: formData.weight },
+      { label: 'גובה (במחשבון השייפר)', value: formData.height },
+      { label: 'רמת גלישה (במחשבון השייפר)', value: formData.surfingLevel }
+    ];
+    
+    const missing = fieldMap.filter(f => !f.value).map(f => f.label);
+    const percentage = Math.round(((fieldMap.length - missing.length) / fieldMap.length) * 100);
+    
+    return { percentage, missing };
+  }, [formData]);
+
+  const completionPercentage = completionDetails.percentage;
 
   if (!formData) return <div className="text-black">Loading...</div>;
 
@@ -356,7 +390,44 @@ const ProfilePage: React.FC = () => {
             </div>
             <div className="flex-1 mb-4">
                <h3 className="text-4xl font-black text-[#7A1555] tracking-tight mb-2">{formData.firstName} {formData.lastName}</h3>
-               <p className="text-[#00426a] font-bold uppercase tracking-widest text-xs">{formData.role === 'Admin' ? 'רכז' : 'חבר נבחרת'}</p>
+               <div className="flex items-center justify-center gap-3">
+                 <p className="text-[#00426a] font-bold uppercase tracking-widest text-xs">{formData.role === 'Admin' ? 'רכז' : 'חבר נבחרת'}</p>
+                 <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                 <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">חבר מאז {new Date(formData.joinedAt).toLocaleDateString('he-IL')}</p>
+               </div>
+            </div>
+
+            {/* Profile Completion Bar */}
+            <div className="w-full max-w-md bg-white/10 backdrop-blur-[20px] border border-white/30 rounded-[2rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
+              <div className="relative z-10">
+                <div className="flex justify-between items-center mb-6 px-1">
+                  <div className="flex items-center gap-4">
+                    <span className="text-[20px] font-black text-[#00426a] uppercase tracking-widest">השלמת פרופיל</span>
+                    <button 
+                      type="button"
+                      onClick={() => setShowCompletionModal(true)}
+                      className="text-[#00426a]/40 hover:text-[#00426a] transition-colors"
+                    >
+                      <HelpCircle size={28} />
+                    </button>
+                  </div>
+                  <span className="text-[24px] font-black text-[#7A1555] drop-shadow-sm">{completionPercentage}%</span>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-6 w-full glass-progress-track rounded-full overflow-hidden relative" dir="ltr">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${completionPercentage}%` }}
+                      className="h-full bg-gradient-to-r from-[var(--surfer-cyan)] to-[var(--surfer-teal)] glass-progress-fill"
+                    />
+                  </div>
+                  <div className="flex justify-between px-2" dir="ltr">
+                    <span className="text-[14px] font-black text-[#00426a]/30">0%</span>
+                    <span className="text-[14px] font-black text-[#00426a]/30">100%</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -485,7 +556,42 @@ const ProfilePage: React.FC = () => {
                 </div>
               </section>
 
-              <SurfMatchEngine formData={formData} onChange={handleFieldChange} isSaving={isSaving} isDirty={isDirty} />
+              <section>
+                <h4 className="text-xs font-black text-[#007085] uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
+                  <AlertCircle size={14} className="text-[#FF2D60]" /> בטיחות ובריאות
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">איש קשר לחירום</label>
+                    <input 
+                      type="text" 
+                      value={formData.emergencyContactName || ''} 
+                      onChange={e => handleFieldChange('emergencyContactName', e.target.value)} 
+                      placeholder="שם מלא של איש הקשר"
+                      className="w-full p-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">טלפון חירום</label>
+                    <input 
+                      type="tel" 
+                      value={formData.emergencyContactPhone || ''} 
+                      onChange={e => handleFieldChange('emergencyContactPhone', formatMobileNumber(e.target.value))} 
+                      placeholder="מספר טלפון לחירום"
+                      className="w-full p-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" 
+                    />
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">מידע רפואי / רגישויות</label>
+                    <textarea 
+                      value={formData.medicalInfo || ''} 
+                      onChange={e => handleFieldChange('medicalInfo', e.target.value)} 
+                      placeholder="פרט כאן רגישויות, פציעות עבר או מידע רפואי שחשוב שנדע..."
+                      className="w-full p-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-bold h-24 resize-none outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" 
+                    />
+                  </div>
+                </div>
+              </section>
             </div>
 
             <div className="lg:col-span-5">
@@ -550,17 +656,23 @@ const ProfilePage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-white/10 backdrop-blur-[15px] border border-white/20 shadow-2xl shadow-black/20 rounded-2xl overflow-hidden"
+              className="relative w-full max-w-md bg-[#FDFDFD] rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.12)] overflow-hidden border border-white"
+              style={{
+                background: 'radial-gradient(circle at top left, rgba(224, 247, 250, 0.4) 0%, transparent 25%), radial-gradient(circle at bottom right, rgba(224, 247, 250, 0.4) 0%, transparent 25%), #FDFDFD',
+              }}
             >
-              <div className="p-8">
+              {/* Micro-grain texture overlay */}
+              <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+
+              <div className="relative z-10 p-10">
                 <div className="flex justify-between items-center mb-8">
-                  <h3 className="text-2xl font-black glass-text-primary flex items-center gap-3">
+                  <h3 className="text-2xl font-black text-[#00426a] flex items-center gap-3">
                     <Key className="text-indigo-500" />
                     החלפת סיסמה
                   </h3>
                   <button 
                     onClick={() => setShowPasswordModal(false)}
-                    className="p-2 text-slate-400 hover:text-slate-200 hover:bg-white/10 rounded-full transition-colors"
+                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
                   >
                     <X size={20} />
                   </button>
@@ -568,24 +680,24 @@ const ProfilePage: React.FC = () => {
 
                 <form onSubmit={handlePasswordChange} className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">סיסמה חדשה</label>
+                    <label className="text-[12px] font-black text-[#00426a]/40 uppercase tracking-widest pr-3">סיסמה חדשה</label>
                     <input 
                       type="password"
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
-                      className="w-full p-4 bg-white/10 backdrop-blur-[15px] border border-white/20 shadow-inner rounded-xl font-black outline-none focus:bg-white/20 transition-all glass-text-primary"
+                      className="w-full p-5 bg-white rounded-2xl shadow-[0_8px_20px_rgba(0,0,0,0.04)] border border-slate-100 font-black outline-none focus:border-[var(--surfer-cyan)] transition-all text-[#00426a]"
                       placeholder="הזן סיסמה חדשה"
                       required
                       minLength={6}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-3">אימות סיסמה</label>
+                    <label className="text-[12px] font-black text-[#00426a]/40 uppercase tracking-widest pr-3">אימות סיסמה</label>
                     <input 
                       type="password"
                       value={confirmPassword}
                       onChange={e => setConfirmPassword(e.target.value)}
-                      className="w-full p-4 bg-white/10 backdrop-blur-[15px] border border-white/20 shadow-inner rounded-xl font-black outline-none focus:bg-white/20 transition-all glass-text-primary"
+                      className="w-full p-5 bg-white rounded-2xl shadow-[0_8px_20px_rgba(0,0,0,0.04)] border border-slate-100 font-black outline-none focus:border-[var(--surfer-cyan)] transition-all text-[#00426a]"
                       placeholder="הזן שוב את הסיסמה"
                       required
                       minLength={6}
@@ -595,12 +707,154 @@ const ProfilePage: React.FC = () => {
                   <button 
                     type="submit"
                     disabled={isChangingPassword || !newPassword || !confirmPassword}
-                    className="w-full flex items-center justify-center gap-4 px-8 py-4 bg-[var(--surfer-cyan)] text-black rounded-xl border border-white/20 shadow-lg shadow-black/10 font-black text-lg transition-all hover:bg-[var(--surfer-teal)] hover:text-white active:scale-95 disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-4 px-8 py-5 bg-[#00426a] text-white rounded-2xl shadow-[0_10px_25px_rgba(0,66,106,0.2)] font-black text-lg transition-all hover:bg-[#005a6b] active:scale-95 disabled:opacity-50"
                   >
                     {isChangingPassword ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                     עדכן סיסמה
                   </button>
                 </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Danger Zone */}
+      <section className="mt-20 pt-10 border-t border-rose-500/20">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-rose-500/5 p-8 rounded-[2rem] border border-rose-500/20">
+          <div className="space-y-2 text-center md:text-right">
+            <h4 className="text-xl font-black text-rose-400">אזור סכנה</h4>
+            <p className="text-sm text-rose-400/60">מחיקת החשבון היא פעולה בלתי הפיכה. כל הנתונים שלך יימחקו לצמיתות.</p>
+          </div>
+          <button 
+            type="button"
+            onClick={() => setShowDeleteModal(true)}
+            className="px-8 py-4 bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white font-black rounded-xl border border-rose-600/50 transition-all flex items-center gap-2"
+          >
+            <Trash2 size={20} />
+            מחק חשבון לצמיתות
+          </button>
+        </div>
+      </section>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDeleteModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-md bg-slate-900 border border-rose-500/30 rounded-[2.5rem] p-10 shadow-2xl text-center"
+              dir="rtl"
+            >
+              <div className="w-20 h-20 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertTriangle size={40} className="text-rose-500" />
+              </div>
+              <h3 className="text-2xl font-black text-white mb-4">בטוח שברצונך לעזוב?</h3>
+              <p className="text-white/60 mb-8 leading-relaxed">
+                מחיקת החשבון תסיר את כל המידע שלך, ההיסטוריה וההגדרות האישיות. לא ניתן יהיה לשחזר את החשבון לאחר מכן.
+              </p>
+              
+              <div className="space-y-3">
+                <button 
+                  onClick={() => {
+                    // In a real app, call delete service
+                    setToast({ msg: 'מחיקת חשבון אינה זמינה בסביבת הדמו', type: 'error' });
+                    setTimeout(() => setToast(null), 3000);
+                    setShowDeleteModal(false);
+                  }}
+                  className="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-xl transition-all shadow-lg"
+                >
+                  כן, מחק את החשבון שלי
+                </button>
+                <button 
+                  onClick={() => setShowDeleteModal(false)}
+                  className="w-full py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-all"
+                >
+                  ביטול
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showCompletionModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCompletionModal(false)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-md bg-[#FDFDFD] rounded-[2.5rem] p-10 shadow-[0_30px_60px_rgba(0,0,0,0.12)] overflow-hidden border border-white"
+              style={{
+                background: 'radial-gradient(circle at top left, rgba(224, 247, 250, 0.4) 0%, transparent 25%), radial-gradient(circle at bottom right, rgba(224, 247, 250, 0.4) 0%, transparent 25%), #FDFDFD',
+              }}
+              dir="rtl"
+            >
+              {/* Micro-grain texture overlay */}
+              <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+
+              <div className="relative z-10">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-2xl font-black text-[#00426a] flex items-center gap-3">
+                    <HelpCircle className="text-[var(--surfer-cyan)]" />
+                    מה חסר להשלמה?
+                  </h3>
+                  <button 
+                    onClick={() => setShowCompletionModal(false)}
+                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  <p className="text-[#00426a]/70 font-bold">
+                    כדי להגיע ל-100% השלמת פרופיל, עליך למלא את השדות הבאים:
+                  </p>
+                  
+                  <div className="space-y-4 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2 py-2">
+                    {completionDetails.missing.length > 0 ? (
+                      completionDetails.missing.map((label, idx) => (
+                        <div 
+                          key={idx} 
+                          className="flex items-center gap-3 p-5 bg-white rounded-2xl shadow-[0_8px_20px_rgba(0,0,0,0.06)] border border-slate-50 transition-transform hover:scale-[1.02]"
+                        >
+                          <div className="w-2 h-2 rounded-full bg-[var(--surfer-cyan)] shadow-[0_0_8px_rgba(61,187,211,0.5)]" />
+                          <span className="font-bold text-[#00426a]">{label}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex flex-col items-center gap-4 py-8">
+                        <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center shadow-inner">
+                          <Check className="text-emerald-500" size={40} />
+                        </div>
+                        <p className="font-black text-emerald-600 text-2xl">הפרופיל שלך מושלם!</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <button 
+                    onClick={() => setShowCompletionModal(false)}
+                    className="w-full py-5 bg-[#00426a] hover:bg-[#005a6b] text-white font-black rounded-2xl transition-all shadow-[0_10px_25px_rgba(0,66,106,0.2)]"
+                  >
+                    הבנתי, תודה
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

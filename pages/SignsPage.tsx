@@ -20,6 +20,7 @@ const SignsPage: React.FC = () => {
     { path: '/posts', ...menuItems[4], text: 'פוסטים' },
     { path: '/world-news', ...menuItems[5], text: 'חדשות' },
     { path: '/surfer-card', ...menuItems[6], text: 'דשבורד אישי' },
+    { path: '/shaper', ...menuItems[11], text: 'פינת השייפר' },
     { path: '/profile', ...menuItems[7], text: 'פרופיל שלי' }
   ];
 

@@ -16,7 +16,7 @@
     "classic_red": "#E23E33"
   },
   "menu_items": [
-    { "id": 1, "text": "Respect the Locals", "icon": "🏠", "color": "#FF2D60", "direction": "right", "rotation": 2 },
+    { "id": 1, "text": "דף הבית", "icon": "🏠", "color": "#FF2D60", "direction": "right", "rotation": 2 },
     { "id": 2, "text": "נבחרת הכוכבים", "icon": "🏄‍♂️", "color": "#00AFC2", "direction": "left", "rotation": -3 },
     { "id": 3, "text": "גלריית תמונות", "icon": "📸", "color": "#3dbbd3", "direction": "right", "rotation": 1 },
     { "id": 4, "text": "אירועים", "icon": "🌴", "color": "#FF9F1C", "direction": "left", "rotation": -2 },
@@ -27,7 +27,7 @@
     { "id": 9, "text": "פאנל ניהול", "icon": "🎸", "color": "#FFDE45", "direction": "right", "rotation": -1 },
     { "id": 10, "text": "סטטיסטיקה", "icon": "📍", "color": "#B2EBF2", "direction": "left", "rotation": 3 },
     { "id": 11, "text": "יומן סשנים", "icon": "🤙", "color": "#7A1555", "direction": "right", "rotation": -3 },
-    { "id": 12, "text": "חפירות", "icon": "❓", "color": "#C29670", "direction": "left", "rotation": 1 },
+    { "id": 12, "text": "פינת השייפר", "icon": "🔨", "color": "#C29670", "direction": "left", "rotation": 1 },
     { "id": 14, "text": "Signs Menu", "icon": "⚠️", "color": "#FFDE45", "direction": "right", "rotation": 0 },
     { "id": 13, "text": "Logout", "icon": "🚪", "color": "#E23E33", "direction": "right", "rotation": 0 }
   ],

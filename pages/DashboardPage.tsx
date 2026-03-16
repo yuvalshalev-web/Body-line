@@ -15,10 +15,13 @@ import {
   Wind,
   RefreshCw,
   Newspaper,
-  UserCircle
+  UserCircle,
+  Hammer,
+  ChevronRight
 } from 'lucide-react';
 import { CoastalDashboard } from '../components/CoastalDashboard';
 import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
+import { EquipmentShowcase } from '../components/EquipmentShowcase';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { getNextSessionDate } from '../services/rolloverService';
@@ -324,6 +327,41 @@ const DashboardPage: React.FC = () => {
         </div>
       </section>
 
+      <EquipmentShowcase />
+
+      {/* Shaper's Corner Promotion */}
+      <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
+        <div className="home-glass-card p-8 md:p-12 flex flex-col md:flex-row items-center gap-10 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-yellow)]/10 blur-[100px] pointer-events-none" />
+          
+          <div className="flex-1 space-y-6 relative z-10">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[var(--surfer-yellow)]/20 rounded-full border border-[var(--surfer-yellow)]/30">
+              <Hammer className="text-[var(--surfer-yellow)]" size={16} />
+              <span className="text-[var(--surfer-yellow)] font-black text-[10px] uppercase tracking-widest">Shaper's Tool</span>
+            </div>
+            <h3 className="text-4xl md:text-5xl font-black text-[#000000] leading-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+              מצא את הגלשן <br /> המדויק שלך
+            </h3>
+            <p className="text-lg font-bold text-[#000000]/70 max-w-md" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+              השתמש במחשבון השייפר שלנו כדי לקבל המלצה אישית המבוססת על משקל, גובה ורמת הגלישה שלך.
+            </p>
+            <Link 
+              to="/shaper"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-black text-[var(--surfer-yellow)] rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:scale-105 transition-all"
+            >
+              למחשבון השייפר
+              <ChevronRight size={18} />
+            </Link>
+          </div>
+
+          <div className="w-full md:w-1/3 h-[300px] relative flex items-center justify-center">
+            <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20" />
+            <div className="scale-75">
+              <SurfboardIcon className="w-48 h-48 text-[var(--surfer-yellow)] drop-shadow-2xl" />
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <section className="home-glass-card p-12 relative min-h-[400px]">

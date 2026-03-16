@@ -46,6 +46,7 @@ const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage'));
 const SurferCardPage = lazy(() => import('./pages/SurferCardPage'));
 const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance'));
 const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage'));
+const ShaperPage = lazy(() => import('./pages/ShaperPage'));
 
 const PageLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -167,10 +168,8 @@ const App: React.FC = () => {
 
   const menuItems = surferMenuConfig.menu_items;
 
-  // Map the original nav items to the new menu config based on index or logic
-  // For now, we'll just use the first 8 items from the config for the main nav
-  // and the next 4 for admin nav, to keep the routing intact while changing the visuals.
-  const navItems = [
+  // Navigation items for the drawer (13 signs total)
+  const allSigns = [
     { path: '/', ...menuItems[0], text: 'דף הבית' },
     { path: '/directory', ...menuItems[1], text: 'נבחרת הכוכבים' },
     { path: '/gallery', ...menuItems[2], text: 'גלריית תמונות' },
@@ -178,13 +177,13 @@ const App: React.FC = () => {
     { path: '/posts', ...menuItems[4], text: 'פוסטים' },
     { path: '/world-news', ...menuItems[5], text: 'חדשות מהעולם' },
     { path: '/surfer-card', ...menuItems[6], text: 'דשבורד אישי' },
-    { path: '/profile', ...menuItems[7], text: 'פרופיל אישי' }
-  ];
-
-  const adminNavItems = [
+    { path: '/shaper', ...menuItems[11], text: 'פינת השייפר' },
     { path: '/admin', ...menuItems[8], text: 'פאנל ניהול' },
     { path: '/admin-info', ...menuItems[9], text: 'דופק חבל זוג' },
-    { path: '/attendance', ...menuItems[10], text: 'יומן סשנים' }
+    { path: '/attendance', ...menuItems[10], text: 'יומן סשנים' },
+    { path: '/profile', ...menuItems[7], text: 'פרופיל שלי' },
+    { path: '/stats', ...menuItems[12], text: 'סטטיסטיקה' },
+    { path: '/logout', ...menuItems[13], text: 'גל יציאה' } // Logout is ID 13
   ];
 
   return (
@@ -246,14 +245,7 @@ const App: React.FC = () => {
 
                 {/* Navigation Items & Signs */}
                 <div className="flex-1 px-6 pt-16 pb-24 flex flex-col items-center gap-0 overflow-y-auto relative z-10 custom-scrollbar">
-                  {/* Respect the Locals Sign at the top of the list */}
-                  <div className="scale-50 -my-20 relative flex flex-col items-center mb-0">
-                    <RespectLocalsSign />
-                    {/* Nail for the diamond sign */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#2a2a2a] shadow-lg z-20" />
-                  </div>
-
-                  {navItems.map((item, idx) => (
+                  {allSigns.map((item, idx) => (
                     <div key={item.path} className="relative w-full max-w-[280px] flex justify-center overflow-visible">
                       {idx === 0 && (
                         <div className="absolute -top-17 -left-3 z-[10000] pointer-events-none scale-[0.6375]">
@@ -264,47 +256,16 @@ const App: React.FC = () => {
                         item={item}
                         index={idx}
                         isActive={location.pathname === item.path}
-                        onClick={() => handleNavigation(item.path)}
+                        onClick={() => {
+                          if (item.path === '/logout') {
+                            handleLogout();
+                          } else {
+                            handleNavigation(item.path);
+                          }
+                        }}
                       />
                     </div>
                   ))}
-
-                  {(currentUser.role === 'Admin' || currentUser.role === 'Instructor') && (
-                    <>
-                      <div className="mt-8 mb-4 w-full text-center">
-                        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider bg-transparent border border-white/20 px-3 py-1 rounded-full">
-                          אזור צוות
-                        </span>
-                      </div>
-                      {adminNavItems.map((item, idx) => (
-                        <div key={item.path} className="relative w-full max-w-[280px] flex justify-center overflow-visible">
-                          <WoodSignLink 
-                            item={item}
-                            index={idx + navItems.length}
-                            isActive={location.pathname === item.path}
-                            onClick={() => handleNavigation(item.path)}
-                          />
-                        </div>
-                      ))}
-                    </>
-                  )}
-
-                  {/* Exit Wave (Logout) Sign */}
-                  <div className="mt-8 w-full max-w-[280px] flex justify-center overflow-visible">
-                    <WoodSignLink 
-                      item={{ 
-                        id: 999,
-                        text: 'גל יציאה', 
-                        icon: '🚪',
-                        color: '#5d4037',
-                        direction: 'left',
-                        rotation: -2
-                      }}
-                      index={navItems.length + adminNavItems.length + 1}
-                      isActive={false}
-                      onClick={handleLogout}
-                    />
-                  </div>
                 </div>
               </div>
             </motion.div>
@@ -329,6 +290,7 @@ const App: React.FC = () => {
               <Route path="/world-news" element={<SurfingNewsPage />} />
               <Route path="/surfer-card" element={<SurferCardPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/shaper" element={<ShaperPage />} />
               {(currentUser.role === 'Admin' || currentUser.role === 'Instructor') && (
                 <>
                   <Route path="/admin" element={<AdminPage />} />

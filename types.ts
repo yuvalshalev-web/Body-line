@@ -48,6 +48,9 @@ export interface Member {
   lng?: number;
   full_address?: string;
   distance?: number;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  medicalInfo?: string;
 }
 
 export interface JoinRequest {
