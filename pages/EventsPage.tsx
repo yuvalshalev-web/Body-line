@@ -93,7 +93,7 @@ const EventsPage: React.FC = () => {
     };
   }, [showModal]);
 
-  const canManageCommunityEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor' || currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
+  const canManageCommunityEvents = currentUser?.role === 'Admin' || currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
   const canManageInstructorEvents = currentUser?.role === 'Admin' || currentUser?.role === 'Instructor' || currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
   const isAdmin = currentUser?.role === 'Admin' || currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
 
@@ -364,12 +364,13 @@ const EventsPage: React.FC = () => {
 
                       <button 
                         type="button"
+                        disabled={!canManageInstructorEvents}
                         onClick={() => { setEventType('INSTRUCTOR'); setShowTypeWarning(false); }}
                         className={`relative p-3 rounded-xl border-t border-l border-white/60 transition-all flex flex-col items-center gap-2 text-center group ${
                           eventType === 'INSTRUCTOR' 
                             ? 'bg-[var(--surfer-orange)] text-[#000000] shadow-[0_8px_24px_rgba(122,21,85,0.3),0_4px_12px_rgba(122,21,85,0.2)]' 
                             : 'bg-white/60 text-[#000000] hover:bg-white/90 shadow-[0_4px_12px_rgba(122,21,85,0.1),0_2px_6px_rgba(122,21,85,0.05)]'
-                        }`}
+                        } ${!canManageInstructorEvents ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                           eventType === 'INSTRUCTOR' ? 'bg-white/40 text-[#000000]' : 'bg-black/5 text-[var(--surfer-yellow)] group-hover:text-[var(--surfer-orange)]'
@@ -381,12 +382,13 @@ const EventsPage: React.FC = () => {
 
                       <button 
                         type="button"
+                        disabled={!canManageCommunityEvents}
                         onClick={() => { setEventType('COMMUNITY'); setShowTypeWarning(false); }}
                         className={`relative p-3 rounded-xl border-t border-l border-white/60 transition-all flex flex-col items-center gap-2 text-center group ${
                           eventType === 'COMMUNITY' 
                             ? 'bg-[var(--surfer-pink)] text-[#000000] shadow-[0_8px_24px_rgba(122,21,85,0.3),0_4px_12px_rgba(122,21,85,0.2)]' 
                             : 'bg-white/60 text-[#000000] hover:bg-white/90 shadow-[0_4px_12px_rgba(122,21,85,0.1),0_2px_6px_rgba(122,21,85,0.05)]'
-                        }`}
+                        } ${!canManageCommunityEvents ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                           eventType === 'COMMUNITY' ? 'bg-white/40 text-[#000000]' : 'bg-black/5 text-[var(--surfer-yellow)] group-hover:text-[var(--surfer-pink)]'

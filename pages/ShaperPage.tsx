@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Ruler, 
   Weight, 
@@ -14,7 +14,9 @@ import {
   Pencil,
   Target,
   Lightbulb,
-  Loader2
+  Loader2,
+  CheckCircle2,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -31,13 +33,18 @@ const ShaperPage: React.FC = () => {
   const [level, setLevel] = useState<'Beginner' | 'Intermediate' | 'Advanced'>(
     (currentUser?.surfingLevel as any) || 'Intermediate'
   );
+  const [fitnessLevel, setFitnessLevel] = useState<'Low' | 'Average' | 'High' | 'Elite'>(
+    (currentUser?.fitnessLevel as any) || 'Average'
+  );
   const [currentVol, setCurrentVol] = useState<number | undefined>(currentUser?.currentBoardVolume);
   const [currentLen, setCurrentLen] = useState<string | undefined>(currentUser?.currentBoardLength);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [toast, setToast] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
   
   const recommendation = useMemo(() => {
-    return calculateSurferFormula(weight, height, level);
-  }, [weight, height, level]);
+    return calculateSurferFormula(weight, height, level, fitnessLevel);
+  }, [weight, height, level, fitnessLevel]);
 
   const matchResults = useMemo(() => {
     if (!currentVol || !currentLen) return null;
@@ -67,20 +74,29 @@ const ShaperPage: React.FC = () => {
   const handleSave = async () => {
     if (!currentUser) return;
     setIsSaving(true);
+    setSaveSuccess(false);
     try {
       await updateMember({
         ...currentUser,
         weight,
         height,
         surfingLevel: level,
+        fitnessLevel,
         currentBoardVolume: currentVol,
         currentBoardLength: currentLen,
         recommendedBoardVolume: recommendation.volume,
         recommendedBoardLength: recommendation.lengthFormatted
       });
-      alert('הנתונים נשמרו בהצלחה!');
+      setSaveSuccess(true);
+      setToast({ msg: 'נשמר בהצלחה', type: 'success' });
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setToast(null);
+      }, 3000);
     } catch (error) {
       console.error('Error saving shaper data:', error);
+      setToast({ msg: 'שגיאה בשמירת הנתונים', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
     } finally {
       setIsSaving(false);
     }
@@ -194,6 +210,38 @@ const ShaperPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Fitness Level Selector */}
+              <div className="space-y-4">
+                <label className="text-[#00426a]/70 font-bold flex items-center gap-2">
+                  <Zap size={18} /> רמת אימון שבועית (כוח ואירובי)
+                </label>
+                <div className="flex flex-col gap-3">
+                  {[
+                    { val: 'Low', title: 'Low', desc: 'פעילות מזדמנת בלבד.' },
+                    { val: 'Average', title: 'Average', desc: 'אימון פעם-פעמיים בשבוע (ריצה קלה או חדר כושר).' },
+                    { val: 'High', title: 'High/Fit', desc: '3-4 אימונים בשבוע, משלב כוח ואירובי.' },
+                    { val: 'Elite', title: 'Elite', desc: 'ספורטאי פעיל, אימוני כוח ספציפיים לגלישה/פונקציונלי יום-יום.' }
+                  ].map((f) => (
+                    <button
+                      key={f.val}
+                      onClick={() => setFitnessLevel(f.val as any)}
+                      className={`p-4 rounded-xl text-right transition-all border flex flex-col gap-1 ${
+                        fitnessLevel === f.val 
+                          ? 'bg-[var(--surfer-cyan)]/10 border-[var(--surfer-cyan)] shadow-sm' 
+                          : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className={`font-black text-sm ${fitnessLevel === f.val ? 'text-[#00426a]' : 'text-[#00426a]/60'}`}>
+                        {f.title}
+                      </span>
+                      <span className={`text-xs font-bold ${fitnessLevel === f.val ? 'text-[#00426a]/80' : 'text-[#00426a]/40'}`}>
+                        {f.desc}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Current Board Section (Match Engine Merger) */}
               <div className="space-y-6 pt-6 border-t border-slate-100">
                 <div className="flex items-center gap-3 mb-2">
@@ -236,14 +284,35 @@ const ShaperPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-6">
+              <div className="pt-6 relative">
+                <AnimatePresence>
+                  {toast && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                      className={`absolute -top-14 left-1/2 -translate-x-1/2 z-50 px-6 py-2 rounded-xl shadow-lg flex items-center gap-2 font-black whitespace-nowrap ${
+                        toast.type === 'success' 
+                          ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
+                          : 'bg-rose-500 text-white shadow-rose-500/20'
+                      }`}
+                    >
+                      {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
+                      <span className="text-sm">{toast.msg}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 <GlassButton 
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="w-full py-4 text-lg bg-[var(--surfer-deep-teal)] text-white hover:bg-[#005a6b] flex items-center justify-center gap-2"
+                  className={`w-full py-4 text-lg flex items-center justify-center gap-2 font-black transition-colors ${
+                    saveSuccess 
+                      ? 'bg-emerald-400 text-[var(--surfer-deep-teal)] hover:bg-emerald-500' 
+                      : 'bg-[var(--surfer-cyan)] text-[var(--surfer-deep-teal)] hover:bg-[#005a6b] hover:text-white'
+                  }`}
                 >
                   {isSaving ? <Loader2 className="animate-spin" size={20} /> : null}
-                  עדכן בפרופיל שלי
+                  {saveSuccess ? 'נשמר בהצלחה!' : 'עדכן בפרופיל שלי'}
                 </GlassButton>
               </div>
             </section>

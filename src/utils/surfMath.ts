@@ -1,5 +1,6 @@
 
 export type SurfingLevel = 'Beginner' | 'Intermediate' | 'Advanced';
+export type FitnessLevel = 'Low' | 'Average' | 'High' | 'Elite';
 
 export interface SurfboardRecommendation {
   volume: number;
@@ -13,7 +14,8 @@ export interface SurfboardRecommendation {
 export const calculateSurferFormula = (
   weight: number,
   heightCm: number,
-  level: SurfingLevel
+  level: SurfingLevel,
+  fitness: FitnessLevel = 'Average'
 ): SurfboardRecommendation => {
   let volMultiplier = 0;
   let lengthOffset = 0;
@@ -41,7 +43,15 @@ export const calculateSurferFormula = (
       break;
   }
 
-  const volume = Math.round(weight * volMultiplier * 10) / 10;
+  let fitnessModifier = 1.0;
+  switch (fitness) {
+    case 'Low': fitnessModifier = 1.1; break; // +10% volume
+    case 'Average': fitnessModifier = 1.0; break; // baseline
+    case 'High': fitnessModifier = 0.95; break; // -5% volume
+    case 'Elite': fitnessModifier = 0.9; break; // -10% volume
+  }
+
+  const volume = Math.round(weight * volMultiplier * fitnessModifier * 10) / 10;
   const lengthCm = heightCm + lengthOffset;
   const lengthInches = lengthCm / 2.54;
   

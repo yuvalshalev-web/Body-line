@@ -168,7 +168,6 @@ const App: React.FC = () => {
 
   const menuItems = surferMenuConfig.menu_items;
 
-  // Navigation items for the drawer (13 signs total)
   const allSigns = [
     { path: '/', ...menuItems[0], text: 'דף הבית' },
     { path: '/directory', ...menuItems[1], text: 'נבחרת הכוכבים' },
@@ -178,12 +177,15 @@ const App: React.FC = () => {
     { path: '/world-news', ...menuItems[5], text: 'חדשות מהעולם' },
     { path: '/surfer-card', ...menuItems[6], text: 'דשבורד אישי' },
     { path: '/shaper', ...menuItems[11], text: 'פינת השייפר' },
-    { path: '/admin', ...menuItems[8], text: 'פאנל ניהול' },
-    { path: '/admin-info', ...menuItems[9], text: 'דופק חבל זוג' },
-    { path: '/attendance', ...menuItems[10], text: 'יומן סשנים' },
-    { path: '/profile', ...menuItems[7], text: 'פרופיל שלי' },
-    { path: '/stats', ...menuItems[12], text: 'סטטיסטיקה' },
-    { path: '/logout', ...menuItems[13], text: 'גל יציאה' } // Logout is ID 13
+    ...(currentUser.role === 'Admin' ? [
+      { path: '/admin', ...menuItems[8], text: 'פאנל ניהול' },
+      { path: '/attendance', ...menuItems[10], text: 'יומן סשנים' },
+    ] : []),
+    ...(currentUser.role === 'Admin' || currentUser.role === 'Instructor' ? [
+      { path: '/admin-info', ...menuItems[9], text: 'דופק הקהילה' },
+    ] : []),
+    { path: '/profile', ...menuItems[7], text: 'פרופיל אישי' },
+    { path: '/logout', ...menuItems[13], text: 'גל יציאה' }
   ];
 
   return (
@@ -245,6 +247,13 @@ const App: React.FC = () => {
 
                 {/* Navigation Items & Signs */}
                 <div className="flex-1 px-6 pt-16 pb-24 flex flex-col items-center gap-0 overflow-y-auto relative z-10 custom-scrollbar">
+                  {/* Respect the Locals Sign */}
+                  <div className="scale-[0.6] mb-20 relative flex flex-col items-center overflow-visible">
+                    <RespectLocalsSign />
+                    {/* Nail for the diamond sign */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#2a2a2a] shadow-lg z-20" />
+                  </div>
+
                   {allSigns.map((item, idx) => (
                     <div key={item.path} className="relative w-full max-w-[280px] flex justify-center overflow-visible">
                       {idx === 0 && (
@@ -291,12 +300,15 @@ const App: React.FC = () => {
               <Route path="/surfer-card" element={<SurferCardPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/shaper" element={<ShaperPage />} />
-              {(currentUser.role === 'Admin' || currentUser.role === 'Instructor') && (
+              {currentUser.role === 'Admin' && (
                 <>
                   <Route path="/admin" element={<AdminPage />} />
                   <Route path="/admin-info" element={<AdminInfoPage />} />
                   <Route path="/attendance" element={<SurfingSessionAttendance />} />
                 </>
+              )}
+              {currentUser.role === 'Instructor' && (
+                <Route path="/admin-info" element={<AdminInfoPage />} />
               )}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

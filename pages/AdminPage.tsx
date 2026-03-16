@@ -46,7 +46,7 @@ const AdminPage: React.FC = () => {
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
     joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember, addMember,
-    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem
+    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins
   } = useData();
 
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM'>('USERS');
@@ -60,21 +60,15 @@ const AdminPage: React.FC = () => {
     { id: 'GALLERY', label: 'גלריה', icon: <ImageIcon size={20} /> },
     { id: 'EVENTS', label: 'אירועים', icon: <Calendar size={20} /> },
     { id: 'ROLLOVER', label: 'דו"ח יום חמישי', icon: <Activity size={20} /> },
-    ...(currentUser?.role === 'Admin' ? [
-      { id: 'ARCHIVE', label: 'ארכיון', icon: <Archive size={20} /> },
-      { id: 'REQUESTS', label: 'בקשות', icon: <UserCheck size={20} />, count: joinRequests.length },
-      { id: 'ENGINE_ROOM', label: 'חדר מכונות', icon: <Terminal size={20} /> },
-      { id: 'SITE', label: 'הגדרות', icon: <Settings size={20} /> }
-    ] : [])
+    { id: 'ARCHIVE', label: 'ארכיון', icon: <Archive size={20} /> },
+    { id: 'REQUESTS', label: 'בקשות', icon: <UserCheck size={20} />, count: joinRequests.length },
+    { id: 'ENGINE_ROOM', label: 'חדר מכונות', icon: <Terminal size={20} /> },
+    { id: 'SITE', label: 'הגדרות', icon: <Settings size={20} /> }
   ];
 
   const isAdmin = currentUser?.role === 'Admin';
 
   const handleTabChange = (id: string) => {
-    if (!isAdmin && ['ARCHIVE', 'REQUESTS', 'ENGINE_ROOM', 'SITE'].includes(id)) {
-      showError('אין לך הרשאות לגשת לאזור זה');
-      return;
-    }
     setActiveTab(id as any);
   };
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,6 +80,8 @@ const AdminPage: React.FC = () => {
   const [replacingAssetKey, setReplacingAssetKey] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  const [editingConflictId, setEditingConflictId] = useState<string | null>(null);
+  const [conflictNewEmail, setConflictNewEmail] = useState('');
   const [newMemberData, setNewMemberData] = useState<Partial<Member>>({
     firstName: '',
     lastName: '',
@@ -1074,6 +1070,80 @@ const AdminPage: React.FC = () => {
         {activeTab === 'ENGINE_ROOM' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             <SystemMonitor />
+
+            {conflictingAdmins.length > 1 && (
+              <div className="luxury-card p-8 bg-rose-50/30 border-rose-200/50">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-4 bg-rose-100 text-rose-600 rounded-2xl shadow-inner">
+                    <ShieldAlert size={32} />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-black text-[var(--deep-teal-sea)]">התנגשויות אימייל (Super Admin)</h4>
+                    <p className="text-sm text-[var(--deep-teal-sea)]/60 font-bold">נמצאו מספר מסמכים עם האימייל של מנהל המערכת. זה גורם להסתרת משתמשים מהרשימה.</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  {conflictingAdmins.map(admin => (
+                    <div key={admin.id} className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-white/80">
+                      <div className="flex items-center gap-4">
+                        <img src={admin.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
+                        <div>
+                          <p className="font-black text-[var(--deep-teal-sea)]">{admin.firstName} {admin.lastName}</p>
+                          <p className="text-xs text-[var(--turquoise-teal)] font-bold">{admin.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {editingConflictId === admin.id ? (
+                          <div className="flex items-center gap-2 animate-in slide-in-from-left-2">
+                            <input 
+                              type="email"
+                              value={conflictNewEmail}
+                              onChange={(e) => setConflictNewEmail(e.target.value)}
+                              placeholder="אימייל חדש"
+                              className="px-3 py-2 bg-white border border-[var(--vibrant-cyan)]/30 rounded-lg text-xs font-bold outline-none focus:ring-2 ring-[var(--vibrant-cyan)]/20 w-48"
+                              autoFocus
+                            />
+                            <button 
+                              onClick={async () => {
+                                if (conflictNewEmail && conflictNewEmail.includes('@')) {
+                                  await updateMember({ ...admin, email: conflictNewEmail.trim().toLowerCase() });
+                                  setEditingConflictId(null);
+                                  setConflictNewEmail('');
+                                  showSuccess('האימייל עודכן בהצלחה');
+                                } else {
+                                  showError('נא להזין אימייל תקין');
+                                }
+                              }}
+                              className="px-4 py-2 bg-[var(--vibrant-cyan)] text-white rounded-lg text-xs font-black hover:shadow-lg transition-all flex items-center gap-1"
+                            >
+                              <Save size={14} />
+                              שמור
+                            </button>
+                            <button 
+                              onClick={() => setEditingConflictId(null)}
+                              className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => {
+                              setEditingConflictId(admin.id);
+                              setConflictNewEmail(admin.email === SUPER_ADMIN_EMAIL ? 'gal@gmail.com' : admin.email);
+                            }}
+                            className="px-4 py-2 bg-[var(--vibrant-cyan)]/10 text-[var(--vibrant-cyan)] border border-[var(--vibrant-cyan)]/20 rounded-lg text-xs font-black hover:bg-[var(--vibrant-cyan)] hover:text-white transition-all"
+                          >
+                            שנה אימייל
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

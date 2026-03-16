@@ -57,7 +57,7 @@ export const RespectLocalsSign: React.FC = () => {
 
         {/* Content (Rotated back) */}
         <div className="-rotate-45 flex flex-col items-center justify-center w-full h-full p-6 text-white font-black uppercase tracking-widest text-center">
-          <span className="text-4xl font-black mb-0 drop-shadow-sm font-['Assistant']" style={{ WebkitTextStroke: '2px black', paintOrder: 'stroke fill' }}>דף</span>
+          <span className="text-3xl font-black mb-0 drop-shadow-sm font-['Assistant']" style={{ WebkitTextStroke: '2px black', paintOrder: 'stroke fill' }}>RESPECT</span>
           
           {/* Detailed Shark SVG */}
           <div className="relative w-[260px] h-[86px] my-1">
@@ -86,7 +86,7 @@ export const RespectLocalsSign: React.FC = () => {
             </svg>
           </div>
 
-          <span className="text-5xl font-black mt-0 drop-shadow-sm font-['Assistant']" style={{ WebkitTextStroke: '2px black', paintOrder: 'stroke fill' }}>הבית</span>
+          <span className="text-3xl font-black mt-0 drop-shadow-sm font-['Assistant']" style={{ WebkitTextStroke: '2px black', paintOrder: 'stroke fill' }}>THE LOCALS</span>
         </div>
         
         {/* Weathering Scratches */}

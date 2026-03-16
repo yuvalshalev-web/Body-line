@@ -90,19 +90,24 @@ const LoginPage: React.FC = () => {
       }
 
       // Step 1: Check if email exists
+      console.log('LoginPage: Attempting login for:', normalizedEmail);
       const qEmail = query(
         collection(db, 'members'), 
         where('email', '==', normalizedEmail), 
         limit(1)
       );
       const emailSnapshot = await trackedGetDocs(qEmail);
-      
+      console.log('LoginPage: Email snapshot size:', emailSnapshot.size);
       if (emailSnapshot.empty) {
+        console.log('LoginPage: Email not found:', normalizedEmail);
         // Diagnostic: Check if there are ANY members in the system
         const qAnyMember = query(collection(db, 'members'), limit(1));
         const anyMemberSnapshot = await trackedGetDocs(qAnyMember);
         
+        console.log('LoginPage: Any member check size:', anyMemberSnapshot.size);
+        
         if (anyMemberSnapshot.empty) {
+          console.error('LoginPage: Database collection "members" is completely empty!');
           setError('מסד הנתונים ריק. אנא פנה למנהל המערכת להקמת משתמשים ראשונית.');
           setIsLoading(false);
           return;

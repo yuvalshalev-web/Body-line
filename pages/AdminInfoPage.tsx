@@ -44,10 +44,10 @@ const AdminInfoPage: React.FC = () => {
     { id: 'help', label: 'מדריך אנליטיקה', icon: <Book size={20} /> },
   ];
 
-  if (currentUser?.role !== 'Admin') {
+  if (currentUser?.role !== 'Admin' && currentUser?.role !== 'Instructor') {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-slate-400 font-black uppercase tracking-widest">גישה לרכזים בלבד</p>
+        <p className="text-slate-400 font-black uppercase tracking-widest">גישה לרכזים ומדריכים בלבד</p>
       </div>
     );
   }

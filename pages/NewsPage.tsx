@@ -93,7 +93,7 @@ const NewsPage: React.FC = () => {
   const handleEdit = (item: NewsItem) => {
     if (!currentUser) return;
     
-    if (item.authorId !== currentUser.id) {
+    if (item.authorId !== currentUser.id && currentUser.role !== 'Admin') {
       showAlert("מבאס, אבל רק מחבר הפוסט יכול לערוך אותו. 🔒", "חזרה");
       return;
     }

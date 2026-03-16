@@ -843,69 +843,109 @@ const SystemMonitor: React.FC = () => {
           </div>
         </div>
 
-        {/* Emergency Button - Centered Push Button Style (Resized to be ~20% smaller than gauges) */}
-        <div className="w-full flex justify-center pt-4 pb-8">
-          <div className="relative group">
+        {/* Emergency Control Panel - 2x1 Grid */}
+        <div className="w-full flex justify-center gap-24 pt-12 pb-20 items-center">
+          
+          {/* Emergency Shutdown Button */}
+          <div className="relative w-[180px] h-[180px] flex items-center justify-center flex-shrink-0">
             {/* Outer Ring/Base of the button */}
-            <div className="absolute -inset-4 bg-slate-200 rounded-full shadow-inner border border-slate-300" />
+            <div className="absolute inset-0 bg-slate-200 rounded-full shadow-inner border border-slate-300 pointer-events-none" />
             
-            <motion.button 
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.9, y: 8, boxShadow: '0px 2px 5px rgba(0,0,0,0.3)' }}
+            <motion.div 
+              role="button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.92, boxShadow: '0px 0px 10px rgba(0,0,0,0.2)' }}
               animate={isKillSwitchActive || countdown !== null ? {
-                filter: ["brightness(1)", "brightness(1.8)", "brightness(1)"],
-                scale: [1, 0.95, 1],
+                filter: ["brightness(1)", "brightness(1.5)", "brightness(1)"],
+                scale: [1, 0.98, 1],
                 boxShadow: [
-                  '0_15px_0_rgb(153,0,0),0_25px_50px_rgba(255,0,0,0.3)',
-                  '0_15px_0_rgb(153,0,0),0_40px_80px_rgba(255,0,0,0.5)',
-                  '0_15px_0_rgb(153,0,0),0_25px_50px_rgba(255,0,0,0.3)'
+                  '0 0 20px rgba(255,0,0,0.2)',
+                  '0 0 40px rgba(255,0,0,0.5)',
+                  '0 0 20px rgba(255,0,0,0.2)'
                 ]
               } : {}}
               transition={{
-                duration: 0.4,
+                duration: 0.5,
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
               onClick={handleButtonClick}
-              className={`relative w-32 h-32 rounded-full font-black text-[9px] transition-all duration-300 flex flex-col items-center justify-center p-4 text-center shadow-[0_15px_0_rgb(153,0,0),0_25px_50px_rgba(0,0,0,0.2)] border-4 border-[#CC0000] bg-[#FF0000] text-white`}
               style={{ 
-                transformStyle: 'preserve-3d',
+                width: '150px', 
+                height: '150px',
+                minWidth: '150px',
+                minHeight: '150px'
               }}
+              className="relative rounded-full font-black text-[10px] transition-all duration-300 border-4 border-[#CC0000] bg-[#FF0000] text-white shadow-xl overflow-hidden cursor-pointer flex-none"
               title={isKillSwitchActive ? "Reconnect to database" : countdown !== null ? "Click to Abort Shutdown" : "Emergency Database Shutdown"}
             >
               {/* Glass Shine Effect */}
-              <div className="absolute top-2 left-4 right-4 h-1/2 bg-gradient-to-b from-white/40 to-transparent rounded-t-full pointer-events-none" />
+              <div className="absolute top-2 left-4 right-4 h-1/2 bg-gradient-to-b from-white/30 to-transparent rounded-t-full pointer-events-none" />
               
               {/* Inner Bezel */}
               <div className="absolute inset-2 rounded-full border-2 border-white/10 pointer-events-none" />
               
-              <div className="relative z-10 flex flex-col items-center gap-1">
+              {/* Content - Absolutely Positioned to avoid stretching */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 pointer-events-none">
                 {isKillSwitchActive ? (
                   <>
-                    <RefreshCw size={24} className="animate-spin mb-1" />
-                    <span className="leading-tight uppercase tracking-tighter">RECONNECTING...</span>
+                    <RefreshCw size={32} className="animate-spin mb-1" />
+                    <span className="leading-none uppercase font-black tracking-tighter text-[10px]">RECONNECTING...</span>
                   </>
                 ) : countdown !== null ? (
                   <>
-                    <TriangleAlert size={24} className="animate-pulse text-yellow-300 mb-1" />
-                    <span className="text-2xl font-black leading-none">{countdown}</span>
-                    <Skull size={20} className="animate-bounce mt-1" />
+                    <TriangleAlert size={32} className="animate-pulse text-yellow-300 mb-1" />
+                    <span className="text-4xl font-black leading-none">{countdown}</span>
                   </>
                 ) : (
                   <>
-                    <TriangleAlert size={28} className="group-hover:scale-110 transition-transform mb-1" />
-                    <span className="leading-tight uppercase font-black tracking-tighter">EMERGENCY<br/>SHUTDOWN</span>
-                    <Skull size={24} className="group-hover:rotate-12 transition-transform mt-1" />
+                    <TriangleAlert size={36} className="mb-1" />
+                    <span className="leading-tight uppercase font-black tracking-tighter text-[11px]">EMERGENCY<br/>SHUTDOWN</span>
+                    <Skull size={28} className="mt-1" />
                   </>
                 )}
               </div>
-
-              {/* Intense Danger Glow for Active State */}
-              {(isKillSwitchActive || countdown !== null) && (
-                <div className="absolute inset-0 bg-white animate-pulse opacity-20 rounded-full" />
-              )}
-            </motion.button>
+            </motion.div>
           </div>
+
+          {/* Cache Cleaning Button - Styled like Emergency Button */}
+          <div className="relative w-[180px] h-[180px] flex items-center justify-center flex-shrink-0">
+            {/* Outer Ring/Base of the button */}
+            <div className="absolute inset-0 bg-slate-200 rounded-full shadow-inner border border-slate-300 pointer-events-none" />
+            
+            <motion.div 
+              role="button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.92, boxShadow: '0px 0px 10px rgba(0,0,0,0.2)' }}
+              onClick={() => {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
+              }}
+              style={{ 
+                width: '150px', 
+                height: '150px',
+                minWidth: '150px',
+                minHeight: '150px'
+              }}
+              className="relative rounded-full font-black text-[10px] transition-all duration-300 border-4 border-[#B48200] bg-[#FFB800] text-white shadow-xl overflow-hidden cursor-pointer flex-none"
+              title="ניקוי מטמון וטעינה מחדש של המערכת"
+            >
+              {/* Glass Shine Effect */}
+              <div className="absolute top-2 left-4 right-4 h-1/2 bg-gradient-to-b from-white/30 to-transparent rounded-t-full pointer-events-none" />
+              
+              {/* Inner Bezel */}
+              <div className="absolute inset-2 rounded-full border-2 border-white/10 pointer-events-none" />
+              
+              {/* Content - Absolutely Positioned to avoid stretching */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 pointer-events-none">
+                <RefreshCw size={36} className="mb-1" />
+                <span className="leading-tight uppercase font-black tracking-tighter text-[11px]">CACHE<br/>PURGE</span>
+                <Zap size={28} className="mt-1" />
+              </div>
+            </motion.div>
+          </div>
+
         </div>
       </div>
 

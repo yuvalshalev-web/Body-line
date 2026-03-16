@@ -6,23 +6,41 @@ import { SignPost } from '../components/SignPost';
 import { AngryBird } from '../components/AngryBird';
 import surferMenuConfig from '../surfer_menu_config.json';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const SignsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentUser } = useAuth();
   const menuItems = surferMenuConfig.menu_items;
 
-  const navItems = [
-    { path: '/dashboard', ...menuItems[0], text: 'דף הבית' },
+  const isAdmin = currentUser?.role === 'Admin' || currentUser?.email === 'yuval@shalev.io';
+  const isInstructor = currentUser?.role === 'Instructor';
+
+  const baseItems = [
+    { path: '/', ...menuItems[0], text: 'דף הבית' },
     { path: '/directory', ...menuItems[1], text: 'נבחרת הכוכבים' },
     { path: '/gallery', ...menuItems[2], text: 'גלריית תמונות' },
     { path: '/events', ...menuItems[3], text: 'אירועים' },
     { path: '/posts', ...menuItems[4], text: 'פוסטים' },
-    { path: '/world-news', ...menuItems[5], text: 'חדשות' },
+    { path: '/world-news', ...menuItems[5], text: 'חדשות מהעולם' },
     { path: '/surfer-card', ...menuItems[6], text: 'דשבורד אישי' },
     { path: '/shaper', ...menuItems[11], text: 'פינת השייפר' },
-    { path: '/profile', ...menuItems[7], text: 'פרופיל שלי' }
+    { path: '/profile', ...menuItems[7], text: 'פרופיל אישי' }
   ];
+
+  const instructorItems = [
+    ...baseItems,
+    { path: '/admin-info', ...menuItems[9], text: 'דופק הקהילה' }
+  ];
+
+  const adminItems = [
+    ...instructorItems,
+    { path: '/admin', ...menuItems[8], text: 'פאנל ניהול' },
+    { path: '/attendance', ...menuItems[10], text: 'יומן סשנים' }
+  ];
+
+  const navItems = isAdmin ? adminItems : (isInstructor ? instructorItems : baseItems);
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -48,7 +66,7 @@ const SignsPage: React.FC = () => {
       <div className="absolute bottom-[39vh] left-1/2 -translate-x-1/2 w-16 h-6 bg-amber-100/80 blur-sm rounded-[100%] -z-10" />
 
       {/* Respect the Locals Sign at the top */}
-      <div className="scale-75 md:scale-100 mb-40 z-10 relative flex flex-col items-center overflow-visible">
+      <div className="scale-[0.6] md:scale-[0.8] mb-40 z-10 relative flex flex-col items-center overflow-visible">
         <RespectLocalsSign />
         {/* Nail for the diamond sign */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#2a2a2a] shadow-lg z-20" />

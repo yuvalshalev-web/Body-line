@@ -36,6 +36,7 @@ export interface Member {
   weight?: number; // in kg
   height?: number; // in cm
   surfingLevel?: 'Beginner' | 'Intermediate' | 'Advanced';
+  fitnessLevel?: 'Low' | 'Average' | 'High' | 'Elite';
   currentBoardVolume?: number; // in liters
   currentBoardLength?: string; // e.g., "6'2"
   recommendedBoardVolume?: number; // in liters

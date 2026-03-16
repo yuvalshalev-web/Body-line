@@ -101,6 +101,7 @@ interface DataContextType {
   archiveMember: (id: string) => Promise<void>;
   addMember: (member: Omit<Member, 'id'>) => Promise<void>;
   isDbEmpty: boolean;
+  conflictingAdmins: Member[];
   seedInitialAdmin: () => Promise<boolean>;
 }
 
@@ -157,6 +158,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [yearConfig, setYearConfig] = useState<{ startDate: string; endDate: string } | null>(null);
   const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
   const [isDbEmpty, setIsDbEmpty] = useState(false);
+  const [conflictingAdmins, setConflictingAdmins] = useState<Member[]>([]);
   const [activeSessionDate, setActiveSessionDate] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [hasQuotaError, setHasQuotaError] = useState(false);
@@ -302,13 +304,50 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Real-time listeners for dynamic data
       const unsubMembers = onSnapshot(query(collection(db, 'members'), limit(200)), (snapshot) => {
-        const mData = snapshot.docs
-          .map(d => ({ id: d.id, ...d.data() } as Member))
-          .filter(m => m.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase());
+        const rawDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member));
+        console.log('DataContext: Raw members count from snapshot:', rawDocs.length);
         
-        setMembers(mData);
+        const filteredDocs = rawDocs.filter(m => {
+          const isSuperAdmin = m.email?.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim();
+          // Special exception: If it's Gal Gadot, don't filter her out even if email matches (to allow recovery)
+          const isGalGadot = (m.firstName === 'גל' && m.lastName === 'גדות') || m.email?.toLowerCase().trim() === 'gal@gmail.com';
+          
+          if (isSuperAdmin && !isGalGadot) {
+            console.log('DataContext: Filtering out super admin:', m.email);
+            return false;
+          }
+          return true;
+        });
+
+        console.log('DataContext: Members count after filtering super admin:', filteredDocs.length);
+        
+        // Check for Gal Gadot specifically
+        const superAdmins = rawDocs.filter(m => m.email?.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim());
+        setConflictingAdmins(superAdmins);
+        if (superAdmins.length > 1) {
+          console.log('DataContext: WARNING! Multiple documents with SuperAdmin email found:', superAdmins.map(m => m.id));
+        } else if (superAdmins.length === 1) {
+          console.log('DataContext: Found single SuperAdmin document. ID:', superAdmins[0].id);
+        } else {
+          console.log('DataContext: No SuperAdmin document found in raw docs! (This is unexpected)');
+        }
+
+        const galGadot = rawDocs.find(m => 
+          (m.firstName === 'גל' && m.lastName === 'גדות') || 
+          m.email?.toLowerCase().trim() === 'gal@gmail.com'
+        );
+        if (galGadot) {
+          console.log('DataContext: Found Gal Gadot in raw docs:', galGadot);
+          console.log('DataContext: Gal Gadot isActive status:', galGadot.isActive);
+          const isFiltered = !filteredDocs.find(m => m.id === galGadot.id);
+          console.log('DataContext: Is Gal Gadot filtered out by SuperAdmin check?', isFiltered);
+        } else {
+          console.log('DataContext: Gal Gadot NOT found in raw docs. Current emails in DB:', rawDocs.map(m => m.email));
+        }
+        
+        setMembers(filteredDocs);
         setIsDbEmpty(snapshot.empty);
-        storage.set('cached_members_v3', mData, 2 / 60);
+        storage.set('cached_members_v3', filteredDocs, 2 / 60);
       }, handleFirestoreError);
 
       const unsubHistory = onSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
@@ -801,13 +840,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, forceResetSession,
       finalizeSession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
-      isDbEmpty, seedInitialAdmin
+      isDbEmpty, conflictingAdmins, seedInitialAdmin
     }), [
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, forceResetSession,
       finalizeSession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
-      isDbEmpty, seedInitialAdmin
+      isDbEmpty, conflictingAdmins, seedInitialAdmin
     ]);
 
   return (

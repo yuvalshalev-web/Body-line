@@ -47,7 +47,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
 
   const { weight, height, surfingLevel, currentBoardVolume, currentBoardLength } = member;
 
-  const baseRec = calculateSurferFormula(weight, height, surfingLevel as any);
+  const baseRec = calculateSurferFormula(weight, height, surfingLevel as any, member.fitnessLevel as any || 'Average');
   let recVol = baseRec.volume;
   let recLenInches = baseRec.lengthInches;
   let boardType = '';
