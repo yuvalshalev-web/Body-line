@@ -115,6 +115,46 @@
     "seaConditionsStats": {
       "schema": "SeaConditionsStats",
       "description": "Historical peaks for sea conditions"
+    },
+    "quotes": {
+      "schema": "object",
+      "description": "Daily quotes"
+    },
+    "news": {
+      "schema": "object",
+      "description": "Community news"
+    },
+    "podcasts": {
+      "schema": "object",
+      "description": "Community podcasts"
+    },
+    "glossary": {
+      "schema": "object",
+      "description": "Surfing glossary"
+    },
+    "exercises": {
+      "schema": "object",
+      "description": "Surfing exercises"
+    },
+    "weekly_history": {
+      "schema": "object",
+      "description": "Weekly session history"
+    },
+    "storage_stats": {
+      "schema": "object",
+      "description": "Database usage statistics"
+    },
+    "site_data": {
+      "schema": "object",
+      "description": "Global site configuration and assets"
+    },
+    "admin": {
+      "schema": "object",
+      "description": "Administrative metadata"
+    },
+    "rollover_logs": {
+      "schema": "object",
+      "description": "Logs for weekly session rollovers"
     }
   }
 }

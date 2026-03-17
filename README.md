@@ -36,7 +36,7 @@
    npm install
    ```
 3. הגדר משתנה סביבה ל-API Key של Gemini:
-   - צור קובץ `.env` והוסף: `API_KEY=your_gemini_api_key_here`
+   - צור קובץ `.env` והוסף: `GEMINI_API_KEY=your_gemini_api_key_here`
 4. הרץ את האפליקציה:
    ```bash
    npm start
@@ -44,7 +44,7 @@
 
 ## אבטחה (Security)
 
-הפרויקט מוגדר להשתמש ב-`process.env.API_KEY`. אין להעלות מפתחות API לקוד המקור. בשימוש ב-GitHub Actions או Vercel, יש להגדיר את המפתח תחת Environment Variables.
+הפרויקט מוגדר להשתמש ב-`process.env.GEMINI_API_KEY`. אין להעלות מפתחות API לקוד המקור. בשימוש ב-GitHub Actions או Vercel, יש להגדיר את המפתח תחת Environment Variables.
 
 ---
 © 2025 חבל זוג - הרצליה. כל הזכויות שמורות.חבל זוג הרצליה • האנשים, הערכים, החברות והרוח מאחורי הגלים

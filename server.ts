@@ -4,8 +4,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import cron, { ScheduledTask } from "node-cron";
 import Parser from 'rss-parser';
-import { finalizeSession as finalizeSessionService } from "./services/rolloverService.js";
-import { getDb } from "./services/firebase.js";
+import { finalizeSession as finalizeSessionService } from "./src/services/rolloverService.js";
+import { getDb } from "./src/services/firebase.js";
 import { collection, query, getDocs, orderBy, limit, onSnapshot, doc, getDoc } from "firebase/firestore";
 
 const parser = new Parser();

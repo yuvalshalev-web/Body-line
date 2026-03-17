@@ -1,4 +1,4 @@
-import { Member } from '../../types';
+import { Member } from '../types';
 import { formatDate } from './dateUtils';
 import { getBodyLineStats } from './bodyLineStats';
 
@@ -282,7 +282,7 @@ export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) =
 
     seasonSessions.forEach(s => {
       // Calculate how many members were active AT THE TIME of this session
-      const activeAtTime = members.filter(m => {
+      const activeMembersAtTime = members.filter(m => {
         const joinedDate = new Date(m.joinedAt);
         if (joinedDate > s.date) return false;
         
@@ -291,9 +291,22 @@ export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) =
           if (deactivatedDate < s.date) return false;
         }
         return true;
-      }).length;
+      });
 
-      totalActuals += s.count;
+      const activeAtTime = activeMembersAtTime.length;
+
+      // Only count actual attendees who were active members at the time
+      let actualAttendees = 0;
+      if (s.participantIds && s.participantIds.length > 0) {
+        actualAttendees = s.participantIds.filter(id => 
+          activeMembersAtTime.some(m => m.id === id)
+        ).length;
+      } else {
+        // Fallback for legacy data without participantIds
+        actualAttendees = Math.min(s.count, activeAtTime);
+      }
+
+      totalActuals += actualAttendees;
       totalCapacity += activeAtTime;
     });
 

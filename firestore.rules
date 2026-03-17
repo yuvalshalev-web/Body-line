@@ -1,4 +1,5 @@
 rules_version = '2';
+// @ai-preserve
 service cloud.firestore {
   match /databases/{database}/documents {
     // ===============================================================
@@ -6,13 +7,14 @@ service cloud.firestore {
     // ===============================================================
     //
     // Collection: members
+    // Document ID: auto-generated or matches auth.uid
     // Fields:
-    //   - firstName: string (required)
-    //   - lastName: string (required)
-    //   - email: string (required)
-    //   - role: string (required, ['Member', 'Instructor', 'Admin'])
-    //   - uid: string (optional, matches auth.uid)
-    //   - isActive: bool (optional)
+    //   - firstName: string (1-100)
+    //   - lastName: string (1-100)
+    //   - email: string (valid format)
+    //   - role: string (Member, Instructor, Admin)
+    //   - uid: string (matches auth.uid)
+    //   - isActive: bool
     //
     // Collection: joinRequests
     // Fields:
@@ -23,9 +25,11 @@ service cloud.firestore {
     //
     // Collection: gallery
     // Fields:
-    //   - imageUrl: string
-    //   - uploaderId: string
+    //   - imageUrl: string (valid URL)
+    //   - uploaderId: string (matches auth.uid)
     //   - uploaderName: string
+    //   - caption: string (max 500)
+    //   - timestamp: timestamp
     //
     // ===============================================================
 
@@ -43,7 +47,8 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && 
-        (get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role == 'Admin' ||
+        ((exists(/databases/$(database)/documents/members/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role == 'Admin') ||
          (request.auth.token.email == "yuval.shalev@gmail.com" && request.auth.token.email_verified == true));
     }
 
@@ -53,6 +58,12 @@ service cloud.firestore {
 
     function hasOnlyAllowedFields(fields) {
       return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function validString(field, min, max) {
+      return request.resource.data[field] is string && 
+             request.resource.data[field].size() >= min && 
+             request.resource.data[field].size() <= max;
     }
 
     // ===============================================================
@@ -66,103 +77,145 @@ service cloud.firestore {
              data.role in ['Member', 'Instructor', 'Admin'];
     }
 
+    function isValidGalleryItem(data) {
+      return data.imageUrl is string && 
+             data.caption is string && data.caption.size() <= 1000;
+    }
+
+    function isValidJoinRequest(data) {
+      return data.firstName is string && data.firstName.size() > 0 &&
+             data.lastName is string && data.lastName.size() > 0 &&
+             isValidEmail(data.email) &&
+             data.mobile is string && data.mobile.size() >= 9;
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
 
-    match /site_data/{docId} {
+    // Content collections - Publicly readable
+    match /quotes/{document=**} {
       allow read: if true;
-      allow write: if true; // App logic handles admin check
-    }
-
-    match /admin/{docId} {
-      // Allow public read for storage metadata and other public admin docs
-      allow read: if true;
-      allow write: if true; // App logic handles admin check
-    }
-
-    match /members/{memberId} {
-      // Allow public read to support custom login system (query by email/password)
-      // Note: This is a security trade-off because Firebase Auth is not being used.
-      allow read: if true;
-      
-      // Only admins can create members, or a user can create their own profile
-      allow create: if true; // Allow public signup/join requests to be converted to members
-      
-      // Only admins can update roles. 
-      allow update: if true; // Allow users to update their own info (app logic handles this)
-      
-      allow delete: if true; // App logic handles admin check
-    }
-
-    match /joinRequests/{requestId} {
-      allow read: if true;
-      allow create: if true; // Public can submit join requests
-      allow update, delete: if true; // App logic handles admin check
-    }
-
-    match /gallery/{itemId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow write: if isAdmin();
     }
 
     match /events/{eventId} {
       allow read: if true;
-      allow write: if true;
+      allow update: if isAdmin() || (
+        isAuthenticated() && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees']) &&
+        (
+          (request.resource.data.attendees.size() == resource.data.attendees.size() + 1 && 
+           request.resource.data.attendees.hasAll(resource.data.attendees) && 
+           request.resource.data.attendees.hasAll([request.auth.uid])) ||
+          (request.resource.data.attendees.size() == resource.data.attendees.size() - 1 && 
+           resource.data.attendees.hasAll(request.resource.data.attendees) && 
+           resource.data.attendees.hasAll([request.auth.uid]))
+        )
+      );
+      allow write: if isAdmin();
     }
 
-    match /news/{newsId} {
+    match /news/{document=**} {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin();
     }
 
-    match /podcasts/{podcastId} {
+    match /podcasts/{document=**} {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin();
     }
 
-    match /glossary/{termId} {
+    match /glossary/{document=**} {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin();
     }
 
-    match /exercises/{exId} {
+    match /exercises/{document=**} {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin();
     }
 
-    match /quotes/{quoteId} {
+    match /site_data/active_session {
       allow read: if true;
-      allow write: if true;
+      allow update: if isAdmin() || (
+        isAuthenticated() && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees']) &&
+        (
+          (request.resource.data.attendees.size() == resource.data.attendees.size() + 1 && 
+           request.resource.data.attendees.hasAll(resource.data.attendees) && 
+           request.resource.data.attendees.hasAll([request.auth.uid])) ||
+          (request.resource.data.attendees.size() == resource.data.attendees.size() - 1 && 
+           resource.data.attendees.hasAll(request.resource.data.attendees) && 
+           resource.data.attendees.hasAll([request.auth.uid]))
+        )
+      );
+      allow write: if isAdmin();
     }
 
-    match /system_logs/{logId} {
+    match /site_data/{document=**} {
       allow read: if true;
-      allow create: if true;
-      allow update, delete: if true;
+      allow write: if isAdmin();
     }
 
-    match /rollover_logs/{logId} {
+    match /admin/{document=**} {
       allow read: if true;
-      allow create: if true;
-      allow update, delete: if true;
+      allow write: if isAdmin();
     }
 
-    match /weekly_history/{historyId} {
+    match /members/{memberId} {
       allow read: if true;
-      allow write: if true;
+      allow create: if isValidMember(request.resource.data) && (isAdmin() || isOwner(memberId));
+      allow update: if isValidMember(request.resource.data) && 
+                    (isAdmin() || (isOwner(memberId) && request.resource.data.role == resource.data.role));
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.email == request.auth.token.email);
+    }
+
+    match /gallery/{document=**} {
+      allow read: if true;
+      allow create: if (isAuthenticated() || isAdmin()) && isValidGalleryItem(request.resource.data);
+      allow update: if (isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.uploaderId)) && isValidGalleryItem(request.resource.data);
+      allow delete: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.uploaderId);
+    }
+
+    match /weekly_history/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
     
-    match /seaConditions/{conditionId} {
+    match /seaConditions/{document=**} {
       allow read: if true;
-      allow write: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
     }
 
-    match /seaConditionsStats/{statId} {
+    match /seaConditionsStats/{document=**} {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin() || isAuthenticated();
+    }
+    
+    match /storage_stats/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Admin-only collections - Restricted to Admins
+    match /joinRequests/{document=**} {
+      allow read: if isAdmin();
+      allow create: if isValidJoinRequest(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /system_logs/{document=**} {
+      allow read: if isAdmin();
+      allow create: if true; // Allow anyone to log errors
+      allow update, delete: if isAdmin();
+    }
+
+    match /rollover_logs/{document=**} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
     }
     
     // Default deny
