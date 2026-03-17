@@ -35,7 +35,7 @@ async function startServer() {
     try {
       const lat = 32.16;
       const lng = 34.84;
-      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=sea_surface_temperature&timezone=auto`;
+      const marineUrl = `http://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=sea_surface_temperature&timezone=auto`;
       const marineRes = await fetch(marineUrl);
       if (marineRes.ok) {
         const marineData = await marineRes.json();
@@ -154,7 +154,7 @@ async function startServer() {
       // Using Open-Meteo Marine API for reliable coastal data in Israel (Herzliya area)
       const lat = 32.16;
       const lng = 34.84;
-      const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=sea_surface_temperature&timezone=auto&forecast_days=1`;
+      const url = `http://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=sea_surface_temperature&timezone=auto&forecast_days=1`;
       
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch from Open-Meteo");
@@ -190,7 +190,7 @@ async function startServer() {
       const lat = 32.16;
       const lng = 34.84;
       // Note: Open-Meteo Marine API supports historical data via the same endpoint if dates are in the past
-      const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=sea_surface_temperature&start_date=${start}&end_date=${end}&timezone=auto`;
+      const url = `http://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=sea_surface_temperature&start_date=${start}&end_date=${end}&timezone=auto`;
       
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch historical data");
@@ -210,10 +210,10 @@ async function startServer() {
       const lng = 34.84;
       
       // Fetch Marine Data (Wave Height, Water Temp)
-      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=wave_height,sea_surface_temperature&timezone=auto`;
+      const marineUrl = `http://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=wave_height,sea_surface_temperature&timezone=auto`;
       
       // Fetch Weather Data (Wind, UV Index)
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
+      const weatherUrl = `http://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
 
       const [marineRes, weatherRes] = await Promise.all([
         fetch(marineUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' } }),

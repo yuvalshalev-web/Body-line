@@ -23,7 +23,6 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { getBodyLineStats } from '../utils/bodyLineStats';
-import { calculateSeasonalGrit } from '../utils/analytics';
 import { 
   BarChart, 
   Bar, 
@@ -37,7 +36,9 @@ import {
   PieChart, 
   Pie, 
   Cell,
-  Legend
+  Legend,
+  LineChart,
+  Line
 } from 'recharts';
 
 const SessionStatsPage: React.FC = () => {
@@ -77,29 +78,6 @@ const SessionStatsPage: React.FC = () => {
     key: 'gritScore',
     direction: 'desc'
   });
-  const [showAudit, setShowAudit] = useState(false);
-
-  const seasonalGrit = useMemo(() => {
-    const calculatedScores = calculateSeasonalGrit(weeklyHistory, members);
-    
-    const seasonsConfig = [
-      { name: 'סתיו', icon: Waves, color: 'var(--surfer-orange)' },
-      { name: 'חורף', icon: Snowflake, color: 'var(--surfer-cyan)' },
-      { name: 'אביב', icon: Leaf, color: 'var(--surfer-teal)' },
-      { name: 'קיץ', icon: Sun, color: 'var(--surfer-yellow)' },
-    ];
-
-    return seasonsConfig.map(config => {
-      const scoreData = calculatedScores.find(s => s.name === config.name);
-      return {
-        ...config,
-        score: scoreData ? scoreData.score : 0,
-        actuals: scoreData ? scoreData.actuals : 0,
-        capacity: scoreData ? scoreData.capacity : 0,
-        sessionCount: scoreData ? scoreData.sessionCount : 0
-      };
-    });
-  }, [weeklyHistory, members]);
 
   const stats = useMemo(() => {
     if (!weeklyHistory || weeklyHistory.length === 0 || !yearConfig) return null;
@@ -483,14 +461,19 @@ const SessionStatsPage: React.FC = () => {
         if (sessions.length === 0) return 0;
         let potentialAttendance = 0;
         const actualAttendance = sessions.reduce((acc, s) => {
-          const sessionDate = new Date(s.date);
-          const activeAtSession = activeMembers.filter(m => {
+          const sessionDateStart = new Date(s.date);
+          sessionDateStart.setHours(0, 0, 0, 0);
+          const sessionDateEnd = new Date(s.date);
+          sessionDateEnd.setHours(23, 59, 59, 999);
+          
+          const activeAtSession = members.filter(m => {
             if (ageMap.get(m.id) !== group.label) return false;
+            if (!m.joinedAt) return true; // If no joinedAt, assume active
             const joinedDate = new Date(m.joinedAt);
-            if (joinedDate > sessionDate) return false;
+            if (joinedDate > sessionDateEnd) return false;
             if (m.deactivatedAt) {
               const deactivatedDate = new Date(m.deactivatedAt);
-              if (deactivatedDate < sessionDate) return false;
+              if (deactivatedDate < sessionDateStart) return false;
             }
             return true;
           }).length;
@@ -554,10 +537,9 @@ const SessionStatsPage: React.FC = () => {
       currentWeek,
       currentMonth,
       cancelledSessionsCount,
-      yearConfig,
-      seasonalGrit
+      yearConfig
     };
-  }, [weeklyHistory, members, yearConfig, gritSortConfig, gritSearchTerm, seasonalGrit]);
+  }, [weeklyHistory, members, yearConfig, gritSortConfig, gritSearchTerm]);
 
   if (isLoading) {
     return (
@@ -572,6 +554,24 @@ const SessionStatsPage: React.FC = () => {
     `${m.firstName} ${m.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
+  const parallelData = useMemo(() => {
+    if (!stats) return [];
+    return [
+      { 
+        name: 'סשן אחרון', 
+        ...stats.ageActivityData.reduce((acc, curr) => ({...acc, [curr.label]: curr.lastSession}), {}) 
+      },
+      { 
+        name: '4 אחרונים', 
+        ...stats.ageActivityData.reduce((acc, curr) => ({...acc, [curr.label]: curr.lastFour}), {}) 
+      },
+      { 
+        name: 'שנתי', 
+        ...stats.ageActivityData.reduce((acc, curr) => ({...acc, [curr.label]: curr.annual}), {}) 
+      }
+    ];
+  }, [stats]);
+
   return (
     <div className="max-w-7xl mx-auto font-['Yehuda_CLM'] pb-20 relative" dir="rtl">
       {/* Unified Header */}
@@ -582,90 +582,9 @@ const SessionStatsPage: React.FC = () => {
 
       {/* Sea-Time & Progress Bar Row */}
       <div className="flex flex-col md:flex-row gap-8 items-center justify-center mb-12 w-full">
-        {/* Seasonal Grit Score Grid (2x2) */}
-        <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-          {stats?.seasonalGrit.map((s, i) => (
-            <div key={i} className="home-glass-card p-6 flex flex-col items-center justify-center gap-3 relative overflow-hidden group">
-              {/* Subtle background glow */}
-              <div 
-                className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-500" 
-                style={{ backgroundColor: s.color }}
-              />
-              
-              <div className="p-3 rounded-[12px] border border-black/5 shadow-inner" style={{ backgroundColor: `${s.color}20` }}>
-                <s.icon 
-                  className="filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" 
-                  size={24} 
-                  style={{ color: s.color }}
-                />
-              </div>
-              
-              <div className="flex flex-col items-center">
-                <div className="flex items-center gap-1 mb-1">
-                  <span className="text-[10px] font-black text-[#000000]/40 uppercase tracking-widest">{s.name}</span>
-                  <div className="gt-info-wrapper relative cursor-help">
-                    <Info size={10} className="text-black/20 hover:text-black/40 transition-colors" />
-                    <div className="gt-tooltip">
-                      אחוז ההתמדה הקהילתי בעונת ה{s.name}.
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-0.5">
-                  <span className="text-3xl font-black text-[#000000]">{s.score}%</span>
-                </div>
-              </div>
-              
-              {/* Beveled edge effect */}
-              <div className="absolute inset-0 border border-white/20 rounded-2xl pointer-events-none" />
-            </div>
-          ))}
-        </div>
-
-        {/* Audit Report Toggle */}
-        <div className="flex flex-col items-center gap-4">
-          <button 
-            onClick={() => setShowAudit(!showAudit)}
-            className="text-[10px] font-black text-[#000000]/40 uppercase tracking-widest hover:text-[#000000] transition-colors flex items-center gap-2"
-          >
-            {showAudit ? 'הסתר פירוט חישוב' : 'הצג פירוט חישוב עונתי (Audit)'}
-          </button>
-          
-          {showAudit && (
-            <div className="home-glass-card p-4 w-full max-w-md animate-in fade-in slide-in-from-top-2 duration-300">
-              <table className="w-full text-right text-[11px] font-bold">
-                <thead>
-                  <tr className="border-b border-black/10">
-                    <th className="pb-2">עונה</th>
-                    <th className="pb-2">סשנים</th>
-                    <th className="pb-2">השתתפויות</th>
-                    <th className="pb-2">פוטנציאל</th>
-                    <th className="pb-2">תוצאה</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats?.seasonalGrit.map((s, i) => (
-                    <tr key={i} className="border-b border-black/5 last:border-0">
-                      <td className="py-2">{s.name}</td>
-                      <td className="py-2">{s.sessionCount}</td>
-                      <td className="py-2">{s.actuals}</td>
-                      <td className="py-2">{s.capacity}</td>
-                      <td className="py-2 font-black">{s.score}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p className="text-[9px] text-[#000000]/40 mt-3 leading-tight">
-                * פוטנציאל (Capacity) מחושב כסכום החברים שהיו פעילים בכל סשן בנפרד.
-                <br />
-                * השתתפויות (Actuals) הוא סך כל המשתתפים שרשומים ביומן.
-              </p>
-            </div>
-          )}
-        </div>
-
         <div className="relative group">
           <div className="absolute inset-0 bg-blue-500/10 blur-2xl group-hover:bg-blue-500/20 transition-all duration-500" />
-          <div className="relative bg-[#DDE1E4] p-8 rounded-[3rem] text-center min-w-[280px] shadow-soft border border-slate-200">
+          <div className="relative admin-info-card p-8 text-center min-w-[280px]">
             <p className="text-[12px] font-black text-[#4A5568] uppercase tracking-widest mb-2">זמן ים מצטבר (הערכה)</p>
             <div className="flex flex-col items-center">
               <span className="text-6xl font-black text-[#2D3748] drop-shadow-sm">
@@ -680,7 +599,7 @@ const SessionStatsPage: React.FC = () => {
         {/* Yearly Progress Bar Widget */}
         <div className="relative group w-full max-w-xl">
           <div className="absolute inset-0 bg-blue-500/5 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500" />
-          <div className="relative bg-[#DDE1E4] p-8 rounded-[3rem] shadow-soft border border-slate-200 flex flex-col w-full">
+          <div className="relative admin-info-card p-8 flex flex-col w-full">
             {(() => {
               const now = new Date();
               const startDate = yearConfig?.startDate || new Date().toISOString();
@@ -710,7 +629,7 @@ const SessionStatsPage: React.FC = () => {
                     {/* Percentage Markers */}
                     <div className="absolute -top-6 left-0 w-full flex justify-between px-1">
                       {[0, 20, 40, 60, 80, 100].map(p => (
-                        <span key={p} className="text-[8px] font-black text-slate-400">{p}%</span>
+                        <span key={p} className="text-[8px] font-black text-[#000000]">{p}%</span>
                       ))}
                     </div>
 
@@ -768,7 +687,7 @@ const SessionStatsPage: React.FC = () => {
           <div className="flex flex-row gap-4 justify-center items-stretch max-w-4xl mx-auto">
             <div className="flex-1 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
-                <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">ממוצע גולשים</p>
+                <p className="text-[12px] font-black text-[#000000] uppercase tracking-widest">ממוצע גולשים</p>
                 <div className="gt-info-wrapper">
                   <div className="gt-info-icon" style={{ width: '16px', height: '16px', fontSize: '10px' }}>i</div>
                   <span className="gt-tooltip" style={{ bottom: '180%', width: '200px' }}>
@@ -781,7 +700,7 @@ const SessionStatsPage: React.FC = () => {
 
             <div className="flex-1 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
-                <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">כניסות למים</p>
+                <p className="text-[12px] font-black text-[#000000] uppercase tracking-widest">כניסות למים</p>
                 <div className="gt-info-wrapper">
                   <div className="gt-info-icon" style={{ width: '16px', height: '16px', fontSize: '10px' }}>i</div>
                   <span className="gt-tooltip" style={{ bottom: '180%', width: '200px' }}>
@@ -795,7 +714,7 @@ const SessionStatsPage: React.FC = () => {
             <div className={`flex-1 p-6 rounded-[2.5rem] border shadow-sm flex flex-col items-center justify-center text-center ${
               stats.globalTrend === 'up' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
               stats.globalTrend === 'down' ? 'bg-rose-50 border-rose-100 text-rose-600' : 
-              'bg-white border-slate-100 text-slate-400'
+              'bg-white border-slate-100 text-[#000000]'
             }`}>
               <p className="text-[12px] font-black uppercase tracking-widest opacity-60 mb-3">מגמת נוכחות</p>
               <div className="flex items-center gap-3">
@@ -810,7 +729,7 @@ const SessionStatsPage: React.FC = () => {
             
             {/* Gender Impact Card (Right Side) */}
             <div className="lg:col-span-5 space-y-10">
-              <div className="relative p-10 rounded-[3.5rem] overflow-hidden border border-slate-200 shadow-soft bg-[#DDE1E4]">
+              <div className="relative admin-info-card p-10 overflow-hidden">
                 <div className="flex justify-between items-start mb-10">
                   <div>
                     <h3 className="text-[#2D3748] font-black text-2xl tracking-tighter">פילוח מגדרי ואימפקט</h3>
@@ -889,7 +808,7 @@ const SessionStatsPage: React.FC = () => {
               </div>
 
               {/* Age & Activity Card - Using White Card */}
-              <div className="bg-[#DDE1E4] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
+              <div className="admin-info-card p-10">
                 <div className="flex items-center gap-4 mb-10">
                   <div className="p-3 bg-white text-[#38B2AC] rounded-xl shadow-sm border border-slate-100"><Activity size={20} /></div>
                   <div className="flex items-center gap-2">
@@ -903,44 +822,66 @@ const SessionStatsPage: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="overflow-hidden rounded-3xl border border-slate-100">
-                  <table className="w-full text-right">
-                    <thead>
-                      <tr className="bg-slate-50">
-                        <th className="p-5 text-[12px] font-black text-slate-400 uppercase tracking-widest">קבוצת גיל</th>
-                        <th className="p-5 text-[12px] font-black text-slate-400 uppercase tracking-widest text-center">סשן אחרון</th>
-                        <th className="p-5 text-[12px] font-black text-slate-400 uppercase tracking-widest text-center">4 אחרונים</th>
-                        <th className="p-5 text-[12px] font-black text-slate-400 uppercase tracking-widest text-center">שנתי</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {stats.ageActivityData.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-5">
-                            <span className="text-sm font-black text-[#2B2B2E]">{row.label}</span>
-                          </td>
-                          <td className="p-5 text-center">
-                            <span className={`text-sm font-black ${row.lastSession >= 80 ? 'text-emerald-600' : 'text-slate-500'}`}>{row.lastSession}%</span>
-                          </td>
-                          <td className="p-5 text-center">
-                            <span className={`text-sm font-black ${row.lastFour >= 80 ? 'text-emerald-600' : 'text-slate-500'}`}>{row.lastFour}%</span>
-                          </td>
-                          <td className="p-5 text-center">
-                            <span className={`text-sm font-black ${row.annual >= 80 ? 'text-emerald-600' : 'text-slate-500'}`}>{row.annual}%</span>
-                          </td>
-                        </tr>
+                <div className="h-[300px] w-full mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={parallelData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                      <XAxis 
+                        dataKey="name" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#64748b', fontSize: 12, fontWeight: 800 }} 
+                        dy={10}
+                      />
+                      <YAxis 
+                        domain={[0, 100]} 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#64748b', fontSize: 12, fontWeight: 800 }}
+                        tickFormatter={(val) => `${val}%`}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(224, 247, 250, 0.08)', 
+                          backdropFilter: 'blur(24px)',
+                          borderRadius: '16px', 
+                          borderTop: '1px solid rgba(255, 255, 255, 0.3)', 
+                          borderLeft: '1px solid rgba(255, 255, 255, 0.3)', 
+                          boxShadow: '0 8px 32px rgba(122, 21, 85, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                          fontFamily: 'Yehuda_CLM',
+                          direction: 'rtl',
+                          color: '#000000'
+                        }}
+                        itemStyle={{ fontWeight: 800, color: '#004D40' }}
+                        formatter={(value: any) => [`${value}%`, '']}
+                      />
+                      <Legend 
+                        wrapperStyle={{ paddingTop: '20px', fontFamily: 'Yehuda_CLM', fontWeight: 800 }}
+                        iconType="circle"
+                      />
+                      {stats.ageGroupsBase.map((group, idx) => (
+                        <Line 
+                          key={idx}
+                          type="monotone" 
+                          dataKey={group.label} 
+                          name={group.label}
+                          stroke={group.color} 
+                          strokeWidth={4}
+                          dot={{ r: 6, strokeWidth: 2, fill: '#fff' }}
+                          activeDot={{ r: 8, strokeWidth: 0 }}
+                        />
                       ))}
-                    </tbody>
-                  </table>
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
-                <p className="text-[9px] text-slate-300 mt-6 font-bold text-center uppercase tracking-widest">הנתונים מייצגים אחוז השתתפות מתוך פוטנציאל הקבוצה</p>
+                <p className="text-[9px] text-[#000000] mt-6 font-bold text-center uppercase tracking-widest">הנתונים מייצגים אחוז השתתפות מתוך פוטנציאל הקבוצה</p>
               </div>
             </div>
 
             {/* Charts & Pulse (Left Side) - Using White Cards */}
             <div className="lg:col-span-7 space-y-10">
               {/* Pulse Area Chart */}
-              <div className="bg-[#DDE1E4] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
+              <div className="admin-info-card p-10">
                 <div className="flex items-center gap-4 mb-8">
                   <div className="p-3 bg-white text-[#1A365D] rounded-xl shadow-sm border border-slate-100">
                     <Activity size={20} />
@@ -988,10 +929,10 @@ const SessionStatsPage: React.FC = () => {
                           if (active && payload && payload.length) {
                             const data = payload[0].payload;
                             return (
-                              <div className="bg-[#2D3748] p-4 rounded-2xl border-none shadow-xl text-white text-right" dir="rtl">
-                                <p className="text-xs font-black mb-1">{data.fullDate}</p>
-                                <p className="text-sm font-black">
-                                  <span className="text-blue-400">{Math.round(payload[0].value as number)}%</span> נוכחות
+                              <div className="admin-info-card p-4 text-right" dir="rtl">
+                                <p className="text-xs font-black mb-1 text-[#000000]">{data.fullDate}</p>
+                                <p className="text-sm font-black text-[#004D40]">
+                                  <span className="text-[#7A1555]">{Math.round(payload[0].value as number)}%</span> נוכחות
                                 </p>
                               </div>
                             );
@@ -1014,7 +955,7 @@ const SessionStatsPage: React.FC = () => {
               </div>
 
               {/* Grit Leaderboard */}
-              <div className="bg-[#DDE1E4] p-10 rounded-[3.5rem] border border-slate-200 shadow-soft">
+              <div className="admin-info-card p-10">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-white text-[#D69E2E] rounded-xl shadow-sm border border-slate-100">
@@ -1043,8 +984,8 @@ const SessionStatsPage: React.FC = () => {
                 </div>
                 <div className="max-h-[600px] overflow-y-auto overflow-x-auto custom-scrollbar pr-2">
                   <table className="w-full text-right">
-                    <thead className="sticky top-0 bg-[#DDE1E4] z-20 shadow-sm">
-                      <tr className="border-b border-slate-200 bg-[#DDE1E4]">
+                    <thead className="sticky top-0 bg-white/10 backdrop-blur-md z-20 shadow-sm">
+                      <tr className="border-b border-white/20">
                         <th 
                           className="pb-6 text-[12px] font-black text-[#4A5568] uppercase tracking-widest pr-4 cursor-pointer hover:text-[#2D3748] transition-colors"
                           onClick={() => setGritSortConfig(prev => ({ key: 'firstName', direction: prev.key === 'firstName' && prev.direction === 'desc' ? 'asc' : 'desc' }))}
@@ -1127,7 +1068,7 @@ const SessionStatsPage: React.FC = () => {
         <div className="py-40 text-center bg-white rounded-[4rem] border-2 border-dashed border-slate-100">
           <BarChart3 size={64} className="mx-auto mb-8 text-slate-100" />
           <h3 className="text-3xl font-black text-[#2B2B2E] mb-4">אין מספיק נתונים לניתוח</h3>
-          <p className="text-slate-400 font-bold max-w-md mx-auto">
+          <p className="text-[#000000] font-bold max-w-md mx-auto">
             כדי להציג את דף הניתוח, יש להזין סשנים במערכת החל מתאריך תחילת שנת חבל זוג ({yearConfig?.startDate || 'לא הוגדר'}).
           </p>
         </div>

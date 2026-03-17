@@ -98,47 +98,31 @@ export const syncStorageOnDelete = async (fileSizeInBytes: number) => {
   }
 };
 
+const listAllRecursive = async (folderRef: any): Promise<number> => {
+  let totalBytes = 0;
+  try {
+    const res = await listAll(folderRef);
+    for (const item of res.items) {
+      const meta = await getMetadata(item);
+      totalBytes += meta.size || 0;
+    }
+    for (const prefix of res.prefixes) {
+      totalBytes += await listAllRecursive(prefix);
+    }
+  } catch (e) {
+    console.warn(`Could not list folder ${folderRef.fullPath}:`, e);
+  }
+  return totalBytes;
+};
+
 /**
  * סורק את כל תיקיות האחסון ומחשב מחדש את הגודל הכולל
  */
 export const recalculateStorageFromStorage = async (): Promise<number> => {
   try {
     const storage = getStorageInstance();
-    // הרחבת רשימת התיקיות לכיסוי מלא יותר
-    const folders = [
-      'gallery', 
-      'news', 
-      'events', 
-      'assets/site', 
-      'assets/logo', 
-      'members/avatars',
-      'podcasts',
-      'exercises',
-      'site_assets'
-    ];
-    let totalBytes = 0;
-
-    for (const folder of folders) {
-      const folderRef = ref(storage, folder);
-      try {
-        const res = await listAll(folderRef);
-        for (const item of res.items) {
-          const meta = await getMetadata(item);
-          totalBytes += meta.size || 0;
-        }
-        
-        // טיפול בתיקיות משנה (רמה אחת נוספת)
-        for (const prefix of res.prefixes) {
-          const subRes = await listAll(prefix);
-          for (const subItem of subRes.items) {
-            const subMeta = await getMetadata(subItem);
-            totalBytes += subMeta.size || 0;
-          }
-        }
-      } catch (e) {
-        console.warn(`Could not list folder ${folder}:`, e);
-      }
-    }
+    const rootRef = ref(storage, '');
+    const totalBytes = await listAllRecursive(rootRef);
 
     const statsRef = doc(db, "admin", "storage_metadata");
     await setDoc(statsRef, {

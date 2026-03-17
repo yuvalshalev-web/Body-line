@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
-import { Calendar, Crown, Star } from 'lucide-react';
+import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCircle, Phone, Twitter, Music2 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { calculateUserStats } from '../utils/analytics';
 import { getBodyLineStats } from '../utils/bodyLineStats';
@@ -108,6 +108,19 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
     return { percentile, roundedPercentile, distanceKm, label };
   }, [member, members, siteConfig]);
 
+  const openWhatsApp = () => {
+    if (!member?.mobile) return;
+    const cleanMobile = member.mobile.replace(/\D/g, '');
+    const finalMobile = cleanMobile.startsWith('0') ? '972' + cleanMobile.substring(1) : cleanMobile;
+    const message = encodeURIComponent(`היי ${member.firstName}, מה קורה?`);
+    window.open(`https://wa.me/${finalMobile}?text=${message}`, '_blank');
+  };
+
+  const callMobile = () => {
+    if (!member?.mobile) return;
+    window.location.href = `tel:${member.mobile}`;
+  };
+
   if (isLoading) return <div className="p-4 glass-panel rounded-2xl border border-white/20 animate-pulse">טוען...</div>;
   if (!member || !stats) return null;
 
@@ -117,7 +130,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-ocean/10 rounded-full blur-3xl -z-10" />
       
       <div className="relative">
-        <div className="w-40 h-40 md:w-48 md:h-48 rounded-3xl relative group">
+        <div className="w-48 h-48 md:w-60 md:h-60 rounded-3xl relative group">
           {/* Subtle Background Glow */}
           <div className="absolute inset-0 bg-sunshine-yellow/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
           
@@ -128,10 +141,11 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
                 alt="" 
                 className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 group-hover:rotate-[-3deg] feathered-avatar" 
                 onError={() => setImageError(true)}
+                referrerPolicy="no-referrer"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-white/20">
-                <Star size={80} className="animate-pulse" />
+                <Star size={100} className="animate-pulse" />
               </div>
             )}
             
@@ -168,6 +182,97 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             <span className="inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm bg-pink-500/20 text-pink-700 border-pink-500/30">
               זהות: {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
             </span>
+          </div>
+
+          {/* Social Media Links */}
+          <div className="flex flex-wrap gap-3 justify-center md:justify-start mt-4">
+            {/* Facebook */}
+            {member.facebookUrl ? (
+              <a href={member.facebookUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#1877F2]/10 rounded-xl hover:bg-[#1877F2] hover:text-white transition-all text-[#1877F2] shadow-sm" title="Facebook">
+                <Facebook size={20} />
+              </a>
+            ) : (
+              <div className="p-2 bg-slate-50 rounded-xl text-slate-300 cursor-not-allowed opacity-40" title="אין קישור לפייסבוק">
+                <Facebook size={20} />
+              </div>
+            )}
+
+            {/* Instagram */}
+            {member.instagramUrl ? (
+              <a href={member.instagramUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#E4405F]/10 rounded-xl hover:bg-[#E4405F] hover:text-white transition-all text-[#E4405F] shadow-sm" title="Instagram">
+                <Instagram size={20} />
+              </a>
+            ) : (
+              <div className="p-2 bg-slate-50 rounded-xl text-slate-300 cursor-not-allowed opacity-40" title="אין קישור לאינסטגרם">
+                <Instagram size={20} />
+              </div>
+            )}
+
+            {/* TikTok */}
+            {member.tiktokUrl ? (
+              <a href={member.tiktokUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-black/10 rounded-xl hover:bg-black hover:text-white transition-all text-black shadow-sm" title="TikTok">
+                <Music2 size={20} />
+              </a>
+            ) : (
+              <div className="p-2 bg-slate-50 rounded-xl text-slate-300 cursor-not-allowed opacity-40" title="אין קישור לטיקטוק">
+                <Music2 size={20} />
+              </div>
+            )}
+
+            {/* LinkedIn */}
+            {member.linkedinUrl ? (
+              <a href={member.linkedinUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#0077B5]/10 rounded-xl hover:bg-[#0077B5] hover:text-white transition-all text-[#0077B5] shadow-sm" title="LinkedIn">
+                <Linkedin size={20} />
+              </a>
+            ) : (
+              <div className="p-2 bg-slate-50 rounded-xl text-slate-300 cursor-not-allowed opacity-40" title="אין קישור ללינקדאין">
+                <Linkedin size={20} />
+              </div>
+            )}
+
+            {/* Twitter/X */}
+            {member.twitterUrl ? (
+              <a href={member.twitterUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-black/10 rounded-xl hover:bg-black hover:text-white transition-all text-black shadow-sm" title="X (Twitter)">
+                <Twitter size={20} />
+              </a>
+            ) : (
+              <div className="p-2 bg-slate-50 rounded-xl text-slate-300 cursor-not-allowed opacity-40" title="אין קישור ל-X">
+                <Twitter size={20} />
+              </div>
+            )}
+
+            {/* Website */}
+            {member.websiteUrl ? (
+              <a href={member.websiteUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#3dbbd3]/10 rounded-xl hover:bg-[#3dbbd3] hover:text-white transition-all text-[#3dbbd3] shadow-sm" title="Website">
+                <Globe size={20} />
+              </a>
+            ) : (
+              <div className="p-2 bg-slate-50 rounded-xl text-slate-300 cursor-not-allowed opacity-40" title="אין קישור לאתר">
+                <Globe size={20} />
+              </div>
+            )}
+          </div>
+
+          {/* Communication Buttons */}
+          <div className="flex flex-wrap gap-3 justify-center md:justify-start mt-4 pt-4 border-t border-white/10">
+            {member.mobile && (
+              <>
+                <button 
+                  onClick={openWhatsApp}
+                  className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-2xl font-black text-sm hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                >
+                  <MessageCircle size={18} />
+                  WhatsApp
+                </button>
+                <button 
+                  onClick={callMobile}
+                  className="flex items-center gap-2 px-6 py-3 bg-sky-500 text-white rounded-2xl font-black text-sm hover:bg-sky-600 transition-all shadow-lg shadow-sky-500/20 active:scale-95"
+                >
+                  <Phone size={18} />
+                  התקשר
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

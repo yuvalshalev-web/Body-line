@@ -296,7 +296,7 @@ const CommunityHeatMap: React.FC = () => {
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="glass-panel p-8 relative overflow-hidden group min-h-[700px] flex flex-col gap-8"
+      className="admin-info-card p-8 relative overflow-hidden group min-h-[700px] flex flex-col gap-8"
     >
       {/* Header Overlay */}
       <div className="flex items-center justify-between z-[1000]">
@@ -308,8 +308,8 @@ const CommunityHeatMap: React.FC = () => {
             </svg>
           </div>
           <div>
-            <h3 className="text-xl font-black glass-text-primary tracking-tight">מפת חום וסטטיסטיקת מרחק</h3>
-            <p className="glass-text-secondary text-[8px] font-bold uppercase tracking-[0.3em]">Geographic Density • Operational Ranges</p>
+            <h3 className="text-xl font-black text-[#7A1555] tracking-tight">מפת חום וסטטיסטיקת מרחק</h3>
+            <p className="text-[#000000] text-[8px] font-bold uppercase tracking-[0.3em]">Geographic Density • Operational Ranges</p>
           </div>
         </div>
         
@@ -317,15 +317,15 @@ const CommunityHeatMap: React.FC = () => {
         <div className="flex gap-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-emerald-500" />
-            <span className="text-[12px] font-bold glass-text-secondary">חי"ר (0-20)</span>
+            <span className="text-[12px] font-bold text-[#000000]">חי"ר (0-20)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-amber-500" />
-            <span className="text-[12px] font-bold glass-text-secondary">שיריון (21-100)</span>
+            <span className="text-[12px] font-bold text-[#000000]">שיריון (21-100)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-red-500" />
-            <span className="text-[12px] font-bold glass-text-secondary">חיל אויר (100+)</span>
+            <span className="text-[12px] font-bold text-[#000000]">חיל אויר (100+)</span>
           </div>
         </div>
       </div>
@@ -341,10 +341,10 @@ const CommunityHeatMap: React.FC = () => {
           
           {hasNoPoints && (
             <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-              <div className="glass-panel p-6 text-center max-w-xs">
+              <div className="admin-info-card p-6 text-center max-w-xs">
                 <ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-                <h4 className="text-lg font-black glass-text-primary mb-2">לא נמצאו נתוני מיקום</h4>
-                <p className="text-xs glass-text-secondary leading-relaxed">
+                <h4 className="text-lg font-black text-[#7A1555] mb-2">לא נמצאו נתוני מיקום</h4>
+                <p className="text-xs text-[#000000] leading-relaxed">
                   כדי להציג את מפת החום, יש לוודא שלחברי הקהילה מוגדרת עיר מגורים תקינה בטבלת החברים.
                 </p>
               </div>
@@ -356,12 +356,12 @@ const CommunityHeatMap: React.FC = () => {
             <div className="glass-effect p-4 rounded-2xl border border-white/20 shadow-xl backdrop-blur-xl">
               <div className="flex items-center gap-3 mb-1">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[12px] font-black glass-text-primary uppercase tracking-widest">חי"ר</span>
+                <span className="text-[12px] font-black text-[#7A1555] uppercase tracking-widest">חי"ר</span>
               </div>
-              <p className="text-xl font-black glass-text-primary">{stats.near} <span className="text-xs font-normal opacity-50">חברים</span></p>
+              <p className="text-xl font-black text-[#7A1555]">{stats.near} <span className="text-xs font-normal opacity-50">חברים</span></p>
               {/* Debug Info */}
               <div className="mt-2 pt-2 border-t border-white/10">
-                <p className="text-[8px] font-bold glass-text-secondary uppercase tracking-tighter">
+                <p className="text-[8px] font-bold text-[#000000] uppercase tracking-tighter">
                   Mapped: {stats.near + stats.medium + stats.far} Members • Points: {stats.bins.reduce((a, b) => a + b.count, 0)}
                 </p>
               </div>
@@ -371,23 +371,23 @@ const CommunityHeatMap: React.FC = () => {
           {/* Heatmap Color Legend */}
           <div className="absolute bottom-4 right-4 z-[1000]">
             <div className="glass-effect p-4 rounded-2xl border border-white/20 shadow-xl backdrop-blur-xl flex flex-col gap-3">
-              <span className="text-[12px] font-black glass-text-primary uppercase tracking-widest mb-1">צפיפות חברים</span>
+              <span className="text-[12px] font-black text-[#7A1555] uppercase tracking-widest mb-1">צפיפות חברים</span>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-[#ef4444] shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
-                  <span className="text-[12px] font-bold glass-text-secondary">גבוהה מאוד</span>
+                  <span className="text-[12px] font-bold text-[#000000]">גבוהה מאוד</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-[#f59e0b] shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
-                  <span className="text-[12px] font-bold glass-text-secondary">גבוהה</span>
+                  <span className="text-[12px] font-bold text-[#000000]">גבוהה</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-[#10b981] shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                  <span className="text-[12px] font-bold glass-text-secondary">בינונית</span>
+                  <span className="text-[12px] font-bold text-[#000000]">בינונית</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-[#3b82f6] shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                  <span className="text-[12px] font-bold glass-text-secondary">נמוכה</span>
+                  <span className="text-[12px] font-bold text-[#000000]">נמוכה</span>
                 </div>
               </div>
             </div>

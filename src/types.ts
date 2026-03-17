@@ -33,6 +33,7 @@ export interface Member {
   loginCount?: number; // Added for analytics
   birthday?: string; // YYYY-MM-DD
   gender?: Gender;
+  group?: string;
   weight?: number; // in kg
   height?: number; // in cm
   surfingLevel?: 'Beginner' | 'Intermediate' | 'Advanced';

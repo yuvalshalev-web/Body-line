@@ -1049,24 +1049,24 @@ const SystemMonitor: React.FC = () => {
           <CircularRing 
             value={Math.min((dbSize / 1024) * 100, 100)}
             label="Database"
-            sublabel={`${(dbSize || 0).toFixed(2)} MB`}
+            sublabel={dbSize >= 1024 ? `${(dbSize / 1024).toFixed(2)} GB` : `${(dbSize || 0).toFixed(2)} MB`}
             gradient={dbSize / 1024 > 0.9 ? ['#CC2678', '#FF2D60'] : dbSize / 1024 > 0.7 ? ['#FFDE45', '#FF9F1C'] : ['#10B981', '#34D399']}
           />
           <div>
             <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight mb-2">גודל מסד הנתונים</h3>
-            <p className="text-xs font-bold text-[#000000]/60 uppercase tracking-widest">מתוך מכסה של 1024 MB</p>
+            <p className="text-xs font-bold text-[#000000]/60 uppercase tracking-widest">מתוך מכסה של 1 GB</p>
           </div>
         </div>
         <div className="luxury-slab p-8 flex items-center gap-6">
           <CircularRing 
-            value={Math.min((storageSize / 1000) * 100, 100)}
+            value={Math.min((storageSize / 5120) * 100, 100)}
             label="Storage"
-            sublabel={`${(storageSize || 0).toFixed(2)} MB`}
-            gradient={storageSize / 1000 > 0.9 ? ['#CC2678', '#FF2D60'] : storageSize / 1000 > 0.7 ? ['#FFDE45', '#FF9F1C'] : ['#10B981', '#34D399']}
+            sublabel={storageSize >= 1024 ? `${(storageSize / 1024).toFixed(2)} GB` : `${(storageSize || 0).toFixed(2)} MB`}
+            gradient={storageSize / 5120 > 0.9 ? ['#CC2678', '#FF2D60'] : storageSize / 5120 > 0.7 ? ['#FFDE45', '#FF9F1C'] : ['#10B981', '#34D399']}
           />
           <div>
             <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight mb-2">גודל שטח האחסון (Storage)</h3>
-            <p className="text-xs font-bold text-[#000000]/60 uppercase tracking-widest">מתוך מכסה של 1000 MB</p>
+            <p className="text-xs font-bold text-[#000000]/60 uppercase tracking-widest">מתוך מכסה של 5 GB</p>
           </div>
         </div>
       </div>

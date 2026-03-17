@@ -746,7 +746,7 @@ const TrendsDashboard: React.FC = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="luxury-card p-4 rounded-2xl shadow-xl text-white text-right" dir="rtl">
+        <div className="admin-info-card p-4 rounded-2xl shadow-xl text-white text-right" dir="rtl">
           <p className="text-xs font-black mb-1 border-b border-white/10 pb-2">{data.fullDate}</p>
           <p className="text-[12px] font-bold text-blue-300 mb-2">חודש {data.activityMonth} לשנת חבל זוג</p>
           <div className="space-y-1.5">
@@ -759,19 +759,19 @@ const TrendsDashboard: React.FC = () => {
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                      <span className="text-xs font-bold text-slate-300">{entry.name}</span>
+                      <span className="text-xs font-bold text-[#004D40]">{entry.name}</span>
                     </div>
                     <span className="text-xs font-black text-white">{Math.round(entry.value as number)}%</span>
                   </div>
                   {entry.payload[`${entry.dataKey}_count`] !== undefined && (
-                    <p className="text-[12px] font-bold text-slate-400 mr-4">
+                    <p className="text-[12px] font-bold text-[#000000] mr-4">
                       מספר משתתפים בפועל: {entry.payload[`${entry.dataKey}_count`]}
                     </p>
                   )}
                 </div>
               );
             })}
-            <p className="text-[12px] font-bold text-slate-500 mt-2 pt-2 border-t border-white/5">
+            <p className="text-[12px] font-bold text-[#000000] mt-2 pt-2 border-t border-white/5">
               שבוע {data.weekNumber} מתחילת הפעילות
             </p>
           </div>
@@ -784,7 +784,7 @@ const TrendsDashboard: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Header & Switcher */}
-      <div className="luxury-slab p-10">
+      <div className="admin-info-card p-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600">
@@ -792,7 +792,7 @@ const TrendsDashboard: React.FC = () => {
             </div>
             <div>
               <h3 className="text-xl font-black text-[#2B2B2E] tracking-tight">דשבורד טרנדים והתמדה</h3>
-              <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">ניתוח שנת חבל זוג • 7 קבוצות מיקוד</p>
+              <p className="text-[12px] font-bold text-[#000000] uppercase tracking-widest">ניתוח שנת חבל זוג • 7 קבוצות מיקוד</p>
             </div>
           </div>
         </div>
@@ -813,7 +813,7 @@ const TrendsDashboard: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="lg:col-span-2 luxury-slab p-10 transition-all duration-500 relative group"
+        className="lg:col-span-2 admin-info-card p-10 transition-all duration-500 relative group"
       >
           {/* Background elements that need clipping */}
           <div className="absolute inset-0 overflow-hidden rounded-[4rem] pointer-events-none">
@@ -823,7 +823,7 @@ const TrendsDashboard: React.FC = () => {
 
           <div className="flex items-center justify-between mb-12 relative z-10">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl luxury-card flex items-center justify-center text-[var(--surfer-cyan)]">
+              <div className="w-12 h-12 rounded-2xl admin-info-card flex items-center justify-center text-[var(--surfer-cyan)]">
                 <Activity size={24} />
               </div>
               <div>
@@ -1105,7 +1105,7 @@ const TrendsDashboard: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="lg:col-span-2 luxury-slab p-10 transition-all duration-500 relative group"
+        className="lg:col-span-2 admin-info-card p-10 transition-all duration-500 relative group"
       >
           {/* Background elements that need clipping */}
           <div className="absolute inset-0 overflow-hidden rounded-[4rem] pointer-events-none">
@@ -1115,7 +1115,7 @@ const TrendsDashboard: React.FC = () => {
 
           <div className="flex items-center justify-between mb-12 relative z-10">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl luxury-card flex items-center justify-center text-[var(--surfer-pink)]">
+              <div className="w-12 h-12 rounded-2xl admin-info-card flex items-center justify-center text-[var(--surfer-pink)]">
                 <Heart size={24} />
               </div>
               <div>
@@ -1374,10 +1374,10 @@ const TrendsDashboard: React.FC = () => {
       <div className="flex flex-col items-center gap-4 mb-8 mt-4">
         <div className="flex items-center gap-3 mb-1">
           <div className="w-8 h-px bg-slate-200" />
-          <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">ניתוח מגמות והתמדה</span>
+          <span className="text-[11px] font-black text-[#000000] uppercase tracking-[0.3em]">ניתוח מגמות והתמדה</span>
           <div className="w-8 h-px bg-slate-200" />
         </div>
-        <div dir="ltr" className="relative flex luxury-card p-1.5 rounded-full">
+        <div dir="ltr" className="relative flex admin-info-card p-1.5 rounded-full">
           {/* Animated Colorful Bubble */}
           <div className="absolute inset-1.5 flex pointer-events-none">
             <motion.div
@@ -1390,7 +1390,7 @@ const TrendsDashboard: React.FC = () => {
           <button
             onClick={() => setViewMode('unified')}
             className={`relative z-10 px-10 py-3 rounded-full text-[14px] font-black uppercase tracking-widest transition-colors duration-300 ${
-              viewMode === 'unified' ? 'text-white' : 'text-slate-500 hover:text-slate-800'
+              viewMode === 'unified' ? 'text-white' : 'text-[#004D40] hover:text-[#000000]'
             }`}
           >
             גרף מאוחד
@@ -1398,7 +1398,7 @@ const TrendsDashboard: React.FC = () => {
           <button
             onClick={() => setViewMode('split')}
             className={`relative z-10 px-10 py-3 rounded-full text-[14px] font-black uppercase tracking-widest transition-colors duration-300 ${
-              viewMode === 'split' ? 'text-white' : 'text-slate-500 hover:text-slate-800'
+              viewMode === 'split' ? 'text-white' : 'text-[#004D40] hover:text-[#000000]'
             }`}
           >
             גרף מפוצל
@@ -1413,7 +1413,7 @@ const TrendsDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="luxury-slab p-10 h-[500px]"
+            className="admin-info-card p-10 h-[500px]"
           >
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
@@ -1511,7 +1511,7 @@ const TrendsDashboard: React.FC = () => {
             className="grid grid-cols-1 gap-8"
           >
             {groups.map(group => (
-              <div key={group.id} className="luxury-slab p-10 h-[350px] flex flex-col">
+              <div key={group.id} className="admin-info-card p-10 h-[350px] flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-xs font-black text-[#2B2B2E] uppercase tracking-widest">{group.label}</h4>
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.color }} />
