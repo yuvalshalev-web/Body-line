@@ -295,7 +295,7 @@
   padding: 5rem 0;
   margin-bottom: 2rem;
   overflow: visible;
-  background: transparent !important;
+  background: transparent;
 }
 
 /* Background Image Layer */
@@ -307,13 +307,13 @@
   background-size: cover !important;
   background-position: center 45% !important;
   background-repeat: no-repeat !important;
-  z-index: 1; /* Positive z-index to ensure it's above parent background */
+  z-index: -1; /* Behind the content */
   opacity: 1 !important;
   filter: contrast(1.05) saturate(1.1) !important;
   
   /* Feathering Effect */
-  mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
+  mask-image: radial-gradient(ellipse at center, black 60%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 60%, transparent 100%);
 }
 
 /* Subtle Texture Layer */
@@ -385,6 +385,51 @@
   .main-page-title {
     margin: 0 auto;
   }
+}
+
+/* --- AVATAR DESIGN RULES (FEATHERING & BLENDING) --- */
+.feathered-edges {
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+.header-image-mask {
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+}
+
+.header-wallpaper {
+  position: relative;
+  overflow: hidden;
+  height: 225px; /* Shortened height by 25% */
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  mask-image: radial-gradient(ellipse at center, black 70%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 70%, transparent 100%);
+}
+
+.header-wallpaper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.6); /* Overlay to simulate 0.4 opacity */
+  z-index: 1;
+  pointer-events: none;
+}
+
+.header-wallpaper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.4); /* Stronger watermark */
+  z-index: 2;
+  pointer-events: none;
+}
+
+.header-content-wrapper {
+  position: relative;
+  z-index: 1;
 }
 
 .wax-comb-card {

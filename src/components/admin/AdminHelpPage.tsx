@@ -19,9 +19,9 @@ const AdminHelpPage = () => {
           <h3 className="text-xl font-black text-[#ff009f] mb-4">השעיית חבר</h3>
           <p className="text-[#4a002e] mb-4">כאשר חבר מושעה, הוא הופך ל"שקוף" עבור המערכת הסטטיסטית.</p>
           <ul className="list-disc pr-5 text-sm leading-relaxed text-[#4a002e]/80">
-            <li><strong>המכנה הקבוצתי ($n$):</strong> קטן ב-1 באופן מיידי.</li>
+            <li><strong>המכנה המשותף ($n$):</strong> קטן ב-1 באופן מיידי.</li>
             <li><strong>ממוצעים:</strong> מתנקים מנתוני החבר המושעה (כדי למנוע "בורות" בגרפים).</li>
-            <li><strong>השפעה:</strong> החברים הפעילים רואים תמונה ריאליסטית של הקבוצה המתאמנת כרגע.</li>
+            <li><strong>השפעה:</strong> החברים הפעילים רואים תמונה ריאליסטית של הזהות (הקבוצה) המתאמנת כרגע.</li>
           </ul>
         </div>
 
@@ -32,7 +32,7 @@ const AdminHelpPage = () => {
           <p className="text-[#4a002e] mb-4">החזרת חבר לסטטוס Active מבצעת "כיול מחדש" לכל האתר.</p>
           <ul className="list-disc pr-5 text-sm leading-relaxed text-[#4a002e]/80">
             <li><strong>אחוזונים:</strong> המערכת מחשבת מחדש את המיקום של כולם (גיל, מרחק, Grit).</li>
-            <li><strong>דירוג:</strong> חבר עשוי לראות שמיקומו השתנה כי חבר "חזק" יותר חזר לקבוצה.</li>
+            <li><strong>דירוג:</strong> חבר עשוי לראות שמיקומו השתנה כי חבר "חזק" יותר חזר לזהות שלו.</li>
           </ul>
         </div>
 
@@ -40,7 +40,7 @@ const AdminHelpPage = () => {
         <div className="admin-info-card p-8 rounded-3xl transition-transform hover:-translate-y-1">
           <div className="text-4xl mb-4">➕</div>
           <h3 className="text-xl font-black text-[#ff009f] mb-4">צירוף חבר חדש</h3>
-          <p className="text-[#4a002e] mb-4">חבר חדש נכנס למערכת ללא היסטוריה, כחלק מהקבוצה העתידית.</p>
+          <p className="text-[#4a002e] mb-4">חבר חדש נכנס למערכת ללא היסטוריה, כחלק מהזהות העתידית.</p>
           <ul className="list-disc pr-5 text-sm leading-relaxed text-[#4a002e]/80">
             <li><strong>היסטוריה:</strong> הוא לא משפיע על ממוצעי העבר (כדי לא לעוות נתונים ישנים).</li>
             <li><strong>זמן אמת:</strong> הוא נספר מיד בחישובי ה-Real-time והאחוזונים הנוכחיים.</li>

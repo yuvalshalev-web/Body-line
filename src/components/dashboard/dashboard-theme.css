@@ -181,14 +181,4 @@
   font-weight: 900 !important;
 }
 
-/* 5. Masking & Feathering */
-.feathered-avatar {
-  mask-image: radial-gradient(circle at center, black 20%, rgba(0,0,0,0.7) 50%, transparent 90%);
-  -webkit-mask-image: radial-gradient(circle at center, black 20%, rgba(0,0,0,0.7) 50%, transparent 90%);
-  transition: all 0.5s ease;
-}
-
-.feathered-avatar-hover:hover .feathered-avatar {
-  mask-image: radial-gradient(circle at center, black 40%, rgba(0,0,0,0.8) 70%, transparent 100%);
-  -webkit-mask-image: radial-gradient(circle at center, black 40%, rgba(0,0,0,0.8) 70%, transparent 100%);
-}
+/* 5. Masking & Feathering - Moved to index.css */

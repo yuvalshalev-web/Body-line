@@ -125,21 +125,21 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   if (!member || !stats) return null;
 
   return (
-    <div className="tangible-glass-card p-[var(--spacing-md)] flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden surfer-theme-bg" dir="rtl">
+    <div className="flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
       {/* Background Accent */}
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-ocean/10 rounded-full blur-3xl -z-10" />
       
       <div className="relative">
-        <div className="w-48 h-48 md:w-60 md:h-60 rounded-3xl relative group">
+        <div className="w-64 h-64 md:w-80 md:h-80 rounded-3xl relative group">
           {/* Subtle Background Glow */}
           <div className="absolute inset-0 bg-sunshine-yellow/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
           
-          <div className="w-full h-full rounded-3xl overflow-hidden border border-white/30 shadow-2xl bg-white/5 backdrop-blur-xl rotate-3 relative z-10 feathered-avatar-hover">
+          <div className="w-full h-full rounded-3xl overflow-hidden border border-white/30 shadow-2xl bg-sky-50 backdrop-blur-xl rotate-3 relative z-10">
             {member.avatar && !imageError ? (
               <img 
                 src={member.avatar} 
                 alt="" 
-                className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 group-hover:rotate-[-3deg] feathered-avatar" 
+                className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 group-hover:rotate-[-3deg] feathered-edges" 
                 onError={() => setImageError(true)}
                 referrerPolicy="no-referrer"
               />
