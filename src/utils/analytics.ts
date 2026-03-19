@@ -42,19 +42,29 @@ export const calculateUserStats = (
   const member = members.find(m => m.id === userId);
   if (!member) return null;
 
+  const parseDate = (date: any) => {
+    if (!date) return new Date(NaN);
+    if (typeof date.toDate === 'function') return date.toDate();
+    if (typeof date.seconds === 'number') return new Date(date.seconds * 1000);
+    return new Date(date);
+  };
+
   const startDate = yearConfig?.startDate ? new Date(yearConfig.startDate) : new Date(0);
   const now = new Date();
   
   // Filter history for sessions after startDate, ignoring cancelled sessions
   const validSessions = weeklyHistory.filter(session => {
-    const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
-    return sessionDate >= startDate && sessionDate <= now && (session.participantsCount || 0) > 0;
+    const sessionDate = parseDate(session.date);
+    if (isNaN(sessionDate.getTime())) return false;
+    
+    const hasParticipants = (session.participantsCount || 0) > 0 || (session.participantIds?.length || 0) > 0;
+    return sessionDate >= startDate && sessionDate <= now && hasParticipants;
   });
 
   // Group by week (Thursday) to merge participantIds
   const sessionsByDate = new Map<string, { date: Date, participantIds: Set<string> }>();
   validSessions.forEach(session => {
-    const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+    const sessionDate = parseDate(session.date);
     
     // Normalize to Thursday 07:00
     const day = sessionDate.getDay();
@@ -81,6 +91,11 @@ export const calculateUserStats = (
   );
 
   const totalSessions = userSessions.length;
+  
+  // Debug log for session data
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[Analytics] User ${userId}: Found ${totalSessions} sessions out of ${weeklyHistory.length} total history items.`);
+  }
 
   // Calculate Social Attendance (Only past events)
   const pastSocialEvents = events.filter(e => {

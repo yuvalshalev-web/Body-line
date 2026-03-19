@@ -8,8 +8,11 @@ import { addLog, SystemLog } from '../utils/systemLogs';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 // @ai-preserve: Firebase Initialization
+console.log("Initializing Firebase...");
 const app = initializeApp(firebaseConfig);
+console.log("Firebase initialized.");
 const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+console.log("Firestore initialized.");
 
 const auth = getAuth(app);
 const storage = getStorage(app);

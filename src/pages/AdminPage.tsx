@@ -7,7 +7,7 @@ import {
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
   PanelTop, ArrowUpCircle, ArrowDownCircle, User, Sparkles, Globe, Activity, AlertTriangle, Terminal,
-  FileText, Map as MapIcon
+  FileText, Map as MapIcon, Clock
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -22,7 +22,6 @@ import { processImage } from '../utils/imageProcessor';
 import { updateStorageStats, syncStorageOnUpload } from '../utils/storageStats';
 import { ColorPickerIcon } from '../components/icons/ColorPickerIcon';
 import { extractAddressData, loadGoogleMaps } from '../utils/googlePlaces';
-import StorageDisplay from '../components/StorageDisplay';
 import TimePicker from '../components/TimePicker';
 import { DayPicker } from '../components/DayPicker';
 import EventEditor from '../components/admin/EventEditor';
@@ -32,6 +31,7 @@ import PostEditor from '../components/admin/PostEditor';
 import AdminRolloverReport from './AdminRolloverReport';
 import SystemMonitor from '../components/SystemMonitor';
 import { MarkdownViewer } from '../components/admin/MarkdownViewer';
+import { useRandomHeader } from '../hooks/useRandomHeader';
 
 const ASSET_LABELS: Record<string, string> = {
   habalZugLogo: 'לוגו חבל זוג',
@@ -43,6 +43,7 @@ const ASSET_LABELS: Record<string, string> = {
 };
 
 const AdminPage: React.FC = () => {
+  const headerImage = useRandomHeader();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
@@ -273,8 +274,8 @@ const AdminPage: React.FC = () => {
   const [isSavingYear, setIsSavingYear] = useState(false);
 
   // Weekly Sessions State
-  const [weeklySessions, setWeeklySessions] = useState<{ dayOfWeek: number, time: string, isActive?: boolean }[]>(
-    siteConfig.weeklySessions || [{ dayOfWeek: 4, time: '07:00', isActive: false }]
+  const [weeklySessions, setWeeklySessions] = useState<{ dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[]>(
+    siteConfig.weeklySessions || [{ dayOfWeek: 4, time: '07:00', isActive: false, isRecurring: true }]
   );
   const [isSavingSessions, setIsSavingSessions] = useState(false);
 
@@ -596,15 +597,15 @@ const AdminPage: React.FC = () => {
     <div className="relative min-h-screen luxury-bg text-right space-y-12 pb-20 pt-8" dir="rtl">
       <div className="max-w-7xl mx-auto">
         {/* Body-line Standard Header Stack */}
-        <div className="surfboard-hero-container mb-6 space-y-2">
-          {/* Main Title */}
-          <h1 className="main-page-title">
-          <span className="surfer-title">פאנל ניהול</span>
-        </h1>
-
-          {/* Subtitle with Emoji context */}
-          <div className="flex flex-col items-center gap-4">
-            <p className="header-subtitle max-w-2xl">
+        <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+          <div className="header-content-wrapper relative z-20">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
+              <Settings size={40} />
+            </div>
+            <h1 className="main-page-title">
+              <span className="surfer-title">פאנל ניהול</span>
+            </h1>
+            <p className="header-subtitle max-w-2xl mx-auto">
               ניהול משתמשים, בקשות הצטרפות והגדרות מערכת מתקדמות 🛡️
             </p>
           </div>
@@ -648,23 +649,23 @@ const AdminPage: React.FC = () => {
                     onClick={() => {
                       setActiveTab(item.id as any);
                     }}
-                    className="group luxury-card p-8 transition-all duration-500 text-right relative overflow-hidden"
+                    className="group admin-info-card p-8 transition-all duration-500 text-right relative overflow-hidden"
                   >
-                    <div className={`absolute top-0 left-0 w-2 h-full ${item.color} opacity-20 group-hover:opacity-100 transition-opacity`} />
+                    <div className={`absolute top-0 left-0 w-1.5 h-full ${item.color} opacity-10 group-hover:opacity-40 transition-opacity`} />
                     <div className="flex items-start justify-between mb-6">
                       <div className={`p-4 rounded-2xl ${item.color} text-white shadow-lg group-hover:scale-110 transition-transform duration-500`}>
                         <item.icon size={28} />
                       </div>
                       {item.count !== undefined && item.count > 0 && (
-                        <div className="bg-[var(--electric-red-pink)] text-white px-3 py-1 rounded-full text-[12px] font-black animate-pulse">
+                        <div className="bg-[var(--surfer-electric-pink)] text-white px-3 py-1 rounded-full text-[12px] font-black animate-pulse shadow-sm shadow-[var(--surfer-electric-pink)]/30">
                           {item.count} חדש
                         </div>
                       )}
                     </div>
-                    <h3 className="text-xl font-black text-[var(--deep-teal-sea)] mb-2 group-hover:text-[var(--turquoise-teal)] transition-colors">{item.label}</h3>
-                    <p className="text-xs font-black text-[var(--deep-teal-sea)]/70 uppercase tracking-widest">{item.desc}</p>
+                    <h3 className="text-xl font-black text-[var(--surfer-electric-pink)] mb-2 group-hover:text-[var(--surfer-deep-magenta)] transition-colors">{item.label}</h3>
+                    <p className="text-xs font-black text-[var(--deep-teal-sea)] uppercase tracking-widest">{item.desc}</p>
                     
-                    <div className="mt-8 flex items-center gap-2 text-[var(--turquoise-teal)] text-[12px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+                    <div className="mt-8 flex items-center gap-2 text-[var(--surfer-vibrant-cyan)] text-[12px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
                       כניסה לניהול <ArrowLeft size={12} />
                     </div>
                   </button>
@@ -675,35 +676,33 @@ const AdminPage: React.FC = () => {
         {activeTab === 'REQUESTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Join Requests Summary Card */}
-            <div className="luxury-slab p-[2px] group">
-              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
-                
-                <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#00FFFF] to-[#FFD700] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#00FFFF]/20 group-hover:rotate-6 transition-transform">
-                    <UserCheck size={32} />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">בקשות להצטרף</h3>
-                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ואישור חברים חדשים בקהילה</p>
-                  </div>
+            <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
+              <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
+              
+              <div className="flex items-center gap-6 relative z-10">
+                <div className="w-16 h-16 bg-gradient-to-br from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-sunshine-yellow)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+                  <UserCheck size={32} />
                 </div>
+                <div>
+                  <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">בקשות להצטרף</h3>
+                  <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול ואישור חברים חדשים בקהילה</p>
+                </div>
+              </div>
 
-                <div className="flex flex-wrap items-center gap-4 relative z-10">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-xl border border-amber-100 text-xs font-bold">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                    בקשות ממתינות {joinRequests.length}
-                  </div>
+              <div className="flex flex-wrap items-center gap-4 relative z-10">
+                <div className="flex items-center gap-2 px-4 py-2 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)] rounded-xl border border-[var(--surfer-aqua-mist)]/20 text-xs font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  בקשות ממתינות {joinRequests.length}
                 </div>
               </div>
             </div>
 
             <div className="relative">
-               <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-[#00FFFF]/40" />
+               <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-[var(--surfer-vibrant-cyan)]/40" />
                <input 
                  type="text" 
                  placeholder="חיפוש לפי שם או אימייל..." 
-                 className="w-full pr-16 pl-6 py-6 luxury-card font-black focus:ring-2 ring-[var(--vibrant-cyan)]/30"
+                 className="w-full pr-16 pl-6 py-6 admin-info-card font-black focus:ring-2 ring-[var(--surfer-vibrant-cyan)]/30 text-[#000000] placeholder:text-[#000000]/40"
                  value={searchTerm}
                  onChange={e => setSearchTerm(e.target.value)}
                />
@@ -712,35 +711,35 @@ const AdminPage: React.FC = () => {
             {filteredRequests.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredRequests.map(req => (
-                  <div key={req.id} className={`luxury-card p-8 group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50' : ''}`}>
+                  <div key={req.id} className={`admin-info-card p-8 group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50' : ''}`}>
                     <div className="flex items-start gap-5 mb-8">
                        {req.avatar ? (
-                         <img src={req.avatar} className="w-16 h-16 rounded-2xl object-cover shadow-md" alt="" />
+                         <img src={req.avatar} className="w-16 h-16 rounded-2xl object-cover shadow-md border border-white/30" alt="" />
                        ) : (
-                         <div className="w-16 h-16 rounded-2xl bg-[var(--aqua-mist)]/20 flex items-center justify-center text-[#00FFFF] shadow-md">
+                         <div className="w-16 h-16 rounded-2xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)] shadow-md border border-white/30">
                            <UserCircle size={32} />
                          </div>
                        )}
                        <div>
-                          <h4 className="text-xl font-black text-[var(--deep-teal-sea)] mb-1">{req.firstName} {req.lastName}</h4>
-                          <div className="flex items-center gap-2 text-[var(--turquoise-teal)]/60 font-bold text-[12px] uppercase tracking-widest">
-                             <Calendar size={12} className="text-[#FFD700]" />
+                          <h4 className="text-xl font-black text-[var(--surfer-electric-pink)] mb-1">{req.firstName} {req.lastName}</h4>
+                          <div className="flex items-center gap-2 text-[#000000] font-bold text-[12px] uppercase tracking-widest">
+                             <Calendar size={12} className="text-[var(--surfer-sunshine-yellow)]" />
                              {new Date(req.requestedAt).toLocaleDateString('he-IL')}
                           </div>
                        </div>
                     </div>
 
                     <div className="space-y-4 flex-1">
-                       <div className="flex items-center gap-3 p-3 bg-[var(--aqua-mist)]/10 rounded-xl">
-                          <Mail size={14} className="text-[var(--turquoise-teal)]/60" />
-                          <span className="text-xs font-black truncate">{req.email}</span>
+                       <div className="flex items-center gap-3 p-3 bg-[var(--surfer-aqua-mist)]/10 rounded-xl border border-white/20">
+                          <Mail size={14} className="text-[#000000]/60" />
+                          <span className="text-xs font-black text-[#000000] truncate">{req.email}</span>
                        </div>
-                       <div className="flex items-center gap-3 p-3 bg-[var(--aqua-mist)]/10 rounded-xl">
-                          <Phone size={14} className="text-[var(--turquoise-teal)]/60" />
-                          <span className="text-xs font-black">{req.mobile}</span>
+                       <div className="flex items-center gap-3 p-3 bg-[var(--surfer-aqua-mist)]/10 rounded-xl border border-white/20">
+                          <Phone size={14} className="text-[#000000]/60" />
+                          <span className="text-xs font-black text-[#000000]">{req.mobile}</span>
                        </div>
-                       <div className="flex items-center gap-3 p-3 bg-[var(--turquoise-teal)]/10 text-[var(--vibrant-cyan)] rounded-xl">
-                          <MapPin size={14} />
+                       <div className="flex items-center gap-3 p-3 bg-[var(--surfer-vibrant-cyan)]/10 text-[#000000] rounded-xl border border-[var(--surfer-vibrant-cyan)]/20">
+                          <MapPin size={14} className="text-[var(--surfer-vibrant-cyan)]" />
                           <span className="text-xs font-black">{(req as any).group || 'הרצליה'}</span>
                        </div>
                     </div>
@@ -753,7 +752,7 @@ const AdminPage: React.FC = () => {
                          disabled={isProcessing === req.id}
                          className="flex-1 py-4 hd-glass-button-gold text-white rounded-2xl font-black text-sm transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
                        >
-                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserCheck size={20} className="text-[#00FFFF]" />}
+                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserCheck size={20} className="text-white" />}
                          אשר הצטרפות
                        </button>
                        <button 
@@ -764,7 +763,7 @@ const AdminPage: React.FC = () => {
                          className="p-4 bg-rose-50 text-rose-600 rounded-2xl hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50 flex items-center justify-center border-2 border-rose-200 hover:border-rose-600 shadow-sm"
                          title="דחה ומחק בקשה"
                        >
-                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserX size={20} className="text-[#FF2D60]" />}
+                         {isProcessing === req.id ? <Loader2 className="animate-spin" size={20} /> : <UserX size={20} />}
                        </button>
                     </div>
                   </div>
@@ -793,41 +792,39 @@ const AdminPage: React.FC = () => {
                 coordinators: members.filter(m => m.role === 'Admin').length,
               };
               return (
-                <div className="luxury-slab p-[2px] group">
-                  <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                    <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
-                    
-                    <div className="flex items-center gap-6 relative z-10">
-                      <div className="w-16 h-16 bg-gradient-to-br from-[#00FFFF] to-[#FFD700] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#00FFFF]/20 group-hover:rotate-6 transition-transform">
-                        <Users size={32} />
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">חברים</h3>
-                        <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול וסינון חברי הקהילה</p>
-                      </div>
+                <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
+                  <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
+                  
+                  <div className="flex items-center gap-6 relative z-10">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-sunshine-yellow)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+                      <Users size={32} />
                     </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">חברים</h3>
+                      <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול וסינון חברי הקהילה</p>
+                    </div>
+                  </div>
 
-                    <div className="flex flex-wrap items-center gap-3 relative z-10">
-                      <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 rounded-xl border border-slate-200 text-xs font-bold">
-                        <span className="w-2 h-2 rounded-full bg-slate-400" />
-                        רשומים {stats.total}
-                      </div>
-                      <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 text-xs font-bold">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        פעילים {stats.active}
-                      </div>
-                      <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-xl border border-amber-100 text-xs font-bold">
-                        <span className="w-2 h-2 rounded-full bg-amber-500" />
-                        מושעים {stats.suspended}
-                      </div>
-                      <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-xs font-bold">
-                        <span className="w-2 h-2 rounded-full bg-indigo-500" />
-                        מדריכים {stats.instructors}
-                      </div>
-                      <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-xl border border-purple-100 text-xs font-bold">
-                        <span className="w-2 h-2 rounded-full bg-purple-500" />
-                        רכזים {stats.coordinators}
-                      </div>
+                  <div className="flex flex-wrap items-center gap-3 relative z-10">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)] rounded-xl border border-[var(--surfer-aqua-mist)]/20 text-xs font-bold shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-slate-400" />
+                      רשומים {stats.total}
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-[#2D6A4F]/10 text-[#2D6A4F] rounded-xl border border-[#2D6A4F]/20 text-xs font-bold shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-[#2D6A4F] animate-pulse" />
+                      פעילים {stats.active}
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-[#BC4749]/10 text-[#BC4749] rounded-xl border border-[#BC4749]/20 text-xs font-bold shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-[#BC4749]" />
+                      מושעים {stats.suspended}
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-xs font-bold shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                      מדריכים {stats.instructors}
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-xl border border-purple-100 text-xs font-bold shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-purple-500" />
+                      רכזים {stats.coordinators}
                     </div>
                   </div>
                 </div>
@@ -859,18 +856,18 @@ const AdminPage: React.FC = () => {
                 onClose={() => setEditingMember(null)}
               />
             ) : (
-              <div className="luxury-card overflow-hidden">
+            <div className="admin-info-card overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-right">
-                    <thead className="bg-[var(--aqua-mist)]/10 border-b border-[var(--vibrant-cyan)]/5">
+                    <thead className="bg-[var(--surfer-aqua-mist)]/10 border-b border-[var(--surfer-vibrant-cyan)]/10">
                       <tr>
-                        <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">משתמש</th>
-                        <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">זהות</th>
-                        <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">סטטוס</th>
-                        <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest text-center">עריכה</th>
+                        <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">משתמש</th>
+                        <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">זהות</th>
+                        <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">סטטוס</th>
+                        <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest text-center">עריכה</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[var(--aqua-mist)]/20">
+                    <tbody className="divide-y divide-[var(--surfer-aqua-mist)]/10">
                       {members.filter(m => m.isActive !== false).sort((a, b) => {
                         const aLast = a.lastName || '';
                         const bLast = b.lastName || '';
@@ -883,29 +880,29 @@ const AdminPage: React.FC = () => {
                         }
                         return aFirst.localeCompare(bFirst, 'he');
                       }).map(member => (
-                        <tr key={member.id} className="hover:bg-[var(--aqua-mist)]/10 transition-all group">
+                        <tr key={member.id} className="hover:bg-[var(--surfer-aqua-mist)]/10 transition-all group">
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-4">
                               {member.avatar ? (
-                                <img src={member.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm" alt="" />
+                                <img src={member.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm border border-white/30" alt="" />
                               ) : (
-                                <div className="w-12 h-12 rounded-xl bg-[var(--aqua-mist)]/20 flex items-center justify-center text-[var(--turquoise-teal)]/40">
+                                <div className="w-12 h-12 rounded-xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)]/40 border border-white/30">
                                   <UserCircle size={24} />
                                 </div>
                               )}
                               <div>
-                                <h4 className="font-black text-[var(--deep-teal-sea)]">{member.firstName} {member.lastName}</h4>
-                                <p className="text-[12px] text-[var(--turquoise-teal)]/60 font-black truncate max-w-[150px]">{member.email}</p>
+                                <h4 className="font-black text-[var(--surfer-electric-pink)]">{member.firstName} {member.lastName}</h4>
+                                <p className="text-[12px] text-[#000000]/70 font-black truncate max-w-[150px]">{member.email}</p>
                               </div>
                             </div>
                           </td>
                           <td className="px-8 py-6">
                             <span className={`px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest ${
                               member.role === 'Admin' 
-                                ? 'bg-[var(--vibrant-cyan)]/10 text-[var(--vibrant-cyan)]' 
+                                ? 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)]' 
                                 : member.role === 'Instructor'
                                   ? 'bg-amber-50 text-amber-600'
-                                  : 'bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)]/60'
+                                  : 'bg-[var(--surfer-aqua-mist)]/10 text-[#000000]'
                             }`}>
                               {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
                             </span>
@@ -913,8 +910,8 @@ const AdminPage: React.FC = () => {
                           <td className="px-8 py-6">
                             <span className={`px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest ${
                               (member as any).status === 'suspended'
-                                ? 'bg-red-50 text-red-600'
-                                : 'bg-emerald-50 text-emerald-600'
+                                ? 'bg-[#BC4749]/10 text-[#BC4749]'
+                                : 'bg-[#2D6A4F]/10 text-[#2D6A4F]'
                             }`}>
                               {(member as any).status === 'suspended' ? 'מושעה' : 'פעיל'}
                             </span>
@@ -923,7 +920,7 @@ const AdminPage: React.FC = () => {
                             <div className="flex items-center justify-center">
                               <button 
                                 onClick={() => setEditingMember(member)}
-                                className="w-10 h-10 bg-white border border-[var(--vibrant-cyan)]/10 rounded-xl flex items-center justify-center text-[var(--turquoise-teal)]/40 hover:text-[var(--vibrant-cyan)] hover:border-[var(--vibrant-cyan)]/30 hover:shadow-lg transition-all"
+                                className="w-10 h-10 bg-white/40 backdrop-blur-md border border-white/30 rounded-xl flex items-center justify-center text-[#000000]/40 hover:text-[var(--surfer-electric-pink)] hover:border-[var(--surfer-electric-pink)]/30 hover:shadow-lg transition-all"
                                 title="עריכת משתמש"
                               >
                                 <Pencil size={18} />
@@ -955,42 +952,40 @@ const AdminPage: React.FC = () => {
             {(() => {
               const suspendedCount = members.filter(m => m.isActive === false).length;
               return (
-                <div className="luxury-slab p-[2px] group">
-                  <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                    <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
-                    
-                    <div className="flex items-center gap-6 relative z-10">
-                      <div className="w-16 h-16 bg-gradient-to-br from-[#00FFFF] to-[#FFD700] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#00FFFF]/20 group-hover:rotate-6 transition-transform">
-                        <UserX size={32} />
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">חברים מושעים</h3>
-                        <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול משתמשים שהוצאו מהמערכת</p>
-                      </div>
+                <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
+                  <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
+                  
+                  <div className="flex items-center gap-6 relative z-10">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-sunshine-yellow)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+                      <UserX size={32} />
                     </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">חברים מושעים</h3>
+                      <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול משתמשים שהוצאו מהמערכת</p>
+                    </div>
+                  </div>
 
-                    <div className="flex flex-wrap items-center gap-3 relative z-10">
-                      <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-xs font-bold">
-                        <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                        מושעים {suspendedCount}
-                      </div>
+                  <div className="flex flex-wrap items-center gap-3 relative z-10">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-xs font-bold shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                      מושעים {suspendedCount}
                     </div>
                   </div>
                 </div>
               );
             })()}
 
-            <div className="luxury-card overflow-hidden">
+            <div className="admin-info-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-right">
-                  <thead className="bg-[var(--aqua-mist)]/10 border-b border-[var(--vibrant-cyan)]/5">
+                  <thead className="bg-[var(--surfer-aqua-mist)]/10 border-b border-[var(--surfer-vibrant-cyan)]/10">
                     <tr>
-                      <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">משתמש מושעה</th>
-                      <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">זהות</th>
-                      <th className="px-8 py-6 text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest text-center">פעולות</th>
+                      <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">משתמש מושעה</th>
+                      <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">זהות</th>
+                      <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest text-center">פעולות</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[var(--aqua-mist)]/10">
+                  <tbody className="divide-y divide-[var(--surfer-aqua-mist)]/10">
                     {members.filter(m => m.isActive === false).sort((a, b) => {
                       const aLast = a.lastName || '';
                       const bLast = b.lastName || '';
@@ -1003,32 +998,32 @@ const AdminPage: React.FC = () => {
                       }
                       return aFirst.localeCompare(bFirst, 'he');
                     }).map(member => (
-                      <tr key={member.id} className="hover:bg-[var(--aqua-mist)]/10 transition-all group">
+                      <tr key={member.id} className="hover:bg-[var(--surfer-aqua-mist)]/10 transition-all group">
                         <td className="px-8 py-6">
                           <div className="flex items-center gap-4">
                             {member.avatar ? (
                               <img 
                                 src={member.avatar} 
-                                className="w-12 h-12 rounded-xl object-cover shadow-sm opacity-50 cursor-pointer hover:opacity-100 transition-opacity" 
+                                className="w-12 h-12 rounded-xl object-cover shadow-sm opacity-50 cursor-pointer hover:opacity-100 transition-opacity border border-white/30" 
                                 alt="" 
                                 onClick={() => setEditingMember(member)}
                               />
                             ) : (
                               <div 
-                                className="w-12 h-12 rounded-xl bg-[var(--aqua-mist)]/20 flex items-center justify-center text-[#00FFFF]/20 cursor-pointer hover:bg-[var(--aqua-mist)]/30 transition-colors"
+                                className="w-12 h-12 rounded-xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)]/20 cursor-pointer hover:bg-[var(--surfer-aqua-mist)]/30 transition-colors border border-white/30"
                                 onClick={() => setEditingMember(member)}
                               >
                                 <UserCircle size={24} />
                               </div>
                             )}
                             <div>
-                              <h4 className="font-black text-[var(--turquoise-teal)]/40">{member.firstName} {member.lastName}</h4>
-                              <p className="text-[12px] text-[var(--turquoise-teal)]/20 font-black truncate max-w-[150px]">{member.email}</p>
+                              <h4 className="font-black text-[#000000]/60">{member.firstName} {member.lastName}</h4>
+                              <p className="text-[12px] text-[#000000]/40 font-black truncate max-w-[150px]">{member.email}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-8 py-6">
-                          <span className="px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)]/40">
+                          <span className="px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest bg-[var(--surfer-aqua-mist)]/10 text-[#000000]/60">
                             {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
                           </span>
                         </td>
@@ -1036,7 +1031,7 @@ const AdminPage: React.FC = () => {
                           <div className="flex items-center justify-center gap-2">
                             <button 
                               onClick={() => setEditingMember(member)}
-                              className="w-10 h-10 bg-white border border-[var(--vibrant-cyan)]/10 rounded-xl flex items-center justify-center text-[var(--turquoise-teal)]/40 hover:text-[var(--vibrant-cyan)] hover:border-[var(--vibrant-cyan)]/30 hover:shadow-lg transition-all"
+                              className="w-10 h-10 bg-white/40 backdrop-blur-md border border-white/30 rounded-xl flex items-center justify-center text-[#000000]/60 hover:text-[var(--surfer-electric-pink)] hover:border-[var(--surfer-electric-pink)]/30 hover:shadow-lg transition-all"
                               title="עריכה"
                             >
                               <Pencil size={18} />
@@ -1055,10 +1050,10 @@ const AdminPage: React.FC = () => {
                                   }
                                 });
                               }}
-                              className="w-10 h-10 bg-white border border-[var(--vibrant-cyan)]/10 rounded-xl flex items-center justify-center text-[var(--turquoise-teal)]/40 hover:text-[var(--vibrant-cyan)] hover:border-[var(--vibrant-cyan)]/30 hover:shadow-lg transition-all"
+                              className="w-10 h-10 bg-white/40 backdrop-blur-md border border-white/30 rounded-xl flex items-center justify-center text-[#000000]/60 hover:text-[var(--surfer-vibrant-cyan)] hover:border-[var(--surfer-vibrant-cyan)]/30 hover:shadow-lg transition-all"
                               title="החזר לפעילות"
                             >
-                              <RefreshCw size={18} className="text-[#00FFFF]" />
+                              <RefreshCw size={18} className="text-[var(--surfer-vibrant-cyan)]" />
                             </button>
                           </div>
                         </td>
@@ -1066,7 +1061,7 @@ const AdminPage: React.FC = () => {
                     ))}
                     {members.filter(m => m.isActive === false).length === 0 && (
                       <tr>
-                        <td colSpan={3} className="px-8 py-12 text-center text-[var(--turquoise-teal)]/40 font-black">אין משתמשים בארכיון</td>
+                        <td colSpan={3} className="px-8 py-12 text-center text-[#000000]/40 font-black">אין משתמשים בארכיון</td>
                       </tr>
                     )}
                   </tbody>
@@ -1081,27 +1076,27 @@ const AdminPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <button 
                 onClick={() => setMarkdownConfig({ isOpen: true, path: '/README.md', title: 'מדריך למשתמש (README)' })}
-                className="luxury-card p-8 group hover:scale-[1.02] transition-all text-right flex items-center gap-6"
+                className="admin-info-card p-8 group hover:scale-[1.02] transition-all text-right flex items-center gap-6"
               >
-                <div className="p-4 bg-[var(--vibrant-cyan)]/10 text-[var(--vibrant-cyan)] rounded-2xl group-hover:bg-[var(--vibrant-cyan)] group-hover:text-white transition-all">
+                <div className="p-4 bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)] rounded-2xl group-hover:bg-[var(--surfer-vibrant-cyan)] group-hover:text-white transition-all shadow-sm">
                   <FileText size={32} />
                 </div>
                 <div>
-                  <h4 className="text-xl font-black text-[var(--deep-teal-sea)]">מדריך למשתמש</h4>
-                  <p className="text-sm text-[var(--deep-teal-sea)]/60 font-bold">צפייה בקובץ README.md לקבלת מידע על הפרויקט</p>
+                  <h4 className="text-xl font-black text-[var(--surfer-electric-pink)]">מדריך למשתמש</h4>
+                  <p className="text-sm text-[#000000] font-bold">צפייה בקובץ README.md לקבלת מידע על הפרויקט</p>
                 </div>
               </button>
 
               <button 
                 onClick={() => setMarkdownConfig({ isOpen: true, path: '/PROJECT_MAP.md', title: 'מפת הפרויקט (Project Map)' })}
-                className="luxury-card p-8 group hover:scale-[1.02] transition-all text-right flex items-center gap-6"
+                className="admin-info-card p-8 group hover:scale-[1.02] transition-all text-right flex items-center gap-6"
               >
-                <div className="p-4 bg-[var(--sunshine-yellow)]/10 text-[var(--sunshine-yellow)] rounded-2xl group-hover:bg-[var(--sunshine-yellow)] group-hover:text-white transition-all">
+                <div className="p-4 bg-[var(--surfer-sunshine-yellow)]/10 text-[var(--surfer-sunshine-yellow)] rounded-2xl group-hover:bg-[var(--surfer-sunshine-yellow)] group-hover:text-white transition-all shadow-sm">
                   <MapIcon size={32} />
                 </div>
                 <div>
-                  <h4 className="text-xl font-black text-[var(--deep-teal-sea)]">מפת הפרויקט</h4>
-                  <p className="text-sm text-[var(--deep-teal-sea)]/60 font-bold">צפייה בקובץ PROJECT_MAP.md להבנת מבנה הרכיבים</p>
+                  <h4 className="text-xl font-black text-[var(--surfer-electric-pink)]">מפת הפרויקט</h4>
+                  <p className="text-sm text-[#000000] font-bold">צפייה בקובץ PROJECT_MAP.md להבנת מבנה הרכיבים</p>
                 </div>
               </button>
             </div>
@@ -1109,25 +1104,25 @@ const AdminPage: React.FC = () => {
             <SystemMonitor />
 
             {conflictingAdmins.length > 1 && (
-              <div className="luxury-card p-8 bg-rose-50/30 border-rose-200/50">
+              <div className="admin-info-card p-8 bg-rose-50/30 border-rose-200/50">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="p-4 bg-rose-100 text-rose-600 rounded-2xl shadow-inner">
                     <ShieldAlert size={32} />
                   </div>
                   <div>
-                    <h4 className="text-xl font-black text-[var(--deep-teal-sea)]">התנגשויות אימייל (Super Admin)</h4>
-                    <p className="text-sm text-[var(--deep-teal-sea)]/60 font-bold">נמצאו מספר מסמכים עם האימייל של מנהל המערכת. זה גורם להסתרת משתמשים מהרשימה.</p>
+                    <h4 className="text-xl font-black text-[var(--surfer-electric-pink)]">התנגשויות אימייל (Super Admin)</h4>
+                    <p className="text-sm text-[var(--deep-teal-sea)] font-bold">נמצאו מספר מסמכים עם האימייל של מנהל המערכת. זה גורם להסתרת משתמשים מהרשימה.</p>
                   </div>
                 </div>
                 
                 <div className="space-y-4">
                   {conflictingAdmins.map(admin => (
-                    <div key={admin.id} className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-white/80">
+                    <div key={admin.id} className="flex items-center justify-between p-4 bg-white/40 backdrop-blur-md rounded-xl border border-white/60 shadow-sm">
                       <div className="flex items-center gap-4">
-                        <img src={admin.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
+                        <img src={admin.avatar} className="w-10 h-10 rounded-full object-cover border border-white/30" alt="" />
                         <div>
                           <p className="font-black text-[var(--deep-teal-sea)]">{admin.firstName} {admin.lastName}</p>
-                          <p className="text-xs text-[var(--turquoise-teal)] font-bold">{admin.email}</p>
+                          <p className="text-xs text-[var(--surfer-turquoise-teal)] font-bold">{admin.email}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1138,7 +1133,7 @@ const AdminPage: React.FC = () => {
                               value={conflictNewEmail}
                               onChange={(e) => setConflictNewEmail(e.target.value)}
                               placeholder="אימייל חדש"
-                              className="px-3 py-2 bg-white border border-[var(--vibrant-cyan)]/30 rounded-lg text-xs font-bold outline-none focus:ring-2 ring-[var(--vibrant-cyan)]/20 w-48"
+                              className="px-3 py-2 bg-white/60 border border-[var(--surfer-vibrant-cyan)]/30 rounded-lg text-xs font-bold outline-none focus:ring-2 ring-[var(--surfer-vibrant-cyan)]/20 w-48 text-[var(--deep-teal-sea)]"
                               autoFocus
                             />
                             <button 
@@ -1152,7 +1147,7 @@ const AdminPage: React.FC = () => {
                                   showError('נא להזין אימייל תקין');
                                 }
                               }}
-                              className="px-4 py-2 bg-[var(--vibrant-cyan)] text-white rounded-lg text-xs font-black hover:shadow-lg transition-all flex items-center gap-1"
+                              className="px-4 py-2 bg-[var(--surfer-vibrant-cyan)] text-white rounded-lg text-xs font-black hover:shadow-lg transition-all flex items-center gap-1"
                             >
                               <Save size={14} />
                               שמור
@@ -1170,7 +1165,7 @@ const AdminPage: React.FC = () => {
                               setEditingConflictId(admin.id);
                               setConflictNewEmail(admin.email === SUPER_ADMIN_EMAIL ? 'gal@gmail.com' : admin.email);
                             }}
-                            className="px-4 py-2 bg-[var(--vibrant-cyan)]/10 text-[var(--vibrant-cyan)] border border-[var(--vibrant-cyan)]/20 rounded-lg text-xs font-black hover:bg-[var(--vibrant-cyan)] hover:text-white transition-all"
+                            className="px-4 py-2 bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)] border border-[var(--surfer-vibrant-cyan)]/20 rounded-lg text-xs font-black hover:bg-[var(--surfer-vibrant-cyan)] hover:text-white transition-all shadow-sm"
                           >
                             שנה אימייל
                           </button>
@@ -1187,67 +1182,65 @@ const AdminPage: React.FC = () => {
         {activeTab === 'POSTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Posts Summary Card */}
-            <div className="luxury-slab p-[2px] group">
-              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
-                
-                <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
-                    <Newspaper size={32} />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">פוסטים</h3>
-                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ומחיקה של פוסטים בקהילה</p>
-                  </div>
+            <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
+              <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
+              
+              <div className="flex items-center gap-6 relative z-10">
+                <div className="w-16 h-16 bg-gradient-to-br from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+                  <Newspaper size={32} />
                 </div>
+                <div>
+                  <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">פוסטים</h3>
+                  <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול ומחיקה של פוסטים בקהילה</p>
+                </div>
+              </div>
 
-                <div className="flex flex-wrap items-center gap-4 relative z-10">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-xs font-bold">
-                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                    פוסטים פעילים {news.length}
-                  </div>
-                  
-                  <button 
-                    onClick={() => setEditingPost({})}
-                    className="bg-[var(--vibrant-cyan)] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[var(--deep-teal-sea)] transition-all shadow-lg shadow-[var(--vibrant-cyan)]/20 flex items-center gap-2 active:scale-95"
-                  >
-                    <Plus size={18} />
-                    פוסט חדש
-                  </button>
+              <div className="flex flex-wrap items-center gap-4 relative z-10">
+                <div className="flex items-center gap-2 px-4 py-2 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)] rounded-xl border border-[var(--surfer-aqua-mist)]/20 text-xs font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                  פוסטים פעילים {news.length}
                 </div>
+                
+                <button 
+                  onClick={() => setEditingPost({})}
+                  className="bg-[var(--surfer-vibrant-cyan)] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[var(--deep-teal-sea)] transition-all shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 flex items-center gap-2 active:scale-95"
+                >
+                  <Plus size={18} />
+                  פוסט חדש
+                </button>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {news.map(item => (
-                <div key={item.id} className="luxury-card p-6 flex flex-col relative group">
+                <div key={item.id} className="admin-info-card p-6 flex flex-col relative group">
                   {item.imageUrl && (
-                    <img src={item.imageUrl} className="w-full h-40 object-cover rounded-xl mb-4" alt="" />
+                    <img src={item.imageUrl} className="w-full h-40 object-cover rounded-xl mb-4 border border-white/30" alt="" />
                   )}
-                  <h3 className="font-black text-lg text-[#2B2B2E] mb-2">{item.title}</h3>
-                  <p className="text-slate-500 text-sm line-clamp-3 mb-4 flex-1">{item.content}</p>
+                  <h3 className="font-black text-lg text-[var(--surfer-electric-pink)] mb-2">{item.title}</h3>
+                  <p className="text-[var(--deep-teal-sea)] text-sm line-clamp-3 mb-4 flex-1 font-bold">{item.content}</p>
                   
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--surfer-aqua-mist)]/20">
                     <div className="flex items-center gap-3">
                       {item.authorAvatar ? (
-                        <img src={item.authorAvatar} className="w-8 h-8 rounded-full object-cover" alt="" />
+                        <img src={item.authorAvatar} className="w-8 h-8 rounded-full object-cover border border-white/30" alt="" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[#FFD700]">
+                        <div className="w-8 h-8 rounded-full bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-sunshine-yellow)] border border-white/30">
                           <User size={14} />
                         </div>
                       )}
                       <div>
-                        <p className="text-xs font-black text-slate-700">{item.authorName}</p>
-                        <p className="text-[12px] text-slate-400">{new Date(item.date).toLocaleDateString('he-IL')}</p>
+                        <p className="text-xs font-black text-[var(--deep-teal-sea)]">{item.authorName}</p>
+                        <p className="text-[12px] text-[var(--surfer-turquoise-teal)] font-black">{new Date(item.date).toLocaleDateString('he-IL')}</p>
                       </div>
                     </div>
                     
                     <div className="flex gap-2">
                       <button 
                         onClick={() => setEditingPost(item)}
-                        className="p-2 bg-indigo-50 text-indigo-500 rounded-xl hover:bg-indigo-500 hover:text-white transition-colors"
+                        className="p-2 bg-[var(--surfer-aqua-mist)]/10 text-[var(--surfer-vibrant-cyan)] rounded-xl hover:bg-[var(--surfer-vibrant-cyan)] hover:text-white transition-colors border border-white/20"
                       >
-                        <Edit2 size={16} className="text-[#00FFFF]" />
+                        <Edit2 size={16} />
                       </button>
                       <button 
                         onClick={() => {
@@ -1266,9 +1259,9 @@ const AdminPage: React.FC = () => {
                             }
                           });
                         }}
-                        className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-colors"
+                        className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-colors border border-rose-100"
                       >
-                        <Trash2 size={16} className="text-[#FF2D60]" />
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </div>
@@ -1276,9 +1269,9 @@ const AdminPage: React.FC = () => {
               ))}
               
               {news.length === 0 && (
-                <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-200 rounded-[3rem]">
-                  <Newspaper className="mx-auto text-[#00FFFF] mb-4" size={48} />
-                  <h3 className="text-xl font-black text-slate-400">אין פוסטים במערכת</h3>
+                <div className="col-span-full py-20 text-center admin-info-card border-dashed border-2">
+                  <Newspaper className="mx-auto text-[var(--surfer-vibrant-cyan)] mb-4" size={48} />
+                  <h3 className="text-xl font-black text-[var(--deep-teal-sea)]/40">אין פוסטים במערכת</h3>
                 </div>
               )}
             </div>
@@ -1418,34 +1411,32 @@ const AdminPage: React.FC = () => {
         {activeTab === 'EVENTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Events Summary Card */}
-            <div className="luxury-slab p-[2px] group">
-              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
-                
-                <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
-                    <Calendar size={32} />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">לוח אירועים</h3>
-                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול לוח הזמנים הקהילתי</p>
-                  </div>
+            <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
+              <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
+              
+              <div className="flex items-center gap-6 relative z-10">
+                <div className="w-16 h-16 bg-gradient-to-br from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+                  <Calendar size={32} />
                 </div>
+                <div>
+                  <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">לוח אירועים</h3>
+                  <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול לוח הזמנים הקהילתי</p>
+                </div>
+              </div>
 
-                <div className="flex flex-wrap items-center gap-4 relative z-10">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-xs font-bold">
-                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                    אירועים מתוכננים {events.length}
-                  </div>
-                  
-                  <button 
-                    onClick={() => setEditingEvent({})}
-                    className="bg-[var(--vibrant-cyan)] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[var(--deep-teal-sea)] transition-all shadow-lg shadow-[var(--vibrant-cyan)]/20 flex items-center gap-2 active:scale-95"
-                  >
-                    <Plus size={18} />
-                    אירוע חדש
-                  </button>
+              <div className="flex flex-wrap items-center gap-4 relative z-10">
+                <div className="flex items-center gap-2 px-4 py-2 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)] rounded-xl border border-[var(--surfer-aqua-mist)]/20 text-xs font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                  אירועים מתוכננים {events.length}
                 </div>
+                
+                <button 
+                  onClick={() => setEditingEvent({})}
+                  className="bg-[var(--surfer-vibrant-cyan)] text-white px-6 py-3 rounded-2xl font-black text-sm hover:bg-[var(--deep-teal-sea)] transition-all shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 flex items-center gap-2 active:scale-95"
+                >
+                  <Plus size={18} />
+                  אירוע חדש
+                </button>
               </div>
             </div>
 
@@ -1455,10 +1446,10 @@ const AdminPage: React.FC = () => {
                 const isPastEvent = eventDate < new Date();
 
                 return (
-                  <div key={event.id} className={`luxury-card p-6 flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
+                  <div key={event.id} className={`admin-info-card p-6 flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
                     
                     {isPastEvent && (
-                      <div className="absolute -right-12 top-6 transform rotate-45 bg-slate-100 text-slate-400 text-[12px] font-black uppercase tracking-widest px-12 py-1 shadow-sm z-10">
+                      <div className="absolute -right-12 top-6 transform rotate-45 bg-[var(--surfer-aqua-mist)]/20 text-[var(--deep-teal-sea)]/40 text-[12px] font-black uppercase tracking-widest px-12 py-1 shadow-sm z-10">
                         הסתיים
                       </div>
                     )}
@@ -1476,7 +1467,7 @@ const AdminPage: React.FC = () => {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                       ) : (
-                        <div className={`w-24 h-24 sm:w-32 sm:h-32 rounded-2xl flex items-center justify-center font-black flex-shrink-0 ${isPastEvent ? 'bg-slate-100 text-slate-400' : 'bg-[var(--vibrant-cyan)]/10 text-[var(--vibrant-cyan)]'}`}>
+                        <div className={`w-24 h-24 sm:w-32 sm:h-32 rounded-2xl flex items-center justify-center font-black flex-shrink-0 border border-white/30 ${isPastEvent ? 'bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/40' : 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)]'}`}>
                           <span className="text-sm whitespace-nowrap tabular-nums">{formatDate(event.date)}</span>
                         </div>
                       )}
@@ -1484,18 +1475,18 @@ const AdminPage: React.FC = () => {
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           {event.imageUrl && (
-                             <span className={`px-2 py-0.5 rounded-md text-[10px] font-black whitespace-nowrap ${isPastEvent ? 'bg-slate-100 text-slate-400' : 'bg-[var(--vibrant-cyan)]/10 text-[var(--vibrant-cyan)]'}`}>
+                             <span className={`px-2 py-0.5 rounded-md text-[10px] font-black whitespace-nowrap ${isPastEvent ? 'bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/40' : 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)]'}`}>
                               {formatDate(event.date)}
                             </span>
                           )}
-                          <h4 className={`text-xl font-black truncate ${isPastEvent ? 'text-slate-500 line-through decoration-slate-300' : 'text-[var(--deep-teal-sea)]'}`}>{event.title}</h4>
+                          <h4 className={`text-xl font-black truncate ${isPastEvent ? 'text-[var(--deep-teal-sea)]/40 line-through decoration-[var(--deep-teal-sea)]/20' : 'text-[var(--surfer-electric-pink)]'}`}>{event.title}</h4>
                         </div>
                         <div className="flex items-center gap-2">
-                          <p className="text-xs font-bold text-[var(--turquoise-teal)]/60 truncate">{event.location}</p>
+                          <p className="text-xs font-bold text-[var(--deep-teal-sea)]/60 truncate">{event.location}</p>
                           <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider whitespace-nowrap ${
-                            event.type === 'COMMUNITY' ? 'bg-[var(--vibrant-cyan)] text-white' : 
-                            event.type === 'INSTRUCTOR' ? 'bg-amber-500 text-white' : 
-                            'bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)]/60'
+                            event.type === 'COMMUNITY' ? 'bg-[var(--surfer-vibrant-cyan)] text-white' : 
+                            event.type === 'INSTRUCTOR' ? 'bg-[var(--surfer-sunshine-yellow)] text-white' : 
+                            'bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/60'
                           }`}>
                             {event.type === 'COMMUNITY' ? 'קהילה' : event.type === 'INSTRUCTOR' ? 'מדריך' : 'חבר'}
                           </span>
@@ -1506,10 +1497,10 @@ const AdminPage: React.FC = () => {
                       {!isPastEvent && (
                         <button 
                           onClick={() => handleEditEvent(event)}
-                          className="p-4 bg-[var(--aqua-mist)]/10 text-[var(--turquoise-teal)] rounded-2xl hover:bg-[var(--vibrant-cyan)] hover:text-white transition-all"
+                          className="p-4 bg-[var(--surfer-aqua-mist)]/10 text-[var(--surfer-vibrant-cyan)] rounded-2xl hover:bg-[var(--surfer-vibrant-cyan)] hover:text-white transition-all border border-white/20"
                           title="עריכת אירוע"
                         >
-                          <Pencil size={20} className="text-[#00FFFF]" />
+                          <Pencil size={20} />
                         </button>
                       )}
                       {!isPastEvent && (
@@ -1520,18 +1511,18 @@ const AdminPage: React.FC = () => {
                               onConfirm: () => deleteEvent(event.id)
                             });
                           }}
-                          className="p-4 bg-rose-50 text-rose-400 rounded-2xl hover:bg-rose-500 hover:text-white transition-all"
+                          className="p-4 bg-rose-50 text-rose-400 rounded-2xl hover:bg-rose-500 hover:text-white transition-all border border-rose-100"
                           title="מחיקת אירוע"
                         >
-                          <Trash2 size={20} className="text-[#FF2D60]" />
+                          <Trash2 size={20} />
                         </button>
                       )}
                       {isPastEvent && (
                          <button 
-                          className="p-4 bg-slate-50 text-slate-300 rounded-2xl cursor-not-allowed"
+                          className="p-4 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/20 rounded-2xl cursor-not-allowed border border-white/10"
                           title="לא ניתן לערוך אירוע שהסתיים"
                         >
-                          <Archive size={20} className="text-[#FFD700]" />
+                          <Archive size={20} />
                         </button>
                       )}
                     </div>
@@ -1608,13 +1599,13 @@ const AdminPage: React.FC = () => {
                         סיום שנת פעילות
                         <Calendar size={10} className="text-[var(--vibrant-cyan)] opacity-0 group-hover/dates:opacity-100 transition-opacity" />
                       </p>
-                      <p className="text-base font-black text-[var(--deep-teal-sea)] tabular-nums">{formatDate(yearConfig?.endDate || '---')}</p>
+                      <p className="text-base font-black text-[#000000] tabular-nums">{formatDate(yearConfig?.endDate || '---')}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-6">
                     <div className="text-center">
-                      <p className="text-[9px] font-black text-[var(--turquoise-teal)] uppercase tracking-widest mb-1">שבועות שחלפו</p>
+                      <p className="text-[9px] font-black text-[#000000]/60 uppercase tracking-widest mb-1">שבועות שחלפו</p>
                       <div className="flex items-baseline gap-1 justify-center">
                         <span className="text-4xl font-black text-[var(--vibrant-cyan)] tabular-nums">{calculateWeeks(yearConfig?.startDate || '')}</span>
                         <span className="text-[12px] font-black text-slate-400">/ 52</span>
@@ -1634,122 +1625,131 @@ const AdminPage: React.FC = () => {
             </div>
 
             {/* Weekly Sessions Config Widget */}
-            <div className="luxury-slab p-[2px] group mb-6">
-              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-start justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
-                
-                <div className="flex items-center gap-6 relative z-10 lg:w-1/3">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
-                    <Calendar size={32} />
+            <div className="luxury-slab p-[2px] group mb-12">
+              <div className="luxury-card p-10 relative overflow-hidden bg-[#f5f5f0]/40 backdrop-blur-3xl rounded-[50px] border border-white/40 shadow-[0_40px_100px_rgba(122,21,85,0.1)]">
+                {/* Header Section - Top Right */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 relative z-10" dir="rtl">
+                  <div className="flex items-center gap-8">
+                    <div className="w-20 h-20 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-[25px] flex items-center justify-center text-white shadow-[0_15px_35px_rgba(0,209,255,0.3)] group-hover:rotate-6 transition-transform duration-700">
+                      <Calendar size={40} strokeWidth={2} />
+                    </div>
+                    <div>
+                      <h3 className="text-4xl font-black text-[#000000] tracking-tight mb-2">ניהול מועדי סשנים</h3>
+                      <p className="text-[14px] font-black text-[#000000]/50 uppercase tracking-widest">ניהול ימים ושעות לסשנים קבועים</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">ניהול מועדי סשנים</h3>
-                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ימים ושעות לסשנים קבועים</p>
-                  </div>
+                  <h4 className="text-2xl font-black text-[#000000]/70 tracking-tight">מועדי סשנים שמורים:</h4>
                 </div>
 
-                <div className="flex-1 relative z-10 space-y-6">
-                  {/* Active Sessions List */}
-                  <div className="space-y-3">
-                    <h4 className="text-lg font-black text-[var(--deep-teal-sea)] mb-4">מועדי סשנים שמורים:</h4>
+                <div className="flex flex-col gap-16 relative z-10" dir="rtl">
+                  {/* Top Section: Active Sessions List */}
+                  <div className="space-y-4">
                     {weeklySessions.map((session, index) => (
-                      <div key={index} className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <div className="flex items-center gap-4">
-                          <input 
-                            type="checkbox"
-                            checked={session.isActive !== false}
-                            onChange={(e) => {
-                              const newSessions = [...weeklySessions];
-                              newSessions[index] = { ...newSessions[index], isActive: e.target.checked };
-                              setWeeklySessions(newSessions);
-                            }}
-                            className="w-5 h-5 rounded border-gray-300 text-[#4A5568] focus:ring-[#4A5568]"
-                          />
-                          <span className={`px-2 py-1 rounded-md text-[12px] font-black tracking-widest uppercase ${session.isActive !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>
-                            {session.isActive !== false ? 'פעיל' : 'מושבת'}
-                          </span>
-                          <div className="flex-1">
-                            <p className="text-lg font-black text-[var(--deep-teal-sea)]">
-                              יום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][session.dayOfWeek]} - {session.time}
-                            </p>
-                          </div>
-                        </div>
+                      <motion.div 
+                        key={index} 
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="gt-stepper w-full flex items-center h-20 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+                      >
+                        {/* Delete Button - Left Segment */}
                         <button
                           onClick={() => setSessionToDelete(index)}
-                          className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
+                          className="gt-step-btn minus h-full flex items-center justify-center px-6 border-l border-[var(--gt-border-soft)] text-rose-500 hover:bg-rose-50 transition-all group/delete"
                           title="מחיקת סשן"
                         >
-                          <Trash2 size={18} className="text-[#FF2D60]" />
+                          <Trash2 size={20} className="group-hover/delete:scale-110 transition-transform" />
                         </button>
-                      </div>
+
+                        {/* Session Details - Middle Segment */}
+                        <div className="flex-1 flex items-center justify-between px-8">
+                          <div className="flex items-center gap-6">
+                            <div className="w-12 h-12 rounded-2xl bg-[var(--gt-accent)]/10 flex items-center justify-center text-[var(--gt-accent)] font-black text-lg shadow-inner border border-[var(--gt-accent)]/20">
+                              {['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'][session.dayOfWeek]}
+                            </div>
+                            <div>
+                              <h4 className="text-xl font-black text-[var(--deep-teal-sea)] tracking-tight">
+                                יום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][session.dayOfWeek]}
+                              </h4>
+                              <p className="text-sm font-bold text-[var(--turquoise-teal)]/50 flex items-center gap-1.5">
+                                <Clock size={14} strokeWidth={3} />
+                                {session.time}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Toggles - Right Part of Middle Segment */}
+                          <div className="flex items-center gap-6">
+                            {/* Status Toggle */}
+                            <div className="gt-toggle-container scale-90">
+                              <div 
+                                onClick={() => {
+                                  const newSessions = [...weeklySessions];
+                                  newSessions[index] = { ...newSessions[index], isActive: !session.isActive };
+                                  setWeeklySessions(newSessions);
+                                }}
+                                className={`gt-toggle ${session.isActive !== false ? 'active' : ''}`}
+                              />
+                              <span className="gt-label label-list">מושעה</span>
+                              <span className="gt-label label-grid">פעיל</span>
+                            </div>
+
+                            {/* Type Toggle */}
+                            <div className="gt-toggle-container scale-90">
+                              <div 
+                                onClick={() => {
+                                  const newSessions = [...weeklySessions];
+                                  newSessions[index] = { ...newSessions[index], isRecurring: !session.isRecurring };
+                                  setWeeklySessions(newSessions);
+                                }}
+                                className={`gt-toggle ${session.isRecurring !== false ? 'active' : ''}`}
+                              />
+                              <span className="gt-label label-list">חד-פעמי</span>
+                              <span className="gt-label label-grid">סדרתי</span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
                     ))}
                   </div>
 
-                  {/* Delete Session Warning Modal */}
-                  {sessionToDelete !== null && (
-                    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl border border-rose-100"
-                      >
-                        <div className="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                          <AlertTriangle size={32} />
+                  {/* Bottom Section: Add New Session Controls */}
+                  <div className="flex flex-col items-center">
+                    <div className="gt-card w-full max-w-2xl p-10 relative overflow-hidden border-2 border-[var(--gt-accent)]/10">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--gt-accent)]/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+                      
+                      <h4 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight text-center mb-10 relative z-10">הוספת מועד סשן שבועי</h4>
+                      
+                      <div className="grid grid-cols-2 gap-8 mb-10 relative z-10">
+                        <div className="space-y-4">
+                          <label className="block text-[12px] font-black text-[var(--deep-teal-sea)]/40 uppercase tracking-widest text-center">יום בשבוע</label>
+                          <DayPicker 
+                            value={newSessionDay} 
+                            onChange={setNewSessionDay} 
+                            className="gt-select w-full text-center font-black text-lg"
+                          />
                         </div>
-                        <h3 className="text-xl font-black text-center text-slate-800 mb-4">
-                          ⚠️ אזהרה: אל תעשו את זה לעצמכם (או לנו)
-                        </h3>
-                        <p className="text-center text-slate-600 mb-8 font-medium leading-relaxed">
-                          מחיקת הסשן עלולה למחוק נתונים, לעצור פעילויות, ואולי לגרום למפתחים שלנו לדיכאון תכנותי כרוני… אתה עדיין רוצה להמשיך?
-                        </p>
-                        <div className="flex gap-4">
-                          <button
-                            onClick={() => setSessionToDelete(null)}
-                            className="flex-1 py-4 rounded-xl font-black text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
-                          >
-                            אני אוותר
-                          </button>
-                          <button
-                            onClick={() => {
-                              const newSessions = [...weeklySessions];
-                              newSessions.splice(sessionToDelete, 1);
-                              setWeeklySessions(newSessions);
-                              setSessionToDelete(null);
-                            }}
-                            className="flex-1 py-4 rounded-xl font-black text-white bg-rose-500 hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/30"
-                          >
-                            אני מתעקש
-                          </button>
+                        <div className="space-y-4">
+                          <label className="block text-[12px] font-black text-[var(--deep-teal-sea)]/40 uppercase tracking-widest text-center">שעה</label>
+                          <div className="relative">
+                            <TimePicker 
+                              value={newSessionTime} 
+                              onChangeValue={setNewSessionTime} 
+                              className="gt-input w-full text-center font-black text-lg"
+                            />
+                            <Clock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--gt-accent)]/30 pointer-events-none" />
+                          </div>
                         </div>
-                      </motion.div>
-                    </div>
-                  )}
-
-                  {/* Add New Session Controls */}
-                  <div className="mt-8">
-                    <h4 className="text-lg font-black text-[var(--deep-teal-sea)] mb-4">הוספת מועד סשן שבועי</h4>
-                    <div className="flex flex-wrap items-end gap-4 p-4 bg-[var(--aqua-mist)]/10 rounded-2xl border border-[var(--vibrant-cyan)]/10">
-                      <div className="flex-1 min-w-[280px]">
-                        <label className="block text-[12px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">יום בשבוע</label>
-                        <DayPicker value={newSessionDay} onChange={setNewSessionDay} />
                       </div>
-                      <div className="flex-1 min-w-[120px]">
-                        <label className="block text-[12px] font-black text-[var(--deep-teal-sea)]/60 uppercase tracking-widest mb-3">שעה</label>
-                        <TimePicker 
-                          value={newSessionTime} 
-                          onChangeValue={setNewSessionTime} 
-                          className="w-full bg-white/40 backdrop-blur-md border border-white/20 rounded-xl p-3 text-xl font-bold text-[var(--deep-teal-sea)] focus:ring-2 focus:ring-[var(--surfer-cyan)] outline-none transition-all"
-                        />
-                      </div>
+                      
                       <button
                         onClick={() => {
                           const newSession = {
                             dayOfWeek: newSessionDay,
                             time: newSessionTime,
-                            isActive: false
+                            isActive: false,
+                            isRecurring: true
                           };
-                          
-                          // Prevent duplicates when adding the new session
                           if (!weeklySessions.some(s => s.dayOfWeek === newSession.dayOfWeek && s.time === newSession.time)) {
                             setWeeklySessions([...weeklySessions, newSession]);
                             showSuccess('הסשן נוסף לרשימה (יש לשמור נתונים)');
@@ -1757,36 +1757,65 @@ const AdminPage: React.FC = () => {
                             showError('סשן זה כבר קיים ברשימה');
                           }
                         }}
-                        className="px-6 py-3 bg-[var(--surfer-cyan)] text-white rounded-xl font-black text-sm hover:bg-[var(--deep-teal-sea)] transition-all shadow-lg shadow-[var(--surfer-cyan)]/20 active:scale-95"
+                        className="gt-btn-primary w-full py-6 text-xl shadow-xl shadow-[var(--gt-accent)]/20 relative z-10"
                       >
                         הוסף סשן
                       </button>
                     </div>
                   </div>
-
-                  {/* Save Button */}
-                  <div className="flex justify-center mt-6">
-                    <button
-                      onClick={async () => {
-                        setIsSavingSessions(true);
-                        try {
-                          await updateSiteConfig({ weeklySessions });
-                          showSuccess('מועדי הסשנים נשמרו בהצלחה');
-                        } catch (err) {
-                          console.error(err);
-                          showError('שגיאה בשמירת מועדי הסשנים');
-                        } finally {
-                          setIsSavingSessions(false);
-                        }
-                      }}
-                      disabled={isSavingSessions}
-                      className="px-8 py-4 bg-[var(--deep-teal-sea)] text-white rounded-2xl font-black text-sm hover:bg-[var(--vibrant-cyan)] transition-all shadow-lg shadow-[var(--deep-teal-sea)]/20 active:scale-95 flex items-center gap-2 disabled:opacity-50"
-                    >
-                      {isSavingSessions ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-                      שמירת נתונים
-                    </button>
-                  </div>
                 </div>
+
+                {/* Save Button - Bottom Center */}
+                <div className="flex justify-center mt-16 relative z-10">
+                  <button
+                    onClick={async () => {
+                      setIsSavingSessions(true);
+                      try {
+                        await updateSiteConfig({ weeklySessions });
+                        showSuccess('מועדי הסשנים נשמרו בהצלחה');
+                      } catch (err) {
+                        console.error(err);
+                        showError('שגיאה בשמירת מועדי הסשנים');
+                      } finally {
+                        setIsSavingSessions(false);
+                      }
+                    }}
+                    disabled={isSavingSessions}
+                    className="gt-btn-primary px-20 py-6 text-2xl shadow-2xl shadow-[var(--gt-accent)]/30 disabled:opacity-50"
+                  >
+                    {isSavingSessions ? <Loader2 className="animate-spin" size={28} /> : <Save size={28} />}
+                    שמירת נתונים
+                  </button>
+                </div>
+
+                {/* Delete Session Warning Modal */}
+                {sessionToDelete !== null && (
+                  <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      className="relative bg-[#f5f5f0]/90 backdrop-blur-3xl rounded-[40px] p-10 max-w-md w-full shadow-[0_40px_100px_rgba(0,0,0,0.3)] border border-white/40 overflow-hidden"
+                    >
+                      <div className="absolute top-0 left-0 w-full h-full border-t border-l border-white/60 rounded-[40px] pointer-events-none" />
+                      <div className="relative z-10">
+                        <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner border border-rose-100/50 rotate-3">
+                          <AlertTriangle size={40} strokeWidth={2.5} />
+                        </div>
+                        <h3 className="text-2xl font-black text-center text-[#000000] mb-4 tracking-tight">⚠️ אזהרה: רגע לפני מחיקה</h3>
+                        <p className="text-center text-[#000000]/70 mb-10 font-bold leading-relaxed">מחיקת הסשן עלולה למחוק נתונים, לעצור פעילויות, ואולי לגרום למפתחים שלנו לדיכאון תכנותי כרוני… אתה עדיין רוצה להמשיך?</p>
+                        <div className="flex gap-4" dir="rtl">
+                          <button onClick={() => setSessionToDelete(null)} className="flex-1 py-5 rounded-2xl font-black text-[#000000] bg-white/50 hover:bg-white/80 transition-all duration-300 border border-white/60 shadow-sm active:scale-95">אני אוותר</button>
+                          <button onClick={() => {
+                            const newSessions = [...weeklySessions];
+                            newSessions.splice(sessionToDelete, 1);
+                            setWeeklySessions(newSessions);
+                            setSessionToDelete(null);
+                          }} className="flex-1 py-5 rounded-2xl font-black text-white bg-rose-500 hover:bg-rose-600 transition-all duration-300 shadow-[0_10px_25px_rgba(244,63,94,0.3)] active:scale-95">אני מתעקש</button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1800,13 +1829,13 @@ const AdminPage: React.FC = () => {
                     <MapPin size={32} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">חוף הבית</h3>
-                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">עוגן לחישוב מרחקים גיאוגרפים</p>
+                    <h3 className="text-2xl font-black text-[#000000] tracking-tight">חוף הבית</h3>
+                    <p className="text-[12px] font-black text-[#000000]/60 uppercase tracking-widest mt-1">עוגן לחישוב מרחקים גיאוגרפים</p>
                   </div>
                 </div>
 
-                <div className="flex-1 max-w-xl relative z-10 space-y-2">
-                  <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest mr-4">כתובת</label>
+                <div className="flex-1 max-w-3xl relative z-10 space-y-2">
+                  <label className="text-[12px] font-black text-[#000000]/60 uppercase tracking-widest mr-4">כתובת</label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" />

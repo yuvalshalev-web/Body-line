@@ -4,29 +4,32 @@ import { useData } from '../contexts/DataContext';
 import PlayerCard from '../components/PlayerCard';
 import PlayerGimmickMetrics from '../components/PlayerGimmickMetrics';
 import UserAnalytics from '../components/UserAnalytics';
-import TribeStatus from '../components/dashboard/TribeStatus';
-import { Trophy, Waves, Target, Crown, WifiOff, Flame, Info } from 'lucide-react';
-import { motion, useMotionValue, useTransform, animate } from 'motion/react';
+import UserCategories from '../components/UserCategories';
+import { Trophy, Waves, Target, Crown, WifiOff, Flame, Info, Loader2 } from 'lucide-react';
+import { motion, useMotionValue, useTransform, animate, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { calculateUserStats } from '../utils/analytics';
+import { useRandomHeader } from '../hooks/useRandomHeader';
 
 const Counter = ({ value, duration = 2 }: { value: number; duration?: number }) => {
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, (latest) => Math.round(latest));
   const [displayValue, setDisplayValue] = useState(0);
 
   useEffect(() => {
-    const controls = animate(count, value, { duration });
-    return rounded.on("change", (v) => setDisplayValue(v));
+    const controls = animate(0, value, {
+      duration,
+      onUpdate: (latest) => setDisplayValue(Math.round(latest))
+    });
+    return () => controls.stop();
   }, [value, duration]);
 
   return <>{displayValue}</>;
 };
 
 const SurferCardPage: React.FC = () => {
+  const headerImage = useRandomHeader();
   const { currentUser } = useAuth();
   const { members, weeklyHistory, yearConfig, isLoading, dbStatus } = useData();
-
+  
   const userData = useMemo(() => {
     if (!currentUser || isLoading) return null;
     return calculateUserStats(currentUser.id, members, weeklyHistory, yearConfig);
@@ -43,11 +46,25 @@ const SurferCardPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-[var(--spacing-md)] md:px-[var(--spacing-lg)] py-[var(--spacing-lg)] font-['Yehuda_CLM']" dir="rtl">
-      <div className="surfboard-hero-container mb-[var(--spacing-lg)] text-center md:text-right">
-        <h1 className="main-page-title">
-          <span className="surfer-title">הדשבורד שלי</span>
-        </h1>
+      {/* Body-line Standard Header Stack */}
+      <div className="surfboard-hero-container mb-12 space-y-2 header-wallpaper !py-12 rounded-3xl overflow-hidden" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+        <div className="header-content-wrapper relative z-20 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-4 shadow-sm border border-sky-500/20 relative z-10">
+            <Trophy size={40} />
+          </div>
+          <h1 className="main-page-title">
+            <span className="surfer-title">הדשבורד שלי</span>
+          </h1>
+          <p className="header-subtitle max-w-2xl mx-auto text-white/80 font-bold">
+            הביצועים שלך, ההתקדמות שלך והדרך שלך בים 🌊
+          </p>
+          
+          <div className="flex flex-col items-center gap-3 mt-6">
+          </div>
+        </div>
       </div>
+
+      {/* Diagnostic Info for Admin */}
 
       {/* The Professional Player Card */}
       <div className="mb-8">
@@ -368,11 +385,6 @@ const SurferCardPage: React.FC = () => {
         <PlayerGimmickMetrics userId={currentUser?.id || 'guest'} />
       </div>
 
-      {/* Tribe Status Section */}
-      <div className="mb-12">
-        <TribeStatus />
-      </div>
-
       {/* Detailed Analytics below */}
       <div className="mt-16 border-t border-white/20 pt-16">
         <div className="flex items-center gap-3 mb-8">
@@ -381,6 +393,7 @@ const SurferCardPage: React.FC = () => {
           </div>
           <h2 className="text-2xl font-black name-title-text tracking-tight">ניתוח ביצועים מעמיק</h2>
         </div>
+        <UserCategories userId={currentUser?.id || 'guest'} />
         <div className="mt-8">
           <UserAnalytics userId={currentUser?.id || 'guest'} />
         </div>

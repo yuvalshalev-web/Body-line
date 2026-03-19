@@ -4,6 +4,7 @@ import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCir
 import { useData } from '../contexts/DataContext';
 import { calculateUserStats } from '../utils/analytics';
 import { getBodyLineStats } from '../utils/bodyLineStats';
+import UserCategories from './UserCategories';
 
 interface PlayerCardProps {
   userId: string;
@@ -108,38 +109,25 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
     return { percentile, roundedPercentile, distanceKm, label };
   }, [member, members, siteConfig]);
 
-  const openWhatsApp = () => {
-    if (!member?.mobile) return;
-    const cleanMobile = member.mobile.replace(/\D/g, '');
-    const finalMobile = cleanMobile.startsWith('0') ? '972' + cleanMobile.substring(1) : cleanMobile;
-    const message = encodeURIComponent(`היי ${member.firstName}, מה קורה?`);
-    window.open(`https://wa.me/${finalMobile}?text=${message}`, '_blank');
-  };
-
-  const callMobile = () => {
-    if (!member?.mobile) return;
-    window.location.href = `tel:${member.mobile}`;
-  };
-
   if (isLoading) return <div className="p-4 glass-panel rounded-2xl border border-white/20 animate-pulse">טוען...</div>;
   if (!member || !stats) return null;
 
   return (
-    <div className="flex flex-col md:flex-row items-center gap-[var(--spacing-lg)] relative overflow-hidden" dir="rtl">
+    <div className="flex flex-col items-center gap-[var(--spacing-lg)] relative overflow-hidden w-full" dir="rtl">
       {/* Background Accent */}
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-ocean/10 rounded-full blur-3xl -z-10" />
       
-      <div className="relative">
-        <div className="w-64 h-64 md:w-80 md:h-80 rounded-3xl relative group">
+      <div className="relative flex justify-center w-full">
+        <div className="w-64 h-64 md:w-80 md:h-80 rounded-full relative group">
           {/* Subtle Background Glow */}
           <div className="absolute inset-0 bg-sunshine-yellow/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
           
-          <div className="w-full h-full rounded-3xl overflow-hidden border border-white/30 shadow-2xl bg-sky-50 backdrop-blur-xl rotate-3 relative z-10">
+          <div className="w-full h-full rounded-full overflow-hidden relative z-10 flex items-center justify-center">
             {member.avatar && !imageError ? (
               <img 
                 src={member.avatar} 
                 alt="" 
-                className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 group-hover:rotate-[-3deg] feathered-edges" 
+                className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105 gradient-mask" 
                 onError={() => setImageError(true)}
                 referrerPolicy="no-referrer"
               />
@@ -148,27 +136,24 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
                 <Star size={100} className="animate-pulse" />
               </div>
             )}
-            
-            {/* Glass Shine Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
           </div>
         </div>
         {stats.isTop10 && (
-          <div className="absolute -top-2 -right-2 w-10 h-10 bg-sand rounded-full flex items-center justify-center text-black shadow-md border border-white/30 animate-bounce">
+          <div className="absolute -top-2 -right-2 w-10 h-10 bg-sand rounded-full flex items-center justify-center text-black shadow-md border border-white/30 animate-bounce z-20">
             <Crown size={20} />
           </div>
         )}
       </div>
 
-      <div className="flex-1 text-center md:text-right">
+      <div className="flex-1 text-center">
         <div className="flex flex-col gap-2 mb-3">
           <h2 className="text-3xl font-black name-title-text tracking-tight">
             {member.firstName} {member.lastName}
           </h2>
-          <div className="flex items-center justify-center md:justify-start gap-4 secondary-detail-text font-bold text-sm mb-1">
+          <div className="flex items-center justify-center gap-4 secondary-detail-text font-bold text-sm mb-1">
             <span className="flex items-center gap-1"><Calendar size={14} /> הצטרף ב-{stats.joiningDate}</span>
           </div>
-          <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+          <div className="flex flex-wrap gap-2 justify-center">
             <span className="inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm bg-orange-500/20 text-orange-700 border-orange-500/30">
               מעמד: {stats.rank}
             </span>
@@ -185,7 +170,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
           </div>
 
           {/* Social Media Links */}
-          <div className="flex flex-wrap gap-3 justify-center md:justify-start mt-4">
+          <div className="flex flex-wrap gap-3 justify-center mt-4">
             {/* Facebook */}
             {member.facebookUrl ? (
               <a href={member.facebookUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#1877F2]/10 rounded-xl hover:bg-[#1877F2] hover:text-white transition-all text-[#1877F2] shadow-sm" title="Facebook">
@@ -253,27 +238,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             )}
           </div>
 
-          {/* Communication Buttons */}
-          <div className="flex flex-wrap gap-3 justify-center md:justify-start mt-4 pt-4 border-t border-white/10">
-            {member.mobile && (
-              <>
-                <button 
-                  onClick={openWhatsApp}
-                  className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-2xl font-black text-sm hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
-                >
-                  <MessageCircle size={18} />
-                  WhatsApp
-                </button>
-                <button 
-                  onClick={callMobile}
-                  className="flex items-center gap-2 px-6 py-3 bg-sky-500 text-white rounded-2xl font-black text-sm hover:bg-sky-600 transition-all shadow-lg shadow-sky-500/20 active:scale-95"
-                >
-                  <Phone size={18} />
-                  התקשר
-                </button>
-              </>
-            )}
-          </div>
+          {/* Communication Buttons Removed per user request */}
+          <UserCategories userId={userId} />
         </div>
       </div>
     </div>

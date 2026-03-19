@@ -39,6 +39,7 @@ import { hashPassword } from '../utils/crypto';
 import { loadGoogleMaps } from '../utils/googlePlaces';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { SurfboardCalculator } from '../components/SurfboardCalculator';
+import { useRandomHeader } from '../hooks/useRandomHeader';
 
 const SocialInput = ({ 
   label, name, value, onChange, icon: Icon, placeholder, brandColor, ensureAbsoluteUrl,
@@ -67,6 +68,7 @@ const SocialInput = ({
 };
 
 const ProfilePage: React.FC = () => {
+  const headerImage = useRandomHeader();
   const { currentUser, updateUser } = useAuth();
   const { updateMember } = useData();
   
@@ -344,20 +346,20 @@ const ProfilePage: React.FC = () => {
       <div className="max-w-6xl mx-auto pt-2 pb-10 text-right animate-in fade-in" dir="rtl">
 
       {/* Body-line Standard Header Stack */}
-      <div className="surfboard-hero-container mb-2 space-y-2">
-        {/* Main Title */}
-        <h1 className="main-page-title">
-          <span className="surfer-title">הפרופיל שלי</span>
-        </h1>
-
-        {/* Subtitle with Emoji context */}
-        <div className="flex flex-col items-center gap-4">
-          <p className="header-subtitle max-w-2xl">
+      <div className="surfboard-hero-container mb-2 space-y-2 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+        <div className="header-content-wrapper relative z-20">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
+            <User size={40} />
+          </div>
+          <h1 className="main-page-title">
+            <span className="surfer-title">הפרופיל שלי</span>
+          </h1>
+          <p className="header-subtitle max-w-2xl mx-auto">
             עדכן את הפרטים האישיים והנוכחות הדיגיטלית שלך בקהילה 👤
           </p>
           
           {isDirty && (
-            <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-xl animate-bounce">
+            <div className="flex items-center justify-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-xl animate-bounce mt-4 mx-auto w-max">
               <AlertCircle size={16} />
               <span className="text-xs font-black">שינויים לא שמורים</span>
             </div>

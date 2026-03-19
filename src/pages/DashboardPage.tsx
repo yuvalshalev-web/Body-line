@@ -17,7 +17,8 @@ import {
   Newspaper,
   UserCircle,
   Hammer,
-  ChevronRight
+  ChevronRight,
+  MessageSquareQuote
 } from 'lucide-react';
 import { CoastalDashboard } from '../components/CoastalDashboard';
 import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
@@ -27,7 +28,11 @@ import { getNextSessionDate } from '../services/rolloverService';
 import { getBodyLineStats } from '../utils/bodyLineStats';
 import { SURF_QUOTES } from '../data/surfQuotes';
 import { SURF_DICTIONARY } from '../data/surfDictionary';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import { getForecastAnalysis } from '../services/geminiService';
+import Markdown from 'react-markdown';
+
+import { useRandomHeader } from '../hooks/useRandomHeader';
 
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -37,6 +42,7 @@ const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
 );
 
 const DashboardPage: React.FC = () => {
+  const headerImage = useRandomHeader();
   const { currentUser } = useAuth();
   const { 
     members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats
@@ -51,6 +57,9 @@ const DashboardPage: React.FC = () => {
   const [isRefreshingQuotes, setIsRefreshingQuotes] = useState(false);
   const [isRefreshingGlossary, setIsRefreshingGlossary] = useState(false);
   const [isRefreshingPost, setIsRefreshingPost] = useState(false);
+
+  const [isAnalyzingForecast, setIsAnalyzingForecast] = useState(false);
+  const [forecastAnalysis, setForecastAnalysis] = useState<string | null>(null);
 
   const newsRef = useRef(news);
   useEffect(() => { newsRef.current = news; }, [news]);
@@ -74,6 +83,27 @@ const DashboardPage: React.FC = () => {
   }), [activeMembers, attendeeIds]);
   const isUserAttending = useMemo(() => currentUser ? attendeeIds.includes(currentUser.id) : false, [attendeeIds, currentUser]);
 
+  const handleForecastAnalysis = async () => {
+    if (!coastalWeather && !seaStats) return;
+    setIsAnalyzingForecast(true);
+    setForecastAnalysis(null);
+    try {
+      const result = await getForecastAnalysis({
+        waveHeight: coastalWeather?.waveHeight || 0.5,
+        waterTemp: coastalWeather?.waterTemp,
+        windSpeed: coastalWeather?.windSpeed,
+        windDir: coastalWeather?.windDir,
+        swellDir: seaStats?.swellDir,
+        period: seaStats?.period
+      });
+      setForecastAnalysis(result);
+    } catch (error) {
+      console.error('Forecast analysis failed:', error);
+    } finally {
+      setIsAnalyzingForecast(false);
+    }
+  };
+
   const refreshPost = useCallback(() => {
     if (newsRef.current.length === 0) return;
     setIsRefreshingPost(true);
@@ -84,24 +114,57 @@ const DashboardPage: React.FC = () => {
     }, 400);
   }, []);
 
+  const lastQuoteId = useRef<string | null>(null);
+  const lastGlossaryId = useRef<string | null>(null);
+
   const refreshGlossary = useCallback(() => {
     setIsRefreshingGlossary(true);
-    setTimeout(() => {
-      const source = glossaryRef.current.length > 0 ? glossaryRef.current : SURF_DICTIONARY;
-      const shuffled = [...source].sort(() => 0.5 - Math.random());
-      setRandomGlossary(shuffled.slice(0, 1));
+    const source = glossaryRef.current.length > 0 ? glossaryRef.current : SURF_DICTIONARY;
+    if (source.length === 0) {
       setIsRefreshingGlossary(false);
-    }, 400);
+      return;
+    }
+    
+    let nextItem;
+    if (source.length > 1) {
+      const filtered = source.filter(item => (item.id || item.term) !== lastGlossaryId.current);
+      nextItem = filtered[Math.floor(Math.random() * filtered.length)];
+    } else {
+      nextItem = source[0];
+    }
+    
+    if (nextItem) {
+      lastGlossaryId.current = nextItem.id || nextItem.term;
+      setRandomGlossary([nextItem]);
+    }
+    setTimeout(() => setIsRefreshingGlossary(false), 400);
   }, []);
 
   const refreshQuote = useCallback(() => {
     setIsRefreshingQuotes(true);
-    setTimeout(() => {
-      const source = quotesRef.current.length > 0 ? quotesRef.current : SURF_QUOTES;
-      const shuffled = [...source].sort(() => 0.5 - Math.random());
-      setRandomQuotes(shuffled.slice(0, 1));
+    const source = quotesRef.current.length > 0 ? quotesRef.current : SURF_QUOTES;
+    if (source.length === 0) {
       setIsRefreshingQuotes(false);
-    }, 400);
+      return;
+    }
+
+    let nextItem;
+    if (source.length > 1) {
+      const filtered = source.filter(item => {
+        const id = typeof item === 'string' ? item : (item.id || item.text);
+        return id !== lastQuoteId.current;
+      });
+      const pool = filtered.length > 0 ? filtered : source;
+      nextItem = pool[Math.floor(Math.random() * pool.length)];
+    } else {
+      nextItem = source[0];
+    }
+
+    if (nextItem) {
+      lastQuoteId.current = typeof nextItem === 'string' ? nextItem : (nextItem.id || nextItem.text);
+      setRandomQuotes([nextItem]);
+    }
+    setTimeout(() => setIsRefreshingQuotes(false), 400);
   }, []);
 
   useEffect(() => {
@@ -314,44 +377,111 @@ const DashboardPage: React.FC = () => {
       </div>
 
       <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="p-3 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-xl border border-white/20 shadow-lg shadow-[var(--surfer-yellow)]/10">
-            <Waves size={20} />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-xl border border-white/20 shadow-lg shadow-[var(--surfer-yellow)]/10">
+              <Waves size={20} />
+            </div>
+            <h3 className="text-2xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מצב הים – עכשיו ושיאי השנה</h3>
           </div>
-          <h3 className="text-2xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מצב הים – עכשיו ושיאי השנה</h3>
+
+          <button
+            onClick={handleForecastAnalysis}
+            disabled={isAnalyzingForecast}
+            className="flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl font-black text-sm text-[var(--surfer-deep-teal)] hover:bg-white/20 transition-all shadow-lg active:scale-95 disabled:opacity-50"
+          >
+            {isAnalyzingForecast ? <Loader2 className="animate-spin" size={18} /> : <MessageSquareQuote size={18} />}
+            <span>ניתוח מומחה AI (Gemini)</span>
+          </button>
         </div>
+
+        <AnimatePresence>
+          {forecastAnalysis && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mb-8 bg-slate-900/90 text-slate-100 p-8 rounded-[2rem] border border-white/10 shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-4 right-4 text-white/10">
+                <Sparkles size={48} />
+              </div>
+              <div className="prose prose-invert prose-slate max-w-none 
+                prose-p:text-slate-200 prose-p:leading-relaxed prose-p:font-bold
+                prose-strong:text-[var(--surfer-cyan)] prose-strong:font-black
+              ">
+                <Markdown>{forecastAnalysis}</Markdown>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <CoastalDashboard />
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <section className="home-glass-card p-12 relative min-h-[400px]">
+        <section className="home-glass-card p-12 relative min-h-[400px] flex flex-col">
            <div className="flex items-center gap-4 mb-10">
               <div className="p-4 bg-[var(--surfer-yellow)]/20 rounded-xl border border-white/20 shadow-sm">
                 <Quote className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
               </div>
               <h3 className="text-2xl font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>חוכמת הליין-אפ</h3>
            </div>
-           {randomQuotes.map((item, idx) => (
-             <div key={idx} className="p-10 bg-white/10 backdrop-blur-[15px] border border-white/20 rounded-2xl transition-all animate-in fade-in shadow-lg shadow-black/5">
-               <p className="text-2xl font-black text-[#000000] leading-tight italic" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>"{item.text}"</p>
-               <p className="text-lg font-bold text-[#000000]/60 italic mt-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>— {item.author}</p>
-             </div>
-           ))}
+           <div className="flex-1 relative">
+             <AnimatePresence mode="wait">
+               {randomQuotes.map((item) => {
+                 const text = typeof item === 'string' ? item : (item.text || '');
+                 const author = typeof item === 'string' ? 'אנונימי' : (item.author || 'אנונימי');
+                 const key = typeof item === 'string' ? item : (item.id || item.text || Math.random().toString());
+                 
+                 return (
+                   <motion.div 
+                     key={key}
+                     initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                     animate={{ opacity: 1, y: 0, scale: 1 }}
+                     exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                     transition={{ duration: 0.5, ease: "easeOut" }}
+                     className="p-10 bg-white/10 backdrop-blur-[15px] border border-white/20 rounded-2xl shadow-lg shadow-black/5 h-full flex flex-col justify-center"
+                   >
+                     <p className="text-2xl font-black text-[#000000] leading-tight italic" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>"{text}"</p>
+                     <p className="text-lg font-bold text-[#000000]/60 italic mt-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>— {author}</p>
+                   </motion.div>
+                 );
+               })}
+             </AnimatePresence>
+           </div>
         </section>
 
-        <section className="home-glass-card p-12 relative min-h-[400px]">
+        <section className="home-glass-card p-12 relative min-h-[400px] flex flex-col">
            <div className="flex items-center gap-4 mb-10">
               <div className="p-4 bg-[var(--surfer-cyan)]/20 rounded-xl border border-white/20 shadow-sm">
                 <BookOpen className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
               </div>
               <h3 className="text-2xl font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מילון מונחים</h3>
            </div>
-           {randomGlossary.map((item, idx) => (
-             <div key={idx} className="p-10 bg-white/10 backdrop-blur-[15px] border border-white/20 rounded-2xl transition-all animate-in fade-in shadow-lg shadow-black/5">
-               <h4 className="text-4xl font-black text-[#000000] mb-4" dir="ltr" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.term}</h4>
-               <p className="text-xl font-bold text-[#000000]/70 italic border-r-4 border-white/30 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{item.definition}</p>
-             </div>
-           ))}
+           <div className="flex-1 relative">
+             <AnimatePresence mode="wait">
+               {randomGlossary.map((item) => {
+                 const term = item.term || '';
+                 const definition = item.definition || '';
+                 const key = item.id || item.term || Math.random().toString();
+                 
+                 return (
+                   <motion.div 
+                     key={key}
+                     initial={{ opacity: 0, x: 20 }}
+                     animate={{ opacity: 1, x: 0 }}
+                     exit={{ opacity: 0, x: -20 }}
+                     transition={{ duration: 0.5, ease: "easeOut" }}
+                     className="p-10 bg-white/10 backdrop-blur-[15px] border border-white/20 rounded-2xl shadow-lg shadow-black/5 h-full flex flex-col justify-center"
+                   >
+                     <h4 className="text-4xl font-black text-[#000000] mb-4" dir="ltr" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{term}</h4>
+                     <p className="text-xl font-bold text-[#000000]/70 italic border-r-4 border-white/30 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{definition}</p>
+                   </motion.div>
+                 );
+               })}
+             </AnimatePresence>
+           </div>
         </section>
       </div>
 

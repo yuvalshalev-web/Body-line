@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
 import { ModalProvider } from './contexts/ModalContext';
 import './utils/chartHelpers';
+import './utils/systemLogs';
 import './index.css';
 
 console.log("index.tsx running");

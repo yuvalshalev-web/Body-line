@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
-import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp, runTransaction } from 'firebase/firestore';
+import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { ref, deleteObject, getMetadata } from 'firebase/storage';
 import { getDb, trackedGetDocs, setDbStatus, db_status, getStorageInstance } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../utils/dateUtils';
@@ -52,7 +52,7 @@ interface DataContextType {
       glowSize?: string;
       glowColor?: string;
     },
-    weeklySessions?: { dayOfWeek: number, time: string, isActive?: boolean }[];
+    weeklySessions?: { dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[];
   };
   coastalWeather: any | null;
   seaStats: any | null;
@@ -83,6 +83,7 @@ interface DataContextType {
   deleteGalleryItems: (ids: string[]) => Promise<void>;
   addGalleryItem: (item: Omit<GalleryItem, 'id'>) => Promise<void>;
   toggleSessionAttendance: (userId: string) => Promise<void>;
+  updateHistory: (id: string, participantIds: string[]) => Promise<void>;
   forceResetSession: () => Promise<void>;
   finalizeSession: () => Promise<void>;
   batchAddGlossary: (items: Omit<GlossaryTerm, 'id'>[]) => Promise<void>;
@@ -95,7 +96,7 @@ interface DataContextType {
     home_break: any,
     globalColor: string,
     h1Styles: any,
-    weeklySessions: { dayOfWeek: number, time: string, isActive?: boolean }[]
+    weeklySessions: { dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[]
   }>) => Promise<void>;
   updateYearConfig: (config: { startDate: string; endDate: string }) => Promise<void>;
   archiveMember: (id: string) => Promise<void>;
@@ -143,9 +144,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       glowSize?: string;
       glowColor?: string;
     },
-    weeklySessions?: { dayOfWeek: number, time: string, isActive?: boolean }[];
+    weeklySessions?: { dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[];
   }>(() => {
-    return { navPosition: 'bottom', weeklySessions: [{ dayOfWeek: 4, time: '07:00', isActive: false }] };
+    return { navPosition: 'bottom', weeklySessions: [{ dayOfWeek: 4, time: '07:00', isActive: false, isRecurring: true }] };
   });
   const [coastalWeather, setCoastalWeather] = useState<any | null>(null);
   const [seaStats, setSeaStats] = useState<any | null>(null);
@@ -352,6 +353,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const unsubHistory = onSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
         const hData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        console.log('DataContext: Weekly History Data:', hData);
         setWeeklyHistory(hData);
         storage.set('cached_history_v3', hData, 2 / 60);
       }, handleFirestoreError);
@@ -378,7 +380,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const sessionDate = data.date;
           const attendees = data.attendees || [];
           setAttendeeIds(attendees);
-          setActiveSessionDate(sessionDate || getNextSessionDate(siteConfigRef.current?.weeklySessions));
+          
+          if (sessionDate && new Date(sessionDate) < new Date()) {
+            console.log('Session date passed, finalizing session...');
+            finalizeSession();
+          } else {
+            setActiveSessionDate(sessionDate || getNextSessionDate(siteConfigRef.current?.weeklySessions));
+          }
         }
         setIsLoading(false);
       }, handleFirestoreError);
@@ -664,6 +672,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateHistory = async (id: string, participantIds: string[]) => {
+    const db = getDb();
+    await updateDoc(doc(db, 'weekly_history', id), {
+      participantIds,
+      participantsCount: participantIds.length
+    });
+  };
+
   const forceResetSession = async () => {
     const nextSession = getNextSessionDate(siteConfig?.weeklySessions);
     await setDoc(doc(getDb(), 'site_data', 'active_session'), {
@@ -672,18 +688,154 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, { merge: true });
   };
 
-  const addRolloverLog = async (action: string, status: 'success' | 'failed', details: string) => {
+  const addRolloverLog = async (action: string, status: 'pending' | 'success' | 'failed', details: string, metrics?: any) => {
+    console.log("addRolloverLog called:", { action, status, details, metrics });
     const db = getDb();
-    await addDoc(collection(db, 'rollover_logs'), {
+    const logData: any = {
       action,
       status,
       details,
-      timestamp: new Date().toISOString()
-    });
+      timestamp: serverTimestamp()
+    };
+    
+    if (metrics && typeof metrics === 'object') {
+      const sanitizedMetrics = { ...metrics };
+      for (const key in sanitizedMetrics) {
+        if (sanitizedMetrics[key] === undefined) {
+          delete sanitizedMetrics[key];
+        }
+      }
+      logData.metrics = sanitizedMetrics;
+    } else if (metrics !== undefined && metrics !== null) {
+      logData.metrics = metrics;
+    }
+    
+    try {
+      await addDoc(collection(db, 'rollover_logs'), logData);
+    } catch (error) {
+      console.error('Error adding rollover log:', error);
+    }
   };
 
   const finalizeSession = async () => {
-    await finalizeSessionService(weeklyHistory, yearConfig, undefined, siteConfig?.weeklySessions);
+    console.log("finalizeSession: Starting process...");
+    const db = getDb();
+    const startTime = Date.now();
+    let updatedFields = 0;
+    
+    try {
+      // 1. Start
+      console.log("finalizeSession: Logging start...");
+      await addRolloverLog('start', 'success', 'תהליך הסגירה החל');
+      
+      // 2. Get current active session data
+      console.log("finalizeSession: Getting active session data...");
+      const activeSessionRef = doc(db, 'site_data', 'active_session');
+      const activeSnap = await getDoc(activeSessionRef);
+      if (!activeSnap.exists()) {
+        console.error("finalizeSession: Active session document not found!");
+        throw new Error('Active session document not found');
+      }
+      const activeData = activeSnap.data();
+      const currentAttendees = activeData.attendees || [];
+      const currentDate = activeData.date;
+      console.log("finalizeSession: Active data retrieved:", { attendeesCount: currentAttendees.length, date: currentDate });
+
+      // 3. Archive to weekly_history
+      console.log("finalizeSession: Archiving to weekly_history...");
+      await addRolloverLog('archive', 'pending', `מעביר ${currentAttendees.length} משתתפים להיסטוריה...`);
+      await addDoc(collection(db, 'weekly_history'), {
+        date: currentDate || new Date().toISOString(),
+        participantIds: currentAttendees,
+        participantsCount: currentAttendees.length,
+        status: 'finalized',
+        finalizedAt: new Date().toISOString()
+      });
+      await addRolloverLog('archive', 'success', 'הסשן הועבר להיסטוריה בהצלחה');
+      updatedFields += 1;
+
+      // 4. Handle One-Time Sessions
+      let currentWeeklySessions = siteConfigRef.current?.weeklySessions || [];
+      if (currentDate && currentWeeklySessions.length > 0) {
+        const sessionDate = new Date(currentDate);
+        const dayOfWeek = sessionDate.getDay();
+        const timeStr = `${sessionDate.getHours().toString().padStart(2, '0')}:${sessionDate.getMinutes().toString().padStart(2, '0')}`;
+        
+        const updatedWeeklySessions = currentWeeklySessions.map(s => {
+          if (s.dayOfWeek === dayOfWeek && s.time === timeStr && s.isRecurring === false) {
+            return { ...s, isActive: false };
+          }
+          return s;
+        });
+        
+        const hasChanges = JSON.stringify(updatedWeeklySessions) !== JSON.stringify(currentWeeklySessions);
+        if (hasChanges) {
+          console.log("finalizeSession: Disabling one-time session...");
+          await updateDoc(doc(db, 'site_data', 'config'), { weeklySessions: updatedWeeklySessions });
+          currentWeeklySessions = updatedWeeklySessions;
+          updatedFields += 1;
+        }
+      }
+
+      // 5. Create new session date
+      console.log("finalizeSession: Calculating next session date...");
+      await addRolloverLog('create_new', 'pending', 'מחשב תאריך לסשן הבא...');
+      const nextDate = getNextSessionDate(currentWeeklySessions);
+      console.log("finalizeSession: Next session date calculated:", nextDate);
+      await addRolloverLog('create_new', 'success', `תאריך חדש חושב: ${nextDate}`);
+      updatedFields += 1;
+
+      // 6. Reset timer
+      console.log("finalizeSession: Resetting timer...");
+      await addRolloverLog('reset_timer', 'pending', 'מעדכן תאריך סשן פעיל...');
+      // This is combined with reset_attendance in the next step
+      await addRolloverLog('reset_timer', 'success', 'תאריך הסשן עודכן');
+      updatedFields += 1;
+
+      // 7. Reset attendance
+      console.log("finalizeSession: Resetting attendance in active_session...");
+      await addRolloverLog('reset_attendance', 'pending', 'מאפס רשימת נוכחות...');
+      await setDoc(activeSessionRef, {
+        date: nextDate,
+        attendees: []
+      }, { merge: true });
+      await addRolloverLog('reset_attendance', 'success', 'רשימת הנוכחות אופסה');
+      updatedFields += 1;
+
+      // 8. Update stats (batch update for members)
+      console.log("finalizeSession: Preparing batch update for member stats...");
+      await addRolloverLog('update_stats', 'pending', `מעדכן סטטיסטיקות ל-${currentAttendees.length} חברים...`);
+      const batch = writeBatch(db);
+      for (const uid of currentAttendees) {
+        const memberRef = doc(db, 'members', uid);
+        batch.update(memberRef, {
+          totalAttendance: increment(1)
+        });
+        updatedFields += 1;
+      }
+      await addRolloverLog('update_stats', 'success', 'סטטיסטיקות חברים הוכנו לעדכון');
+
+      // 9. Save to DB
+      console.log("finalizeSession: Committing batch update...");
+      await addRolloverLog('save_db', 'pending', 'מבצע שמירה סופית למסד הנתונים...');
+      await batch.commit();
+      console.log("finalizeSession: Batch commit successful!");
+      await addRolloverLog('save_db', 'success', 'כל השינויים נשמרו בהצלחה');
+
+      const metrics = {
+        expectedFields: 5 + currentAttendees.length,
+        updatedFields: updatedFields,
+        saveStatus: 'success',
+        durationMs: Date.now() - startTime
+      };
+      
+      console.log("finalizeSession: Rollover complete!", metrics);
+      await addRolloverLog('complete', 'success', 'תהליך הסגירה הושלם בהצלחה', metrics);
+    } catch (err: any) {
+      console.error('Rollover error:', err);
+      await addRolloverLog('complete', 'failed', err.message || 'שגיאה לא ידועה');
+      throw err;
+    }
   };
 
   const batchAddGlossary = async (items: Omit<GlossaryTerm, 'id'>[]) => {
@@ -841,13 +993,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const contextValue = React.useMemo(() => ({ 
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
-      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, forceResetSession,
+      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory, forceResetSession,
       finalizeSession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       isDbEmpty, conflictingAdmins, seedInitialAdmin
     }), [
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
-      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, forceResetSession,
+      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory, forceResetSession,
       finalizeSession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       isDbEmpty, conflictingAdmins, seedInitialAdmin
     ]);

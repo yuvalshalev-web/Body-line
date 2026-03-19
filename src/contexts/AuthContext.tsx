@@ -52,32 +52,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setFirebaseUser(user);
       
       if (user) {
-        // User is signed in, fetch their member data from Firestore
-        const db = getDb();
-        
-        // Try to find member by UID first
-        // If not found by UID, we might need to find by email (for legacy users)
-        // But for now let's assume UID is the primary key or stored in the doc
-        
-        // Actually, the current app uses document IDs that might not be UIDs.
-        // Let's check if we can find a member with this UID.
-        // If we can't find by UID, we'll try to find by email.
-        
-        // For now, let's try to get the member data.
-        // We'll need a way to map Firebase User to Member document.
-        // Usually, the document ID is the UID.
-        
-        const memberDoc = await getDoc(doc(db, 'members', user.uid));
-        if (memberDoc.exists()) {
-          const memberData = { id: memberDoc.id, ...memberDoc.data() } as Member;
-          setCurrentUser(memberData);
-          localStorage.setItem('habal_zug_user', JSON.stringify(memberData));
-        } else {
-          // If not found by UID, maybe it's a legacy user or a new Google login
-          // We'll handle this in the login page or here if needed.
-          // For now, if they are logged into Firebase but no member doc exists, 
-          // we might still want to set some basic info if they are the super admin.
-          
+        try {
+          const db = getDb();
+          const memberDoc = await getDoc(doc(db, 'members', user.uid));
+          if (memberDoc.exists()) {
+            const memberData = { id: memberDoc.id, ...memberDoc.data() } as Member;
+            setCurrentUser(memberData);
+            localStorage.setItem('habal_zug_user', JSON.stringify(memberData));
+          } else {
+            const savedUser = localStorage.getItem('habal_zug_user');
+            if (savedUser) {
+              setCurrentUser(JSON.parse(savedUser));
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user doc in AuthContext:", error);
           const savedUser = localStorage.getItem('habal_zug_user');
           if (savedUser) {
             setCurrentUser(JSON.parse(savedUser));
@@ -110,7 +99,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
       } else if (currentUser.id !== 'dev-admin-id' && currentUser.id !== 'super-admin') {
         // User was deleted
-        logout();
+        if (!snapshot.metadata.fromCache) {
+          logout();
+        }
       }
     }, (error) => {
       console.error("Error listening to user doc:", error);
@@ -129,7 +120,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       logout, 
       updateUser 
     }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

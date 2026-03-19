@@ -216,13 +216,14 @@ const DirectoryPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pb-20" dir="rtl">
       {/* Header Section */}
-      <div className="relative w-full h-96 mb-20">
+      <div className="relative w-full h-80 mb-24">
         <div 
           className="absolute inset-0 bg-cover bg-center header-image-mask"
           style={{ backgroundImage: `url(${headerImage})` }}
         />
-        <div className="absolute bottom-0 w-full px-16 pb-8">
-          <h1 className="text-7xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
+        {/* Title container - positioned to overlap bottom edge */}
+        <div className="absolute bottom-0 w-full px-16 translate-y-1/2">
+          <h1 className="text-7xl font-black text-slate-800 drop-shadow-[0_0_15px_rgba(255,255,255,1)]">
             נבחרת הכוכבים
           </h1>
         </div>

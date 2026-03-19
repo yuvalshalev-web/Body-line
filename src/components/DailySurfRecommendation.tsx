@@ -214,21 +214,21 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                 
                 <div className="flex justify-center items-end shrink-0 w-full md:w-auto -mx-4 md:mx-0">
                   {wetsuit && (
-                    <div className="flex flex-col items-center gap-3 w-[160px] md:w-[220px] z-10 -mr-6 md:-mr-12 relative pt-10">
+                    <div className="flex flex-col items-center gap-3 w-[185px] md:w-[255px] z-10 -mr-7 md:-mr-14 relative pt-10">
                       <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-[#2A3F45] text-white text-[11px] font-bold px-4 py-1.5 rounded-full whitespace-nowrap shadow-lg z-30">
                         {wetsuit.label} (המומלץ!)
                       </div>
-                      <div className="h-[350px] w-full relative flex items-end justify-center bg-transparent p-0">
+                      <div className="h-[400px] w-full relative flex items-end justify-center bg-transparent p-0">
                         <WetsuitSVG thickness={wetsuit.thickness} alignBottom />
                       </div>
                       <span className="text-[11px] font-bold text-[#002b44] text-center w-full leading-tight bg-white/50 px-2 py-1 rounded-lg border border-white/40">ביגוד מומלץ: {wetsuit.label}</span>
                     </div>
                   )}
-                  <div className="flex flex-col items-center gap-3 w-[160px] md:w-[220px] z-20 relative pt-10">
+                  <div className="flex flex-col items-center gap-3 w-[185px] md:w-[255px] z-20 relative pt-10">
                     <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-[#2A3F45] text-white text-[11px] font-bold px-4 py-1.5 rounded-full whitespace-nowrap shadow-lg z-30">
                       {catalogItem?.name || boardType} (המומלץ!)
                     </div>
-                    <div className="h-[350px] w-full relative flex items-end justify-center">
+                    <div className="h-[400px] w-full relative flex items-end justify-center">
                       <SurfboardOverlay selectedBoardType={boardKey} hideLabel />
                     </div>
                     <span className="text-[11px] font-bold text-[#002b44] text-center w-full leading-tight bg-white/50 px-2 py-1 rounded-lg border border-white/40">גלשן מומלץ: {boardType}</span>

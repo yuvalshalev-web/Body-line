@@ -16,7 +16,8 @@ import {
   Lightbulb,
   Loader2,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  MessageSquareQuote
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -24,8 +25,12 @@ import { calculateSurferFormula, calculateMatchScore } from '../utils/surfMath';
 import { SurfboardOverlay } from '../components/SurfboardOverlay';
 import WetsuitSVG from '../components/WetsuitSVG';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
+import { useRandomHeader } from '../hooks/useRandomHeader';
+import { getShaperConsultation } from '../services/geminiService';
+import Markdown from 'react-markdown';
 
 const ShaperPage: React.FC = () => {
+  const headerImage = useRandomHeader();
   const { currentUser } = useAuth();
   const { updateMember } = useData();
   
@@ -43,6 +48,9 @@ const ShaperPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [toast, setToast] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
+  
+  const [isConsulting, setIsConsulting] = useState(false);
+  const [consultation, setConsultation] = useState<string | null>(null);
   
   const recommendation = useMemo(() => {
     return calculateSurferFormula(weight, height, level, fitnessLevel);
@@ -104,6 +112,31 @@ const ShaperPage: React.FC = () => {
     }
   };
 
+  const handleConsultation = async () => {
+    setIsConsulting(true);
+    setConsultation(null);
+    try {
+      const result = await getShaperConsultation({
+        weight,
+        height,
+        level,
+        fitness: fitnessLevel,
+        currentBoard: currentVol ? { volume: currentVol, length: currentLen } : undefined,
+        recommendedBoard: {
+          volume: recommendation.volume,
+          length: recommendation.lengthFormatted,
+          type: recommendation.boardTypeHebrew
+        }
+      });
+      setConsultation(result);
+    } catch (error) {
+      console.error('Consultation failed:', error);
+      setToast({ msg: 'שגיאה בחיבור לשייפר', type: 'error' });
+    } finally {
+      setIsConsulting(false);
+    }
+  };
+
   const parseLength = (lenStr?: string) => {
     if (!lenStr) return { feet: 0, inches: 0 };
     const parts = lenStr.split("'");
@@ -125,23 +158,20 @@ const ShaperPage: React.FC = () => {
       backgroundAttachment: 'fixed'
     }}>
       <div className="max-w-4xl mx-auto pt-12 relative z-10">
-        {/* Header Section */}
-        <header className="text-center mb-16">
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-3 px-6 py-2 bg-white/40 backdrop-blur-md border border-white/60 rounded-full mb-6 shadow-sm"
-          >
-            <Hammer className="text-[var(--surfer-deep-teal)]" size={20} />
-            <span className="text-[#00426a] font-black text-sm uppercase tracking-[0.2em]">Shaper's Corner</span>
-          </motion.div>
-          <h1 className="text-5xl md:text-7xl font-black text-[#00426a] mb-4 drop-shadow-sm" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
-            מחשבון התאמת גלשן אישי
-          </h1>
-          <p className="text-[#00426a]/60 text-lg max-w-2xl mx-auto font-bold">
-            הנוסחה המדעית למציאת הגלשן המושלם עבורך. שקלול של משקל, גובה ורמת גלישה.
-          </p>
-        </header>
+        {/* Body-line Standard Header Stack */}
+        <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+          <div className="header-content-wrapper relative z-20">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
+              <Hammer size={40} />
+            </div>
+            <h1 className="main-page-title">
+              <span className="surfer-title">פינת השייפר</span>
+            </h1>
+            <p className="header-subtitle max-w-2xl mx-auto">
+              הנוסחה המדעית למציאת הגלשן המושלם עבורך. שקלול של משקל, גובה ורמת גלישה.
+            </p>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Controls Section */}
@@ -470,16 +500,53 @@ const ShaperPage: React.FC = () => {
             {/* Pro Tip Card */}
             <motion.div 
               whileHover={{ scale: 1.02 }}
-              className="bg-white/60 backdrop-blur-xl border border-white/80 rounded-[2.5rem] p-10 flex gap-8 items-center shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)]"
+              className="bg-white/60 backdrop-blur-xl border border-white/80 rounded-[2.5rem] p-10 flex flex-col gap-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)]"
             >
-              <div className="w-20 h-20 bg-[var(--surfer-cyan)]/10 rounded-3xl flex items-center justify-center text-[var(--surfer-cyan)] shadow-inner flex-shrink-0">
-                <Zap size={40} fill="currentColor" />
+              <div className="flex gap-8 items-center">
+                <div className="w-20 h-20 bg-[var(--surfer-cyan)]/10 rounded-3xl flex items-center justify-center text-[var(--surfer-cyan)] shadow-inner flex-shrink-0">
+                  <Zap size={40} fill="currentColor" />
+                </div>
+                <div>
+                  <h4 className="text-2xl font-black text-[#00426a] mb-2">טיפ מהשייפר</h4>
+                  <p className="text-[#00426a]/60 font-bold leading-relaxed text-lg">
+                    זכור שנפח הוא המפתח לציפה ולתפיסת גלים, אבל האורך והרוחב קובעים את יכולת התמרון. אם אתה מרגיש שאתה לא תופס מספיק גלים, נסה לעלות ב-2-3 ליטר מעל ההמלצה.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="text-2xl font-black text-[#00426a] mb-2">טיפ מהשייפר</h4>
-                <p className="text-[#00426a]/60 font-bold leading-relaxed text-lg">
-                  זכור שנפח הוא המפתח לציפה ולתפיסת גלים, אבל האורך והרוחב קובעים את יכולת התמרון. אם אתה מרגיש שאתה לא תופס מספיק גלים, נסה לעלות ב-2-3 ליטר מעל ההמלצה.
-                </p>
+
+              <div className="pt-4 border-t border-slate-100">
+                <button
+                  onClick={handleConsultation}
+                  disabled={isConsulting}
+                  className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[var(--surfer-deep-teal)] to-[var(--surfer-cyan)] text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {isConsulting ? <Loader2 className="animate-spin" size={24} /> : <MessageSquareQuote size={24} />}
+                  <span>התייעצות עם שייפר AI (Gemini)</span>
+                </button>
+
+                <AnimatePresence>
+                  {consultation && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-6 overflow-hidden"
+                    >
+                      <div className="bg-slate-900/90 text-slate-100 p-8 rounded-3xl border border-white/10 shadow-2xl relative">
+                        <div className="absolute top-4 right-4 text-white/20">
+                          <Sparkles size={40} />
+                        </div>
+                        <div className="prose prose-invert prose-slate max-w-none 
+                          prose-p:text-slate-200 prose-p:leading-relaxed prose-p:font-bold
+                          prose-strong:text-[var(--surfer-cyan)] prose-strong:font-black
+                          prose-li:text-slate-300 prose-li:font-bold
+                        ">
+                          <Markdown>{consultation}</Markdown>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           </div>

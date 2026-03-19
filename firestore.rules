@@ -199,6 +199,36 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /events/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /news/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /podcasts/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /glossary/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /exercises/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /quotes/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Admin-only collections - Restricted to Admins
     match /joinRequests/{document=**} {
       allow read: if isAdmin();

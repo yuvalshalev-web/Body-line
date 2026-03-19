@@ -9,8 +9,6 @@ interface PlayerGimmickMetricsProps {
 
 const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) => {
   const { members, siteConfig, isLoading } = useData();
-  const [showPopup, setShowPopup] = useState(false);
-  const [showDriftPopup, setShowDriftPopup] = useState(false);
 
   const member = useMemo(() => {
     return members.find(m => m.id === userId);
@@ -96,15 +94,14 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
       {driftPercentile && (
         <div className="flex flex-col items-start w-full md:w-auto">
           <div 
-            className="tangible-glass-card surfer-theme-bg w-full p-6 cursor-pointer" 
+            className="tangible-glass-card surfer-theme-bg w-full p-6" 
             dir="rtl"
-            onClick={() => setShowDriftPopup(true)}
           >
             <div id="drift-title" className="name-title-text text-lg font-bold mb-4 text-center">
               מדד ה-Drift (סחף) 🌊
             </div>
             
-            <div className="flex items-center justify-between w-full mb-4">
+            <div className="flex items-center justify-between w-full mb-4" dir="ltr">
               <span className="text-2xl">🪐</span>
               <div className="tactile-slider-track mx-2">
                 <div 
@@ -122,28 +119,7 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
             <div className="text-center text-sm secondary-detail-text">
               {member.gender === 'נקבה' ? 'את גרה' : 'אתה גר'} במרחק {driftPercentile.distanceKm} ק"מ מחוף הבית – {member.gender === 'נקבה' ? 'קרובה' : 'קרוב'} יותר מ-{100 - driftPercentile.roundedPercentile}% מהקהילה
             </div>
-            <div className="text-[10px] secondary-detail-text text-center mt-3">({member.gender === 'נקבה' ? 'לחצי' : 'לחץ'} עליי לסיבוב דאווין)</div>
           </div>
-
-          {/* Drift Popup Modal */}
-          {showDriftPopup && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in" onClick={() => setShowDriftPopup(false)}>
-              <div className="tangible-glass-card surfer-theme-bg p-8 max-w-xs w-full text-center animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-                <h2 className="text-2xl font-black name-title-text mb-3">
-                  סיבוב דאווין 🌊
-                </h2>
-                <p className="text-lg font-bold secondary-detail-text">
-                  {member.gender === 'נקבה' ? 'את גרה' : 'אתה גר'} במרחק {driftPercentile.distanceKm} ק"מ מחוף הבית – {member.gender === 'נקבה' ? 'קרובה' : 'קרוב'} יותר מ-{100 - driftPercentile.roundedPercentile}% מהקהילה
-                </p>
-                <button 
-                  className="mt-6 px-8 py-2 bg-ocean text-black rounded-xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 shadow-[0_4px_10px_rgba(0,217,230,0.4)]"
-                  onClick={() => setShowDriftPopup(false)}
-                >
-                  סגור
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
@@ -152,15 +128,14 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
         <div className="flex flex-col items-start w-full md:w-auto">
           {/* New Age Gimmick Container */}
           <div 
-            className="tangible-glass-card surfer-theme-bg w-full p-6 cursor-pointer" 
+            className="tangible-glass-card surfer-theme-bg w-full p-6" 
             dir="rtl"
-            onClick={() => setShowPopup(true)}
           >
             <div id="funny-title" className="name-title-text text-lg font-bold mb-4 text-center">
               מדד ה-Vintage 🍷
             </div>
             
-            <div className="flex items-center justify-between w-full mb-4">
+            <div className="flex items-center justify-between w-full mb-4" dir="ltr">
               <span id="startIcon" className="text-2xl">🐢</span>
               <div className="tactile-slider-track mx-2">
                 <div 
@@ -180,41 +155,9 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
             <div id="dynamicComment" className="text-center text-sm secondary-detail-text">
               {member.gender === 'נקבה' ? 'את' : 'אתה'} באחוזון הגיל ה-{agePercentile.roundedPercentile}% של הקבוצה
             </div>
-            <div className="text-[10px] secondary-detail-text text-center mt-3">(לחצי עליי לסיבוב דאווין)</div>
           </div>
 
           {/* Popup Modal */}
-          {showPopup && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in" onClick={() => setShowPopup(false)}>
-              <div className="tangible-glass-card surfer-theme-bg p-8 max-w-xs w-full text-center animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-                <h2 className="text-2xl font-black name-title-text mb-3">
-                  סיבוב דאווין {(() => {
-                    const p = agePercentile.roundedPercentile;
-                    if (member.gender === 'נקבה') {
-                      if (p < 25) return '🐥';
-                      if (p < 50) return '🐔';
-                      if (p <= 60) return '👑';
-                      return '🐢';
-                    } else {
-                      if (p < 25) return '🍼';
-                      if (p < 50) return '🐮';
-                      if (p <= 60) return '🐂';
-                      return '🐢';
-                    }
-                  })()}
-                </h2>
-                <p className="text-lg font-bold secondary-detail-text">
-                  {member.gender === 'נקבה' ? 'את' : 'אתה'} באחוזון הגיל ה-{agePercentile.roundedPercentile}% של הקבוצה
-                </p>
-                <button 
-                  className="mt-6 px-8 py-2 bg-sand text-black rounded-xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 shadow-[0_4px_10px_rgba(243,208,118,0.4)]"
-                  onClick={() => setShowPopup(false)}
-                >
-                  סגור
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

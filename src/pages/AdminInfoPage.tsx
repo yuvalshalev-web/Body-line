@@ -11,6 +11,8 @@ import GlassNavigationBar from '../components/GlassNavigationBar';
 import AdminHelpPage from '../components/admin/AdminHelpPage';
 import SeasonalPersistence from '../components/admin/SeasonalPersistence';
 
+import { useRandomHeader } from '../hooks/useRandomHeader';
+
 type Tab = 'community' | 'trends' | 'attendance' | 'help' | 'seasonal';
 
 const SnorkelIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
@@ -32,6 +34,7 @@ const SnorkelIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
 );
 
 const AdminInfoPage: React.FC = () => {
+  const headerImage = useRandomHeader();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('community');
@@ -55,13 +58,18 @@ const AdminInfoPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 font-['Yehuda_CLM']" dir="rtl">
       {/* Header */}
-      <div className="surfboard-hero-container mb-8">
-        <h1 className="main-page-title">
-          <span className="surfer-title">מבט על הקהילה</span>
-        </h1>
-        <p className="text-[#004D40] font-bold mt-3 text-lg">
-          ניטור בזמן אמת של פעילות הקהילה והמערכת
-        </p>
+      <div className="surfboard-hero-container mb-8 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+        <div className="header-content-wrapper relative z-20">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
+            <TrendingUp size={40} />
+          </div>
+          <h1 className="main-page-title">
+            <span className="surfer-title">דופק הקהילה</span>
+          </h1>
+          <p className="header-subtitle max-w-2xl mx-auto">
+            ניטור בזמן אמת של פעילות הקהילה והמערכת 📈
+          </p>
+        </div>
       </div>
 
       {/* Tab Navigation */}

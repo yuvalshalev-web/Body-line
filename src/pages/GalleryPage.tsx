@@ -11,7 +11,10 @@ import { analyzeImage } from '../services/geminiService';
 import { GalleryItem } from '../types';
 import { syncStorageOnUpload, syncStorageOnDelete } from '../utils/storageStats';
 
+import { useRandomHeader } from '../hooks/useRandomHeader';
+
 const GalleryPage: React.FC = () => {
+  const headerImage = useRandomHeader();
   const { currentUser } = useAuth();
   const { galleryItems } = useData();
   const { showConfirm, showError } = useModal();
@@ -147,25 +150,25 @@ const GalleryPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-transparent text-right animate-in fade-in duration-700" dir="rtl" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
       {/* Body-line Standard Header Stack */}
-      <div className="surfboard-hero-container mb-6 space-y-2">
-        {/* Main Title */}
-        <h1 className="main-page-title">
-          <span className="surfer-title">ליינאפ התמונות</span>
-        </h1>
-
-        {/* Subtitle with Emoji context */}
-        <div className="flex flex-col items-center gap-4">
-          <p className="header-subtitle max-w-2xl text-[var(--surfer-yellow)] font-bold drop-shadow-md">
+      <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+        <div className="header-content-wrapper relative z-20">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
+            <ImageIcon size={40} />
+          </div>
+          <h1 className="main-page-title">
+            <span className="surfer-title">ליינאפ התמונות</span>
+          </h1>
+          <p className="header-subtitle max-w-2xl mx-auto">
             רגעים מהמים • {galleryItems.length} תמונות אופטימליות של הגולשים שלנו 📸
           </p>
           
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-3 mt-4">
             <button 
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="flex items-center gap-4 px-10 py-4 bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_15px_30px_-10px_var(--surfer-deep-shadow),inset_0_0_15px_var(--surfer-aqua-mist)] text-[var(--surfer-cyan)] rounded-2xl font-black text-lg transition-all hover:bg-[var(--surfer-aqua-mist)]/20 hover:scale-105 active:scale-95 disabled:opacity-50 group"
+              className="flex items-center gap-4 px-10 py-4 bg-white/50 backdrop-blur-xl border border-white shadow-xl shadow-slate-200/50 text-sky-600 rounded-2xl font-black text-lg transition-all hover:bg-white hover:scale-105 active:scale-95 disabled:opacity-50 group"
             >
-              {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-[var(--surfer-yellow)]" />}
+              {isUploading ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform text-sky-500" />}
               <span>{isUploading ? 'מעבד תמונות...' : 'העלאת תמונות'}</span>
             </button>
             <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleFileUpload} />

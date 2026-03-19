@@ -459,19 +459,28 @@ export const CoastalDashboard: React.FC = () => {
       {/* Bottom Grid: Forecast & Live Cam */}
       <div className="grid grid-cols-2 border-t border-slate-200/50 divide-x divide-x-reverse divide-slate-200/50 relative z-10">
         {/* Forecast Tile */}
-        <a 
+        <motion.a 
           href="https://gosurf.co.il/forecast/herzliya-marina" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="p-6 flex flex-col items-center text-center gap-2 hover:bg-cyan-50/50 active:bg-cyan-100/50 transition-all duration-300 group cursor-pointer relative overflow-hidden"
+          whileHover={{ 
+            scale: 1.05, 
+            y: -8,
+            backgroundColor: "rgba(236, 254, 255, 0.8)",
+            rotateX: 5,
+            rotateY: -5,
+          }}
+          whileTap={{ scale: 0.95, y: 0 }}
+          className="p-6 flex flex-col items-center text-center gap-2 transition-all duration-300 group cursor-pointer relative overflow-hidden border-b-4 border-transparent hover:border-cyan-500/30 pulse-glow-interactive"
         >
           {/* Subtle Pulse for Mobile Interactivity */}
           <motion.div
             animate={{
-              opacity: [0, 0.05, 0],
+              opacity: [0, 0.15, 0],
+              scale: [1, 1.1, 1],
             }}
             transition={{
-              duration: 4,
+              duration: 3,
               repeat: Infinity,
               ease: "easeInOut",
             }}
@@ -479,47 +488,64 @@ export const CoastalDashboard: React.FC = () => {
           />
 
           {/* Subtle Hover Glow */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           
-          <Waves className="text-cyan-500 mb-1 group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 relative z-10" size={28} />
+          <Waves className="text-cyan-500 mb-1 group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 relative z-10 drop-shadow-sm" size={28} />
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-none relative z-10">Forecast</span>
           <span className="text-lg font-black text-slate-800 relative z-10" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>תחזית גלים</span>
           
           {/* Interaction Indicator */}
-          <div className="absolute bottom-2 w-8 h-0.5 bg-cyan-500/30 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-        </a>
+          <motion.div 
+            className="absolute bottom-2 w-12 h-1 bg-cyan-500/40 rounded-full"
+            animate={{ opacity: [0.3, 0.8, 0.3], scaleX: [0.8, 1.2, 0.8] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        </motion.a>
 
         {/* Live Cam Tile */}
-        <a 
+        <motion.a 
           href="https://beachcam.co.il" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="p-6 flex flex-col items-center text-center gap-2 hover:bg-amber-50/50 active:bg-amber-100/50 transition-all duration-300 group cursor-pointer relative overflow-hidden"
+          whileHover={{ 
+            scale: 1.05, 
+            y: -8,
+            backgroundColor: "rgba(255, 251, 235, 0.8)",
+            rotateX: 5,
+            rotateY: 5,
+          }}
+          whileTap={{ scale: 0.95, y: 0 }}
+          className="p-6 flex flex-col items-center text-center gap-2 transition-all duration-300 group cursor-pointer relative overflow-hidden border-b-4 border-transparent hover:border-amber-500/30 pulse-glow-interactive"
         >
           {/* Subtle Pulse for Mobile Interactivity */}
           <motion.div
             animate={{
-              opacity: [0, 0.05, 0],
+              opacity: [0, 0.15, 0],
+              scale: [1, 1.1, 1],
             }}
             transition={{
-              duration: 4,
+              duration: 3,
               repeat: Infinity,
               ease: "easeInOut",
-              delay: 2
+              delay: 1.5
             }}
             className="absolute inset-0 bg-amber-400 pointer-events-none"
           />
 
           {/* Subtle Hover Glow */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           
-          <Video className="text-amber-500 mb-1 group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 relative z-10" size={28} />
+          <Video className="text-amber-500 mb-1 group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 relative z-10 drop-shadow-sm" size={28} />
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-none relative z-10">Live Stream</span>
           <span className="text-lg font-black text-slate-800 relative z-10" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מצלמת חוף</span>
           
           {/* Interaction Indicator */}
-          <div className="absolute bottom-2 w-8 h-0.5 bg-amber-500/30 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-        </a>
+          <motion.div 
+            className="absolute bottom-2 w-12 h-1 bg-amber-500/40 rounded-full"
+            animate={{ opacity: [0.3, 0.8, 0.3], scaleX: [0.8, 1.2, 0.8] }}
+            transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+          />
+        </motion.a>
       </div>
 
       <div className="p-4 bg-slate-50/50 border-t border-slate-200/50 flex justify-center relative z-10">

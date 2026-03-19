@@ -18,13 +18,13 @@ const WetsuitSVG: React.FC<WetsuitSVGProps> = ({ thickness = '4/3', alignBottom 
   const imgSrc = thickness === '4/3' ? '/wetsuit-4-3.png' : thickness === '3/2' ? '/wetsuit-3-2.png' : thickness === '2/2' ? '/wetsuit-2-2.png' : thickness === '2/2-ss' ? '/wetsuit-2-2-ss.png' : '/sun-shirt.png';
 
   return (
-    <div className={`flex ${alignBottom ? 'items-end pb-6' : 'items-center'} justify-center w-full h-full p-2 bg-transparent`}>
-      <div className={`relative group w-full max-w-md flex justify-center ${alignBottom ? 'items-end' : 'items-center'} min-h-[320px]`}>
+    <div className={`flex ${alignBottom ? 'items-end' : 'items-center'} justify-center w-full h-full ${alignBottom ? 'p-0' : 'p-2'} bg-transparent`}>
+      <div className={`relative group w-full max-w-md flex justify-center ${alignBottom ? 'items-end' : 'items-center'} ${alignBottom ? '' : 'min-h-[320px]'}`}>
         {/* Glowing background effect for the transparent image */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 bg-[var(--surfer-cyan)]/20 blur-[80px] rounded-full pointer-events-none" />
         
         {!imgError ? (
-          <div className="relative z-10 w-full max-w-[255px] flex flex-col items-center">
+          <div className={`relative z-10 w-full max-w-[255px] flex flex-col items-center ${alignBottom ? '-translate-y-20' : ''}`}>
             <motion.img
               key={thickness} // Force re-animation on change
               initial={{ opacity: 0, y: 20 }}
@@ -32,7 +32,7 @@ const WetsuitSVG: React.FC<WetsuitSVGProps> = ({ thickness = '4/3', alignBottom 
               transition={{ duration: 0.8, ease: "easeOut" }}
               src={imgSrc} 
               alt={`${thickness} Full Wetsuit`}
-              className="w-full h-auto drop-shadow-[0_30px_40px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-auto scale-160 drop-shadow-[0_30px_40px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-170"
               onError={() => setImgError(true)}
             />
           </div>

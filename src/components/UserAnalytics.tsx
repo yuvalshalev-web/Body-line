@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { 
-  PieChart, Pie, Cell, ResponsiveContainer, 
-  PolarGrid, PolarAngleAxis, PolarRadiusAxis
+  PieChart, Pie, Cell, ResponsiveContainer
 } from 'recharts';
 import { Waves, Zap, Trophy, Flame, Calendar, ChevronLeft, ArrowUpRight, ArrowDownRight, Minus, Users, Info, Target, Compass, Dumbbell, Timer, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -516,18 +515,17 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
         className="tangible-glass-card surfer-theme-bg p-4 md:p-6 relative overflow-hidden transition-all duration-1000"
       >
           <div className="relative z-10">
-          <div className="flex flex-col items-center mb-8">
-            <div className="flex items-center gap-[var(--spacing-xs)]">
-              <div className="p-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-sm mr-2">
-                <Compass size={18} className="text-[#00FFFF]" />
+            <div className="flex flex-col items-center mb-8">
+              <div className="flex items-center gap-[var(--spacing-xs)]">
+                <div className="p-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-sm mr-2">
+                  <Compass size={18} className="text-[#00FFFF]" />
+                </div>
+                <h3 className="text-lg font-black name-title-text">רדאר השיפור שלך</h3>
               </div>
-              <h3 className="text-lg font-black name-title-text">רדאר השיפור שלך</h3>
             </div>
-            <span className="text-[12px] font-bold secondary-detail-text uppercase tracking-widest mt-1">(לשימוש עתידי)</span>
-          </div>
 
           <div className="h-[450px] w-full relative">
-            <RadarChart />
+            <RadarChart userId={userId} />
           </div>
 
           <div className="mt-12 p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/20 shadow-md shadow-black/5">
