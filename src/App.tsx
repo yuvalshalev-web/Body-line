@@ -14,7 +14,7 @@ import { FloatingDrawer } from './components/FloatingDock';
 
 // Lazy loaded components
 const LoginPage = lazy(() => import('./pages/LoginPage'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const HomePage = lazy(() => import('./pages/HomePage'));
 const DirectoryPage = lazy(() => import('./pages/DirectoryPage'));
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 import ProfilePage from './pages/ProfilePage';
@@ -174,7 +174,7 @@ const App: React.FC = () => {
         <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<DashboardPage />} />
+              <Route path="/" element={<HomePage />} />
               <Route path="/directory" element={<DirectoryPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/events" element={<EventsPage />} />

@@ -2,12 +2,12 @@ import React, { useMemo, useState } from 'react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer
 } from 'recharts';
-import { Waves, Zap, Trophy, Flame, Calendar, ChevronLeft, ArrowUpRight, ArrowDownRight, Minus, Users, Info, Target, Compass, Dumbbell, Timer, Eye } from 'lucide-react';
+import { Waves, Zap, Trophy, Flame, Calendar, ChevronLeft, ArrowUpRight, ArrowDownRight, Minus, Users, Info, Target, Compass, Dumbbell, Timer, Eye, Wind, Thermometer, Sun } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { formatDate } from '../utils/dateUtils';
 import { calculateUserStats } from '../utils/analytics';
-import RadarChart from './RadarChart';
+import { RadarChart } from './RadarChart';
 import SessionDetails from './SessionDetails';
 
 const OCEAN_PALETTE = [
@@ -355,8 +355,10 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
     <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700 min-h-[400px]" dir="rtl">
       {/* Unified Modern Dashboard - Dynamic Premium Style matching Surfer Card */}
       <motion.div 
-        className="tangible-glass-card surfer-theme-bg p-4 md:p-6 relative transition-all duration-1000"
+        className="p-4 md:p-6 bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_8px_32px_rgba(49,170,193,0.15),0_4px_16px_rgba(49,170,193,0.1)] rounded-[2rem] relative transition-all duration-1000 overflow-hidden"
       >
+        {/* Grit Overlay */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
         {/* Decorative background elements */}
         <div className="absolute -right-20 -top-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
@@ -425,9 +427,11 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
       {/* Session History - Collapsible Dropbox Style - Dynamic Premium Style */}
       <motion.div 
-        className="tangible-glass-card surfer-theme-bg relative overflow-hidden transition-all duration-1000"
+        className="bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_8px_32px_rgba(49,170,193,0.15),0_4px_16px_rgba(49,170,193,0.1)] rounded-[2rem] relative overflow-hidden transition-all duration-1000"
         onMouseLeave={() => setIsHistoryOpen(false)}
       >
+        {/* Grit Overlay */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
         <button 
           onClick={() => setIsHistoryOpen(!isHistoryOpen)}
           onMouseEnter={() => setIsHistoryOpen(true)}
@@ -475,9 +479,61 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                         <Waves size={14} className="text-sunshine-yellow transition-colors" />
                         <div className="flex flex-col">
                           <span className="font-bold secondary-detail-text text-xs">{formattedDate}</span>
-                          <span className="text-[12px] secondary-detail-text font-medium">
-                            {session.instructorName || 'מדריך חבל זוג'}
-                          </span>
+                          <div className="flex flex-col gap-0.5 text-[12px] secondary-detail-text font-medium">
+                            <div>
+                              מדריכים: {(() => {
+                                const instructors = (session.participantIds || [])
+                                  .map((id: string) => members.find(m => m.id === id))
+                                  .filter((m: any) => m && m.role === 'Instructor');
+                                return instructors.length > 0 
+                                  ? instructors.map((m: any) => `${m.firstName} ${m.lastName}`).join(', ')
+                                  : 'אין';
+                              })()}
+                            </div>
+                            <div>
+                              רכזים: {(() => {
+                                const coordinators = (session.participantIds || [])
+                                  .map((id: string) => members.find(m => m.id === id))
+                                  .filter((m: any) => m && m.role === 'Admin');
+                                return coordinators.length > 0 
+                                  ? coordinators.map((m: any) => `${m.firstName} ${m.lastName}`).join(', ')
+                                  : 'אין';
+                              })()}
+                            </div>
+                          </div>
+                          {/* Sea State Info */}
+                          {(session.waveHeight !== undefined || session.seaState?.waveHeight !== undefined || session.windSpeed !== undefined || session.seaState?.windSpeed !== undefined || session.waterTemp !== undefined || session.seaState?.waterTemp !== undefined || session.uvIndex !== undefined || session.seaState?.uvIndex !== undefined) && (
+                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                              {(session.waveHeight !== undefined || session.seaState?.waveHeight !== undefined) && (
+                                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#0071a1]/5 border border-[#0071a1]/10 transition-all hover:bg-[#0071a1]/10" title="גובה גלים">
+                                  <Waves size={12} className="text-[#0071a1]" />
+                                  <span className="text-[10px] font-black text-[#00426a]/70">גובה גלים:</span>
+                                  <span className="text-[10px] font-black text-[#0071a1]" dir="ltr">{session.waveHeight ?? session.seaState?.waveHeight}m</span>
+                                </div>
+                              )}
+                              {(session.windSpeed !== undefined || session.seaState?.windSpeed !== undefined) && (
+                                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#0891b2]/5 border border-[#0891b2]/10 transition-all hover:bg-[#0891b2]/10" title="מהירות רוח">
+                                  <Wind size={12} className="text-[#0891b2]" />
+                                  <span className="text-[10px] font-black text-[#00426a]/70">מהירות רוח:</span>
+                                  <span className="text-[10px] font-black text-[#0891b2]" dir="ltr">{session.windSpeed ?? session.seaState?.windSpeed}kts</span>
+                                </div>
+                              )}
+                              {(session.waterTemp !== undefined || session.seaState?.waterTemp !== undefined) && (
+                                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#4338ca]/5 border border-[#4338ca]/10 transition-all hover:bg-[#4338ca]/10" title="טמפ׳ מים">
+                                  <Thermometer size={12} className="text-[#4338ca]" />
+                                  <span className="text-[10px] font-black text-[#00426a]/70">טמפ׳ מים:</span>
+                                  <span className="text-[10px] font-black text-[#4338ca]" dir="ltr">{session.waterTemp ?? session.seaState?.waterTemp}°C</span>
+                                </div>
+                              )}
+                              {(session.uvIndex !== undefined || session.seaState?.uvIndex !== undefined) && (
+                                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#b45309]/5 border border-[#b45309]/10 transition-all hover:bg-[#b45309]/10" title="אינדקס קרינה">
+                                  <Sun size={12} className="text-[#b45309]" />
+                                  <span className="text-[10px] font-black text-[#00426a]/70">אינדקס קרינה:</span>
+                                  <span className="text-[10px] font-black text-[#b45309]" dir="ltr">{session.uvIndex ?? session.seaState?.uvIndex} UV</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -512,8 +568,10 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
       {/* Surf Compass (Radar Chart) - Future Use - Dynamic Premium Style */}
       <motion.div 
-        className="tangible-glass-card surfer-theme-bg p-4 md:p-6 relative overflow-hidden transition-all duration-1000"
+        className="p-4 md:p-6 bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_8px_32px_rgba(49,170,193,0.15),0_4px_16px_rgba(49,170,193,0.1)] rounded-[2rem] relative transition-all duration-1000"
       >
+        {/* Grit Overlay */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
           <div className="relative z-10">
             <div className="flex flex-col items-center mb-8">
               <div className="flex items-center gap-[var(--spacing-xs)]">
@@ -524,7 +582,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               </div>
             </div>
 
-          <div className="h-[450px] w-full relative">
+          <div className="h-[500px] w-full relative z-20">
             <RadarChart userId={userId} />
           </div>
 

@@ -461,20 +461,28 @@ const SessionStatsPage: React.FC = () => {
 
       const calcRate = (sessions: any[]) => {
         if (sessions.length === 0) return 0;
+        
+        const parseDate = (date: any) => {
+          if (!date) return new Date(NaN);
+          if (typeof date.toDate === 'function') return date.toDate();
+          if (typeof date.seconds === 'number') return new Date(date.seconds * 1000);
+          return new Date(date);
+        };
+
         let potentialAttendance = 0;
         const actualAttendance = sessions.reduce((acc, s) => {
-          const sessionDateStart = new Date(s.date);
+          const sessionDateStart = parseDate(s.date);
           sessionDateStart.setHours(0, 0, 0, 0);
-          const sessionDateEnd = new Date(s.date);
+          const sessionDateEnd = new Date(sessionDateStart);
           sessionDateEnd.setHours(23, 59, 59, 999);
           
           const activeAtSession = members.filter(m => {
             if (ageMap.get(m.id) !== group.label) return false;
             if (!m.joinedAt) return true; // If no joinedAt, assume active
-            const joinedDate = new Date(m.joinedAt);
+            const joinedDate = parseDate(m.joinedAt);
             if (joinedDate > sessionDateEnd) return false;
             if (m.deactivatedAt) {
-              const deactivatedDate = new Date(m.deactivatedAt);
+              const deactivatedDate = parseDate(m.deactivatedAt);
               if (deactivatedDate < sessionDateStart) return false;
             }
             return true;
@@ -484,7 +492,7 @@ const SessionStatsPage: React.FC = () => {
           return acc + (s.participantIds || []).filter((uid: string) => ageMap.get(uid) === group.label).length;
         }, 0);
         if (potentialAttendance === 0) return 0;
-        return Math.round((actualAttendance / potentialAttendance) * 100);
+        return Math.min(100, Math.round((actualAttendance / potentialAttendance) * 100));
       };
 
       return {
@@ -610,7 +618,7 @@ const SessionStatsPage: React.FC = () => {
         {/* Yearly Progress Bar Widget */}
         <div className="relative group w-full max-w-xl">
           <div className="absolute inset-0 bg-blue-500/5 blur-2xl group-hover:bg-blue-500/10 transition-all duration-500" />
-          <div className="relative admin-info-card p-8 flex flex-col w-full">
+          <div className="relative admin-info-card p-8 flex flex-col w-full" dir="ltr">
             {(() => {
               const now = new Date();
               const startDate = yearConfig?.startDate || new Date().toISOString();
@@ -649,7 +657,7 @@ const SessionStatsPage: React.FC = () => {
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min(100, percentage)}%` }}
                       transition={{ duration: 1.5, ease: "easeOut" }}
-                      className="absolute inset-y-0 right-0 bg-gradient-to-l from-blue-400 to-blue-600 rounded-r-2xl shadow-[0_0_15px_rgba(37,99,235,0.3)] z-10"
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-400 to-blue-600 rounded-l-2xl shadow-[0_0_15px_rgba(37,99,235,0.3)] z-10"
                     >
                       <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.1)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.1)_50%,rgba(255,255,255,0.1)_75%,transparent_75%,transparent)] bg-[length:20px_20px] opacity-20" />
                     </motion.div>
@@ -657,7 +665,7 @@ const SessionStatsPage: React.FC = () => {
                     {/* Target Marker (Today's Plan) - Positioned from Right (RTL) */}
                     <div 
                       className="absolute inset-y-0 w-1 bg-orange-500 z-20 shadow-[0_0_8px_rgba(249,115,22,0.5)]"
-                      style={{ right: `${targetPercent}%` }}
+                      style={{ left: `${targetPercent}%` }}
                     >
                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center">
                         <span className="text-[9px] font-black text-[#00426a] whitespace-nowrap bg-[rgba(240,248,255,0.1)] backdrop-blur-md px-2 py-0.5 rounded-full border-t border-l border-white/80 shadow-sm">היעד להיום</span>

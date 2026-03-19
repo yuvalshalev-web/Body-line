@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Waves, Info, CheckCircle2, AlertTriangle, Ruler, Weight } from 'lucide-react';
 import { Member } from '../types';
+import { calculateSurferFormula } from '../utils/surfMath';
 
 interface SurfboardCalculatorProps {
   formData: Member;
@@ -27,30 +28,20 @@ export const SurfboardCalculator: React.FC<SurfboardCalculatorProps> = ({ formDa
   const [recommendedLengthCm, setRecommendedLengthCm] = useState<number | null>(null);
 
   useEffect(() => {
-    if (formData.weight && formData.surfingLevel) {
-      let volMultiplier = 0;
-      switch (formData.surfingLevel) {
-        case 'Beginner': volMultiplier = 0.8; break;
-        case 'Intermediate': volMultiplier = 0.55; break;
-        case 'Advanced': volMultiplier = 0.4; break;
-      }
-      setRecommendedVolume(formData.weight * volMultiplier);
+    if (formData.weight && formData.height && formData.surfingLevel) {
+      const recommendation = calculateSurferFormula(
+        formData.weight,
+        formData.height,
+        formData.surfingLevel as any,
+        (formData.fitnessLevel as any) || 'Average'
+      );
+      setRecommendedVolume(recommendation.volume);
+      setRecommendedLengthCm(recommendation.lengthCm);
     } else {
       setRecommendedVolume(null);
-    }
-
-    if (formData.height && formData.surfingLevel) {
-      let lengthAdd = 0;
-      switch (formData.surfingLevel) {
-        case 'Beginner': lengthAdd = 40; break;
-        case 'Intermediate': lengthAdd = 15; break;
-        case 'Advanced': lengthAdd = 0; break; // +/- 5cm, we'll just use 0
-      }
-      setRecommendedLengthCm(formData.height + lengthAdd);
-    } else {
       setRecommendedLengthCm(null);
     }
-  }, [formData.weight, formData.height, formData.surfingLevel]);
+  }, [formData.weight, formData.height, formData.surfingLevel, formData.fitnessLevel]);
 
   const formatLength = (cm: number) => {
     const totalInches = cm / 2.54;
@@ -128,11 +119,12 @@ export const SurfboardCalculator: React.FC<SurfboardCalculatorProps> = ({ formDa
 
           <div className="space-y-2">
             <label className="text-[12px] font-black text-white/80 uppercase tracking-widest pr-3">רמת גלישה</label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['Beginner', 'Intermediate', 'Advanced'] as const).map((level) => {
+            <div className="grid grid-cols-4 gap-2">
+              {(['Learner', 'Beginner', 'Intermediate', 'Advanced'] as const).map((level) => {
                 const labels = {
+                  'Learner': 'מתלמד',
                   'Beginner': 'מתחיל',
-                  'Intermediate': 'בינוני',
+                  'Intermediate': 'מיומן',
                   'Advanced': 'מתקדם'
                 };
                 const isSelected = formData.surfingLevel === level;

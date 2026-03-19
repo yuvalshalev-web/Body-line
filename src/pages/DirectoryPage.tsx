@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Filter, User, Mail, Phone, MapPin, Waves, Loader2, MessageCircle, LayoutGrid, List, X } from 'lucide-react';
+import { Search, Filter, User, Mail, Phone, MapPin, Waves, Loader2, MessageCircle, LayoutGrid, List, X, Users } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { Member } from '../types';
 import PlayerCard from '../components/PlayerCard';
+import { useRandomHeader } from '../hooks/useRandomHeader';
 
 const DirectoryPage: React.FC = () => {
   const { members, isLoading } = useData();
@@ -14,17 +15,7 @@ const DirectoryPage: React.FC = () => {
 
   const identities = ['הכל', 'רכז', 'מדריך', 'חבר'];
 
-  const [headerImage, setHeaderImage] = useState('/headers/header_1.jpg');
-
-  useEffect(() => {
-    const headers = [
-      'header_1.jpg', 'header_10.jpeg', 'header_11.jpg', 'header_2.jpeg',
-      'header_3.jpeg', 'header_4.jpg', 'header_5.jpg', 'header_6.jpg',
-      'header_7.jpg', 'header_8.jpeg'
-    ];
-    const randomHeader = headers[Math.floor(Math.random() * headers.length)];
-    setHeaderImage(`/headers/${randomHeader}`);
-  }, []);
+  const headerImage = useRandomHeader();
 
   const filteredMembers = members.filter(member => {
     const matchesSearch = 
@@ -84,24 +75,6 @@ const DirectoryPage: React.FC = () => {
 
           {/* Quick Actions */}
           <div className="flex gap-2 mt-2">
-            {member.mobile && (
-              <>
-                <button 
-                  onClick={(e) => openWhatsApp(e, member.mobile!, member.firstName)}
-                  className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
-                  title="WhatsApp"
-                >
-                  <MessageCircle size={16} />
-                </button>
-                <button 
-                  onClick={(e) => callMobile(e, member.mobile!)}
-                  className="w-8 h-8 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center hover:bg-sky-500 hover:text-white transition-all shadow-sm"
-                  title="Call"
-                >
-                  <Phone size={16} />
-                </button>
-              </>
-            )}
           </div>
         </div>
       </motion.div>
@@ -142,24 +115,6 @@ const DirectoryPage: React.FC = () => {
         </div>
 
         <div className="flex gap-2">
-          {member.mobile && (
-            <>
-              <button 
-                onClick={(e) => openWhatsApp(e, member.mobile!, member.firstName)}
-                className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-600 font-black text-xs flex items-center gap-2 hover:bg-emerald-500 hover:text-white transition-all"
-              >
-                <MessageCircle size={14} />
-                WhatsApp
-              </button>
-              <button 
-                onClick={(e) => callMobile(e, member.mobile!)}
-                className="px-4 py-2 rounded-xl bg-sky-50 text-sky-600 font-black text-xs flex items-center gap-2 hover:bg-sky-500 hover:text-white transition-all"
-              >
-                <Phone size={14} />
-                התקשר
-              </button>
-            </>
-          )}
         </div>
       </motion.div>
     );
@@ -215,17 +170,18 @@ const DirectoryPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pb-20" dir="rtl">
-      {/* Header Section */}
-      <div className="relative w-full h-80 mb-24">
-        <div 
-          className="absolute inset-0 bg-cover bg-center header-image-mask"
-          style={{ backgroundImage: `url(${headerImage})` }}
-        />
-        {/* Title container - positioned to overlap bottom edge */}
-        <div className="absolute bottom-0 w-full px-16 translate-y-1/2">
-          <h1 className="text-7xl font-black text-slate-800 drop-shadow-[0_0_15px_rgba(255,255,255,1)]">
-            נבחרת הכוכבים
+      {/* Body-line Standard Header Stack */}
+      <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+        <div className="header-content-wrapper relative z-20">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
+            <Users size={40} />
+          </div>
+          <h1 className="main-page-title">
+            <span className="surfer-title">נבחרת הכוכבים</span>
           </h1>
+          <p className="header-subtitle max-w-2xl mx-auto">
+            הכירו את הקהילה שלנו • {members.length} חברים רשומים 🏄‍♂️
+          </p>
         </div>
       </div>
 
@@ -309,15 +265,21 @@ const DirectoryPage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-2xl"
+              className="relative w-full max-w-2xl bg-[#f0f8ff] rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(0,66,106,0.2)] overflow-hidden border-t border-l border-white/80 border-b border-r border-[#00426a]/10"
             >
+              {/* Subtle gradient / Aqua Mist in corners */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-teal-100/40 rounded-full blur-3xl -z-10" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-100/40 rounded-full blur-3xl -z-10" />
+              {/* Micro-grain texture */}
+              <div className="absolute inset-0 opacity-[0.02] mix-blend-overlay pointer-events-none -z-10" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+              
               <button 
                 onClick={() => setSelectedMemberId(null)}
-                className="absolute top-6 left-6 z-50 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+                className="absolute top-6 left-6 z-50 p-2 bg-[#00426a]/5 hover:bg-[#00426a]/10 text-[#00426a] rounded-full transition-colors"
               >
                 <X size={24} />
               </button>
-              <div>
+              <div className="p-8 max-h-[90vh] overflow-y-auto">
                 <PlayerCard userId={selectedMemberId} />
               </div>
             </motion.div>

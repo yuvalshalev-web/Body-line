@@ -1,5 +1,5 @@
 
-export type SurfingLevel = 'Beginner' | 'Intermediate' | 'Advanced';
+export type SurfingLevel = 'Learner' | 'Beginner' | 'Intermediate' | 'Advanced';
 export type FitnessLevel = 'Low' | 'Average' | 'High' | 'Elite';
 
 export interface SurfboardRecommendation {
@@ -22,39 +22,93 @@ export const calculateSurferFormula = (
   let boardType = '';
   let boardTypeHebrew = '';
 
+  // 1. Base Volume Multiplier (GF - Guild Factor)
   switch (level) {
+    case 'Learner':
+      volMultiplier = 1.10; // Extra volume for absolute learners
+      break;
     case 'Beginner':
-      volMultiplier = 0.8;
-      lengthOffset = 40;
-      boardType = 'softboard';
-      boardTypeHebrew = 'סופטבורד';
+      volMultiplier = 1.00;
       break;
     case 'Intermediate':
       volMultiplier = 0.55;
-      lengthOffset = 15;
-      boardType = 'funboard';
-      boardTypeHebrew = 'פאנבורד';
       break;
     case 'Advanced':
-      volMultiplier = 0.4;
-      lengthOffset = 0; // +/- 5cm, using base height
-      boardType = 'shortboard';
-      boardTypeHebrew = 'שורטבורד';
+      volMultiplier = 0.38;
       break;
   }
 
+  // 2. Fitness Modifier
   let fitnessModifier = 1.0;
   switch (fitness) {
-    case 'Low': fitnessModifier = 1.1; break; // +10% volume
-    case 'Average': fitnessModifier = 1.0; break; // baseline
+    case 'Low': fitnessModifier = 1.10; break; // +10% volume
+    case 'Average': fitnessModifier = 1.00; break; // baseline
     case 'High': fitnessModifier = 0.95; break; // -5% volume
-    case 'Elite': fitnessModifier = 0.9; break; // -10% volume
+    case 'Elite': fitnessModifier = 0.92; break; // -8% volume
+  }
+
+  // 3. Board Type & Length Offset based on Level and Fitness
+  if (level === 'Learner') {
+    boardType = 'softboard';
+    boardTypeHebrew = 'סופטבורד';
+    lengthOffset = 70; // Increased to 70cm for better learner length
+  } else if (level === 'Beginner') {
+    if (fitness === 'Low' || fitness === 'Average') {
+      boardType = 'softboard';
+      boardTypeHebrew = 'סופטבורד';
+      lengthOffset = 50; // General beginner length
+    } else {
+      boardType = 'longboard';
+      boardTypeHebrew = 'לונגבורד';
+      lengthOffset = 60; // +50-70cm for longboards
+    }
+  } else if (level === 'Intermediate') {
+    if (fitness === 'Low') {
+      boardType = 'funboard';
+      boardTypeHebrew = 'פאנבורד';
+      lengthOffset = 20;
+    } else if (fitness === 'Average') {
+      boardType = 'funboard';
+      boardTypeHebrew = 'פאנבורד / פיש';
+      lengthOffset = 15;
+    } else {
+      boardType = 'shortboard';
+      boardTypeHebrew = 'שורטבורד (Hybrid)';
+      lengthOffset = 0;
+    }
+  } else if (level === 'Advanced') {
+    if (fitness === 'Low' || fitness === 'Average') {
+      boardType = 'fish';
+      boardTypeHebrew = 'פיש / שורטבורד';
+      lengthOffset = -5; // -5 to -10cm for fish
+    } else {
+      boardType = 'shortboard';
+      boardTypeHebrew = 'שורטבורד';
+      lengthOffset = 0; // +/- 5cm for shortboard
+    }
   }
 
   const volume = Math.round(weight * volMultiplier * fitnessModifier * 10) / 10;
-  const lengthCm = heightCm + lengthOffset;
-  const lengthInches = lengthCm / 2.54;
+  let lengthCm = heightCm + lengthOffset;
+  let lengthInches = lengthCm / 2.54;
   
+  // Cap softboard length at 9'6" (114 inches / ~290-293 cm) since that's the max manufactured size
+  if (boardType === 'softboard' && lengthInches > 114) {
+    lengthInches = 114;
+    lengthCm = 114 * 2.54;
+  }
+
+  // Enforce classic longboard length range (8'0" to 12'0")
+  if (boardType === 'longboard') {
+    if (lengthInches < 96) { // 8'0" = 96 inches
+      boardType = 'funboard';
+      boardTypeHebrew = 'מיני-מאל / פאנבורד';
+    } else if (lengthInches > 144) { // 12'0" = 144 inches
+      lengthInches = 144;
+      lengthCm = 144 * 2.54;
+    }
+  }
+
   const feet = Math.floor(lengthInches / 12);
   const inches = Math.round(lengthInches % 12);
   const lengthFormatted = `${feet}'${inches}"`;

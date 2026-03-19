@@ -38,7 +38,6 @@ import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { hashPassword } from '../utils/crypto';
 import { loadGoogleMaps } from '../utils/googlePlaces';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
-import { SurfboardCalculator } from '../components/SurfboardCalculator';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 
 const SocialInput = ({ 
@@ -53,7 +52,7 @@ const SocialInput = ({
         <input
           type="text"
           placeholder={placeholder}
-          className="w-full pr-14 pl-12 py-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]"
+          className="w-full pr-14 pl-12 py-5 bg-white/10 backdrop-blur-[30px] border border-white/40 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-white/20 transition-all text-[#000000]"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -214,10 +213,7 @@ const ProfilePage: React.FC = () => {
       { label: 'מגדר', value: formData.gender },
       { label: 'כתובת מגורים', value: formData.full_address },
       { label: 'שם איש קשר לחירום', value: formData.emergencyContactName },
-      { label: 'טלפון לחירום', value: formData.emergencyContactPhone },
-      { label: 'משקל (במחשבון השייפר)', value: formData.weight },
-      { label: 'גובה (במחשבון השייפר)', value: formData.height },
-      { label: 'רמת גלישה (במחשבון השייפר)', value: formData.surfingLevel }
+      { label: 'טלפון לחירום', value: formData.emergencyContactPhone }
     ];
     
     const missing = fieldMap.filter(f => !f.value).map(f => f.label);
@@ -374,8 +370,15 @@ const ProfilePage: React.FC = () => {
         <form onSubmit={handleSubmit} className="px-12 pb-16 -mt-6 luxury-card border border-white/60 rounded-[2.5rem] relative z-20">
           <div className="flex flex-col items-center gap-8 mb-16 text-center">
             <div className="relative group">
-              
-              <div className="w-44 h-44 rounded-[1.5rem] overflow-hidden border border-white/50 shadow-[0_10px_30px_rgba(0,0,0,0.1)] group-hover:scale-[1.02] transition-transform duration-500 bg-slate-100 flex items-center justify-center relative z-10">
+              <style>
+                {`
+                  .feathered-avatar {
+                    mask-image: radial-gradient(circle, black 40%, transparent 100%);
+                    -webkit-mask-image: radial-gradient(circle, black 40%, transparent 100%);
+                  }
+                `}
+              </style>
+              <div className="w-44 h-44 overflow-hidden group-hover:scale-[1.02] transition-transform duration-500 flex items-center justify-center relative z-10">
                 {isProcessingImage ? (
                   <Loader2 className="animate-spin text-indigo-500" size={32} />
                 ) : formData.avatar ? (
@@ -443,11 +446,11 @@ const ProfilePage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">שם פרטי</label>
-                    <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" />
+                    <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-5 bg-white/10 backdrop-blur-[30px] border border-white/40 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-white/20 transition-all text-[#000000]" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">שם משפחה</label>
-                    <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" />
+                    <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-5 bg-white/10 backdrop-blur-[30px] border border-white/40 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-white/20 transition-all text-[#000000]" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">טלפון נייד</label>
@@ -457,7 +460,7 @@ const ProfilePage: React.FC = () => {
                         type="tel" 
                         value={formData.mobile} 
                         onChange={handleMobileChange} 
-                        className="w-full pr-14 pl-6 py-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" 
+                        className="w-full pr-14 pl-6 py-5 bg-white/10 backdrop-blur-[30px] border border-white/40 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-white/20 transition-all text-[#000000]" 
                       />
                     </div>
                   </div>
@@ -469,7 +472,7 @@ const ProfilePage: React.FC = () => {
                         type="date" 
                         value={formData.birthday || ''} 
                         onChange={e => handleFieldChange('birthday', e.target.value)} 
-                        className="w-full pr-14 pl-6 py-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all cursor-pointer text-[#000000]" 
+                        className="w-full pr-14 pl-6 py-5 bg-white/10 backdrop-blur-[30px] border border-white/40 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-white/20 transition-all cursor-pointer text-[#000000]" 
                       />
                     </div>
                   </div>
@@ -480,7 +483,7 @@ const ProfilePage: React.FC = () => {
                       <button 
                         type="button"
                         onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                        className="w-full pr-14 pl-12 py-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black text-sm outline-none focus:bg-cyan-50/10 transition-all flex items-center justify-between group text-[#000000]"
+                        className="w-full pr-14 pl-12 py-5 bg-white/10 backdrop-blur-[30px] border border-white/40 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black text-sm outline-none focus:bg-white/20 transition-all flex items-center justify-between group text-[#000000]"
                       >
                         <span>{formData.gender || 'בחר מגדר'}</span>
                         <ChevronDown size={18} className={`text-[#00426a] transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
@@ -531,7 +534,7 @@ const ProfilePage: React.FC = () => {
                           setIsDirty(true);
                         }} 
                         placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
-                        className="w-full pr-14 pl-6 py-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" 
+                        className="w-full pr-14 pl-6 py-5 bg-white/10 backdrop-blur-[30px] border border-white/40 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-white/20 transition-all text-[#000000]" 
                         required
                         autoComplete="off"
                       />
@@ -571,7 +574,7 @@ const ProfilePage: React.FC = () => {
                       value={formData.emergencyContactName || ''} 
                       onChange={e => handleFieldChange('emergencyContactName', e.target.value)} 
                       placeholder="שם מלא של איש הקשר"
-                      className="w-full p-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" 
+                      className="w-full p-5 bg-white/10 backdrop-blur-[30px] border border-white/40 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-white/20 transition-all text-[#000000]" 
                     />
                   </div>
                   <div className="space-y-2">
@@ -581,7 +584,7 @@ const ProfilePage: React.FC = () => {
                       value={formData.emergencyContactPhone || ''} 
                       onChange={e => handleFieldChange('emergencyContactPhone', formatMobileNumber(e.target.value))} 
                       placeholder="מספר טלפון לחירום"
-                      className="w-full p-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" 
+                      className="w-full p-5 bg-white/10 backdrop-blur-[30px] border border-white/40 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-black outline-none focus:bg-white/20 transition-all text-[#000000]" 
                     />
                   </div>
                   <div className="md:col-span-2 space-y-2">
@@ -590,13 +593,12 @@ const ProfilePage: React.FC = () => {
                       value={formData.medicalInfo || ''} 
                       onChange={e => handleFieldChange('medicalInfo', e.target.value)} 
                       placeholder="פרט כאן רגישויות, פציעות עבר או מידע רפואי שחשוב שנדע..."
-                      className="w-full p-5 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-bold h-24 resize-none outline-none focus:bg-cyan-50/10 transition-all text-[#000000]" 
+                      className="w-full p-5 bg-white/10 backdrop-blur-[30px] border border-white/40 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem] font-bold h-24 resize-none outline-none focus:bg-white/20 transition-all text-[#000000]" 
                     />
                   </div>
                 </div>
               </section>
 
-              <SurfboardCalculator formData={formData} onChange={handleFieldChange} />
             </div>
 
             <div className="lg:col-span-5">
@@ -610,7 +612,7 @@ const ProfilePage: React.FC = () => {
                   <textarea 
                     value={formData.bio} 
                     onChange={e => handleFieldChange('bio', e.target.value)} 
-                    className="w-full p-8 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1),5px_5px_15px_rgba(122,21,85,0.2)] rounded-[1rem] font-bold h-[32rem] resize-none outline-none focus:bg-cyan-50/10 transition-all text-lg leading-relaxed text-[#000000]" 
+                    className="w-full p-8 bg-white/10 backdrop-blur-[30px] border border-white/40 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1),5px_5px_15px_rgba(122,21,85,0.2)] rounded-[1rem] font-bold h-[32rem] resize-none outline-none focus:bg-white/20 transition-all text-lg leading-relaxed text-[#000000]" 
                     placeholder="ספר קצת על עצמך, על הגלישה, על החיים..." 
                   />
                </div>
@@ -728,8 +730,8 @@ const ProfilePage: React.FC = () => {
       <section className="mt-20 pt-10 border-t border-rose-500/20">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-rose-500/5 p-8 rounded-[2rem] border border-rose-500/20">
           <div className="space-y-2 text-center md:text-right">
-            <h4 className="text-xl font-black text-rose-400">אזור סכנה</h4>
-            <p className="text-sm text-rose-400/60">מחיקת החשבון היא פעולה בלתי הפיכה. כל הנתונים שלך יימחקו לצמיתות.</p>
+            <h4 className="text-xl font-black text-rose-400">אזור השעיה</h4>
+            <p className="text-sm text-rose-400/60">השעיית החשבון תמנע ממך גישה למערכת עד שמנהל יחזיר אותך לפעילות.</p>
           </div>
           <button 
             type="button"
@@ -737,7 +739,7 @@ const ProfilePage: React.FC = () => {
             className="px-8 py-4 bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white font-black rounded-xl border border-rose-600/50 transition-all flex items-center gap-2"
           >
             <Trash2 size={20} />
-            מחק חשבון לצמיתות
+            השעה חשבון
           </button>
         </div>
       </section>
@@ -763,22 +765,31 @@ const ProfilePage: React.FC = () => {
               <div className="w-20 h-20 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <AlertTriangle size={40} className="text-rose-500" />
               </div>
-              <h3 className="text-2xl font-black text-white mb-4">בטוח שברצונך לעזוב?</h3>
+              <h3 className="text-2xl font-black text-white mb-4">בטוח שברצונך להשעות את החשבון?</h3>
               <p className="text-white/60 mb-8 leading-relaxed">
-                מחיקת החשבון תסיר את כל המידע שלך, ההיסטוריה וההגדרות האישיות. לא ניתן יהיה לשחזר את החשבון לאחר מכן.
+                השעיית החשבון תמנע ממך גישה למערכת עד שמנהל יחזיר אותך לפעילות.
               </p>
               
               <div className="space-y-3">
                 <button 
-                  onClick={() => {
-                    // In a real app, call delete service
-                    setToast({ msg: 'מחיקת חשבון אינה זמינה בסביבת הדמו', type: 'error' });
-                    setTimeout(() => setToast(null), 3000);
+                  onClick={async () => {
+                    if (!formData) return;
+                    try {
+                      await updateMember({ ...formData, isActive: false, deactivatedAt: new Date().toISOString() });
+                      setToast({ msg: 'החשבון הושעה בהצלחה', type: 'success' });
+                      setTimeout(() => {
+                        window.location.href = '/login';
+                      }, 2000);
+                    } catch (err) {
+                      console.error(err);
+                      setToast({ msg: 'שגיאה בהשעיית החשבון', type: 'error' });
+                      setTimeout(() => setToast(null), 3000);
+                    }
                     setShowDeleteModal(false);
                   }}
                   className="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-xl transition-all shadow-lg"
                 >
-                  כן, מחק את החשבון שלי
+                  כן, השעה את החשבון שלי
                 </button>
                 <button 
                   onClick={() => setShowDeleteModal(false)}

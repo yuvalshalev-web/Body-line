@@ -14,6 +14,41 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  app.get("/api/test-weather", async (req, res) => {
+    res.json({ status: "test ok" });
+  });
+
+  app.get("/api/ocean-data", async (req, res) => {
+    try {
+      const lat = 32.16;
+      const lng = 34.84;
+      const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=sea_surface_temperature&timezone=auto`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch ocean data");
+      const data = await response.json();
+      res.json({ temp: data.current.sea_surface_temperature });
+    } catch (err) {
+      console.error("Ocean data fetch failed:", err);
+      res.status(500).json({ error: "Failed to fetch ocean data" });
+    }
+  });
+
+  app.get("/api/ocean-data/historical", async (req, res) => {
+    try {
+      const { start, end } = req.query;
+      const lat = 32.16;
+      const lng = 34.84;
+      const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&start_date=${start}&end_date=${end}&hourly=sea_surface_temperature&timezone=auto`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch historical ocean data");
+      const data = await response.json();
+      res.json({ hourly: { time: data.hourly.time, sea_surface_temperature: data.hourly.sea_surface_temperature } });
+    } catch (err) {
+      console.error("Historical ocean data fetch failed:", err);
+      res.status(500).json({ error: "Failed to fetch historical ocean data" });
+    }
+  });
+
   app.get("/api/coastal-weather", async (req, res) => {
     try {
       const lat = 32.16;
@@ -26,14 +61,28 @@ async function startServer() {
       const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
 
       const [marineRes, weatherRes] = await Promise.all([
-        fetch(marineUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' } }),
-        fetch(weatherUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' } })
+        fetch(marineUrl),
+        fetch(weatherUrl)
       ]);
 
-      if (!marineRes.ok || !weatherRes.ok) throw new Error("Failed to fetch coastal data");
+      if (!marineRes.ok) {
+        const text = await marineRes.text();
+        console.error("Marine API fetch failed:", marineRes.status, text);
+        throw new Error(`Marine API fetch failed: ${marineRes.status}`);
+      }
+      if (!weatherRes.ok) {
+        const text = await weatherRes.text();
+        console.error("Weather API fetch failed:", weatherRes.status, text);
+        throw new Error(`Weather API fetch failed: ${weatherRes.status}`);
+      }
 
       const marineData = await marineRes.json();
       const weatherData = await weatherRes.json();
+
+      if (!marineData.current || !weatherData.current) {
+        console.error("Marine or Weather API returned no current data");
+        throw new Error("No current data available");
+      }
 
       const result = {
         waterTemp: marineData.current.sea_surface_temperature,

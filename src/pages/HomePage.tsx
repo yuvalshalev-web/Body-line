@@ -41,7 +41,7 @@ const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   </svg>
 );
 
-const DashboardPage: React.FC = () => {
+const HomePage: React.FC = () => {
   const headerImage = useRandomHeader();
   const { currentUser } = useAuth();
   const { 
@@ -514,6 +514,6 @@ const DashboardPage: React.FC = () => {
   );
 };
 
-export default DashboardPage;
+export default HomePage;
 // --- APPENDED CODE: V2 ---
-export const DashboardPageV2 = DashboardPage;
+export const HomePageV2 = HomePage;

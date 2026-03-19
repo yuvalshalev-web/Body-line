@@ -48,9 +48,8 @@ export const RadarChart: React.FC<RadarChartProps> = ({ userId }) => {
   }
 
   return (
-    <div className="w-full h-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <RechartsRadar cx="50%" cy="50%" outerRadius="65%" data={data}>
+    <div className="w-full h-[500px] border border-green-500 flex justify-center items-center">
+        <RechartsRadar width={500} height={500} cx={250} cy={250} outerRadius={150} data={data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
           <PolarGrid stroke="rgba(255,255,255,0.1)" />
           <PolarAngleAxis 
             dataKey="subject" 
@@ -70,7 +69,6 @@ export const RadarChart: React.FC<RadarChartProps> = ({ userId }) => {
             fillOpacity={0.4}
           />
         </RechartsRadar>
-      </ResponsiveContainer>
     </div>
   );
 };

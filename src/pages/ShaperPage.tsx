@@ -36,7 +36,7 @@ const ShaperPage: React.FC = () => {
   
   const [weight, setWeight] = useState<number>(currentUser?.weight || 75);
   const [height, setHeight] = useState<number>(currentUser?.height || 175);
-  const [level, setLevel] = useState<'Beginner' | 'Intermediate' | 'Advanced'>(
+  const [level, setLevel] = useState<'Learner' | 'Beginner' | 'Intermediate' | 'Advanced'>(
     (currentUser?.surfingLevel as any) || 'Intermediate'
   );
   const [fitnessLevel, setFitnessLevel] = useState<'Low' | 'Average' | 'High' | 'Elite'>(
@@ -225,8 +225,8 @@ const ShaperPage: React.FC = () => {
                 <label className="text-[#00426a]/70 font-bold flex items-center gap-2">
                   <Trophy size={18} /> רמת גלישה
                 </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {(['Beginner', 'Intermediate', 'Advanced'] as const).map((l) => (
+                <div className="grid grid-cols-4 gap-3">
+                  {(['Learner', 'Beginner', 'Intermediate', 'Advanced'] as const).map((l) => (
                     <button
                       key={l}
                       onClick={() => setLevel(l)}
@@ -236,7 +236,7 @@ const ShaperPage: React.FC = () => {
                           : 'bg-slate-50 text-[#00426a]/40 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
-                      {l === 'Beginner' ? 'מתחיל' : l === 'Intermediate' ? 'בינוני' : 'מתקדם'}
+                      {l === 'Learner' ? 'מתלמד' : l === 'Beginner' ? 'מתחיל' : l === 'Intermediate' ? 'מיומן' : 'מתקדם'}
                     </button>
                   ))}
                 </div>
@@ -403,7 +403,7 @@ const ShaperPage: React.FC = () => {
                   <h4 className="text-2xl font-black text-[#00426a]">סוג הגלשן: {recommendation.boardTypeHebrew}</h4>
                 </div>
                 <p className="text-[#00426a]/60 font-bold text-lg">
-                  התאמה אופטימלית לרמת {level === 'Beginner' ? 'מתחיל' : level === 'Intermediate' ? 'בינוני' : 'מתקדם'} במשקל {weight} ק"ג.
+                  התאמה אופטימלית לרמת {level === 'Learner' ? 'מתלמד' : level === 'Beginner' ? 'מתחיל' : level === 'Intermediate' ? 'מיומן' : 'מתקדם'} במשקל {weight} ק"ג.
                 </p>
               </div>
 

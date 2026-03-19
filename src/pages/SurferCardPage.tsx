@@ -4,6 +4,7 @@ import { useData } from '../contexts/DataContext';
 import PlayerCard from '../components/PlayerCard';
 import PlayerGimmickMetrics from '../components/PlayerGimmickMetrics';
 import UserAnalytics from '../components/UserAnalytics';
+import { OceanJourney } from '../components/OceanJourney';
 import UserCategories from '../components/UserCategories';
 import { Trophy, Waves, Target, Crown, WifiOff, Flame, Info, Loader2 } from 'lucide-react';
 import { motion, useMotionValue, useTransform, animate, AnimatePresence } from 'motion/react';
@@ -119,8 +120,11 @@ const SurferCardPage: React.FC = () => {
 
           return (
             <motion.div 
-              className="p-4 md:p-6 rounded-[2rem] bg-cyan-50/5 backdrop-blur-[20px] transition-all duration-1000 relative border-t border-l border-white/30 shadow-[10px_10px_20px_rgba(122,21,85,0.2),-5px_-5px_10px_rgba(255,255,255,0.1)]"
+              className="p-4 md:p-6 floating-slab-deep relative overflow-hidden"
             >
+              {/* Grit Overlay */}
+              <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
+              
               {/* Decorative background elements */}
               <div className="absolute -right-20 -top-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
               <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
@@ -166,10 +170,10 @@ const SurferCardPage: React.FC = () => {
                   </div>
                   
                   <div className="flex-1 text-center md:text-right">
-                    <h3 className="text-2xl md:text-[38px] font-black mb-5 leading-none tracking-tighter name-title-text">
+                    <h3 className="text-2xl md:text-[38px] font-black mb-5 leading-none tracking-tighter text-[#00426a]">
                       אנחנו לא מודדים הישגים. <br className="hidden md:block" /> אנחנו חוגגים נוכחות.
                     </h3>
-                    <p className="font-bold secondary-detail-text text-sm md:text-lg leading-relaxed max-w-2xl">
+                    <p className="font-bold text-[#000000] text-sm md:text-lg leading-relaxed max-w-2xl">
                       גולשים נבנים מהתמדה, והים מתגמל מתמידים.<br />
                       ככל שתגיע ליותר סשנים, תתקדם במסע שלך ותפתח עוד ועוד אפשרויות חדשות.
                     </p>
@@ -195,15 +199,15 @@ const SurferCardPage: React.FC = () => {
                         className="absolute top-[-50px] flex flex-col items-center pointer-events-none z-[60]"
                         style={{ transform: 'translateX(-50%)' }}
                       >
-                        <div className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-md border border-white/20 shadow-sm mb-1">
-                          <span className="text-[12px] font-black secondary-detail-text uppercase tracking-widest whitespace-nowrap">
+                        <div className="bg-[#f0f8ff]/90 backdrop-blur-md px-3 py-1 rounded-md border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-sm mb-1">
+                          <span className="text-[12px] font-black text-[#00426a] uppercase tracking-widest whitespace-nowrap">
                             מיקומך הנוכחי
                           </span>
                         </div>
                         <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[10px] border-t-black drop-shadow-sm" />
                       </motion.div>
 
-                      <div className="relative w-full h-[20px] flex items-center rounded-full bg-cyan-50/10 border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] overflow-hidden">
+                      <div className="relative w-full h-[20px] flex items-center rounded-full bg-[#f0f8ff]/10 border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[inset_0_2px_4px_rgba(0,66,106,0.1)] overflow-hidden">
                         {/* Progress Liquid - Same percentage as Marker */}
                         <motion.div 
                           initial={{ width: 0 }}
@@ -211,9 +215,9 @@ const SurferCardPage: React.FC = () => {
                             width: `${progressPercent}%` 
                           }}
                           transition={{ duration: 2, ease: "circOut" }}
-                          className="h-[20px] rounded-full relative z-10 backdrop-blur-[20px] overflow-hidden border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)]"
+                          className="h-[20px] rounded-full relative z-10 backdrop-blur-[20px] overflow-hidden border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[inset_0_2px_4px_rgba(0,66,106,0.1)]"
                           style={{ 
-                            background: 'linear-gradient(90deg, #3dbbd3 0%, #7A1555 100%)'
+                            background: 'linear-gradient(90deg, #31aac1 0%, #00426a 100%)'
                           }}
                         >
                           {/* Shimmer Effect Overlay */}
@@ -252,13 +256,13 @@ const SurferCardPage: React.FC = () => {
                                   style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
                                 >
                                   {/* Identical Circle Node */}
-                                  <div className={`w-4 h-4 rounded-full transition-all duration-1000 border-[1.5px] border-white/50 relative ${
+                                  <div className={`w-4 h-4 rounded-full transition-all duration-1000 border-[1.5px] border-[#ffffff]/80 relative ${
                                     isCurrent || isPassed
-                                      ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]' 
-                                      : 'bg-white/20'
+                                      ? 'bg-[#f0f8ff] shadow-[0_0_10px_rgba(240,248,255,0.5)]' 
+                                      : 'bg-[#f0f8ff]/20'
                                   }`}>
                                     {isCurrent && (
-                                      <div className="absolute inset-[-6px] border-[1.5px] border-white/30 rounded-full animate-pulse blur-[1px]" />
+                                      <div className="absolute inset-[-6px] border-[1.5px] border-[#00426a]/30 rounded-full animate-pulse blur-[1px]" />
                                     )}
                                   </div>
                                 </div>
@@ -271,7 +275,7 @@ const SurferCardPage: React.FC = () => {
                       {/* Offline Overlay (Blur + No Signal) */}
                       {dbStatus === 'OFFLINE' && (
                         <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-30 flex items-center justify-center rounded-full">
-                          <div className="flex items-center gap-2 secondary-detail-text">
+                          <div className="flex items-center gap-2 text-white">
                             <WifiOff size={14} className="animate-pulse" />
                             <span className="text-[8px] font-black uppercase tracking-widest">No Signal</span>
                           </div>
@@ -296,7 +300,7 @@ const SurferCardPage: React.FC = () => {
                             style={{ left: `${percent}%`, transform: 'translateX(-50%)' }}
                           >
                             <span className={`whitespace-nowrap text-[12px] font-black tracking-[0.2em] uppercase transition-all duration-500 mb-1 ${
-                              isCurrent ? 'metric-value-text opacity-100 scale-110' : 'secondary-detail-text opacity-60'
+                              isCurrent ? 'text-[#00426a] opacity-100 scale-110' : 'text-[#000000] opacity-60'
                             }`}>
                               {rank.name}
                             </span>
@@ -321,55 +325,59 @@ const SurferCardPage: React.FC = () => {
                 </div>
 
                 {/* Stats Grid - Moved from PlayerCard */}
-                <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/20 pt-6">
-                  <div className="flex flex-col group relative items-center p-3 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem]">
-                    <span className="text-[13px] secondary-detail-text font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
-                      <Crown size={13} className="text-[#FFDE45]" /> מעמד
-                      <Info size={12} className="text-sunshine-yellow" />
-                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-white/90 backdrop-blur-md secondary-detail-text text-xs rounded shadow-lg z-50">
+                <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
+                  <div className="flex flex-col group relative items-center p-3 bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_4px_16px_rgba(49,170,193,0.1)] rounded-[1rem] overflow-hidden">
+                    <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
+                    <span className="text-[13px] text-[#00426a] font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help relative z-10">
+                      <Crown size={13} className="text-[#0071a1]" /> מעמד
+                      <Info size={12} className="text-[#0071a1]/50" />
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-[#f0f8ff]/90 backdrop-blur-md text-[#000000] text-xs rounded shadow-lg z-50">
                         הדרגה הנוכחית שלך בנבחרת.
                       </div>
                     </span>
-                    <span className="text-xl md:text-2xl font-black name-title-text truncate max-w-full px-2">
+                    <span className="text-xl md:text-2xl font-black text-[#00426a] truncate max-w-full px-2 relative z-10">
                       {currentRank}
                     </span>
                   </div>
 
-                  <div className="flex flex-col group relative items-center p-3 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem]">
-                    <span className="text-[13px] secondary-detail-text font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
-                      <Waves size={13} className="text-[#3dbbd3]" /> סשנים
-                      <Info size={12} className="text-sunshine-yellow" />
-                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-white/90 backdrop-blur-md secondary-detail-text text-xs rounded shadow-lg z-50">
+                  <div className="flex flex-col group relative items-center p-3 bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_4px_16px_rgba(49,170,193,0.1)] rounded-[1rem] overflow-hidden">
+                    <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
+                    <span className="text-[13px] text-[#00426a] font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help relative z-10">
+                      <Waves size={13} className="text-[#0071a1]" /> סשנים
+                      <Info size={12} className="text-[#0071a1]/50" />
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-[#f0f8ff]/90 backdrop-blur-md text-[#000000] text-xs rounded shadow-lg z-50">
                         מספר הסשנים הכולל שהשתתפת בהם עד כה.
                       </div>
                     </span>
-                    <span className="text-3xl font-black metric-value-text tabular-nums">
+                    <span className="text-3xl font-black text-[#2D6A4F] tabular-nums relative z-10">
                       <Counter value={userData?.totalSessions || 0} />
                     </span>
                   </div>
 
-                  <div className="flex flex-col group relative items-center p-3 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem]">
-                    <span className="text-[13px] secondary-detail-text font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help">
-                      <Target size={13} className="text-[#FF2D60]" /> {userData?.nextRankName ? `סשנים ל${userData.nextRankName}` : 'הגעת לפסגה'}
-                      <Info size={12} className="text-sunshine-yellow" />
-                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-white/90 backdrop-blur-md secondary-detail-text text-xs rounded shadow-lg z-50">
+                  <div className="flex flex-col group relative items-center p-3 bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_4px_16px_rgba(49,170,193,0.1)] rounded-[1rem] overflow-hidden">
+                    <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
+                    <span className="text-[13px] text-[#00426a] font-black uppercase tracking-widest mb-1 flex items-center gap-[var(--spacing-xs)] cursor-help relative z-10">
+                      <Target size={13} className="text-[#BC4749]" /> {userData?.nextRankName ? `סשנים ל${userData.nextRankName}` : 'הגעת לפסגה'}
+                      <Info size={12} className="text-[#0071a1]/50" />
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-[#f0f8ff]/90 backdrop-blur-md text-[#000000] text-xs rounded shadow-lg z-50">
                         {userData?.nextRankName ? `מספר הסשנים שנותרו עד למעמד ${userData.nextRankName}` : 'כל הכבוד! הגעת למעמד הגבוה ביותר.'}
                       </div>
                     </span>
-                    <span className="text-3xl font-black metric-value-text tabular-nums">
+                    <span className="text-3xl font-black text-[#2D6A4F] tabular-nums relative z-10">
                       {userData?.nextRankName ? <Counter value={userData.sessionsToNextRank} /> : 'MAX'}
                     </span>
                   </div>
 
-                  <div className="flex flex-col group relative items-center p-3 bg-cyan-50/5 backdrop-blur-[20px] border-t border-l border-white/30 shadow-[inset_2px_2px_5px_rgba(122,21,85,0.1)] rounded-[1rem]">
-                    <span className="text-[13px] secondary-detail-text font-black uppercase tracking-widest mb-1 flex items-center gap-1 cursor-help">
-                      <Flame size={13} className="text-[#FFDE45]" /> רצף
-                      <Info size={12} className="text-sunshine-yellow" />
-                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-white/90 backdrop-blur-md secondary-detail-text text-xs rounded shadow-lg z-50">
+                  <div className="flex flex-col group relative items-center p-3 bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_4px_16px_rgba(49,170,193,0.1)] rounded-[1rem] overflow-hidden">
+                    <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
+                    <span className="text-[13px] text-[#00426a] font-black uppercase tracking-widest mb-1 flex items-center gap-1 cursor-help relative z-10">
+                      <Flame size={13} className="text-[#0071a1]" /> רצף
+                      <Info size={12} className="text-[#0071a1]/50" />
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-[#f0f8ff]/90 backdrop-blur-md text-[#000000] text-xs rounded shadow-lg z-50">
                         מספר השבועות הרצופים בהם הגעת לסשן.
                       </div>
                     </span>
-                    <span className="text-3xl font-black metric-value-text tabular-nums">
+                    <span className="text-3xl font-black text-[#2D6A4F] tabular-nums relative z-10">
                       <Counter value={userData?.streak || 0} />
                     </span>
                   </div>
@@ -387,6 +395,9 @@ const SurferCardPage: React.FC = () => {
 
       {/* Detailed Analytics below */}
       <div className="mt-16 border-t border-white/20 pt-16">
+        <div className="mb-16">
+          <OceanJourney />
+        </div>
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-xl flex items-center justify-center text-sunshine-yellow shadow-md shadow-black/5">
             <Waves size={20} />

@@ -94,10 +94,13 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
       {driftPercentile && (
         <div className="flex flex-col items-start w-full md:w-auto">
           <div 
-            className="tangible-glass-card surfer-theme-bg w-full p-6" 
+            className="w-full p-6 bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_8px_32px_rgba(49,170,193,0.15),0_4px_16px_rgba(49,170,193,0.1)] rounded-[2rem] relative overflow-hidden" 
             dir="rtl"
           >
-            <div id="drift-title" className="name-title-text text-lg font-bold mb-4 text-center">
+            {/* Grit Overlay */}
+            <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
+            
+            <div id="drift-title" className="text-[#00426a] text-lg font-black mb-4 text-center relative z-10">
               מדד ה-Drift (סחף) 🌊
             </div>
             
@@ -116,7 +119,7 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
               <span className="text-2xl">📍</span>
             </div>
             
-            <div className="text-center text-sm secondary-detail-text">
+            <div className="text-center text-sm text-[#000000] relative z-10 font-bold">
               {member.gender === 'נקבה' ? 'את גרה' : 'אתה גר'} במרחק {driftPercentile.distanceKm} ק"מ מחוף הבית – {member.gender === 'נקבה' ? 'קרובה' : 'קרוב'} יותר מ-{100 - driftPercentile.roundedPercentile}% מהקהילה
             </div>
           </div>
@@ -128,10 +131,13 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
         <div className="flex flex-col items-start w-full md:w-auto">
           {/* New Age Gimmick Container */}
           <div 
-            className="tangible-glass-card surfer-theme-bg w-full p-6" 
+            className="w-full p-6 bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_8px_32px_rgba(49,170,193,0.15),0_4px_16px_rgba(49,170,193,0.1)] rounded-[2rem] relative overflow-hidden" 
             dir="rtl"
           >
-            <div id="funny-title" className="name-title-text text-lg font-bold mb-4 text-center">
+            {/* Grit Overlay */}
+            <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
+            
+            <div id="funny-title" className="text-[#00426a] text-lg font-black mb-4 text-center relative z-10">
               מדד ה-Vintage 🍷
             </div>
             
@@ -152,7 +158,7 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
               </span>
             </div>
             
-            <div id="dynamicComment" className="text-center text-sm secondary-detail-text">
+            <div id="dynamicComment" className="text-center text-sm text-[#000000] relative z-10 font-bold">
               {member.gender === 'נקבה' ? 'את' : 'אתה'} באחוזון הגיל ה-{agePercentile.roundedPercentile}% של הקבוצה
             </div>
           </div>

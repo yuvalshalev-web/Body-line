@@ -5,10 +5,12 @@ import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestor
 import { getDb } from '../services/firebase';
 
 export const AdminRolloverReport: React.FC = () => {
-  const { weeklyHistory, yearConfig, finalizeSession, activeSessionDate } = useData();
+  const { weeklyHistory, yearConfig, finalizeSession, activeSessionDate, updateHistoricalSeaTemperatures } = useData();
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<any[]>([]);
   const [timeLeft, setTimeLeft] = useState<string>('');
+  const [isUpdatingTemps, setIsUpdatingTemps] = useState(false);
+  const [tempUpdateMessage, setTempUpdateMessage] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('AdminRolloverReport: activeSessionDate =', activeSessionDate);
@@ -60,6 +62,7 @@ export const AdminRolloverReport: React.FC = () => {
   const rolloverSteps = [
     { id: 'start', label: 'התחלת תהליך סגירה' },
     { id: 'archive', label: 'הפיכת הסשן הקרוב להיסטורי' },
+    { id: 'save_sea_state', label: 'שמירת נתוני מצב הים' },
     { id: 'create_new', label: 'הקמת סשן קרוב חדש' },
     { id: 'reset_timer', label: 'איפוס טיימר סשן קרוב' },
     { id: 'reset_attendance', label: 'איפוס רשימת מאשרי הגעה' },
@@ -84,18 +87,49 @@ export const AdminRolloverReport: React.FC = () => {
     }
   };
 
+  const handleUpdateTemps = async () => {
+    setIsUpdatingTemps(true);
+    setTempUpdateMessage(null);
+    try {
+      const count = await updateHistoricalSeaTemperatures();
+      setTempUpdateMessage(`עודכנו בהצלחה ${count} סשנים היסטוריים עם נתוני טמפרטורת מים.`);
+    } catch (err: any) {
+      console.error('Update temps error:', err);
+      setError(err.message || 'אירעה שגיאה בעדכון טמפרטורות');
+    } finally {
+      setIsUpdatingTemps(false);
+    }
+  };
+
   return (
     <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-black text-slate-800">דוח גלגול שבועי</h2>
-        <button 
-          onClick={handleFinalize}
-          className="px-4 py-2 bg-sky-600 text-white rounded-lg font-bold hover:bg-sky-700 transition-colors flex items-center gap-2"
-        >
-          <Activity size={18} />
-          הפעל סגירת סשן
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={handleUpdateTemps}
+            disabled={isUpdatingTemps}
+            className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            {isUpdatingTemps ? <Loader2 size={18} className="animate-spin" /> : <Activity size={18} />}
+            עדכן טמפ' היסטורית
+          </button>
+          <button 
+            onClick={handleFinalize}
+            className="px-4 py-2 bg-sky-600 text-white rounded-lg font-bold hover:bg-sky-700 transition-colors flex items-center gap-2"
+          >
+            <Activity size={18} />
+            הפעל סגירת סשן
+          </button>
+        </div>
       </div>
+
+      {tempUpdateMessage && (
+        <div className="mb-8 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-700">
+          <CheckCircle size={20} />
+          <span className="font-bold">{tempUpdateMessage}</span>
+        </div>
+      )}
 
       {timeLeft && (
         <div className="mb-8 p-4 bg-sky-50 border border-sky-200 rounded-xl text-center">

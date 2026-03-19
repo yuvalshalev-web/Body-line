@@ -1103,6 +1103,47 @@ const AdminPage: React.FC = () => {
 
             <SystemMonitor />
 
+            {/* Historical Data Update Button */}
+            <div className="admin-info-card p-8 bg-amber-50/30 border-amber-200/50">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-4 bg-amber-100 text-amber-600 rounded-2xl shadow-inner">
+                  <RotateCcw size={32} />
+                </div>
+                <div>
+                  <h4 className="text-xl font-black text-[var(--surfer-electric-pink)]">עדכון נתונים היסטוריים</h4>
+                  <p className="text-sm text-[var(--deep-teal-sea)] font-bold">עדכון מהירות רוח וטמפרטורת מים לסשנים היסטוריים.</p>
+                </div>
+              </div>
+              <button 
+                onClick={async () => {
+                  showConfirm({
+                    message: 'האם אתה בטוח שברצונך לעדכן את נתוני הרוח והטמפרטורה לסשנים היסטוריים? פעולה זו אינה הפיכה.',
+                    onConfirm: async () => {
+                      setIsProcessing('historical-update');
+                      try {
+                        const { updateHistoricalData } = await import('../utils/updateHistoricalData');
+                        const result = await updateHistoricalData();
+                        if (result.success) {
+                          showSuccess('הנתונים ההיסטוריים עודכנו בהצלחה!');
+                        } else {
+                          showError('שגיאה בעדכון הנתונים.');
+                        }
+                      } catch (err) {
+                        showError('שגיאה לא צפויה בעדכון הנתונים.');
+                      } finally {
+                        setIsProcessing(null);
+                      }
+                    }
+                  });
+                }}
+                disabled={isProcessing === 'historical-update'}
+                className="px-6 py-3 bg-amber-500 text-white rounded-2xl font-black text-sm hover:bg-amber-600 transition-all flex items-center gap-2 disabled:opacity-50"
+              >
+                {isProcessing === 'historical-update' ? <Loader2 className="animate-spin" size={16} /> : <RotateCcw size={16} />}
+                הפעל עדכון נתונים
+              </button>
+            </div>
+
             {conflictingAdmins.length > 1 && (
               <div className="admin-info-card p-8 bg-rose-50/30 border-rose-200/50">
                 <div className="flex items-center gap-4 mb-6">
@@ -2156,7 +2197,7 @@ const AdminPage: React.FC = () => {
                             siteConfig.h1Styles?.showGlass !== false ? 'bg-[#6366f1] text-white' : 'bg-slate-200 text-slate-500'
                           }`}
                         >
-                          {siteConfig.h1Styles?.showGlass !== false ? 'פעיל' : 'כבוי'}
+                          {siteConfig.h1Styles?.showGlass !== false ? 'פעיל' : 'מושהה'}
                         </button>
                       </div>
                       

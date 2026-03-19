@@ -143,12 +143,12 @@
 
 /* Dark Anchor Rule Classes */
 .text-dark-magenta {
-  color: #7A1555 !important;
+  color: #00426a !important; /* Ocean 1 */
   text-shadow: none !important;
 }
 
 .text-dark-teal {
-  color: #004D40 !important;
+  color: #0071a1 !important; /* Ocean 2 */
   text-shadow: none !important;
 }
 
@@ -158,7 +158,7 @@
 }
 
 .text-sunshine-yellow {
-  color: #FFDE45 !important;
+  color: #0071a1 !important; /* Ocean 2 for icons */
   text-shadow: none !important;
 }
 
@@ -170,13 +170,13 @@
 }
 
 .metric-value-text {
-  color: #004D40 !important; /* Darkest Cyan/Turquoise */
+  color: #2D6A4F !important; /* Deep Sea Green */
   text-shadow: none !important;
   font-weight: 900 !important;
 }
 
 .name-title-text {
-  color: #7A1555 !important; /* Deep Magenta */
+  color: #00426a !important; /* Ocean 1 */
   text-shadow: none !important;
   font-weight: 900 !important;
 }

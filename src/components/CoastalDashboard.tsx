@@ -346,15 +346,12 @@ export const CoastalDashboard: React.FC = () => {
                 const max = stats.maxWindSpeed;
                 const current = data.windSpeed;
                 const progress = max === min ? 50 : Math.max(0, Math.min(100, ((current - min) / (max - min)) * 100));
-                const isStrong = current > 25;
                 return (
                   <motion.div 
                     className="absolute w-6 h-6 bg-white rounded-full border-4 border-white shadow-lg"
                     style={{ left: `${progress}%`, transform: 'translateX(-50%)' }}
                     initial={{ left: '0%' }}
                     animate={{ left: `${progress}%` }}
-                    whileHover={isStrong ? { x: [-2, 2, -2, 2, 0] } : {}}
-                    transition={isStrong ? { repeat: Infinity, duration: 0.1 } : {}}
                   />
                 );
               })()}

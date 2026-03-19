@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
-import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCircle, Phone, Twitter, Music2 } from 'lucide-react';
+import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCircle, Phone, Twitter, Music2, Mail, MapPin } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { calculateUserStats } from '../utils/analytics';
 import { getBodyLineStats } from '../utils/bodyLineStats';
@@ -113,7 +113,9 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   if (!member || !stats) return null;
 
   return (
-    <div className="flex flex-col items-center gap-[var(--spacing-lg)] relative overflow-hidden w-full" dir="rtl">
+    <div className="flex flex-col items-center gap-[var(--spacing-lg)] relative overflow-hidden w-full p-6 md:p-8 bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_8px_32px_rgba(49,170,193,0.15),0_4px_16px_rgba(49,170,193,0.1)] rounded-[2rem]" dir="rtl">
+      {/* Grit Overlay */}
+      <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
       {/* Background Accent */}
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-ocean/10 rounded-full blur-3xl -z-10" />
       
@@ -147,11 +149,17 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
       <div className="flex-1 text-center">
         <div className="flex flex-col gap-2 mb-3">
-          <h2 className="text-3xl font-black name-title-text tracking-tight">
+          <h2 className="text-3xl font-black text-[#00426a] tracking-tight">
             {member.firstName} {member.lastName}
           </h2>
-          <div className="flex items-center justify-center gap-4 secondary-detail-text font-bold text-sm mb-1">
-            <span className="flex items-center gap-1"><Calendar size={14} /> הצטרף ב-{stats.joiningDate}</span>
+          <div className="flex flex-col items-center justify-center gap-1 text-[#00426a]/70 font-bold text-sm mb-1">
+            <span className="flex items-center gap-1"><Mail size={14} /> {member.email}</span>
+            {(member.full_address || member.city) && (
+              <span className="flex items-center gap-1">
+                <MapPin size={14} /> 
+                {member.full_address || [member.street_name, member.house_number, member.city].filter(Boolean).join(', ')}
+              </span>
+            )}
           </div>
           <div className="flex flex-wrap gap-2 justify-center">
             <span className="inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm bg-orange-500/20 text-orange-700 border-orange-500/30">
@@ -159,12 +167,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             </span>
             <span className={`inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm ${
               member.isActive !== false 
-                ? 'bg-emerald-500/20 text-emerald-900 border-emerald-500/30' 
-                : 'bg-rose-500/20 text-rose-900 border-rose-500/30'
+                ? 'bg-[#2D6A4F]/20 text-[#2D6A4F] border-[#2D6A4F]/30' 
+                : 'bg-[#BC4749]/20 text-[#BC4749] border-[#BC4749]/30'
             }`}>
-              סטטוס: {member.isActive !== false ? 'פעיל' : 'לא פעיל'}
+              סטטוס: {member.isActive !== false ? 'פעיל' : 'מושהה'}
             </span>
-            <span className="inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm bg-pink-500/20 text-pink-700 border-pink-500/30">
+            <span className="inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm bg-[#0071a1]/20 text-[#00426a] border-[#0071a1]/30">
               זהות: {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
             </span>
           </div>

@@ -7,7 +7,11 @@ import {
   X,
   Search,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  Waves,
+  Wind,
+  Thermometer,
+  Sun
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { Member } from '../types';
@@ -25,7 +29,10 @@ const SurfingSessionAttendance: React.FC = () => {
     activeSessionDate, 
     toggleSessionAttendance,
     updateHistory,
-    isLoading 
+    isLoading,
+    coastalWeather,
+    siteConfig,
+    seaStats
   } = useData();
   
   const headerImage = useRandomHeader();
@@ -164,16 +171,70 @@ const SurfingSessionAttendance: React.FC = () => {
                   <div className="relative z-10">
                     <span className="inline-block px-5 py-1.5 rounded-full bg-[#3dbbd3] text-[#00426a] text-xs font-black tracking-[0.2em] uppercase mb-4 shadow-lg shadow-[#3dbbd3]/20">הסשן הקרוב</span>
                     <h3 className="text-4xl font-black text-[#00426a] mb-3 tracking-tight">{formatDate(activeSessionDate)}</h3>
-                    <div className="flex items-center gap-6 text-[#00426a] font-black">
+                    <div className="flex flex-col gap-2 text-[#00426a] font-black">
                       <div className="flex items-center gap-2.5">
                         <Users size={22} className="text-[#0071a1]" />
                         <span className="text-lg">{attendeeIds.length} חברים רשומים</span>
+                      </div>
+                      <div className="text-sm opacity-70 flex flex-col gap-0.5">
+                        <div>
+                          מדריכים: {(() => {
+                            const instructors = attendeeIds
+                              .map(id => members.find((m: any) => m.id === id))
+                              .filter((m: any): m is any => !!m && m.role === 'Instructor');
+                            return instructors.length > 0 
+                              ? instructors.map(m => `${m.firstName} ${m.lastName}`).join(', ')
+                              : 'אין';
+                          })()}
+                        </div>
+                        <div>
+                          רכזים: {(() => {
+                            const coordinators = attendeeIds
+                              .map(id => members.find((m: any) => m.id === id))
+                              .filter((m: any): m is any => !!m && m.role === 'Admin');
+                            return coordinators.length > 0 
+                              ? coordinators.map(m => `${m.firstName} ${m.lastName}`).join(', ')
+                              : 'אין';
+                          })()}
+                        </div>
+                      </div>
+
+                      {/* Sea State Info */}
+                      <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-[#00426a]/10">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0071a1]/5 border border-[#0071a1]/10 transition-all hover:bg-[#0071a1]/10" title="גובה גלים">
+                          <Waves size={14} className="text-[#0071a1]" />
+                          <span className="text-xs font-black text-[#00426a]/70">גובה גלים:</span>
+                          {(seaStats?.waveHeight !== undefined || siteConfig?.seaState?.waveHeight !== undefined) && (
+                            <span className="text-xs font-black text-[#0071a1]" dir="ltr">{seaStats?.waveHeight ?? siteConfig?.seaState?.waveHeight}m</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0891b2]/5 border border-[#0891b2]/10 transition-all hover:bg-[#0891b2]/10" title="מהירות רוח">
+                          <Wind size={14} className="text-[#0891b2]" />
+                          <span className="text-xs font-black text-[#00426a]/70">מהירות רוח:</span>
+                          {(seaStats?.windSpeed !== undefined || siteConfig?.seaState?.windSpeed !== undefined) && (
+                            <span className="text-xs font-black text-[#0891b2]" dir="ltr">{seaStats?.windSpeed ?? siteConfig?.seaState?.windSpeed}kts</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#4338ca]/5 border border-[#4338ca]/10 transition-all hover:bg-[#4338ca]/10" title="טמפ׳ מים">
+                          <Thermometer size={14} className="text-[#4338ca]" />
+                          <span className="text-xs font-black text-[#00426a]/70">טמפ׳ מים:</span>
+                          {(seaStats?.waterTemp !== undefined || siteConfig?.seaState?.waterTemp !== undefined) && (
+                            <span className="text-xs font-black text-[#4338ca]" dir="ltr">{seaStats?.waterTemp ?? siteConfig?.seaState?.waterTemp}°C</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#b45309]/5 border border-[#b45309]/10 transition-all hover:bg-[#b45309]/10" title="אינדקס קרינה">
+                          <Sun size={14} className="text-[#b45309]" />
+                          <span className="text-xs font-black text-[#00426a]/70">אינדקס קרינה:</span>
+                          {(seaStats?.uvIndex !== undefined || siteConfig?.seaState?.uvIndex !== undefined) && (
+                            <span className="text-xs font-black text-[#b45309]" dir="ltr">{seaStats?.uvIndex ?? siteConfig?.seaState?.uvIndex} UV</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                   <div className="flex -space-x-4 space-x-reverse relative z-10">
                     {attendeeIds.slice(0, 6).map(id => {
-                      const m = members.find(mem => mem.id === id);
+                      const m = members.find((mem: any) => mem.id === id);
                       return (
                         <div key={id} className="w-14 h-14 rounded-2xl border-4 border-white overflow-hidden shadow-xl bg-slate-100 transform hover:-translate-y-1 transition-transform duration-300">
                           {m?.avatar ? <img src={m.avatar} className="w-full h-full object-cover" /> : <Users className="m-auto text-slate-300" />}
@@ -206,23 +267,75 @@ const SurfingSessionAttendance: React.FC = () => {
                 </div>
 
                 <div 
-                  onClick={() => setSelectedSession({ id: session.id, date: session.date, participantIds: session.participantIds || [] })}
+                  onClick={() => {
+                    console.log('Selected Session:', session);
+                    setSelectedSession({ id: session.id, date: session.date, participantIds: session.participantIds || [] });
+                  }}
                   className="group cursor-pointer bg-[#f0f8ff1a] backdrop-blur-md border-t border-l border-white/80 border-b border-r border-[#00426a33] rounded-[32px] p-8 shadow-[0_15px_40px_rgba(0,66,106,0.08)] hover:shadow-[0_25px_50px_rgba(0,66,106,0.15)] transition-all duration-500 hover:-translate-y-1 relative overflow-hidden"
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                     <div>
                       <h4 className="text-2xl font-black text-[#00426a] mb-2">{formatDate(session.date)}</h4>
-                      <div className="flex items-center gap-4 text-[#00426a] font-bold">
+                      <div className="flex flex-wrap items-center gap-4 text-[#00426a] font-bold">
                         <div className="flex items-center gap-2">
                           <Users size={16} className="text-[#0071a1]" />
                           <span>{session.participantIds?.length || 0} משתתפים</span>
                         </div>
-                        {session.instructorName && (
-                          <>
-                            <span className="opacity-20 text-lg">|</span>
-                            <span className="text-[#00426a]/60">{session.instructorName}</span>
-                          </>
-                        )}
+                        <span className="opacity-20 text-lg">|</span>
+                        <div className="flex flex-col gap-0.5 text-[#00426a]/60 text-sm">
+                          <div>
+                            מדריכים: {(() => {
+                              const instructors = (session.participantIds || [])
+                                .map((id: string) => members.find((m: any) => m.id === id))
+                                .filter((m: any): m is any => !!m && m.role === 'Instructor');
+                              return instructors.length > 0 
+                                ? instructors.map((m: any) => `${m.firstName} ${m.lastName}`).join(', ')
+                                : 'אין';
+                            })()}
+                          </div>
+                          <div>
+                            רכזים: {(() => {
+                              const coordinators = (session.participantIds || [])
+                                .map((id: string) => members.find((m: any) => m.id === id))
+                                .filter((m: any): m is any => !!m && m.role === 'Admin');
+                              return coordinators.length > 0 
+                                ? coordinators.map((m: any) => `${m.firstName} ${m.lastName}`).join(', ')
+                                : 'אין';
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Sea State Info */}
+                      <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-[#00426a]/10">
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0071a1]/5 border border-[#0071a1]/10 transition-all hover:bg-[#0071a1]/10" title="גובה גלים">
+                          <Waves size={14} className="text-[#0071a1]" />
+                          <span className="text-xs font-black text-[#00426a]/70">גובה גלים:</span>
+                          {(session.waveHeight !== undefined || session.seaState?.waveHeight !== undefined) && (
+                            <span className="text-xs font-black text-[#0071a1]" dir="ltr">{session.waveHeight ?? session.seaState?.waveHeight}m</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0891b2]/5 border border-[#0891b2]/10 transition-all hover:bg-[#0891b2]/10" title="מהירות רוח">
+                          <Wind size={14} className="text-[#0891b2]" />
+                          <span className="text-xs font-black text-[#00426a]/70">מהירות רוח:</span>
+                          {(session.windSpeed !== undefined || session.seaState?.windSpeed !== undefined) && (
+                            <span className="text-xs font-black text-[#0891b2]" dir="ltr">{session.windSpeed ?? session.seaState?.windSpeed}kts</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#4338ca]/5 border border-[#4338ca]/10 transition-all hover:bg-[#4338ca]/10" title="טמפ׳ מים">
+                          <Thermometer size={14} className="text-[#4338ca]" />
+                          <span className="text-xs font-black text-[#00426a]/70">טמפ׳ מים:</span>
+                          {(session.waterTemp !== undefined || session.seaState?.waterTemp !== undefined) && (
+                            <span className="text-xs font-black text-[#4338ca]" dir="ltr">{session.waterTemp ?? session.seaState?.waterTemp}°C</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#b45309]/5 border border-[#b45309]/10 transition-all hover:bg-[#b45309]/10" title="אינדקס קרינה">
+                          <Sun size={14} className="text-[#b45309]" />
+                          <span className="text-xs font-black text-[#00426a]/70">אינדקס קרינה:</span>
+                          {(session.uvIndex !== undefined || session.seaState?.uvIndex !== undefined) && (
+                            <span className="text-xs font-black text-[#b45309]" dir="ltr">{session.uvIndex ?? session.seaState?.uvIndex} UV</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
@@ -429,7 +542,8 @@ const SurfingSessionAttendance: React.FC = () => {
                         date: new Date(selectedSession.date),
                         participantIds: selectedSession.participantIds,
                         participantsCount: selectedSession.participantIds.length,
-                        status: status
+                        status: status,
+                        seaState: coastalWeather || null
                       });
                       setSelectedSession(null);
                       setDateError(null);

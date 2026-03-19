@@ -53,6 +53,12 @@ interface DataContextType {
       glowColor?: string;
     },
     weeklySessions?: { dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[];
+    seaState?: {
+      waveHeight?: number | string;
+      windSpeed?: number | string;
+      waterTemp?: number | string;
+      uvIndex?: number | string;
+    };
   };
   coastalWeather: any | null;
   seaStats: any | null;
@@ -86,6 +92,7 @@ interface DataContextType {
   updateHistory: (id: string, participantIds: string[]) => Promise<void>;
   forceResetSession: () => Promise<void>;
   finalizeSession: () => Promise<void>;
+  updateHistoricalSeaTemperatures: () => Promise<number>;
   batchAddGlossary: (items: Omit<GlossaryTerm, 'id'>[]) => Promise<void>;
   batchAddExercises: (items: Omit<Exercise, 'id'>[]) => Promise<void>;
   batchAddQuotes: (items: Omit<QuoteItem, 'id'>[]) => Promise<void>;
@@ -749,9 +756,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         participantIds: currentAttendees,
         participantsCount: currentAttendees.length,
         status: 'finalized',
-        finalizedAt: new Date().toISOString()
+        finalizedAt: new Date().toISOString(),
+        seaState: coastalWeather || null
       });
       await addRolloverLog('archive', 'success', 'הסשן הועבר להיסטוריה בהצלחה');
+      
+      await addRolloverLog('save_sea_state', 'pending', 'שומר נתוני מצב הים...');
+      if (coastalWeather) {
+        await addRolloverLog('save_sea_state', 'success', 'נתוני מצב הים נשמרו בהצלחה');
+      } else {
+        await addRolloverLog('save_sea_state', 'success', 'לא נמצאו נתוני מצב ים לשמירה');
+      }
       updatedFields += 1;
 
       // 4. Handle One-Time Sessions
@@ -836,6 +851,57 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await addRolloverLog('complete', 'failed', err.message || 'שגיאה לא ידועה');
       throw err;
     }
+  };
+
+  const updateHistoricalSeaTemperatures = async () => {
+    const db = getDb();
+    const historyRef = collection(db, 'weekly_history');
+    const snapshot = await getDocs(historyRef);
+    
+    // Average sea temperatures in Tel Aviv by month (0-indexed: Jan=0, Dec=11)
+    const telAvivTemps = [18, 17, 18, 19, 21, 25, 28, 29, 28, 26, 23, 20];
+    
+    let updatedCount = 0;
+    const batch = writeBatch(db);
+    
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
+      if (data.date) {
+        let dateObj: Date;
+        
+        // Check if it's a Firestore Timestamp
+        if (typeof data.date.toDate === 'function') {
+          dateObj = data.date.toDate();
+        } else {
+          dateObj = new Date(data.date);
+        }
+        
+        // Skip invalid dates
+        if (isNaN(dateObj.getTime())) continue;
+        
+        const monthIndex = dateObj.getMonth();
+        const avgTemp = telAvivTemps[monthIndex];
+        
+        if (avgTemp !== undefined) {
+          const currentSeaState = data.seaState || {};
+          
+          batch.update(doc(db, 'weekly_history', docSnap.id), {
+            seaState: {
+              ...currentSeaState,
+              waterTemp: avgTemp,
+              isHistoricalAverage: true
+            }
+          });
+          updatedCount++;
+        }
+      }
+    }
+    
+    if (updatedCount > 0) {
+      await batch.commit();
+    }
+    
+    return updatedCount;
   };
 
   const batchAddGlossary = async (items: Omit<GlossaryTerm, 'id'>[]) => {
@@ -994,13 +1060,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory, forceResetSession,
-      finalizeSession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
+      finalizeSession, updateHistoricalSeaTemperatures, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       isDbEmpty, conflictingAdmins, seedInitialAdmin
     }), [
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory, forceResetSession,
-      finalizeSession, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
+      finalizeSession, updateHistoricalSeaTemperatures, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       isDbEmpty, conflictingAdmins, seedInitialAdmin
     ]);
 

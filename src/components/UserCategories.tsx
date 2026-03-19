@@ -82,10 +82,10 @@ const UserCategories: React.FC<UserCategoriesProps> = ({ userId }) => {
     if (!userStats) return [];
 
     const categories = [];
-    if (penguins.some(p => p.id === userId)) categories.push({ name: 'פינגווין', icon: Snowflake, color: 'text-blue-600', bg: 'bg-blue-100' });
-    if (jellyfish.some(j => j.id === userId)) categories.push({ name: 'דג ליצן', icon: Sun, color: 'text-orange-600', bg: 'bg-orange-100' });
-    if (sharks.some(s => s.id === userId)) categories.push({ name: 'כריש', icon: Zap, color: 'text-cyan-700', bg: 'bg-cyan-100' });
-    if (orcas.some(o => o.id === userId)) categories.push({ name: 'אורקה', icon: Trophy, color: 'text-amber-600', bg: 'bg-amber-100' });
+    if (penguins.some(p => p.id === userId)) categories.push({ name: 'פינגווין', icon: Snowflake, color: 'text-[#00426a]', iconColor: 'text-[#0071a1]', bg: 'bg-[#f0f8ff]/50 border border-[#00426a]/10 shadow-sm' });
+    if (jellyfish.some(j => j.id === userId)) categories.push({ name: 'דג ליצן', icon: Sun, color: 'text-[#00426a]', iconColor: 'text-[#0071a1]', bg: 'bg-[#f0f8ff]/50 border border-[#00426a]/10 shadow-sm' });
+    if (sharks.some(s => s.id === userId)) categories.push({ name: 'כריש', icon: Zap, color: 'text-[#00426a]', iconColor: 'text-[#0071a1]', bg: 'bg-[#f0f8ff]/50 border border-[#00426a]/10 shadow-sm' });
+    if (orcas.some(o => o.id === userId)) categories.push({ name: 'אורקה', icon: Trophy, color: 'text-[#00426a]', iconColor: 'text-[#0071a1]', bg: 'bg-[#f0f8ff]/50 border border-[#00426a]/10 shadow-sm' });
 
     return categories;
   }, [members, weeklyHistory, userId]);
@@ -96,7 +96,7 @@ const UserCategories: React.FC<UserCategoriesProps> = ({ userId }) => {
     <div className="flex flex-wrap gap-2 justify-center mt-4">
       {categories.map(cat => (
         <div key={cat.name} className={`flex items-center gap-1 px-3 py-1 rounded-full ${cat.bg} ${cat.color} font-bold text-xs`}>
-          <cat.icon size={14} />
+          <cat.icon size={14} className={cat.iconColor} />
           {cat.name}
         </div>
       ))}
