@@ -393,7 +393,7 @@ const ShaperPage: React.FC = () => {
               </div>
 
               {/* Board Visualization */}
-              <div className="relative w-full h-[400px] flex items-center justify-center bg-slate-50/50 rounded-[2.5rem] border border-slate-100">
+              <div className="relative w-full aspect-[4/3] md:aspect-[16/9] flex items-center justify-center bg-slate-50/50 rounded-[2.5rem] border border-slate-100">
                 <SurfboardOverlay selectedBoardType={recommendation.boardType} />
               </div>
 

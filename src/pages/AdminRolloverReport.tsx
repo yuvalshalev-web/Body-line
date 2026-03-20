@@ -3,6 +3,7 @@ import { useData } from '../contexts/DataContext';
 import { Activity, Calendar, CheckCircle, Circle, Loader2, AlertTriangle } from 'lucide-react';
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { getDb } from '../services/firebase';
+import { formatDateTime } from '../utils/dateUtils';
 
 export const AdminRolloverReport: React.FC = () => {
   const { weeklyHistory, yearConfig, finalizeSession, activeSessionDate, updateHistoricalSeaTemperatures } = useData();
@@ -256,7 +257,7 @@ export const AdminRolloverReport: React.FC = () => {
                       return 'תאריך לא תקין';
                     }
                     
-                    return dateValue.toLocaleDateString('he-IL');
+                    return formatDateTime(dateValue);
                   })()}
                 </td>
                 <td className="py-3 px-4 text-slate-600">{session.participantsCount || 0}</td>

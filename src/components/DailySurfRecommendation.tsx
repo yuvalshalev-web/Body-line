@@ -55,53 +55,63 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
   let isWarning = false;
 
   if (surfingLevel === 'Beginner') {
-    if (currentWaveHeight >= 1.6) {
+    if (currentWaveHeight >= 1.5) {
       boardType = 'סופטבורד (Softboard)';
       explanation = 'ים גבוה מדי למתחילים - מומלץ להישאר בחוף או לגלוש רק בקצף הקרוב לחוף. בטיחות קודמת לכל!';
       isWarning = true;
     } else if (currentWaveHeight >= 0.8) {
       boardType = 'סופטבורד / פאן-בורד';
-      explanation = 'ים בינוני, מעולה לתרגול. קח גלשן עם הרבה נפח שיעזור לך לתפוס גלים ולשמור על יציבות.';
+      recVol = baseRec.volume * 1.05; // Slightly more volume for medium waves
+      recLenInches = baseRec.lengthInches + 2;
+      explanation = 'ים בינוני, מעולה לתרגול. קח גלשן עם קצת יותר נפח מהרגיל שיעזור לך לתפוס גלים ולשמור על יציבות.';
     } else {
       boardType = 'סופטבורד (Softboard)';
-      explanation = 'ים נמוך ורגוע, מושלם למתחילים! סופטבורד גדול ייתן לך מקסימום גלים והנאה.';
+      recVol = baseRec.volume * 1.15; // Much more volume for small waves
+      recLenInches = baseRec.lengthInches + 6;
+      explanation = 'ים נמוך ורגוע, מושלם למתחילים! סופטבורד גדול במיוחד ייתן לך מקסימום גלים והנאה.';
     }
   } else if (surfingLevel === 'Advanced') {
-    if (currentWaveHeight > 2.5) {
+    if (currentWaveHeight > 2.0) {
+      boardType = 'סטפ-אפ (Step-up)';
+      recVol = baseRec.volume * 1.05; // Extra volume for big waves
+      recLenInches = baseRec.lengthInches + 4; // Longer for big waves
+      explanation = 'ים גבוה ועוצמתי. קח גלשן ארוך יותר (Step-up) כדי להיכנס מוקדם לגל ולשמור על שליטה במהירויות גבוהות.';
+    } else if (currentWaveHeight >= 1.2) {
       boardType = 'שורטבורד (Shortboard)';
-      recVol = baseRec.volume * 1.1; // Extra volume for big waves
-      recLenInches = baseRec.lengthInches + 5; // Longer for big waves
-      explanation = 'ים גבוה ועוצמתי. קח גלשן ארוך וצר יותר כדי להיכנס מוקדם לגל ולשמור על שליטה במהירויות גבוהות.';
-    } else if (currentWaveHeight >= 1.6) {
-      boardType = 'שורטבורד (Shortboard)';
-      explanation = 'תנאים מצוינים לביצועים. שורטבורד קלאסי ייתן לך את הרדיקליות שאתה מחפש.';
-    } else if (currentWaveHeight >= 0.8) {
-      boardType = 'שורטבורד / פיש';
-      explanation = 'ים כיפי וורסטילי. פיש או שורטבורד קצר יעזרו לך לייצר מהירות ולשחרר זנב.';
+      // Base volume is perfect here
+      explanation = 'תנאים מצוינים לביצועים. שורטבורד קלאסי במידות הרגילות שלך ייתן לך את הרדיקליות שאתה מחפש.';
+    } else if (currentWaveHeight >= 0.7) {
+      boardType = 'שורטבורד קטן / הייבריד';
+      recVol = baseRec.volume * 1.08;
+      recLenInches = baseRec.lengthInches - 2;
+      explanation = 'ים בינוני-נמוך. גלשן מעט קצר ורחב יותר יעזור לך לייצר מהירות בחלקים החלשים של הגל.';
     } else {
-      boardType = 'פיש (Fish)';
-      recVol = baseRec.volume * 1.2; // Extra volume for weak waves
-      explanation = 'ים חלש. קח גלשן רחב ושטוח (פיש או טווין-פין) כדי לייצר מהירות גם כשאין כוח בגל.';
+      boardType = 'פיש (Fish) / גרובבלר';
+      recVol = baseRec.volume * 1.15; // Extra volume for weak waves
+      recLenInches = baseRec.lengthInches - 4; // Shorter
+      explanation = 'ים חלש. קח גלשן קצר, רחב ושטוח (פיש או גרובבלר) כדי לייצר מהירות גם כשאין כוח בגל.';
     }
   } else {
     // Intermediate
-    if (currentWaveHeight > 2.5) {
-      boardType = 'שורטבורד (Shortboard)';
-      recVol = baseRec.volume * 1.1;
-      recLenInches = baseRec.lengthInches + 5;
-      explanation = 'ים גבוה מאוד ומאתגר. דורש כושר וניסיון. אם אתה נכנס, קח גלשן ארוך יותר עם אקסטרה נפח.';
-      isWarning = true;
-    } else if (currentWaveHeight >= 1.6) {
+    if (currentWaveHeight > 1.8) {
+      boardType = 'שורטבורד / סטפ-אפ';
+      recVol = baseRec.volume * 1.08;
+      recLenInches = baseRec.lengthInches + 4;
+      explanation = 'ים גבוה ומאתגר. קח גלשן ארוך יותר עם אקסטרה נפח כדי להבטיח כניסה בטוחה לגלים.';
+    } else if (currentWaveHeight >= 1.0) {
       boardType = 'שורטבורד / הייבריד';
-      explanation = 'הים עולה. גלשן היברידי או שורטבורד עם קצת יותר נפח יעזור לך להתמודד עם העוצמה.';
-    } else if (currentWaveHeight >= 0.8) {
+      // Base volume is perfect here
+      explanation = 'תנאים קלאסיים! הגלשן היומיומי שלך (All-rounder) במידות הרגילות יעבוד כאן בצורה מושלמת.';
+    } else if (currentWaveHeight >= 0.6) {
       boardType = 'פאן-בורד / פיש';
-      explanation = 'יום קלאסי לפאן-בורד או ה-Ribeye שלך. שילוב מושלם של ציפה ויכולת תמרון.';
+      recVol = baseRec.volume * 1.15;
+      recLenInches = baseRec.lengthInches - 2;
+      explanation = 'ים חלש יחסית. גלשן עם יותר נפח (כמו פאן-בורד או פיש) יעזור לך לא לפספס גלים ולשמור על מהירות.';
     } else {
-      boardType = 'לונגבורד / פאן-בורד';
-      recVol = baseRec.volume * 1.3;
-      recLenInches = baseRec.lengthInches + 10;
-      explanation = 'ים נמוך. תהנה מהציפה עם לונגבורד או פאן-בורד גדול כדי לא לפספס אף גל.';
+      boardType = 'לונגבורד / מיני-מאל';
+      recVol = baseRec.volume * 1.35;
+      recLenInches = baseRec.lengthInches + 12;
+      explanation = 'ים נמוך מאוד. תהנה מהציפה עם לונגבורד או מיני-מאל כדי לתפוס כל אדווה בים.';
     }
   }
 

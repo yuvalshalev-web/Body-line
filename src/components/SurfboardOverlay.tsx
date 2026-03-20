@@ -3,11 +3,9 @@ import React from 'react';
 export const ExactSurfboard = ({ type }: { type: string }) => {
   const GlossGradient = () => (
     <linearGradient id={`gloss-${type}`} x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.7" />
-      <stop offset="15%" stopColor="#ffffff" stopOpacity="0.2" />
-      <stop offset="40%" stopColor="#ffffff" stopOpacity="0.0" />
-      <stop offset="80%" stopColor="#000000" stopOpacity="0.1" />
-      <stop offset="100%" stopColor="#000000" stopOpacity="0.4" />
+      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+      <stop offset="50%" stopColor="#ffffff" stopOpacity="0.0" />
+      <stop offset="100%" stopColor="#ffffff" stopOpacity="0.2" />
     </linearGradient>
   );
 
@@ -127,7 +125,7 @@ export const SurfboardOverlay: React.FC<SurfboardOverlayProps> = ({ selectedBoar
   const selectedIdx = boardKeys.indexOf(selectedBoardType) !== -1 ? boardKeys.indexOf(selectedBoardType) : 2;
 
   return (
-    <div className="relative w-full h-[320px] flex justify-center items-end bg-transparent p-3 overflow-visible">
+    <div className="relative w-full aspect-[4/3] md:aspect-[16/9] flex justify-center items-end bg-transparent p-3 overflow-visible">
       {boardKeys.map((key, index) => {
         const isSelected = key === selectedBoardType;
         const board = surfboardData[key as keyof typeof surfboardData];

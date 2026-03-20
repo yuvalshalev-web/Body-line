@@ -19,7 +19,7 @@ const WetsuitSVG: React.FC<WetsuitSVGProps> = ({ thickness = '4/3', alignBottom 
 
   return (
     <div className={`flex ${alignBottom ? 'items-end' : 'items-center'} justify-center w-full h-full ${alignBottom ? 'p-0' : 'p-2'} bg-transparent`}>
-      <div className={`relative group w-full max-w-md flex justify-center ${alignBottom ? 'items-end' : 'items-center'} ${alignBottom ? '' : 'min-h-[320px]'}`}>
+      <div className={`relative group w-full max-w-md flex justify-center ${alignBottom ? 'items-end' : 'items-center'}`}>
         {/* Glowing background effect for the transparent image */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 bg-[var(--surfer-cyan)]/20 blur-[80px] rounded-full pointer-events-none" />
         

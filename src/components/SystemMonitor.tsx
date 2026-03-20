@@ -7,8 +7,9 @@ import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, Refr
 import { motion, AnimatePresence } from 'motion/react';
 import VercelStatusWidget from './admin/VercelStatusWidget';
 import GitHubCommandCenter from './admin/GitHubCommandCenter';
+import WorkflowVisualizer from './admin/WorkflowVisualizer';
 import { getStorageSizeMB, recalculateStorageFromStorage, recalculateDatabaseSize } from '../utils/storageStats';
-import { sessionReadCount, db, saveLogsToDatabase, loadLogsFromDatabase } from '../services/firebase';
+import { sessionReadCount, incrementReadCount, db, saveLogsToDatabase, loadLogsFromDatabase } from '../services/firebase';
 import { useData } from '../contexts/DataContext';
 import { get24hBandwidth } from '../utils/bandwidthTracker';
 import { getLogs, SystemLog, LogSeverity, clearLogs } from '../utils/systemLogs';
@@ -318,7 +319,7 @@ const DataHealthScore: React.FC = () => {
 
       {lastScan && (
         <div className="mt-6 pt-4 border-t border-black/5 flex items-center justify-between">
-          <p className="text-[10px] font-bold text-[#000000]/40 uppercase tracking-widest">סריקה אחרונה: {lastScan.toLocaleTimeString('he-IL')}</p>
+          <p className="text-[10px] font-bold text-[#000000]/40 uppercase tracking-widest">סריקה אחרונה: {lastScan.toLocaleString('he-IL')}</p>
           <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
             <HeartPulse size={10} />
             <span>DATA IS STABLE</span>
@@ -333,35 +334,34 @@ const DataHealthScore: React.FC = () => {
  * Quota Monitor Component
  * Real-time monitoring of Firebase Quotas.
  */
+import { getMonthlyQuotaData } from '../utils/quotaStats';
+
+// ... (inside SystemMonitor.tsx)
+
+const QuotaChart = ({ data, dataKey, limit, title, color }: { data: any[], dataKey: string, limit: number, title: string, color: string }) => (
+  <div className="luxury-slab p-6">
+    <div className="flex items-center justify-between mb-4">
+      <h4 className="text-sm font-black text-[#000000] uppercase tracking-widest">{title}</h4>
+      <span className="text-[10px] font-black text-[#000000]/60 bg-black/5 px-2 py-1 rounded-md">
+        מכסה יומית: {limit.toLocaleString()}
+      </span>
+    </div>
+    <div className="h-[150px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+          <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+          <YAxis tick={{ fontSize: 10 }} domain={[0, limit]} />
+          <Tooltip />
+          <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+);
+
 const QuotaMonitor: React.FC = () => {
-  const [quotaData, setQuotaData] = useState<{ time: string, reads: number, writes: number }[]>([]);
-  const [currentQuota, setCurrentQuota] = useState({ reads: sessionReadCount, writes: 0 });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-      
-      setQuotaData(prev => {
-        const newPoint = {
-          time: timeStr,
-          reads: sessionReadCount,
-          writes: 0 // We don't track writes globally yet
-        };
-        return [...prev, newPoint].slice(-12);
-      });
-      
-      setCurrentQuota({ reads: sessionReadCount, writes: currentQuota.writes });
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [currentQuota.writes]);
-
-  const isExceeded = sessionReadCount > 50000;
-  const quotaPercentage = (sessionReadCount / 50000) * 100;
-
-  const maxReads = Math.max(...quotaData.map(pt => pt.reads), sessionReadCount, 1);
-  const yAxisMax = Math.pow(10, Math.floor(Math.log10(maxReads)) + 1);
+  const monthlyData = useMemo(() => getMonthlyQuotaData(), []);
 
   return (
     <div className="rounded-3xl p-8 relative overflow-hidden group transition-all duration-500"
@@ -375,103 +375,22 @@ const QuotaMonitor: React.FC = () => {
         boxShadow: '0 10px 30px rgba(49, 170, 193, 0.15)'
       }}
     >
-      {/* Grain Overlay */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
-      
       <div className="relative z-10 flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-[#FFDE45] rounded-xl flex items-center justify-center text-[#000000] shadow-sm border border-white/30">
             <Zap size={24} />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl font-black text-[#CC2678] tracking-tight">מכסות Firebase</h3>
-              <span className={`px-3 py-1 text-[10px] font-black rounded-full border ${isExceeded ? 'bg-amber-100/50 text-amber-900 border-amber-200' : 'bg-emerald-100/50 text-emerald-900 border-emerald-200'}`}>
-                {isExceeded ? 'PAY AS YOU GO' : 'FREE TIER'}
-              </span>
-            </div>
-            <p className="text-xs font-bold text-[#000000] uppercase tracking-widest">REAL-TIME QUOTA MONITOR</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-[10px] font-black text-[#000000] uppercase tracking-widest">Firestore Reads</p>
-            <p className="text-lg font-black text-[#007085]">{sessionReadCount.toLocaleString()}</p>
-          </div>
-          <div className="w-px h-8 bg-slate-900/20" />
-          <div className="text-right">
-            <p className="text-[10px] font-black text-[#000000] uppercase tracking-widest">Limit</p>
-            <p className="text-lg font-black text-[#000000]/40">50,000</p>
+            <h3 className="text-xl font-black text-[#CC2678] tracking-tight">מכסות Firebase היסטוריות</h3>
+            <p className="text-xs font-bold text-[#000000] uppercase tracking-widest">MONTHLY QUOTA PROGRESS</p>
           </div>
         </div>
       </div>
 
-      <div className="h-[200px] w-full mt-4">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={quotaData} margin={{ left: -20, right: 10 }}>
-            <CartesianGrid strokeDasharray="0" vertical={false} stroke="rgba(0,0,0,0.1)" />
-            <XAxis dataKey="time" hide />
-            <YAxis 
-              domain={[0, yAxisMax]}
-              tickCount={6}
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 9, fontWeight: 900, fill: '#000000' }}
-              allowDecimals={false}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#fff', 
-                borderRadius: '0', 
-                border: '2px solid #000', 
-                boxShadow: '4px 4px 0px rgba(0,0,0,0.1)',
-                fontWeight: 900 
-              }}
-              itemStyle={{ fontWeight: 900, fontSize: '12px' }}
-            />
-            <Line 
-              type="stepAfter" 
-              dataKey="reads" 
-              stroke={sessionReadCount > 40000 ? '#C29670' : '#007085'} 
-              strokeWidth={4} 
-              dot={false} 
-              animationDuration={1000}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-      
-      <div className="mt-6">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-black text-[#000000] uppercase tracking-widest">
-            {Math.round(quotaPercentage)}% OF DAILY FREE QUOTA
-          </span>
-          {isExceeded && (
-            <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest bg-amber-50 px-2 py-1 rounded-md border border-amber-200">
-              OVER-QUOTA: BILLING ACTIVE
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 h-3 bg-[#000000]/5 border border-[#000000]/10 rounded-full overflow-hidden relative shadow-inner">
-            <motion.div 
-              className={`h-full ${isExceeded ? 'bg-amber-400' : sessionReadCount > 40000 ? 'bg-[#C29670]' : 'bg-[#007085]'}`}
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min(100, quotaPercentage)}%` }}
-            />
-            {isExceeded && (
-              <motion.div 
-                className="absolute top-0 left-0 h-full bg-amber-500/30 w-full"
-                animate={{ opacity: [0.3, 0.6, 0.3] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-            )}
-          </div>
-        </div>
-        <p className="mt-4 text-[11px] font-bold text-[#000000]/60 leading-relaxed text-right border-t border-[#000000]/10 pt-3">
-          * מכסת הקריאות החינמית ב-Firestore היא 50,000 ליום. חריגה מהמכסה מעבירה את המערכת למודל Pay-as-you-go באופן אוטומטי.
-        </p>
+      <div className="grid grid-cols-1 gap-6">
+        <QuotaChart data={monthlyData} dataKey="reads" limit={50000} title="קריאות מסמכים (Reads)" color="#007085" />
+        <QuotaChart data={monthlyData} dataKey="writes" limit={20000} title="כתיבת מסמכים (Writes)" color="#3dbbd3" />
+        <QuotaChart data={monthlyData} dataKey="deletes" limit={20000} title="מחיקת מסמכים (Deletes)" color="#CC2678" />
       </div>
     </div>
   );
@@ -1010,14 +929,15 @@ const SystemMonitor: React.FC = () => {
         </div>
 
         {/* Vercel Command Center - Repositioned beneath Emergency Buttons */}
-        <div className="w-full max-w-4xl mx-auto">
+        <div className="w-full max-w-4xl mx-auto flex flex-col gap-6">
+          <WorkflowVisualizer />
+          <GitHubCommandCenter />
           <VercelStatusWidget 
             systemStats={{
               membersCount: members.length,
               eventsCount: events.length
             }}
           />
-          <GitHubCommandCenter />
         </div>
       </div>
 
@@ -1123,7 +1043,7 @@ const SystemMonitor: React.FC = () => {
         <div className="luxury-slab p-8 relative overflow-hidden">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+              <div className="w-2 h-2 bg-[#A2FF00] rounded-full animate-ping" />
               <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight">קצב קריאות ממסד הנתונים (Live)</h3>
               <div className="gt-info-wrapper">
                 <div className="gt-info-icon" style={{ width: '18px', height: '18px', fontSize: '11px', backgroundColor: '#FFDE45', color: '#000' }}>i</div>
@@ -1136,11 +1056,8 @@ const SystemMonitor: React.FC = () => {
             </div>
             
             <button 
-              onClick={() => {
-                const newTotal = sessionReadCount + 1;
-                window.dispatchEvent(new CustomEvent('db-read-update', { detail: newTotal }));
-              }}
-              className="px-3 py-1 bg-white/30 hover:bg-white/50 text-[#000000] text-[12px] font-black rounded-lg transition-colors uppercase tracking-wider border border-white/20"
+              onClick={() => incrementReadCount(1)}
+              className="px-4 py-2 bg-gradient-to-r from-[#007085] to-[#3dbbd3] hover:from-[#005a6a] hover:to-[#3098ad] text-white text-[12px] font-black rounded-xl transition-all uppercase tracking-wider border border-white/10 shadow-lg hover:shadow-xl active:scale-95"
             >
               בצע בדיקת קריאה
             </button>

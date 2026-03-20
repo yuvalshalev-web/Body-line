@@ -1072,44 +1072,25 @@ const AdminPage: React.FC = () => {
         )}
 
         {activeTab === 'ENGINE_ROOM' && (
-          <div className="min-h-screen bg-[#fdfdfd] relative overflow-hidden pb-32">
+          <div className="min-h-screen bg-[#fdfdfd] relative overflow-hidden pb-32 pt-8">
             {/* Elite Alabaster Background Elements */}
             <div className="absolute inset-0 opacity-[0.015] pointer-events-none" 
                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
             <div className="absolute top-0 left-0 w-[1000px] h-[1000px] bg-[#B2EBF2]/5 rounded-full blur-[200px] -translate-x-1/2 -translate-y-1/2" />
             <div className="absolute bottom-0 right-0 w-[1000px] h-[1000px] bg-[#B2EBF2]/5 rounded-full blur-[200px] translate-x-1/2 translate-y-1/2" />
 
-            <div className="max-w-7xl mx-auto px-6 pt-12 space-y-16 relative z-10">
-              {/* --- Section 1: Real-time Intelligence (Information) --- */}
-              <section className="space-y-10">
-                <div className="space-y-6">
-                  <SystemMonitor />
-                </div>
-              </section>
+            <div className="max-w-7xl mx-auto px-8 flex flex-col gap-16 relative z-10">
+              <SystemMonitor />
 
-              {/* --- Section 2: Knowledge Base (Information) --- */}
-              <section className="space-y-10">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-8 bg-slate-400 rounded-full shadow-md" />
-                    <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">
-                      KNOWLEDGE // מאגר ידע ותיעוד
-                    </h3>
-                  </div>
-                  <p className="text-xs font-black text-slate-400 mr-5 uppercase tracking-widest opacity-70">
-                    Infrastructure Blueprints & Operational Guides
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <button 
-                    onClick={() => setMarkdownConfig({ isOpen: true, path: '/README.md', title: 'מדריך למשתמש (README)' })}
-                    className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group hover:scale-[1.01] transition-all text-right flex items-center gap-6 border-l-8 border-l-slate-900"
+                    onClick={() => setMarkdownConfig({ isOpen: true, path: '/README.md', title: 'מדריך למשתמש (User Guide)' })}
+                    className="w-full bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group hover:scale-[1.01] transition-all text-right flex items-center gap-6 border-l-8 border-l-slate-900"
                   >
                     <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
                       <FileText size={100} />
                     </div>
-                    <div className="p-5 bg-slate-900/5 text-slate-900 rounded-2xl group-hover:bg-slate-900 group-hover:text-white transition-all shadow-inner relative z-10">
+                    <div className="p-5 bg-slate-900/5 text-slate-900 rounded-2xl group-hover:bg-slate-900 group-hover:text-white transition-all shadow-inner relative z-10 shrink-0">
                       <FileText size={32} />
                     </div>
                     <div className="relative z-10">
@@ -1120,12 +1101,12 @@ const AdminPage: React.FC = () => {
 
                   <button 
                     onClick={() => setMarkdownConfig({ isOpen: true, path: '/PROJECT_MAP.md', title: 'מפת הפרויקט (Project Map)' })}
-                    className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group hover:scale-[1.01] transition-all text-right flex items-center gap-6 border-l-8 border-l-slate-400"
+                    className="w-full bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group hover:scale-[1.01] transition-all text-right flex items-center gap-6 border-l-8 border-l-slate-400"
                   >
                     <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
                       <MapIcon size={100} />
                     </div>
-                    <div className="p-5 bg-slate-400/5 text-slate-400 rounded-2xl group-hover:bg-slate-400 group-hover:text-white transition-all shadow-inner relative z-10">
+                    <div className="p-5 bg-slate-400/5 text-slate-400 rounded-2xl group-hover:bg-slate-400 group-hover:text-white transition-all shadow-inner relative z-10 shrink-0">
                       <MapIcon size={32} />
                     </div>
                     <div className="relative z-10">
@@ -1133,7 +1114,6 @@ const AdminPage: React.FC = () => {
                       <p className="text-xs text-slate-500 font-bold leading-relaxed">צפייה בקובץ PROJECT_MAP.md להבנת מבנה הרכיבים והקשרים ביניהם</p>
                     </div>
                   </button>
-                </div>
               </section>
 
               {/* --- Section 3: Strategic Operations (Actions) --- */}
@@ -1149,54 +1129,52 @@ const AdminPage: React.FC = () => {
                     Critical Maintenance Tools & System Overrides
                   </p>
                 </div>
-
                 <div className="grid grid-cols-1 gap-8">
-                  {/* Historical Data Update Button */}
-                  <div className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden border-r-8 border-r-amber-400">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                      <div className="flex items-center gap-6">
-                        <div className="p-5 bg-amber-50 text-amber-600 rounded-2xl shadow-inner border border-amber-100">
-                          <RotateCcw size={32} />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-black rounded uppercase tracking-tighter">System Utility</span>
-                            <h4 className="text-xl font-black text-slate-900">עדכון נתונים היסטוריים</h4>
+                    {/* Historical Data Update Button */}
+                    <div className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden border-r-8 border-r-amber-400">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                        <div className="flex items-center gap-6">
+                          <div className="p-5 bg-amber-50 text-amber-600 rounded-2xl shadow-inner border border-amber-100">
+                            <RotateCcw size={32} />
                           </div>
-                          <p className="text-sm text-slate-500 font-bold">עדכון רטרואקטיבי של מהירות רוח וטמפרטורת מים לכל הסשנים המוקלטים.</p>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-black rounded uppercase tracking-tighter">System Utility</span>
+                              <h4 className="text-xl font-black text-slate-900">עדכון נתונים היסטוריים</h4>
+                            </div>
+                            <p className="text-sm text-slate-500 font-bold">עדכון רטרואקטיבי של מהירות רוח וטמפרטורת מים לכל הסשנים המוקלטים.</p>
+                          </div>
                         </div>
-                      </div>
-                      <button 
-                        onClick={async () => {
-                          showConfirm({
-                            message: 'האם אתה בטוח שברצונך לעדכן את נתוני הרוח והטמפרטורה לסשנים היסטוריים? פעולה זו תעבור על כל מסמכי הסשנים ותעדכן אותם.',
-                            onConfirm: async () => {
-                              setIsProcessing('historical-update');
-                              try {
-                                const { updateHistoricalData } = await import('../utils/updateHistoricalData');
-                                const result = await updateHistoricalData();
-                                if (result.success) {
-                                  showSuccess('הנתונים ההיסטוריים עודכנו בהצלחה!');
-                                } else {
-                                  showError('שגיאה בעדכון הנתונים: ' + (result.error || 'שגיאה לא ידועה'));
+                        <button 
+                          onClick={async () => {
+                            showConfirm({
+                              message: 'האם אתה בטוח שברצונך לעדכן את נתוני הרוח והטמפרטורה לסשנים היסטוריים? פעולה זו תעבור על כל מסמכי הסשנים ותעדכן אותם.',
+                              onConfirm: async () => {
+                                setIsProcessing('historical-update');
+                                try {
+                                  const { updateHistoricalData } = await import('../utils/updateHistoricalData');
+                                  const result = await updateHistoricalData();
+                                  if (result.success) {
+                                    showSuccess('הנתונים ההיסטוריים עודכנו בהצלחה!');
+                                  } else {
+                                    showError('שגיאה בעדכון הנתונים: ' + (result.error || 'שגיאה לא ידועה'));
+                                  }
+                                } catch (err) {
+                                  showError('שגיאה לא צפויה בתהליך העדכון.');
+                                } finally {
+                                  setIsProcessing(null);
                                 }
-                              } catch (err) {
-                                showError('שגיאה לא צפויה בתהליך העדכון.');
-                              } finally {
-                                setIsProcessing(null);
                               }
-                            }
-                          });
-                        }}
-                        disabled={isProcessing === 'historical-update'}
-                        className="px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl shadow-xl hover:shadow-amber-500/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 min-w-[200px]"
-                      >
-                        {isProcessing === 'historical-update' ? <Loader2 className="animate-spin" size={20} /> : <RotateCcw size={20} />}
-                        <span className="text-base">הפעל עדכון</span>
-                      </button>
+                            });
+                          }}
+                          disabled={isProcessing === 'historical-update'}
+                          className="px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl shadow-xl hover:shadow-amber-500/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 min-w-[200px]"
+                        >
+                          {isProcessing === 'historical-update' ? <Loader2 className="animate-spin" size={20} /> : <RotateCcw size={20} />}
+                          <span className="text-base">הפעל עדכון</span>
+                        </button>
+                      </div>
                     </div>
-                  </div>
-
                 {conflictingAdmins.length > 1 && (
                   <div className="admin-info-card p-10 bg-rose-50/20 border-rose-200/30 border-r-8 border-r-rose-400/80">
                     <div className="flex flex-col gap-8">
@@ -2752,9 +2730,9 @@ const AdminPage: React.FC = () => {
         title={markdownConfig.title}
       />
     </div>
-  </div>
-</div>
-</div>
+    </div>
+    </div>
+    </div>
   );
 };
 

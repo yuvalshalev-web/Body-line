@@ -1,0 +1,341 @@
+370:              <div class="color-swatch" style="background-color: var(${v})"></div>
+597:    <div className="relative min-h-screen luxury-bg text-right space-y-12 pb-20 pt-8" dir="rtl">
+598:      <div className="max-w-7xl mx-auto">
+600:        <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+601:          <div className="header-content-wrapper relative z-20">
+602:            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
+614:        <div className="flex flex-col gap-12 items-start">
+616:          <div className="w-full mb-8">
+625:          <div className="flex-1 min-w-0 w-full">
+627:              <div className="fixed top-4 left-4 bg-black text-white p-2 z-[999] text-[12px]">
+633:              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
+654:                    <div className={`absolute top-0 left-0 w-1.5 h-full ${item.color} opacity-10 group-hover:opacity-40 transition-opacity`} />
+655:                    <div className="flex items-start justify-between mb-6">
+656:                      <div className={`p-4 rounded-2xl ${item.color} text-white shadow-lg group-hover:scale-110 transition-transform duration-500`}>
+660:                        <div className="bg-[var(--surfer-electric-pink)] text-white px-3 py-1 rounded-full text-[12px] font-black animate-pulse shadow-sm shadow-[var(--surfer-electric-pink)]/30">
+668:                    <div className="mt-8 flex items-center gap-2 text-[var(--surfer-vibrant-cyan)] text-[12px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+677:          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+679:            <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
+680:              <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
+682:              <div className="flex items-center gap-6 relative z-10">
+683:                <div className="w-16 h-16 bg-gradient-to-br from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-sunshine-yellow)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+686:                <div>
+692:              <div className="flex flex-wrap items-center gap-4 relative z-10">
+693:                <div className="flex items-center gap-2 px-4 py-2 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)] rounded-xl border border-[var(--surfer-aqua-mist)]/20 text-xs font-bold shadow-sm">
+700:            <div className="relative">
+712:              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+714:                  <div key={req.id} className={`admin-info-card p-8 group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50' : ''}`}>
+715:                    <div className="flex items-start gap-5 mb-8">
+719:                         <div className="w-16 h-16 rounded-2xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)] shadow-md border border-white/30">
+723:                       <div>
+725:                          <div className="flex items-center gap-2 text-[#000000] font-bold text-[12px] uppercase tracking-widest">
+732:                    <div className="space-y-4 flex-1">
+733:                       <div className="flex items-center gap-3 p-3 bg-[var(--surfer-aqua-mist)]/10 rounded-xl border border-white/20">
+737:                       <div className="flex items-center gap-3 p-3 bg-[var(--surfer-aqua-mist)]/10 rounded-xl border border-white/20">
+741:                       <div className="flex items-center gap-3 p-3 bg-[var(--surfer-vibrant-cyan)]/10 text-[#000000] rounded-xl border border-[var(--surfer-vibrant-cyan)]/20">
+747:                    <div className="flex gap-3 mt-10">
+773:              <div className="py-32 text-center border-2 border-dashed border-[var(--vibrant-cyan)]/10 rounded-[4rem]">
+774:                 <div className="w-20 h-20 bg-[var(--aqua-mist)]/20 rounded-full flex items-center justify-center mx-auto mb-6 text-[#00FFFF]/20">
+784:          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+795:                <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
+796:                  <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
+798:                  <div className="flex items-center gap-6 relative z-10">
+799:                    <div className="w-16 h-16 bg-gradient-to-br from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-sunshine-yellow)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+802:                    <div>
+808:                  <div className="flex flex-wrap items-center gap-3 relative z-10">
+809:                    <div className="flex items-center gap-2 px-4 py-2 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)] rounded-xl border border-[var(--surfer-aqua-mist)]/20 text-xs font-bold shadow-sm">
+813:                    <div className="flex items-center gap-2 px-4 py-2 bg-[#2D6A4F]/10 text-[#2D6A4F] rounded-xl border border-[#2D6A4F]/20 text-xs font-bold shadow-sm">
+817:                    <div className="flex items-center gap-2 px-4 py-2 bg-[#BC4749]/10 text-[#BC4749] rounded-xl border border-[#BC4749]/20 text-xs font-bold shadow-sm">
+821:                    <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-xs font-bold shadow-sm">
+825:                    <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-xl border border-purple-100 text-xs font-bold shadow-sm">
+834:            <div className="flex justify-center mt-6">
+859:            <div className="admin-info-card overflow-hidden">
+860:                <div className="overflow-x-auto">
+885:                            <div className="flex items-center gap-4">
+889:                                <div className="w-12 h-12 rounded-xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)]/40 border border-white/30">
+893:                              <div>
+920:                            <div className="flex items-center justify-center">
+950:          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+955:                <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
+956:                  <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
+958:                  <div className="flex items-center gap-6 relative z-10">
+959:                    <div className="w-16 h-16 bg-gradient-to-br from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-sunshine-yellow)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+962:                    <div>
+968:                  <div className="flex flex-wrap items-center gap-3 relative z-10">
+969:                    <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-xs font-bold shadow-sm">
+978:            <div className="admin-info-card overflow-hidden">
+979:              <div className="overflow-x-auto">
+1003:                          <div className="flex items-center gap-4">
+1012:                              <div 
+1019:                            <div>
+1031:                          <div className="flex items-center justify-center gap-2">
+1075:          <div className="min-h-screen bg-[#fdfdfd] relative overflow-hidden pb-32">
+1077:            <div className="absolute inset-0 opacity-[0.015] pointer-events-none" 
+1079:            <div className="absolute top-0 left-0 w-[1000px] h-[1000px] bg-[#B2EBF2]/5 rounded-full blur-[200px] -translate-x-1/2 -translate-y-1/2" />
+1080:            <div className="absolute bottom-0 right-0 w-[1000px] h-[1000px] bg-[#B2EBF2]/5 rounded-full blur-[200px] translate-x-1/2 translate-y-1/2" />
+1082:            <div className="max-w-7xl mx-auto px-8">
+1088:                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+1091:                    <div className="p-5 bg-slate-900/5 text-slate-900 rounded-2xl group-hover:bg-slate-900 group-hover:text-white transition-all shadow-inner relative z-10">
+1094:                    <div className="relative z-10">
+1104:                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+1107:                    <div className="p-5 bg-slate-400/5 text-slate-400 rounded-2xl group-hover:bg-slate-400 group-hover:text-white transition-all shadow-inner relative z-10">
+1110:                    <div className="relative z-10">
+1119:                <div className="flex flex-col gap-1">
+1120:                  <div className="flex items-center gap-3">
+1121:                    <div className="w-2 h-8 bg-rose-500 rounded-full shadow-lg" />
+1130:                <div className="grid grid-cols-1 gap-8">
+1132:                    <div className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden border-r-8 border-r-amber-400">
+1133:                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+1134:                        <div className="flex items-center gap-6">
+1135:                          <div className="p-5 bg-amber-50 text-amber-600 rounded-2xl shadow-inner border border-amber-100">
+1138:                          <div>
+1139:                            <div className="flex items-center gap-2 mb-1">
+1180:                  <div className="admin-info-card p-10 bg-rose-50/20 border-rose-200/30 border-r-8 border-r-rose-400/80">
+1181:                    <div className="flex flex-col gap-8">
+1182:                      <div className="flex items-center gap-8">
+1183:                        <div className="p-5 bg-rose-100/50 text-rose-600 rounded-3xl shadow-inner border border-rose-200/50">
+1186:                        <div>
+1187:                          <div className="flex items-center gap-2 mb-1">
+1195:                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+1197:                          <div key={admin.id} className="flex items-center justify-between p-5 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/80 shadow-sm group hover:shadow-md transition-all">
+1198:                            <div className="flex items-center gap-4">
+1199:                              <div className="relative">
+1202:                                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+1207:                              <div>
+1212:                            <div className="flex items-center gap-2">
+1214:                                <div className="flex items-center gap-2 animate-in slide-in-from-left-2">
+1272:          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+1274:            <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
+1275:              <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
+1277:              <div className="flex items-center gap-6 relative z-10">
+1278:                <div className="w-16 h-16 bg-gradient-to-br from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+1281:                <div>
+1287:              <div className="flex flex-wrap items-center gap-4 relative z-10">
+1288:                <div className="flex items-center gap-2 px-4 py-2 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)] rounded-xl border border-[var(--surfer-aqua-mist)]/20 text-xs font-bold shadow-sm">
+1303:            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+1305:                <div key={item.id} className="admin-info-card p-6 flex flex-col relative group">
+1312:                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--surfer-aqua-mist)]/20">
+1313:                    <div className="flex items-center gap-3">
+1317:                        <div className="w-8 h-8 rounded-full bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-sunshine-yellow)] border border-white/30">
+1321:                      <div>
+1327:                    <div className="flex gap-2">
+1361:                <div className="col-span-full py-20 text-center admin-info-card border-dashed border-2">
+1386:          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+1388:            <div className="luxury-slab p-[2px] group">
+1389:              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+1390:                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
+1392:                <div className="flex items-center gap-6 relative z-10">
+1393:                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+1396:                  <div>
+1402:                <div className="flex flex-wrap items-center gap-4 relative z-10">
+1403:                  <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-xs font-bold">
+1454:             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+1456:                 <div 
+1470:                     <div className="w-full h-full bg-[#f7c1ea]/10 flex items-center justify-center text-[#f063c1]/20">
+1475:                   <div className="absolute top-2 right-2 z-10">
+1476:                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+1483:                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+1501:          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+1503:            <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
+1504:              <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
+1506:              <div className="flex items-center gap-6 relative z-10">
+1507:                <div className="w-16 h-16 bg-gradient-to-br from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+1510:                <div>
+1516:              <div className="flex flex-wrap items-center gap-4 relative z-10">
+1517:                <div className="flex items-center gap-2 px-4 py-2 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)] rounded-xl border border-[var(--surfer-aqua-mist)]/20 text-xs font-bold shadow-sm">
+1532:            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+1538:                  <div key={event.id} className={`admin-info-card p-6 flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
+1541:                      <div className="absolute -right-12 top-6 transform rotate-45 bg-[var(--surfer-aqua-mist)]/20 text-[var(--deep-teal-sea)]/40 text-[12px] font-black uppercase tracking-widest px-12 py-1 shadow-sm z-10">
+1546:                    <div className="flex items-center gap-6 flex-1">
+1549:                        <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden flex-shrink-0 shadow-md border border-white/20">
+1556:                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+1559:                        <div className={`w-24 h-24 sm:w-32 sm:h-32 rounded-2xl flex items-center justify-center font-black flex-shrink-0 border border-white/30 ${isPastEvent ? 'bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/40' : 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)]'}`}>
+1564:                      <div className="flex flex-col min-w-0">
+1565:                        <div className="flex items-center gap-2 mb-1">
+1573:                        <div className="flex items-center gap-2">
+1585:                    <div className="flex gap-2 mt-4 sm:mt-0">
+1630:          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
+1632:            <div className="space-y-8">
+1633:              <div className="flex items-center gap-4">
+1634:                <div className="p-4 bg-[var(--deep-teal-sea)] text-white rounded-2xl shadow-lg shadow-[var(--deep-teal-sea)]/20">
+1637:                <div>
+1643:              <div className="bg-red-600 border-4 border-red-800 py-6 px-[5%] rounded-[1.5rem] flex flex-col items-center justify-center gap-3 shadow-[0_0_25px_rgba(220,38,38,0.8)] animate-pulse text-center transform hover:scale-105 transition-transform duration-300 relative overflow-hidden">
+1644:                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-50"></div>
+1656:            <div className="luxury-slab p-[2px] group">
+1657:              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+1658:                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
+1660:                <div className="flex items-center gap-6 relative z-10">
+1661:                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+1664:                  <div>
+1666:                    <div className="flex items-center gap-2 mt-1">
+1673:                <div className="flex flex-wrap items-center gap-4 lg:gap-12 relative z-10">
+1674:                  <div 
+1678:                    <div className="text-right">
+1685:                    <div className="w-px h-8 bg-slate-200 mx-2" />
+1686:                    <div className="text-right">
+1695:                  <div className="flex items-center gap-6">
+1696:                    <div className="text-center">
+1698:                      <div className="flex items-baseline gap-1 justify-center">
+1717:            <div className="luxury-slab p-[2px] group mb-12">
+1718:              <div className="luxury-card p-10 relative overflow-hidden bg-[#f5f5f0]/40 backdrop-blur-3xl rounded-[50px] border border-white/40 shadow-[0_40px_100px_rgba(122,21,85,0.1)]">
+1720:                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 relative z-10" dir="rtl">
+1721:                  <div className="flex items-center gap-8">
+1722:                    <div className="w-20 h-20 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-[25px] flex items-center justify-center text-white shadow-[0_15px_35px_rgba(0,209,255,0.3)] group-hover:rotate-6 transition-transform duration-700">
+1725:                    <div>
+1733:                <div className="flex flex-col gap-16 relative z-10" dir="rtl">
+1735:                  <div className="space-y-4">
+1754:                        <div className="flex-1 flex items-center justify-between px-8">
+1755:                          <div className="flex items-center gap-6">
+1756:                            <div className="w-12 h-12 rounded-2xl bg-[var(--gt-accent)]/10 flex items-center justify-center text-[var(--gt-accent)] font-black text-lg shadow-inner border border-[var(--gt-accent)]/20">
+1759:                            <div>
+1771:                          <div className="flex items-center gap-6">
+1773:                            <div className="gt-toggle-container scale-90">
+1774:                              <div 
+1787:                            <div className="gt-toggle-container scale-90">
+1788:                              <div 
+1806:                  <div className="flex flex-col items-center">
+1807:                    <div className="gt-card w-full max-w-2xl p-10 relative overflow-hidden border-2 border-[var(--gt-accent)]/10">
+1808:                      <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--gt-accent)]/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+1812:                      <div className="grid grid-cols-2 gap-8 mb-10 relative z-10">
+1813:                        <div className="space-y-4">
+1821:                        <div className="space-y-4">
+1823:                          <div className="relative">
+1858:                <div className="flex justify-center mt-16 relative z-10">
+1882:                  <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
+1888:                      <div className="absolute top-0 left-0 w-full h-full border-t border-l border-white/60 rounded-[40px] pointer-events-none" />
+1889:                      <div className="relative z-10">
+1890:                        <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner border border-rose-100/50 rotate-3">
+1895:                        <div className="flex gap-4" dir="rtl">
+1912:            <div className="luxury-slab p-[2px] group mb-6">
+1913:              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+1914:                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
+1916:                <div className="flex items-center gap-6 relative z-10">
+1917:                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+1920:                  <div>
+1926:                <div className="flex-1 max-w-3xl relative z-10 space-y-2">
+1928:                  <div className="flex gap-2">
+1929:                    <div className="relative flex-1">
+2020:            <div className="luxury-slab p-[2px] group mb-6">
+2021:              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+2022:                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
+2024:                <div className="flex items-center gap-6 relative z-10">
+2025:                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
+2028:                  <div>
+2034:                <div className="inline-flex w-max self-start lg:self-auto bg-white/50 backdrop-blur p-1 rounded-xl relative z-10 border border-white/40 shadow-inner">
+2060:            <div className="luxury-slab p-[2px] group mb-6 inline-block">
+2061:              <div className="luxury-card p-4 flex items-center gap-6 relative overflow-hidden">
+2062:                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
+2064:                <div>
+2069:                <div className="relative">
+2080:                  <div className="w-12 h-12 rounded-xl shadow-lg border-2 border-white flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" style={{ backgroundColor: siteConfig.globalColor || '#40E0D0' }}>
+2088:            <div className="luxury-slab p-[2px] group mb-10">
+2089:              <div className="luxury-card p-8 relative overflow-hidden">
+2090:                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
+2092:                <div className="flex items-center gap-6 mb-10 relative z-10">
+2093:                  <div className="w-16 h-16 bg-gradient-to-br from-[#6366f1] to-[#a855f7] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#6366f1]/20 group-hover:rotate-6 transition-transform">
+2096:                  <div>
+2102:                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
+2104:                  <div className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 rounded-[2rem] min-h-[160px] border border-slate-100 relative overflow-hidden">
+2106:                    <div className="surfboard-hero-container" style={{ minHeight: 'auto', padding: '20px 0' }}>
+2114:                  <div className="space-y-6 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
+2116:                    <div className="grid grid-cols-2 gap-6">
+2117:                      <div className="space-y-3">
+2118:                        <div className="flex justify-between items-center px-1">
+2122:                        <div className="gt-stepper w-full !justify-between">
+2131:                          <div className="gt-step-val">{parseInt(siteConfig.h1Styles?.fontSize || '50')}</div>
+2142:                      <div className="space-y-3">
+2143:                        <div className="flex justify-between items-center px-1">
+2147:                        <div className="gt-stepper w-full !justify-between">
+2156:                          <div className="gt-step-val">{parseInt(siteConfig.h1Styles?.letterSpacing || '0')}</div>
+2170:                    <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+2171:                      <div className="space-y-2">
+2180:                      <div className="space-y-2">
+2189:                      <div className="space-y-2">
+2201:                    <div className="grid grid-cols-2 gap-6">
+2202:                      <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+2204:                        <div className="flex items-center gap-3 mb-3">
+2219:                      <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+2221:                        <div className="flex items-center gap-3 mb-3">
+2239:                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-6">
+2240:                      <div className="flex justify-between items-center">
+2253:                        <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-200">
+2254:                          <div className="space-y-3">
+2255:                            <div className="flex justify-between items-center px-1">
+2266:                          <div className="space-y-3">
+2267:                            <div className="flex justify-between items-center px-1">
+2283:                    <div className="grid grid-cols-2 gap-6">
+2284:                      <div className="space-y-3">
+2301:                      <div className="space-y-3">
+2303:                        <div className="gt-segmented">
+2323:                <div className="flex items-center gap-4 mb-8">
+2324:                    <div className="p-4 bg-gradient-to-br from-[#00FFFF] to-[#FFD700] text-white rounded-2xl shadow-lg">
+2327:                    <div>
+2332:                <div id="palettes-container">
+2334:                    <div className="flex items-center justify-center w-full py-12">
+2340:            <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-[4rem] p-12 shadow-xl">
+2341:             <div className="flex items-center justify-between mb-10">
+2342:                <div className="flex items-center gap-4">
+2343:                   <div className="p-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl shadow-lg"><RotateCcw size={24} /></div>
+2344:                   <div>
+2358:             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+2360:                   <div key={key} className="p-6 bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/20 flex items-center justify-between group shadow-lg">
+2361:                      <div className="flex items-center gap-4">
+2362:                         <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center overflow-hidden shadow-sm border border-[var(--vibrant-cyan)]/10 relative group/avatar">
+2384:                         <div>
+2390:                      <div className="flex items-center gap-2">
+2408:              <div className="mt-16 pt-16 border-t border-[var(--vibrant-cyan)]/10">
+2409:                <div className="flex items-center gap-4 mb-10">
+2410:                  <div className="p-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl shadow-lg shadow-[var(--vibrant-cyan)]/20"><Sparkles size={24} /></div>
+2411:                  <div>
+2417:                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+2419:                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
+2425:                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
+2431:                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
+2433:                    <div className="gt-toggle-container">
+2434:                      <div className="gt-toggle" />
+2441:                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
+2443:                    <div className="gt-segmented">
+2444:                      <div className="gt-segment-item active">LIST</div>
+2445:                      <div className="gt-segment-item">GRID</div>
+2450:                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4 w-full">
+2456:                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
+2458:                    <div className="gt-stepper">
+2459:                      <div className="gt-step-btn minus">-</div>
+2460:                      <div className="gt-step-val">10</div>
+2461:                      <div className="gt-step-btn plus">+</div>
+2466:                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4 w-full">
+2472:                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4 w-full">
+2482:                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
+2484:                    <div className="flex items-center gap-2">
+2491:                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4 w-full">
+2493:                    <div className="gt-card w-full">
+2500:                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
+2502:                    <div className="flex gap-2">
+2509:                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
+2511:                    <div className="gt-info-wrapper">
+2512:                      <div className="gt-info-icon">i</div>
+2533:        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-[var(--deep-teal-sea)]/60 backdrop-blur-md animate-in fade-in">
+2534:          <div className="bg-white/60 backdrop-blur-xl w-full max-w-lg rounded-[3.5rem] shadow-2xl p-10 border border-white/30 animate-in zoom-in-95">
+2538:            <div className="space-y-6 mb-10">
+2539:              <div className="space-y-2">
+2551:                <div className="aspect-video rounded-2xl overflow-hidden border border-[var(--vibrant-cyan)]/10 bg-[var(--aqua-mist)]/10">
+2557:            <div className="grid grid-cols-2 gap-4">
+2593:        <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl animate-in fade-in">
+2600:            <div className="bg-rose-500 p-10 text-white text-center relative overflow-hidden">
+2601:              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+2607:            <div className="p-10 space-y-8">
+2608:              <div className="bg-rose-50 p-6 rounded-2xl border border-rose-100 text-rose-700 text-center font-black leading-relaxed">
+2612:              <div className="grid grid-cols-2 gap-6">
+2613:                <div className="space-y-2">
+2623:                <div className="space-y-2">
+2635:              <div className="flex flex-col gap-3 pt-4">
+2669:        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-[#4a002e]/60 backdrop-blur-md animate-in fade-in">
+2670:           <div className="bg-white/60 backdrop-blur-xl w-full max-w-md rounded-[3.5rem] shadow-2xl p-10 md:p-14 border border-white/30 text-center animate-in zoom-in-95 relative overflow-hidden">
+2671:              <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff009f]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+2673:              <div className="w-20 h-20 bg-[var(--vibrant-cyan)] text-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-[var(--vibrant-cyan)]/10">
+2683:              <div className="bg-[var(--aqua-mist)]/10 rounded-[2rem] p-8 mb-6 border border-[var(--vibrant-cyan)]/5 relative group">
+2684:                 <div className="space-y-4">
+2685:                    <div className="flex justify-between items-center text-right">
+2689:                    <div className="h-px bg-[var(--vibrant-cyan)]/10"></div>
+2690:                    <div className="flex justify-between items-center text-right">
+2697:              <div className="grid grid-cols-1 gap-3 mb-10">

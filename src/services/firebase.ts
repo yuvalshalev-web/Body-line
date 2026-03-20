@@ -170,6 +170,17 @@ export const trackedGetDocs = async (query: Query): Promise<QuerySnapshot> => {
     }
 };
 
+export const incrementReadCount = (amount: number = 1) => {
+  sessionReadCount += amount;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('db_read_stats', JSON.stringify({
+      count: sessionReadCount,
+      date: new Date().toDateString()
+    }));
+  }
+  window.dispatchEvent(new CustomEvent('db-read-update', { detail: sessionReadCount }));
+};
+
 export { db, auth, storage };
 export const getDb = () => db;
 export const getStorageInstance = () => storage;
