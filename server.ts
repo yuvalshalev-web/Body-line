@@ -136,7 +136,11 @@ async function startServer() {
 
   app.get("/api/github/actions", async (req, res) => {
     try {
-      const repo = process.env.GITHUB_REPO || "yuvalshalev/memberhub"; // Fallback repo
+      let repo = process.env.GITHUB_REPO || "yuvalshalev/memberhub"; // Fallback repo
+      if (repo.startsWith("github.com/")) {
+        repo = repo.replace("github.com/", "");
+      }
+      console.log("Using GitHub repo:", repo);
       const token = process.env.GITHUB_TOKEN;
 
       // If no token, return mock data for demo purposes
@@ -157,16 +161,21 @@ async function startServer() {
       }
 
       const url = `https://api.github.com/repos/${repo}/actions/runs?per_page=1`;
+      console.log("Fetching GitHub actions from URL:", url);
+      console.log("Using repo:", repo);
+      console.log("Token present:", !!token);
+      
       const response = await fetch(url, {
         headers: {
-          Authorization: `token ${token}`,
+          Authorization: `Bearer ${token}`,
           Accept: "application/vnd.github.v3+json",
           "User-Agent": "MemberHub-App"
         },
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch GitHub actions");
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch GitHub actions: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();

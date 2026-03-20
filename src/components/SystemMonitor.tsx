@@ -6,7 +6,7 @@ import {
 import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp, Skull, TriangleAlert, HeartPulse, Zap, Terminal, Filter, Search as SearchIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import VercelStatusWidget from './admin/VercelStatusWidget';
-import GitHubEngine from './admin/GitHubEngine';
+import GitHubCommandCenter from './admin/GitHubCommandCenter';
 import { getStorageSizeMB, recalculateStorageFromStorage, recalculateDatabaseSize } from '../utils/storageStats';
 import { sessionReadCount, db, saveLogsToDatabase, loadLogsFromDatabase } from '../services/firebase';
 import { useData } from '../contexts/DataContext';
@@ -228,11 +228,20 @@ const DataHealthScore: React.FC = () => {
   }, []);
 
   return (
-    <div className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group transition-all duration-500">
-      {/* Elite Alabaster Background Elements */}
-      <div className="absolute inset-0 opacity-[0.015] pointer-events-none" 
+    <div className="rounded-3xl p-8 relative overflow-hidden group transition-all duration-500"
+      style={{
+        background: 'rgba(240, 248, 255, 0.4)',
+        backdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.8)',
+        borderLeft: '1px solid rgba(255, 255, 255, 0.8)',
+        borderBottom: '1px solid rgba(0, 66, 106, 0.1)',
+        borderRight: '1px solid rgba(0, 66, 106, 0.1)',
+        boxShadow: '0 10px 30px rgba(49, 170, 193, 0.15)'
+      }}
+    >
+      {/* Grain Overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
-      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-emerald-500/10 transition-all duration-700" />
       
       <div className="relative z-10 flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
@@ -355,9 +364,19 @@ const QuotaMonitor: React.FC = () => {
   const yAxisMax = Math.pow(10, Math.floor(Math.log10(maxReads)) + 1);
 
   return (
-    <div className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group transition-all duration-500">
-      {/* Elite Alabaster Background Elements */}
-      <div className="absolute inset-0 opacity-[0.015] pointer-events-none" 
+    <div className="rounded-3xl p-8 relative overflow-hidden group transition-all duration-500"
+      style={{
+        background: 'rgba(240, 248, 255, 0.4)',
+        backdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.8)',
+        borderLeft: '1px solid rgba(255, 255, 255, 0.8)',
+        borderBottom: '1px solid rgba(0, 66, 106, 0.1)',
+        borderRight: '1px solid rgba(0, 66, 106, 0.1)',
+        boxShadow: '0 10px 30px rgba(49, 170, 193, 0.15)'
+      }}
+    >
+      {/* Grain Overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
       
       <div className="relative z-10 flex items-center justify-between mb-8">
@@ -501,9 +520,19 @@ const TechnicalLogs: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group transition-all duration-500">
-      {/* Elite Alabaster Background Elements */}
-      <div className="absolute inset-0 opacity-[0.015] pointer-events-none" 
+    <div className="rounded-3xl p-8 relative overflow-hidden group transition-all duration-500"
+      style={{
+        background: 'rgba(240, 248, 255, 0.4)',
+        backdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.8)',
+        borderLeft: '1px solid rgba(255, 255, 255, 0.8)',
+        borderBottom: '1px solid rgba(0, 66, 106, 0.1)',
+        borderRight: '1px solid rgba(0, 66, 106, 0.1)',
+        boxShadow: '0 10px 30px rgba(49, 170, 193, 0.15)'
+      }}
+    >
+      {/* Grain Overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
       
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -637,6 +666,28 @@ const TechnicalLogs: React.FC = () => {
 
 // --- End New Modular Components ---
 
+const Gauge = ({ value, label, color, sublabel }: { value: number, label: string, color: string, sublabel?: string }) => (
+  <div className="relative w-full h-[300px] mx-auto">
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie
+          data={[
+            { value: value },
+            { value: 100 - value }
+          ]}
+          cx="50%"
+          cy="50%"
+          innerRadius={60}
+          outerRadius={80}
+          fill={color}
+          paddingAngle={5}
+          dataKey="value"
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  </div>
+);
+
 const SystemMonitor: React.FC = () => {
   const { dbStatus, toggleDbStatus, members, events } = useData();
   const [data, setData] = useState<any>({
@@ -648,6 +699,7 @@ const SystemMonitor: React.FC = () => {
   const [dbSize, setDbSize] = useState<number>(0);
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [liveReads, setLiveReads] = useState(sessionReadCount);
   const [readHistory, setReadHistory] = useState<{ time: string, reads: number }[]>(() => {
     const now = new Date();
@@ -763,6 +815,7 @@ const SystemMonitor: React.FC = () => {
         setData(statsJson);
       } catch (err) {
         console.error('Error fetching system stats:', err);
+        setError('שגיאה בטעינת נתוני המערכת.');
       } finally {
         setLoading(false);
       }
@@ -783,41 +836,6 @@ const SystemMonitor: React.FC = () => {
       setShowConfirmModal(true);
     }
   };
-
-  if (loading && !data.traffic.length) return <div className="p-8 text-center font-black text-[#4A5568] animate-pulse">מתחבר לחדר מכונות...</div>;
-
-  const quotaLimit = 50000;
-  const quotaPercentage = Math.min(100, Math.round((liveReads / quotaLimit) * 100));
-
-  const Gauge = ({ value, label, color, sublabel }: { value: number, label: string, color: string, sublabel?: string }) => (
-    <div className="relative w-full h-[300px] mx-auto">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={[
-              { value: value },
-              { value: 100 - value }
-            ]}
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={80}
-            startAngle={180}
-            endAngle={0}
-            dataKey="value"
-          >
-            <Cell fill={color} />
-            <Cell fill="#f1f5f9" />
-          </Pie>
-        </PieChart>
-      </ResponsiveContainer>
-      <div className="absolute inset-0 flex flex-col items-center justify-center pt-10">
-        <span className="text-3xl font-black text-[#2B2B2E] tabular-nums">{value}%</span>
-        <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
-        {sublabel && <span className="text-[8px] text-slate-300 mt-1">{sublabel}</span>}
-      </div>
-    </div>
-  );
 
   const maxReads = Math.max(...readHistory.map(pt => pt.reads), 0);
   const yAxisMax = Math.pow(10, Math.floor(Math.log10(Math.max(1, maxReads))) + 1);
@@ -999,7 +1017,7 @@ const SystemMonitor: React.FC = () => {
               eventsCount: events.length
             }}
           />
-          <GitHubEngine />
+          <GitHubCommandCenter />
         </div>
       </div>
 
