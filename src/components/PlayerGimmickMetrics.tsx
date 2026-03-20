@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { getBodyLineStats } from '../utils/bodyLineStats';
+import { calculateAge } from '../utils/dateUtils';
 import './dashboard/dashboard-theme.css';
 
 interface PlayerGimmickMetricsProps {
@@ -17,18 +18,8 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
   const agePercentile = useMemo(() => {
     if (!member?.birthday || members.length === 0) return null;
 
-    const calculateAge = (birthday: string) => {
-      const birthDate = new Date(birthday);
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return age;
-    };
-
     const userAge = calculateAge(member.birthday);
+    if (userAge === null) return null;
     
     // Use getBodyLineStats for age percentile
     const membersWithAge = members.map(m => ({

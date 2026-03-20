@@ -18,6 +18,7 @@ import { AstrodeckGauge } from './UserAnalytics';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { calculateDistance } from '../utils/distanceCalculator';
 import { getCoordinates } from '../utils/geocoding';
+import { calculateAge } from '../utils/dateUtils';
 
 const CommunityAnalytics: React.FC = () => {
   const { members, weeklyHistory, siteConfig, isLoading } = useData();
@@ -322,17 +323,7 @@ const CommunityAnalytics: React.FC = () => {
 
     // 1. Demographics
     const now = new Date();
-    const calculateAge = (birthday?: string) => {
-      if (!birthday) return null;
-      const birthDate = new Date(birthday);
-      let age = now.getFullYear() - birthDate.getFullYear();
-      const m = now.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && now.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return age;
-    };
-
+    
     const ageGroups = {
       'צעירים (18-25)': 0,
       'בוגרים (26-40)': 0,
@@ -397,12 +388,12 @@ const CommunityAnalytics: React.FC = () => {
 
       const potentialAttendance = last8Sessions.reduce((sum, session) => {
         const activeGroupMembers = groupMembers.filter(m => {
-          const joinedDate = new Date(m.joinedAt);
-          const sessionDate = new Date(session.date);
-          if (joinedDate > sessionDate) return false;
+          const joinedDate = parseDate(m.joinedAt);
+          const sessionDate = parseDate(session.date);
+          if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
-            const deactivatedDate = new Date(m.deactivatedAt);
-            if (deactivatedDate < sessionDate) return false;
+            const deactivatedDate = parseDate(m.deactivatedAt);
+            if (deactivatedDate && sessionDate && deactivatedDate < sessionDate) return false;
           }
           return true;
         });
@@ -423,12 +414,12 @@ const CommunityAnalytics: React.FC = () => {
       // Calculate Yearly Retention
       const yearlyPotentialAttendance = weeklyHistory.reduce((sum, session) => {
         const activeGroupMembers = groupMembers.filter(m => {
-          const joinedDate = new Date(m.joinedAt);
-          const sessionDate = new Date(session.date);
-          if (joinedDate > sessionDate) return false;
+          const joinedDate = parseDate(m.joinedAt);
+          const sessionDate = parseDate(session.date);
+          if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
-            const deactivatedDate = new Date(m.deactivatedAt);
-            if (deactivatedDate < sessionDate) return false;
+            const deactivatedDate = parseDate(m.deactivatedAt);
+            if (deactivatedDate && sessionDate && deactivatedDate < sessionDate) return false;
           }
           return true;
         });
@@ -449,12 +440,12 @@ const CommunityAnalytics: React.FC = () => {
       const last2Sessions = last8Sessions.slice(0, 2);
       const potentialAttendanceLast2 = last2Sessions.reduce((sum, session) => {
         const activeGroupMembers = groupMembers.filter(m => {
-          const joinedDate = new Date(m.joinedAt);
-          const sessionDate = new Date(session.date);
-          if (joinedDate > sessionDate) return false;
+          const joinedDate = parseDate(m.joinedAt);
+          const sessionDate = parseDate(session.date);
+          if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
-            const deactivatedDate = new Date(m.deactivatedAt);
-            if (deactivatedDate < sessionDate) return false;
+            const deactivatedDate = parseDate(m.deactivatedAt);
+            if (deactivatedDate && sessionDate && deactivatedDate < sessionDate) return false;
           }
           return true;
         });

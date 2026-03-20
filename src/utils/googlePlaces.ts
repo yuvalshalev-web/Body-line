@@ -55,9 +55,12 @@ export const loadGoogleMaps = (): Promise<void> => {
     return scriptLoadingPromise;
   }
 
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  const apiKey = 
+    process.env.GOOGLE_MAPS_PLATFORM_KEY || 
+    import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 
+    '';
   if (!apiKey) {
-    return Promise.reject(new Error("VITE_GOOGLE_MAPS_API_KEY is missing"));
+    return Promise.reject(new Error("Google Maps API Key is missing. Please set GOOGLE_MAPS_PLATFORM_KEY in Secrets."));
   }
 
   scriptLoadingPromise = new Promise((resolve, reject) => {

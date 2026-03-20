@@ -12,12 +12,12 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
   className = '', 
   ...props 
 }) => {
-  const baseClasses = "relative overflow-hidden rounded-xl font-bold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseClasses = "group relative overflow-hidden rounded-2xl font-black transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]";
   
   const variants = {
-    primary: "bg-slate-900 text-white hover:bg-slate-800",
-    secondary: "bg-white/20 text-slate-900 border border-slate-200 hover:bg-white/40",
-    danger: "bg-rose-500 text-white hover:bg-rose-600"
+    primary: "bg-slate-900 text-white hover:bg-slate-800 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.3)] hover:shadow-[0_20px_40px_-10px_rgba(15,23,42,0.4)]",
+    secondary: "bg-white/40 backdrop-blur-md text-slate-900 border border-white/60 shadow-[0_4px_15px_rgba(0,0,0,0.05)] hover:bg-white/60 hover:border-white hover:shadow-[0_10px_25px_rgba(0,0,0,0.08)]",
+    danger: "bg-rose-500 text-white hover:bg-rose-600 shadow-[0_10px_30px_-10px_rgba(244,63,94,0.3)] hover:shadow-[0_20px_40px_-10px_rgba(244,63,94,0.4)]"
   };
 
   return (
@@ -26,7 +26,12 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
       disabled={isLoading || props.disabled}
       {...props}
     >
-      <div className="relative z-10 flex items-center justify-center gap-2">
+      {/* Shine effect */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
+      </div>
+      
+      <div className="relative z-10 flex items-center justify-center gap-2 px-6 py-3">
         {isLoading ? (
           <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
         ) : children}

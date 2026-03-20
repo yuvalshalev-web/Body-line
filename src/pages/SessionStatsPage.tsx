@@ -23,6 +23,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { getBodyLineStats } from '../utils/bodyLineStats';
+import { calculateAge, parseDate, formatDate } from '../utils/dateUtils';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { 
   BarChart, 
@@ -241,18 +242,6 @@ const SessionStatsPage: React.FC = () => {
     ].filter(s => s.value > 0);
 
     // 5. Age-based Statistics
-    const calculateAge = (birthday?: string) => {
-      if (!birthday) return null;
-      const birthDate = new Date(birthday);
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return age;
-    };
-
     const ageGroupsBase = [
       { label: 'צעירים (18-25)', min: 18, max: 25, color: '#006994' },
       { label: 'בוגרים (26-40)', min: 26, max: 40, color: '#40E0D0' },
@@ -429,13 +418,13 @@ const SessionStatsPage: React.FC = () => {
       while (iter <= end && safety < 400) {
         if (iter.getDay() === 4) {
           const count = sessionMap.get(iter.toDateString()) || 0;
-          const sessionDate = new Date(iter);
+          const sessionDate = iter;
           const activeAtSession = activeMembers.filter(m => {
-            const joinedDate = new Date(m.joinedAt);
-            if (joinedDate > sessionDate) return false;
+            const joinedDate = parseDate(m.joinedAt);
+            if (joinedDate && joinedDate > sessionDate) return false;
             if (m.deactivatedAt) {
-              const deactivatedDate = new Date(m.deactivatedAt);
-              if (deactivatedDate < sessionDate) return false;
+              const deactivatedDate = parseDate(m.deactivatedAt);
+              if (deactivatedDate && deactivatedDate < sessionDate) return false;
             }
             return true;
           }).length;
@@ -462,16 +451,10 @@ const SessionStatsPage: React.FC = () => {
       const calcRate = (sessions: any[]) => {
         if (sessions.length === 0) return 0;
         
-        const parseDate = (date: any) => {
-          if (!date) return new Date(NaN);
-          if (typeof date.toDate === 'function') return date.toDate();
-          if (typeof date.seconds === 'number') return new Date(date.seconds * 1000);
-          return new Date(date);
-        };
-
         let potentialAttendance = 0;
         const actualAttendance = sessions.reduce((acc, s) => {
           const sessionDateStart = parseDate(s.date);
+          if (!sessionDateStart) return acc;
           sessionDateStart.setHours(0, 0, 0, 0);
           const sessionDateEnd = new Date(sessionDateStart);
           sessionDateEnd.setHours(23, 59, 59, 999);
@@ -480,10 +463,10 @@ const SessionStatsPage: React.FC = () => {
             if (ageMap.get(m.id) !== group.label) return false;
             if (!m.joinedAt) return true; // If no joinedAt, assume active
             const joinedDate = parseDate(m.joinedAt);
-            if (joinedDate > sessionDateEnd) return false;
+            if (joinedDate && joinedDate > sessionDateEnd) return false;
             if (m.deactivatedAt) {
               const deactivatedDate = parseDate(m.deactivatedAt);
-              if (deactivatedDate < sessionDateStart) return false;
+              if (deactivatedDate && deactivatedDate < sessionDateStart) return false;
             }
             return true;
           }).length;
@@ -569,15 +552,15 @@ const SessionStatsPage: React.FC = () => {
     return [
       { 
         name: 'סשן אחרון', 
-        ...stats.ageActivityData.reduce((acc, curr) => ({...acc, [curr.label]: curr.lastSession}), {}) 
+        ...(stats.ageActivityData || []).reduce((acc, curr) => ({...acc, [curr.label]: curr.lastSession}), {}) 
       },
       { 
         name: '4 אחרונים', 
-        ...stats.ageActivityData.reduce((acc, curr) => ({...acc, [curr.label]: curr.lastFour}), {}) 
+        ...(stats.ageActivityData || []).reduce((acc, curr) => ({...acc, [curr.label]: curr.lastFour}), {}) 
       },
       { 
         name: 'שנתי', 
-        ...stats.ageActivityData.reduce((acc, curr) => ({...acc, [curr.label]: curr.annual}), {}) 
+        ...(stats.ageActivityData || []).reduce((acc, curr) => ({...acc, [curr.label]: curr.annual}), {}) 
       }
     ];
   }, [stats]);
@@ -714,7 +697,7 @@ const SessionStatsPage: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <p className="text-4xl md:text-5xl font-black text-[#00426a] leading-none">{stats.avgAttendance}</p>
+              <p className="text-4xl md:text-5xl font-black text-[#00426a] leading-none">{stats?.avgAttendance}</p>
             </div>
 
             <div className="flex-1 bg-[rgba(240,248,255,0.1)] backdrop-blur-[20px] p-6 rounded-[2.5rem] border-t border-l border-white/80 border-b border-r border-[#00426a]/10 shadow-[0_10px_30px_rgba(49,170,193,0.15)] flex flex-col items-center justify-center text-center">
@@ -727,18 +710,18 @@ const SessionStatsPage: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <p className="text-4xl md:text-5xl font-black text-[#00426a] leading-none">{stats.totalAttendance}</p>
+              <p className="text-4xl md:text-5xl font-black text-[#00426a] leading-none">{stats?.totalAttendance}</p>
             </div>
 
             <div className={`flex-1 p-6 rounded-[2.5rem] border-t border-l border-white/80 border-b border-r border-[#00426a]/10 shadow-[0_10px_30px_rgba(49,170,193,0.15)] flex flex-col items-center justify-center text-center ${
-              stats.globalTrend === 'up' ? 'bg-emerald-900/10 border-emerald-900/20 text-[#2D6A4F]' : 
-              stats.globalTrend === 'down' ? 'bg-rose-900/10 border-rose-900/20 text-[#BC4749]' : 
+              stats?.globalTrend === 'up' ? 'bg-emerald-900/10 border-emerald-900/20 text-[#2D6A4F]' : 
+              stats?.globalTrend === 'down' ? 'bg-rose-900/10 border-rose-900/20 text-[#BC4749]' : 
               'bg-[rgba(240,248,255,0.1)] backdrop-blur-[20px] border-white/80 text-[#00426a]'
             }`}>
               <p className="text-[12px] font-black uppercase tracking-widest opacity-60 mb-3">מגמת נוכחות</p>
               <div className="flex items-center gap-3">
-                {stats.globalTrend === 'up' ? <ArrowUpRight size={28} /> : stats.globalTrend === 'down' ? <ArrowDownRight size={28} /> : <Minus size={28} />}
-                <p className="text-3xl md:text-4xl font-black leading-none">{stats.trendPercentage}%</p>
+                {stats?.globalTrend === 'up' ? <ArrowUpRight size={28} /> : stats?.globalTrend === 'down' ? <ArrowDownRight size={28} /> : <Minus size={28} />}
+                <p className="text-3xl md:text-4xl font-black leading-none">{stats?.trendPercentage}%</p>
               </div>
             </div>
           </div>
@@ -748,6 +731,50 @@ const SessionStatsPage: React.FC = () => {
             
             {/* Gender Impact Card (Right Side) */}
             <div className="lg:col-span-5 space-y-10">
+              {/* Community Composition Card */}
+              <div className="relative admin-info-card p-10 overflow-hidden">
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <h3 className="text-[#00426a] font-black text-2xl tracking-tighter">הרכב הקהילה</h3>
+                    <p className="text-[#00426a] text-[12px] uppercase tracking-widest mt-1 font-bold">פילוח לפי רמת פעילות</p>
+                  </div>
+                  <div className="p-3 bg-[rgba(240,248,255,0.1)] backdrop-blur-md rounded-2xl text-[#0071a1] shadow-sm border-t border-l border-white/80">
+                    <Users size={24} />
+                  </div>
+                </div>
+                <div className="h-[200px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={stats?.segmentation || []}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {(stats?.segmentation || []).map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(240, 248, 255, 0.1)', 
+                          backdropFilter: 'blur(24px)',
+                          borderRadius: '16px', 
+                          border: 'none',
+                          boxShadow: '0 8px 32px rgba(49, 170, 193, 0.2)',
+                          fontFamily: 'Yehuda_CLM',
+                          direction: 'rtl'
+                        }}
+                      />
+                      <Legend verticalAlign="bottom" height={36}/>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
               <div className="relative admin-info-card p-10 overflow-hidden">
                 <div className="flex justify-between items-start mb-10">
                   <div>
@@ -763,11 +790,11 @@ const SessionStatsPage: React.FC = () => {
                 <div className="mb-12">
                   <div className="flex justify-between text-[12px] font-black text-[#00426a] uppercase tracking-widest mb-3">
                     <span>תמהיל קהילתי</span>
-                    <span>{stats.activeMembersCount} חברים פעילים</span>
+                    <span>{stats?.activeMembersCount} חברים פעילים</span>
                   </div>
                   <div className="flex h-4 w-full rounded-full overflow-hidden bg-black/10 p-[2px] border border-white/20">
-                    {stats.genderImpact.map((item, idx) => {
-                      const width = (item.count / stats.activeMembersCount) * 100;
+                    {(stats?.genderImpact || []).map((item, idx) => {
+                      const width = (item.count / (stats?.activeMembersCount || 1)) * 100;
                       if (width === 0) return null;
                       return (
                         <div 
@@ -785,7 +812,7 @@ const SessionStatsPage: React.FC = () => {
 
                 {/* Detailed Metrics */}
                 <div className="space-y-4">
-                  {stats.genderImpact.map((item, idx) => (
+                  {(stats?.genderImpact || []).map((item, idx) => (
                     <div key={idx} className="flex items-center justify-between p-5 rounded-3xl bg-[rgba(240,248,255,0.1)] backdrop-blur-md border-t border-l border-white/80 border-b border-r border-[#00426a]/10 hover:bg-[rgba(240,248,255,0.15)] transition-all group shadow-[0_5px_15px_rgba(49,170,193,0.1)]">
                       <div className="flex items-center gap-4">
                         <div className={`w-3 h-3 rounded-full ${item.color} shadow-sm`} />
@@ -807,13 +834,37 @@ const SessionStatsPage: React.FC = () => {
                   ))}
                 </div>
 
+                {/* Age Attendance Rates */}
+                <div className="mt-10 pt-10 border-t border-black/10">
+                  <h4 className="text-[12px] font-black text-[#00426a] uppercase tracking-widest mb-6">שיעורי השתתפות לפי גיל</h4>
+                  <div className="space-y-4">
+                    {(stats?.radialPercentages || []).map((item, idx) => (
+                      <div key={idx} className="space-y-2">
+                        <div className="flex justify-between text-[10px] font-black text-[#00426a] uppercase tracking-widest">
+                          <span>{item.group}</span>
+                          <span>{item.annual}% שנתי</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-black/5 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${item.annual}%` }}
+                            transition={{ duration: 1, delay: idx * 0.1 }}
+                            className="h-full rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Impact Insight */}
                 <div className="mt-10 pt-6 border-t border-black/10">
                   <div className="bg-[rgba(240,248,255,0.1)] backdrop-blur-md p-4 rounded-2xl border-t border-l border-white/80 border-b border-r border-[#00426a]/10">
                     <p className="text-xs text-[#00426a] leading-relaxed text-center font-bold">
                       💡 <strong className="text-[#00426a]">תובנת אימפקט:</strong> {(() => {
-                        const women = stats.genderImpact.find(g => g.key === 'women');
-                        const men = stats.genderImpact.find(g => g.key === 'men');
+                        const women = stats?.genderImpact?.find(g => g.key === 'women');
+                        const men = stats?.genderImpact?.find(g => g.key === 'men');
                         if (women && men && women.retention > men.retention) {
                           return `קבוצת הנשים שומרת על אחוזי התמדה גבוהים (${women.retention}%) לעומת הגברים (${men.retention}%), מה שמעיד על חיבור עמוק לקהילה.`;
                         } else if (women && men) {
@@ -878,7 +929,7 @@ const SessionStatsPage: React.FC = () => {
                         wrapperStyle={{ paddingTop: '20px', fontFamily: 'Yehuda_CLM', fontWeight: 900, color: '#00426a' }}
                         iconType="circle"
                       />
-                      {stats.ageGroupsBase.map((group, idx) => (
+                      {(stats?.ageGroupsBase || []).map((group, idx) => (
                         <Line 
                           key={idx}
                           type="monotone" 
@@ -891,6 +942,44 @@ const SessionStatsPage: React.FC = () => {
                         />
                       ))}
                     </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Age Stacked Data - Comparison */}
+                <div className="mt-12 pt-10 border-t border-black/5 h-[300px] w-full">
+                  <div className="flex items-center gap-2 mb-6">
+                    <h4 className="text-lg font-black text-[#00426a] tracking-tight">השוואת נוכחות מצטברת</h4>
+                  </div>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stats?.ageStackedData || []} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" vertical={false} />
+                      <XAxis 
+                        dataKey="name" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#00426a', fontSize: 12, fontWeight: 900 }} 
+                      />
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#00426a', fontSize: 12, fontWeight: 900 }}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(240, 248, 255, 0.1)', 
+                          backdropFilter: 'blur(24px)',
+                          borderRadius: '16px', 
+                          border: 'none',
+                          boxShadow: '0 8px 32px rgba(49, 170, 193, 0.2)',
+                          fontFamily: 'Yehuda_CLM',
+                          direction: 'rtl'
+                        }}
+                      />
+                      <Legend />
+                      {(stats?.ageGroupsBase || []).map((group, idx) => (
+                        <Bar key={idx} dataKey={group.label} fill={group.color} stackId="a" radius={[4, 4, 0, 0]} />
+                      ))}
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
                 <p className="text-[9px] text-[#00426a] mt-6 font-bold text-center uppercase tracking-widest">הנתונים מייצגים אחוז השתתפות מתוך פוטנציאל הקבוצה</p>
@@ -919,7 +1008,7 @@ const SessionStatsPage: React.FC = () => {
                 
                 <div className="h-[400px] w-full mt-6">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={stats.pulseData} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
+                    <AreaChart data={stats?.pulseData || []} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
                       <defs>
                         <linearGradient id="colorPulse" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#00426a" stopOpacity={0.3}/>
@@ -1041,7 +1130,7 @@ const SessionStatsPage: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#00426a]/5">
-                      {stats.gritLeaderboard.map((member: any) => (
+                      {(stats?.gritLeaderboard || []).map((member: any) => (
                         <tr key={member.id} className="group hover:bg-[rgba(240,248,255,0.1)] transition-colors">
                           <td className="py-5 pr-4">
                             <div className="flex items-center gap-4">

@@ -5,6 +5,8 @@ import {
 } from 'recharts';
 import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp, Skull, TriangleAlert, HeartPulse, Zap, Terminal, Filter, Search as SearchIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import VercelStatusWidget from './admin/VercelStatusWidget';
+import GitHubEngine from './admin/GitHubEngine';
 import { getStorageSizeMB, recalculateStorageFromStorage, recalculateDatabaseSize } from '../utils/storageStats';
 import { sessionReadCount, db, saveLogsToDatabase, loadLogsFromDatabase } from '../services/firebase';
 import { useData } from '../contexts/DataContext';
@@ -108,7 +110,7 @@ const CircularRing: React.FC<CircularRingProps> = ({
 
   return (
     <div className={`flex flex-col items-center justify-center p-4 ${animateClass || ''}`}>
-      <div className="relative w-40 h-40 flex items-center justify-center bg-[#B2EBF2]/[0.07] rounded-full shadow-inner border border-white/30 backdrop-blur-[20px]">
+      <div className="relative w-40 h-40 flex items-center justify-center bg-[#B2EBF2]/[0.07] rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.05),0_10px_20px_-5px_rgba(0,0,0,0.05)] border border-white/30 backdrop-blur-[20px]">
         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
           <defs>
             <linearGradient id={`grad-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -226,10 +228,13 @@ const DataHealthScore: React.FC = () => {
   }, []);
 
   return (
-    <div className="luxury-slab p-8 relative overflow-hidden group">
+    <div className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group transition-all duration-500">
+      {/* Elite Alabaster Background Elements */}
+      <div className="absolute inset-0 opacity-[0.015] pointer-events-none" 
+           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-emerald-500/10 transition-all duration-700" />
       
-      <div className="flex items-center justify-between mb-8">
+      <div className="relative z-10 flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-[#FFDE45] rounded-2xl flex items-center justify-center text-[#000000] shadow-sm border border-white/30">
             <HeartPulse size={24} />
@@ -290,8 +295,8 @@ const DataHealthScore: React.FC = () => {
             <div className="space-y-2">
               <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">דגימת חריגות:</p>
               <div className="space-y-1">
-                {anomalies.map((a, i) => (
-                  <div key={i} className="flex items-center justify-between text-[11px] font-bold text-[#000000] bg-rose-50/20 px-3 py-1.5 rounded-lg border border-rose-100/30">
+                {anomalies.map((a) => (
+                  <div key={a.id} className="flex items-center justify-between text-[11px] font-bold text-[#000000] bg-rose-50/20 px-3 py-1.5 rounded-lg border border-rose-100/30">
                     <span>{a.name}</span>
                     <span className="text-rose-600">{a.issue}</span>
                   </div>
@@ -346,9 +351,16 @@ const QuotaMonitor: React.FC = () => {
   const isExceeded = sessionReadCount > 50000;
   const quotaPercentage = (sessionReadCount / 50000) * 100;
 
+  const maxReads = Math.max(...quotaData.map(pt => pt.reads), sessionReadCount, 1);
+  const yAxisMax = Math.pow(10, Math.floor(Math.log10(maxReads)) + 1);
+
   return (
-    <div className="luxury-slab p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group transition-all duration-500">
+      {/* Elite Alabaster Background Elements */}
+      <div className="absolute inset-0 opacity-[0.015] pointer-events-none" 
+           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+      
+      <div className="relative z-10 flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-[#FFDE45] rounded-xl flex items-center justify-center text-[#000000] shadow-sm border border-white/30">
             <Zap size={24} />
@@ -378,10 +390,17 @@ const QuotaMonitor: React.FC = () => {
 
       <div className="h-[200px] w-full mt-4">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={quotaData}>
+          <LineChart data={quotaData} margin={{ left: -20, right: 10 }}>
             <CartesianGrid strokeDasharray="0" vertical={false} stroke="rgba(0,0,0,0.1)" />
             <XAxis dataKey="time" hide />
-            <YAxis hide />
+            <YAxis 
+              domain={[0, yAxisMax]}
+              tickCount={6}
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 9, fontWeight: 900, fill: '#000000' }}
+              allowDecimals={false}
+            />
             <Tooltip 
               contentStyle={{ 
                 backgroundColor: '#fff', 
@@ -482,8 +501,12 @@ const TechnicalLogs: React.FC = () => {
   };
 
   return (
-    <div className="luxury-slab p-8 h-[70vh] flex flex-col">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group transition-all duration-500">
+      {/* Elite Alabaster Background Elements */}
+      <div className="absolute inset-0 opacity-[0.015] pointer-events-none" 
+           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+      
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-[#FFDE45] rounded-2xl flex items-center justify-center text-[#000000] shadow-lg border border-white/30">
             <Terminal size={24} />
@@ -538,18 +561,18 @@ const TechnicalLogs: React.FC = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto overflow-y-auto -mx-8 px-8 flex-1 custom-scrollbar">
-        <table className="w-full text-right border-separate border-spacing-y-2">
-          <thead>
+      <div className="overflow-x-auto overflow-y-auto -mx-8 px-8 max-h-[400px] custom-scrollbar">
+        <table className="w-full text-right border-separate border-spacing-y-2 relative">
+          <thead className="sticky top-0 z-20 bg-[#fdfdfd]">
             <tr className="text-[10px] font-black text-[#000000] uppercase tracking-[0.2em]">
-              <th className="pb-4 px-4">זמן</th>
-              <th className="pb-4 px-4">חומרה</th>
-              <th className="pb-4 px-4">מקור</th>
-              <th className="pb-4 px-4">הודעה</th>
-              <th className="pb-4 px-4">פרטים</th>
+              <th className="pb-4 px-4 text-right">זמן</th>
+              <th className="pb-4 px-4 text-right">חומרה</th>
+              <th className="pb-4 px-4 text-right">מקור</th>
+              <th className="pb-4 px-4 text-right">הודעה</th>
+              <th className="pb-4 px-4 text-right">פרטים</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="relative z-10">
             <AnimatePresence mode="popLayout">
               {filteredLogs.map((log) => (
                 <motion.tr 
@@ -615,7 +638,7 @@ const TechnicalLogs: React.FC = () => {
 // --- End New Modular Components ---
 
 const SystemMonitor: React.FC = () => {
-  const { dbStatus, toggleDbStatus } = useData();
+  const { dbStatus, toggleDbStatus, members, events } = useData();
   const [data, setData] = useState<any>({
     dbSize: 0,
     errorRate: 0,
@@ -796,6 +819,9 @@ const SystemMonitor: React.FC = () => {
     </div>
   );
 
+  const maxReads = Math.max(...readHistory.map(pt => pt.reads), 0);
+  const yAxisMax = Math.pow(10, Math.floor(Math.log10(Math.max(1, maxReads))) + 1);
+
   return (
     <div className="space-y-12 animate-in fade-in duration-700 min-h-[400px]" dir="rtl">
       {/* Unified Header */}
@@ -964,6 +990,17 @@ const SystemMonitor: React.FC = () => {
           </div>
 
         </div>
+
+        {/* Vercel Command Center - Repositioned beneath Emergency Buttons */}
+        <div className="w-full max-w-4xl mx-auto">
+          <VercelStatusWidget 
+            systemStats={{
+              membersCount: members.length,
+              eventsCount: events.length
+            }}
+          />
+          <GitHubEngine />
+        </div>
       </div>
 
       {/* Confirmation Modal */}
@@ -1021,13 +1058,6 @@ const SystemMonitor: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {liveReads > 1000 && (
-        <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center gap-4 text-[#FF0000] animate-pulse">
-          <ShieldAlert size={24} />
-          <p className="font-black text-sm">⚠️ High Read Traffic detected in this session!</p>
         </div>
       )}
 
@@ -1113,7 +1143,8 @@ const SystemMonitor: React.FC = () => {
                   axisLine={false} 
                   tickLine={false} 
                   tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
-                  domain={[0, 'auto']}
+                  domain={[0, yAxisMax]}
+                  tickCount={6}
                   allowDecimals={false}
                   minTickGap={10}
                 />

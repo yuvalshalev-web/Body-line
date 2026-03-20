@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { doc, onSnapshot, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { getDb, auth } from '../services/firebase';
@@ -22,14 +22,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const login = (user: Member) => {
+  const login = useCallback((user: Member) => {
     setCurrentUser(user);
     // We don't strictly need localStorage anymore as Firebase Auth handles persistence,
     // but it can be useful for immediate UI rendering before onAuthStateChanged fires.
     localStorage.setItem('habal_zug_user', JSON.stringify(user));
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await signOut(auth);
       setCurrentUser(null);
@@ -38,12 +38,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error("Error signing out:", error);
     }
-  };
+  }, []);
 
-  const updateUser = (user: Member) => {
+  const updateUser = useCallback((user: Member) => {
     setCurrentUser(user);
     localStorage.setItem('habal_zug_user', JSON.stringify(user));
-  };
+  }, []);
 
   // @ai-preserve: Firebase Auth State Listener
   // Listen to Firebase Auth state changes
@@ -108,18 +108,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     return () => unsub();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, logout]);
+
+  const value = React.useMemo(() => ({ 
+    currentUser, 
+    firebaseUser,
+    isAuthenticated: !!currentUser, 
+    loading,
+    login, 
+    logout, 
+    updateUser 
+  }), [currentUser, firebaseUser, loading, login, logout, updateUser]);
 
   return (
-    <AuthContext.Provider value={{ 
-      currentUser, 
-      firebaseUser,
-      isAuthenticated: !!currentUser, 
-      loading,
-      login, 
-      logout, 
-      updateUser 
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

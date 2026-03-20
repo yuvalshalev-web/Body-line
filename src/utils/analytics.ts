@@ -1,5 +1,5 @@
 import { Member } from '../types';
-import { formatDate } from './dateUtils';
+import { formatDate, parseDate } from './dateUtils';
 import { getBodyLineStats } from './bodyLineStats';
 
 export interface UserStats {
@@ -42,20 +42,13 @@ export const calculateUserStats = (
   const member = members.find(m => m.id === userId);
   if (!member) return null;
 
-  const parseDate = (date: any) => {
-    if (!date) return new Date(NaN);
-    if (typeof date.toDate === 'function') return date.toDate();
-    if (typeof date.seconds === 'number') return new Date(date.seconds * 1000);
-    return new Date(date);
-  };
-
-  const startDate = yearConfig?.startDate ? new Date(yearConfig.startDate) : new Date(0);
+  const startDate = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date(0) : new Date(0);
   const now = new Date();
   
   // Filter history for sessions after startDate, ignoring cancelled sessions
   const validSessions = weeklyHistory.filter(session => {
     const sessionDate = parseDate(session.date);
-    if (isNaN(sessionDate.getTime())) return false;
+    if (!sessionDate || isNaN(sessionDate.getTime())) return false;
     
     const hasParticipants = (session.participantsCount || 0) > 0 || (session.participantIds?.length || 0) > 0;
     return sessionDate >= startDate && sessionDate <= now && hasParticipants;
@@ -65,6 +58,7 @@ export const calculateUserStats = (
   const sessionsByDate = new Map<string, { date: Date, participantIds: Set<string> }>();
   validSessions.forEach(session => {
     const sessionDate = parseDate(session.date);
+    if (!sessionDate) return;
     
     // Normalize to Thursday 07:00
     const day = sessionDate.getDay();
@@ -99,8 +93,8 @@ export const calculateUserStats = (
 
   // Calculate Social Attendance (Only past events)
   const pastSocialEvents = events.filter(e => {
-    const eventDate = e.date?.toDate ? e.date.toDate() : new Date(e.date);
-    return (e.type === 'COMMUNITY' || e.type === 'MEMBER') && eventDate < now;
+    const eventDate = parseDate(e.date);
+    return (e.type === 'COMMUNITY' || e.type === 'MEMBER') && eventDate && eventDate < now;
   });
   const userSocialAttendance = pastSocialEvents.filter(e => e.attendees?.includes(userId)).length;
   const totalSocialEvents = pastSocialEvents.length;
@@ -179,8 +173,8 @@ export const calculateUserStats = (
   const averageGrit = statsHelper.getAverage('gritScore');
 
   // Yearly Stability Calculation (based on Shnat Hevel Zug)
-  const seasonStart = yearConfig?.startDate ? new Date(yearConfig.startDate) : new Date('2026-01-01');
-  const seasonEnd = yearConfig?.endDate ? new Date(yearConfig.endDate) : new Date('2026-12-31');
+  const seasonStart = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date('2026-01-01') : new Date('2026-01-01');
+  const seasonEnd = yearConfig?.endDate ? parseDate(yearConfig.endDate) || new Date('2026-12-31') : new Date('2026-12-31');
   
   // Calculate total weeks passed in the current season up to now
   const effectiveEnd = now < seasonEnd ? now : seasonEnd;
@@ -243,19 +237,11 @@ export const calculateUserStats = (
 export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) => {
   if (!weeklyHistory || weeklyHistory.length === 0 || !members) return [];
 
-  // Helper to safely parse dates from Firestore
-  const parseDate = (date: any) => {
-    if (!date) return new Date(NaN);
-    if (typeof date.toDate === 'function') return date.toDate();
-    if (typeof date.seconds === 'number') return new Date(date.seconds * 1000);
-    return new Date(date);
-  };
-
   // Filter and normalize sessions
   const sessionsByDate = new Map<string, { date: Date, count: number, participantIds: string[] }>();
   weeklyHistory.forEach(session => {
     const sessionDate = parseDate(session.date);
-    if (isNaN(sessionDate.getTime())) return;
+    if (!sessionDate || isNaN(sessionDate.getTime())) return;
     
     const day = sessionDate.getDay();
     const diff = 4 - day;
@@ -298,12 +284,12 @@ export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) =
     seasonSessions.forEach(s => {
       // Calculate how many members were active AT THE TIME of this session
       const activeMembersAtTime = members.filter(m => {
-        const joinedDate = new Date(m.joinedAt);
-        if (joinedDate > s.date) return false;
+        const joinedDate = parseDate(m.joinedAt);
+        if (joinedDate && joinedDate > s.date) return false;
         
         if (m.deactivatedAt) {
-          const deactivatedDate = new Date(m.deactivatedAt);
-          if (deactivatedDate < s.date) return false;
+          const deactivatedDate = parseDate(m.deactivatedAt);
+          if (deactivatedDate && deactivatedDate < s.date) return false;
         }
         return true;
       });

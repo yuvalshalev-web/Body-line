@@ -31,22 +31,40 @@ export const formatDate = (date: any): string => {
 };
 
 /**
- * Parses a dd/mm/yyyy string into a Date object.
+ * Parses a date input (string, Date, Timestamp, number) into a Date object.
  */
-export const parseDate = (dateStr: string): Date | null => {
-  if (!dateStr || typeof dateStr !== 'string') return null;
+export const parseDate = (dateInput: any): Date | null => {
+  if (!dateInput) return null;
   
-  const parts = dateStr.split('/');
-  if (parts.length === 3) {
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const year = parseInt(parts[2], 10);
-    const d = new Date(year, month, day);
+  if (dateInput instanceof Date) {
+    return isNaN(dateInput.getTime()) ? null : new Date(dateInput);
+  }
+  
+  if (typeof dateInput === 'object' && typeof dateInput.toDate === 'function') {
+    const d = dateInput.toDate();
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  if (typeof dateInput === 'number') {
+    const d = new Date(dateInput);
     return isNaN(d.getTime()) ? null : d;
   }
   
-  const d = new Date(dateStr);
-  return isNaN(d.getTime()) ? null : d;
+  if (typeof dateInput === 'string') {
+    const parts = dateInput.split('/');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      if (!isNaN(d.getTime())) return d;
+    }
+    
+    const d = new Date(dateInput);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  
+  return null;
 };
 
 /**
@@ -54,4 +72,25 @@ export const parseDate = (dateStr: string): Date | null => {
  */
 export const getCurrentDateFormatted = (): string => {
   return formatDate(new Date());
+};
+
+/**
+ * Calculates age from a birthday string, Date object, or Timestamp.
+ */
+export const calculateAge = (birthday?: any): number | null => {
+  if (!birthday) return null;
+  
+  const birthDate = parseDate(birthday);
+
+  if (!birthDate || isNaN(birthDate.getTime())) {
+    return null;
+  }
+
+  const now = new Date();
+  let age = now.getFullYear() - birthDate.getFullYear();
+  const m = now.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
 };

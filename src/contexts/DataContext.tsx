@@ -216,20 +216,21 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // 1. Public Data Listeners (Always active)
     const fetchCoastalWeather = async () => {
       try {
-        const res = await fetch('/api/coastal-weather');
+        console.log("Fetching coastal weather from:", window.location.origin + '/api/coastal-weather');
+        const res = await fetch('/api/coastal-weather', {
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
         if (!res.ok) {
             console.error("Coastal weather fetch failed with status", res.status);
             return;
         }
-        const text = await res.text();
-        try {
-            const data = JSON.parse(text);
-            setCoastalWeather(data);
-        } catch (e) {
-            console.error("Failed to parse coastal weather JSON", e, "Response text:", text);
-        }
+        const data = await res.json();
+        console.log("Coastal weather data received:", data);
+        setCoastalWeather(data);
       } catch (e) {
-        console.error("Failed to fetch coastal weather", e);
+        console.error("Failed to fetch coastal weather - network error or server down:", e);
       }
     };
     fetchCoastalWeather();
@@ -420,7 +421,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [handleFirestoreError, dbStatus, currentUser]);
 
-  const updateMember = async (member: Member) => {
+  const updateMember = useCallback(async (member: Member) => {
     const { id, ...data } = member;
     const db = getDb();
     
@@ -435,13 +436,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     await updateDoc(doc(db, 'members', id), data);
-  };
+  }, [members]);
 
-  const deleteMember = async (id: string) => {
+  const deleteMember = useCallback(async (id: string) => {
     await deleteDoc(doc(getDb(), 'members', id));
-  };
+  }, []);
 
-  const toggleStatus = async (id: string) => {
+  const toggleStatus = useCallback(async (id: string) => {
     const member = members.find(m => m.id === id);
     if (!member) return;
 
@@ -462,9 +463,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     batch.update(memberRef, updateData);
     await batch.commit();
-  };
+  }, [members]);
 
-  const toggleRole = async (id: string, requesterEmail?: string) => {
+  const toggleRole = useCallback(async (id: string, requesterEmail?: string) => {
     const member = members.find(m => m.id === id);
     if (member) {
       const isSuperAdmin = requesterEmail === SUPER_ADMIN_EMAIL;
@@ -485,16 +486,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       await updateDoc(doc(getDb(), 'members', id), { role: nextRole });
     }
-  };
+  }, [members]);
 
-  const resetPassword = async (id: string) => {
+  const resetPassword = useCallback(async (id: string) => {
     const tempPass = Math.random().toString(36).slice(-8);
     const hashed = await hashPassword(tempPass);
     await updateDoc(doc(getDb(), 'members', id), { password: hashed, isTemporary: true });
     showAlert(`סיסמה זמנית חדשה: ${tempPass}`, "איפוס סיסמה");
-  };
+  }, [showAlert]);
 
-  const approveRequest = async (id: string) => {
+  const approveRequest = useCallback(async (id: string) => {
     console.log('DataContext: approveRequest starting for id:', id);
     try {
       const db = getDb();
@@ -563,30 +564,30 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Error in approveRequest:', err);
       throw err;
     }
-  };
+  }, []);
 
-  const rejectRequest = async (id: string) => {
+  const rejectRequest = useCallback(async (id: string) => {
     try {
       await deleteDoc(doc(getDb(), 'joinRequests', id));
     } catch (err: any) {
       throw err;
     }
-  };
+  }, []);
 
-  const addEvent = async (details: Omit<Event, 'id'>) => {
+  const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
     await setDoc(doc(collection(getDb(), 'events')), details);
-  };
+  }, []);
 
-  const deleteEvent = async (id: string) => {
+  const deleteEvent = useCallback(async (id: string) => {
     await deleteDoc(doc(getDb(), 'events', id));
-  };
+  }, []);
 
-  const updateEvent = async (event: Event) => {
+  const updateEvent = useCallback(async (event: Event) => {
     const { id, ...data } = event;
     await updateDoc(doc(getDb(), 'events', id), data);
-  };
+  }, []);
 
-  const toggleEventAttendance = async (eventId: string, userId: string) => {
+  const toggleEventAttendance = useCallback(async (eventId: string, userId: string) => {
     const member = members.find(m => m.id === userId);
     if (member && !member.isActive) {
       showAlert("משתמש מושעה אינו יכול לאשר הגעה", "שגיאה");
@@ -598,35 +599,35 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await updateDoc(doc(getDb(), 'events', eventId), {
       attendees: isAttending ? arrayRemove(userId) : arrayUnion(userId)
     });
-  };
+  }, [members, events, showAlert]);
 
-  const addNews = async (details: Omit<NewsItem, 'id'>) => {
+  const addNews = useCallback(async (details: Omit<NewsItem, 'id'>) => {
     await setDoc(doc(collection(getDb(), 'news')), details);
-  };
+  }, []);
 
-  const updateNews = async (newsItem: NewsItem) => {
+  const updateNews = useCallback(async (newsItem: NewsItem) => {
     const { id, ...data } = newsItem;
     await updateDoc(doc(getDb(), 'news', id), data);
-  };
+  }, []);
 
-  const deleteNews = async (id: string) => {
+  const deleteNews = useCallback(async (id: string) => {
     await deleteDoc(doc(getDb(), 'news', id));
-  };
+  }, []);
 
-  const addPodcast = async (details: Omit<Podcast, 'id'>) => {
+  const addPodcast = useCallback(async (details: Omit<Podcast, 'id'>) => {
     await setDoc(doc(collection(getDb(), 'podcasts')), details);
-  };
+  }, []);
 
-  const updatePodcast = async (podcast: Podcast) => {
+  const updatePodcast = useCallback(async (podcast: Podcast) => {
     const { id, ...data } = podcast;
     await updateDoc(doc(getDb(), 'podcasts', id), data);
-  };
+  }, []);
 
-  const deletePodcast = async (id: string) => {
+  const deletePodcast = useCallback(async (id: string) => {
     await deleteDoc(doc(getDb(), 'podcasts', id));
-  };
+  }, []);
 
-  const deleteGalleryItems = async (ids: string[]) => {
+  const deleteGalleryItems = useCallback(async (ids: string[]) => {
     if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
     const storage = getStorageInstance();
     const batch = writeBatch(getDb());
@@ -654,17 +655,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (totalSizeDeleted > 0) {
       await syncStorageOnDelete(totalSizeDeleted);
     }
-  };
+  }, [hasQuotaError, dbStatus, galleryItems]);
 
-  const addGalleryItem = async (item: Omit<GalleryItem, 'id'>) => {
+  const addGalleryItem = useCallback(async (item: Omit<GalleryItem, 'id'>) => {
     const db = getDb();
     await addDoc(collection(db, 'gallery'), {
       ...item,
       timestamp: Timestamp.now()
     });
-  };
+  }, []);
 
-  const toggleSessionAttendance = async (userId: string) => {
+  const toggleSessionAttendance = useCallback(async (userId: string) => {
     const member = members.find(m => m.id === userId);
     if (!member || member.isActive === false || (member as any).status === 'suspended' || (member as any).status === 'left') {
       showAlert("משתמש שאינו פעיל או שאינו קיים אינו יכול לאשר הגעה", "שגיאה");
@@ -677,25 +678,25 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } else {
       await setDoc(activeSessionRef, { attendees: arrayUnion(userId) }, { merge: true });
     }
-  };
+  }, [members, attendeeIds, showAlert]);
 
-  const updateHistory = async (id: string, participantIds: string[]) => {
+  const updateHistory = useCallback(async (id: string, participantIds: string[]) => {
     const db = getDb();
     await updateDoc(doc(db, 'weekly_history', id), {
       participantIds,
       participantsCount: participantIds.length
     });
-  };
+  }, []);
 
-  const forceResetSession = async () => {
+  const forceResetSession = useCallback(async () => {
     const nextSession = getNextSessionDate(siteConfig?.weeklySessions);
     await setDoc(doc(getDb(), 'site_data', 'active_session'), {
       attendees: [],
       date: nextSession
     }, { merge: true });
-  };
+  }, [siteConfig?.weeklySessions]);
 
-  const addRolloverLog = async (action: string, status: 'pending' | 'success' | 'failed', details: string, metrics?: any) => {
+  const addRolloverLog = useCallback(async (action: string, status: 'pending' | 'success' | 'failed', details: string, metrics?: any) => {
     console.log("addRolloverLog called:", { action, status, details, metrics });
     const db = getDb();
     const logData: any = {
@@ -722,9 +723,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Error adding rollover log:', error);
     }
-  };
+  }, []);
 
-  const finalizeSession = async () => {
+  const finalizeSession = useCallback(async () => {
     console.log("finalizeSession: Starting process...");
     const db = getDb();
     const startTime = Date.now();
@@ -851,9 +852,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await addRolloverLog('complete', 'failed', err.message || 'שגיאה לא ידועה');
       throw err;
     }
-  };
+  }, [addRolloverLog, coastalWeather]);
 
-  const updateHistoricalSeaTemperatures = async () => {
+  const updateHistoricalSeaTemperatures = useCallback(async () => {
     const db = getDb();
     const historyRef = collection(db, 'weekly_history');
     const snapshot = await getDocs(historyRef);
@@ -902,9 +903,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     
     return updatedCount;
-  };
+  }, []);
 
-  const batchAddGlossary = async (items: Omit<GlossaryTerm, 'id'>[]) => {
+  const batchAddGlossary = useCallback(async (items: Omit<GlossaryTerm, 'id'>[]) => {
     if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
     const db = getDb();
     const batch = writeBatch(db);
@@ -914,9 +915,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
     await batch.commit();
     storage.remove('cached_glossary_v2'); // Invalidate cache
-  };
+  }, [hasQuotaError, dbStatus]);
 
-  const batchAddExercises = async (items: Omit<Exercise, 'id'>[]) => {
+  const batchAddExercises = useCallback(async (items: Omit<Exercise, 'id'>[]) => {
     if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
     const db = getDb();
     const batch = writeBatch(db);
@@ -926,9 +927,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
     await batch.commit();
     storage.remove('cached_exercises_v2'); // Invalidate cache
-  };
+  }, [hasQuotaError, dbStatus]);
 
-  const batchAddQuotes = async (items: Omit<QuoteItem, 'id'>[]) => {
+  const batchAddQuotes = useCallback(async (items: Omit<QuoteItem, 'id'>[]) => {
     if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
     const db = getDb();
     const batch = writeBatch(db);
@@ -937,9 +938,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       batch.set(newDocRef, item);
     });
     await batch.commit();
-  };
+  }, [hasQuotaError, dbStatus]);
 
-  const clearCollection = async (collectionName: string) => {
+  const clearCollection = useCallback(async (collectionName: string) => {
     const db = getDb();
     const unsub = onSnapshot(collection(db, collectionName), async (snap: any) => {
       const batch = writeBatch(db);
@@ -947,13 +948,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await batch.commit();
       unsub();
     });
-  };
+  }, []);
 
-  const updateSiteAssets = async (assets: any) => {
+  const updateSiteAssets = useCallback(async (assets: any) => {
     await setDoc(doc(getDb(), 'site_data', 'assets'), assets, { merge: true });
-  };
+  }, []);
 
-  const updateSiteConfig = async (config: Partial<{ 
+  const updateSiteConfig = useCallback(async (config: Partial<{ 
     navPosition: 'bottom' | 'top',
     home_break: any,
     globalColor: string,
@@ -971,13 +972,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     
     await batch.commit();
-  };
+  }, []);
 
-  const updateYearConfig = async (config: { startDate: string; endDate: string }) => {
+  const updateYearConfig = useCallback(async (config: { startDate: string; endDate: string }) => {
     await setDoc(doc(getDb(), 'site_data', 'year_config'), config);
-  };
+  }, []);
 
-  const archiveMember = async (id: string) => {
+  const archiveMember = useCallback(async (id: string) => {
     if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
     const db = getDb();
     const batch = writeBatch(db);
@@ -1002,9 +1003,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
     
     await batch.commit();
-  };
+  }, [hasQuotaError, dbStatus, events]);
 
-  const addMember = async (memberData: Omit<Member, 'id'>) => {
+  const addMember = useCallback(async (memberData: Omit<Member, 'id'>) => {
     const db = getDb();
     
     // Circuit Breaker check
@@ -1021,9 +1022,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       loginCount: 0,
       totalAttendance: 0
     });
-  };
+  }, [hasQuotaError, dbStatus]);
 
-  const seedInitialAdmin = async () => {
+  const seedInitialAdmin = useCallback(async () => {
     try {
       setIsLoading(true);
       const db = getDb();
@@ -1054,7 +1055,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const contextValue = React.useMemo(() => ({ 
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,

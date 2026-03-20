@@ -4,6 +4,7 @@ import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCir
 import { useData } from '../contexts/DataContext';
 import { calculateUserStats } from '../utils/analytics';
 import { getBodyLineStats } from '../utils/bodyLineStats';
+import { calculateAge } from '../utils/dateUtils';
 import UserCategories from './UserCategories';
 
 interface PlayerCardProps {
@@ -34,18 +35,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   const agePercentile = useMemo(() => {
     if (!member?.birthday || members.length === 0) return null;
 
-    const calculateAge = (birthday: string) => {
-      const birthDate = new Date(birthday);
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return age;
-    };
-
     const userAge = calculateAge(member.birthday);
+    if (userAge === null) return null;
     
     // Use getBodyLineStats for age percentile
     const membersWithAge = members.map(m => ({
@@ -108,6 +99,15 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
     
     return { percentile, roundedPercentile, distanceKm, label };
   }, [member, members, siteConfig]);
+
+  const openWhatsApp = (mobile: string) => {
+    const formattedMobile = mobile.replace(/\D/g, '');
+    window.open(`https://wa.me/${formattedMobile}`, '_blank');
+  };
+
+  const callMobile = (mobile: string) => {
+    window.location.href = `tel:${mobile}`;
+  };
 
   if (isLoading) return <div className="p-4 glass-panel rounded-2xl border border-white/20 animate-pulse">טוען...</div>;
   if (!member || !stats) return null;
@@ -246,7 +246,24 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             )}
           </div>
 
-          {/* Communication Buttons Removed per user request */}
+          {/* Communication Buttons */}
+          <div className="flex flex-wrap gap-3 justify-center mt-4">
+            <button 
+              onClick={() => member.mobile && openWhatsApp(member.mobile)}
+              className="p-2 bg-[#25D366]/10 rounded-xl hover:bg-[#25D366] hover:text-white transition-all text-[#25D366] shadow-sm" 
+              title="WhatsApp"
+            >
+              <MessageCircle size={20} />
+            </button>
+            <button 
+              onClick={() => member.mobile && callMobile(member.mobile)}
+              className="p-2 bg-[#00426a]/10 rounded-xl hover:bg-[#00426a] hover:text-white transition-all text-[#00426a] shadow-sm" 
+              title="התקשר"
+            >
+              <Phone size={20} />
+            </button>
+          </div>
+
           <UserCategories userId={userId} />
         </div>
       </div>

@@ -17,7 +17,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const HomePage = lazy(() => import('./pages/HomePage'));
 const DirectoryPage = lazy(() => import('./pages/DirectoryPage'));
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
-import ProfilePage from './pages/ProfilePage';
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const EventsPage = lazy(() => import('./pages/EventsPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));

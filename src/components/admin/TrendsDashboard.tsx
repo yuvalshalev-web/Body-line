@@ -33,6 +33,7 @@ import { getOperationalXAxisProps } from '../../utils/chartHelpers';
 import OperationalChartHeader from '../OperationalChartHeader';
 import { calculateDistance } from '../../utils/distanceCalculator';
 import { getCoordinates } from '../../utils/geocoding';
+import { calculateAge, parseDate, formatDate } from '../../utils/dateUtils';
 
 const TrendsDashboard: React.FC = () => {
   const { members, weeklyHistory, yearConfig, siteAssets, siteConfig } = useData();
@@ -96,17 +97,7 @@ const TrendsDashboard: React.FC = () => {
 
     // 1. Demographics
     const now = new Date();
-    const calculateAge = (birthday?: string) => {
-      if (!birthday) return null;
-      const birthDate = new Date(birthday);
-      let age = now.getFullYear() - birthDate.getFullYear();
-      const m = now.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && now.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return age;
-    };
-
+    
     const ageGroups = {
       'צעירים (18-25)': 0,
       'בוגרים (26-40)': 0,
@@ -223,12 +214,12 @@ const TrendsDashboard: React.FC = () => {
       const last2Sessions = last8Sessions.slice(0, 2);
       const potentialAttendanceLast2 = last2Sessions.reduce((sum, session) => {
         const activeGroupMembers = groupMembers.filter(m => {
-          const joinedDate = new Date(m.joinedAt);
-          const sessionDate = new Date(session.date);
-          if (joinedDate > sessionDate) return false;
+          const joinedDate = parseDate(m.joinedAt);
+          const sessionDate = parseDate(session.date);
+          if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
-            const deactivatedDate = new Date(m.deactivatedAt);
-            if (deactivatedDate < sessionDate) return false;
+            const deactivatedDate = parseDate(m.deactivatedAt);
+            if (deactivatedDate && sessionDate && deactivatedDate < sessionDate) return false;
           }
           return true;
         });
@@ -296,16 +287,16 @@ const TrendsDashboard: React.FC = () => {
     const activeAtStartOfMonth = members.filter(m => {
       if (m.isActive) return true;
       if (!m.deactivatedAt) return true; // Fallback for members suspended before tracking
-      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : new Date(m.deactivatedAt);
-      return dDate >= startOfCurrentMonth;
+      const dDate = parseDate(m.deactivatedAt);
+      return dDate && dDate >= startOfCurrentMonth;
     });
     
     // Members who are currently inactive AND were deactivated THIS month
     const churnedThisMonth = members.filter(m => {
       if (m.isActive) return false;
       if (!m.deactivatedAt) return true; // Fallback
-      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : new Date(m.deactivatedAt);
-      return dDate >= startOfCurrentMonth;
+      const dDate = parseDate(m.deactivatedAt);
+      return dDate && dDate >= startOfCurrentMonth;
     });
     
     const churnRate = activeAtStartOfMonth.length > 0 
@@ -317,8 +308,8 @@ const TrendsDashboard: React.FC = () => {
 
     const recentSessionParticipants = new Set<string>();
     weeklyHistory.forEach(session => {
-      const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
-      if (sessionDate >= thirtyDaysAgo) {
+      const sessionDate = parseDate(session.date);
+      if (sessionDate && sessionDate >= thirtyDaysAgo) {
         (session.participantIds || []).forEach((id: string) => recentSessionParticipants.add(id));
       }
     });
@@ -335,16 +326,16 @@ const TrendsDashboard: React.FC = () => {
     const annualChurned = members.filter(m => {
       if (m.isActive) return false;
       if (!m.deactivatedAt) return true; // Fallback
-      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : new Date(m.deactivatedAt);
-      return dDate >= yearStart;
+      const dDate = parseDate(m.deactivatedAt);
+      return dDate && dDate >= yearStart;
     }).length;
     
     // Annual total: currently active OR deactivated since yearStart
     const annualTotal = members.filter(m => {
       if (m.isActive) return true;
       if (!m.deactivatedAt) return true; // Fallback
-      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : new Date(m.deactivatedAt);
-      return dDate >= yearStart;
+      const dDate = parseDate(m.deactivatedAt);
+      return dDate && dDate >= yearStart;
     }).length;
     
     const annualChurnRate = annualTotal > 0 ? parseFloat(((annualChurned / annualTotal) * 100).toFixed(1)) : 0;
@@ -352,8 +343,8 @@ const TrendsDashboard: React.FC = () => {
     // Global Retention Algorithm (3+ sessions in 30 days)
     const userAttendanceCount = new Map<string, number>();
     weeklyHistory.forEach(session => {
-      const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
-      if (sessionDate >= thirtyDaysAgo) {
+      const sessionDate = parseDate(session.date);
+      if (sessionDate && sessionDate >= thirtyDaysAgo) {
         (session.participantIds || []).forEach((id: string) => {
           userAttendanceCount.set(id, (userAttendanceCount.get(id) || 0) + 1);
         });
@@ -378,12 +369,12 @@ const TrendsDashboard: React.FC = () => {
 
       const potentialAttendance = last8Sessions.reduce((sum, session) => {
         const activeGroupMembers = groupMembers.filter(m => {
-          const joinedDate = new Date(m.joinedAt);
-          const sessionDate = new Date(session.date);
-          if (joinedDate > sessionDate) return false;
+          const joinedDate = parseDate(m.joinedAt);
+          const sessionDate = parseDate(session.date);
+          if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
-            const deactivatedDate = new Date(m.deactivatedAt);
-            if (deactivatedDate < sessionDate) return false;
+            const deactivatedDate = parseDate(m.deactivatedAt);
+            if (deactivatedDate && sessionDate && deactivatedDate < sessionDate) return false;
           }
           return true;
         });
@@ -404,12 +395,12 @@ const TrendsDashboard: React.FC = () => {
       // Calculate Yearly Retention
       const yearlyPotentialAttendance = weeklyHistory.reduce((sum, session) => {
         const activeGroupMembers = groupMembers.filter(m => {
-          const joinedDate = new Date(m.joinedAt);
-          const sessionDate = new Date(session.date);
-          if (joinedDate > sessionDate) return false;
+          const joinedDate = parseDate(m.joinedAt);
+          const sessionDate = parseDate(session.date);
+          if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
-            const deactivatedDate = new Date(m.deactivatedAt);
-            if (deactivatedDate < sessionDate) return false;
+            const deactivatedDate = parseDate(m.deactivatedAt);
+            if (deactivatedDate && sessionDate && deactivatedDate < sessionDate) return false;
           }
           return true;
         });
@@ -649,7 +640,7 @@ const TrendsDashboard: React.FC = () => {
   const groups = [
     { id: 'age1', label: 'צעירים (18-25)', color: '#4FD1C5' },
     { id: 'age2', label: 'בוגרים (26-40)', color: '#63B3ED' },
-    { id: 'age3', label: 'אמצע חיים (41-60)', color: '#4299E1' },
+    { id: 'age3', label: 'אמצע החיים (41-60)', color: '#4299E1' },
     { id: 'age4', label: 'ותיקים (60+)', color: '#2B6CB0' },
     { id: 'male', label: 'גברים', color: '#3182CE' },
     { id: 'female', label: 'נשים', color: '#D53F8C' },
@@ -698,9 +689,8 @@ const TrendsDashboard: React.FC = () => {
               if (group.id === 'female') return m.gender === 'נקבה';
               if (group.id === 'other') return !m.gender || m.gender === 'מעדיף/ה לא לציין';
               
-              const birthDate = m.birthday ? new Date(m.birthday) : null;
-              if (!birthDate) return false;
-              const age = today.getFullYear() - birthDate.getFullYear();
+              const age = calculateAge(m.birthday);
+              if (age === null) return false;
               if (group.id === 'age1') return age >= 18 && age <= 25;
               if (group.id === 'age2') return age >= 26 && age <= 40;
               if (group.id === 'age3') return age >= 41 && age <= 60;

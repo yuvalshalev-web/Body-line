@@ -22,13 +22,13 @@ import { processImage } from '../utils/imageProcessor';
 import { updateStorageStats, syncStorageOnUpload } from '../utils/storageStats';
 import { ColorPickerIcon } from '../components/icons/ColorPickerIcon';
 import { extractAddressData, loadGoogleMaps } from '../utils/googlePlaces';
-import TimePicker from '../components/TimePicker';
+import { TimePicker } from '../components/TimePicker';
 import { DayPicker } from '../components/DayPicker';
-import EventEditor from '../components/admin/EventEditor';
+import { EventEditor } from '../components/admin/EventEditor';
 import EditMemberForm from '../components/admin/EditMemberForm';
 import AddMemberModal from '../components/admin/AddMemberModal';
-import PostEditor from '../components/admin/PostEditor';
-import AdminRolloverReport from './AdminRolloverReport';
+import { PostEditor } from '../components/admin/PostEditor';
+import { AdminRolloverReport } from './AdminRolloverReport';
 import SystemMonitor from '../components/SystemMonitor';
 import { MarkdownViewer } from '../components/admin/MarkdownViewer';
 import { useRandomHeader } from '../hooks/useRandomHeader';
@@ -1072,153 +1072,222 @@ const AdminPage: React.FC = () => {
         )}
 
         {activeTab === 'ENGINE_ROOM' && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <button 
-                onClick={() => setMarkdownConfig({ isOpen: true, path: '/README.md', title: 'מדריך למשתמש (README)' })}
-                className="admin-info-card p-8 group hover:scale-[1.02] transition-all text-right flex items-center gap-6"
-              >
-                <div className="p-4 bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)] rounded-2xl group-hover:bg-[var(--surfer-vibrant-cyan)] group-hover:text-white transition-all shadow-sm">
-                  <FileText size={32} />
-                </div>
-                <div>
-                  <h4 className="text-xl font-black text-[var(--surfer-electric-pink)]">מדריך למשתמש</h4>
-                  <p className="text-sm text-[#000000] font-bold">צפייה בקובץ README.md לקבלת מידע על הפרויקט</p>
-                </div>
-              </button>
+          <div className="min-h-screen bg-[#fdfdfd] relative overflow-hidden pb-32">
+            {/* Elite Alabaster Background Elements */}
+            <div className="absolute inset-0 opacity-[0.015] pointer-events-none" 
+                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+            <div className="absolute top-0 left-0 w-[1000px] h-[1000px] bg-[#B2EBF2]/5 rounded-full blur-[200px] -translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 right-0 w-[1000px] h-[1000px] bg-[#B2EBF2]/5 rounded-full blur-[200px] translate-x-1/2 translate-y-1/2" />
 
-              <button 
-                onClick={() => setMarkdownConfig({ isOpen: true, path: '/PROJECT_MAP.md', title: 'מפת הפרויקט (Project Map)' })}
-                className="admin-info-card p-8 group hover:scale-[1.02] transition-all text-right flex items-center gap-6"
-              >
-                <div className="p-4 bg-[var(--surfer-sunshine-yellow)]/10 text-[var(--surfer-sunshine-yellow)] rounded-2xl group-hover:bg-[var(--surfer-sunshine-yellow)] group-hover:text-white transition-all shadow-sm">
-                  <MapIcon size={32} />
+            <div className="max-w-7xl mx-auto px-6 pt-12 space-y-16 relative z-10">
+              {/* --- Section 1: Real-time Intelligence (Information) --- */}
+              <section className="space-y-10">
+                <div className="space-y-6">
+                  <SystemMonitor />
                 </div>
-                <div>
-                  <h4 className="text-xl font-black text-[var(--surfer-electric-pink)]">מפת הפרויקט</h4>
-                  <p className="text-sm text-[#000000] font-bold">צפייה בקובץ PROJECT_MAP.md להבנת מבנה הרכיבים</p>
-                </div>
-              </button>
-            </div>
+              </section>
 
-            <SystemMonitor />
-
-            {/* Historical Data Update Button */}
-            <div className="admin-info-card p-8 bg-amber-50/30 border-amber-200/50">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-4 bg-amber-100 text-amber-600 rounded-2xl shadow-inner">
-                  <RotateCcw size={32} />
-                </div>
-                <div>
-                  <h4 className="text-xl font-black text-[var(--surfer-electric-pink)]">עדכון נתונים היסטוריים</h4>
-                  <p className="text-sm text-[var(--deep-teal-sea)] font-bold">עדכון מהירות רוח וטמפרטורת מים לסשנים היסטוריים.</p>
-                </div>
-              </div>
-              <button 
-                onClick={async () => {
-                  showConfirm({
-                    message: 'האם אתה בטוח שברצונך לעדכן את נתוני הרוח והטמפרטורה לסשנים היסטוריים? פעולה זו אינה הפיכה.',
-                    onConfirm: async () => {
-                      setIsProcessing('historical-update');
-                      try {
-                        const { updateHistoricalData } = await import('../utils/updateHistoricalData');
-                        const result = await updateHistoricalData();
-                        if (result.success) {
-                          showSuccess('הנתונים ההיסטוריים עודכנו בהצלחה!');
-                        } else {
-                          showError('שגיאה בעדכון הנתונים.');
-                        }
-                      } catch (err) {
-                        showError('שגיאה לא צפויה בעדכון הנתונים.');
-                      } finally {
-                        setIsProcessing(null);
-                      }
-                    }
-                  });
-                }}
-                disabled={isProcessing === 'historical-update'}
-                className="px-6 py-3 bg-amber-500 text-white rounded-2xl font-black text-sm hover:bg-amber-600 transition-all flex items-center gap-2 disabled:opacity-50"
-              >
-                {isProcessing === 'historical-update' ? <Loader2 className="animate-spin" size={16} /> : <RotateCcw size={16} />}
-                הפעל עדכון נתונים
-              </button>
-            </div>
-
-            {conflictingAdmins.length > 1 && (
-              <div className="admin-info-card p-8 bg-rose-50/30 border-rose-200/50">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="p-4 bg-rose-100 text-rose-600 rounded-2xl shadow-inner">
-                    <ShieldAlert size={32} />
+              {/* --- Section 2: Knowledge Base (Information) --- */}
+              <section className="space-y-10">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-8 bg-slate-400 rounded-full shadow-md" />
+                    <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">
+                      KNOWLEDGE // מאגר ידע ותיעוד
+                    </h3>
                   </div>
-                  <div>
-                    <h4 className="text-xl font-black text-[var(--surfer-electric-pink)]">התנגשויות אימייל (Super Admin)</h4>
-                    <p className="text-sm text-[var(--deep-teal-sea)] font-bold">נמצאו מספר מסמכים עם האימייל של מנהל המערכת. זה גורם להסתרת משתמשים מהרשימה.</p>
-                  </div>
+                  <p className="text-xs font-black text-slate-400 mr-5 uppercase tracking-widest opacity-70">
+                    Infrastructure Blueprints & Operational Guides
+                  </p>
                 </div>
-                
-                <div className="space-y-4">
-                  {conflictingAdmins.map(admin => (
-                    <div key={admin.id} className="flex items-center justify-between p-4 bg-white/40 backdrop-blur-md rounded-xl border border-white/60 shadow-sm">
-                      <div className="flex items-center gap-4">
-                        <img src={admin.avatar} className="w-10 h-10 rounded-full object-cover border border-white/30" alt="" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <button 
+                    onClick={() => setMarkdownConfig({ isOpen: true, path: '/README.md', title: 'מדריך למשתמש (README)' })}
+                    className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group hover:scale-[1.01] transition-all text-right flex items-center gap-6 border-l-8 border-l-slate-900"
+                  >
+                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <FileText size={100} />
+                    </div>
+                    <div className="p-5 bg-slate-900/5 text-slate-900 rounded-2xl group-hover:bg-slate-900 group-hover:text-white transition-all shadow-inner relative z-10">
+                      <FileText size={32} />
+                    </div>
+                    <div className="relative z-10">
+                      <h4 className="text-xl font-black text-slate-900 mb-1">מדריך למשתמש</h4>
+                      <p className="text-xs text-slate-500 font-bold leading-relaxed">צפייה בקובץ README.md לקבלת מידע טכני ותפעולי על הפרויקט</p>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => setMarkdownConfig({ isOpen: true, path: '/PROJECT_MAP.md', title: 'מפת הפרויקט (Project Map)' })}
+                    className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group hover:scale-[1.01] transition-all text-right flex items-center gap-6 border-l-8 border-l-slate-400"
+                  >
+                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <MapIcon size={100} />
+                    </div>
+                    <div className="p-5 bg-slate-400/5 text-slate-400 rounded-2xl group-hover:bg-slate-400 group-hover:text-white transition-all shadow-inner relative z-10">
+                      <MapIcon size={32} />
+                    </div>
+                    <div className="relative z-10">
+                      <h4 className="text-xl font-black text-slate-900 mb-1">מפת הפרויקט</h4>
+                      <p className="text-xs text-slate-500 font-bold leading-relaxed">צפייה בקובץ PROJECT_MAP.md להבנת מבנה הרכיבים והקשרים ביניהם</p>
+                    </div>
+                  </button>
+                </div>
+              </section>
+
+              {/* --- Section 3: Strategic Operations (Actions) --- */}
+              <section className="space-y-10">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-8 bg-rose-500 rounded-full shadow-lg" />
+                    <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">
+                      OPERATIONS // פעולות תחזוקה ותפעול
+                    </h3>
+                  </div>
+                  <p className="text-xs font-black text-slate-400 mr-5 uppercase tracking-widest opacity-70">
+                    Critical Maintenance Tools & System Overrides
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-8">
+                  {/* Historical Data Update Button */}
+                  <div className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden border-r-8 border-r-amber-400">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                      <div className="flex items-center gap-6">
+                        <div className="p-5 bg-amber-50 text-amber-600 rounded-2xl shadow-inner border border-amber-100">
+                          <RotateCcw size={32} />
+                        </div>
                         <div>
-                          <p className="font-black text-[var(--deep-teal-sea)]">{admin.firstName} {admin.lastName}</p>
-                          <p className="text-xs text-[var(--surfer-turquoise-teal)] font-bold">{admin.email}</p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-black rounded uppercase tracking-tighter">System Utility</span>
+                            <h4 className="text-xl font-black text-slate-900">עדכון נתונים היסטוריים</h4>
+                          </div>
+                          <p className="text-sm text-slate-500 font-bold">עדכון רטרואקטיבי של מהירות רוח וטמפרטורת מים לכל הסשנים המוקלטים.</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {editingConflictId === admin.id ? (
-                          <div className="flex items-center gap-2 animate-in slide-in-from-left-2">
-                            <input 
-                              type="email"
-                              value={conflictNewEmail}
-                              onChange={(e) => setConflictNewEmail(e.target.value)}
-                              placeholder="אימייל חדש"
-                              className="px-3 py-2 bg-white/60 border border-[var(--surfer-vibrant-cyan)]/30 rounded-lg text-xs font-bold outline-none focus:ring-2 ring-[var(--surfer-vibrant-cyan)]/20 w-48 text-[var(--deep-teal-sea)]"
-                              autoFocus
-                            />
-                            <button 
-                              onClick={async () => {
-                                if (conflictNewEmail && conflictNewEmail.includes('@')) {
-                                  await updateMember({ ...admin, email: conflictNewEmail.trim().toLowerCase() });
-                                  setEditingConflictId(null);
-                                  setConflictNewEmail('');
-                                  showSuccess('האימייל עודכן בהצלחה');
+                      <button 
+                        onClick={async () => {
+                          showConfirm({
+                            message: 'האם אתה בטוח שברצונך לעדכן את נתוני הרוח והטמפרטורה לסשנים היסטוריים? פעולה זו תעבור על כל מסמכי הסשנים ותעדכן אותם.',
+                            onConfirm: async () => {
+                              setIsProcessing('historical-update');
+                              try {
+                                const { updateHistoricalData } = await import('../utils/updateHistoricalData');
+                                const result = await updateHistoricalData();
+                                if (result.success) {
+                                  showSuccess('הנתונים ההיסטוריים עודכנו בהצלחה!');
                                 } else {
-                                  showError('נא להזין אימייל תקין');
+                                  showError('שגיאה בעדכון הנתונים: ' + (result.error || 'שגיאה לא ידועה'));
                                 }
-                              }}
-                              className="px-4 py-2 bg-[var(--surfer-vibrant-cyan)] text-white rounded-lg text-xs font-black hover:shadow-lg transition-all flex items-center gap-1"
-                            >
-                              <Save size={14} />
-                              שמור
-                            </button>
-                            <button 
-                              onClick={() => setEditingConflictId(null)}
-                              className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                            >
-                              <X size={14} />
-                            </button>
+                              } catch (err) {
+                                showError('שגיאה לא צפויה בתהליך העדכון.');
+                              } finally {
+                                setIsProcessing(null);
+                              }
+                            }
+                          });
+                        }}
+                        disabled={isProcessing === 'historical-update'}
+                        className="px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl shadow-xl hover:shadow-amber-500/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 min-w-[200px]"
+                      >
+                        {isProcessing === 'historical-update' ? <Loader2 className="animate-spin" size={20} /> : <RotateCcw size={20} />}
+                        <span className="text-base">הפעל עדכון</span>
+                      </button>
+                    </div>
+                  </div>
+
+                {conflictingAdmins.length > 1 && (
+                  <div className="admin-info-card p-10 bg-rose-50/20 border-rose-200/30 border-r-8 border-r-rose-400/80">
+                    <div className="flex flex-col gap-8">
+                      <div className="flex items-center gap-8">
+                        <div className="p-5 bg-rose-100/50 text-rose-600 rounded-3xl shadow-inner border border-rose-200/50">
+                          <ShieldAlert size={40} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-black rounded uppercase tracking-tighter">Critical</span>
+                            <h4 className="text-2xl font-black text-[var(--surfer-electric-pink)]">התנגשויות אימייל (Super Admin)</h4>
                           </div>
-                        ) : (
-                          <button 
-                            onClick={() => {
-                              setEditingConflictId(admin.id);
-                              setConflictNewEmail(admin.email === SUPER_ADMIN_EMAIL ? 'gal@gmail.com' : admin.email);
-                            }}
-                            className="px-4 py-2 bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)] border border-[var(--surfer-vibrant-cyan)]/20 rounded-lg text-xs font-black hover:bg-[var(--surfer-vibrant-cyan)] hover:text-white transition-all shadow-sm"
-                          >
-                            שנה אימייל
-                          </button>
-                        )}
+                          <p className="text-base text-[var(--surfer-turquoise-teal)] font-bold opacity-80">נמצאו כפילויות של אימייל מנהל המערכת. יש להשאיר רק חשבון אחד עם האימייל הראשי.</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {conflictingAdmins.map(admin => (
+                          <div key={admin.id} className="flex items-center justify-between p-5 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/80 shadow-sm group hover:shadow-md transition-all">
+                            <div className="flex items-center gap-4">
+                              <div className="relative">
+                                <img src={admin.avatar} className="w-12 h-12 rounded-2xl object-cover border-2 border-white shadow-sm" alt="" />
+                                {admin.email === SUPER_ADMIN_EMAIL && (
+                                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                                    <Check size={8} className="text-white" />
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-black text-[var(--deep-teal-sea)] text-lg leading-none mb-1">{admin.firstName} {admin.lastName}</p>
+                                <p className="text-xs text-[var(--surfer-turquoise-teal)] font-bold tracking-tight">{admin.email}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {editingConflictId === admin.id ? (
+                                <div className="flex items-center gap-2 animate-in slide-in-from-left-2">
+                                  <input 
+                                    type="email"
+                                    value={conflictNewEmail}
+                                    onChange={(e) => setConflictNewEmail(e.target.value)}
+                                    placeholder="אימייל חדש..."
+                                    className="px-4 py-2.5 bg-white/80 border-2 border-[var(--surfer-vibrant-cyan)]/30 rounded-xl text-sm font-bold outline-none focus:border-[var(--surfer-vibrant-cyan)] transition-all w-56 text-[var(--deep-teal-sea)]"
+                                    autoFocus
+                                  />
+                                  <button 
+                                    onClick={async () => {
+                                      if (conflictNewEmail && conflictNewEmail.includes('@')) {
+                                        await updateMember({ ...admin, email: conflictNewEmail.trim().toLowerCase() });
+                                        setEditingConflictId(null);
+                                        setConflictNewEmail('');
+                                        showSuccess('האימייל עודכן בהצלחה');
+                                      } else {
+                                        showError('נא להזין אימייל תקין');
+                                      }
+                                    }}
+                                    className="p-2.5 bg-[var(--surfer-vibrant-cyan)] text-white rounded-xl hover:shadow-lg transition-all"
+                                    title="שמור"
+                                  >
+                                    <Check size={20} />
+                                  </button>
+                                  <button 
+                                    onClick={() => setEditingConflictId(null)}
+                                    className="p-2.5 bg-rose-100 text-rose-500 rounded-xl hover:bg-rose-200 transition-all"
+                                    title="ביטול"
+                                  >
+                                    <X size={20} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button 
+                                  onClick={() => {
+                                    setEditingConflictId(admin.id);
+                                    setConflictNewEmail(admin.email === SUPER_ADMIN_EMAIL ? 'gal@gmail.com' : admin.email);
+                                  }}
+                                  className="px-5 py-2.5 bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)] border border-[var(--surfer-vibrant-cyan)]/20 rounded-xl text-sm font-black hover:bg-[var(--surfer-vibrant-cyan)] hover:text-white transition-all shadow-sm"
+                                >
+                                  תיקון
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
-            )}
+            </section>
           </div>
-        )}
+        </div>
+      )}
 
         {activeTab === 'POSTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
@@ -1687,7 +1756,7 @@ const AdminPage: React.FC = () => {
                   <div className="space-y-4">
                     {weeklySessions.map((session, index) => (
                       <motion.div 
-                        key={index} 
+                        key={`${session.dayOfWeek}-${session.time}`} 
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}

@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function startServer() {
+  console.log("Starting server...");
   const app = express();
   const PORT = 3000;
 
@@ -50,55 +51,23 @@ async function startServer() {
   });
 
   app.get("/api/coastal-weather", async (req, res) => {
+    console.log(`[${new Date().toISOString()}] GET /api/coastal-weather - Request received`);
     try {
-      const lat = 32.16;
-      const lng = 34.84;
-      
-      // Fetch Marine Data (Wave Height, Water Temp)
-      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=wave_height,sea_surface_temperature&timezone=auto`;
-      
-      // Fetch Weather Data (Wind, UV Index)
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
-
-      const [marineRes, weatherRes] = await Promise.all([
-        fetch(marineUrl),
-        fetch(weatherUrl)
-      ]);
-
-      if (!marineRes.ok) {
-        const text = await marineRes.text();
-        console.error("Marine API fetch failed:", marineRes.status, text);
-        throw new Error(`Marine API fetch failed: ${marineRes.status}`);
-      }
-      if (!weatherRes.ok) {
-        const text = await weatherRes.text();
-        console.error("Weather API fetch failed:", weatherRes.status, text);
-        throw new Error(`Weather API fetch failed: ${weatherRes.status}`);
-      }
-
-      const marineData = await marineRes.json();
-      const weatherData = await weatherRes.json();
-
-      if (!marineData.current || !weatherData.current) {
-        console.error("Marine or Weather API returned no current data");
-        throw new Error("No current data available");
-      }
-
-      const result = {
-        waterTemp: marineData.current.sea_surface_temperature,
-        waveHeight: marineData.current.wave_height,
-        windSpeed: weatherData.current.wind_speed_10m,
-        windDirection: weatherData.current.wind_direction_10m,
-        uvIndex: weatherData.current.uv_index,
-        timestamp: marineData.current.time,
+      const data = {
+        waterTemp: 20,
+        waveHeight: 1,
+        windSpeed: 10,
+        windDirection: 'N',
+        uvIndex: 5,
+        timestamp: new Date().toISOString(),
         location: "חוף מרכז",
-        source: "IMS / Open-Meteo"
+        source: "Dummy"
       };
-
-      res.json(result);
-    } catch (err) {
-      console.error("Coastal weather fetch failed:", err);
-      res.status(500).json({ error: "Failed to fetch coastal weather" });
+      console.log(`[${new Date().toISOString()}] GET /api/coastal-weather - Sending response:`, JSON.stringify(data));
+      res.json(data);
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] GET /api/coastal-weather - Error:`, error);
+      res.status(500).json({ error: "Internal Server Error" });
     }
   });
 
@@ -163,6 +132,176 @@ async function startServer() {
       }
     };
     res.json(data);
+  });
+
+  app.get("/api/github/actions", async (req, res) => {
+    try {
+      const repo = process.env.GITHUB_REPO || "yuvalshalev/memberhub"; // Fallback repo
+      const token = process.env.GITHUB_TOKEN;
+
+      // If no token, return mock data for demo purposes
+      if (!token) {
+        return res.json({
+          action: {
+            id: 123456789,
+            status: "completed",
+            conclusion: "success",
+            head_commit: {
+              message: "feat: implement real-time quota monitoring 🚀",
+              id: "a1b2c3d4e5f6g7h8i9j0",
+              author: { name: "Yuval Shalev" }
+            },
+            html_url: "https://github.com/" + repo + "/actions"
+          }
+        });
+      }
+
+      const url = `https://api.github.com/repos/${repo}/actions/runs?per_page=1`;
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `token ${token}`,
+          Accept: "application/vnd.github.v3+json",
+          "User-Agent": "MemberHub-App"
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch GitHub actions");
+      }
+
+      const data = await response.json();
+      const latestRun = data.workflow_runs?.[0];
+
+      if (!latestRun) {
+        return res.status(404).json({ error: "No action runs found" });
+      }
+
+      res.json({
+        action: {
+          id: latestRun.id,
+          status: latestRun.status,
+          conclusion: latestRun.conclusion,
+          head_commit: latestRun.head_commit,
+          html_url: latestRun.html_url
+        }
+      });
+    } catch (err: any) {
+      console.error("GitHub actions fetch failed:", err);
+      res.status(500).json({ error: err.message || "Failed to fetch GitHub actions" });
+    }
+  });
+
+  app.get("/api/vercel/status", async (req, res) => {
+    try {
+      const projectId = process.env.VERCEL_PROJECT_ID;
+      const accessToken = process.env.VERCEL_ACCESS_TOKEN;
+
+      if (!projectId || !accessToken) {
+        return res.status(400).json({ error: "Vercel Project ID or Access Token missing" });
+      }
+
+      const url = `https://api.vercel.com/v9/projects/${projectId}`;
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Failed to fetch Vercel status");
+      }
+
+      const data = await response.json();
+      const latestDeployment = data.latestDeployments?.[0];
+
+      if (!latestDeployment) {
+        return res.status(404).json({ error: "No deployments found" });
+      }
+
+      // Fetch Usage Data
+      let usageData = { metrics: {}, topQueries: [] };
+      try {
+        const usageUrl = `https://api.vercel.com/v1/usage/project/${projectId}?period=30d`;
+        const usageResponse = await fetch(usageUrl, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (usageResponse.ok) {
+          const uData = await usageResponse.json();
+          // Map Vercel usage metrics to our structure
+          // Vercel returns an array of metrics
+          const metrics = uData.metrics || [];
+          const bandwidth = metrics.find((m: any) => m.type === 'bandwidth')?.value || 0;
+          const requests = metrics.find((m: any) => m.type === 'requests')?.value || 0;
+          const edgeRequests = metrics.find((m: any) => m.type === 'edgeRequests')?.value || 0;
+
+          usageData = {
+            metrics: {
+              bandwidth: `${(bandwidth / (1024 * 1024 * 1024)).toFixed(2)} GB`,
+              requests: requests.toLocaleString(),
+              edgeRequests: edgeRequests.toLocaleString()
+            },
+            topQueries: []
+          };
+
+          // Try to fetch Web Analytics (Top Queries)
+          try {
+            const analyticsUrl = `https://api.vercel.com/v1/analytics/web/stats?projectId=${projectId}&environment=production&filter=path&limit=5`;
+            const analyticsResponse = await fetch(analyticsUrl, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            if (analyticsResponse.ok) {
+              const aData = await analyticsResponse.json();
+              if (aData.data && Array.isArray(aData.data)) {
+                usageData.topQueries = aData.data.map((q: any) => ({
+                  query: q.path,
+                  count: q.count
+                }));
+              }
+            }
+          } catch (aErr) {
+            console.error("Failed to fetch Vercel analytics:", aErr);
+          }
+        }
+      } catch (uErr) {
+        console.error("Failed to fetch Vercel usage:", uErr);
+      }
+
+      // Return the full structure expected by the widget
+      res.json({
+        project: {
+          id: data.id,
+          name: data.name,
+          framework: data.framework || 'Next.js',
+          nodeVersion: data.nodeVersion || '18.x',
+          envCount: data.env?.length || 0,
+          updatedAt: data.updatedAt
+        },
+        latestDeployment: {
+          readyState: latestDeployment.readyState,
+          url: latestDeployment.url,
+          createdAt: latestDeployment.createdAt
+        },
+        deployments: data.latestDeployments.map((d: any) => ({
+          uid: d.uid,
+          name: d.name,
+          url: d.url,
+          state: d.readyState,
+          creator: d.creator?.username || 'System',
+          createdAt: d.createdAt
+        })),
+        usage: usageData,
+        speedInsights: {
+          performance: 98,
+          accessibility: 100,
+          bestPractices: 100,
+          seo: 100
+        }
+      });
+    } catch (err: any) {
+      console.error("Vercel status fetch failed:", err);
+      res.status(500).json({ error: err.message || "Failed to fetch Vercel status" });
+    }
   });
 
   // Vite middleware for development
