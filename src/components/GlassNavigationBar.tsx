@@ -17,7 +17,7 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
   // Mode 1: Tab Bar (used in Admin pages)
   if (items && onChange) {
     return (
-      <div className={`flex overflow-x-auto hide-scrollbar gap-2 p-2 rounded-2xl ${theme === 'sunset' ? 'bg-orange-50/50' : 'bg-white/50'} backdrop-blur-md border border-white/20 shadow-sm`}>
+      <div className={`flex overflow-x-auto no-scrollbar gap-2 p-2 rounded-2xl ${theme === 'sunset' ? 'bg-orange-50/50' : 'bg-white/50'} backdrop-blur-md border border-white/20 shadow-sm`}>
         {items.map((item) => {
           const isActive = activeId === item.id;
           return (

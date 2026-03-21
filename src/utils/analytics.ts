@@ -1,6 +1,7 @@
 import { Member } from '../types';
 import { formatDate, parseDate } from './dateUtils';
 import { getBodyLineStats } from './bodyLineStats';
+import { RANKS } from '../constants';
 
 export interface UserStats {
   userId: string;
@@ -30,6 +31,7 @@ export interface UserStats {
   rankThresholds: Array<{ name: string; min: number }>;
   sessionsToNextRank: number;
   nextRankName: string | null;
+  overallProgressPercent: number;
 }
 
 export const calculateUserStats = (
@@ -42,16 +44,18 @@ export const calculateUserStats = (
   const member = members.find(m => m.id === userId);
   if (!member) return null;
 
+  const seasonStart = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date('2026-01-01') : new Date('2026-01-01');
+  const seasonEnd = yearConfig?.endDate ? parseDate(yearConfig.endDate) || new Date('2026-12-31') : new Date('2026-12-31');
   const startDate = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date(0) : new Date(0);
   const now = new Date();
   
-  // Filter history for sessions after startDate, ignoring cancelled sessions
+  // Filter history for sessions within the season, ignoring cancelled sessions
   const validSessions = weeklyHistory.filter(session => {
     const sessionDate = parseDate(session.date);
     if (!sessionDate || isNaN(sessionDate.getTime())) return false;
     
     const hasParticipants = (session.participantsCount || 0) > 0 || (session.participantIds?.length || 0) > 0;
-    return sessionDate >= startDate && sessionDate <= now && hasParticipants;
+    return sessionDate >= startDate && sessionDate <= seasonEnd && hasParticipants;
   });
 
   // Group by week (Thursday) to merge participantIds
@@ -118,14 +122,21 @@ export const calculateUserStats = (
   // Grit Score Logic: (Total Sessions * 2) + (Streak * 5)
   const gritScore = Math.min(100, (totalSessions * 1.5) + (streak * 4));
 
+  // Calculate total planned sessions based on unique session dates in the database for the season
+  
+  const plannedSessionsSet = new Set<string>();
+  weeklyHistory.forEach(session => {
+    const sessionDate = parseDate(session.date);
+    if (sessionDate && !isNaN(sessionDate.getTime()) && sessionDate >= seasonStart && sessionDate <= seasonEnd) {
+      plannedSessionsSet.add(sessionDate.toDateString());
+    }
+  });
+  const plannedSessions = plannedSessionsSet.size;
+  
+  const overallProgressPercent = plannedSessions > 0 ? Math.min(100, (totalSessions / plannedSessions) * 100) : 0;
+
   // Rank Logic & Next Rank Calculation (Adjusted for once-a-week schedule)
-  const rankThresholds = [
-    { name: "פופ-אפיסט", min: 0 },
-    { name: "תופס פינה", min: 5 },
-    { name: "ליין-אפיסט", min: 10 },
-    { name: "שואו-אפיסט", min: 20 },
-    { name: "קלי סלייטר", min: 40 }
-  ];
+  const rankThresholds = RANKS.map(r => ({ name: r.he, min: r.min }));
 
   let currentRankIndex = 0;
   for (let i = rankThresholds.length - 1; i >= 0; i--) {
@@ -173,8 +184,6 @@ export const calculateUserStats = (
   const averageGrit = statsHelper.getAverage('gritScore');
 
   // Yearly Stability Calculation (based on Shnat Hevel Zug)
-  const seasonStart = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date('2026-01-01') : new Date('2026-01-01');
-  const seasonEnd = yearConfig?.endDate ? parseDate(yearConfig.endDate) || new Date('2026-12-31') : new Date('2026-12-31');
   
   // Calculate total weeks passed in the current season up to now
   const effectiveEnd = now < seasonEnd ? now : seasonEnd;
@@ -230,7 +239,8 @@ export const calculateUserStats = (
     },
     rankThresholds,
     sessionsToNextRank,
-    nextRankName: nextRank ? nextRank.name : null
+    nextRankName: nextRank ? nextRank.name : null,
+    overallProgressPercent
   };
 };
 

@@ -171,10 +171,10 @@
   --neo-shadow-hover: 2px 2px 0px 0px var(--midnight-black);
 
   /* --- Tangible Surfer UI Palette --- */
-  --surfer-deep-shadow: #7A1555;
-  --surfer-aqua-mist: #B2EBF2;
-  --surfer-vibrant-cyan: #3dbbd3;
-  --surfer-electric-pink: #FF2D60;
+  --surfer-deep-shadow: #432818;
+  --surfer-aqua-mist: #E6CCB2;
+  --surfer-vibrant-cyan: #D4A373;
+  --surfer-electric-pink: #B08968;
   --surfer-sunshine-yellow: #FFDE45;
 }
 

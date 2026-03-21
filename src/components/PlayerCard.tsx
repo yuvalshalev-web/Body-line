@@ -2,6 +2,7 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCircle, Phone, Twitter, Music2, Mail, MapPin } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import { calculateUserStats } from '../utils/analytics';
 import { getBodyLineStats } from '../utils/bodyLineStats';
 import { calculateAge } from '../utils/dateUtils';
@@ -14,6 +15,7 @@ interface PlayerCardProps {
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   const { members, weeklyHistory, yearConfig, siteConfig, isLoading } = useData();
+  const { currentUser } = useAuth();
   const [showPopup, setShowPopup] = useState(false);
   const [showDriftPopup, setShowDriftPopup] = useState(false);
 
@@ -95,9 +97,15 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
     const roundedPercentile = Math.round(percentile);
     const distanceKm = userDistance.toFixed(1);
 
+    // Calculate decile
+    const validMembers = membersWithDistance.filter(m => typeof m.distance === 'number');
+    const sorted = validMembers.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    const index = sorted.findIndex(m => m.id === member.id);
+    const decile = index !== -1 ? Math.min(10, Math.floor((index / sorted.length) * 10) + 1) : null;
+
     let label = `מדד הסחף: אתה נמצא במרחק של ${distanceKm} ק"מ מהחוף`;
     
-    return { percentile, roundedPercentile, distanceKm, label };
+    return { percentile, roundedPercentile, distanceKm, label, decile };
   }, [member, members, siteConfig]);
 
   const openWhatsApp = (mobile: string) => {
@@ -162,9 +170,6 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             )}
           </div>
           <div className="flex flex-wrap gap-2 justify-center">
-            <span className="inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm bg-orange-500/20 text-orange-700 border-orange-500/30">
-              מעמד: {stats.rank}
-            </span>
             <span className={`inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm ${
               member.isActive !== false 
                 ? 'bg-[#2D6A4F]/20 text-[#2D6A4F] border-[#2D6A4F]/30' 
@@ -175,6 +180,11 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             <span className="inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm bg-[#0071a1]/20 text-[#00426a] border-[#0071a1]/30">
               זהות: {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
             </span>
+            {agePercentile?.badge && (
+              <span className="inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm bg-yellow-500/20 text-yellow-700 border-yellow-500/30">
+                ותק: {agePercentile.badge}
+              </span>
+            )}
           </div>
 
           {/* Social Media Links */}
@@ -247,24 +257,61 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
           </div>
 
           {/* Communication Buttons */}
-          <div className="flex flex-wrap gap-3 justify-center mt-4">
-            <button 
-              onClick={() => member.mobile && openWhatsApp(member.mobile)}
-              className="p-2 bg-[#25D366]/10 rounded-xl hover:bg-[#25D366] hover:text-white transition-all text-[#25D366] shadow-sm" 
-              title="WhatsApp"
-            >
-              <MessageCircle size={20} />
-            </button>
-            <button 
-              onClick={() => member.mobile && callMobile(member.mobile)}
-              className="p-2 bg-[#00426a]/10 rounded-xl hover:bg-[#00426a] hover:text-white transition-all text-[#00426a] shadow-sm" 
-              title="התקשר"
-            >
-              <Phone size={20} />
-            </button>
-          </div>
+          {currentUser?.id !== userId && (
+            <div className="flex flex-wrap gap-3 justify-center mt-4">
+              <button 
+                onClick={() => member.mobile && openWhatsApp(member.mobile)}
+                className="p-2 bg-[#25D366]/10 rounded-xl hover:bg-[#25D366] hover:text-white transition-all text-[#25D366] shadow-sm" 
+                title="WhatsApp"
+              >
+                <MessageCircle size={20} />
+              </button>
+              <button 
+                onClick={() => member.mobile && callMobile(member.mobile)}
+                className="p-2 bg-[#00426a]/10 rounded-xl hover:bg-[#00426a] hover:text-white transition-all text-[#00426a] shadow-sm" 
+                title="התקשר"
+              >
+                <Phone size={20} />
+              </button>
+            </div>
+          )}
 
           <UserCategories userId={userId} />
+
+          {/* Drift Metric */}
+          {driftPercentile && (
+            <div className="w-full p-4 bg-[#f0f8ff]/10 backdrop-blur-[20px] border border-[#00426a]/10 rounded-2xl mt-4" dir="rtl">
+              <div className="text-[#00426a] text-sm font-black mb-2 text-center">מדד ה-Drift (סחף) 🌊</div>
+              <div className="flex items-center justify-between w-full mb-2" dir="ltr">
+                <span className="text-xl">📍</span>
+                <div className="flex-1 h-2 bg-black/10 rounded-full mx-2 relative">
+                  <div className="absolute top-0 left-0 h-full bg-[#3dbbd3] rounded-full" style={{ width: `${driftPercentile.roundedPercentile}%` }} />
+                </div>
+                <span className="text-xl">🪐</span>
+              </div>
+              <div className="text-center text-xs text-[#000000] font-bold flex flex-col gap-1">
+                <span>{member.gender === 'נקבה' ? 'את גרה' : 'אתה גר'} במרחק {driftPercentile.distanceKm} ק"מ מהחוף</span>
+                {driftPercentile.decile && <span className="text-[#00426a]/80">עשירון {driftPercentile.decile} בקירבה לחוף (1 = הכי קרוב)</span>}
+              </div>
+            </div>
+          )}
+
+          {/* Vintage Metric */}
+          {agePercentile && (
+            <div className="w-full p-4 bg-[#f0f8ff]/10 backdrop-blur-[20px] border border-[#00426a]/10 rounded-2xl mt-4" dir="rtl">
+              <div className="text-[#00426a] text-sm font-black mb-2 text-center">מדד ה-Vintage 🍷</div>
+              <div className="flex items-center justify-between w-full mb-2" dir="ltr">
+                <span className="text-xl">🐣</span>
+                <div className="flex-1 h-2 bg-black/10 rounded-full mx-2 relative">
+                  <div className="absolute top-0 left-0 h-full bg-[#FFDE45] rounded-full" style={{ width: `${agePercentile.roundedPercentile}%` }} />
+                </div>
+                <span className="text-xl">🐢</span>
+              </div>
+              <div className="text-center text-xs text-[#000000] font-bold">
+                {member.gender === 'נקבה' ? 'את מבוגרת' : 'אתה מבוגר'} יותר מ-{agePercentile.roundedPercentile}% מחברי הקהילה
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

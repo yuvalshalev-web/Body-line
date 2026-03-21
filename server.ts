@@ -135,6 +135,7 @@ async function startServer() {
   });
 
   app.get("/api/github/actions", async (req, res) => {
+    console.log(`[${new Date().toISOString()}] GET /api/github/actions - Request received`);
     try {
       let repo = process.env.GITHUB_REPO || "yuvalshalev/memberhub"; // Fallback repo
       if (repo.startsWith("github.com/")) {

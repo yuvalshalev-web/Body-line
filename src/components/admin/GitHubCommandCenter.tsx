@@ -20,7 +20,7 @@ const GitHubCommandCenter: React.FC = () => {
 
   const fetchAction = async () => {
     try {
-      const res = await fetch('/api/github/actions');
+      const res = await fetch(`${window.location.origin}/api/github/actions`);
       const data = await res.json();
       if (data.action) setAction(data.action);
     } catch (err) {

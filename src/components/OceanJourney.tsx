@@ -233,7 +233,7 @@ export const OceanJourney: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00426a]/5 border border-[#00426a]/10 mb-4"
           >
             <Star size={14} className="text-amber-500 fill-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00426a]/60">Home Beach Quest</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00426a]/60">הגעת – ניצחת. כל השאר בונוס</span>
           </motion.div>
           
           <h2 className="text-4xl md:text-6xl font-black text-[#00426a] mb-6 tracking-tighter">
@@ -257,88 +257,75 @@ export const OceanJourney: React.FC = () => {
         </div>
 
         {/* Quest Path Visualization */}
-        <div className="relative">
-          {/* Connecting Line */}
-          <div className="absolute top-1/2 left-0 w-full h-1 bg-[#00426a]/5 -translate-y-1/2 hidden md:block" />
-          
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-4 relative">
-            {milestones.map((milestone, index) => {
-              const isUnlocked = activeCategories.has(milestone.id);
-              
-              return (
-                <motion.div
-                  key={milestone.id}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="relative group"
-                >
+        <div className="relative w-full pb-8 pt-4">
+          <div className="w-full relative mx-auto px-4 md:px-0">
+            {/* Connecting Line (Desktop only) */}
+            <div className="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-[#00426a]/5 -translate-y-1/2 z-0" />
+            
+            <div className="flex flex-row gap-2 overflow-x-auto pb-4 md:grid md:grid-cols-5 md:gap-4 relative z-10 no-scrollbar">
+              {milestones.map((milestone, index) => {
+                const isUnlocked = activeCategories.has(milestone.id);
+                
+                return (
+                  <motion.div
+                    key={milestone.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="relative group flex-shrink-0 w-32 md:w-full"
+                  >
                   {/* Milestone Card */}
                   <div className={`
-                    relative z-10 flex flex-col items-center p-6 rounded-[2.5rem] transition-all duration-500
+                    relative z-10 flex flex-col items-center p-4 rounded-[2rem] transition-all duration-500
                     ${isUnlocked 
                       ? `bg-gradient-to-b ${milestone.color} shadow-xl ${milestone.glow}` 
                       : 'bg-white/40 border border-[#00426a]/10 grayscale opacity-60'}
                   `}>
                     {/* Status Icon */}
-                    <div className="absolute -top-3 -right-3 z-20">
+                    <div className="absolute -top-2 -right-2 z-20">
                       {isUnlocked ? (
-                        <div className="bg-green-500 rounded-full p-1 shadow-lg border-2 border-white">
-                          <CheckCircle2 size={20} className="text-white" />
+                        <div className="bg-green-500 rounded-full p-0.5 shadow-lg border-2 border-white">
+                          <CheckCircle2 size={14} className="text-white" />
                         </div>
                       ) : (
-                        <div className="bg-slate-100 rounded-full p-1.5 shadow-lg border border-[#00426a]/10">
-                          <Lock size={16} className="text-slate-400" />
+                        <div className="bg-slate-100 rounded-full p-1 shadow-lg border border-[#00426a]/10">
+                          <Lock size={12} className="text-slate-400" />
                         </div>
                       )}
                     </div>
 
                     {/* Image Container */}
                     <div className={`
-                      w-32 h-32 rounded-full flex items-center justify-center mb-6 relative
+                      w-20 h-20 rounded-full flex items-center justify-center mb-3 relative
                       ${isUnlocked ? 'bg-white/30 backdrop-blur-md' : 'bg-white/20'}
                     `}>
                       {isUnlocked && (
                         <motion.div 
                           animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
                           transition={{ duration: 3, repeat: Infinity }}
-                          className="absolute inset-0 rounded-full bg-white blur-xl"
+                          className="absolute inset-0 rounded-full bg-white blur-lg"
                         />
                       )}
                       <img 
                         src={milestone.src} 
                         alt={milestone.alt} 
-                        className={`w-24 h-24 object-contain relative z-10 ${isUnlocked ? 'drop-shadow-xl' : ''}`}
+                        className={`w-16 h-16 object-contain relative z-10 ${isUnlocked ? 'drop-shadow-xl' : ''}`}
                         referrerPolicy="no-referrer"
                       />
                     </div>
 
-                    <h4 className={`text-xl font-black mb-2 ${isUnlocked ? 'text-white' : 'text-slate-500'}`}>
+                    <h4 className={`text-sm font-black mb-1 ${isUnlocked ? 'text-white' : 'text-slate-500'}`}>
                       {milestone.name}
                     </h4>
                     
-                    <p className={`text-[10px] text-center font-bold leading-tight ${isUnlocked ? 'text-white/90' : 'text-slate-400'}`}>
+                    <p className={`text-[8px] text-center font-bold leading-tight ${isUnlocked ? 'text-white/90' : 'text-slate-400'}`}>
                       {milestone.desc}
                     </p>
-
-                    {/* Hover Info Wrapper */}
-                    <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className={`flex items-center gap-1 text-[8px] font-black uppercase tracking-widest ${isUnlocked ? 'text-white/60' : 'text-slate-400'}`}>
-                        <Info size={10} />
-                        <span>פרטים נוספים</span>
-                      </div>
-                    </div>
                   </div>
-
-                  {/* Connector Dot (Mobile) */}
-                  {index < milestones.length - 1 && (
-                    <div className="md:hidden flex justify-center py-4">
-                      <div className="w-1 h-8 bg-[#00426a]/10 rounded-full" />
-                    </div>
-                  )}
                 </motion.div>
               );
             })}
+            </div>
           </div>
         </div>
 

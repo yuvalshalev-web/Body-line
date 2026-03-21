@@ -81,7 +81,8 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
       hour: '2-digit',
       minute: '2-digit',
       day: '2-digit',
-      month: '2-digit'
+      month: '2-digit',
+      year: 'numeric'
     });
   };
 
@@ -186,7 +187,7 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
                 </div>
                 <div>
                   <span className="text-[9px] font-black text-[#006699] uppercase tracking-widest block mb-1">Build</span>
-                  <span className="text-sm font-black text-[#003366]">{status?.latestDeployment?.createdAt ? formatDate(status.latestDeployment.createdAt).split(',')[0] : 'N/A'}</span>
+                  <span className="text-sm font-black text-[#003366]">{status?.latestDeployment?.createdAt ? formatDate(status.latestDeployment.createdAt) : 'N/A'}</span>
                 </div>
               </div>
             </div>
@@ -255,7 +256,7 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
                       <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${d.state === 'READY' ? 'bg-[#7cfc00]' : 'bg-amber-500'}`} />
                       <div className="min-w-0">
                         <p className="text-[10px] font-bold text-[#003366] truncate">{d.url}</p>
-                        <p className="text-[9px] text-[#006699] font-bold uppercase tracking-widest">{formatDate(d.createdAt).split(',')[0]}</p>
+                        <p className="text-[9px] text-[#006699] font-bold uppercase tracking-widest">{formatDate(d.createdAt)}</p>
                       </div>
                     </div>
                     <a href={`https://${d.url}`} target="_blank" rel="noopener noreferrer" className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded transition-all text-[#006699] hover:text-[#003366]">

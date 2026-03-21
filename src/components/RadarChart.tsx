@@ -24,51 +24,65 @@ export const RadarChart: React.FC<RadarChartProps> = ({ userId }) => {
   const data = useMemo(() => {
     if (!targetUserId || !members || !weeklyHistory) return [];
 
-    const stats = calculateUserStats(targetUserId, members, weeklyHistory, yearConfig);
+    const getStats = (id: string) => calculateUserStats(id, members, weeklyHistory, yearConfig);
     
-    if (!stats) return [];
-    
-    // Normalize values for the radar chart (0-100)
-    // We'll use: Grit, Consistency, Attendance, Stability, and a mock 'Skill' or 'Progress'
+    const userStats = getStats(targetUserId);
+
+    const mapStats = (stats: any | null) => {
+      if (!stats) return { A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 };
+      return {
+        A: Math.min(10, stats.gritScore / 10),
+        B: Math.min(10, stats.attendancePercent / 10),
+        C: Math.min(10, stats.streak),
+        D: Math.min(10, stats.percentile / 10),
+        E: Math.min(10, stats.attendance.sea / 5),
+        F: Math.min(10, stats.overallProgressPercent / 10),
+      };
+    };
+
+    const userMap = mapStats(userStats);
+
     return [
-      { subject: 'Grit', A: Math.min(stats.gritScore, 100), fullMark: 100 },
-      { subject: 'Consistency', A: Math.min(stats.attendancePercent, 100), fullMark: 100 },
-      { subject: 'Attendance', A: Math.min((stats.totalSessions / 50) * 100, 100), fullMark: 100 },
-      { subject: 'Stability', A: Math.min(stats.yearlyStability.percent, 100), fullMark: 100 },
-      { subject: 'Progress', A: Math.min((stats.totalSessions / 20) * 100, 100), fullMark: 100 },
+      { subject: 'קריאת ים', A: userMap.A },
+      { subject: 'בחירת גל', A: userMap.B },
+      { subject: 'התמדה', A: userMap.C },
+      { subject: 'נחישות', A: userMap.D },
+      { subject: 'טכניקה ושליטה', A: userMap.E },
+      { subject: 'Flow וסטייל', A: userMap.F },
     ];
   }, [targetUserId, members, weeklyHistory, yearConfig]);
 
-  if (data.length === 0) {
+  const userName = members.find(m => m.id === targetUserId)?.firstName || 'אני';
+
+  const CustomTick = (props: any) => {
+    const { x, y, payload } = props;
     return (
-      <div className="flex items-center justify-center h-64 text-white/40 font-yehuda">
-        No data available for radar
-      </div>
+      <text x={x} y={y + 15} textAnchor="middle" fill="#003366" fontSize="12" fontFamily="'Inter', sans-serif">
+        {payload.value}
+      </text>
     );
-  }
+  };
 
   return (
-    <div className="w-full h-[500px] border border-green-500 flex justify-center items-center">
-        <RechartsRadar width={500} height={500} cx={250} cy={250} outerRadius={150} data={data} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-          <PolarGrid stroke="rgba(255,255,255,0.1)" />
-          <PolarAngleAxis 
-            dataKey="subject" 
-            tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 10, fontFamily: 'Heebo' }} 
-          />
+    <div className="w-full h-[500px]">
+      <div className="flex flex-wrap gap-4 mb-4 relative z-10">
+        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-[#003366] rounded-full opacity-60"></div><span className="text-[#003366] font-medium font-['Inter',sans-serif]">{userName}</span></div>
+      </div>
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsRadar cx="50%" cy="45%" outerRadius="92%" data={data}>
+          <PolarGrid stroke="#e2e8f0" strokeOpacity={1} />
+          <PolarAngleAxis dataKey="subject" tick={{ fill: '#003366', fontSize: 14, fontWeight: 600, fontFamily: "'Inter', sans-serif" }} />
           <PolarRadiusAxis 
-            angle={30} 
-            domain={[0, 100]} 
-            tick={false} 
-            axisLine={false}
+            angle={180} 
+            domain={[0, 10]} 
+            tickCount={11} 
+            tick={<CustomTick />} 
+            axisLine={true}
           />
-          <Radar
-            name="Surfer Stats"
-            dataKey="A"
-            stroke="#00E5FF"
-            fill="#00E5FF"
-            fillOpacity={0.4}
-          />
+          
+          <Radar name={userName} dataKey="A" stroke="#003366" fill="#003366" fillOpacity={0.4} />
         </RechartsRadar>
+      </ResponsiveContainer>
     </div>
   );
 };

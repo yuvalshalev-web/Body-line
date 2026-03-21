@@ -217,7 +217,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const fetchCoastalWeather = async () => {
       try {
         console.log("Fetching coastal weather from:", window.location.origin + '/api/coastal-weather');
-        const res = await fetch('/api/coastal-weather', {
+        const res = await fetch(window.location.origin + '/api/coastal-weather', {
           headers: {
             'Accept': 'application/json'
           }

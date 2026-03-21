@@ -31,6 +31,15 @@ const GalleryPage: React.FC = () => {
     const files = Array.from(e.target.files || []) as File[];
     if (files.length === 0) return;
 
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/jpg'];
+    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+    
+    if (invalidFiles.length > 0) {
+      setErrorMsg(`סוגי קבצים לא נתמכים: ${invalidFiles.map(f => f.name).join(', ')}. אנא העלה תמונות בלבד (JPG, PNG, WEBP, HEIC).`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     setIsUploading(true);
     setErrorMsg(null);
     setUploadProgress(0);

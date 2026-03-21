@@ -326,7 +326,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
     if (!data) return null;
     const rankColors: Record<string, { bg: string, glow: string }> = {
       'פופ-אפיסט': { bg: 'from-[#021626] to-[#010d17]', glow: 'rgba(255,255,255,0.1)' },
-      'תופס פינה': { bg: 'from-[#021626] to-[#010d17]', glow: 'rgba(255,255,255,0.1)' },
+      'קצפ-אפיסט': { bg: 'from-[#021626] to-[#010d17]', glow: 'rgba(255,255,255,0.1)' },
       'ליין-אפיסט': { bg: 'from-[#06402b] to-[#065f46]', glow: 'rgba(6, 95, 70, 0.5)' },
       'שואו-אפיסט': { bg: 'from-[#1e1b4b] to-[#312e81]', glow: 'rgba(67, 56, 202, 0.6)' },
       'קלי סלייטר': { bg: 'from-[#92400e] via-[#b45309] to-[#92400e]', glow: 'rgba(251, 191, 36, 0.8)' }
@@ -568,7 +568,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
       {/* Surf Compass (Radar Chart) - Future Use - Dynamic Premium Style */}
       <motion.div 
-        className="p-4 md:p-6 bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_8px_32px_rgba(49,170,193,0.15),0_4px_16px_rgba(49,170,193,0.1)] rounded-[2rem] relative transition-all duration-1000"
+        className="p-4 md:p-6 bg-[#f5e6d3]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#432818]/10 border-r-[#432818]/10 shadow-[0_8px_32px_rgba(212,163,115,0.15),0_4px_16px_rgba(212,163,115,0.1)] rounded-[2rem] relative transition-all duration-1000"
       >
         {/* Grit Overlay */}
         <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
@@ -576,9 +576,12 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
             <div className="flex flex-col items-center mb-8">
               <div className="flex items-center gap-[var(--spacing-xs)]">
                 <div className="p-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-sm mr-2">
-                  <Compass size={18} className="text-[#00FFFF]" />
+                  <Compass size={18} className="text-[#D4A373]" />
                 </div>
-                <h3 className="text-lg font-black name-title-text">רדאר השיפור שלך</h3>
+                <div className="flex flex-col">
+                  <h3 className="text-3xl font-black name-title-text">רדאר השיפור שלך</h3>
+                  <p className="text-sm text-gray-500 font-medium mt-1">לא פעיל - לשימוש עתידי</p>
+                </div>
               </div>
             </div>
 

@@ -11,9 +11,12 @@ const WorkflowVisualizer: React.FC = () => {
     let interval: NodeJS.Timeout;
 
     const fetchStatuses = async () => {
+      console.log('Fetching statuses...');
       try {
         // Fetch GitHub Status
-        const ghRes = await fetch('/api/github/actions');
+        console.log('Fetching GitHub Status from /api/github/actions');
+        const ghRes = await fetch(`${window.location.origin}/api/github/actions`);
+        console.log('GitHub Status response:', ghRes.status, ghRes.ok);
         if (ghRes.ok) {
           const ghData = await ghRes.json();
           const action = ghData.action;
