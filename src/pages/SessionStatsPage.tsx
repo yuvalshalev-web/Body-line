@@ -88,19 +88,20 @@ const SessionStatsPage: React.FC = () => {
     const activeMembers = getBodyLineStats(members).activeMembers;
     const now = new Date();
     // 1. Filter sessions by Shnat Hevel Zug start date
-    const startDate = new Date(yearConfig.startDate);
+    const startDate = parseDate(yearConfig.startDate) || new Date();
     const cancelledDates = new Set<string>();
     
     // Filter history for sessions after startDate
     const validSessions = weeklyHistory.filter(session => {
-      const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
-      return sessionDate >= startDate && sessionDate <= now;
+      const sessionDate = parseDate(session.date);
+      return sessionDate && sessionDate >= startDate && sessionDate <= now;
     });
 
     // Group by week (Thursday) to merge participantIds
     const sessionsByDate = new Map<string, { date: Date, participantIds: Set<string>, participantsCount: number }>();
     validSessions.forEach(session => {
-      const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+      const sessionDate = parseDate(session.date);
+      if (!sessionDate) return;
       
       // Normalize to Thursday 07:00
       const day = sessionDate.getDay();
@@ -127,7 +128,8 @@ const SessionStatsPage: React.FC = () => {
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
     const cancelledSessionsCount = weeklyHistory.filter(session => {
-      const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+      const sessionDate = parseDate(session.date);
+      if (!sessionDate) return false;
       
       // Normalize to Thursday 07:00
       const day = sessionDate.getDay();

@@ -9,19 +9,21 @@ import {
   UserMinus,
   Heart,
   Sparkles,
-  Waves
+  Waves,
+  X
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { parseDate } from '../utils/dateUtils';
 import { AstrodeckGauge } from './UserAnalytics';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { calculateDistance } from '../utils/distanceCalculator';
 import { getCoordinates } from '../utils/geocoding';
 import { calculateAge } from '../utils/dateUtils';
 
 const CommunityAnalytics: React.FC = () => {
-  const { members, weeklyHistory, siteConfig, isLoading } = useData();
+  const { members, weeklyHistory, siteConfig, yearConfig, isLoading, updateMember } = useData();
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
@@ -323,6 +325,41 @@ const CommunityAnalytics: React.FC = () => {
 
     // 1. Demographics
     const now = new Date();
+    const currentDate = now;
+    const seasonStart = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date('2026-01-01') : new Date('2026-01-01');
+    const seasonEnd = yearConfig?.endDate ? parseDate(yearConfig.endDate) || new Date('2026-12-31') : new Date('2026-12-31');
+
+    const rawValidSessions = weeklyHistory.filter(session => {
+      const sessionDate = parseDate(session.date);
+      if (!sessionDate || isNaN(sessionDate.getTime())) return false;
+      const hasParticipants = (session.participantsCount || 0) > 0 || (session.participantIds?.length || 0) > 0;
+      return sessionDate >= seasonStart && sessionDate <= seasonEnd && sessionDate <= currentDate && hasParticipants;
+    });
+
+    // Group by week (Thursday) to merge participantIds
+    const sessionsByDate = new Map<string, { date: Date, participantIds: Set<string> }>();
+    rawValidSessions.forEach(session => {
+      const sessionDate = parseDate(session.date);
+      if (!sessionDate) return;
+      
+      // Normalize to Thursday 07:00
+      const day = sessionDate.getDay();
+      const diff = 4 - day;
+      const thursdayDate = new Date(sessionDate);
+      thursdayDate.setDate(thursdayDate.getDate() + diff);
+      thursdayDate.setHours(7, 0, 0, 0);
+      
+      const dateKey = thursdayDate.toDateString();
+      if (!sessionsByDate.has(dateKey)) {
+        sessionsByDate.set(dateKey, { date: thursdayDate, participantIds: new Set<string>() });
+      }
+      (session.participantIds || []).forEach((id: string) => sessionsByDate.get(dateKey)!.participantIds.add(id));
+    });
+
+    const validSessions = Array.from(sessionsByDate.values()).map(s => ({
+      date: s.date,
+      participantIds: Array.from(s.participantIds)
+    })).sort((a, b) => b.date.getTime() - a.date.getTime());
     
     const ageGroups = {
       'צעירים (18-25)': 0,
@@ -506,23 +543,40 @@ const CommunityAnalytics: React.FC = () => {
     const overallRetention = totalMembers > 0 ? Math.round((activeMembers.length / totalMembers) * 100) : 0;
     const churnedCount = members.filter(m => m.isActive === false).length;
 
-    // 3. Churn & Low Pulse
+    // 3. Churn & Low Pulse (Risk of Churn)
+    // New Rule: Member is at risk if they haven't participated in any of the last 4 historical sessions
+    const last4Sessions = validSessions.slice(0, 4);
+    const recentParticipants = new Set<string>();
+    last4Sessions.forEach(session => {
+      (session.participantIds || []).forEach((id: string) => recentParticipants.add(id));
+    });
+
+    const lowPulseMembers = activeMembers
+      .filter(m => !recentParticipants.has(m.id))
+      .map(m => {
+        const lastSession = validSessions.find(s => s.participantIds.includes(m.id));
+        return {
+          ...m,
+          lastSessionDate: lastSession ? lastSession.date.toLocaleDateString('he-IL') : 'מעולם לא'
+        };
+      });
+
     const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
     // Members who were active at the start of the month (or joined during the month)
     const activeAtStartOfMonth = members.filter(m => {
       if (m.isActive) return true;
       if (!m.deactivatedAt) return true; // Fallback for members suspended before tracking
-      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : new Date(m.deactivatedAt);
-      return dDate >= startOfCurrentMonth;
+      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : parseDate(m.deactivatedAt);
+      return dDate && dDate >= startOfCurrentMonth;
     });
     
     // Members who are currently inactive AND were deactivated THIS month
     const churnedThisMonth = members.filter(m => {
       if (m.isActive) return false;
       if (!m.deactivatedAt) return true; // Fallback
-      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : new Date(m.deactivatedAt);
-      return dDate >= startOfCurrentMonth;
+      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : parseDate(m.deactivatedAt);
+      return dDate && dDate >= startOfCurrentMonth;
     });
     
     console.log("DEBUG: activeAtStartOfMonth:", activeAtStartOfMonth.length, "churnedThisMonth:", churnedThisMonth.length);
@@ -530,20 +584,6 @@ const CommunityAnalytics: React.FC = () => {
     const churnRate = activeAtStartOfMonth.length > 0 
       ? parseFloat(((churnedThisMonth.length / activeAtStartOfMonth.length) * 100).toFixed(1)) 
       : 0;
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const recentSessionParticipants = new Set<string>();
-    weeklyHistory.forEach(session => {
-      const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
-      if (sessionDate >= thirtyDaysAgo) {
-        (session.participantIds || []).forEach((id: string) => recentSessionParticipants.add(id));
-      }
-    });
-
-    const lowPulseMembers = activeMembers
-      .filter(m => !recentSessionParticipants.has(m.id));
 
     // Annual Churn (Since Hevel HaZog year start - assuming Sept 1st)
     const currentYear = now.getFullYear();
@@ -553,27 +593,30 @@ const CommunityAnalytics: React.FC = () => {
     const annualChurned = members.filter(m => {
       if (m.isActive) return false;
       if (!m.deactivatedAt) return true; // Fallback
-      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : new Date(m.deactivatedAt);
-      return dDate >= yearStart;
+      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : parseDate(m.deactivatedAt);
+      return dDate && dDate >= yearStart;
     }).length;
     
     // Annual total: currently active OR deactivated since yearStart
     const annualTotal = members.filter(m => {
       if (m.isActive) return true;
       if (!m.deactivatedAt) return true; // Fallback
-      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : new Date(m.deactivatedAt);
-      return dDate >= yearStart;
+      const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : parseDate(m.deactivatedAt);
+      return dDate && dDate >= yearStart;
     }).length;
     
     console.log("DEBUG: annualChurned:", annualChurned, "annualTotal:", annualTotal);
     
     const annualChurnRate = annualTotal > 0 ? parseFloat(((annualChurned / annualTotal) * 100).toFixed(1)) : 0;
 
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     // Global Retention Algorithm (3+ sessions in 30 days)
     const userAttendanceCount = new Map<string, number>();
     weeklyHistory.forEach(session => {
-      const sessionDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
-      if (sessionDate >= thirtyDaysAgo) {
+      const sessionDate = parseDate(session.date);
+      if (sessionDate && sessionDate >= thirtyDaysAgo) {
         (session.participantIds || []).forEach((id: string) => {
           userAttendanceCount.set(id, (userAttendanceCount.get(id) || 0) + 1);
         });
@@ -598,12 +641,12 @@ const CommunityAnalytics: React.FC = () => {
 
       const potentialAttendance = last8Sessions.reduce((sum, session) => {
         const activeGroupMembers = groupMembers.filter(m => {
-          const joinedDate = new Date(m.joinedAt);
-          const sessionDate = new Date(session.date);
-          if (joinedDate > sessionDate) return false;
+          const joinedDate = parseDate(m.joinedAt);
+          const sessionDate = parseDate(session.date);
+          if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
-            const deactivatedDate = new Date(m.deactivatedAt);
-            if (deactivatedDate < sessionDate) return false;
+            const deactivatedDate = parseDate(m.deactivatedAt);
+            if (deactivatedDate && sessionDate && deactivatedDate < sessionDate) return false;
           }
           return true;
         });
@@ -624,12 +667,12 @@ const CommunityAnalytics: React.FC = () => {
       // Calculate Yearly Retention
       const yearlyPotentialAttendance = weeklyHistory.reduce((sum, session) => {
         const activeGroupMembers = groupMembers.filter(m => {
-          const joinedDate = new Date(m.joinedAt);
-          const sessionDate = new Date(session.date);
-          if (joinedDate > sessionDate) return false;
+          const joinedDate = parseDate(m.joinedAt);
+          const sessionDate = parseDate(session.date);
+          if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
-            const deactivatedDate = new Date(m.deactivatedAt);
-            if (deactivatedDate < sessionDate) return false;
+            const deactivatedDate = parseDate(m.deactivatedAt);
+            if (deactivatedDate && sessionDate && deactivatedDate < sessionDate) return false;
           }
           return true;
         });
@@ -661,6 +704,91 @@ const CommunityAnalytics: React.FC = () => {
       };
     });
 
+    // Member Classifications
+    const memberClassifications = members.map(member => {
+      let attended = 0;
+      let absenceStreak = 0;
+      let countingStreak = true;
+      let total = 0;
+      let lastSessionDate: string | null = null;
+
+      validSessions.forEach(session => {
+        const sessionDate = session.date;
+        if (!sessionDate) return;
+        if (member.deactivatedAt) {
+          const deactivatedDate = parseDate(member.deactivatedAt);
+          if (deactivatedDate && sessionDate > deactivatedDate) return;
+        }
+
+        total++;
+        const isParticipant = session.participantIds?.includes(member.id);
+        if (isParticipant) {
+          attended++;
+          countingStreak = false;
+          if (!lastSessionDate) {
+            lastSessionDate = sessionDate.toLocaleDateString('he-IL');
+          }
+        } else if (countingStreak) {
+          absenceStreak++;
+        }
+      });
+
+      if (attended === 0) {
+        absenceStreak = 0; // If they never attended, they don't have an absence streak, they are just new/guest.
+      }
+
+      // console.log(`Member: ${member.firstName} ${member.lastName}, Total: ${total}, Attended: ${attended}, Streak: ${absenceStreak}`);
+
+      const rate = total > 0 ? (attended / total) * 100 : 0;
+      let status = 'מזדמן';
+      let bgColor = 'var(--status-guest)';
+      let action = 'Encourage participation';
+
+      if (absenceStreak >= 4) {
+        status = 'בנסיגה';
+        bgColor = 'var(--status-slipping)';
+        action = 'Send retention message';
+      } else if (rate >= 85) {
+        status = 'אלוף';
+        bgColor = 'var(--status-champion)';
+        action = 'Invite to pro session';
+      } else if (rate >= 60) {
+        status = 'מתמיד';
+        bgColor = 'var(--status-steady)';
+        action = 'Keep as is';
+      } else if (rate >= 30) {
+        status = 'לא יציב';
+        bgColor = 'var(--status-unstable)';
+        action = 'Check-in message';
+      }
+
+      return {
+        ...member,
+        total,
+        attended,
+        absenceStreak,
+        rate,
+        status,
+        bgColor,
+        action,
+        lastSessionDate: lastSessionDate || 'מעולם לא'
+      };
+    });
+
+    const classificationCounts = {
+      'אלוף': 0,
+      'מתמיד': 0,
+      'לא יציב': 0,
+      'בנסיגה': 0,
+      'מזדמן': 0
+    };
+
+    memberClassifications.forEach(m => {
+      if (m.status in classificationCounts) {
+        classificationCounts[m.status as keyof typeof classificationCounts]++;
+      }
+    });
+
     return {
       ageGroups,
       genderCounts,
@@ -669,6 +797,8 @@ const CommunityAnalytics: React.FC = () => {
       lowPulseMembers,
       cohorts,
       genderCohorts,
+      memberClassifications,
+      classificationCounts,
       activeCount: activeMembers.length,
       totalCount: totalMembers,
       globalRetentionIndex,
@@ -680,7 +810,27 @@ const CommunityAnalytics: React.FC = () => {
       far: farCount,
       distanceData
     };
-  }, [members, weeklyHistory, siteConfig]);
+  }, [members, weeklyHistory, siteConfig, yearConfig]);
+
+  // Sync member status to DB if it changed
+  useEffect(() => {
+    if (!stats || !members || members.length === 0) return;
+
+    const updateStatuses = async () => {
+      for (const m of stats.memberClassifications) {
+        const originalMember = members.find(mem => mem.id === m.id);
+        if (originalMember && originalMember.status !== m.status) {
+          try {
+            await updateMember({ ...originalMember, status: m.status as any });
+          } catch (error) {
+            console.error(`Failed to update status for member ${m.id}:`, error);
+          }
+        }
+      }
+    };
+
+    updateStatuses();
+  }, [stats, members, updateMember]);
 
   if (isLoading || !stats) {
     return (
@@ -720,185 +870,120 @@ const CommunityAnalytics: React.FC = () => {
                   <Sparkles size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-[#7A1555] tracking-tight">התפלגות חברים לפי גיל</h3>
+                  <h3 className="text-xl font-black text-[#7A1555] tracking-tight">הרכב הקהילה</h3>
                   <p className="text-[#000000] text-[8px] font-bold uppercase tracking-[0.3em] opacity-80">Community Aura • Ocean Analytics</p>
                 </div>
               </div>
             </div>
 
-            {/* Donut Chart Area */}
-            <div className="w-full flex-1 relative flex items-center justify-center min-h-[350px]">
-              <svg width="100%" height="100%" viewBox="50 50 900 900" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible max-w-[400px]">
-                <defs>
-                  <linearGradient id="neon-turquoise" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#4FD1C5" />
-                    <stop offset="100%" stopColor="#38B2AC" />
-                  </linearGradient>
-                  <linearGradient id="neon-magenta" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#63B3ED" />
-                    <stop offset="100%" stopColor="#4299E1" />
-                  </linearGradient>
-                  <linearGradient id="neon-purple" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#4299E1" />
-                    <stop offset="100%" stopColor="#3182CE" />
-                  </linearGradient>
-                  <linearGradient id="neon-emerald" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#2B6CB0" />
-                    <stop offset="100%" stopColor="#2C5282" />
-                  </linearGradient>
-
-                  <filter id="glass-reflection" x="0" y="0" width="100%" height="100%">
-                    <feGaussianBlur stdDeviation="2" />
-                  </filter>
-                </defs>
-
-                {/* Donut Ring Segments */}
-                {(() => {
-                  let currentAngle = -90;
-                  const groups = [
-                    { label: 'צעירים', key: 'צעירים (18-25)', color: 'url(#neon-turquoise)', glow: '#4FD1C5' },
-                    { label: 'בוגרים', key: 'בוגרים (26-40)', color: 'url(#neon-magenta)', glow: '#63B3ED' },
-                    { label: 'אמצע חיים', key: 'אמצע החיים (41-60)', color: 'url(#neon-purple)', glow: '#4299E1' },
-                    { label: 'ותיקים', key: 'ותיקים (60+)', color: 'url(#neon-emerald)', glow: '#2B6CB0' }
-                  ];
-                  const total = stats.activeCount || 1;
-                  const radius = 280; 
-                  const strokeWidth = 90; 
-                  const centerX = 500;
-                  const centerY = 500;
-                  
-                  return groups.map((g, i) => {
-                    const count = stats.ageGroups[g.key as keyof typeof stats.ageGroups] || 0;
-                    if (count === 0) return null;
-                    
-                    const percentage = count / total;
-                    const angleSize = percentage * 360;
-                    const startAngle = currentAngle;
-                    const endAngle = currentAngle + angleSize;
-                    currentAngle += angleSize;
-
-                    const midAngle = startAngle + angleSize / 2;
-                    const rad = (midAngle * Math.PI) / 180;
-                    
-                    // Callout Line Coordinates
-                    const lineStartRadius = radius + strokeWidth / 2 + 5;
-                    const lineMidRadius = radius + strokeWidth / 2 + 35;
-                    
-                    const sx = centerX + lineStartRadius * Math.cos(rad);
-                    const sy = centerY + lineStartRadius * Math.sin(rad);
-                    const mx = centerX + lineMidRadius * Math.cos(rad);
-                    const my = centerY + lineMidRadius * Math.sin(rad);
-                    const ex = mx + (Math.cos(rad) > 0 ? 30 : -30);
-                    const ey = my;
-
-                    const x1 = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
-                    const y1 = centerY + radius * Math.sin((startAngle * Math.PI) / 180);
-                    const x2 = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
-                    const y2 = centerY + radius * Math.sin((endAngle * Math.PI) / 180);
-
-                    const largeArcFlag = angleSize > 180 ? 1 : 0;
-                    const d = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`;
-
-                    return (
-                      <g key={`group-${i}`}>
-                        {/* Main Segment */}
-                        <motion.path
-                          d={d}
-                          fill="none"
-                          stroke={g.color}
-                          strokeWidth={strokeWidth}
-                          strokeLinecap="round"
-                          initial={{ pathLength: 0 }}
-                          animate={{ pathLength: 1 }}
-                          transition={{ duration: 1.5, ease: "easeOut", delay: i * 0.1 }}
-                          className="cursor-pointer hover:brightness-125 transition-all"
-                        />
-
-                        {/* Callout Line */}
-                        <g>
-                          {/* Anchor Dot */}
-                          <circle cx={sx} cy={sy} r="2" fill="#000000" opacity="0.3" />
-                          
-                          <motion.path
-                            d={`M ${sx} ${sy} L ${mx} ${my} L ${ex} ${ey}`}
-                            fill="none"
-                            stroke="#000000"
-                            strokeWidth="1.5"
-                            opacity="0.2"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 0.8, delay: 1 + i * 0.1 }}
-                          />
-                        </g>
-                        
-                        {/* Percentage Label */}
-                        <motion.g
-                          initial={{ opacity: 0, x: Math.cos(rad) > 0 ? 10 : -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.5, delay: 1.5 + i * 0.1 }}
-                        >
-                          <text 
-                            x={ex + (Math.cos(rad) > 0 ? 10 : -10)} 
-                            y={ey} 
-                            textAnchor={Math.cos(rad) > 0 ? "start" : "end"} 
-                            dominantBaseline="middle" 
-                            fill="#4A0033" 
-                            className="font-black text-3xl"
-                          >
-                            {Math.round(percentage * 100)}%
-                          </text>
-                          <text 
-                            x={ex + (Math.cos(rad) > 0 ? 10 : -10)} 
-                            y={ey + 28} 
-                            textAnchor={Math.cos(rad) > 0 ? "start" : "end"} 
-                            dominantBaseline="middle" 
-                            fill="#000000" 
-                            opacity="0.8"
-                            className="font-bold text-base uppercase tracking-[0.2em]"
-                          >
-                            {g.label}
-                          </text>
-                        </motion.g>
-                      </g>
-                    );
-                  });
-                })()}
-
-                {/* Central Core */}
-                <g>
-                  {/* Light Inner Circle for Contrast */}
-                  <circle cx="500" cy="500" r="230" fill="white" fillOpacity="0.8" />
-                  
-                  {/* Glass Reflection Overlay */}
-                  <circle cx="500" cy="500" r="280" fill="url(#glass-gradient)" opacity="0.1" pointerEvents="none" />
-                  <defs>
-                    <linearGradient id="glass-gradient" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="white" />
-                      <stop offset="50%" stopColor="transparent" />
-                      <stop offset="100%" stopColor="white" stopOpacity="0.5" />
-                    </linearGradient>
-                  </defs>
- 
-                  <foreignObject x="280" y="280" width="440" height="440">
-                    <div className="w-full h-full flex flex-col items-center justify-center text-center">
-                      <Waves size={48} className="text-[#008080] mb-2" />
-                      <span className="home-data-text text-xs font-black uppercase tracking-[0.4em] mb-2 opacity-60">Community Total</span>
-                      <motion.span 
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="home-title text-8xl font-black tracking-tighter"
-                      >
-                        {stats.activeCount}
-                      </motion.span>
-                      <div className="flex items-center gap-2 mt-4">
-                        <div className="w-3 h-3 rounded-full bg-[#008080] animate-pulse shadow-sm" />
-                        <span className="text-xs text-[#008080] font-black uppercase tracking-[0.2em]">Active Pulse</span>
-                      </div>
-                    </div>
-                  </foreignObject>
-                </g>
-              </svg>
+            {/* Classification Summary */}
+            <div className="w-full mb-6 grid grid-cols-2 sm:grid-cols-5 gap-2 relative z-10">
+              {[
+                { label: 'אלוף', color: 'var(--surfer-yellow)', count: stats.classificationCounts['אלוף'] },
+                { label: 'מתמיד', color: 'var(--surfer-teal)', count: stats.classificationCounts['מתמיד'] },
+                { label: 'לא יציב', color: 'var(--surfer-orange)', count: stats.classificationCounts['לא יציב'] },
+                { label: 'בנסיגה', color: 'var(--surfer-magenta)', count: stats.classificationCounts['בנסיגה'] },
+                { label: 'מזדמן', color: 'var(--surfer-cyan)', count: stats.classificationCounts['מזדמן'] }
+              ].map(group => {
+                const percentage = stats.totalCount > 0 ? Math.round((group.count / stats.totalCount) * 100) : 0;
+                return (
+                  <div key={group.label} className="flex flex-col items-center p-2 rounded-xl glass-effect border border-white/20 shadow-sm">
+                    <span className="text-xs font-bold mb-1" style={{ color: group.color }}>{group.label}</span>
+                    <span className="text-lg font-black text-gray-900">{percentage}%</span>
+                    <span className="text-[10px] text-gray-500">{group.count} חברים</span>
+                  </div>
+                );
+              })}
             </div>
+
+            {/* Member Classification Pie Chart */}
+            <div className="w-full flex-1 relative min-h-[400px] z-10" style={{ filter: 'drop-shadow(0px 15px 20px rgba(0,0,0,0.2))' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <defs>
+                    <filter id="pie3d" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="8" stdDeviation="6" floodOpacity="0.3" />
+                      <feComponentTransfer>
+                        <feFuncA type="linear" slope="0.9"/>
+                      </feComponentTransfer>
+                    </filter>
+                  </defs>
+                  <Pie
+                    data={[
+                      { name: 'אלוף', value: stats.classificationCounts['אלוף'], color: 'var(--surfer-yellow)' },
+                      { name: 'מתמיד', value: stats.classificationCounts['מתמיד'], color: 'var(--surfer-teal)' },
+                      { name: 'לא יציב', value: stats.classificationCounts['לא יציב'], color: 'var(--surfer-orange)' },
+                      { name: 'בנסיגה', value: stats.classificationCounts['בנסיגה'], color: 'var(--surfer-magenta)' },
+                      { name: 'מזדמן', value: stats.classificationCounts['מזדמן'], color: 'var(--surfer-cyan)' }
+                    ].filter(d => d.value > 0)}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={72}
+                    outerRadius={120}
+                    paddingAngle={5}
+                    dataKey="value"
+                    onClick={(data) => setSelectedGroup(data.name || null)}
+                    style={{ cursor: 'pointer', filter: 'url(#pie3d)' }}
+                    stroke="rgba(255,255,255,0.2)"
+                    strokeWidth={2}
+                    labelLine={false}
+                    label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value, fill }) => {
+                      if (midAngle === undefined || percent === undefined) return null;
+                      const RADIAN = Math.PI / 180;
+                      const sin = Math.sin(-RADIAN * midAngle);
+                      const cos = Math.cos(-RADIAN * midAngle);
+                      const sx = cx + (outerRadius) * cos;
+                      const sy = cy + (outerRadius) * sin;
+                      const mx = cx + (outerRadius + 25) * cos;
+                      const my = cy + (outerRadius + 25) * sin;
+                      const ex = mx + (cos >= 0 ? 1 : -1) * 20;
+                      const ey = my;
+                      const textAnchor = cos >= 0 ? 'start' : 'end';
+
+                      return (
+                        <g style={{ pointerEvents: 'none' }}>
+                          <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" strokeWidth={2} />
+                          <circle cx={ex} cy={ey} r={4} fill={fill} stroke="none" />
+                          <text x={ex + (cos >= 0 ? 1 : -1) * 10} y={ey - 8} textAnchor={textAnchor} fill={fill} className="text-sm font-black" dominantBaseline="central">
+                            {name}
+                          </text>
+                          <text x={ex + (cos >= 0 ? 1 : -1) * 10} y={ey + 10} textAnchor={textAnchor} fill="#333" className="text-[12px] font-bold" dominantBaseline="central">
+                            {`${value} חברים (${(percent * 100).toFixed(0)}%)`}
+                          </text>
+                        </g>
+                      );
+                    }}
+                  >
+                    {[
+                      { name: 'אלוף', value: stats.classificationCounts['אלוף'], color: 'var(--surfer-yellow)' },
+                      { name: 'מתמיד', value: stats.classificationCounts['מתמיד'], color: 'var(--surfer-teal)' },
+                      { name: 'לא יציב', value: stats.classificationCounts['לא יציב'], color: 'var(--surfer-orange)' },
+                      { name: 'בנסיגה', value: stats.classificationCounts['בנסיגה'], color: 'var(--surfer-magenta)' },
+                      { name: 'מזדמן', value: stats.classificationCounts['מזדמן'], color: 'var(--surfer-cyan)' }
+                    ].filter(d => d.value > 0).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="glass-effect p-3 rounded-xl border border-white/20 shadow-xl backdrop-blur-md">
+                            <p className="text-xs font-black mb-1" style={{ color: payload[0].payload.color }}>{payload[0].name}</p>
+                            <p className="text-lg font-black text-gray-900">{payload[0].value} <span className="text-[12px] text-gray-700 opacity-80">חברים</span></p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <p className="text-center text-xs text-gray-500 mt-2">לחץ על פלח כדי לראות את רשימת החברים</p>
+            </div>
+
+
+
           </motion.div>
 
           {/* Distance Distribution Card */}
@@ -1017,7 +1102,7 @@ const CommunityAnalytics: React.FC = () => {
                   <h4 className="text-xl font-black text-[#7A1555] tracking-tight">דופק נמוך (בסיכון נטישה)</h4>
                 </div>
                 <span className="text-[12px] font-black text-[#000000] uppercase tracking-widest glass-effect px-4 py-1.5 rounded-full border border-white/20 shadow-sm">
-                  לא נראו מעל 30 יום ({stats.lowPulseMembers.length})
+                  לא השתתפו ב-4 הסשנים האחרונים ({stats.lowPulseMembers.length})
                 </span>
               </div>
 
@@ -1034,7 +1119,7 @@ const CommunityAnalytics: React.FC = () => {
                           />
                           <div>
                             <p className="text-base font-black text-[#7A1555]">{member.firstName} {member.lastName}</p>
-                            <p className="text-[12px] font-bold text-[#000000] italic">פעם אחרונה: {member.joinedAt}</p>
+                            <p className="text-[12px] font-bold text-[#000000] italic">פעם אחרונה: {(member as any).lastSessionDate}</p>
                           </div>
                         </div>
                         <button className="p-3 rounded-xl glass-effect text-[#004D40] opacity-0 group-hover/item:opacity-100 transition-all hover:bg-white/20">
@@ -1107,6 +1192,52 @@ const CommunityAnalytics: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Modal for selected group */}
+      {selectedGroup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedGroup(null)}>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="glass-effect rounded-3xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto shadow-2xl relative border border-white/20"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6 sticky top-0 z-10 pb-2 border-b border-white/10">
+              <h3 className="text-2xl font-black text-white drop-shadow-md">{selectedGroup}</h3>
+              <button onClick={() => setSelectedGroup(null)} className="p-2 rounded-full hover:bg-white/10 transition-colors text-white">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              {stats.memberClassifications
+                .filter(m => m.status === selectedGroup)
+                .map(member => (
+                  <div key={member.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 transition-colors backdrop-blur-md">
+                    <div className="w-12 h-12 rounded-full bg-slate-800 overflow-hidden flex-shrink-0 flex items-center justify-center border-2 border-white/30 shadow-lg">
+                      {member.avatar ? (
+                        <img src={member.avatar} alt={member.firstName} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-white font-bold text-lg">
+                          {member.firstName[0]}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-bold text-white drop-shadow-sm">{member.firstName} {member.lastName}</p>
+                      <div className="flex flex-col">
+                        <p className="text-xs text-white/70">נוכחות: {member.rate.toFixed(0)}%</p>
+                        <p className="text-[10px] text-white/50 italic">פעם אחרונה: {member.lastSessionDate}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              {stats.memberClassifications.filter(m => m.status === selectedGroup).length === 0 && (
+                <p className="text-center text-white/50 py-4">אין חברים בקבוצה זו</p>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

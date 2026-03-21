@@ -162,7 +162,7 @@ const App: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <FloatingMenu onLogout={handleLogout} scrollRef={mainRef} />
+      <FloatingMenu onLogout={handleLogout} scrollRef={mainRef} onOpenDrawer={() => setIsDrawerOpen(true)} />
       <main 
         ref={mainRef}
         className={`flex-1 overflow-y-auto pb-32 relative z-10 ${

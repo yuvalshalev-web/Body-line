@@ -46,7 +46,16 @@ const CommunityHeatMap: React.FC = () => {
 
   useEffect(() => {
     isMounted.current = true;
-    return () => { isMounted.current = false; };
+    return () => { 
+      isMounted.current = false; 
+      if (heatmapTimeoutRef.current) {
+        clearTimeout(heatmapTimeoutRef.current);
+      }
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
   }, []);
 
   const initHeatMap = () => {
@@ -280,16 +289,6 @@ const CommunityHeatMap: React.FC = () => {
     };
 
     tryInit();
-
-    return () => {
-      if (heatmapTimeoutRef.current) {
-        clearTimeout(heatmapTimeoutRef.current);
-      }
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-    };
   }, [members, siteConfig]);
 
   return (

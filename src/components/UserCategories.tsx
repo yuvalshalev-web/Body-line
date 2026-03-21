@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { Snowflake, Sun, Zap, Trophy } from 'lucide-react';
+import { parseDate } from '../utils/dateUtils';
 
 interface UserCategoriesProps {
   userId: string;
@@ -14,7 +15,7 @@ const UserCategories: React.FC<UserCategoriesProps> = ({ userId }) => {
 
     const getTemp = (session: any) => {
       if (session.waterTemp !== undefined && session.waterTemp !== null) return session.waterTemp;
-      const date = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+      const date = parseDate(session.date) || new Date();
       const month = date.getMonth();
       const averages = [17, 18, 20, 22, 25, 28, 29, 28, 26, 23, 20, 18];
       return averages[month];
@@ -37,8 +38,8 @@ const UserCategories: React.FC<UserCategoriesProps> = ({ userId }) => {
       
       const getStreak = (sessions: any[], memberId: string) => {
         const sorted = [...sessions].sort((a, b) => {
-          const da = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-          const db = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+          const da = parseDate(a.date) || new Date(0);
+          const db = parseDate(b.date) || new Date(0);
           return db.getTime() - da.getTime();
         });
         let streak = 0;
@@ -55,8 +56,10 @@ const UserCategories: React.FC<UserCategoriesProps> = ({ userId }) => {
       const seasonalCounts = [0, 0, 0, 0];
       weeklyHistory.forEach(s => {
         if (s.participantIds?.includes(member.id)) {
-          const date = s.date?.toDate ? s.date.toDate() : new Date(s.date);
-          seasonalCounts[getSeasonIndex(date)]++;
+          const date = parseDate(s.date);
+          if (date) {
+            seasonalCounts[getSeasonIndex(date)]++;
+          }
         }
       });
 

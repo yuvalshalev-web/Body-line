@@ -52,6 +52,7 @@ export interface Member {
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   medicalInfo?: string;
+  status?: 'אלוף' | 'מתמיד' | 'לא יציב' | 'בנסיגה' | 'מזדמן';
 }
 
 export interface JoinRequest {

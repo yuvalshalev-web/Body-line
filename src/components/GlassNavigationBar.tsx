@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Users, Image, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { motion } from 'motion/react';
 
 interface GlassNavigationBarProps {
   items?: { id?: string; path?: string; label: string; icon: React.ReactNode; count?: number }[];
@@ -17,33 +18,52 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
   // Mode 1: Tab Bar (used in Admin pages)
   if (items && onChange) {
     return (
-      <div className={`flex overflow-x-auto no-scrollbar gap-2 p-2 rounded-2xl ${theme === 'sunset' ? 'bg-orange-50/50' : 'bg-white/50'} backdrop-blur-md border border-white/20 shadow-sm`}>
-        {items.map((item) => {
-          const isActive = activeId === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => item.id && onChange(item.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all duration-300 ${
-                isActive 
-                  ? 'bg-white text-slate-900 shadow-sm font-black scale-105' 
-                  : 'text-slate-600 hover:bg-white/60 font-bold hover:text-slate-900'
-              }`}
-            >
-              <div className={`${isActive ? 'text-indigo-600' : 'text-slate-400'}`}>
-                {item.icon}
-              </div>
-              <span className="text-sm">{item.label}</span>
-              {item.count !== undefined && item.count > 0 && (
-                <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'
+      <div className="w-full flex justify-center">
+        <div className={`flex items-center overflow-x-auto no-scrollbar gap-1.5 p-1.5 rounded-2xl ${theme === 'sunset' ? 'bg-orange-200/20' : 'bg-slate-200/20'} backdrop-blur-2xl border border-white/30 shadow-inner relative max-w-full touch-pan-x`}>
+          {items.map((item) => {
+            const isActive = activeId === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => item.id && onChange(item.id)}
+                className="relative group px-0.5 py-0.5 flex-shrink-0"
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className={`absolute inset-0 rounded-xl shadow-[0_8px_16px_rgba(0,0,0,0.2),inset_0_2px_4px_rgba(255,255,255,1)] border-t border-white/60 border-l border-white/40 ${
+                      theme === 'sunset' 
+                        ? 'bg-gradient-to-br from-orange-500/60 to-rose-600/60' 
+                        : 'bg-gradient-to-br from-indigo-500/60 to-purple-600/60'
+                    } backdrop-blur-xl`}
+                    initial={false}
+                    transition={{ type: "spring", bounce: 0.4, duration: 0.5 }}
+                  >
+                    {/* Extra glass shine layer */}
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-transparent via-white/20 to-transparent pointer-events-none" />
+                  </motion.div>
+                )}
+                <div className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl transition-all duration-300 z-10 ${
+                  isActive 
+                    ? 'text-white font-black scale-105' 
+                    : 'text-slate-600 hover:text-slate-900 font-bold'
                 }`}>
-                  {item.count}
-                </span>
-              )}
-            </button>
-          );
-        })}
+                  <div className={`${isActive ? 'text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)]' : 'text-slate-500'}`}>
+                    {React.cloneElement(item.icon as React.ReactElement, { size: 18 })}
+                  </div>
+                  <span className="text-sm font-black tracking-tight whitespace-nowrap">{item.label}</span>
+                  {item.count !== undefined && item.count > 0 && (
+                    <span className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black shadow-md ${
+                      isActive ? 'bg-white text-slate-900' : 'bg-slate-300 text-slate-700'
+                    }`}>
+                      {item.count}
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
     );
   }

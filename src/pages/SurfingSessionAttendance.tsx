@@ -121,7 +121,7 @@ const SurfingSessionAttendance: React.FC = () => {
             <History size={40} />
           </div>
           <h1 className="main-page-title">
-            <span className="surfer-title text-[#00426a]">יומן סשנים</span>
+            <span className="surfer-title text-[#00426a]">צוללים לסשנים</span>
           </h1>
           <p className="header-subtitle max-w-2xl mx-auto text-[#00426a] font-black">
             תיעוד וניהול נוכחות של סשני הקהילה 🌊

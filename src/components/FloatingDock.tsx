@@ -16,7 +16,8 @@ import {
   User,
   LayoutDashboard,
   HeartPulse,
-  ClipboardList
+  ClipboardList,
+  X
 } from 'lucide-react';
 
 interface NavItem {
@@ -47,7 +48,6 @@ interface FloatingDrawerProps {
 export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose, activeRoute }) => {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
-  const dockRef = useRef<HTMLElement>(null);
   
   const isAdmin = currentUser?.role === 'Admin';
 
@@ -83,128 +83,187 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
 
   return (
     <>
-      {/* Edge Trigger (Invisible) */}
-      {!isOpen && (
-        <div 
-          className="fixed right-0 top-0 bottom-0 w-5 z-[9999] cursor-pointer"
-          onMouseEnter={onClose} // Just in case, but usually we want to open it
-          onClick={onClose}
-        />
-      )}
-
       {/* Backdrop for Mobile */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            key="drawer-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/5 backdrop-blur-[2px] z-[9999] lg:hidden"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[9999] lg:bg-transparent lg:backdrop-blur-none"
           />
         )}
       </AnimatePresence>
 
-      <motion.nav
-        ref={dockRef}
-        initial={{ x: 300, opacity: 0 }}
-        animate={{
-          x: isOpen ? 0 : 300,
-          opacity: 1,
-          ...(isOpen ? floatAnimation : {})
-        }}
-        transition={{
-          ...springConfig,
-          ...(isOpen ? { y: floatTransition } : {})
-        }}
-        className="fixed right-6 top-1/2 -translate-y-1/2 z-[10000] w-[280px] bg-white/40 backdrop-blur-xl rounded-[32px] p-6 flex flex-col gap-6 shadow-[0_20px_50px_rgba(31,38,135,0.15)] border border-white/20"
-        style={{
-          boxShadow: '0 20px 50px rgba(31,38,135,0.15), inset 0 1px 1px rgba(255,255,255,0.7)',
-        }}
-        dir="rtl"
-      >
-        {/* Profile Section */}
-        <div 
-          className="flex items-center gap-4 p-2 rounded-2xl transition-colors hover:bg-white/20 shrink-0 cursor-pointer"
-          onClick={() => handleNavigate('/profile')}
-        >
-          <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white/50 shrink-0 border border-white/40 shadow-sm flex items-center justify-center">
-            {currentUser?.avatar ? (
-              <img 
-                src={currentUser.avatar} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <User size={28} className="text-slate-400" strokeWidth={1.5} />
-            )}
-          </div>
-          <div className="flex flex-col justify-center overflow-hidden">
-            <span className="text-base font-bold text-slate-800 leading-tight truncate">
-              {currentUser?.firstName || 'גולש'}
-            </span>
-            <span className="text-[11px] text-slate-600 font-semibold uppercase tracking-wider">
-              {currentUser?.role || 'Member'}
-            </span>
-          </div>
-        </div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.nav
+            key="drawer-content"
+            initial={{ x: '110%', rotateY: -20, opacity: 0 }}
+            animate={{ 
+              x: 0, 
+              rotateY: 0, 
+              opacity: 1,
+              transition: {
+                type: "spring",
+                stiffness: 260,
+                damping: 25,
+                mass: 0.8
+              }
+            }}
+            exit={{ 
+              x: '110%', 
+              rotateY: 20, 
+              opacity: 0,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 30
+              }
+            }}
+            className="fixed right-4 top-4 bottom-4 z-[10000] w-[300px] bg-white/10 backdrop-blur-[40px] rounded-[40px] p-8 flex flex-col gap-8 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.3)] border border-white/30 overflow-hidden"
+            style={{
+              perspective: '1000px',
+              boxShadow: '0 32px 64px -15px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.4), inset 0 20px 40px rgba(255,255,255,0.1)',
+            }}
+            dir="rtl"
+          >
+            {/* Animated Background Glows */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-400/20 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-cyan-400/20 blur-[100px] rounded-full pointer-events-none" />
 
-        {/* Navigation Links */}
-        <div className="flex flex-col gap-3 w-full overflow-y-auto max-h-[55vh] no-scrollbar py-2 px-1">
-          {allNavItems.map((item) => {
-            const isActive = activeRoute === item.path;
-            const Icon = item.icon;
-            
-            return (
+            {/* Header / Profile Section */}
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="relative z-10 flex flex-col items-center text-center gap-4 py-4"
+            >
+              <div className="relative group cursor-pointer" onClick={() => handleNavigate('/profile')}>
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-[28px] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
+                <div className="relative w-24 h-24 rounded-[24px] overflow-hidden bg-white/20 border border-white/40 shadow-xl flex items-center justify-center">
+                  {currentUser?.avatar ? (
+                    <img 
+                      src={currentUser.avatar} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <User size={40} className="text-white/70" strokeWidth={1} />
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <h3 className="text-2xl font-black text-white tracking-tight leading-none">
+                  {currentUser?.firstName || 'גולש'}
+                </h3>
+                <span className="text-xs text-white/60 font-black uppercase tracking-[0.2em]">
+                  {currentUser?.role || 'Member'}
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Navigation Links */}
+            <div className="flex-1 flex flex-col gap-2 overflow-y-auto no-scrollbar relative z-10 pr-1">
+              {allNavItems.map((item, index) => {
+                const isActive = activeRoute === item.path;
+                const Icon = item.icon;
+                
+                return (
+                  <motion.button
+                    key={item.id}
+                    initial={{ x: 50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 + index * 0.05 }}
+                    whileHover={{ x: -8 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleNavigate(item.path)}
+                    className={`
+                      flex items-center gap-4 p-4 rounded-[20px] transition-all duration-500 w-full shrink-0 group relative overflow-hidden
+                      ${isActive 
+                        ? 'bg-white/20 text-white shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)]' 
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                      }
+                    `}
+                  >
+                    {isActive && (
+                      <motion.div 
+                        layoutId="active-nav-bg"
+                        className="absolute inset-0 bg-gradient-to-l from-blue-500/20 to-transparent"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
+                    
+                    <div className={`
+                      w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500
+                      ${isActive ? 'bg-white text-blue-600 shadow-lg' : 'bg-white/5 group-hover:bg-white/20'}
+                    `}>
+                      <Icon 
+                        size={24} 
+                        strokeWidth={2} 
+                        className="shrink-0" 
+                      />
+                    </div>
+                    
+                    <span className={`text-lg font-bold tracking-tight transition-all duration-300 ${isActive ? 'translate-x-0' : 'group-hover:-translate-x-1'}`}>
+                      {item.label}
+                    </span>
+
+                    {isActive && (
+                      <motion.div 
+                        layoutId="active-indicator"
+                        className="absolute left-4 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_#fff]"
+                      />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            {/* Footer Section */}
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="relative z-10 pt-4 border-t border-white/10 flex flex-col gap-4"
+            >
               <motion.button
-                key={item.id}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleNavigate(item.path)}
-                aria-label={item.label}
-                className={`
-                  flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 w-full shrink-0 group relative
-                  ${isActive 
-                    ? 'bg-blue-400/20 text-slate-800 shadow-[-2px_-2px_5px_rgba(255,255,255,0.8),2px_2px_5px_rgba(0,0,0,0.1)]' 
-                    : 'text-slate-700 hover:bg-white/30 hover:text-slate-900'
-                  }
-                `}
-                style={isActive ? {
-                  boxShadow: 'inset -2px -2px 5px rgba(255,255,255,0.7), inset 2px 2px 5px rgba(0,0,0,0.1)',
-                } : {}}
+                whileHover={{ x: -8 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => {
+                  logout();
+                  onClose();
+                }}
+                className="flex items-center gap-4 p-4 rounded-[20px] transition-all duration-500 w-full text-white/60 hover:bg-rose-500/20 hover:text-rose-200 group"
               >
-                <Icon 
-                  size={24} 
-                  strokeWidth={1.5} 
-                  className={`shrink-0 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'scale-110' : ''}`} 
-                />
-                <span className="whitespace-nowrap text-[15px] font-bold text-right">
-                  {item.label}
+                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-rose-500/20 transition-colors">
+                  <LogOut size={24} strokeWidth={2} />
+                </div>
+                <span className="text-lg font-bold tracking-tight">
+                  גל יציאה
                 </span>
               </motion.button>
-            );
-          })}
-        </div>
+            </motion.div>
 
-        {/* Divider */}
-        <div className="w-full h-[1px] bg-slate-800/5 shrink-0" />
-
-        {/* Logout Button (Pinned to Bottom) */}
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={() => {
-            logout();
-            onClose();
-          }}
-          aria-label="גל יציאה"
-          className="flex items-center gap-4 p-4 rounded-2xl transition-colors w-full shrink-0 text-slate-600 hover:bg-rose-400/10 hover:text-rose-600 group mt-auto"
-        >
-          <LogOut size={24} strokeWidth={1.5} className="shrink-0 transition-transform group-hover:scale-110" />
-          <span className="whitespace-nowrap text-[15px] font-bold text-right">
-            גל יציאה
-          </span>
-        </motion.button>
-      </motion.nav>
+            {/* Close Button */}
+            <motion.button 
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="absolute top-6 left-6 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all z-[10001]"
+              aria-label="סגור תפריט"
+            >
+              <X size={20} strokeWidth={2.5} />
+            </motion.button>
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </>
   );
 };

@@ -77,16 +77,16 @@
   --ocean-text-main: #ffffff;
   --ocean-text-dim: rgba(255, 255, 255, 0.5);
   /* --- Surfer Theme Palette --- */
-  --surfer-cyan: #3dbbd3;
-  --surfer-teal: #00AFC2;
+  --surfer-cyan: #2563eb; /* Royal Blue instead of Cyan */
+  --surfer-teal: #059669; /* Emerald Green instead of Teal */
   --surfer-pink: #FF2D60;
   --surfer-magenta: #CC2678;
   --surfer-yellow: #FFDE45;
   --surfer-orange: #FF9F1C;
   --surfer-shadow: #7A1555;
   --surfer-tan: #C29670;
-  --surfer-deep-teal: #007085;
-  --surfer-aqua: #B2EBF2;
+  --surfer-deep-teal: #1e3a8a; /* Deep Blue instead of Deep Teal */
+  --surfer-aqua: #dbeafe; /* Light Blue instead of Aqua */
 
   /* --- Global Glassmorphism Design Language (Body-line Standards) --- */
   --glass-bg: rgba(255, 255, 255, 0.1);

@@ -3,6 +3,7 @@ import { Waves, Snowflake, Sun, Zap, Info, Trophy } from 'lucide-react';
 import { OceanPulse } from '../OceanPulse';
 import SeasonalPersistenceRow from './SeasonalPersistenceRow';
 import { useData } from '../../contexts/DataContext';
+import { parseDate } from '../../utils/dateUtils';
 import { motion } from 'motion/react';
 
 const SeasonalPersistence: React.FC = () => {
@@ -14,7 +15,7 @@ const SeasonalPersistence: React.FC = () => {
     // Helper to get water temp (actual or estimated by month)
     const getTemp = (session: any) => {
       if (session.waterTemp !== undefined && session.waterTemp !== null) return session.waterTemp;
-      const date = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+      const date = parseDate(session.date) || new Date();
       const month = date.getMonth();
       const averages = [17, 18, 20, 22, 25, 28, 29, 28, 26, 23, 20, 18]; // Jan-Dec
       return averages[month];
@@ -39,8 +40,8 @@ const SeasonalPersistence: React.FC = () => {
       // Calculate category-specific streaks
       const getStreak = (sessions: any[], memberId: string) => {
         const sorted = [...sessions].sort((a, b) => {
-          const da = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-          const db = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+          const da = parseDate(a.date) || new Date(0);
+          const db = parseDate(b.date) || new Date(0);
           return db.getTime() - da.getTime();
         });
         let streak = 0;
@@ -58,8 +59,10 @@ const SeasonalPersistence: React.FC = () => {
       const seasonalCounts = [0, 0, 0, 0];
       weeklyHistory.forEach(s => {
         if (s.participantIds?.includes(member.id)) {
-          const date = s.date?.toDate ? s.date.toDate() : new Date(s.date);
-          seasonalCounts[getSeasonIndex(date)]++;
+          const date = parseDate(s.date);
+          if (date) {
+            seasonalCounts[getSeasonIndex(date)]++;
+          }
         }
       });
 

@@ -3,7 +3,7 @@ import { useData } from '../contexts/DataContext';
 import { Activity, Calendar, CheckCircle, Circle, Loader2, AlertTriangle } from 'lucide-react';
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { getDb } from '../services/firebase';
-import { formatDateTime } from '../utils/dateUtils';
+import { formatDateTime, parseDate } from '../utils/dateUtils';
 
 export const AdminRolloverReport: React.FC = () => {
   const { weeklyHistory, yearConfig, finalizeSession, activeSessionDate, updateHistoricalSeaTemperatures } = useData();
@@ -250,7 +250,7 @@ export const AdminRolloverReport: React.FC = () => {
                     } else if (session.date.type === 'firestore/timestamp/1.0') {
                       dateValue = new Date(session.date.seconds * 1000);
                     } else {
-                      dateValue = new Date(session.date);
+                      dateValue = parseDate(session.date) || new Date();
                     }
                     
                     if (isNaN(dateValue.getTime())) {

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
+import { parseDate } from '../utils/dateUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Lock, CheckCircle2, Star, Info, Waves, HelpCircle, X } from 'lucide-react';
 
@@ -64,7 +65,7 @@ export const OceanJourney: React.FC = () => {
 
     const getTemp = (session: any) => {
       if (session.waterTemp !== undefined && session.waterTemp !== null) return session.waterTemp;
-      const date = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+      const date = parseDate(session.date) || new Date();
       const month = date.getMonth();
       const averages = [17, 18, 20, 22, 25, 28, 29, 28, 26, 23, 20, 18];
       return averages[month];
@@ -79,8 +80,8 @@ export const OceanJourney: React.FC = () => {
       
       const getStreak = (sessions: any[], memberId: string) => {
         const sorted = [...sessions].sort((a, b) => {
-          const da = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-          const db = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+          const da = parseDate(a.date) || new Date(0);
+          const db = parseDate(b.date) || new Date(0);
           return db.getTime() - da.getTime();
         });
         let streak = 0;
@@ -236,8 +237,8 @@ export const OceanJourney: React.FC = () => {
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00426a]/60">הגעת – ניצחת. כל השאר בונוס</span>
           </motion.div>
           
-          <h2 className="text-4xl md:text-6xl font-black text-[#00426a] mb-6 tracking-tighter">
-            המסע שלך בחוף הבית
+          <h2 className="text-3xl md:text-4xl font-black text-[#00426a] mb-6 tracking-tighter">
+            אקלים משתנה – הנחישות גוברת
           </h2>
           
           <div className="max-w-md mx-auto">

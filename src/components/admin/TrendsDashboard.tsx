@@ -162,12 +162,12 @@ const TrendsDashboard: React.FC = () => {
 
       const potentialAttendance = last8Sessions.reduce((sum, session) => {
         const activeGroupMembers = groupMembers.filter(m => {
-          const joinedDate = new Date(m.joinedAt);
-          const sessionDate = new Date(session.date);
-          if (joinedDate > sessionDate) return false;
+          const joinedDate = parseDate(m.joinedAt);
+          const sessionDate = parseDate(session.date);
+          if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
-            const deactivatedDate = new Date(m.deactivatedAt);
-            if (deactivatedDate < sessionDate) return false;
+            const deactivatedDate = parseDate(m.deactivatedAt);
+            if (deactivatedDate && sessionDate && deactivatedDate < sessionDate) return false;
           }
           return true;
         });
@@ -188,12 +188,12 @@ const TrendsDashboard: React.FC = () => {
       // Calculate Yearly Retention
       const yearlyPotentialAttendance = weeklyHistory.reduce((sum, session) => {
         const activeGroupMembers = groupMembers.filter(m => {
-          const joinedDate = new Date(m.joinedAt);
-          const sessionDate = new Date(session.date);
-          if (joinedDate > sessionDate) return false;
+          const joinedDate = parseDate(m.joinedAt);
+          const sessionDate = parseDate(session.date);
+          if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
-            const deactivatedDate = new Date(m.deactivatedAt);
-            if (deactivatedDate < sessionDate) return false;
+            const deactivatedDate = parseDate(m.deactivatedAt);
+            if (deactivatedDate && sessionDate && deactivatedDate < sessionDate) return false;
           }
           return true;
         });
