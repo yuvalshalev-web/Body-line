@@ -92,27 +92,27 @@ export const SurfboardCalculator: React.FC<SurfboardCalculatorProps> = ({ formDa
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-[12px] font-black text-white/80 uppercase tracking-widest pr-3 flex items-center gap-2">
-                <Weight size={14} /> משקל (ק"ג)
+              <label className="text-[12px] font-black text-[#00426a]/80 uppercase tracking-widest pr-3 flex items-center gap-2">
+                <Weight size={14} className="text-[#0071a1]" /> משקל (ק"ג)
               </label>
               <input 
                 type="number" 
                 value={formData.weight || ''} 
                 onChange={e => onChange('weight', parseFloat(e.target.value) || undefined)}
                 placeholder="לדוגמה: 75"
-                className="w-full p-4 bg-white/5 backdrop-blur-[15px] border border-white/10 rounded-2xl font-black outline-none focus:bg-white/10 transition-all text-white placeholder:text-white/30"
+                className="w-full p-4 tangible-input rounded-2xl outline-none transition-all placeholder:text-[#00426a]/30"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[12px] font-black text-white/80 uppercase tracking-widest pr-3 flex items-center gap-2">
-                <Ruler size={14} /> גובה (ס"מ)
+              <label className="text-[12px] font-black text-[#00426a]/80 uppercase tracking-widest pr-3 flex items-center gap-2">
+                <Ruler size={14} className="text-[#0071a1]" /> גובה (ס"מ)
               </label>
               <input 
                 type="number" 
                 value={formData.height || ''} 
                 onChange={e => onChange('height', parseFloat(e.target.value) || undefined)}
                 placeholder="לדוגמה: 175"
-                className="w-full p-4 bg-white/5 backdrop-blur-[15px] border border-white/10 rounded-2xl font-black outline-none focus:bg-white/10 transition-all text-white placeholder:text-white/30"
+                className="w-full p-4 tangible-input rounded-2xl outline-none transition-all placeholder:text-[#00426a]/30"
               />
             </div>
           </div>
@@ -147,14 +147,14 @@ export const SurfboardCalculator: React.FC<SurfboardCalculatorProps> = ({ formDa
           </div>
 
           <div className="space-y-2">
-            <label className="text-[12px] font-black text-white/80 uppercase tracking-widest pr-3">נפח גלשן נוכחי (ליטר)</label>
+            <label className="text-[12px] font-black text-[#00426a]/80 uppercase tracking-widest pr-3">נפח גלשן נוכחי (ליטר)</label>
             <input 
               type="number" 
               value={formData.currentBoardVolume || ''} 
               onChange={e => onChange('currentBoardVolume', parseFloat(e.target.value) || undefined)}
               placeholder="לדוגמה: 32.5"
               step="0.1"
-              className="w-full p-4 bg-white/5 backdrop-blur-[15px] border border-white/10 rounded-2xl font-black outline-none focus:bg-white/10 transition-all text-white placeholder:text-white/30"
+              className="w-full p-4 tangible-input rounded-2xl outline-none transition-all placeholder:text-[#00426a]/30"
             />
           </div>
         </div>

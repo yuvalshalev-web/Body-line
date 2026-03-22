@@ -5,7 +5,7 @@ import { Member, Gender } from '../../types';
 import { processImage } from '../../utils/imageProcessor';
 import { generateBio } from '../../services/geminiService';
 import { hashPassword } from '../../utils/crypto';
-import { validateMobileNumber } from '../../utils/validation';
+import { validateMobileNumber, formatMobileNumber } from '../../utils/validation';
 import { loadGoogleMaps, extractAddressData } from '../../utils/googlePlaces';
 
 interface AddMemberModalProps {
@@ -21,10 +21,87 @@ interface AddMemberModalProps {
 const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMemberData, setNewMemberData, isSaving, setIsSaving, addMember }) => {
   const [isProcessingImage, setIsProcessingImage] = React.useState(false);
   const [isGeneratingBio, setIsGeneratingBio] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = React.useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = React.useState(false);
   const addressInputRef = React.useRef<HTMLInputElement>(null);
   const autocompleteRef = React.useRef<any>(null);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setError(null);
+    }
+  }, [isOpen]);
+
+  const handleSave = async () => {
+    setError(null);
+    if (!newMemberData.firstName || !newMemberData.lastName || !newMemberData.email) {
+      setError('נא למלא שם פרטי, שם משפחה ואימייל לפחות');
+      return;
+    }
+    
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(newMemberData.email)) {
+      setError('נא להזין כתובת אימייל תקינה');
+      return;
+    }
+
+    if (newMemberData.mobile && !validateMobileNumber(newMemberData.mobile)) {
+      setError('נא להזין מספר טלפון נייד תקין');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const finalPass = newMemberData.password || Math.random().toString(36).slice(-8);
+      const hashed = await hashPassword(finalPass);
+      
+      await addMember({
+        ...newMemberData as Member,
+        password: hashed,
+        isTemporary: true,
+        joinedAt: new Date().toISOString()
+      });
+      
+      alert(`חבר נוסף בהצלחה! סיסמה: ${finalPass}`);
+      onClose();
+      setNewMemberData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        mobile: '',
+        avatar: '',
+        bio: '',
+        role: 'Member',
+        gender: 'מעדיף/ה לא לציין',
+        isActive: true,
+        birthday: '',
+        full_address: '',
+        instagramUrl: '',
+        facebookUrl: '',
+        linkedinUrl: '',
+        twitterUrl: '',
+        password: ''
+      });
+    } catch (err: any) {
+      console.error(err);
+      let errorMessage = err.message || err;
+      
+      // Try to parse if it's a JSON string from handleFirestoreError
+      try {
+        const parsed = JSON.parse(errorMessage);
+        if (parsed.error) {
+          errorMessage = parsed.error;
+        }
+      } catch (e) {
+        // Not a JSON string, use as is
+      }
+      
+      setError(`שגיאה בהוספת חבר: ${errorMessage}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   React.useEffect(() => {
     const initAutocomplete = () => {
@@ -203,9 +280,11 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
                         <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">טלפון נייד</label>
                         <input 
                           type="tel" 
-                          value={newMemberData.mobile} 
-                          onChange={e => setNewMemberData(prev => ({ ...prev, mobile: e.target.value }))}
+                          value={newMemberData.mobile || ''} 
+                          onChange={e => setNewMemberData(prev => ({ ...prev, mobile: formatMobileNumber(e.target.value) }))}
                           className="w-full p-5 luxury-card font-black outline-none focus:bg-white/80 transition-all text-[#000000]" 
+                          dir="ltr"
+                          placeholder="05X-XXXXXXX"
                         />
                       </div>
                       <div className="space-y-2">
@@ -347,65 +426,34 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
             </div>
 
               {/* Footer Actions */}
-              <div className="p-6 flex flex-col md:flex-row items-center justify-end gap-4 shrink-0 mt-auto">
-              <button 
-                onClick={async () => {
-                  if (!newMemberData.firstName || !newMemberData.email) {
-                    alert('נא למלא שם ואימייל לפחות');
-                    return;
-                  }
-                  setIsSaving(true);
-                  try {
-                    const finalPass = newMemberData.password || Math.random().toString(36).slice(-8);
-                    const hashed = await hashPassword(finalPass);
-                    
-                    await addMember({
-                      ...newMemberData as Member,
-                      password: hashed,
-                      isTemporary: true,
-                      joinedAt: new Date().toISOString()
-                    });
-                    
-                    alert(`חבר נוסף בהצלחה! סיסמה: ${finalPass}`);
-                    onClose();
-                    setNewMemberData({
-                      firstName: '',
-                      lastName: '',
-                      email: '',
-                      mobile: '',
-                      avatar: '',
-                      bio: '',
-                      role: 'Member',
-                      gender: 'מעדיף/ה לא לציין',
-                      isActive: true,
-                      birthday: '',
-                      full_address: '',
-                      instagramUrl: '',
-                      facebookUrl: '',
-                      linkedinUrl: '',
-                      twitterUrl: '',
-                      password: ''
-                    });
-                  } catch (err) {
-                    console.error(err);
-                    alert('שגיאה בהוספת חבר');
-                  } finally {
-                    setIsSaving(false);
-                  }
-                }}
-                disabled={isSaving}
-                className="w-full md:w-auto px-12 py-4 bg-[#FF9F1C] text-white !rounded-full font-black text-lg flex items-center justify-center gap-3 shadow-xl shadow-[#FF9F1C]/20 disabled:opacity-50"
-              >
-                {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                שמור חבר חדש
-              </button>
-              <button 
-                onClick={onClose}
-                className="w-full md:w-auto px-8 py-4 bg-white/20 hover:bg-white/40 !rounded-full text-[#00426a] font-black text-lg transition-all"
-              >
-                ביטול
-              </button>
-            </div>
+              <div className="p-6 flex flex-col items-center justify-end gap-4 shrink-0 mt-auto">
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-full p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 text-sm font-black text-center mb-2 flex items-center justify-center gap-2"
+                  >
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                    {error}
+                  </motion.div>
+                )}
+                <div className="flex flex-col md:flex-row items-center justify-end gap-4 w-full">
+                  <button 
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="w-full md:w-auto px-12 py-4 bg-[#FF9F1C] text-white !rounded-full font-black text-lg flex items-center justify-center gap-3 shadow-xl shadow-[#FF9F1C]/20 disabled:opacity-50"
+                  >
+                    {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                    שמור חבר חדש
+                  </button>
+                  <button 
+                    onClick={onClose}
+                    className="w-full md:w-auto px-8 py-4 bg-white/20 hover:bg-white/40 !rounded-full text-[#00426a] font-black text-lg transition-all"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>

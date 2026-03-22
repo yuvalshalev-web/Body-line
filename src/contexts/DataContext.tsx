@@ -96,6 +96,8 @@ interface DataContextType {
   batchAddGlossary: (items: Omit<GlossaryTerm, 'id'>[]) => Promise<void>;
   batchAddExercises: (items: Omit<Exercise, 'id'>[]) => Promise<void>;
   batchAddQuotes: (items: Omit<QuoteItem, 'id'>[]) => Promise<void>;
+  batchAddMembers: (items: any[]) => Promise<void>;
+  batchAddHistory: (items: any[]) => Promise<void>;
   clearCollection: (collectionName: string) => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
   updateSiteConfig: (config: Partial<{ 
@@ -115,8 +117,36 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId: string | undefined;
+    email: string | null | undefined;
+    emailVerified: boolean | undefined;
+    isAnonymous: boolean | undefined;
+    tenantId: string | null | undefined;
+    providerInfo: {
+      providerId: string;
+      displayName: string | null;
+      email: string | null;
+      photoUrl: string | null;
+    }[];
+  }
+}
+
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, firebaseUser } = useAuth();
   const { showAlert } = useModal();
   const [members, setMembers] = useState<Member[]>([]);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
@@ -183,7 +213,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 
 
-  const handleFirestoreError = useCallback((error: any) => {
+  const handleFirestoreError = useCallback((error: any, operationType: OperationType = OperationType.WRITE, path: string | null = null) => {
     // Ignore transient connection issues or intentional kill switch
     if (error.code === 'unavailable' || error.message === 'QUOTA_EXCEEDED_OR_KILL_SWITCH') {
       if (error.code === 'unavailable') {
@@ -194,12 +224,34 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return;
     }
 
-    console.error("Firestore error:", error);
+    const errInfo: FirestoreErrorInfo = {
+      error: error instanceof Error ? error.message : String(error),
+      authInfo: {
+        userId: firebaseUser?.uid,
+        email: firebaseUser?.email,
+        emailVerified: firebaseUser?.emailVerified,
+        isAnonymous: firebaseUser?.isAnonymous,
+        tenantId: firebaseUser?.tenantId,
+        providerInfo: firebaseUser?.providerData.map(provider => ({
+          providerId: provider.providerId,
+          displayName: provider.displayName,
+          email: provider.email,
+          photoUrl: provider.photoURL
+        })) || []
+      },
+      operationType,
+      path
+    };
+
+    console.error("Firestore Error:", JSON.stringify(errInfo));
+    
     if (error.code === 'resource-exhausted' || error.message?.includes('429') || error.message?.includes('quota')) {
       setHasQuotaError(true);
       showAlert("שגיאת מכסה (Quota Exceeded). המערכת עברה למצב לא מקוון זמנית.", "שגיאת מערכת");
     }
-  }, [showAlert]);
+
+    throw new Error(JSON.stringify(errInfo));
+  }, [showAlert, firebaseUser]);
 
   useEffect(() => {
     if (db_status !== dbStatus) {
@@ -216,8 +268,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // 1. Public Data Listeners (Always active)
     const fetchCoastalWeather = async () => {
       try {
-        console.log("Fetching coastal weather from:", window.location.origin + '/api/coastal-weather');
-        const res = await fetch(window.location.origin + '/api/coastal-weather', {
+        console.log("Fetching coastal weather...");
+        const res = await fetch('/api/coastal-weather', {
           headers: {
             'Accept': 'application/json'
           }
@@ -236,18 +288,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchCoastalWeather();
     const weatherInterval = setInterval(fetchCoastalWeather, 1000 * 60 * 15);
 
-    const fetchSeaStats = async () => {
-      try {
-        const statsRef = doc(db, 'seaConditionsStats', 'current');
-        const statsDoc = await getDoc(statsRef);
-        if (statsDoc.exists()) {
-          setSeaStats(statsDoc.data());
-        }
-      } catch (e) {
-        console.error("Failed to fetch sea stats", e);
+    const unsubSeaStats = onSnapshot(doc(db, 'seaConditionsStats', 'current'), (doc) => {
+      if (doc.exists()) {
+        setSeaStats(doc.data());
       }
-    };
-    fetchSeaStats();
+    }, handleFirestoreError);
 
     const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (doc) => {
       if (doc.exists()) setSiteAssets(doc.data());
@@ -262,7 +307,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, handleFirestoreError);
 
     // 2. Auth-dependent Data
-    let unsubs: (() => void)[] = [unsubAssets, unsubConfig, unsubYearConfig];
+    let unsubs: (() => void)[] = [unsubSeaStats, unsubAssets, unsubConfig, unsubYearConfig];
 
     if (currentUser) {
       if (currentUser.role === 'Admin') {
@@ -940,6 +985,78 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await batch.commit();
   }, [hasQuotaError, dbStatus]);
 
+  const batchAddMembers = useCallback(async (items: any[]) => {
+    if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
+    const db = getDb();
+    const batch = writeBatch(db);
+    
+    // Limit to 500 per batch (Firestore limit)
+    const limitedItems = items.slice(0, 450);
+    
+    for (const item of limitedItems) {
+      const newDocRef = doc(collection(db, 'members'));
+      const memberData = {
+        ...item,
+        isActive: item.isActive !== undefined ? item.isActive : true,
+        role: item.role || 'Member',
+        joinedAt: item.joinedAt || new Date().toISOString().split('T')[0],
+        avatar: item.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.email}`,
+        totalAttendance: 0,
+        eventAttendanceCount: 0,
+        loginCount: 0
+      };
+      batch.set(newDocRef, memberData);
+    }
+    
+    await batch.commit();
+    storage.remove('cached_members_v3');
+  }, [hasQuotaError, dbStatus]);
+
+  const batchAddHistory = useCallback(async (items: any[]) => {
+    if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
+    const db = getDb();
+    const batch = writeBatch(db);
+    
+    // Map names to IDs
+    const nameToId: Record<string, string> = {};
+    members.forEach(m => {
+      const fullName = `${m.firstName} ${m.lastName}`.toLowerCase().trim();
+      nameToId[fullName] = m.id;
+    });
+
+    const limitedItems = items.slice(0, 450);
+    
+    for (const item of limitedItems) {
+      const newDocRef = doc(collection(db, 'weekly_history'));
+      
+      // Resolve participant IDs from names if provided
+      let participantIds: string[] = [];
+      if (item.participantNames) {
+        const names = typeof item.participantNames === 'string' 
+          ? item.participantNames.split(',').map((n: string) => n.trim().toLowerCase())
+          : [];
+        participantIds = names.map((n: string) => nameToId[n]).filter(Boolean);
+      }
+
+      const historyData = {
+        date: item.date,
+        participantIds: participantIds,
+        participantsCount: participantIds.length,
+        location: item.location || 'חוף הדרומי',
+        seaState: {
+          windSpeed: Number(item.windSpeed) || 0,
+          waterTemp: Number(item.waterTemp) || 0
+        },
+        isImported: true,
+        importedAt: new Date().toISOString()
+      };
+      batch.set(newDocRef, historyData);
+    }
+    
+    await batch.commit();
+    storage.remove('cached_history_v3');
+  }, [hasQuotaError, dbStatus, members]);
+
   const clearCollection = useCallback(async (collectionName: string) => {
     const db = getDb();
     const unsub = onSnapshot(collection(db, collectionName), async (snap: any) => {
@@ -1013,16 +1130,21 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw new Error('Database is currently unavailable or quota exceeded.');
     }
 
-    const membersRef = collection(db, 'members');
-    await addDoc(membersRef, {
-      ...memberData,
-      email: memberData.email.toLowerCase().trim(),
-      joinedAt: memberData.joinedAt || getCurrentDateFormatted(),
-      isActive: memberData.isActive !== undefined ? memberData.isActive : true,
-      loginCount: 0,
-      totalAttendance: 0
-    });
-  }, [hasQuotaError, dbStatus]);
+    const path = 'members';
+    try {
+      const membersRef = collection(db, path);
+      await addDoc(membersRef, {
+        ...memberData,
+        email: memberData.email.toLowerCase().trim(),
+        joinedAt: memberData.joinedAt || getCurrentDateFormatted(),
+        isActive: memberData.isActive !== undefined ? memberData.isActive : true,
+        loginCount: 0,
+        totalAttendance: 0
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, path);
+    }
+  }, [hasQuotaError, dbStatus, handleFirestoreError]);
 
   const seedInitialAdmin = useCallback(async () => {
     try {
@@ -1061,13 +1183,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory, forceResetSession,
-      finalizeSession, updateHistoricalSeaTemperatures, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
+      finalizeSession, updateHistoricalSeaTemperatures, batchAddGlossary, batchAddExercises, batchAddQuotes, batchAddMembers, batchAddHistory, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       isDbEmpty, conflictingAdmins, seedInitialAdmin
     }), [
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory, forceResetSession,
-      finalizeSession, updateHistoricalSeaTemperatures, batchAddGlossary, batchAddExercises, batchAddQuotes, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
+      finalizeSession, updateHistoricalSeaTemperatures, batchAddGlossary, batchAddExercises, batchAddQuotes, batchAddMembers, batchAddHistory, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       isDbEmpty, conflictingAdmins, seedInitialAdmin
     ]);
 

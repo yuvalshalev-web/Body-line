@@ -146,15 +146,15 @@ const CircularRing: React.FC<CircularRingProps> = ({
         </svg>
         
         <div className="absolute inset-0 flex items-center justify-center flex-col">
-          <span className="text-2xl font-black text-[#000000]">
+          <span className="text-2xl font-black text-[#00426a]">
             {displayValue.toFixed(0)}%
           </span>
-          <span className="text-[10px] font-bold text-[#000000] uppercase tracking-wider mt-1">
+          <span className="text-[10px] font-bold text-[#00426a] uppercase tracking-wider mt-1">
             {label}
           </span>
         </div>
       </div>
-      <p className="text-xs font-bold text-[#000000] mt-4 tabular-nums uppercase tracking-widest">
+      <p className="text-xs font-bold text-[#00426a] mt-4 tabular-nums uppercase tracking-widest">
         {sublabel}
       </p>
     </div>
@@ -229,15 +229,14 @@ const DataHealthScore: React.FC = () => {
   }, []);
 
   return (
-    <div className="rounded-3xl p-8 relative overflow-hidden group transition-all duration-500"
+    <div className="rounded-3xl p-8 relative overflow-hidden group transition-all duration-500 border border-white/20 shadow-xl"
       style={{
-        background: 'rgba(240, 248, 255, 0.4)',
+        background: 'rgba(240, 248, 255, 0.1)',
         backdropFilter: 'blur(20px)',
         borderTop: '1px solid rgba(255, 255, 255, 0.8)',
         borderLeft: '1px solid rgba(255, 255, 255, 0.8)',
         borderBottom: '1px solid rgba(0, 66, 106, 0.1)',
         borderRight: '1px solid rgba(0, 66, 106, 0.1)',
-        boxShadow: '0 10px 30px rgba(49, 170, 193, 0.15)'
       }}
     >
       {/* Grain Overlay */}
@@ -250,15 +249,15 @@ const DataHealthScore: React.FC = () => {
             <HeartPulse size={24} />
           </div>
           <div>
-            <h3 className="text-xl font-black text-[#CC2678] tracking-tight">ציון בריאות נתונים</h3>
-            <p className="text-xs font-bold text-[#000000] uppercase tracking-widest">DATA INTEGRITY SCAN</p>
+            <h3 className="text-xl font-black text-[#00426a] tracking-tight">ציון בריאות נתונים</h3>
+            <p className="text-xs font-bold text-[#00426a] uppercase tracking-widest">DATA INTEGRITY SCAN</p>
           </div>
         </div>
         
         <button 
           onClick={runScan}
           disabled={isScanning}
-          className="px-4 py-2 bg-white/30 hover:bg-white/50 border border-white/40 rounded-xl text-xs font-black text-[#000000] transition-all flex items-center gap-2 shadow-sm disabled:opacity-50"
+          className="px-4 py-2 bg-white/30 hover:bg-white/50 border border-white/40 rounded-xl text-xs font-black text-[#00426a] transition-all flex items-center gap-2 shadow-sm disabled:opacity-50"
         >
           <RefreshCw size={14} className={isScanning ? 'animate-spin' : ''} />
           {isScanning ? 'סורק...' : 'הפעל סריקה'}
@@ -283,18 +282,18 @@ const DataHealthScore: React.FC = () => {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-3xl font-black text-[#007085]">{healthScore ?? '--'}</span>
-            <span className="text-[8px] font-bold text-[#000000] uppercase tracking-widest">SCORE</span>
+            <span className="text-[8px] font-bold text-[#00426a] uppercase tracking-widest">SCORE</span>
           </div>
         </div>
 
         <div className="flex-1 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/10 p-4 rounded-2xl border border-white/20">
-              <p className="text-[10px] font-bold text-[#000000] uppercase tracking-widest mb-1">סה"כ רשומות</p>
+              <p className="text-[10px] font-bold text-[#00426a] uppercase tracking-widest mb-1">סה"כ רשומות</p>
               <p className="text-xl font-black text-[#007085]">{members.length}</p>
             </div>
             <div className="bg-white/10 p-4 rounded-2xl border border-white/20">
-              <p className="text-[10px] font-bold text-[#000000] uppercase tracking-widest mb-1">חריגות שנמצאו</p>
+              <p className="text-[10px] font-bold text-[#00426a] uppercase tracking-widest mb-1">חריגות שנמצאו</p>
               <p className={`text-xl font-black ${anomalies.length > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                 {healthScore !== null ? (100 - healthScore) / 2 : '--'}
               </p>
@@ -306,7 +305,7 @@ const DataHealthScore: React.FC = () => {
               <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">דגימת חריגות:</p>
               <div className="space-y-1">
                 {anomalies.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between text-[11px] font-bold text-[#000000] bg-rose-50/20 px-3 py-1.5 rounded-lg border border-rose-100/30">
+                  <div key={a.id} className="flex items-center justify-between text-[11px] font-bold text-[#00426a] bg-rose-50/20 px-3 py-1.5 rounded-lg border border-rose-100/30">
                     <span>{a.name}</span>
                     <span className="text-rose-600">{a.issue}</span>
                   </div>
@@ -319,7 +318,7 @@ const DataHealthScore: React.FC = () => {
 
       {lastScan && (
         <div className="mt-6 pt-4 border-t border-black/5 flex items-center justify-between">
-          <p className="text-[10px] font-bold text-[#000000]/40 uppercase tracking-widest">סריקה אחרונה: {lastScan.toLocaleString('he-IL')}</p>
+          <p className="text-[10px] font-bold text-[#00426a]/40 uppercase tracking-widest">סריקה אחרונה: {lastScan.toLocaleString('he-IL')}</p>
           <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
             <HeartPulse size={10} />
             <span>DATA IS STABLE</span>
@@ -339,10 +338,10 @@ import { getMonthlyQuotaData } from '../utils/quotaStats';
 // ... (inside SystemMonitor.tsx)
 
 const QuotaChart = ({ data, dataKey, limit, title, color }: { data: any[], dataKey: string, limit: number, title: string, color: string }) => (
-  <div className="luxury-slab p-6">
+  <div className="bg-[#f0f8ff]/10 backdrop-blur-md p-6 border border-white/20 rounded-2xl shadow-xl">
     <div className="flex items-center justify-between mb-4">
-      <h4 className="text-sm font-black text-[#000000] uppercase tracking-widest">{title}</h4>
-      <span className="text-[10px] font-black text-[#000000]/60 bg-black/5 px-2 py-1 rounded-md">
+      <h4 className="text-sm font-black text-[#00426a] uppercase tracking-widest">{title}</h4>
+      <span className="text-[10px] font-black text-[#00426a]/60 bg-[#00426a]/5 px-2 py-1 rounded-md">
         מכסה יומית: {limit.toLocaleString()}
       </span>
     </div>
@@ -364,15 +363,14 @@ const QuotaMonitor: React.FC = () => {
   const monthlyData = useMemo(() => getMonthlyQuotaData(), []);
 
   return (
-    <div className="rounded-3xl p-8 relative overflow-hidden group transition-all duration-500"
+    <div className="rounded-3xl p-8 relative overflow-hidden group transition-all duration-500 border border-white/20 shadow-xl"
       style={{
-        background: 'rgba(240, 248, 255, 0.4)',
+        background: 'rgba(240, 248, 255, 0.1)',
         backdropFilter: 'blur(20px)',
         borderTop: '1px solid rgba(255, 255, 255, 0.8)',
         borderLeft: '1px solid rgba(255, 255, 255, 0.8)',
         borderBottom: '1px solid rgba(0, 66, 106, 0.1)',
         borderRight: '1px solid rgba(0, 66, 106, 0.1)',
-        boxShadow: '0 10px 30px rgba(49, 170, 193, 0.15)'
       }}
     >
       <div className="relative z-10 flex items-center justify-between mb-8">
@@ -381,8 +379,8 @@ const QuotaMonitor: React.FC = () => {
             <Zap size={24} />
           </div>
           <div>
-            <h3 className="text-xl font-black text-[#CC2678] tracking-tight">מכסות Firebase היסטוריות</h3>
-            <p className="text-xs font-bold text-[#000000] uppercase tracking-widest">MONTHLY QUOTA PROGRESS</p>
+            <h3 className="text-xl font-black text-[#00426a] tracking-tight">מכסות Firebase היסטוריות</h3>
+            <p className="text-xs font-bold text-[#00426a] uppercase tracking-widest">MONTHLY QUOTA PROGRESS</p>
           </div>
         </div>
       </div>
@@ -439,15 +437,14 @@ const TechnicalLogs: React.FC = () => {
   };
 
   return (
-    <div className="rounded-3xl p-8 relative overflow-hidden group transition-all duration-500"
+    <div className="rounded-3xl p-8 relative overflow-hidden group transition-all duration-500 border border-white/20 shadow-xl"
       style={{
-        background: 'rgba(240, 248, 255, 0.4)',
+        background: 'rgba(240, 248, 255, 0.1)',
         backdropFilter: 'blur(20px)',
         borderTop: '1px solid rgba(255, 255, 255, 0.8)',
         borderLeft: '1px solid rgba(255, 255, 255, 0.8)',
         borderBottom: '1px solid rgba(0, 66, 106, 0.1)',
         borderRight: '1px solid rgba(0, 66, 106, 0.1)',
-        boxShadow: '0 10px 30px rgba(49, 170, 193, 0.15)'
       }}
     >
       {/* Grain Overlay */}
@@ -456,12 +453,12 @@ const TechnicalLogs: React.FC = () => {
       
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-[#FFDE45] rounded-2xl flex items-center justify-center text-[#000000] shadow-lg border border-white/30">
+          <div className="w-12 h-12 bg-[#FFDE45] rounded-2xl flex items-center justify-center text-[#00426a] shadow-lg border border-white/30">
             <Terminal size={24} />
           </div>
           <div>
-            <h3 className="text-xl font-black text-[#CC2678] tracking-tight">יומן אירועים טכני</h3>
-            <p className="text-xs font-bold text-[#000000] uppercase tracking-widest">ADVANCED SYSTEM LOGS</p>
+            <h3 className="text-xl font-black text-[#00426a] tracking-tight">יומן אירועים טכני</h3>
+            <p className="text-xs font-bold text-[#00426a] uppercase tracking-widest">ADVANCED SYSTEM LOGS</p>
           </div>
         </div>
 
@@ -488,7 +485,7 @@ const TechnicalLogs: React.FC = () => {
             </button>
             <button 
               onClick={refreshLogs}
-              className="p-2 bg-white/30 border border-white/40 rounded-xl text-[#000000]/40 hover:text-[#000000] transition-all shadow-sm"
+              className="p-2 bg-white/30 border border-white/40 rounded-xl text-[#00426a]/40 hover:text-[#00426a] transition-all shadow-sm"
             >
               <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
             </button>
@@ -499,7 +496,7 @@ const TechnicalLogs: React.FC = () => {
                 key={s}
                 onClick={() => setFilter(s)}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${
-                  filter === s ? 'bg-white text-[#000000] shadow-sm' : 'text-[#000000]/40 hover:text-[#000000]'
+                  filter === s ? 'bg-white text-[#00426a] shadow-sm' : 'text-[#00426a]/40 hover:text-[#00426a]'
                 }`}
               >
                 {s === 'All' ? 'הכל' : s === 'Critical' ? 'קריטי' : s === 'Warning' ? 'אזהרה' : s === 'Info' ? 'מידע' : 'אבטחה'}
@@ -512,7 +509,7 @@ const TechnicalLogs: React.FC = () => {
       <div className="overflow-x-auto overflow-y-auto -mx-8 px-8 max-h-[400px] custom-scrollbar">
         <table className="w-full text-right border-separate border-spacing-y-2 relative">
           <thead className="sticky top-0 z-20 bg-[#fdfdfd]">
-            <tr className="text-[10px] font-black text-[#000000] uppercase tracking-[0.2em]">
+            <tr className="text-[10px] font-black text-[#00426a] uppercase tracking-[0.2em]">
               <th className="pb-4 px-4 text-right">זמן</th>
               <th className="pb-4 px-4 text-right">חומרה</th>
               <th className="pb-4 px-4 text-right">מקור</th>
@@ -530,7 +527,7 @@ const TechnicalLogs: React.FC = () => {
                   exit={{ opacity: 0, scale: 0.95 }}
                   className="group"
                 >
-                  <td className="py-3 px-4 bg-white/10 first:rounded-r-2xl border-y border-r border-white/10 text-[11px] font-bold text-[#000000]/60 tabular-nums">
+                  <td className="py-3 px-4 bg-white/10 first:rounded-r-2xl border-y border-r border-white/10 text-[11px] font-bold text-[#00426a]/60 tabular-nums">
                     {log.timestamp.toLocaleTimeString('he-IL')}
                   </td>
                   <td className="py-3 px-4 bg-white/10 border-y border-white/10">
@@ -538,11 +535,11 @@ const TechnicalLogs: React.FC = () => {
                       {log.severity}
                     </span>
                   </td>
-                  <td className="py-3 px-4 bg-white/10 border-y border-white/10 text-[11px] font-black text-[#000000]">
+                  <td className="py-3 px-4 bg-white/10 border-y border-white/10 text-[11px] font-black text-[#00426a]">
                     {log.source}
                   </td>
                   <td 
-                    className="py-3 px-4 bg-white/10 border-y border-white/10 text-[11px] font-bold text-[#000000] max-w-xs truncate cursor-pointer hover:bg-white/20 transition-colors relative"
+                    className="py-3 px-4 bg-white/10 border-y border-white/10 text-[11px] font-bold text-[#00426a] max-w-xs truncate cursor-pointer hover:bg-white/20 transition-colors relative"
                     onClick={() => copyToClipboard(log)}
                     title="לחץ להעתקת פרטי האירוע"
                   >
@@ -558,7 +555,7 @@ const TechnicalLogs: React.FC = () => {
                     )}
                   </td>
                   <td 
-                    className="py-3 px-4 bg-white/10 last:rounded-l-2xl border-y border-l border-white/10 text-[10px] font-medium text-[#000000]/40 font-mono cursor-pointer hover:bg-white/20 transition-colors"
+                    className="py-3 px-4 bg-white/10 last:rounded-l-2xl border-y border-l border-white/10 text-[10px] font-medium text-[#00426a]/40 font-mono cursor-pointer hover:bg-white/20 transition-colors"
                     onClick={() => copyToClipboard(log)}
                     title="לחץ להעתקת פרטי האירוע"
                   >
@@ -768,7 +765,7 @@ const SystemMonitor: React.FC = () => {
           <span className="tracking-widest">SYSTEM DIVE ANALYTICS</span>
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-black text-[#CC2678] tracking-tighter leading-none uppercase">
+        <h1 className="text-5xl md:text-7xl font-black text-[#00426a] tracking-tighter leading-none uppercase" style={{ textShadow: '0 0 30px rgba(0, 66, 106, 0.2)' }}>
           חדר מכונות
         </h1>
 
@@ -814,7 +811,7 @@ const SystemMonitor: React.FC = () => {
                 }
               }}
               disabled={isRecalculating}
-              className="flex items-center gap-2 px-4 py-2 bg-white/30 hover:bg-white/50 rounded-xl text-[#000000] text-xs font-black transition-all border border-white/30 shadow-sm disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-white/30 hover:bg-white/50 rounded-xl text-[#00426a] text-xs font-black transition-all border border-white/30 shadow-sm disabled:opacity-50"
               title="Recalculate Storage & Database"
             >
               <RefreshCw size={12} className={isRecalculating ? 'animate-spin' : ''} />
@@ -829,7 +826,7 @@ const SystemMonitor: React.FC = () => {
           {/* Emergency Shutdown Button */}
           <div className="relative w-[180px] h-[180px] flex items-center justify-center flex-shrink-0">
             {/* Outer Ring/Base of the button */}
-            <div className="absolute inset-0 bg-slate-200 rounded-full shadow-inner border border-slate-300 pointer-events-none" />
+            <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-full shadow-inner border border-white/20 pointer-events-none" />
             
             <motion.div 
               role="button"
@@ -891,7 +888,7 @@ const SystemMonitor: React.FC = () => {
           {/* Cache Cleaning Button - Styled like Emergency Button */}
           <div className="relative w-[180px] h-[180px] flex items-center justify-center flex-shrink-0">
             {/* Outer Ring/Base of the button */}
-            <div className="absolute inset-0 bg-slate-200 rounded-full shadow-inner border border-slate-300 pointer-events-none" />
+            <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-full shadow-inner border border-white/20 pointer-events-none" />
             
             <motion.div 
               role="button"
@@ -943,9 +940,9 @@ const SystemMonitor: React.FC = () => {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-xl animate-in fade-in">
-          <div className="luxury-slab border border-white/20 w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col" dir="rtl">
-            <div className="bg-[#FF0000] p-8 text-white flex items-center gap-4 relative overflow-hidden">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-[#00426a]/40 backdrop-blur-xl animate-in fade-in">
+          <div className="bg-[#f0f8ff]/10 backdrop-blur-md border border-white/20 w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col rounded-[2.5rem]" dir="rtl">
+            <div className="bg-[#BC4749] p-8 text-white flex items-center gap-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.3)_0%,transparent_70%)] animate-pulse" />
               <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl border border-white/30 rotate-3">
                 <Skull size={40} className="text-white animate-pulse" />
@@ -961,15 +958,15 @@ const SystemMonitor: React.FC = () => {
             
             <div className="p-8 space-y-6">
               <div className="space-y-4">
-                <p className="text-[#2B2B2E] font-black text-lg leading-tight">
+                <p className="text-[#00426a] font-black text-lg leading-tight">
                   האם אתה בטוח שברצונך להשבית את מסד הנתונים?
                 </p>
-                <div className="bg-red-50 p-4 rounded-2xl border border-red-100 space-y-2">
-                  <p className="text-[#FF0000] text-sm font-bold flex items-start gap-2">
+                <div className="bg-[#BC4749]/10 p-4 rounded-2xl border border-[#BC4749]/20 space-y-2">
+                  <p className="text-[#BC4749] text-sm font-bold flex items-start gap-2">
                     <AlertCircle size={16} className="mt-0.5 shrink-0" />
                     <span>פעולה זו תנתק את כל המשתמשים המחוברים ותחסום כל גישה למידע באתר.</span>
                   </p>
-                  <p className="text-[#FF0000] text-sm font-bold flex items-start gap-2">
+                  <p className="text-[#BC4749] text-sm font-bold flex items-start gap-2">
                     <AlertCircle size={16} className="mt-0.5 shrink-0" />
                     <span>האתר יפסיק לתפקד עד שתפעיל מחדש את הגישה.</span>
                   </p>
@@ -982,14 +979,14 @@ const SystemMonitor: React.FC = () => {
                     setShowConfirmModal(false);
                     setCountdown(10);
                   }}
-                  className="flex-1 py-4 bg-[#FF0000] text-white rounded-2xl font-black text-lg hover:bg-[#CC0000] transition-all shadow-[0_10px_30px_rgba(255,0,0,0.4)] active:scale-95 flex items-center justify-center gap-2"
+                  className="flex-1 py-4 bg-[#BC4749] text-white rounded-2xl font-black text-lg hover:bg-[#9b3a3c] transition-all shadow-[0_10px_30px_rgba(188,71,73,0.4)] active:scale-95 flex items-center justify-center gap-2"
                 >
                   <Skull size={20} />
                   אישור (הפעל טיימר)
                 </button>
                 <button 
                   onClick={() => setShowConfirmModal(false)}
-                  className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-lg hover:bg-slate-200 transition-all active:scale-95"
+                  className="flex-1 py-4 bg-white/20 backdrop-blur-md text-[#00426a] rounded-2xl font-black text-lg hover:bg-white/30 transition-all active:scale-95 border border-white/30"
                 >
                   ביטול
                 </button>
@@ -1012,7 +1009,7 @@ const SystemMonitor: React.FC = () => {
 
       {/* Database & Storage Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        <div className="luxury-slab p-8 flex items-center gap-6">
+        <div className="bg-[#f0f8ff]/10 backdrop-blur-md p-8 flex items-center gap-6 border border-white/20 rounded-3xl shadow-xl">
           <CircularRing 
             value={Math.min((dbSize / 1024) * 100, 100)}
             label="Database"
@@ -1020,11 +1017,11 @@ const SystemMonitor: React.FC = () => {
             gradient={dbSize / 1024 > 0.9 ? ['#CC2678', '#FF2D60'] : dbSize / 1024 > 0.7 ? ['#FFDE45', '#FF9F1C'] : ['#10B981', '#34D399']}
           />
           <div>
-            <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight mb-2">גודל מסד הנתונים</h3>
-            <p className="text-xs font-bold text-[#000000]/60 uppercase tracking-widest">מתוך מכסה של 1 GB</p>
+            <h3 className="text-lg font-black text-[#00426a] uppercase tracking-tight mb-2">גודל מסד הנתונים</h3>
+            <p className="text-xs font-bold text-[#00426a]/60 uppercase tracking-widest">מתוך מכסה של 1 GB</p>
           </div>
         </div>
-        <div className="luxury-slab p-8 flex items-center gap-6">
+        <div className="bg-[#f0f8ff]/10 backdrop-blur-md p-8 flex items-center gap-6 border border-white/20 rounded-3xl shadow-xl">
           <CircularRing 
             value={Math.min((storageSize / 5120) * 100, 100)}
             label="Storage"
@@ -1032,19 +1029,19 @@ const SystemMonitor: React.FC = () => {
             gradient={storageSize / 5120 > 0.9 ? ['#CC2678', '#FF2D60'] : storageSize / 5120 > 0.7 ? ['#FFDE45', '#FF9F1C'] : ['#10B981', '#34D399']}
           />
           <div>
-            <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight mb-2">גודל שטח האחסון (Storage)</h3>
-            <p className="text-xs font-bold text-[#000000]/60 uppercase tracking-widest">מתוך מכסה של 5 GB</p>
+            <h3 className="text-lg font-black text-[#00426a] uppercase tracking-tight mb-2">גודל שטח האחסון (Storage)</h3>
+            <p className="text-xs font-bold text-[#00426a]/60 uppercase tracking-widest">מתוך מכסה של 5 GB</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
         {/* Reads per Minute Chart */}
-        <div className="luxury-slab p-8 relative overflow-hidden">
+        <div className="bg-[#f0f8ff]/10 backdrop-blur-md p-8 relative overflow-hidden border border-white/20 rounded-3xl shadow-xl">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-[#A2FF00] rounded-full animate-ping" />
-              <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight">קצב קריאות ממסד הנתונים (Live)</h3>
+              <h3 className="text-lg font-black text-[#00426a] uppercase tracking-tight">קצב קריאות ממסד הנתונים (Live)</h3>
               <div className="gt-info-wrapper">
                 <div className="gt-info-icon" style={{ width: '18px', height: '18px', fontSize: '11px', backgroundColor: '#FFDE45', color: '#000' }}>i</div>
                 <span className="gt-tooltip" style={{ bottom: '180%', width: '280px', backgroundColor: '#fff', color: '#000', border: '2px solid #000' }}>
@@ -1066,34 +1063,34 @@ const SystemMonitor: React.FC = () => {
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={readHistory} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
-                <CartesianGrid strokeDasharray="0" vertical={false} stroke="rgba(0,0,0,0.1)" />
+                <CartesianGrid strokeDasharray="0" vertical={false} stroke="rgba(0,66,106,0.1)" />
                 <XAxis 
                   dataKey="time" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
+                  tick={{ fontSize: 10, fontWeight: 900, fill: '#00426a' }}
                   minTickGap={30}
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
+                  tick={{ fontSize: 10, fontWeight: 900, fill: '#00426a' }}
                   domain={[0, yAxisMax]}
                   tickCount={6}
                   allowDecimals={false}
                   minTickGap={10}
                 />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#fff', borderRadius: '0', border: '2px solid #000', color: '#000', boxShadow: '4px 4px 0px rgba(0,0,0,0.1)' }}
-                  itemStyle={{ color: '#007085', fontWeight: 900 }}
+                  contentStyle={{ backgroundColor: 'rgba(240, 248, 255, 0.9)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.2)', color: '#00426a', backdropFilter: 'blur(10px)' }}
+                  itemStyle={{ color: '#0071a1', fontWeight: 900 }}
                   formatter={(value: any) => [Math.round(value), 'קריאות']}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="reads" 
-                  stroke="#007085" 
+                  stroke="#0071a1" 
                   strokeWidth={4} 
-                  dot={{ r: 4, fill: '#007085', strokeWidth: 2, stroke: '#fff' }}
+                  dot={{ r: 4, fill: '#0071a1', strokeWidth: 2, stroke: '#fff' }}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                   isAnimationActive={false}
                 />
@@ -1103,7 +1100,7 @@ const SystemMonitor: React.FC = () => {
           
           {readHistory.every(pt => pt.reads === 0) && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <p className="text-[12px] font-black text-[#000000]/40 uppercase tracking-[0.3em] bg-white/40 px-4 py-2 rounded-full backdrop-blur-sm">
+              <p className="text-[12px] font-black text-[#00426a]/40 uppercase tracking-[0.3em] bg-white/40 px-4 py-2 rounded-full backdrop-blur-sm">
                 No active traffic detected
               </p>
             </div>
@@ -1112,19 +1109,19 @@ const SystemMonitor: React.FC = () => {
       </div>
 
       {/* Traffic Area Chart */}
-      <div className="luxury-slab p-8">
+      <div className="bg-[#f0f8ff]/10 backdrop-blur-md p-8 border border-white/20 rounded-3xl shadow-xl">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-black text-[#CC2678] uppercase tracking-tight">תנועת רשת (24 שעות - MB)</h3>
+          <h3 className="text-lg font-black text-[#00426a] uppercase tracking-tight">תנועת רשת (24 שעות - MB)</h3>
           <div className="flex gap-4">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-[#007085]" />
-              <span className="text-[12px] font-black text-[#000000] uppercase tracking-widest flex items-center gap-1">
+              <span className="text-[12px] font-black text-[#00426a] uppercase tracking-widest flex items-center gap-1">
                 <ArrowDown size={10} /> Incoming
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-[#3dbbd3]" />
-              <span className="text-[12px] font-black text-[#000000] uppercase tracking-widest flex items-center gap-1">
+              <span className="text-[12px] font-black text-[#00426a] uppercase tracking-widest flex items-center gap-1">
                 <ArrowUp size={10} /> Outgoing
               </span>
             </div>
@@ -1135,30 +1132,30 @@ const SystemMonitor: React.FC = () => {
             <AreaChart data={bandwidthData} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
               <defs>
                 <linearGradient id="colorIn" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#007085" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#007085" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#00426a" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#00426a" stopOpacity={0}/>
                 </linearGradient>
                 <linearGradient id="colorOut" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3dbbd3" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3dbbd3" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#0071a1" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#0071a1" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="0" vertical={false} stroke="rgba(0,0,0,0.1)" />
+              <CartesianGrid strokeDasharray="0" vertical={false} stroke="rgba(0,66,106,0.1)" />
               <XAxis 
                 dataKey="time" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }}
+                tick={{ fontSize: 10, fontWeight: 900, fill: '#00426a' }}
                 minTickGap={30}
               />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#000000' }} unit="MB" />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#00426a' }} unit="MB" />
               <Tooltip 
-                contentStyle={{ backgroundColor: '#fff', borderRadius: '0', border: '2px solid #000', color: '#000', boxShadow: '4px 4px 0px rgba(0,0,0,0.1)' }}
+                contentStyle={{ backgroundColor: 'rgba(240, 248, 255, 0.9)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.2)', color: '#00426a', backdropFilter: 'blur(10px)' }}
                 itemStyle={{ fontWeight: 900 }}
                 formatter={(value: any) => [`${Math.round(value)} MB`]}
               />
-              <Area type="monotone" dataKey="in" name="Incoming" stroke="#007085" strokeWidth={3} fillOpacity={1} fill="url(#colorIn)" />
-              <Area type="monotone" dataKey="out" name="Outgoing" stroke="#3dbbd3" strokeWidth={3} fillOpacity={1} fill="url(#colorOut)" />
+              <Area type="monotone" dataKey="in" name="Incoming" stroke="#00426a" strokeWidth={3} fillOpacity={1} fill="url(#colorIn)" />
+              <Area type="monotone" dataKey="out" name="Outgoing" stroke="#0071a1" strokeWidth={3} fillOpacity={1} fill="url(#colorOut)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>

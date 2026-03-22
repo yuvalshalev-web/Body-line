@@ -54,7 +54,7 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
                   <span className="text-sm font-black tracking-tight whitespace-nowrap">{item.label}</span>
                   {item.count !== undefined && item.count > 0 && (
                     <span className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black shadow-md ${
-                      isActive ? 'bg-white text-slate-900' : 'bg-slate-300 text-slate-700'
+                      isActive ? 'bg-white text-slate-900' : 'bg-[#00AFC2] text-white'
                     }`}>
                       {item.count}
                     </span>

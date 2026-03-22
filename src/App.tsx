@@ -11,6 +11,7 @@ import { AngryBird } from './components/AngryBird';
 import ErrorBoundary from './components/ErrorBoundary';
 import FloatingMenu from './components/FloatingMenu';
 import { FloatingDrawer } from './components/FloatingDock';
+import { SurfNewsTracker } from './components/SurfNewsTracker';
 
 // Lazy loaded components
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -141,6 +142,9 @@ const App: React.FC = () => {
         <div id="global-progress-bar"></div>
       </div>
 
+      {/* Surf News Ticker */}
+      <SurfNewsTracker />
+
       {/* Modern Minimalist Floating Navigation */}
       <FloatingDrawer 
         isOpen={isDrawerOpen} 
@@ -165,9 +169,7 @@ const App: React.FC = () => {
       <FloatingMenu onLogout={handleLogout} scrollRef={mainRef} onOpenDrawer={() => setIsDrawerOpen(true)} />
       <main 
         ref={mainRef}
-        className={`flex-1 overflow-y-auto pb-32 relative z-10 ${
-          location.pathname === '/attendance' ? '' : 'p-6 md:p-12 lg:p-16 lg:pr-24'
-        } ${
+        className={`flex-1 overflow-y-auto pb-20 relative z-10 ${
           ['/', '/events', '/gallery', '/directory', '/posts'].includes(location.pathname) ? 'luxury-bg' : ''
         }`}
       >

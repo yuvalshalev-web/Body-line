@@ -34,6 +34,12 @@ interface CoastalData {
   timestamp: string;
   location: string;
   source: string;
+  syncStatus?: {
+    waterTemp: boolean;
+    waveHeight: boolean;
+    wind: boolean;
+    uvIndex: boolean;
+  };
 }
 
 interface SeaStats {
@@ -214,6 +220,15 @@ export const CoastalDashboard: React.FC = () => {
 
   const uv = getUVLevel(data.uvIndex);
 
+  const SyncIndicator: React.FC<{ isSynced: boolean }> = ({ isSynced }) => (
+    <div className="absolute top-3 right-3 flex items-center gap-1.5">
+      <div className={`w-1.5 h-1.5 rounded-full ${isSynced ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.8)]' : 'bg-amber-500 shadow-[0_0_5px_rgba(245,158,11,0.8)]'}`} />
+      <span className="text-[7px] font-black uppercase tracking-tighter text-slate-400">
+        {isSynced ? 'Live' : 'Cached'}
+      </span>
+    </div>
+  );
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -268,6 +283,7 @@ export const CoastalDashboard: React.FC = () => {
             whileHover={{ scale: 1.05, y: -5 }}
             className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-between relative transition-all duration-500 group"
           >
+            <SyncIndicator isSynced={data.syncStatus?.waveHeight ?? true} />
             <div className="flex flex-col items-center gap-1 mb-2">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">גובה גלים</span>
               <span className="text-4xl font-black text-slate-900 tracking-tighter">
@@ -314,8 +330,9 @@ export const CoastalDashboard: React.FC = () => {
             whileHover={{ scale: 1.05, y: -5 }}
             className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-between relative transition-all duration-500 group"
           >
+            <SyncIndicator isSynced={data.syncStatus?.wind ?? true} />
             <div className="flex flex-col items-center gap-1 mb-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">מהירות רוח</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">רוח ({getWindDirection(data.windDirection)})</span>
               <span className="text-4xl font-black text-slate-900 tracking-tighter">
                 {data.windSpeed.toFixed(0)} <span className="text-xl font-bold text-slate-400">kts</span>
               </span>
@@ -363,6 +380,7 @@ export const CoastalDashboard: React.FC = () => {
             whileHover={{ scale: 1.05, y: -5 }}
             className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-between relative transition-all duration-500 group"
           >
+            <SyncIndicator isSynced={data.syncStatus?.waterTemp ?? true} />
             <div className="flex flex-col items-center gap-1 mb-2">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">טמפ' מים</span>
               <span className="text-4xl font-black text-slate-900 tracking-tighter">
@@ -433,6 +451,7 @@ export const CoastalDashboard: React.FC = () => {
             whileHover={{ scale: 1.05, y: -5 }}
             className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-center relative transition-all duration-500 group"
           >
+            <SyncIndicator isSynced={data.syncStatus?.uvIndex ?? true} />
             <div className="flex flex-col items-center gap-1 mb-4">
               <span className="text-4xl font-black text-slate-900 tracking-tighter">
                 {data.uvIndex.toFixed(1)}

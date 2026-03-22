@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, getDocs, Query, QuerySnapshot, collection, addDoc, query, orderBy, limit, deleteDoc, writeBatch, doc } from 'firebase/firestore';
+import { getFirestore, getDocs, Query, QuerySnapshot, collection, addDoc, query, orderBy, limit, deleteDoc, writeBatch, doc, getDocFromServer } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { trackBandwidth } from '../utils/bandwidthTracker';
 import { addLog, SystemLog } from '../utils/systemLogs';
@@ -182,6 +182,23 @@ export const incrementReadCount = (amount: number = 1) => {
 };
 
 export { db, auth, storage };
+
+// Connection test
+async function testConnection() {
+  try {
+    // Using a non-existent doc to test connectivity
+    const { getDocFromServer } = await import('firebase/firestore');
+    await getDocFromServer(doc(db, 'system_logs', 'connection_test'));
+    console.log("Firestore connection test successful.");
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration. The client is offline.");
+    }
+    // Skip logging for other errors, as this is simply a connection test.
+  }
+}
+testConnection();
+
 export const getDb = () => db;
 export const getStorageInstance = () => storage;
 export default app;

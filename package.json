@@ -34,6 +34,7 @@
     "lucide-react": "^0.564.0",
     "motion": "^12.34.3",
     "node-cron": "^4.2.1",
+    "papaparse": "^5.5.3",
     "react": "^18.3.1",
     "react-apexcharts": "^2.0.1",
     "react-chartjs-2": "^5.3.1",
@@ -45,7 +46,8 @@
     "remark-gfm": "^4.0.1",
     "rss-parser": "^3.13.0",
     "tailwindcss": "^4.2.0",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.0",
@@ -53,6 +55,7 @@
     "@types/jquery": "^4.0.0",
     "@types/node": "^22.14.0",
     "@types/node-cron": "^3.0.11",
+    "@types/papaparse": "^5.5.2",
     "@vitejs/plugin-react": "^5.1.4",
     "@webgpu/types": "^0.1.69",
     "typescript": "~5.8.2",

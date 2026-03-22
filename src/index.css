@@ -30,6 +30,129 @@
   --color-ocean-10: #ffffff;
 }
 
+@layer components {
+  /* --- Tangible Surfer UI: The Dark Anchor & Premium Glass Stack --- */
+  .premium-glass {
+    background: rgba(240, 248, 255, 0.1); /* Ocean 9 at 10% */
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.8); /* Beveled Edge: Light Catch */
+    border-left: 1px solid rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(0, 66, 106, 0.1); /* Beveled Edge: Physical Lip */
+    border-right: 1px solid rgba(0, 66, 106, 0.1);
+    box-shadow: 0 4px 12px rgba(49, 170, 193, 0.1), 0 8px 32px rgba(49, 170, 193, 0.05);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .grain-overlay {
+    position: absolute;
+    inset: 0;
+    opacity: 0.02;
+    pointer-events: none;
+    z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+
+  .tangible-input {
+    background: rgba(240, 248, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.8);
+    border-left: 1px solid rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(0, 66, 106, 0.1);
+    border-right: 1px solid rgba(0, 66, 106, 0.1);
+    color: #00426a; /* Ocean 1 */
+    font-weight: 700;
+    transition: all 0.3s ease;
+  }
+
+  .tangible-input:focus {
+    background: rgba(240, 248, 255, 0.15);
+    border-top-color: rgba(255, 255, 255, 1);
+    border-left-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 15px rgba(49, 170, 193, 0.1);
+  }
+
+  .tangible-toggle-track {
+    background: rgba(240, 248, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9999px;
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .tangible-toggle-thumb {
+    background: #ffffff; /* Ocean 10 solid matte */
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Haluk Nahal (Sea Pebble) look */
+    border: 1px solid rgba(0, 66, 106, 0.05);
+  }
+
+  .weathered-sign {
+    border-radius: 4px 12px 6px 18px; /* Irregular Edges */
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(0, 66, 106, 0.1);
+  }
+
+  .weathered-sign::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='crazing'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='5' seed='1'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23crazing)'/%3E%3C/svg%3E");
+  }
+
+  /* --- UX WOW Effects --- */
+  @keyframes premium-sweep {
+    0% { transform: translateX(-200%) skewX(-20deg); opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { transform: translateX(300%) skewX(-20deg); opacity: 0; }
+  }
+  
+  .premium-sweep-fx {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 150px;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
+    animation: premium-sweep 7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    pointer-events: none;
+    z-index: 25;
+    mix-blend-mode: overlay;
+  }
+
+  @keyframes physical-sonar {
+    0% { box-shadow: 0 0 0 0 rgba(45, 106, 79, 0.4); border-color: rgba(255,255,255,0.8); }
+    70% { box-shadow: 0 0 0 10px rgba(45, 106, 79, 0); border-color: rgba(255,255,255,0); }
+    100% { box-shadow: 0 0 0 0 rgba(45, 106, 79, 0); border-color: rgba(255,255,255,0); }
+  }
+  
+  .sonar-dot {
+    animation: physical-sonar 2.5s infinite;
+  }
+  
+  .capsule-3d {
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+    transform-style: preserve-3d;
+  }
+  
+  .capsule-3d:hover {
+    transform: translateY(-2px) scale(1.02) rotateX(5deg);
+    box-shadow: 0 12px 24px -8px rgba(0, 66, 106, 0.15), 0 4px 8px -4px rgba(0, 66, 106, 0.1);
+  }
+
+  .glass-mask-edges {
+    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  }
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700;900&family=Heebo:wght@300;400;600;700;900&family=Rubik:wght@300;400;600;700;900&family=Varela+Round&family=Secular+One&family=Miriwin&family=Roboto+Slab:wght@100..900&family=Permanent+Marker&family=Special+Elite&display=swap');
 
 @font-face {
@@ -1681,8 +1804,9 @@ main.bg-slate-50 {
     position: relative;
     width: 3.5em;
     height: 1.8em;
-    background: var(--gt-off-bg);
-    border: 1px solid var(--gt-border-soft);
+    background: rgba(240, 248, 255, 0.1); /* Ocean 9 at 10% */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 2em;
     cursor: pointer;
     transition: 0.3s;
@@ -1696,22 +1820,23 @@ main.bg-slate-50 {
     left: 0.2em; /* תמיד מתחיל מצד שמאל ללא קשר לשפה */
     width: 1.4em;
     height: 1.4em;
-    background: #fff;
+    background: #ffffff; /* Ocean 10 solid matte */
     border-radius: 50%;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0, 66, 106, 0.05); /* Haluk Nahal look */
 }
 
 /* מצב פעיל - הטורקיז נדלק והעיגול זז ימינה */
 .gt-toggle.active, [class*="toggle-switch"].active {
-    background: rgba(64, 224, 208, 0.2);
-    border-color: var(--gt-accent);
+    background: rgba(45, 106, 79, 0.2); /* Deep Sea Green at 20% */
+    border-color: #2D6A4F;
 }
 
 .gt-toggle.active::before, [class*="toggle-switch"].active::before {
     /* תנועה ימינה במצב פעיל */
     transform: translateX(1.7em);
-    background: var(--gt-accent);
+    background: #ffffff;
 }
 
 /* 2. Segmented Control */
@@ -1911,16 +2036,31 @@ main.bg-slate-50 {
 /* 7. שדה טקסט (Input Field) */
 .gt-input {
     font-size: 16px; padding: 0.8em 1em;
-    background: var(--gt-off-bg); border: 1px solid var(--gt-border-soft);
-    border-radius: 0.6em; color: #333; width: 100%; outline: none; transition: 0.3s;
+    background: rgba(240, 248, 255, 0.1); /* Ocean 9 at 10% */
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.8);
+    border-left: 1px solid rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(0, 66, 106, 0.1);
+    border-right: 1px solid rgba(0, 66, 106, 0.1);
+    border-radius: 0.6em; color: #00426a; width: 100%; outline: none; transition: 0.3s;
 }
-.gt-input:focus { border-color: var(--gt-accent); box-shadow: 0 0 0 3px rgba(64, 224, 208, 0.1); }
+.gt-input:focus {
+    background: rgba(240, 248, 255, 0.15);
+    border-top-color: rgba(255, 255, 255, 1);
+    border-left-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 15px rgba(49, 170, 193, 0.1);
+}
 
 /* 8. תפריט בחירה (Select/Dropdown) */
 .gt-select {
     font-size: 16px; padding: 0.8em 1em;
-    background: var(--gt-off-bg); border: 1px solid var(--gt-border-soft);
-    border-radius: 0.6em; color: #333; appearance: none; cursor: pointer;
+    background: rgba(240, 248, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.8);
+    border-left: 1px solid rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(0, 66, 106, 0.1);
+    border-right: 1px solid rgba(0, 66, 106, 0.1);
+    border-radius: 0.6em; color: #00426a; appearance: none; cursor: pointer;
     width: 100%;
 }
 
@@ -1932,11 +2072,14 @@ main.bg-slate-50 {
 
 /* 10. כרטיס זכוכית (Card/Container) */
 .gt-card {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: var(--gt-blur); -webkit-backdrop-filter: var(--gt-blur);
-    border: 1px solid var(--gt-border-soft);
+    background: rgba(240, 248, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.8);
+    border-left: 1px solid rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(0, 66, 106, 0.1);
+    border-right: 1px solid rgba(0, 66, 106, 0.1);
     border-radius: 1.2em; padding: 1.5em;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(49, 170, 193, 0.1), 0 8px 32px rgba(49, 170, 193, 0.05);
 }
 
 /* 11. תווית סטטוס (Badge/Tag) */

@@ -51,23 +51,75 @@ async function startServer() {
   });
 
   app.get("/api/coastal-weather", async (req, res) => {
-    console.log(`[${new Date().toISOString()}] GET /api/coastal-weather - Request received`);
+    const requestId = Math.random().toString(36).substring(7);
+    console.log(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Request received`);
     try {
+      const lat = 32.16;
+      const lng = 34.84;
+      
+      // Fetch Marine data (Waves, Water Temp)
+      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=wave_height,sea_surface_temperature&timezone=auto`;
+      // Fetch Forecast data (Wind, UV Index)
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
+      
+      console.log(`[${new Date().toISOString()}] [${requestId}] Fetching from Open-Meteo...`);
+      
+      const [marineRes, weatherRes] = await Promise.all([
+        fetch(marineUrl).catch(err => {
+          console.error(`[${new Date().toISOString()}] [${requestId}] Marine fetch failed:`, err);
+          return { ok: false } as Response;
+        }),
+        fetch(weatherUrl).catch(err => {
+          console.error(`[${new Date().toISOString()}] [${requestId}] Weather fetch failed:`, err);
+          return { ok: false } as Response;
+        })
+      ]);
+
+      const marineData = marineRes.ok ? await marineRes.json().catch(() => null) : null;
+      const weatherData = weatherRes.ok ? await weatherRes.json().catch(() => null) : null;
+
       const data = {
-        waterTemp: 20,
-        waveHeight: 1,
-        windSpeed: 10,
-        windDirection: 'N',
-        uvIndex: 5,
+        waterTemp: marineData?.current?.sea_surface_temperature || 20,
+        waveHeight: marineData?.current?.wave_height || 1,
+        wavePeriod: marineData?.current?.wave_period || 6,
+        windSpeed: weatherData?.current?.wind_speed_10m || 10,
+        windDirection: weatherData?.current?.wind_direction_10m || 0,
+        uvIndex: weatherData?.current?.uv_index || 0,
         timestamp: new Date().toISOString(),
         location: "חוף מרכז",
-        source: "Dummy"
+        source: marineData && weatherData ? "Open-Meteo Real-time" : "Partial Real-time / Fallback",
+        syncStatus: {
+          waterTemp: !!marineData,
+          waveHeight: !!marineData,
+          wavePeriod: !!marineData,
+          wind: !!weatherData,
+          uvIndex: !!weatherData
+        }
       };
-      console.log(`[${new Date().toISOString()}] GET /api/coastal-weather - Sending response:`, JSON.stringify(data));
+
+      console.log(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Success`);
       res.json(data);
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] GET /api/coastal-weather - Error:`, error);
-      res.status(500).json({ error: "Internal Server Error" });
+      console.error(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Critical Error:`, error);
+      const hour = new Date().getHours();
+      res.json({
+        waterTemp: 20,
+        waveHeight: 1,
+        wavePeriod: 6,
+        windSpeed: 10,
+        windDirection: 0,
+        uvIndex: (hour >= 19 || hour < 6) ? 0 : 3,
+        timestamp: new Date().toISOString(),
+        location: "חוף מרכז (מצב חירום)",
+        source: "Fallback",
+        syncStatus: {
+          waterTemp: false,
+          waveHeight: false,
+          wavePeriod: false,
+          wind: false,
+          uvIndex: false
+        }
+      });
     }
   });
 

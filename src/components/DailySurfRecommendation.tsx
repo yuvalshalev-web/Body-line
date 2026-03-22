@@ -179,136 +179,130 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
             transition={{ duration: 0.5, type: "spring" }}
             className="relative z-10 space-y-8"
           >
-            {isWarning ? (
-              <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-6 flex items-start gap-4">
-                <AlertTriangle className="text-rose-500 shrink-0 mt-1" size={28} />
-                <div>
-                  <h4 className="text-xl font-black text-rose-900 mb-2">אזהרת בטיחות</h4>
-                  <p className="text-rose-800 leading-relaxed font-medium">{explanation}</p>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-white/60 border border-white/40 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-8 shadow-sm">
-                <div className="flex-1 text-center md:text-right">
-                  <h4 className="text-3xl font-black text-[#002b44] mb-3">{boardType}</h4>
-                  <div className="flex justify-center md:justify-start gap-6 mb-4">
-                    <div>
-                      <p className="text-[10px] text-[#007085] uppercase tracking-widest mb-1">נפח מומלץ</p>
-                      <p className="text-2xl font-black text-[#002b44]">{recVol.toFixed(1)}<span className="text-sm text-[#007085] ml-1">L</span></p>
+            <div className="relative">
+              <div className="space-y-8 transition-all duration-500">
+                <div className="bg-white/60 border border-white/40 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-8 shadow-sm">
+                  <div className="flex-1 text-center md:text-right">
+                    <h4 className="text-3xl font-black text-[#002b44] mb-3">{boardType}</h4>
+                    <div className="flex justify-center md:justify-start gap-6 mb-4">
+                      <div>
+                        <p className="text-[10px] text-[#007085] uppercase tracking-widest mb-1">נפח מומלץ</p>
+                        <p className="text-2xl font-black text-[#002b44]">{recVol.toFixed(1)}<span className="text-sm text-[#007085] ml-1">L</span></p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-[#007085] uppercase tracking-widest mb-1">אורך מומלץ</p>
+                        <p className="text-2xl font-black text-[#002b44]" dir="ltr">{Math.floor(recLenInches/12)}'{Math.round(recLenInches%12)}"</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] text-[#007085] uppercase tracking-widest mb-1">אורך מומלץ</p>
-                      <p className="text-2xl font-black text-[#002b44]" dir="ltr">{Math.floor(recLenInches/12)}'{Math.round(recLenInches%12)}"</p>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-[#002b44]/80 text-sm leading-relaxed bg-white/50 p-4 rounded-xl border border-white/40">{explanation}</p>
-                    {catalogItem && (
-                      <div className="bg-cyan-50/50 p-4 rounded-xl border border-cyan-100/50 space-y-3">
-                        <div className="flex justify-between items-center">
-                          <p className="text-[10px] text-cyan-700 uppercase tracking-widest font-bold">על סוג הגלשן:</p>
-                          <div className="flex gap-3">
-                            <span className="text-[9px] bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full font-bold">אורך: {catalogItem.lengthRange}</span>
-                            <span className="text-[9px] bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full font-bold">נפח: {catalogItem.volumeRange}</span>
+                    <div className="space-y-3">
+                      <p className="text-[#002b44]/80 text-sm leading-relaxed bg-white/50 p-4 rounded-xl border border-white/40">{explanation}</p>
+                      {catalogItem && (
+                        <div className="bg-cyan-50/50 p-4 rounded-xl border border-cyan-100/50 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <p className="text-[10px] text-cyan-700 uppercase tracking-widest font-bold">על סוג הגלשן:</p>
+                            <div className="flex gap-3">
+                              <span className="text-[9px] bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full font-bold">אורך: {catalogItem.lengthRange}</span>
+                              <span className="text-[9px] bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full font-bold">נפח: {catalogItem.volumeRange}</span>
+                            </div>
+                          </div>
+                          <p className="text-[#002b44]/70 text-xs leading-relaxed italic">{catalogItem.description}</p>
+                          <div className="pt-2 border-t border-cyan-200/30">
+                            <p className="text-[9px] text-cyan-600 font-bold uppercase mb-1">השורה התחתונה:</p>
+                            <p className="text-[#002b44]/80 text-[11px] leading-relaxed font-medium">{catalogItem.bottomLine}</p>
                           </div>
                         </div>
-                        <p className="text-[#002b44]/70 text-xs leading-relaxed italic">{catalogItem.description}</p>
-                        <div className="pt-2 border-t border-cyan-200/30">
-                          <p className="text-[9px] text-cyan-600 font-bold uppercase mb-1">השורה התחתונה:</p>
-                          <p className="text-[#002b44]/80 text-[11px] leading-relaxed font-medium">{catalogItem.bottomLine}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-center items-end shrink-0 w-full md:w-auto -mx-4 md:mx-0">
+                    {wetsuit && (
+                      <div className="flex flex-col items-center gap-3 w-[185px] md:w-[200px] z-10 -mr-7 md:-mr-14 relative pt-10">
+                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-[#2A3F45] text-white text-[11px] font-bold px-4 py-1.5 rounded-full whitespace-nowrap shadow-lg z-30">
+                          {wetsuit.label} (המומלץ!)
                         </div>
+                        <div className="h-[400px] md:h-[350px] w-full relative flex items-end justify-center bg-transparent p-0">
+                          <WetsuitSVG thickness={wetsuit.thickness} alignBottom />
+                        </div>
+                        <span className="text-[11px] font-bold text-[#002b44] text-center w-full leading-tight bg-white/50 px-2 py-1 rounded-lg border border-white/40">ביגוד מומלץ: {wetsuit.label}</span>
                       </div>
                     )}
-                  </div>
-                </div>
-                
-                <div className="flex justify-center items-end shrink-0 w-full md:w-auto -mx-4 md:mx-0">
-                  {wetsuit && (
-                    <div className="flex flex-col items-center gap-3 w-[185px] md:w-[200px] z-10 -mr-7 md:-mr-14 relative pt-10">
+                    <div className="flex flex-col items-center gap-3 w-[185px] md:w-[255px] z-20 relative pt-10">
                       <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-[#2A3F45] text-white text-[11px] font-bold px-4 py-1.5 rounded-full whitespace-nowrap shadow-lg z-30">
-                        {wetsuit.label} (המומלץ!)
+                        {catalogItem?.name || boardType} (המומלץ!)
                       </div>
-                      <div className="h-[400px] md:h-[350px] w-full relative flex items-end justify-center bg-transparent p-0">
-                        <WetsuitSVG thickness={wetsuit.thickness} alignBottom />
+                      <div className="h-[400px] w-full relative flex items-end justify-center">
+                        <SurfboardOverlay selectedBoardType={boardKey} hideLabel />
                       </div>
-                      <span className="text-[11px] font-bold text-[#002b44] text-center w-full leading-tight bg-white/50 px-2 py-1 rounded-lg border border-white/40">ביגוד מומלץ: {wetsuit.label}</span>
+                      <span className="text-[11px] font-bold text-[#002b44] text-center w-full leading-tight bg-white/50 px-2 py-1 rounded-lg border border-white/40">גלשן מומלץ: {boardType}</span>
                     </div>
-                  )}
-                  <div className="flex flex-col items-center gap-3 w-[185px] md:w-[255px] z-20 relative pt-10">
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-[#2A3F45] text-white text-[11px] font-bold px-4 py-1.5 rounded-full whitespace-nowrap shadow-lg z-30">
-                      {catalogItem?.name || boardType} (המומלץ!)
-                    </div>
-                    <div className="h-[400px] w-full relative flex items-end justify-center">
-                      <SurfboardOverlay selectedBoardType={boardKey} hideLabel />
-                    </div>
-                    <span className="text-[11px] font-bold text-[#002b44] text-center w-full leading-tight bg-white/50 px-2 py-1 rounded-lg border border-white/40">גלשן מומלץ: {boardType}</span>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {currentBoardVolume && currentBoardLength && !isWarning && (
-              <div className="bg-white/50 border border-white/40 rounded-2xl p-6 shadow-sm">
-                <div className="flex justify-between items-end mb-4">
-                  <div>
-                    <p className="text-xs text-[#007085] uppercase tracking-widest mb-1">התאמת הגלשן שלך להיום</p>
-                    <p className="text-sm font-bold text-[#002b44]">{matchText}</p>
+                {currentBoardVolume && currentBoardLength && (
+                  <div className="bg-white/50 border border-white/40 rounded-2xl p-6 shadow-sm">
+                    <div className="flex justify-between items-end mb-4">
+                      <div>
+                        <p className="text-xs text-[#007085] uppercase tracking-widest mb-1">התאמת הגלשן שלך להיום</p>
+                        <p className="text-sm font-bold text-[#002b44]">{matchText}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-3xl font-black ${matchScore >= 85 ? 'text-emerald-500' : matchScore >= 60 ? 'text-amber-500' : 'text-rose-500'}`}>
+                          {matchScore}%
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Visual Gauge */}
+                    <div className="h-3 bg-black/5 rounded-full overflow-hidden relative">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${matchScore}%` }}
+                        transition={{ duration: 1, delay: 0.5, type: "spring" }}
+                        className={`absolute top-0 left-0 h-full rounded-full ${matchScore >= 85 ? 'bg-emerald-400' : matchScore >= 60 ? 'bg-amber-400' : 'bg-rose-400'}`}
+                      />
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className={`text-3xl font-black ${matchScore >= 85 ? 'text-emerald-500' : matchScore >= 60 ? 'text-amber-500' : 'text-rose-500'}`}>
-                      {matchScore}%
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Visual Gauge */}
-                <div className="h-3 bg-black/5 rounded-full overflow-hidden relative">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${matchScore}%` }}
-                    transition={{ duration: 1, delay: 0.5, type: "spring" }}
-                    className={`absolute top-0 left-0 h-full rounded-full ${matchScore >= 85 ? 'bg-emerald-400' : matchScore >= 60 ? 'bg-amber-400' : 'bg-rose-400'}`}
-                  />
-                </div>
-              </div>
-            )}
+                )}
 
-            {onSaveRecommendation && !isWarning && (
-              <div className="flex justify-center w-full">
-                <button 
-                  onClick={async () => {
-                    setIsSaving(true);
-                    try {
-                      await onSaveRecommendation(recVol, `${Math.floor(recLenInches/12)}'${Math.round(recLenInches%12)}"`);
-                      setSaveSuccess(true);
-                      setTimeout(() => setSaveSuccess(false), 3000);
-                    } finally {
-                      setIsSaving(false);
-                    }
-                  }}
-                  disabled={isSaving || saveSuccess}
-                  className={`px-8 py-3 font-black rounded-xl transition-all flex justify-center items-center gap-2 shadow-sm hover:shadow-md ${
-                    saveSuccess 
-                      ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
-                      : 'bg-[#007085] hover:bg-[#005a6b] text-white'
-                  }`}
-                >
-                  {isSaving ? (
-                    <Loader2 className="animate-spin" size={20} />
-                  ) : saveSuccess ? (
-                    <>
-                      <CheckCircle2 size={20} />
-                      נשמר בהצלחה
-                    </>
-                  ) : (
-                    <>
-                      <Save size={20} />
-                      שמור המלצה בפרופיל
-                    </>
-                  )}
-                </button>
+                {onSaveRecommendation && (
+                  <div className="flex justify-center w-full">
+                    <button 
+                      onClick={async () => {
+                        setIsSaving(true);
+                        try {
+                          await onSaveRecommendation(recVol, `${Math.floor(recLenInches/12)}'${Math.round(recLenInches%12)}"`);
+                          setSaveSuccess(true);
+                          setTimeout(() => setSaveSuccess(false), 3000);
+                        } finally {
+                          setIsSaving(false);
+                        }
+                      }}
+                      disabled={isSaving || saveSuccess}
+                      className={`px-8 py-3 font-black rounded-xl transition-all flex justify-center items-center gap-2 shadow-sm hover:shadow-md ${
+                        saveSuccess 
+                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
+                          : 'bg-[#007085] hover:bg-[#005a6b] text-white'
+                      }`}
+                    >
+                      {isSaving ? (
+                        <Loader2 className="animate-spin" size={20} />
+                      ) : saveSuccess ? (
+                        <>
+                          <CheckCircle2 size={20} />
+                          נשמר בהצלחה
+                        </>
+                      ) : (
+                        <>
+                          <Save size={20} />
+                          שמור המלצה בפרופיל
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

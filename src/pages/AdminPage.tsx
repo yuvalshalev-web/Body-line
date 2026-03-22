@@ -7,7 +7,7 @@ import {
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
   PanelTop, ArrowUpCircle, ArrowDownCircle, User, Sparkles, Globe, Activity, AlertTriangle, Terminal,
-  FileText, Map as MapIcon, Clock
+  FileText, Map as MapIcon, Clock, Upload
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -30,6 +30,7 @@ import AddMemberModal from '../components/admin/AddMemberModal';
 import { PostEditor } from '../components/admin/PostEditor';
 import { AdminRolloverReport } from './AdminRolloverReport';
 import SystemMonitor from '../components/SystemMonitor';
+import { DataImporterModal } from '../components/DataImporterModal';
 import { MarkdownViewer } from '../components/admin/MarkdownViewer';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 
@@ -49,7 +50,7 @@ const AdminPage: React.FC = () => {
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
     joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember, addMember,
-    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins
+    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, batchAddMembers, batchAddHistory
   } = useData();
 
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM'>('USERS');
@@ -76,6 +77,7 @@ const AdminPage: React.FC = () => {
   };
   const [searchTerm, setSearchTerm] = useState('');
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const [importModal, setImportModal] = useState<{ isOpen: boolean, type: 'members' | 'sessions' }>({ isOpen: false, type: 'members' });
   const [approvedUser, setApprovedUser] = useState<{ firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null>(null);
   const [editingAsset, setEditingAsset] = useState<{ key: string, value: string } | null>(null);
   const [isUploadingAsset, setIsUploadingAsset] = useState<string | null>(null);
@@ -657,7 +659,7 @@ const AdminPage: React.FC = () => {
                         <item.icon size={28} />
                       </div>
                       {item.count !== undefined && item.count > 0 && (
-                        <div className="bg-[var(--surfer-electric-pink)] text-white px-3 py-1 rounded-full text-[12px] font-black animate-pulse shadow-sm shadow-[var(--surfer-electric-pink)]/30">
+                        <div className="bg-[#00AFC2] text-white px-3 py-1 rounded-full text-[12px] font-black animate-pulse shadow-sm shadow-[#00AFC2]/30">
                           {item.count} חדש
                         </div>
                       )}
@@ -1085,64 +1087,64 @@ const AdminPage: React.FC = () => {
               <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <button 
                     onClick={() => setMarkdownConfig({ isOpen: true, path: '/README.md', title: 'מדריך למשתמש (User Guide)' })}
-                    className="w-full bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group hover:scale-[1.01] transition-all text-right flex items-center gap-6 border-l-8 border-l-slate-900"
+                    className="w-full admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-8 group hover:scale-[1.01] transition-all text-right flex items-center gap-6 border-l-8 border-l-[#00426a] relative shadow-xl border border-white/20"
                   >
                     <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
-                      <FileText size={100} />
+                      <FileText size={100} color="#0071a1" />
                     </div>
-                    <div className="p-5 bg-slate-900/5 text-slate-900 rounded-2xl group-hover:bg-slate-900 group-hover:text-white transition-all shadow-inner relative z-10 shrink-0">
+                    <div className="p-5 bg-[#0071a1]/10 text-[#0071a1] rounded-2xl group-hover:bg-[#0071a1] group-hover:text-white transition-all shadow-inner relative z-10 shrink-0 border border-white/20">
                       <FileText size={32} />
                     </div>
                     <div className="relative z-10">
-                      <h4 className="text-xl font-black text-slate-900 mb-1">מדריך למשתמש</h4>
-                      <p className="text-xs text-slate-500 font-bold leading-relaxed">צפייה בקובץ README.md לקבלת מידע טכני ותפעולי על הפרויקט</p>
+                      <h4 className="text-xl font-black text-[#00426a] mb-1">מדריך למשתמש</h4>
+                      <p className="text-xs text-[#00426a] font-bold leading-relaxed opacity-80">צפייה בקובץ README.md לקבלת מידע טכני ותפעולי על הפרויקט</p>
                     </div>
                   </button>
 
                   <button 
                     onClick={() => setMarkdownConfig({ isOpen: true, path: '/PROJECT_MAP.md', title: 'מפת הפרויקט (Project Map)' })}
-                    className="w-full bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden group hover:scale-[1.01] transition-all text-right flex items-center gap-6 border-l-8 border-l-slate-400"
+                    className="w-full admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-8 group hover:scale-[1.01] transition-all text-right flex items-center gap-6 border-l-8 border-l-[#0071a1] relative shadow-xl border border-white/20"
                   >
                     <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
-                      <MapIcon size={100} />
+                      <MapIcon size={100} color="#0071a1" />
                     </div>
-                    <div className="p-5 bg-slate-400/5 text-slate-400 rounded-2xl group-hover:bg-slate-400 group-hover:text-white transition-all shadow-inner relative z-10 shrink-0">
+                    <div className="p-5 bg-[#0071a1]/10 text-[#0071a1] rounded-2xl group-hover:bg-[#0071a1] group-hover:text-white transition-all shadow-inner relative z-10 shrink-0 border border-white/20">
                       <MapIcon size={32} />
                     </div>
                     <div className="relative z-10">
-                      <h4 className="text-xl font-black text-slate-900 mb-1">מפת הפרויקט</h4>
-                      <p className="text-xs text-slate-500 font-bold leading-relaxed">צפייה בקובץ PROJECT_MAP.md להבנת מבנה הרכיבים והקשרים ביניהם</p>
+                      <h4 className="text-xl font-black text-[#00426a] mb-1">מפת הפרויקט</h4>
+                      <p className="text-xs text-[#00426a] font-bold leading-relaxed opacity-80">צפייה בקובץ PROJECT_MAP.md להבנת מבנה הרכיבים והקשרים ביניהם</p>
                     </div>
                   </button>
               </section>
 
               {/* --- Section 3: Strategic Operations (Actions) --- */}
               <section className="space-y-10">
-                <div className="flex flex-col gap-1">
+                <div className="admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-6 flex flex-col gap-1 border-r-8 border-r-[#00426a] shadow-xl border border-white/20">
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-8 bg-rose-500 rounded-full shadow-lg" />
-                    <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">
+                    <div className="w-2 h-8 bg-[#00426a] rounded-full shadow-lg" />
+                    <h3 className="text-3xl font-black text-[#00426a] tracking-tighter uppercase italic" style={{ textShadow: '0 0 20px rgba(0, 66, 106, 0.15)' }}>
                       OPERATIONS // פעולות תחזוקה ותפעול
                     </h3>
                   </div>
-                  <p className="text-xs font-black text-slate-400 mr-5 uppercase tracking-widest opacity-70">
+                  <p className="text-xs font-black text-[#00426a] mr-5 uppercase tracking-widest opacity-60">
                     Critical Maintenance Tools & System Overrides
                   </p>
                 </div>
                 <div className="grid grid-cols-1 gap-8">
                     {/* Historical Data Update Button */}
-                    <div className="bg-[#fdfdfd] border border-white/80 rounded-3xl p-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] relative overflow-hidden border-r-8 border-r-amber-400">
+                    <div className="admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-8 border-r-8 border-r-[#00426a] relative shadow-xl border border-white/20">
                       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
                         <div className="flex items-center gap-6">
-                          <div className="p-5 bg-amber-50 text-amber-600 rounded-2xl shadow-inner border border-amber-100">
+                          <div className="p-5 bg-[#0071a1]/5 text-[#0071a1] rounded-2xl shadow-inner border border-white/20">
                             <RotateCcw size={32} />
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-black rounded uppercase tracking-tighter">System Utility</span>
-                              <h4 className="text-xl font-black text-slate-900">עדכון נתונים היסטוריים</h4>
+                              <span className="px-2 py-0.5 bg-[#2D6A4F]/10 text-[#2D6A4F] text-[9px] font-black rounded uppercase tracking-tighter">System Utility</span>
+                              <h4 className="text-xl font-black text-[#00426a]">עדכון נתונים היסטוריים</h4>
                             </div>
-                            <p className="text-sm text-slate-500 font-bold">עדכון רטרואקטיבי של מהירות רוח וטמפרטורת מים לכל הסשנים המוקלטים.</p>
+                            <p className="text-sm text-[#00426a]/70 font-bold">עדכון רטרואקטיבי של מהירות רוח וטמפרטורת מים לכל הסשנים המוקלטים.</p>
                           </div>
                         </div>
                         <button 
@@ -1168,15 +1170,80 @@ const AdminPage: React.FC = () => {
                             });
                           }}
                           disabled={isProcessing === 'historical-update'}
-                          className="px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl shadow-xl hover:shadow-amber-500/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 min-w-[200px]"
+                          className="px-8 py-4 bg-[#0071a1] hover:bg-[#00426a] text-white font-black rounded-xl shadow-xl hover:shadow-[#0071a1]/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 min-w-[200px] border border-white/20"
                         >
                           {isProcessing === 'historical-update' ? <Loader2 className="animate-spin" size={20} /> : <RotateCcw size={20} />}
                           <span className="text-base">הפעל עדכון</span>
                         </button>
                       </div>
                     </div>
+
+                    {/* Data Import Section */}
+                    <div className="admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-6 flex flex-col gap-1 mt-12 border-r-8 border-r-[#0071a1] shadow-xl border border-white/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-8 bg-[#0071a1] rounded-full shadow-lg" />
+                        <h3 className="text-3xl font-black text-[#00426a] tracking-tighter uppercase italic" style={{ textShadow: '0 0 20px rgba(0, 66, 106, 0.15)' }}>
+                          DATA IMPORT // ייבוא נתונים
+                        </h3>
+                      </div>
+                      <p className="text-xs font-black text-[#00426a] mr-5 uppercase tracking-widest opacity-60">
+                        Bulk Data Migration & Management
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* Import Members */}
+                      <div className="admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-8 border-r-8 border-r-[#0071a1] relative shadow-xl border border-white/20">
+                        <div className="flex flex-col gap-6">
+                          <div className="flex items-center gap-6">
+                            <div className="p-5 bg-[#0071a1]/5 text-[#0071a1] rounded-2xl shadow-inner border border-white/20">
+                              <Users size={32} />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="px-2 py-0.5 bg-[#0071a1]/10 text-[#0071a1] text-[9px] font-black rounded uppercase tracking-tighter">Migration</span>
+                                <h4 className="text-xl font-black text-[#00426a]">ייבוא חברים</h4>
+                              </div>
+                              <p className="text-sm text-[#00426a]/70 font-bold">ייבוא מסיבי של חברים מקובץ CSV או Excel.</p>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => setImportModal({ isOpen: true, type: 'members' })}
+                            className="w-full py-4 bg-[#0071a1] hover:bg-[#00426a] text-white font-black rounded-xl shadow-xl hover:shadow-[#0071a1]/40 transition-all active:scale-95 flex items-center justify-center gap-3 border border-white/20"
+                          >
+                            <Upload size={20} />
+                            <span className="text-base">התחל ייבוא חברים</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Import Sessions */}
+                      <div className="admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-8 border-r-8 border-r-[#0071a1] relative shadow-xl border border-white/20">
+                        <div className="flex flex-col gap-6">
+                          <div className="flex items-center gap-6">
+                            <div className="p-5 bg-[#0071a1]/5 text-[#0071a1] rounded-2xl shadow-inner border border-white/20">
+                              <Calendar size={32} />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="px-2 py-0.5 bg-[#0071a1]/10 text-[#0071a1] text-[9px] font-black rounded uppercase tracking-tighter">History</span>
+                                <h4 className="text-xl font-black text-[#00426a]">ייבוא סשנים היסטוריים</h4>
+                              </div>
+                              <p className="text-sm text-[#00426a]/70 font-bold">ייבוא יומן סשנים מהעבר כולל רשימות משתתפים.</p>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => setImportModal({ isOpen: true, type: 'sessions' })}
+                            className="w-full py-4 bg-[#0071a1] hover:bg-[#00426a] text-white font-black rounded-xl shadow-xl hover:shadow-[#0071a1]/40 transition-all active:scale-95 flex items-center justify-center gap-3 border border-white/20"
+                          >
+                            <Upload size={20} />
+                            <span className="text-base">התחל ייבוא סשנים</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                 {conflictingAdmins.length > 1 && (
-                  <div className="admin-info-card p-10 bg-rose-50/20 border-rose-200/30 border-r-8 border-r-rose-400/80">
+                  <div className="admin-info-card p-10 bg-rose-50/10 backdrop-blur-md border-rose-200/30 border-r-8 border-r-rose-400/80 shadow-xl border border-white/20">
                     <div className="flex flex-col gap-8">
                       <div className="flex items-center gap-8">
                         <div className="p-5 bg-rose-100/50 text-rose-600 rounded-3xl shadow-inner border border-rose-200/50">
@@ -2728,6 +2795,13 @@ const AdminPage: React.FC = () => {
         onClose={() => setMarkdownConfig(prev => ({ ...prev, isOpen: false }))}
         filePath={markdownConfig.path}
         title={markdownConfig.title}
+      />
+
+      <DataImporterModal 
+        isOpen={importModal.isOpen}
+        onClose={() => setImportModal(prev => ({ ...prev, isOpen: false }))}
+        type={importModal.type}
+        onImport={importModal.type === 'members' ? batchAddMembers : batchAddHistory}
       />
     </div>
     </div>
