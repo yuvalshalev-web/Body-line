@@ -164,6 +164,7 @@ const TrendsDashboard: React.FC = () => {
         const activeGroupMembers = groupMembers.filter(m => {
           const joinedDate = parseDate(m.joinedAt);
           const sessionDate = parseDate(session.date);
+          if (session.participantIds?.includes(m.id)) return true;
           if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
             const deactivatedDate = parseDate(m.deactivatedAt);
@@ -190,6 +191,7 @@ const TrendsDashboard: React.FC = () => {
         const activeGroupMembers = groupMembers.filter(m => {
           const joinedDate = parseDate(m.joinedAt);
           const sessionDate = parseDate(session.date);
+          if (session.participantIds?.includes(m.id)) return true;
           if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
             const deactivatedDate = parseDate(m.deactivatedAt);
@@ -216,6 +218,7 @@ const TrendsDashboard: React.FC = () => {
         const activeGroupMembers = groupMembers.filter(m => {
           const joinedDate = parseDate(m.joinedAt);
           const sessionDate = parseDate(session.date);
+          if (session.participantIds?.includes(m.id)) return true;
           if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
             const deactivatedDate = parseDate(m.deactivatedAt);
@@ -371,6 +374,7 @@ const TrendsDashboard: React.FC = () => {
         const activeGroupMembers = groupMembers.filter(m => {
           const joinedDate = parseDate(m.joinedAt);
           const sessionDate = parseDate(session.date);
+          if (session.participantIds?.includes(m.id)) return true;
           if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
             const deactivatedDate = parseDate(m.deactivatedAt);
@@ -397,6 +401,7 @@ const TrendsDashboard: React.FC = () => {
         const activeGroupMembers = groupMembers.filter(m => {
           const joinedDate = parseDate(m.joinedAt);
           const sessionDate = parseDate(session.date);
+          if (session.participantIds?.includes(m.id)) return true;
           if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
           if (m.deactivatedAt) {
             const deactivatedDate = parseDate(m.deactivatedAt);

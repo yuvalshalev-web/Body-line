@@ -14,7 +14,7 @@ interface PlayerCardProps {
 
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
-  const { members, weeklyHistory, yearConfig, siteConfig, isLoading } = useData();
+  const { members, weeklyHistory, yearConfig, siteConfig, isLoading, events } = useData();
   const { currentUser } = useAuth();
   const [showPopup, setShowPopup] = useState(false);
   const [showDriftPopup, setShowDriftPopup] = useState(false);
@@ -31,8 +31,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
   const stats = useMemo(() => {
     if (!userId || members.length === 0 || isLoading) return null;
-    return calculateUserStats(userId, members, weeklyHistory, yearConfig);
-  }, [userId, members, weeklyHistory, yearConfig, isLoading]);
+    return calculateUserStats(userId, members, weeklyHistory, yearConfig, events);
+  }, [userId, members, weeklyHistory, yearConfig, events, isLoading]);
 
   const agePercentile = useMemo(() => {
     if (!member?.birthday || members.length === 0) return null;

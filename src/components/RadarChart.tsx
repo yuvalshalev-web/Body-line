@@ -57,7 +57,16 @@ export const RadarChart: React.FC<RadarChartProps> = ({ userId }) => {
   const CustomTick = (props: any) => {
     const { x, y, payload } = props;
     return (
-      <text x={x} y={y + 15} textAnchor="middle" fill="#003366" fontSize="12" fontFamily="'Inter', sans-serif">
+      <text 
+        x={x} 
+        y={y} 
+        textAnchor="middle" 
+        dominantBaseline="central"
+        fill="#003366" 
+        fontSize="10" 
+        fontWeight="700"
+        fontFamily="'Inter', sans-serif"
+      >
         {payload.value}
       </text>
     );
@@ -69,15 +78,15 @@ export const RadarChart: React.FC<RadarChartProps> = ({ userId }) => {
         <div className="flex items-center gap-2"><div className="w-4 h-4 bg-[#003366] rounded-full opacity-60"></div><span className="text-[#003366] font-medium font-['Inter',sans-serif]">{userName}</span></div>
       </div>
       <ResponsiveContainer width="100%" height="100%">
-        <RechartsRadar cx="50%" cy="45%" outerRadius="92%" data={data}>
-          <PolarGrid stroke="#e2e8f0" strokeOpacity={1} />
+        <RechartsRadar cx="50%" cy="45%" outerRadius="101%" data={data}>
+          <PolarGrid stroke="#e2e8f0" strokeOpacity={1} gridCount={10} gridType="circle" />
           <PolarAngleAxis dataKey="subject" tick={{ fill: '#003366', fontSize: 14, fontWeight: 600, fontFamily: "'Inter', sans-serif" }} />
           <PolarRadiusAxis 
-            angle={180} 
+            angle={210} 
             domain={[0, 10]} 
-            tickCount={11} 
+            ticks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
             tick={<CustomTick />} 
-            axisLine={true}
+            axisLine={false}
           />
           
           <Radar name={userName} dataKey="A" stroke="#003366" fill="#003366" fillOpacity={0.4} />

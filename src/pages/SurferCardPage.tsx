@@ -30,12 +30,12 @@ const Counter = ({ value, duration = 2 }: { value: number; duration?: number }) 
 const SurferCardPage: React.FC = () => {
   const headerImage = useRandomHeader();
   const { currentUser } = useAuth();
-  const { members, weeklyHistory, yearConfig, siteConfig, isLoading, dbStatus } = useData();
+  const { members, weeklyHistory, yearConfig, siteConfig, isLoading, dbStatus, events } = useData();
   
   const userData = useMemo(() => {
     if (!currentUser || isLoading) return null;
-    return calculateUserStats(currentUser.id, members, weeklyHistory, yearConfig);
-  }, [currentUser, members, weeklyHistory, yearConfig, isLoading]);
+    return calculateUserStats(currentUser.id, members, weeklyHistory, yearConfig, events);
+  }, [currentUser, members, weeklyHistory, yearConfig, events, isLoading]);
 
   if (isLoading) return (
     <div className="flex items-center justify-center min-h-[60vh]">

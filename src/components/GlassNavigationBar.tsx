@@ -19,42 +19,48 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
   if (items && onChange) {
     return (
       <div className="w-full flex justify-center">
-        <div className={`flex items-center overflow-x-auto no-scrollbar gap-1.5 p-1.5 rounded-2xl ${theme === 'sunset' ? 'bg-orange-200/20' : 'bg-slate-200/20'} backdrop-blur-2xl border border-white/30 shadow-inner relative max-w-full touch-pan-x`}>
+        <div className={`flex items-center overflow-x-auto no-scrollbar gap-2 p-2 rounded-[2rem] ${theme === 'sunset' ? 'bg-orange-200/30' : 'bg-white/40'} backdrop-blur-2xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.12)] ring-1 ring-black/5 relative max-w-full touch-pan-x`}>
           {items.map((item) => {
             const isActive = activeId === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => item.id && onChange(item.id)}
-                className="relative group px-0.5 py-0.5 flex-shrink-0"
+                className="relative group px-1 py-1 flex-shrink-0 outline-none"
               >
                 {isActive && (
                   <motion.div
                     layoutId="activeTab"
-                    className={`absolute inset-0 rounded-xl shadow-[0_8px_16px_rgba(0,0,0,0.2),inset_0_2px_4px_rgba(255,255,255,1)] border-t border-white/60 border-l border-white/40 ${
+                    className={`absolute inset-0 rounded-2xl ${
+                      theme === 'sunset'
+                        ? 'shadow-[0_4px_20px_rgba(249,115,22,0.4),inset_0_2px_4px_rgba(255,255,255,0.4)]'
+                        : 'shadow-[0_4px_20px_rgba(255,45,96,0.4),inset_0_2px_4px_rgba(255,255,255,0.4)]'
+                    } border-t border-white/80 border-l border-white/50 ${
                       theme === 'sunset' 
-                        ? 'bg-gradient-to-br from-orange-500/60 to-rose-600/60' 
-                        : 'bg-gradient-to-br from-indigo-500/60 to-purple-600/60'
+                        ? 'bg-gradient-to-br from-orange-500/80 to-rose-600/80' 
+                        : 'bg-gradient-to-br from-[#FF2D60] to-[#E61E4D]'
                     } backdrop-blur-xl`}
                     initial={false}
-                    transition={{ type: "spring", bounce: 0.4, duration: 0.5 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   >
                     {/* Extra glass shine layer */}
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-transparent via-white/20 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/30 to-transparent pointer-events-none" />
                   </motion.div>
                 )}
-                <div className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl transition-all duration-300 z-10 ${
+                <div className={`relative flex items-center gap-2 px-4 py-2 rounded-2xl transition-all duration-300 z-10 ${
                   isActive 
                     ? 'text-white font-black scale-105' 
-                    : 'text-slate-600 hover:text-slate-900 font-bold'
+                    : 'text-slate-600 hover:text-slate-900 font-bold hover:bg-white/50 hover:shadow-sm'
                 }`}>
-                  <div className={`${isActive ? 'text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)]' : 'text-slate-500'}`}>
-                    {React.cloneElement(item.icon as React.ReactElement, { size: 18 })}
+                  <div className={`transition-transform duration-300 ${isActive ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] scale-110' : `text-slate-500 group-hover:scale-110 ${theme === 'sunset' ? 'group-hover:text-orange-500' : 'group-hover:text-[#FF2D60]'}`}`}>
+                    {React.cloneElement(item.icon as React.ReactElement, { size: 18, strokeWidth: isActive ? 2.5 : 2 })}
                   </div>
-                  <span className="text-sm font-black tracking-tight whitespace-nowrap">{item.label}</span>
+                  <span className={`text-sm font-black tracking-tight whitespace-nowrap transition-all duration-300 ${isActive ? 'drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]' : ''}`}>{item.label}</span>
                   {item.count !== undefined && item.count > 0 && (
-                    <span className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black shadow-md ${
-                      isActive ? 'bg-white text-slate-900' : 'bg-[#00AFC2] text-white'
+                    <span className={`ml-1 px-2 py-0.5 rounded-full text-[11px] font-black shadow-md transition-all duration-300 ${
+                      isActive 
+                        ? `bg-white ${theme === 'sunset' ? 'text-orange-500' : 'text-[#FF2D60]'}` 
+                        : `${theme === 'sunset' ? 'bg-orange-500' : 'bg-[#FF2D60]'} text-white group-hover:scale-110`
                     }`}>
                       {item.count}
                     </span>

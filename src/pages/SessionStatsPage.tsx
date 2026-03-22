@@ -399,9 +399,9 @@ const SessionStatsPage: React.FC = () => {
     const today = new Date();
 
     if (filteredSessions.length > 0 && yearConfig) {
-      const sessionMap = new Map<string, number>();
+      const sessionMap = new Map<string, any>();
       filteredSessions.forEach(s => {
-        sessionMap.set(s.date.toDateString(), s.participantsCount || 0);
+        sessionMap.set(s.date.toDateString(), s);
       });
 
       let iter = new Date(startDate);
@@ -419,9 +419,11 @@ const SessionStatsPage: React.FC = () => {
       let safety = 0;
       while (iter <= end && safety < 400) {
         if (iter.getDay() === 4) {
-          const count = sessionMap.get(iter.toDateString()) || 0;
+          const session = sessionMap.get(iter.toDateString());
+          const count = session?.participantsCount || 0;
           const sessionDate = iter;
           const activeAtSession = activeMembers.filter(m => {
+            if (session?.participantIds?.includes(m.id)) return true;
             const joinedDate = parseDate(m.joinedAt);
             if (joinedDate && joinedDate > sessionDate) return false;
             if (m.deactivatedAt) {
@@ -463,6 +465,7 @@ const SessionStatsPage: React.FC = () => {
           
           const activeAtSession = members.filter(m => {
             if (ageMap.get(m.id) !== group.label) return false;
+            if (s.participantIds?.includes(m.id)) return true;
             if (!m.joinedAt) return true; // If no joinedAt, assume active
             const joinedDate = parseDate(m.joinedAt);
             if (joinedDate && joinedDate > sessionDateEnd) return false;

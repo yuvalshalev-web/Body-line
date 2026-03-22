@@ -727,11 +727,38 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateHistory = useCallback(async (id: string, participantIds: string[]) => {
     const db = getDb();
-    await updateDoc(doc(db, 'weekly_history', id), {
+    
+    // Find the previous session data to calculate who was added/removed
+    const previousSession = weeklyHistory.find(s => s.id === id);
+    const previousParticipants = previousSession?.participantIds || [];
+    
+    const addedParticipants = participantIds.filter((pid: string) => !previousParticipants.includes(pid));
+    const removedParticipants = previousParticipants.filter((pid: string) => !participantIds.includes(pid));
+    
+    const batch = writeBatch(db);
+    
+    // Update the history document
+    batch.update(doc(db, 'weekly_history', id), {
       participantIds,
       participantsCount: participantIds.length
     });
-  }, []);
+    
+    // Update totalAttendance for added participants
+    for (const uid of addedParticipants) {
+      batch.update(doc(db, 'members', uid), {
+        totalAttendance: increment(1)
+      });
+    }
+    
+    // Update totalAttendance for removed participants
+    for (const uid of removedParticipants) {
+      batch.update(doc(db, 'members', uid), {
+        totalAttendance: increment(-1)
+      });
+    }
+    
+    await batch.commit();
+  }, [weeklyHistory]);
 
   const forceResetSession = useCallback(async () => {
     const nextSession = getNextSessionDate(siteConfig?.weeklySessions);

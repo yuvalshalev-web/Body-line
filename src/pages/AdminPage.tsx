@@ -1124,7 +1124,7 @@ const AdminPage: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-8 bg-[#00426a] rounded-full shadow-lg" />
                     <h3 className="text-3xl font-black text-[#00426a] tracking-tighter uppercase italic" style={{ textShadow: '0 0 20px rgba(0, 66, 106, 0.15)' }}>
-                      OPERATIONS // פעולות תחזוקה ותפעול
+                      פעולות תחזוקה ותפעול
                     </h3>
                   </div>
                   <p className="text-xs font-black text-[#00426a] mr-5 uppercase tracking-widest opacity-60">
@@ -1176,6 +1176,50 @@ const AdminPage: React.FC = () => {
                           <span className="text-base">הפעל עדכון</span>
                         </button>
                       </div>
+                      
+                      {/* Sync User Stats */}
+                      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 bg-[#0071a1]/5 rounded-2xl border border-white/20 shadow-inner">
+                        <div className="flex items-center gap-6">
+                          <div className="p-4 bg-[#0071a1]/10 text-[#0071a1] rounded-xl shadow-inner border border-white/20">
+                            <Users size={32} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="px-2 py-0.5 bg-[#2D6A4F]/10 text-[#2D6A4F] text-[9px] font-black rounded uppercase tracking-tighter">System Utility</span>
+                              <h4 className="text-xl font-black text-[#00426a]">סנכרון סטטיסטיקות משתמשים</h4>
+                            </div>
+                            <p className="text-sm text-[#00426a]/70 font-bold">חישוב מחדש של סך ההשתתפויות לכל חבר על בסיס יומן הסשנים ההיסטורי.</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={async () => {
+                            showConfirm({
+                              message: 'האם אתה בטוח שברצונך לסנכרן את הסטטיסטיקות? פעולה זו תעבור על כל יומן הסשנים ותחשב מחדש את סך ההשתתפויות לכל חבר.',
+                              onConfirm: async () => {
+                                setIsProcessing('sync-stats');
+                                try {
+                                  const { syncUserStats } = await import('../utils/syncUserStats');
+                                  const result = await syncUserStats();
+                                  if (result.success) {
+                                    showSuccess(`הסטטיסטיקות סונכרנו בהצלחה! ${result.updatedCount} משתמשים עודכנו.`);
+                                  } else {
+                                    showError('שגיאה בסנכרון הנתונים: ' + (result.error || 'שגיאה לא ידועה'));
+                                  }
+                                } catch (err) {
+                                  showError('שגיאה לא צפויה בתהליך הסנכרון.');
+                                } finally {
+                                  setIsProcessing(null);
+                                }
+                              }
+                            });
+                          }}
+                          disabled={isProcessing === 'sync-stats'}
+                          className="px-8 py-4 bg-[#0071a1] hover:bg-[#00426a] text-white font-black rounded-xl shadow-xl hover:shadow-[#0071a1]/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 min-w-[200px] border border-white/20"
+                        >
+                          {isProcessing === 'sync-stats' ? <Loader2 className="animate-spin" size={20} /> : <RotateCcw size={20} />}
+                          <span className="text-base">הפעל סנכרון</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Data Import Section */}
@@ -1183,7 +1227,7 @@ const AdminPage: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-8 bg-[#0071a1] rounded-full shadow-lg" />
                         <h3 className="text-3xl font-black text-[#00426a] tracking-tighter uppercase italic" style={{ textShadow: '0 0 20px rgba(0, 66, 106, 0.15)' }}>
-                          DATA IMPORT // ייבוא נתונים
+                          ייבוא נתונים
                         </h3>
                       </div>
                       <p className="text-xs font-black text-[#00426a] mr-5 uppercase tracking-widest opacity-60">
