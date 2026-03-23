@@ -58,7 +58,7 @@ function BurningBar({pct, accent}: {pct: number, accent: string}) {
       <div style={{position:"absolute",top:0,left:0,height:"100%",width:`${w}%`,background:accent,borderRadius:99,transition:"width 1.7s cubic-bezier(0.22,1,0.36,1)",boxShadow:`0 0 10px ${accent}77`,overflow:"visible"}}>
         {flame && <div style={{position:"absolute",right:-7,top:"50%",transform:"translateY(-50%)",width:14,height:14,borderRadius:"50%",background:"#fff",boxShadow:`0 0 0 3px ${accent},0 0 14px 5px ${accent}cc,0 0 28px 10px ${accent}44`,animation:"flamePulse 0.65s ease-in-out infinite alternate"}}/>}
       </div>
-      {lbl && <div style={{position:"absolute",left:`${Math.min(w,92)}%`,top:-20,transform:"translateX(-50%)",fontSize:10,fontWeight:800,color:accent,fontFamily:"'Yehuda CLM', sans-serif",whiteSpace:"nowrap",animation:"fadeUp 0.3s both"}}>{Math.round(pct)}%</div>}
+      {lbl && <div style={{position:"absolute",left:`${Math.min(w,92)}%`,top:-20,transform:"translateX(-50%)",fontSize:10,fontWeight:800,color:accent,fontFamily:"'Inter', sans-serif",whiteSpace:"nowrap",animation:"fadeUp 0.3s both"}}>{Math.round(pct)}%</div>}
     </div>
   );
 }
@@ -114,7 +114,7 @@ function RankRow({rank, sessions, index}: {rank: any, sessions: number, index: n
   return (
     <div onClick={()=>setOpen(o=>!o)} style={{
         borderBottom:"1px solid rgba(0,0,0,0.05)",
-        background:isActive?`#E0F7F6`:"#FFFFFF",
+        background:isActive?`#e0f2fe`:"#FFFFFF",
         opacity:isLocked?0.6:1,
         cursor:"pointer",
         transition:"background 0.3s, box-shadow 0.3s",
@@ -125,7 +125,7 @@ function RankRow({rank, sessions, index}: {rank: any, sessions: number, index: n
         borderRadius: "16px",
         marginBottom: "16px"
     }}>
-      {isActive && <div style={{position:"absolute",top:0,right:0,bottom:0,width:4,background:`#F4A460`, borderRadius: "16px 0 0 16px"}}/>}
+      {isActive && <div style={{position:"absolute",top:0,right:0,bottom:0,width:4,background:`#f59e0b`, borderRadius: "16px 0 0 16px"}}/>}
       {isActive && <SparkleCanvas color={rank.accent} trigger={sparked}/>}
 
       <div style={{display:"flex",alignItems:"center",gap:16,padding:"16px", direction: "rtl"}}>
@@ -134,20 +134,20 @@ function RankRow({rank, sessions, index}: {rank: any, sessions: number, index: n
         <div style={{flex:1,minWidth:0}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:isActive?8:0}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <span style={{fontSize:isActive?18:16,fontWeight:isActive?700:isDone?600:500,color:"#003366",fontFamily:"'Inter', sans-serif",transition:"all 0.3s"}}>
+              <span style={{fontSize:isActive?18:16,fontWeight:isActive?700:isDone?600:500,color:"#0c4a6e",fontFamily:"'Inter', sans-serif",transition:"all 0.3s"}}>
                 {rank.he}
               </span>
-              {isActive && <span style={{fontSize:10,letterSpacing:1,textTransform:"uppercase",color:"#FFFFFF",background:`#F4A460`,padding:"4px 8px",borderRadius:8,fontWeight:700,fontFamily:"'Inter', sans-serif"}}>עכשיו</span>}
+              {isActive && <span style={{fontSize:10,letterSpacing:1,textTransform:"uppercase",color:"#FFFFFF",background:`#f59e0b`,padding:"4px 8px",borderRadius:8,fontWeight:700,fontFamily:"'Inter', sans-serif"}}>עכשיו</span>}
             </div>
-            <span style={{fontSize:12,color:"#003366",fontFamily:"'Inter', sans-serif", fontWeight: 600}}>
+            <span style={{fontSize:12,color:"#0c4a6e",fontFamily:"'Inter', sans-serif", fontWeight: 600}}>
               {rank.min}{rank.max?`–${rank.max}`:"+"} סשנים
             </span>
           </div>
           {isActive && <BurningBar pct={pct} accent={rank.accent}/>}
-          {isLocked && <div style={{fontSize:12,color:"#003366",fontFamily:"'Inter', sans-serif",marginTop:4, fontWeight: 500}}>🔒 עוד {toUnlock} סשנים</div>}
+          {isLocked && <div style={{fontSize:12,color:"#0c4a6e",fontFamily:"'Inter', sans-serif",marginTop:4, fontWeight: 500}}>🔒 עוד {toUnlock} סשנים</div>}
         </div>
 
-        <div style={{fontSize:12,color:"#003366",transform:open?"rotate(180deg)":"none",transition:"transform 0.25s",flexShrink:0}}>▾</div>
+        <div style={{fontSize:12,color:"#0c4a6e",transform:open?"rotate(180deg)":"none",transition:"transform 0.25s",flexShrink:0}}>▾</div>
       </div>
 
       <div style={{maxHeight:open?320:0,overflow:"hidden",transition:"max-height 0.45s cubic-bezier(0.22,1,0.36,1)"}}>
@@ -163,7 +163,7 @@ function RankRow({rank, sessions, index}: {rank: any, sessions: number, index: n
             ))}
           </div>
           {isActive && nextName && (
-            <div style={{marginTop:16,padding:"12px",background:`rgba(64, 224, 208, 0.1)`,border:`1px solid rgba(64, 224, 208, 0.3)`,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{marginTop:16,padding:"12px",background:`rgba(45, 212, 191, 0.1)`,border:`1px solid rgba(45, 212, 191, 0.3)`,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <span style={{fontSize:13,color:"rgba(0,0,0,0.7)",fontFamily:"'Inter', sans-serif"}}>{Math.round(pct)}% מהדרך ל{nextName}</span>
               <span style={{fontSize:14,fontWeight:700,color:rank.accent,fontFamily:"'Inter', sans-serif"}}>{rank.max?rank.max-sessions:0} סשנים נותרו</span>
             </div>
@@ -192,11 +192,11 @@ export const RankRoadmap: React.FC<{ name: string, sessions: number, overallProg
   },[sessions]);
 
   return (
-    <div style={{
+        <div style={{
         width: "100%",
         maxWidth: 430,
         padding: "32px 16px",
-        background: "#FFFFFF",
+        background: "#F0F9FF", // Light blue background
         position: "relative",
         borderRadius: "24px",
         boxShadow: "0 10px 30px rgba(0,0,0,0.05)"
@@ -216,19 +216,19 @@ export const RankRoadmap: React.FC<{ name: string, sessions: number, overallProg
 
           {/* Header */}
           <div style={{padding:"0 8px",marginBottom:32,animation:"fadeUp 0.5s both", direction: "rtl"}}>
-            <div style={{fontSize:12,letterSpacing:1,color:"#003366",textTransform:"uppercase",marginBottom:8, display: "flex", justifyContent: "space-between", fontFamily: "'Inter', sans-serif"}}>
+            <div style={{fontSize:12,letterSpacing:1,color:"#0369a1",textTransform:"uppercase",marginBottom:8, display: "flex", justifyContent: "space-between", fontFamily: "'Inter', sans-serif"}}>
               <span>{name}</span>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:16}}>
-              <div style={{fontFamily:"'Inter', sans-serif",fontSize:20,fontWeight:700,color:"#003366", whiteSpace: 'nowrap'}}>הגעת – ניצחת. כל השאר בונוס</div>
+              <div style={{fontFamily:"'Inter', sans-serif",fontSize:20,fontWeight:700,color:"#0c4a6e", whiteSpace: 'nowrap'}}>הגעת – ניצחת. כל השאר בונוס</div>
               <div style={{display:"flex",alignItems:"baseline",gap:4,animation:"countBounce 0.75s 1.4s cubic-bezier(0.34,1.56,0.64,1) both"}}>
-                <span style={{fontSize:24,fontWeight:800,color:"#F4A460",lineHeight:1,letterSpacing:"-1px"}}>{count}</span>
-                <span style={{fontSize:12,color:"#003366",letterSpacing:1,textTransform:"uppercase", fontFamily: "'Inter', sans-serif"}}>סשנים</span>
+                <span style={{fontSize:24,fontWeight:800,color:"#f59e0b",lineHeight:1,letterSpacing:"-1px"}}>{count}</span>
+                <span style={{fontSize:12,color:"#0369a1",letterSpacing:1,textTransform:"uppercase", fontFamily: "'Inter', sans-serif"}}>סשנים</span>
               </div>
             </div>
             <div style={{marginTop:12,position:"relative", direction: "ltr"}}>
               <div style={{height:8,background:"rgba(0,0,0,0.05)",borderRadius:99,overflow:"hidden"}}>
-                <div style={{height:"100%",width:`${overallProgressPercent}%`,background:"#40E0D0",borderRadius:99,transition:"width 1.9s cubic-bezier(0.22,1,0.36,1)"}}/>
+                <div style={{height:"100%",width:`${overallProgressPercent}%`,background:"#2dd4bf",borderRadius:99,transition:"width 1.9s cubic-bezier(0.22,1,0.36,1)"}}/>
               </div>
               {[...RANKS.map(r => r.min)].filter(m => m > 0 && m < 35).map(s => (
                 <div key={s} style={{position:"absolute",top:-2,left:`${(s/35)*100}%`,transform:"translateX(-50%)",width:2,height:12,background:"rgba(0,0,0,0.1)"}}/>
@@ -240,7 +240,7 @@ export const RankRoadmap: React.FC<{ name: string, sessions: number, overallProg
             {/* Grit Overlay */}
             <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
             {/* Background Accent */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#004e64]/10 rounded-full blur-3xl -z-10" />
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#0ea5e9]/10 rounded-full blur-3xl -z-10" />
             
             <div className="w-full">
               {RANKS.map((r,i)=><RankRow key={r.id} rank={r} sessions={sessions} index={i}/>)}

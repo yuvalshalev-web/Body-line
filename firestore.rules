@@ -52,6 +52,12 @@ service cloud.firestore {
          (request.auth.token.email == "yuval.shalev@gmail.com" && request.auth.token.email_verified == true));
     }
 
+    function isInstructor() {
+      return isAuthenticated() && 
+        (exists(/databases/$(database)/documents/members/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role == 'Instructor');
+    }
+
     function isValidEmail(email) {
       return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
@@ -246,6 +252,11 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow create: if true;
       allow update, delete: if isAdmin();
+    }
+    
+    match /performance_scores/{scoreId} {
+      allow read: if isAuthenticated() && (isAdmin() || isInstructor() || isOwner(resource.data.memberId));
+      allow write: if isAdmin() || isInstructor();
     }
     
     // Default deny

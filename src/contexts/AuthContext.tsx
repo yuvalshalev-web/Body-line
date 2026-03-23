@@ -48,25 +48,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // @ai-preserve: Firebase Auth State Listener
   // Listen to Firebase Auth state changes
   useEffect(() => {
+    console.log("AuthContext: Initializing onAuthStateChanged...");
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      console.log("AuthContext: onAuthStateChanged fired. User:", user?.email || 'null');
       setFirebaseUser(user);
       
       if (user) {
         try {
           const db = getDb();
+          console.log("AuthContext: Fetching member doc for", user.uid);
           const memberDoc = await getDoc(doc(db, 'members', user.uid));
           if (memberDoc.exists()) {
             const memberData = { id: memberDoc.id, ...memberDoc.data() } as Member;
+            console.log("AuthContext: Member doc found:", memberData.email);
             setCurrentUser(memberData);
             localStorage.setItem('habal_zug_user', JSON.stringify(memberData));
           } else {
+            console.warn("AuthContext: Member doc NOT found for", user.uid);
             const savedUser = localStorage.getItem('habal_zug_user');
             if (savedUser) {
               setCurrentUser(JSON.parse(savedUser));
             }
           }
         } catch (error) {
-          console.error("Error fetching user doc in AuthContext:", error);
+          console.error("AuthContext: Error fetching user doc in AuthContext:", error);
           const savedUser = localStorage.getItem('habal_zug_user');
           if (savedUser) {
             setCurrentUser(JSON.parse(savedUser));
@@ -76,6 +81,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setCurrentUser(null);
         localStorage.removeItem('habal_zug_user');
       }
+      console.log("AuthContext: Setting loading to false");
       setLoading(false);
     });
 

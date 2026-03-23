@@ -87,16 +87,16 @@ const WorkflowVisualizer: React.FC = () => {
             <div className="w-24 h-24 rounded-[2rem] bg-white/20 backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-white/30 flex items-center justify-center relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/20 to-purple-50/20 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity" />
               <Bot size={40} className="text-[#0071a1] relative z-10" strokeWidth={2} />
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#7cfc00]/20 rounded-full border-2 border-white/30 flex items-center justify-center">
-                <CheckCircle2 size={12} className="text-[#7cfc00]" />
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#10B981]/20 rounded-full border-2 border-white/30 flex items-center justify-center">
+                <CheckCircle2 size={12} className="text-[#10B981]" />
               </div>
             </div>
             <div className="text-center">
               <h3 className="text-[#00426a] font-black text-lg uppercase tracking-widest">AI Studio</h3>
               <p className="text-[11px] font-black text-[#0071a1] uppercase tracking-widest mt-1">Code Generation</p>
-              <div className="mt-3 inline-flex items-center gap-1.5 bg-[#7cfc00]/20 px-2 py-0.5 rounded-full">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#7cfc00] animate-pulse" />
-                <span className="text-[8px] font-black text-[#7cfc00] uppercase tracking-widest">Connected</span>
+              <div className="mt-3 inline-flex items-center gap-1.5 bg-[#10B981]/20 px-2 py-0.5 rounded-full">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+                <span className="text-[8px] font-black text-[#10B981] uppercase tracking-widest">Connected</span>
               </div>
             </div>
           </div>
@@ -112,10 +112,10 @@ const WorkflowVisualizer: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-slate-50/20 to-gray-100/20 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity" />
               <Github size={40} className="text-[#00426a] relative z-10" strokeWidth={2} />
               <div className={`absolute -top-2 -right-2 w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center ${
-                githubStatus === 'synced' ? 'bg-[#7cfc00]/20' : 
+                githubStatus === 'synced' ? 'bg-[#10B981]/20' : 
                 githubStatus === 'building' ? 'bg-[#0071a1]/20' : 'bg-[#c94a4a]/20'
               }`}>
-                {githubStatus === 'synced' && <CheckCircle2 size={12} className="text-[#7cfc00]" />}
+                {githubStatus === 'synced' && <CheckCircle2 size={12} className="text-[#10B981]" />}
                 {githubStatus === 'building' && <RefreshCw size={12} className="text-[#0071a1] animate-spin" />}
                 {githubStatus === 'error' && <AlertCircle size={12} className="text-[#c94a4a]" />}
               </div>
@@ -124,15 +124,15 @@ const WorkflowVisualizer: React.FC = () => {
               <h3 className="text-[#00426a] font-black text-lg uppercase tracking-widest">GitHub</h3>
               <p className="text-[11px] font-black text-[#0071a1] uppercase tracking-widest mt-1">Version Control</p>
               <div className={`mt-3 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${
-                githubStatus === 'synced' ? 'bg-[#7cfc00]/20' : 
+                githubStatus === 'synced' ? 'bg-[#10B981]/20' : 
                 githubStatus === 'building' ? 'bg-[#0071a1]/10' : 'bg-[#c94a4a]/10'
               }`}>
                 <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
-                  githubStatus === 'synced' ? 'bg-[#7cfc00]' : 
+                  githubStatus === 'synced' ? 'bg-[#10B981]' : 
                   githubStatus === 'building' ? 'bg-[#0071a1]' : 'bg-[#c94a4a]'
                 }`} />
                 <span className={`text-[8px] font-black uppercase tracking-widest ${
-                  githubStatus === 'synced' ? 'text-[#7cfc00]' : 
+                  githubStatus === 'synced' ? 'text-[#10B981]' : 
                   githubStatus === 'building' ? 'text-[#0071a1]' : 'text-[#c94a4a]'
                 }`}>
                   {githubStatus === 'synced' ? 'Synced' : 
@@ -155,10 +155,10 @@ const WorkflowVisualizer: React.FC = () => {
                 <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
               </svg>
               <div className={`absolute -top-2 -right-2 w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center ${
-                vercelStatus === 'ready' ? 'bg-[#7cfc00]/20' : 
+                vercelStatus === 'ready' ? 'bg-[#10B981]/20' : 
                 vercelStatus === 'building' ? 'bg-[#0071a1]/20' : 'bg-[#c94a4a]/20'
               }`}>
-                {vercelStatus === 'ready' && <CheckCircle2 size={12} className="text-[#7cfc00]" />}
+                {vercelStatus === 'ready' && <CheckCircle2 size={12} className="text-[#10B981]" />}
                 {vercelStatus === 'building' && <Activity size={12} className="text-[#0071a1] animate-pulse" />}
                 {vercelStatus === 'error' && <AlertCircle size={12} className="text-[#c94a4a]" />}
               </div>
@@ -167,15 +167,15 @@ const WorkflowVisualizer: React.FC = () => {
               <h3 className="text-[#00426a] font-black text-lg uppercase tracking-widest">Vercel</h3>
               <p className="text-[11px] font-black text-[#0071a1] uppercase tracking-widest mt-1">Production Hosting</p>
               <div className={`mt-3 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${
-                vercelStatus === 'ready' ? 'bg-[#7cfc00]/20' : 
+                vercelStatus === 'ready' ? 'bg-[#10B981]/20' : 
                 vercelStatus === 'building' ? 'bg-[#0071a1]/10' : 'bg-[#c94a4a]/10'
               }`}>
                 <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
-                  vercelStatus === 'ready' ? 'bg-[#7cfc00]' : 
+                  vercelStatus === 'ready' ? 'bg-[#10B981]' : 
                   vercelStatus === 'building' ? 'bg-[#0071a1]' : 'bg-[#c94a4a]'
                 }`} />
                 <span className={`text-[8px] font-black uppercase tracking-widest ${
-                  vercelStatus === 'ready' ? 'text-[#7cfc00]' : 
+                  vercelStatus === 'ready' ? 'text-[#10B981]' : 
                   vercelStatus === 'building' ? 'text-[#0071a1]' : 'text-[#c94a4a]'
                 }`}>
                   {vercelStatus === 'ready' ? 'Online' : 

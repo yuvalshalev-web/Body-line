@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import * as React from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import PlayerCard from '../components/PlayerCard';
@@ -6,12 +7,10 @@ import UserAnalytics from '../components/UserAnalytics';
 import { OceanJourney } from '../components/OceanJourney';
 import UserCategories from '../components/UserCategories';
 import { RankRoadmap } from '../components/RankRoadmap';
-import { Trophy, Waves, Target, Crown, WifiOff, Flame, Info, Loader2 } from 'lucide-react';
-import { motion, useMotionValue, useTransform, animate, AnimatePresence } from 'motion/react';
-import { useState, useEffect } from 'react';
+import { Trophy, Waves } from 'lucide-react';
+import { animate } from 'motion/react';
 import { calculateUserStats } from '../utils/analytics';
 import { useRandomHeader } from '../hooks/useRandomHeader';
-import { calculateDistance } from '../utils/distanceCalculator';
 
 const Counter = ({ value, duration = 2 }: { value: number; duration?: number }) => {
   const [displayValue, setDisplayValue] = useState(0);

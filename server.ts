@@ -11,6 +11,34 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // Basic middleware
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+
+  // Global error tracking for "Sea Observation"
+  let totalRequests = 0;
+  let errorRequests = 0;
+  const requestHistory: { timestamp: number; isError: boolean }[] = [];
+
+  // Request tracking middleware (moved to top for all requests)
+  app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      totalRequests++;
+      const isError = res.statusCode >= 400;
+      if (isError) errorRequests++;
+      
+      requestHistory.push({ timestamp: Date.now(), isError });
+      if (requestHistory.length > 1000) requestHistory.shift();
+
+      if (req.path.startsWith('/api')) {
+        console.log(`[API] ${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
+      }
+    });
+    next();
+  });
+
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
   });
@@ -121,28 +149,6 @@ async function startServer() {
         }
       });
     }
-  });
-
-  // Global error tracking for "Sea Observation"
-  let totalRequests = 0;
-  let errorRequests = 0;
-  const requestHistory: { timestamp: number; isError: boolean }[] = [];
-
-  // Middleware to track requests and errors
-  app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-      const duration = Date.now() - start;
-      totalRequests++;
-      const isError = res.statusCode >= 400;
-      if (isError) errorRequests++;
-      
-      requestHistory.push({ timestamp: Date.now(), isError });
-      
-      // Keep only last 1000 requests for the rate calculation
-      if (requestHistory.length > 1000) requestHistory.shift();
-    });
-    next();
   });
 
   // Module C: System & Infrastructure
@@ -366,16 +372,27 @@ async function startServer() {
     }
   });
 
+  // 404 handler for API routes to prevent falling through to SPA fallback
+  app.use("/api/*all", (req, res) => {
+    res.status(404).json({ error: `API route not found: ${req.originalUrl}` });
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
+    console.log("Initializing Vite server...");
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { 
+        middlewareMode: true,
+        hmr: false // Explicitly disable HMR as per platform guidelines
+      },
       appType: "spa",
+      root: process.cwd(),
     });
+    console.log("Vite server initialized.");
     app.use(vite.middlewares);
   } else {
     app.use(express.static(path.join(__dirname, "dist")));
-    app.get("*", (req, res) => {
+    app.get("*all", (req, res) => {
       res.sendFile(path.join(__dirname, "dist", "index.html"));
     });
   }

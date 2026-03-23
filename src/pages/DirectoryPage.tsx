@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Filter, User, Mail, Phone, MapPin, Waves, Loader2, MessageCircle, LayoutGrid, List, X, Users } from 'lucide-react';
+import { Search, Filter, User, Mail, Phone, MapPin, Waves, Loader2, MessageCircle, LayoutGrid, List, X, Users, Star } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Member } from '../types';
 import PlayerCard from '../components/PlayerCard';
 import { useRandomHeader } from '../hooks/useRandomHeader';
+import { PerformanceInput } from '../components/PerformanceInput';
 
 const DirectoryPage: React.FC = () => {
   const { members, isLoading } = useData();
+  const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIdentity, setSelectedIdentity] = useState<string>('הכל');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [ratingMemberId, setRatingMemberId] = useState<string | null>(null);
+
+  const isInstructorOrAdmin = currentUser?.role === 'Instructor' || currentUser?.role === 'Admin';
 
   const identities = ['הכל', 'רכז', 'מדריך', 'חבר'];
 
@@ -75,6 +81,18 @@ const DirectoryPage: React.FC = () => {
 
           {/* Quick Actions */}
           <div className="flex gap-2 mt-2">
+            {isInstructorOrAdmin && (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRatingMemberId(member.id);
+                }}
+                className="p-2 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-100 transition-colors"
+                title="הזן ציוני ביצועים"
+              >
+                <Star size={16} />
+              </button>
+            )}
           </div>
         </div>
       </motion.div>
@@ -115,6 +133,18 @@ const DirectoryPage: React.FC = () => {
         </div>
 
         <div className="flex gap-2">
+          {isInstructorOrAdmin && (
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setRatingMemberId(member.id);
+              }}
+              className="p-2 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-100 transition-colors flex items-center gap-2"
+            >
+              <Star size={16} />
+              <span className="text-xs font-bold">דרג ביצועים</span>
+            </button>
+          )}
         </div>
       </motion.div>
     );
@@ -252,6 +282,12 @@ const DirectoryPage: React.FC = () => {
 
       {/* Member Profile Modal */}
       <AnimatePresence>
+        {ratingMemberId && (
+          <PerformanceInput 
+            member={members.find(m => m.id === ratingMemberId)!} 
+            onClose={() => setRatingMemberId(null)} 
+          />
+        )}
         {selectedMemberId && (
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
             <motion.div

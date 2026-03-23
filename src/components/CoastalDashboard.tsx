@@ -24,6 +24,7 @@ import {
 import { getDoc, doc, setDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface CoastalData {
   waterTemp: number;
@@ -94,6 +95,7 @@ export const CoastalDashboard: React.FC = () => {
     };
   };
 
+  const { currentUser } = useAuth();
   const advice = data ? getAdvice(data.uvIndex) : null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,9 +104,19 @@ export const CoastalDashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const weatherRes = await fetch('/api/coastal-weather');
+        const weatherRes = await fetch('/api/coastal-weather', {
+          headers: { 'Accept': 'application/json' }
+        });
         
-        if (!weatherRes.ok) throw new Error('Failed to fetch coastal data');
+        if (!weatherRes.ok) throw new Error(`Failed to fetch coastal data: ${weatherRes.status}`);
+        
+        const contentType = weatherRes.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await weatherRes.text();
+          console.error('Expected JSON but got:', text.substring(0, 100));
+          throw new Error('Server returned non-JSON response');
+        }
+
         const weatherJson = await weatherRes.json();
         setData(weatherJson);
         
@@ -160,14 +172,16 @@ export const CoastalDashboard: React.FC = () => {
           }
         }
         
-        // Optionally log the condition to history (fire and forget)
-        addDoc(collection(db, 'seaConditions'), {
-          timestamp: new Date().toISOString(),
-          waveHeight: weatherJson.waveHeight,
-          waterTemp: weatherJson.waterTemp,
-          windSpeed: weatherJson.windSpeed,
-          uvIndex: weatherJson.uvIndex
-        }).catch(console.error);
+        // Optionally log the condition to history (fire and forget) - ONLY FOR ADMINS
+        if (currentUser?.role === 'Admin') {
+          addDoc(collection(db, 'seaConditions'), {
+            timestamp: new Date().toISOString(),
+            waveHeight: weatherJson.waveHeight,
+            waterTemp: weatherJson.waterTemp,
+            windSpeed: weatherJson.windSpeed,
+            uvIndex: weatherJson.uvIndex
+          }).catch(console.error);
+        }
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');

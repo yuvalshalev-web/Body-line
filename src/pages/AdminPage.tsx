@@ -50,7 +50,7 @@ const AdminPage: React.FC = () => {
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
     joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember, addMember,
-    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, batchAddMembers, batchAddHistory
+    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, batchAddMembers, batchAddHistory, seedPerformanceData
   } = useData();
 
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM'>('USERS');
@@ -1218,6 +1218,44 @@ const AdminPage: React.FC = () => {
                         >
                           {isProcessing === 'sync-stats' ? <Loader2 className="animate-spin" size={20} /> : <RotateCcw size={20} />}
                           <span className="text-base">הפעל סנכרון</span>
+                        </button>
+                      </div>
+                      {/* Seed Performance Data */}
+                      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 bg-[#0071a1]/5 rounded-2xl border border-white/20 shadow-inner mt-6">
+                        <div className="flex items-center gap-6">
+                          <div className="p-4 bg-[#0071a1]/10 text-[#0071a1] rounded-xl shadow-inner border border-white/20">
+                            <Activity size={32} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="px-2 py-0.5 bg-[#2D6A4F]/10 text-[#2D6A4F] text-[9px] font-black rounded uppercase tracking-tighter">System Utility</span>
+                              <h4 className="text-xl font-black text-[#00426a]">הזנת נתוני ביצועים (דמו)</h4>
+                            </div>
+                            <p className="text-sm text-[#00426a]/70 font-bold">יצירת נתוני ביצועים פיקטיביים עבור המשתמשים הראשונים במערכת לצורכי בדיקה.</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={async () => {
+                            showConfirm({
+                              message: 'האם אתה בטוח שברצונך להזין נתוני ביצועים לדוגמה? פעולה זו תוסיף נתונים פיקטיביים למשתמשים קיימים.',
+                              onConfirm: async () => {
+                                setIsProcessing('seed-performance');
+                                try {
+                                  await seedPerformanceData();
+                                  showSuccess('נתוני ביצועים הוזנו בהצלחה!');
+                                } catch (err) {
+                                  showError('שגיאה בהזנת נתוני ביצועים.');
+                                } finally {
+                                  setIsProcessing(null);
+                                }
+                              }
+                            });
+                          }}
+                          disabled={isProcessing === 'seed-performance'}
+                          className="px-8 py-4 bg-[#0071a1] hover:bg-[#00426a] text-white font-black rounded-xl shadow-xl hover:shadow-[#0071a1]/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 min-w-[200px] border border-white/20"
+                        >
+                          {isProcessing === 'seed-performance' ? <Loader2 className="animate-spin" size={20} /> : <Activity size={20} />}
+                          <span className="text-base">הפעל הזנה</span>
                         </button>
                       </div>
                     </div>

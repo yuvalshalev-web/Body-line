@@ -26,7 +26,8 @@ import {
   HeartPulse,
   Trash2,
   AlertTriangle,
-  HelpCircle
+  HelpCircle,
+  Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
@@ -39,6 +40,7 @@ import { hashPassword } from '../utils/crypto';
 import { loadGoogleMaps } from '../utils/googlePlaces';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useRandomHeader } from '../hooks/useRandomHeader';
+import { PerformanceRadar } from '../components/PerformanceRadar';
 
 const ensureAbsoluteUrl = (url?: string) => {
   if (!url) return '';
@@ -203,8 +205,17 @@ const ProfileCompletion = React.memo(({ percentage, onShowDetails }: { percentag
 const ProfilePage: React.FC = () => {
   const headerImage = useRandomHeader();
   const { currentUser, updateUser } = useAuth();
-  const { updateMember } = useData();
+  const { updateMember, performanceScores } = useData();
   
+  const userScores = useMemo(() => {
+    if (!currentUser) return [];
+    const scores = performanceScores.filter(s => s.memberId === currentUser.id);
+    console.log('currentUser:', currentUser);
+    console.log('performanceScores:', performanceScores);
+    console.log('userScores:', scores);
+    return scores;
+  }, [performanceScores, currentUser]);
+
   const [formData, setFormData] = useState<Member | null>(currentUser ? { ...currentUser } : null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

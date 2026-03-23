@@ -85,6 +85,26 @@
         "maxUvIndex": { "type": "number" },
         "minUvIndex": { "type": "number" }
       }
+    },
+    "PerformanceScore": {
+      "title": "PerformanceScore",
+      "description": "A monthly performance score for a member",
+      "type": "object",
+      "properties": {
+        "memberId": { "type": "string" },
+        "month": { "type": "number" },
+        "year": { "type": "number" },
+        "paddle": { "type": "number" },
+        "takeOff": { "type": "number" },
+        "turns": { "type": "number" },
+        "positioning": { "type": "number" },
+        "stamina": { "type": "number" },
+        "style": { "type": "number" },
+        "instructorId": { "type": "string" },
+        "instructorName": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["memberId", "month", "year", "paddle", "takeOff", "turns", "positioning", "stamina", "style"]
     }
   },
   "firestore": {
@@ -155,6 +175,10 @@
     "rollover_logs": {
       "schema": "object",
       "description": "Logs for weekly session rollovers"
+    },
+    "performance_scores": {
+      "schema": "PerformanceScore",
+      "description": "Monthly performance scores for members"
     }
   }
 }

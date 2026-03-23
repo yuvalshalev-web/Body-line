@@ -55,6 +55,22 @@ export interface Member {
   status?: 'אלוף' | 'מתמיד' | 'לא יציב' | 'בנסיגה' | 'מזדמן';
 }
 
+export interface PerformanceScore {
+  id: string;
+  memberId: string;
+  month: number; // 1-12
+  year: number;
+  paddle: number; // 1-10
+  takeOff: number; // 1-10
+  turns: number; // 1-10
+  positioning: number; // 1-10
+  stamina: number; // 1-10
+  style: number; // 1-10
+  instructorId: string;
+  instructorName: string;
+  updatedAt: string;
+}
+
 export interface JoinRequest {
   id: string;
   firstName: string;

@@ -3,7 +3,7 @@ import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, array
 import { ref, deleteObject, getMetadata } from 'firebase/storage';
 import { getDb, trackedGetDocs, setDbStatus, db_status, getStorageInstance } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../utils/dateUtils';
-import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast } from '../types';
+import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
 import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageStats';
@@ -22,6 +22,7 @@ interface DataContextType {
   glossary: GlossaryTerm[];
   exercises: Exercise[];
   quotes: QuoteItem[];
+  performanceScores: PerformanceScore[];
   weeklyHistory: any[];
   siteAssets: any;
   siteConfig: { 
@@ -110,6 +111,9 @@ interface DataContextType {
   updateYearConfig: (config: { startDate: string; endDate: string }) => Promise<void>;
   archiveMember: (id: string) => Promise<void>;
   addMember: (member: Omit<Member, 'id'>) => Promise<void>;
+  addPerformanceScore: (score: Omit<PerformanceScore, 'id'>) => Promise<void>;
+  updatePerformanceScore: (score: PerformanceScore) => Promise<void>;
+  seedPerformanceData: () => Promise<void>;
   isDbEmpty: boolean;
   conflictingAdmins: Member[];
   seedInitialAdmin: () => Promise<boolean>;
@@ -157,6 +161,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [glossary, setGlossary] = useState<GlossaryTerm[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
+  const [performanceScores, setPerformanceScores] = useState<PerformanceScore[]>([]);
   const [weeklyHistory, setWeeklyHistory] = useState<any[]>([]);
   const [siteAssets, setSiteAssets] = useState<any>({});
   const [siteConfig, setSiteConfig] = useState<{ 
@@ -253,45 +258,66 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     throw new Error(JSON.stringify(errInfo));
   }, [showAlert, firebaseUser]);
 
+  // 1. Sync db_status with firebase.ts
   useEffect(() => {
     if (db_status !== dbStatus) {
       setDbStatus(dbStatus);
     }
+  }, [dbStatus]);
 
-    if (dbStatus === 'OFFLINE') {
-      setIsLoading(false);
-      return;
-    }
+  // 2. Coastal Weather Fetcher (Interval)
+  useEffect(() => {
+    if (dbStatus === 'OFFLINE') return;
 
-    const db = getDb();
-    
-    // 1. Public Data Listeners (Always active)
     const fetchCoastalWeather = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
       try {
-        console.log("Fetching coastal weather...");
-        const res = await fetch('/api/coastal-weather', {
+        const url = `${window.location.origin}/api/coastal-weather`;
+        console.log("Fetching coastal weather from:", url);
+        const res = await fetch(url, {
           headers: {
             'Accept': 'application/json'
-          }
+          },
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
+        
         if (!res.ok) {
             console.error("Coastal weather fetch failed with status", res.status);
             return;
         }
-        const data = await res.json();
-        console.log("Coastal weather data received:", data);
-        setCoastalWeather(data);
-      } catch (e) {
-        console.error("Failed to fetch coastal weather - network error or server down:", e);
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          console.log("Coastal weather data received:", data);
+          setCoastalWeather(data);
+        } catch (e) {
+          console.error("Failed to parse coastal weather JSON:", e, "Response text:", text);
+        }
+      } catch (e: any) {
+        clearTimeout(timeoutId);
+        if (e.name === 'AbortError') {
+          console.error("Coastal weather fetch timed out");
+        } else {
+          console.error("Failed to fetch coastal weather - network error or server down:", e);
+        }
       }
     };
+
     fetchCoastalWeather();
     const weatherInterval = setInterval(fetchCoastalWeather, 1000 * 60 * 15);
+    return () => clearInterval(weatherInterval);
+  }, [dbStatus]);
+
+  // 3. Public Site Data Listeners
+  useEffect(() => {
+    if (dbStatus === 'OFFLINE') return;
+    const db = getDb();
 
     const unsubSeaStats = onSnapshot(doc(db, 'seaConditionsStats', 'current'), (doc) => {
-      if (doc.exists()) {
-        setSeaStats(doc.data());
-      }
+      if (doc.exists()) setSeaStats(doc.data());
     }, handleFirestoreError);
 
     const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (doc) => {
@@ -306,165 +332,139 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (doc.exists()) setYearConfig(doc.data() as { startDate: string; endDate: string });
     }, handleFirestoreError);
 
-    // 2. Auth-dependent Data
-    let unsubs: (() => void)[] = [unsubSeaStats, unsubAssets, unsubConfig, unsubYearConfig];
+    return () => {
+      unsubSeaStats();
+      unsubAssets();
+      unsubConfig();
+      unsubYearConfig();
+    };
+  }, [dbStatus, handleFirestoreError]);
 
-    if (currentUser) {
-      if (currentUser.role === 'Admin') {
-        initializeStorageStats();
-      }
-      
-      // Initial Placeholder from Cache (Freshness check: 2 mins)
-      const cachedMembers = storage.get('cached_members_v3');
-      if (cachedMembers) setMembers(cachedMembers);
-      
-      const cachedHistory = storage.get('cached_history_v3');
-      if (cachedHistory) setWeeklyHistory(cachedHistory);
+  // 4. Auth-dependent Data Listeners
+  useEffect(() => {
+    if (dbStatus === 'OFFLINE' || !currentUser) {
+      if (!currentUser) setIsLoading(false);
+      return;
+    }
 
-      // One-time fetches for static-ish data
-      const fetchData = async () => {
-        try {
-          // Glossary
-          const cachedGlossary = storage.get('cached_glossary_v2');
-          if (cachedGlossary) {
-            setGlossary(cachedGlossary);
-          } else {
-            const glSnap = await trackedGetDocs(collection(db, 'glossary'));
-            const glData = glSnap.docs.map(d => ({ id: d.id, ...d.data() } as GlossaryTerm));
-            setGlossary(glData);
-            storage.set('cached_glossary_v2', glData, 24);
-          }
+    const db = getDb();
 
-          // Exercises
-          const cachedExercises = storage.get('cached_exercises_v2');
-          if (cachedExercises) {
-            setExercises(cachedExercises);
-          } else {
-            const exSnap = await trackedGetDocs(collection(db, 'exercises'));
-            const exData = exSnap.docs.map(d => ({ id: d.id, ...d.data() } as Exercise));
-            setExercises(exData);
-            storage.set('cached_exercises_v2', exData, 24);
-          }
-          
-          // Quotes
-          const qSnap = await trackedGetDocs(collection(db, 'quotes'));
-          setQuotes(qSnap.docs.map(d => ({ id: d.id, ...d.data() } as QuoteItem)));
-        } catch (e: any) {
-          if (e.message !== 'QUOTA_EXCEEDED_OR_KILL_SWITCH') handleFirestoreError(e);
-        }
-      };
+    // Initial Placeholder from Cache
+    const cachedMembers = storage.get('cached_members_v3');
+    if (cachedMembers) setMembers(cachedMembers);
+    
+    const cachedHistory = storage.get('cached_history_v3');
+    if (cachedHistory) setWeeklyHistory(cachedHistory);
 
-      fetchData();
-
-      // Real-time listeners for dynamic data
-      const unsubMembers = onSnapshot(query(collection(db, 'members'), limit(200)), (snapshot) => {
-        const rawDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member));
-        console.log('DataContext: Raw members count from snapshot:', rawDocs.length);
-        
-        const filteredDocs = rawDocs.filter(m => {
-          const isSuperAdmin = m.email?.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim();
-          // Special exception: If it's Gal Gadot, don't filter her out even if email matches (to allow recovery)
-          const isGalGadot = (m.firstName === 'גל' && m.lastName === 'גדות') || m.email?.toLowerCase().trim() === 'gal@gmail.com';
-          
-          if (isSuperAdmin && !isGalGadot) {
-            console.log('DataContext: Filtering out super admin:', m.email);
-            return false;
-          }
-          return true;
-        });
-
-        console.log('DataContext: Members count after filtering super admin:', filteredDocs.length);
-        
-        // Check for Gal Gadot specifically
-        const superAdmins = rawDocs.filter(m => m.email?.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim());
-        setConflictingAdmins(superAdmins);
-        if (superAdmins.length > 1) {
-          console.log('DataContext: WARNING! Multiple documents with SuperAdmin email found:', superAdmins.map(m => m.id));
-        } else if (superAdmins.length === 1) {
-          console.log('DataContext: Found single SuperAdmin document. ID:', superAdmins[0].id);
+    // One-time fetches
+    const fetchData = async () => {
+      try {
+        const cachedGlossary = storage.get('cached_glossary_v2');
+        if (cachedGlossary) {
+          setGlossary(cachedGlossary);
         } else {
-          console.log('DataContext: No SuperAdmin document found in raw docs! (This is unexpected)');
+          const glSnap = await trackedGetDocs(collection(db, 'glossary'));
+          const glData = glSnap.docs.map(d => ({ id: d.id, ...d.data() } as GlossaryTerm));
+          setGlossary(glData);
+          storage.set('cached_glossary_v2', glData, 24);
         }
 
-        const galGadot = rawDocs.find(m => 
-          (m.firstName === 'גל' && m.lastName === 'גדות') || 
-          m.email?.toLowerCase().trim() === 'gal@gmail.com'
-        );
-        if (galGadot) {
-          console.log('DataContext: Found Gal Gadot in raw docs:', galGadot);
-          console.log('DataContext: Gal Gadot isActive status:', galGadot.isActive);
-          const isFiltered = !filteredDocs.find(m => m.id === galGadot.id);
-          console.log('DataContext: Is Gal Gadot filtered out by SuperAdmin check?', isFiltered);
+        const cachedExercises = storage.get('cached_exercises_v2');
+        if (cachedExercises) {
+          setExercises(cachedExercises);
         } else {
-          console.log('DataContext: Gal Gadot NOT found in raw docs. Current emails in DB:', rawDocs.map(m => m.email));
+          const exSnap = await trackedGetDocs(collection(db, 'exercises'));
+          const exData = exSnap.docs.map(d => ({ id: d.id, ...d.data() } as Exercise));
+          setExercises(exData);
+          storage.set('cached_exercises_v2', exData, 24);
         }
         
-        setMembers(filteredDocs);
-        setIsDbEmpty(snapshot.empty);
-        storage.set('cached_members_v3', filteredDocs, 2 / 60);
-      }, handleFirestoreError);
-
-      const unsubHistory = onSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
-        const hData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        console.log('DataContext: Weekly History Data:', hData);
-        setWeeklyHistory(hData);
-        storage.set('cached_history_v3', hData, 2 / 60);
-      }, handleFirestoreError);
-
-      const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
-        setEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event)));
-      }, handleFirestoreError);
-      
-      const unsubNews = onSnapshot(query(collection(db, 'news'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
-        setNews(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as NewsItem)));
-      }, handleFirestoreError);
-      
-      const unsubPodcasts = onSnapshot(query(collection(db, 'podcasts'), orderBy('publishedAt', 'desc'), limit(200)), (snapshot) => {
-        setPodcasts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Podcast)));
-      }, handleFirestoreError);
-      
-      const unsubGallery = onSnapshot(query(collection(db, 'gallery'), orderBy('timestamp', 'desc'), limit(50)), (snapshot) => {
-        setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
-      }, handleFirestoreError);
-
-      const unsubAttendees = onSnapshot(doc(db, 'site_data', 'active_session'), async (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.data() as any;
-          const sessionDate = data.date;
-          const attendees = data.attendees || [];
-          setAttendeeIds(attendees);
-          
-          if (sessionDate && new Date(sessionDate) < new Date()) {
-            console.log('Session date passed, finalizing session...');
-            finalizeSession();
-          } else {
-            setActiveSessionDate(sessionDate || getNextSessionDate(siteConfigRef.current?.weeklySessions));
-          }
-        }
-        setIsLoading(false);
-      }, handleFirestoreError);
-
-      unsubs.push(unsubMembers, unsubHistory, unsubEvents, unsubNews, unsubPodcasts, unsubGallery, unsubAttendees);
-
-      if (currentUser.role === 'Admin') {
-        const unsubRequests = onSnapshot(query(collection(db, 'joinRequests'), limit(200)), (snapshot) => {
-          setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
-        }, handleFirestoreError);
-        unsubs.push(unsubRequests);
+        const qSnap = await trackedGetDocs(collection(db, 'quotes'));
+        setQuotes(qSnap.docs.map(d => ({ id: d.id, ...d.data() } as QuoteItem)));
+      } catch (e: any) {
+        if (e.message !== 'QUOTA_EXCEEDED_OR_KILL_SWITCH') handleFirestoreError(e);
       }
-    } else {
-      // Not logged in
+    };
+    fetchData();
+
+    // Real-time listeners
+    const unsubMembers = onSnapshot(query(collection(db, 'members'), limit(200)), (snapshot) => {
+      const rawDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member));
+      const filteredDocs = rawDocs.filter(m => {
+        const isSuperAdmin = m.email?.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim();
+        const isGalGadot = (m.firstName === 'גל' && m.lastName === 'גדות') || m.email?.toLowerCase().trim() === 'gal@gmail.com';
+        return !(isSuperAdmin && !isGalGadot);
+      });
+      setMembers(filteredDocs);
+      setIsDbEmpty(snapshot.empty);
+      storage.set('cached_members_v3', filteredDocs, 2 / 60);
+    }, handleFirestoreError);
+
+    const unsubHistory = onSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
+      const hData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setWeeklyHistory(hData);
+      storage.set('cached_history_v3', hData, 2 / 60);
+    }, handleFirestoreError);
+
+    const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
+      setEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event)));
+    }, handleFirestoreError);
+    
+    const unsubNews = onSnapshot(query(collection(db, 'news'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
+      setNews(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as NewsItem)));
+    }, handleFirestoreError);
+    
+    const unsubPodcasts = onSnapshot(query(collection(db, 'podcasts'), orderBy('publishedAt', 'desc'), limit(200)), (snapshot) => {
+      setPodcasts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Podcast)));
+    }, handleFirestoreError);
+    
+    const unsubGallery = onSnapshot(query(collection(db, 'gallery'), orderBy('timestamp', 'desc'), limit(50)), (snapshot) => {
+      setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
+    }, handleFirestoreError);
+
+    const unsubPerformance = onSnapshot(query(collection(db, 'performance_scores'), limit(500)), (snapshot) => {
+      const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
+      console.log('performanceScores updated:', scores);
+      setPerformanceScores(scores);
+    }, handleFirestoreError);
+
+    const unsubAttendees = onSnapshot(doc(db, 'site_data', 'active_session'), async (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data() as any;
+        setAttendeeIds(data.attendees || []);
+        
+        if (data.date && new Date(data.date) < new Date()) {
+          if (finalizeSessionRef.current) finalizeSessionRef.current();
+        } else {
+          setActiveSessionDate(data.date || getNextSessionDate(siteConfigRef.current?.weeklySessions));
+        }
+      }
       setIsLoading(false);
+    }, handleFirestoreError);
+
+    let unsubRequests: (() => void) | null = null;
+    if (currentUser.role === 'Admin') {
+      unsubRequests = onSnapshot(query(collection(db, 'joinRequests'), limit(200)), (snapshot) => {
+        setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
+      }, handleFirestoreError);
+      initializeStorageStats();
     }
 
     const timeoutId = setTimeout(() => setIsLoading(false), 4000);
 
     return () => {
       clearTimeout(timeoutId);
-      clearInterval(weatherInterval);
-      unsubs.forEach(unsub => unsub());
+      unsubMembers();
+      unsubHistory();
+      unsubEvents();
+      unsubNews();
+      unsubPodcasts();
+      unsubGallery();
+      unsubPerformance();
+      unsubAttendees();
+      if (unsubRequests) unsubRequests();
     };
-  }, [handleFirestoreError, dbStatus, currentUser]);
+  }, [dbStatus, currentUser?.id, currentUser?.role, handleFirestoreError]);
 
   const updateMember = useCallback(async (member: Member) => {
     const { id, ...data } = member;
@@ -797,7 +797,21 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
+  const isFinalizingRef = useRef(false);
+  const finalizeSessionRef = useRef<() => Promise<void>>();
+  
   const finalizeSession = useCallback(async () => {
+    if (isFinalizingRef.current) {
+      console.log("finalizeSession: Already in progress, skipping...");
+      return;
+    }
+    
+    if (hasQuotaError) {
+      console.warn("finalizeSession: Quota error detected, skipping...");
+      return;
+    }
+    
+    isFinalizingRef.current = true;
     console.log("finalizeSession: Starting process...");
     const db = getDb();
     const startTime = Date.now();
@@ -806,6 +820,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       // 1. Start
       console.log("finalizeSession: Logging start...");
+      // Reduced logging: only log start and end
       await addRolloverLog('start', 'success', 'תהליך הסגירה החל');
       
       // 2. Get current active session data
@@ -823,7 +838,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // 3. Archive to weekly_history
       console.log("finalizeSession: Archiving to weekly_history...");
-      await addRolloverLog('archive', 'pending', `מעביר ${currentAttendees.length} משתתפים להיסטוריה...`);
       await addDoc(collection(db, 'weekly_history'), {
         date: currentDate || new Date().toISOString(),
         participantIds: currentAttendees,
@@ -832,14 +846,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         finalizedAt: new Date().toISOString(),
         seaState: coastalWeather || null
       });
-      await addRolloverLog('archive', 'success', 'הסשן הועבר להיסטוריה בהצלחה');
       
-      await addRolloverLog('save_sea_state', 'pending', 'שומר נתוני מצב הים...');
-      if (coastalWeather) {
-        await addRolloverLog('save_sea_state', 'success', 'נתוני מצב הים נשמרו בהצלחה');
-      } else {
-        await addRolloverLog('save_sea_state', 'success', 'לא נמצאו נתוני מצב ים לשמירה');
-      }
       updatedFields += 1;
 
       // 4. Handle One-Time Sessions
@@ -867,32 +874,25 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // 5. Create new session date
       console.log("finalizeSession: Calculating next session date...");
-      await addRolloverLog('create_new', 'pending', 'מחשב תאריך לסשן הבא...');
       const nextDate = getNextSessionDate(currentWeeklySessions);
       console.log("finalizeSession: Next session date calculated:", nextDate);
-      await addRolloverLog('create_new', 'success', `תאריך חדש חושב: ${nextDate}`);
       updatedFields += 1;
 
       // 6. Reset timer
       console.log("finalizeSession: Resetting timer...");
-      await addRolloverLog('reset_timer', 'pending', 'מעדכן תאריך סשן פעיל...');
       // This is combined with reset_attendance in the next step
-      await addRolloverLog('reset_timer', 'success', 'תאריך הסשן עודכן');
       updatedFields += 1;
 
       // 7. Reset attendance
       console.log("finalizeSession: Resetting attendance in active_session...");
-      await addRolloverLog('reset_attendance', 'pending', 'מאפס רשימת נוכחות...');
       await setDoc(activeSessionRef, {
         date: nextDate,
         attendees: []
       }, { merge: true });
-      await addRolloverLog('reset_attendance', 'success', 'רשימת הנוכחות אופסה');
       updatedFields += 1;
 
       // 8. Update stats (batch update for members)
       console.log("finalizeSession: Preparing batch update for member stats...");
-      await addRolloverLog('update_stats', 'pending', `מעדכן סטטיסטיקות ל-${currentAttendees.length} חברים...`);
       const batch = writeBatch(db);
       for (const uid of currentAttendees) {
         const memberRef = doc(db, 'members', uid);
@@ -901,14 +901,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
         updatedFields += 1;
       }
-      await addRolloverLog('update_stats', 'success', 'סטטיסטיקות חברים הוכנו לעדכון');
 
       // 9. Save to DB
       console.log("finalizeSession: Committing batch update...");
-      await addRolloverLog('save_db', 'pending', 'מבצע שמירה סופית למסד הנתונים...');
       await batch.commit();
       console.log("finalizeSession: Batch commit successful!");
-      await addRolloverLog('save_db', 'success', 'כל השינויים נשמרו בהצלחה');
 
       const metrics = {
         expectedFields: 5 + currentAttendees.length,
@@ -923,8 +920,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('Rollover error:', err);
       await addRolloverLog('complete', 'failed', err.message || 'שגיאה לא ידועה');
       throw err;
+    } finally {
+      isFinalizingRef.current = false;
     }
   }, [addRolloverLog, coastalWeather]);
+
+  // Update the ref whenever finalizeSession changes
+  useEffect(() => {
+    finalizeSessionRef.current = finalizeSession;
+  }, [finalizeSession]);
 
   const updateHistoricalSeaTemperatures = useCallback(async () => {
     const db = getDb();
@@ -1173,6 +1177,71 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [hasQuotaError, dbStatus, handleFirestoreError]);
 
+  const addPerformanceScore = useCallback(async (score: Omit<PerformanceScore, 'id'>) => {
+    const db = getDb();
+    const path = 'performance_scores';
+    try {
+      await addDoc(collection(db, path), {
+        ...score,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, path);
+    }
+  }, [handleFirestoreError]);
+
+  const updatePerformanceScore = useCallback(async (score: PerformanceScore) => {
+    const { id, ...data } = score;
+    const db = getDb();
+    const path = `performance_scores/${id}`;
+    try {
+      await updateDoc(doc(db, 'performance_scores', id), {
+        ...data,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
+    }
+  }, [handleFirestoreError]);
+
+  const seedPerformanceData = useCallback(async () => {
+    if (members.length === 0) return;
+    
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    
+    // Months to seed: 9(Sep), 10(Oct), 11(Nov), 12(Dec), 1(Jan), 2(Feb), 3(Mar)
+    const monthsToSeed = [9, 10, 11, 12, 1, 2, 3];
+    
+    // Seed for all members
+    for (const member of members) {
+      // Check if already has scores
+      const hasScores = performanceScores.some(s => s.memberId === member.id);
+      if (hasScores) continue;
+
+      // Add scores for specified months
+      for (const m of monthsToSeed) {
+        // Assume year is current or previous if month is Jan-Mar
+        const y = (m <= 3) ? currentYear : currentYear - 1;
+
+        await addPerformanceScore({
+          memberId: member.id,
+          month: m,
+          year: y,
+          paddle: Math.floor(Math.random() * 5) + 5,
+          takeOff: Math.floor(Math.random() * 5) + 5,
+          turns: Math.floor(Math.random() * 5) + 5,
+          positioning: Math.floor(Math.random() * 5) + 5,
+          stamina: Math.floor(Math.random() * 5) + 5,
+          style: Math.floor(Math.random() * 5) + 5,
+          instructorId: 'system',
+          instructorName: 'מערכת',
+          updatedAt: new Date().toISOString()
+        });
+      }
+    }
+  }, [members, performanceScores, addPerformanceScore]);
+
   const seedInitialAdmin = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -1207,16 +1276,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const contextValue = React.useMemo(() => ({ 
-      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
+      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory, forceResetSession,
       finalizeSession, updateHistoricalSeaTemperatures, batchAddGlossary, batchAddExercises, batchAddQuotes, batchAddMembers, batchAddHistory, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
+      addPerformanceScore, updatePerformanceScore, seedPerformanceData,
       isDbEmpty, conflictingAdmins, seedInitialAdmin
     }), [
-      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
+      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory, forceResetSession,
       finalizeSession, updateHistoricalSeaTemperatures, batchAddGlossary, batchAddExercises, batchAddQuotes, batchAddMembers, batchAddHistory, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
+      addPerformanceScore, updatePerformanceScore, seedPerformanceData,
       isDbEmpty, conflictingAdmins, seedInitialAdmin
     ]);
 
