@@ -2656,6 +2656,26 @@ main.bg-slate-50 {
 }
 
 @font-face {
+    font-family: 'Dana Yad Alef Alef';
+    src: url('/src/assets/fonts/DanaYadAlefAlefAlef-Normal.eot');
+    src: url('/src/assets/fonts/DanaYadAlefAlefAlef-Normal.eot?#iefix') format('embedded-opentype'),
+         url('/src/assets/fonts/DanaYadAlefAlefAlef-Normal.woff') format('woff'),
+         url('/src/assets/fonts/DanaYadAlefAlefAlef-Normal.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@layer utilities {
+  .font-miri {
+    font-family: 'Miriwin', 'Miri', 'Caveat', cursive, sans-serif;
+  }
+  .font-dana-yad {
+    font-family: 'Dana Yad Alef Alef', 'Miriwin', 'Caveat', cursive, sans-serif;
+  }
+}
+
+@font-face {
     font-family: 'Yehuda CLM';
     src: url('./src/assets/fonts/yehudaclm-light-webfont.woff') format('woff'),
          url('./src/assets/fonts/yehudaclm-light-webfont.ttf') format('truetype');

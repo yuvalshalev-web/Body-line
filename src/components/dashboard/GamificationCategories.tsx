@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 const categories = [
   { id: 'starfish', name: 'כוכב ים', image: '/images/starfish.jpg' },
   { id: 'penguin', name: 'פינגווין', image: '/images/penguin.jpg' },
-  { id: 'clownfish', name: 'דג ליצן', image: '/images/clownfish.jpg' },
+  { id: 'manta_ray', name: 'מנטה ריי', image: '/images/manta_ray.png' },
   { id: 'shark', name: 'כריש', image: '/images/shark.jpg' },
   { id: 'orca', name: 'אורקה', image: '/images/orca.jpg' },
 ];
@@ -35,7 +35,7 @@ const GamificationCategories: React.FC = () => {
               <img 
                 src={cat.image} 
                 alt={cat.name} 
-                className="w-16 h-16 object-cover rounded-full"
+                className={`${cat.id === 'manta_ray' ? 'w-32 h-32' : cat.id === 'orca' ? 'w-[70px] h-[70px]' : 'w-16 h-16'} object-cover rounded-full`}
                 referrerPolicy="no-referrer"
               />
               <span className="text-xs font-bold text-white">{cat.name}</span>

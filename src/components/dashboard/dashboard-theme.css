@@ -63,14 +63,14 @@
   }
 }
 
-/* Force vibrant colors for the clownfish and prevent grayscale */
-.clownfish-vibrant-fixed {
+/* Force vibrant colors for the manta ray and prevent grayscale */
+.manta-ray-vibrant-fixed {
   filter: saturate(1.2) contrast(1.05) drop-shadow(0 8px 15px rgba(255, 100, 0, 0.3)) !important;
   opacity: 1 !important;
 }
 
-/* Special override: Clownfish should NEVER be grayscale even when inactive */
-.evolution-icon-inactive .clownfish-vibrant-fixed {
+/* Special override: Manta ray should NEVER be grayscale even when inactive */
+.evolution-icon-inactive .manta-ray-vibrant-fixed {
   filter: saturate(1.1) contrast(1.05) brightness(0.9) !important;
   opacity: 0.8 !important;
 }

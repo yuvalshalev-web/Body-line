@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Ruler, 
@@ -32,7 +32,7 @@ import Markdown from 'react-markdown';
 const ShaperPage: React.FC = () => {
   const headerImage = useRandomHeader();
   const { currentUser } = useAuth();
-  const { updateMember } = useData();
+  const { updateMember, seaStats, coastalWeather, siteConfig } = useData();
   
   const [weight, setWeight] = useState<number>(currentUser?.weight || 75);
   const [height, setHeight] = useState<number>(currentUser?.height || 175);
@@ -44,7 +44,33 @@ const ShaperPage: React.FC = () => {
   );
   const [currentVol, setCurrentVol] = useState<number | undefined>(currentUser?.currentBoardVolume);
   const [currentLen, setCurrentLen] = useState<string | undefined>(currentUser?.currentBoardLength);
-  const [wetsuitThickness, setWetsuitThickness] = useState<'4/3' | '3/2' | '2/2' | '2/2-ss' | 'sun-shirt'>('4/3');
+  
+  const waterTempRaw = seaStats?.waterTemp ?? coastalWeather?.waterTemp ?? siteConfig?.seaState?.waterTemp;
+  const waterTemp = (waterTempRaw !== undefined && waterTempRaw !== null) 
+    ? parseFloat(String(waterTempRaw)) 
+    : null;
+
+  useEffect(() => {
+    console.log('ShaperPage - Water Temp Debug:', {
+      seaStatsTemp: seaStats?.waterTemp,
+      coastalWeatherTemp: coastalWeather?.waterTemp,
+      siteConfigTemp: siteConfig?.seaState?.waterTemp,
+      waterTempRaw,
+      finalWaterTemp: waterTemp
+    });
+  }, [seaStats, coastalWeather, siteConfig, waterTempRaw, waterTemp]);
+
+  const getWetsuit = (temp: number) => {
+    if (temp < 16) return { label: 'חליפה ארוכה (4/3)', thickness: '4/3' as const };
+    if (temp <= 19) return { label: 'חליפה ארוכה (4/3)', thickness: '4/3' as const };
+    if (temp <= 23) return { label: 'מעבר (3/2)', thickness: '3/2' as const };
+    if (temp <= 25) return { label: 'קיץ ארוך (2/2)', thickness: '2/2' as const };
+    if (temp <= 27) return { label: 'קיץ קצר (2/2)', thickness: '2/2-ss' as const };
+    return { label: 'חולצת לייקרה', thickness: 'sun-shirt' as const };
+  };
+
+  const recommendedWetsuit = waterTemp ? getWetsuit(waterTemp) : null;
+  const wetsuitThickness = recommendedWetsuit?.thickness || '4/3';
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [toast, setToast] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
@@ -339,8 +365,8 @@ const ShaperPage: React.FC = () => {
                   disabled={isSaving}
                   className={`w-full py-4 text-lg flex items-center justify-center gap-2 font-black transition-all active:scale-95 ${
                     saveSuccess 
-                      ? '!bg-gradient-to-br !from-emerald-400/60 !to-emerald-500/20 !backdrop-blur-xl !border !border-white/60 !border-b-black/10 !border-r-black/10 !shadow-[inset_0_2px_15px_rgba(255,255,255,0.7),0_10px_30px_rgba(52,211,153,0.3)] !text-[#00426a] hover:!from-emerald-400/70 hover:!to-emerald-500/30' 
-                      : '!bg-gradient-to-br !from-[var(--surfer-cyan)]/60 !to-[var(--surfer-cyan)]/20 !backdrop-blur-xl !border !border-white/60 !border-b-black/10 !border-r-black/10 !shadow-[inset_0_2px_15px_rgba(255,255,255,0.7),0_10px_30px_rgba(0,255,255,0.2)] !text-[#00426a] hover:!from-[var(--surfer-cyan)]/70 hover:!to-[var(--surfer-cyan)]/30 hover:!shadow-[inset_0_2px_20px_rgba(255,255,255,0.9),0_15px_40px_rgba(0,255,255,0.3)]'
+                      ? '!bg-gradient-to-br !from-emerald-400/60 !to-emerald-500/20 !backdrop-blur-xl !border !border-white/60 !border-b-black/10 !border-r-black/10 !shadow-[inset_0_2px_15px_rgba(255,255,255,0.7),0_10px_30px_rgba(52,211,153,0.3)] !text-white hover:!from-emerald-400/70 hover:!to-emerald-500/30' 
+                      : '!bg-gradient-to-br !from-[var(--surfer-cyan)]/60 !to-[var(--surfer-cyan)]/20 !backdrop-blur-xl !border !border-white/60 !border-b-black/10 !border-r-black/10 !shadow-[inset_0_2px_15px_rgba(255,255,255,0.7),0_10px_30px_rgba(0,255,255,0.2)] !text-white hover:!from-[var(--surfer-cyan)]/70 hover:!to-[var(--surfer-cyan)]/30 hover:!shadow-[inset_0_2px_20px_rgba(255,255,255,0.9),0_15px_40px_rgba(0,255,255,0.3)]'
                   }`}
                 >
                   {isSaving ? <Loader2 className="animate-spin" size={20} /> : null}
@@ -436,65 +462,21 @@ const ShaperPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-[#00426a]">חליפת גלישה מומלצת</h3>
-                    <p className="text-[#00426a]/40 text-xs font-bold">התאמה לפי עונות השנה</p>
+                    <p className="text-[#00426a]/40 text-xs font-bold">
+                      {waterTemp ? `טמפרטורת מים נוכחית: ${waterTemp}°C` : 'טמפרטורת מים לא זמינה'}
+                    </p>
                   </div>
                 </div>
 
-                {/* Toggle */}
-                <div className="flex bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl border border-white/60 shadow-inner overflow-x-auto">
-                  <button
-                    onClick={() => setWetsuitThickness('4/3')}
-                    className={`px-4 py-2.5 rounded-xl font-black text-sm transition-all whitespace-nowrap ${
-                      wetsuitThickness === '4/3'
-                        ? 'bg-[var(--surfer-deep-teal)] text-white shadow-md'
-                        : 'text-[#00426a]/60 hover:text-[#00426a]'
-                    }`}
-                  >
-                    חליפה ארוכה (4/3)
-                  </button>
-                  <button
-                    onClick={() => setWetsuitThickness('3/2')}
-                    className={`px-4 py-2.5 rounded-xl font-black text-sm transition-all whitespace-nowrap ${
-                      wetsuitThickness === '3/2'
-                        ? 'bg-[var(--surfer-cyan)] text-[#00426a] shadow-md'
-                        : 'text-[#00426a]/60 hover:text-[#00426a]'
-                    }`}
-                  >
-                    מעבר (3/2)
-                  </button>
-                  <button
-                    onClick={() => setWetsuitThickness('2/2')}
-                    className={`px-4 py-2.5 rounded-xl font-black text-sm transition-all whitespace-nowrap ${
-                      wetsuitThickness === '2/2'
-                        ? 'bg-[var(--surfer-pink)] text-white shadow-md'
-                        : 'text-[#00426a]/60 hover:text-[#00426a]'
-                    }`}
-                  >
-                    קיץ ארוך (2/2)
-                  </button>
-                  <button
-                    onClick={() => setWetsuitThickness('2/2-ss')}
-                    className={`px-4 py-2.5 rounded-xl font-black text-sm transition-all whitespace-nowrap ${
-                      wetsuitThickness === '2/2-ss'
-                        ? 'bg-amber-400 text-[#00426a] shadow-md'
-                        : 'text-[#00426a]/60 hover:text-[#00426a]'
-                    }`}
-                  >
-                    קיץ קצר (2/2)
-                  </button>
-                  <button
-                    onClick={() => setWetsuitThickness('sun-shirt')}
-                    className={`px-4 py-2.5 rounded-xl font-black text-sm transition-all whitespace-nowrap ${
-                      wetsuitThickness === 'sun-shirt'
-                        ? 'bg-[#141414] text-white shadow-md'
-                        : 'text-[#00426a]/60 hover:text-[#00426a]'
-                    }`}
-                  >
-                    חולצת לייקרה
-                  </button>
-                </div>
+                  {recommendedWetsuit && (
+                    <div className="bg-white/50 backdrop-blur-sm px-6 py-3 rounded-2xl border border-white/60 shadow-inner font-black text-[#00426a]">
+                      {recommendedWetsuit.label}
+                    </div>
+                  )}
               </div>
-              <WetsuitSVG thickness={wetsuitThickness} />
+              <div className="scale-80">
+                <WetsuitSVG thickness={recommendedWetsuit?.thickness || '3/2'} />
+              </div>
             </section>
 
             {/* Pro Tip Card */}

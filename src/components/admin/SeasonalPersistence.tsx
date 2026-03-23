@@ -224,7 +224,7 @@ const SeasonalPersistence: React.FC = () => {
               <div className="flex items-center gap-3">
                 <Sun className="text-orange-600" size={28} />
                 <div className="flex items-center gap-2">
-                  <h4 className="text-xl font-black text-[#000000]">🐠 דגי ליצן</h4>
+                  <h4 className="text-xl font-black text-[#000000]">🌊 מנטה ריי</h4>
                   <div className="gt-info-wrapper relative cursor-help">
                     <Info size={14} className="text-orange-600/40 hover:text-orange-600 transition-colors" />
                     <div className="gt-tooltip">
@@ -347,7 +347,7 @@ const SeasonalPersistence: React.FC = () => {
                   <div className="gt-info-wrapper relative cursor-help">
                     <Info size={14} className="text-amber-600/40 hover:text-amber-600 transition-colors" />
                     <div className="gt-tooltip">
-                      גולשי על הנמצאים בטופ 5 של כל שלוש הקטגוריות (פינגווינים, דגי ליצן וכרישים).
+                      גולשי על הנמצאים בטופ 5 של כל שלוש הקטגוריות (פינגווינים, מנטה ריי וכרישים).
                     </div>
                   </div>
                 </div>

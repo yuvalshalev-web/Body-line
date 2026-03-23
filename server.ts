@@ -78,9 +78,22 @@ async function startServer() {
     }
   });
 
+  // In-memory cache for coastal weather
+  let coastalWeatherCache: any = null;
+  let coastalWeatherCacheTime: number = 0;
+  const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
   app.get("/api/coastal-weather", async (req, res) => {
     const requestId = Math.random().toString(36).substring(7);
-    console.log(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Request received`);
+    const now = Date.now();
+
+    // Cache-Aside Pattern: Check if valid cache exists
+    if (coastalWeatherCache && (now - coastalWeatherCacheTime < CACHE_TTL)) {
+      console.log(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Returning cached data`);
+      return res.json(coastalWeatherCache);
+    }
+
+    console.log(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Cache miss, fetching fresh data`);
     try {
       const lat = 32.16;
       const lng = 34.84;
@@ -89,8 +102,6 @@ async function startServer() {
       const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=wave_height,sea_surface_temperature&timezone=auto`;
       // Fetch Forecast data (Wind, UV Index)
       const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
-      
-      console.log(`[${new Date().toISOString()}] [${requestId}] Fetching from Open-Meteo...`);
       
       const [marineRes, weatherRes] = await Promise.all([
         fetch(marineUrl).catch(err => {
@@ -125,10 +136,21 @@ async function startServer() {
         }
       };
 
-      console.log(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Success`);
+      // Update cache
+      coastalWeatherCache = data;
+      coastalWeatherCacheTime = now;
+
+      console.log(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Success, cache updated`);
       res.json(data);
     } catch (error) {
       console.error(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Critical Error:`, error);
+      
+      // If we have a stale cache, return it on error as fallback
+      if (coastalWeatherCache) {
+        console.log(`[${new Date().toISOString()}] [${requestId}] Returning stale cache due to error`);
+        return res.json(coastalWeatherCache);
+      }
+
       const hour = new Date().getHours();
       res.json({
         waterTemp: 20,

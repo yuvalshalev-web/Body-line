@@ -123,16 +123,16 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
                 damping: 30
               }
             }}
-            className="fixed right-4 top-4 bottom-4 z-[10000] w-[300px] bg-white/10 backdrop-blur-[40px] rounded-[40px] p-8 flex flex-col gap-8 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.3)] border border-white/30 overflow-hidden"
+            className="fixed right-4 top-4 bottom-4 z-[10000] w-[300px] bg-white/40 backdrop-blur-[40px] rounded-[40px] p-8 flex flex-col gap-8 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] border border-slate-200/60 overflow-hidden"
             style={{
               perspective: '1000px',
-              boxShadow: '0 32px 64px -15px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.4), inset 0 20px 40px rgba(255,255,255,0.1)',
+              boxShadow: '0 32px 64px -15px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.8), inset 0 20px 40px rgba(255,255,255,0.5)',
             }}
             dir="rtl"
           >
             {/* Animated Background Glows */}
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-400/20 blur-[100px] rounded-full pointer-events-none" />
-            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-cyan-400/20 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-400/10 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-cyan-400/10 blur-[100px] rounded-full pointer-events-none" />
 
             {/* Header / Profile Section */}
             <motion.div 
@@ -143,7 +143,7 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
             >
               <div className="relative group cursor-pointer" onClick={() => handleNavigate('/profile')}>
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-[28px] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-                <div className="relative w-24 h-24 rounded-[24px] overflow-hidden bg-white/20 border border-white/40 shadow-xl flex items-center justify-center">
+                <div className="relative w-24 h-24 rounded-[24px] overflow-hidden bg-white/80 border border-slate-200 shadow-xl flex items-center justify-center">
                   {currentUser?.avatar ? (
                     <img 
                       src={currentUser.avatar} 
@@ -152,15 +152,15 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <User size={40} className="text-white/70" strokeWidth={1} />
+                    <User size={40} className="text-slate-400" strokeWidth={1} />
                   )}
                 </div>
               </div>
               <div className="flex flex-col gap-1">
-                <h3 className="text-2xl font-black text-white tracking-tight leading-none">
+                <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none">
                   {currentUser?.firstName || 'גולש'}
                 </h3>
-                <span className="text-xs text-white/60 font-black uppercase tracking-[0.2em]">
+                <span className="text-xs text-slate-500 font-black uppercase tracking-[0.2em]">
                   {currentUser?.role || 'Member'}
                 </span>
               </div>
@@ -184,22 +184,22 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
                     className={`
                       flex items-center gap-4 p-4 rounded-[20px] transition-all duration-500 w-full shrink-0 group relative overflow-hidden
                       ${isActive 
-                        ? 'bg-white/20 text-white shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)]' 
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        ? 'bg-blue-50/80 text-blue-700 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.05)]' 
+                        : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
                       }
                     `}
                   >
                     {isActive && (
                       <motion.div 
                         layoutId="active-nav-bg"
-                        className="absolute inset-0 bg-gradient-to-l from-blue-500/20 to-transparent"
+                        className="absolute inset-0 bg-gradient-to-l from-blue-100/50 to-transparent"
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       />
                     )}
                     
                     <div className={`
                       w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500
-                      ${isActive ? 'bg-white text-blue-600 shadow-lg' : 'bg-white/5 group-hover:bg-white/20'}
+                      ${isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'bg-slate-100 group-hover:bg-slate-200'}
                     `}>
                       <Icon 
                         size={24} 
@@ -215,7 +215,7 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
                     {isActive && (
                       <motion.div 
                         layoutId="active-indicator"
-                        className="absolute left-4 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_#fff]"
+                        className="absolute left-4 w-1.5 h-1.5 rounded-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]"
                       />
                     )}
                   </motion.button>
@@ -228,7 +228,7 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="relative z-10 pt-4 border-t border-white/10 flex flex-col gap-4"
+              className="relative z-10 pt-4 border-t border-slate-200 flex flex-col gap-4"
             >
               <motion.button
                 whileHover={{ x: -8 }}
@@ -237,9 +237,9 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
                   logout();
                   onClose();
                 }}
-                className="flex items-center gap-4 p-4 rounded-[20px] transition-all duration-500 w-full text-white/60 hover:bg-rose-500/20 hover:text-rose-200 group"
+                className="flex items-center gap-4 p-4 rounded-[20px] transition-all duration-500 w-full text-slate-600 hover:bg-rose-50 hover:text-rose-600 group"
               >
-                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-rose-500/20 transition-colors">
+                <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
                   <LogOut size={24} strokeWidth={2} />
                 </div>
                 <span className="text-lg font-bold tracking-tight">
@@ -256,7 +256,7 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
                 e.stopPropagation();
                 onClose();
               }}
-              className="absolute top-6 left-6 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all z-[10001]"
+              className="absolute top-6 left-6 w-10 h-10 rounded-full bg-white/50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all z-[10001]"
               aria-label="סגור תפריט"
             >
               <X size={20} strokeWidth={2.5} />

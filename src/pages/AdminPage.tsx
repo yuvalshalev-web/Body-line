@@ -30,7 +30,6 @@ import AddMemberModal from '../components/admin/AddMemberModal';
 import { PostEditor } from '../components/admin/PostEditor';
 import { AdminRolloverReport } from './AdminRolloverReport';
 import SystemMonitor from '../components/SystemMonitor';
-import { DataImporterModal } from '../components/DataImporterModal';
 import { MarkdownViewer } from '../components/admin/MarkdownViewer';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 
@@ -50,7 +49,7 @@ const AdminPage: React.FC = () => {
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
     joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember, addMember,
-    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, batchAddMembers, batchAddHistory, seedPerformanceData
+    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins
   } = useData();
 
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM'>('USERS');
@@ -77,7 +76,6 @@ const AdminPage: React.FC = () => {
   };
   const [searchTerm, setSearchTerm] = useState('');
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
-  const [importModal, setImportModal] = useState<{ isOpen: boolean, type: 'members' | 'sessions' }>({ isOpen: false, type: 'members' });
   const [approvedUser, setApprovedUser] = useState<{ firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null>(null);
   const [editingAsset, setEditingAsset] = useState<{ key: string, value: string } | null>(null);
   const [isUploadingAsset, setIsUploadingAsset] = useState<string | null>(null);
@@ -1118,213 +1116,7 @@ const AdminPage: React.FC = () => {
                   </button>
               </section>
 
-              {/* --- Section 3: Strategic Operations (Actions) --- */}
-              <section className="space-y-10">
-                <div className="admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-6 flex flex-col gap-1 border-r-8 border-r-[#00426a] shadow-xl border border-white/20">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-8 bg-[#00426a] rounded-full shadow-lg" />
-                    <h3 className="text-3xl font-black text-[#00426a] tracking-tighter uppercase italic" style={{ textShadow: '0 0 20px rgba(0, 66, 106, 0.15)' }}>
-                      פעולות תחזוקה ותפעול
-                    </h3>
-                  </div>
-                  <p className="text-xs font-black text-[#00426a] mr-5 uppercase tracking-widest opacity-60">
-                    Critical Maintenance Tools & System Overrides
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 gap-8">
-                    {/* Historical Data Update Button */}
-                    <div className="admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-8 border-r-8 border-r-[#00426a] relative shadow-xl border border-white/20">
-                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                        <div className="flex items-center gap-6">
-                          <div className="p-5 bg-[#0071a1]/5 text-[#0071a1] rounded-2xl shadow-inner border border-white/20">
-                            <RotateCcw size={32} />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="px-2 py-0.5 bg-[#2D6A4F]/10 text-[#2D6A4F] text-[9px] font-black rounded uppercase tracking-tighter">System Utility</span>
-                              <h4 className="text-xl font-black text-[#00426a]">עדכון נתונים היסטוריים</h4>
-                            </div>
-                            <p className="text-sm text-[#00426a]/70 font-bold">עדכון רטרואקטיבי של מהירות רוח וטמפרטורת מים לכל הסשנים המוקלטים.</p>
-                          </div>
-                        </div>
-                        <button 
-                          onClick={async () => {
-                            showConfirm({
-                              message: 'האם אתה בטוח שברצונך לעדכן את נתוני הרוח והטמפרטורה לסשנים היסטוריים? פעולה זו תעבור על כל מסמכי הסשנים ותעדכן אותם.',
-                              onConfirm: async () => {
-                                setIsProcessing('historical-update');
-                                try {
-                                  const { updateHistoricalData } = await import('../utils/updateHistoricalData');
-                                  const result = await updateHistoricalData();
-                                  if (result.success) {
-                                    showSuccess('הנתונים ההיסטוריים עודכנו בהצלחה!');
-                                  } else {
-                                    showError('שגיאה בעדכון הנתונים: ' + (result.error || 'שגיאה לא ידועה'));
-                                  }
-                                } catch (err) {
-                                  showError('שגיאה לא צפויה בתהליך העדכון.');
-                                } finally {
-                                  setIsProcessing(null);
-                                }
-                              }
-                            });
-                          }}
-                          disabled={isProcessing === 'historical-update'}
-                          className="px-8 py-4 bg-[#0071a1] hover:bg-[#00426a] text-white font-black rounded-xl shadow-xl hover:shadow-[#0071a1]/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 min-w-[200px] border border-white/20"
-                        >
-                          {isProcessing === 'historical-update' ? <Loader2 className="animate-spin" size={20} /> : <RotateCcw size={20} />}
-                          <span className="text-base">הפעל עדכון</span>
-                        </button>
-                      </div>
-                      
-                      {/* Sync User Stats */}
-                      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 bg-[#0071a1]/5 rounded-2xl border border-white/20 shadow-inner">
-                        <div className="flex items-center gap-6">
-                          <div className="p-4 bg-[#0071a1]/10 text-[#0071a1] rounded-xl shadow-inner border border-white/20">
-                            <Users size={32} />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="px-2 py-0.5 bg-[#2D6A4F]/10 text-[#2D6A4F] text-[9px] font-black rounded uppercase tracking-tighter">System Utility</span>
-                              <h4 className="text-xl font-black text-[#00426a]">סנכרון סטטיסטיקות משתמשים</h4>
-                            </div>
-                            <p className="text-sm text-[#00426a]/70 font-bold">חישוב מחדש של סך ההשתתפויות לכל חבר על בסיס יומן הסשנים ההיסטורי.</p>
-                          </div>
-                        </div>
-                        <button 
-                          onClick={async () => {
-                            showConfirm({
-                              message: 'האם אתה בטוח שברצונך לסנכרן את הסטטיסטיקות? פעולה זו תעבור על כל יומן הסשנים ותחשב מחדש את סך ההשתתפויות לכל חבר.',
-                              onConfirm: async () => {
-                                setIsProcessing('sync-stats');
-                                try {
-                                  const { syncUserStats } = await import('../utils/syncUserStats');
-                                  const result = await syncUserStats();
-                                  if (result.success) {
-                                    showSuccess(`הסטטיסטיקות סונכרנו בהצלחה! ${result.updatedCount} משתמשים עודכנו.`);
-                                  } else {
-                                    showError('שגיאה בסנכרון הנתונים: ' + (result.error || 'שגיאה לא ידועה'));
-                                  }
-                                } catch (err) {
-                                  showError('שגיאה לא צפויה בתהליך הסנכרון.');
-                                } finally {
-                                  setIsProcessing(null);
-                                }
-                              }
-                            });
-                          }}
-                          disabled={isProcessing === 'sync-stats'}
-                          className="px-8 py-4 bg-[#0071a1] hover:bg-[#00426a] text-white font-black rounded-xl shadow-xl hover:shadow-[#0071a1]/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 min-w-[200px] border border-white/20"
-                        >
-                          {isProcessing === 'sync-stats' ? <Loader2 className="animate-spin" size={20} /> : <RotateCcw size={20} />}
-                          <span className="text-base">הפעל סנכרון</span>
-                        </button>
-                      </div>
-                      {/* Seed Performance Data */}
-                      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 bg-[#0071a1]/5 rounded-2xl border border-white/20 shadow-inner mt-6">
-                        <div className="flex items-center gap-6">
-                          <div className="p-4 bg-[#0071a1]/10 text-[#0071a1] rounded-xl shadow-inner border border-white/20">
-                            <Activity size={32} />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="px-2 py-0.5 bg-[#2D6A4F]/10 text-[#2D6A4F] text-[9px] font-black rounded uppercase tracking-tighter">System Utility</span>
-                              <h4 className="text-xl font-black text-[#00426a]">הזנת נתוני ביצועים (דמו)</h4>
-                            </div>
-                            <p className="text-sm text-[#00426a]/70 font-bold">יצירת נתוני ביצועים פיקטיביים עבור המשתמשים הראשונים במערכת לצורכי בדיקה.</p>
-                          </div>
-                        </div>
-                        <button 
-                          onClick={async () => {
-                            showConfirm({
-                              message: 'האם אתה בטוח שברצונך להזין נתוני ביצועים לדוגמה? פעולה זו תוסיף נתונים פיקטיביים למשתמשים קיימים.',
-                              onConfirm: async () => {
-                                setIsProcessing('seed-performance');
-                                try {
-                                  await seedPerformanceData();
-                                  showSuccess('נתוני ביצועים הוזנו בהצלחה!');
-                                } catch (err) {
-                                  showError('שגיאה בהזנת נתוני ביצועים.');
-                                } finally {
-                                  setIsProcessing(null);
-                                }
-                              }
-                            });
-                          }}
-                          disabled={isProcessing === 'seed-performance'}
-                          className="px-8 py-4 bg-[#0071a1] hover:bg-[#00426a] text-white font-black rounded-xl shadow-xl hover:shadow-[#0071a1]/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 min-w-[200px] border border-white/20"
-                        >
-                          {isProcessing === 'seed-performance' ? <Loader2 className="animate-spin" size={20} /> : <Activity size={20} />}
-                          <span className="text-base">הפעל הזנה</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Data Import Section */}
-                    <div className="admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-6 flex flex-col gap-1 mt-12 border-r-8 border-r-[#0071a1] shadow-xl border border-white/20">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-8 bg-[#0071a1] rounded-full shadow-lg" />
-                        <h3 className="text-3xl font-black text-[#00426a] tracking-tighter uppercase italic" style={{ textShadow: '0 0 20px rgba(0, 66, 106, 0.15)' }}>
-                          ייבוא נתונים
-                        </h3>
-                      </div>
-                      <p className="text-xs font-black text-[#00426a] mr-5 uppercase tracking-widest opacity-60">
-                        Bulk Data Migration & Management
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Import Members */}
-                      <div className="admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-8 border-r-8 border-r-[#0071a1] relative shadow-xl border border-white/20">
-                        <div className="flex flex-col gap-6">
-                          <div className="flex items-center gap-6">
-                            <div className="p-5 bg-[#0071a1]/5 text-[#0071a1] rounded-2xl shadow-inner border border-white/20">
-                              <Users size={32} />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="px-2 py-0.5 bg-[#0071a1]/10 text-[#0071a1] text-[9px] font-black rounded uppercase tracking-tighter">Migration</span>
-                                <h4 className="text-xl font-black text-[#00426a]">ייבוא חברים</h4>
-                              </div>
-                              <p className="text-sm text-[#00426a]/70 font-bold">ייבוא מסיבי של חברים מקובץ CSV או Excel.</p>
-                            </div>
-                          </div>
-                          <button 
-                            onClick={() => setImportModal({ isOpen: true, type: 'members' })}
-                            className="w-full py-4 bg-[#0071a1] hover:bg-[#00426a] text-white font-black rounded-xl shadow-xl hover:shadow-[#0071a1]/40 transition-all active:scale-95 flex items-center justify-center gap-3 border border-white/20"
-                          >
-                            <Upload size={20} />
-                            <span className="text-base">התחל ייבוא חברים</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Import Sessions */}
-                      <div className="admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-8 border-r-8 border-r-[#0071a1] relative shadow-xl border border-white/20">
-                        <div className="flex flex-col gap-6">
-                          <div className="flex items-center gap-6">
-                            <div className="p-5 bg-[#0071a1]/5 text-[#0071a1] rounded-2xl shadow-inner border border-white/20">
-                              <Calendar size={32} />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="px-2 py-0.5 bg-[#0071a1]/10 text-[#0071a1] text-[9px] font-black rounded uppercase tracking-tighter">History</span>
-                                <h4 className="text-xl font-black text-[#00426a]">ייבוא סשנים היסטוריים</h4>
-                              </div>
-                              <p className="text-sm text-[#00426a]/70 font-bold">ייבוא יומן סשנים מהעבר כולל רשימות משתתפים.</p>
-                            </div>
-                          </div>
-                          <button 
-                            onClick={() => setImportModal({ isOpen: true, type: 'sessions' })}
-                            className="w-full py-4 bg-[#0071a1] hover:bg-[#00426a] text-white font-black rounded-xl shadow-xl hover:shadow-[#0071a1]/40 transition-all active:scale-95 flex items-center justify-center gap-3 border border-white/20"
-                          >
-                            <Upload size={20} />
-                            <span className="text-base">התחל ייבוא סשנים</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                {conflictingAdmins.length > 1 && (
+              {conflictingAdmins.length > 1 && (
                   <div className="admin-info-card p-10 bg-rose-50/10 backdrop-blur-md border-rose-200/30 border-r-8 border-r-rose-400/80 shadow-xl border border-white/20">
                     <div className="flex flex-col gap-8">
                       <div className="flex items-center gap-8">
@@ -1410,11 +1202,9 @@ const AdminPage: React.FC = () => {
                     </div>
                   </div>
                 )}
-              </div>
-            </section>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
         {activeTab === 'POSTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
@@ -2877,13 +2667,6 @@ const AdminPage: React.FC = () => {
         onClose={() => setMarkdownConfig(prev => ({ ...prev, isOpen: false }))}
         filePath={markdownConfig.path}
         title={markdownConfig.title}
-      />
-
-      <DataImporterModal 
-        isOpen={importModal.isOpen}
-        onClose={() => setImportModal(prev => ({ ...prev, isOpen: false }))}
-        type={importModal.type}
-        onImport={importModal.type === 'members' ? batchAddMembers : batchAddHistory}
       />
     </div>
     </div>

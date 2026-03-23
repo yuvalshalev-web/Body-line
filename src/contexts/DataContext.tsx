@@ -93,13 +93,6 @@ interface DataContextType {
   updateHistory: (id: string, participantIds: string[]) => Promise<void>;
   forceResetSession: () => Promise<void>;
   finalizeSession: () => Promise<void>;
-  updateHistoricalSeaTemperatures: () => Promise<number>;
-  batchAddGlossary: (items: Omit<GlossaryTerm, 'id'>[]) => Promise<void>;
-  batchAddExercises: (items: Omit<Exercise, 'id'>[]) => Promise<void>;
-  batchAddQuotes: (items: Omit<QuoteItem, 'id'>[]) => Promise<void>;
-  batchAddMembers: (items: any[]) => Promise<void>;
-  batchAddHistory: (items: any[]) => Promise<void>;
-  clearCollection: (collectionName: string) => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
   updateSiteConfig: (config: Partial<{ 
     navPosition: 'bottom' | 'top',
@@ -113,7 +106,6 @@ interface DataContextType {
   addMember: (member: Omit<Member, 'id'>) => Promise<void>;
   addPerformanceScore: (score: Omit<PerformanceScore, 'id'>) => Promise<void>;
   updatePerformanceScore: (score: PerformanceScore) => Promise<void>;
-  seedPerformanceData: () => Promise<void>;
   isDbEmpty: boolean;
   conflictingAdmins: Member[];
   seedInitialAdmin: () => Promise<boolean>;
@@ -291,8 +283,61 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const text = await res.text();
         try {
           const data = JSON.parse(text);
-          console.log("Coastal weather data received:", data);
+          console.log("DataContext - Coastal weather data received:", data);
           setCoastalWeather(data);
+
+          // Centralized Side Effects: Update stats and log history (Admins only for history)
+          const db = getDb();
+          const statsRef = doc(db, 'seaConditionsStats', 'current');
+          const statsDoc = await getDoc(statsRef);
+          
+          if (!statsDoc.exists()) {
+            await setDoc(statsRef, {
+              maxWaveHeight: data.waveHeight,
+              minWaveHeight: data.waveHeight,
+              maxWaterTemp: data.waterTemp,
+              minWaterTemp: data.waterTemp,
+              maxWindSpeed: data.windSpeed,
+              minWindSpeed: data.windSpeed,
+              maxUvIndex: data.uvIndex,
+              minUvIndex: data.uvIndex
+            });
+          } else {
+            const currentStats = statsDoc.data();
+            const needsUpdate = 
+              data.waveHeight > currentStats.maxWaveHeight ||
+              data.waveHeight < currentStats.minWaveHeight ||
+              data.waterTemp > currentStats.maxWaterTemp ||
+              data.waterTemp < currentStats.minWaterTemp ||
+              data.windSpeed > currentStats.maxWindSpeed ||
+              data.windSpeed < currentStats.minWindSpeed ||
+              data.uvIndex > currentStats.maxUvIndex ||
+              data.uvIndex < currentStats.minUvIndex;
+
+            if (needsUpdate) {
+              await updateDoc(statsRef, {
+                maxWaveHeight: Math.max(currentStats.maxWaveHeight, data.waveHeight),
+                minWaveHeight: Math.min(currentStats.minWaveHeight, data.waveHeight),
+                maxWaterTemp: Math.max(currentStats.maxWaterTemp, data.waterTemp),
+                minWaterTemp: Math.min(currentStats.minWaterTemp, data.waterTemp),
+                maxWindSpeed: Math.max(currentStats.maxWindSpeed, data.windSpeed),
+                minWindSpeed: Math.min(currentStats.minWindSpeed, data.windSpeed),
+                maxUvIndex: Math.max(currentStats.maxUvIndex, data.uvIndex),
+                minUvIndex: Math.min(currentStats.minUvIndex, data.uvIndex)
+              });
+            }
+          }
+
+          // Log to history if Admin
+          if (currentUser?.role === 'Admin') {
+            addDoc(collection(db, 'seaConditions'), {
+              timestamp: new Date().toISOString(),
+              waveHeight: data.waveHeight,
+              waterTemp: data.waterTemp,
+              windSpeed: data.windSpeed,
+              uvIndex: data.uvIndex
+            }).catch(console.error);
+          }
         } catch (e) {
           console.error("Failed to parse coastal weather JSON:", e, "Response text:", text);
         }
@@ -309,7 +354,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchCoastalWeather();
     const weatherInterval = setInterval(fetchCoastalWeather, 1000 * 60 * 15);
     return () => clearInterval(weatherInterval);
-  }, [dbStatus]);
+  }, [dbStatus, currentUser]);
 
   // 3. Public Site Data Listeners
   useEffect(() => {
@@ -318,19 +363,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const unsubSeaStats = onSnapshot(doc(db, 'seaConditionsStats', 'current'), (doc) => {
       if (doc.exists()) setSeaStats(doc.data());
-    }, handleFirestoreError);
+    });
 
     const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (doc) => {
       if (doc.exists()) setSiteAssets(doc.data());
-    }, handleFirestoreError);
+    });
 
     const unsubConfig = onSnapshot(doc(db, 'site_data', 'config'), (doc) => {
       if (doc.exists()) setSiteConfig(doc.data() as any);
-    }, handleFirestoreError);
+    });
 
     const unsubYearConfig = onSnapshot(doc(db, 'site_data', 'year_config'), (doc) => {
       if (doc.exists()) setYearConfig(doc.data() as { startDate: string; endDate: string });
-    }, handleFirestoreError);
+    });
 
     return () => {
       unsubSeaStats();
@@ -398,35 +443,35 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setMembers(filteredDocs);
       setIsDbEmpty(snapshot.empty);
       storage.set('cached_members_v3', filteredDocs, 2 / 60);
-    }, handleFirestoreError);
+    });
 
     const unsubHistory = onSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
       const hData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setWeeklyHistory(hData);
       storage.set('cached_history_v3', hData, 2 / 60);
-    }, handleFirestoreError);
+    });
 
     const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
       setEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event)));
-    }, handleFirestoreError);
+    });
     
     const unsubNews = onSnapshot(query(collection(db, 'news'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
       setNews(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as NewsItem)));
-    }, handleFirestoreError);
+    });
     
     const unsubPodcasts = onSnapshot(query(collection(db, 'podcasts'), orderBy('publishedAt', 'desc'), limit(200)), (snapshot) => {
       setPodcasts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Podcast)));
-    }, handleFirestoreError);
+    });
     
     const unsubGallery = onSnapshot(query(collection(db, 'gallery'), orderBy('timestamp', 'desc'), limit(50)), (snapshot) => {
       setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
-    }, handleFirestoreError);
+    });
 
     const unsubPerformance = onSnapshot(query(collection(db, 'performance_scores'), limit(500)), (snapshot) => {
       const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
       console.log('performanceScores updated:', scores);
       setPerformanceScores(scores);
-    }, handleFirestoreError);
+    });
 
     const unsubAttendees = onSnapshot(doc(db, 'site_data', 'active_session'), async (snapshot) => {
       if (snapshot.exists()) {
@@ -440,13 +485,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
       setIsLoading(false);
-    }, handleFirestoreError);
+    });
 
     let unsubRequests: (() => void) | null = null;
     if (currentUser.role === 'Admin') {
       unsubRequests = onSnapshot(query(collection(db, 'joinRequests'), limit(200)), (snapshot) => {
         setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
-      }, handleFirestoreError);
+      });
       initializeStorageStats();
     }
 
@@ -930,174 +975,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     finalizeSessionRef.current = finalizeSession;
   }, [finalizeSession]);
 
-  const updateHistoricalSeaTemperatures = useCallback(async () => {
-    const db = getDb();
-    const historyRef = collection(db, 'weekly_history');
-    const snapshot = await getDocs(historyRef);
-    
-    // Average sea temperatures in Tel Aviv by month (0-indexed: Jan=0, Dec=11)
-    const telAvivTemps = [18, 17, 18, 19, 21, 25, 28, 29, 28, 26, 23, 20];
-    
-    let updatedCount = 0;
-    const batch = writeBatch(db);
-    
-    for (const docSnap of snapshot.docs) {
-      const data = docSnap.data();
-      if (data.date) {
-        let dateObj: Date;
-        
-        // Check if it's a Firestore Timestamp
-        if (typeof data.date.toDate === 'function') {
-          dateObj = data.date.toDate();
-        } else {
-          dateObj = new Date(data.date);
-        }
-        
-        // Skip invalid dates
-        if (isNaN(dateObj.getTime())) continue;
-        
-        const monthIndex = dateObj.getMonth();
-        const avgTemp = telAvivTemps[monthIndex];
-        
-        if (avgTemp !== undefined) {
-          const currentSeaState = data.seaState || {};
-          
-          batch.update(doc(db, 'weekly_history', docSnap.id), {
-            seaState: {
-              ...currentSeaState,
-              waterTemp: avgTemp,
-              isHistoricalAverage: true
-            }
-          });
-          updatedCount++;
-        }
-      }
-    }
-    
-    if (updatedCount > 0) {
-      await batch.commit();
-    }
-    
-    return updatedCount;
-  }, []);
-
-  const batchAddGlossary = useCallback(async (items: Omit<GlossaryTerm, 'id'>[]) => {
-    if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
-    const db = getDb();
-    const batch = writeBatch(db);
-    items.slice(0, 200).forEach(item => {
-      const newDocRef = doc(collection(db, 'glossary'));
-      batch.set(newDocRef, item);
-    });
-    await batch.commit();
-    storage.remove('cached_glossary_v2'); // Invalidate cache
-  }, [hasQuotaError, dbStatus]);
-
-  const batchAddExercises = useCallback(async (items: Omit<Exercise, 'id'>[]) => {
-    if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
-    const db = getDb();
-    const batch = writeBatch(db);
-    items.slice(0, 200).forEach(item => {
-      const newDocRef = doc(collection(db, 'exercises'));
-      batch.set(newDocRef, item);
-    });
-    await batch.commit();
-    storage.remove('cached_exercises_v2'); // Invalidate cache
-  }, [hasQuotaError, dbStatus]);
-
-  const batchAddQuotes = useCallback(async (items: Omit<QuoteItem, 'id'>[]) => {
-    if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
-    const db = getDb();
-    const batch = writeBatch(db);
-    items.slice(0, 200).forEach(item => {
-      const newDocRef = doc(collection(db, 'quotes'));
-      batch.set(newDocRef, item);
-    });
-    await batch.commit();
-  }, [hasQuotaError, dbStatus]);
-
-  const batchAddMembers = useCallback(async (items: any[]) => {
-    if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
-    const db = getDb();
-    const batch = writeBatch(db);
-    
-    // Limit to 500 per batch (Firestore limit)
-    const limitedItems = items.slice(0, 450);
-    
-    for (const item of limitedItems) {
-      const newDocRef = doc(collection(db, 'members'));
-      const memberData = {
-        ...item,
-        isActive: item.isActive !== undefined ? item.isActive : true,
-        role: item.role || 'Member',
-        joinedAt: item.joinedAt || new Date().toISOString().split('T')[0],
-        avatar: item.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.email}`,
-        totalAttendance: 0,
-        eventAttendanceCount: 0,
-        loginCount: 0
-      };
-      batch.set(newDocRef, memberData);
-    }
-    
-    await batch.commit();
-    storage.remove('cached_members_v3');
-  }, [hasQuotaError, dbStatus]);
-
-  const batchAddHistory = useCallback(async (items: any[]) => {
-    if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
-    const db = getDb();
-    const batch = writeBatch(db);
-    
-    // Map names to IDs
-    const nameToId: Record<string, string> = {};
-    members.forEach(m => {
-      const fullName = `${m.firstName} ${m.lastName}`.toLowerCase().trim();
-      nameToId[fullName] = m.id;
-    });
-
-    const limitedItems = items.slice(0, 450);
-    
-    for (const item of limitedItems) {
-      const newDocRef = doc(collection(db, 'weekly_history'));
-      
-      // Resolve participant IDs from names if provided
-      let participantIds: string[] = [];
-      if (item.participantNames) {
-        const names = typeof item.participantNames === 'string' 
-          ? item.participantNames.split(',').map((n: string) => n.trim().toLowerCase())
-          : [];
-        participantIds = names.map((n: string) => nameToId[n]).filter(Boolean);
-      }
-
-      const historyData = {
-        date: item.date,
-        participantIds: participantIds,
-        participantsCount: participantIds.length,
-        location: item.location || 'חוף הדרומי',
-        seaState: {
-          windSpeed: Number(item.windSpeed) || 0,
-          waterTemp: Number(item.waterTemp) || 0
-        },
-        isImported: true,
-        importedAt: new Date().toISOString()
-      };
-      batch.set(newDocRef, historyData);
-    }
-    
-    await batch.commit();
-    storage.remove('cached_history_v3');
-  }, [hasQuotaError, dbStatus, members]);
-
-  const clearCollection = useCallback(async (collectionName: string) => {
-    const db = getDb();
-    const unsub = onSnapshot(collection(db, collectionName), async (snap: any) => {
-      const batch = writeBatch(db);
-      snap.docs.forEach((d: any) => batch.delete(d.ref));
-      await batch.commit();
-      unsub();
-    });
-  }, []);
-
   const updateSiteAssets = useCallback(async (assets: any) => {
     await setDoc(doc(getDb(), 'site_data', 'assets'), assets, { merge: true });
   }, []);
@@ -1204,44 +1081,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [handleFirestoreError]);
 
-  const seedPerformanceData = useCallback(async () => {
-    if (members.length === 0) return;
-    
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    
-    // Months to seed: 9(Sep), 10(Oct), 11(Nov), 12(Dec), 1(Jan), 2(Feb), 3(Mar)
-    const monthsToSeed = [9, 10, 11, 12, 1, 2, 3];
-    
-    // Seed for all members
-    for (const member of members) {
-      // Check if already has scores
-      const hasScores = performanceScores.some(s => s.memberId === member.id);
-      if (hasScores) continue;
-
-      // Add scores for specified months
-      for (const m of monthsToSeed) {
-        // Assume year is current or previous if month is Jan-Mar
-        const y = (m <= 3) ? currentYear : currentYear - 1;
-
-        await addPerformanceScore({
-          memberId: member.id,
-          month: m,
-          year: y,
-          paddle: Math.floor(Math.random() * 5) + 5,
-          takeOff: Math.floor(Math.random() * 5) + 5,
-          turns: Math.floor(Math.random() * 5) + 5,
-          positioning: Math.floor(Math.random() * 5) + 5,
-          stamina: Math.floor(Math.random() * 5) + 5,
-          style: Math.floor(Math.random() * 5) + 5,
-          instructorId: 'system',
-          instructorName: 'מערכת',
-          updatedAt: new Date().toISOString()
-        });
-      }
-    }
-  }, [members, performanceScores, addPerformanceScore]);
-
   const seedInitialAdmin = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -1279,15 +1118,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory, forceResetSession,
-      finalizeSession, updateHistoricalSeaTemperatures, batchAddGlossary, batchAddExercises, batchAddQuotes, batchAddMembers, batchAddHistory, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
-      addPerformanceScore, updatePerformanceScore, seedPerformanceData,
+      finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
+      addPerformanceScore, updatePerformanceScore,
       isDbEmpty, conflictingAdmins, seedInitialAdmin
     }), [
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory, forceResetSession,
-      finalizeSession, updateHistoricalSeaTemperatures, batchAddGlossary, batchAddExercises, batchAddQuotes, batchAddMembers, batchAddHistory, clearCollection, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
-      addPerformanceScore, updatePerformanceScore, seedPerformanceData,
+      finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
+      addPerformanceScore, updatePerformanceScore,
       isDbEmpty, conflictingAdmins, seedInitialAdmin
     ]);
 

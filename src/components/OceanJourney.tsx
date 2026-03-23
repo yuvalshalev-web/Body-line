@@ -25,10 +25,10 @@ const milestones = [
     glow: 'shadow-blue-500/50'
   },
   { 
-    id: 'clownfish', 
-    src: `${import.meta.env.BASE_URL}images/clownfish.png`, 
-    alt: 'Clownfish', 
-    name: 'דג ליצן', 
+    id: 'manta_ray', 
+    src: `${import.meta.env.BASE_URL}images/manta_ray.png`, 
+    alt: 'Manta Ray', 
+    name: 'מנטה ריי', 
     desc: 'שורד את חום הקיץ עם חיוך. אנרגיה טהורה.',
     color: 'from-orange-300 to-orange-600',
     glow: 'shadow-orange-500/50'
@@ -53,7 +53,7 @@ const milestones = [
   },
 ];
 
-export const OceanJourney: React.FC = () => {
+export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = ({ compact = false, noFrame = false }) => {
   const { members, weeklyHistory } = useData();
   const { currentUser } = useAuth();
   const [showHelp, setShowHelp] = useState(false);
@@ -131,7 +131,7 @@ export const OceanJourney: React.FC = () => {
 
     const active = new Set(['starfish']);
     if (penguins.some(p => p.id === userId)) active.add('penguin');
-    if (jellyfish.some(j => j.id === userId)) active.add('clownfish');
+    if (jellyfish.some(j => j.id === userId)) active.add('manta_ray');
     if (sharks.some(s => s.id === userId)) active.add('shark');
     if (orcas.some(o => o.id === userId)) active.add('orca');
 
@@ -143,129 +143,131 @@ export const OceanJourney: React.FC = () => {
   const progressPercent = (unlockedCount / totalCount) * 100;
 
   return (
-    <section className="relative py-16 px-4 md:px-8 overflow-hidden rounded-[3rem] bg-white/40 backdrop-blur-xl border border-white/40 shadow-xl">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,113,161,0.05),transparent_70%)]" />
-        <motion.div 
-          animate={{ 
-            y: [0, -20, 0],
-            opacity: [0.1, 0.2, 0.1]
-          }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-20 -right-20 w-96 h-96 bg-cyan-200/20 rounded-full blur-[100px]" 
-        />
-        <motion.div 
-          animate={{ 
-            y: [0, 20, 0],
-            opacity: [0.05, 0.15, 0.05]
-          }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute -bottom-20 -left-20 w-80 h-80 bg-blue-300/20 rounded-full blur-[80px]" 
-        />
-      </div>
-
+    <section 
+      className={`relative overflow-hidden ${compact ? 'flex flex-col px-2 py-4' : 'py-16 px-4 md:px-8'}`}
+      style={{
+        backgroundColor: '#b87e4a',
+        backgroundImage: `
+          radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.5) 100%),
+          url("${import.meta.env.BASE_URL}cork%20/cork.jpg")
+        `,
+        backgroundSize: '100%, cover',
+        backgroundPosition: 'center, center',
+        borderStyle: noFrame ? 'none' : 'solid',
+        borderWidth: noFrame ? '0' : (compact ? '12px' : '24px'),
+        borderTopColor: '#d49a6a',
+        borderLeftColor: '#c28553',
+        borderRightColor: '#9e6538',
+        borderBottomColor: '#855026',
+        boxShadow: noFrame ? 'inset 0 10px 20px rgba(0,0,0,0.5), inset 0 -10px 20px rgba(0,0,0,0.3), inset 10px 0 20px rgba(0,0,0,0.4), inset -10px 0 20px rgba(0,0,0,0.4)' : 'inset 0 10px 20px rgba(0,0,0,0.5), inset 0 -10px 20px rgba(0,0,0,0.3), inset 10px 0 20px rgba(0,0,0,0.4), inset -10px 0 20px rgba(0,0,0,0.4), 0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        borderRadius: noFrame ? '0' : '4px'
+      }}
+    >
       <div className="relative z-10 max-w-6xl mx-auto">
-        <div className="text-center mb-16 relative">
-          {/* Help Icon & Tooltip */}
-          <div className="absolute top-0 right-0 md:right-4">
-            <motion.button 
-              onClick={() => setShowHelp(!showHelp)}
-              animate={{ 
-                scale: [1, 1.1, 1],
-                boxShadow: [
-                  "0 0 0px rgba(6, 182, 212, 0)",
-                  "0 0 15px rgba(6, 182, 212, 0.4)",
-                  "0 0 0px rgba(6, 182, 212, 0)"
-                ]
-              }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              className="p-2.5 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 text-cyan-600 border border-cyan-500/30 hover:from-cyan-500/30 hover:to-blue-600/30 transition-all duration-300"
-              title="איך משחקים?"
-            >
-              <HelpCircle size={28} />
-            </motion.button>
+        <div className={`flex ${compact ? 'flex-col items-center gap-4 mb-4' : 'flex-col lg:flex-row items-center justify-center gap-8 mb-16'}`}>
+          {/* Main Title Container */}
+          <div 
+            className={`text-center relative ${compact ? 'p-3 w-64 translate-x-12 rotate-[3deg] z-10' : 'p-4 md:p-6 w-full max-w-xl rotate-[1deg]'} transform`}
+            style={{
+              backgroundColor: '#fdfdfd',
+              backgroundImage: `
+                linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,0.03) 100%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E")
+              `,
+              boxShadow: '0 2px 5px rgba(0,0,0,0.15), 5px 10px 15px rgba(0,0,0,0.1), -3px 12px 15px rgba(0,0,0,0.08), inset 0 -10px 15px -5px rgba(0,0,0,0.05)',
+              borderRadius: '2px 255px 3px 25px / 255px 5px 225px 3px'
+            }}
+          >
+            {/* Thumbtack */}
+            <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20">
+              <div className="absolute top-2 left-2 w-3 h-3 bg-black/30 rounded-full blur-[2px]" />
+              <div 
+                className="relative w-4 h-4 rounded-full shadow-[inset_-1px_-1px_3px_rgba(0,0,0,0.3),0_1px_2px_rgba(0,0,0,0.4)] border border-black/10"
+                style={{ background: 'radial-gradient(circle at 30% 30%, #ff6b6b, #c93030)' }}
+              />
+            </div>
+
+            <h2 className={`${compact ? 'text-lg md:text-xl mb-3 mt-2' : 'text-3xl md:text-4xl mb-6 mt-2'} font-black text-[#00426a] tracking-tighter`}>
+              איזו חיה ימית אתה?
+            </h2>
             
-            <AnimatePresence>
-              {showHelp && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                  className="absolute top-14 left-0 md:left-auto md:right-0 w-72 md:w-80 p-6 rounded-3xl bg-[#021626] text-white shadow-2xl z-50 text-right border border-white/10"
-                >
-                  <button 
-                    onClick={() => setShowHelp(false)}
-                    className="absolute top-4 left-4 text-white/40 hover:text-white"
-                  >
-                    <X size={16} />
-                  </button>
-                  <h4 className="text-lg font-black mb-4 text-cyan-400">איך מתקדמים במסע?</h4>
-                  <ul className="space-y-3 text-xs font-bold leading-relaxed">
-                    <li className="flex gap-2 items-start">
-                      <span className="text-amber-400">★</span>
-                      <span><strong className="text-amber-400">כוכב ים:</strong> מוענק לכל חבר חדש שמצטרף למשפחת המים שלנו.</span>
-                    </li>
-                    <li className="flex gap-2 items-start">
-                      <span className="text-blue-400">★</span>
-                      <span><strong className="text-blue-400">פינגווין:</strong> מוענק על התמדה יוצאת דופן באימוני החורף הקרים.</span>
-                    </li>
-                    <li className="flex gap-2 items-start">
-                      <span className="text-orange-400">★</span>
-                      <span><strong className="text-orange-400">דג ליצן:</strong> מוענק על שמירה על רצף אימונים גם בימי הקיץ החמים.</span>
-                    </li>
-                    <li className="flex gap-2 items-start">
-                      <span className="text-slate-400">★</span>
-                      <span><strong className="text-slate-400">כריש:</strong> מוענק על הגעה עקבית ורציפה לכל הסשנים לאורך זמן.</span>
-                    </li>
-                    <li className="flex gap-2 items-start">
-                      <span className="text-indigo-400">★</span>
-                      <span><strong className="text-indigo-400">אורקה:</strong> המאסטר האמיתי - מי שהצליח להשיג את כל הדרגות!</span>
-                    </li>
-                  </ul>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <div className="max-w-md mx-auto">
+              <div className={`flex justify-between items-end ${compact ? 'mb-1' : 'mb-2'}`}>
+                <span className={`${compact ? 'text-[10px]' : 'text-xs'} font-black text-cyan-600 uppercase tracking-widest`}>התקדמות המסע</span>
+                <span className={`${compact ? 'text-lg' : 'text-2xl'} font-black text-[#00426a]`}>{unlockedCount}/{totalCount}</span>
+              </div>
+              <div className={`${compact ? 'h-2' : 'h-3'} w-full bg-[#00426a]/5 rounded-full overflow-hidden border border-[#00426a]/10 p-0.5`} dir="ltr">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPercent}%` }}
+                  transition={{ duration: 1.5, ease: "circOut" }}
+                  className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.3)]"
+                />
+              </div>
+            </div>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00426a]/5 border border-[#00426a]/10 mb-4"
-          >
-            <Star size={14} className="text-amber-500 fill-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00426a]/60">הגעת – ניצחת. כל השאר בונוס</span>
-          </motion.div>
-          
-          <h2 className="text-3xl md:text-4xl font-black text-[#00426a] mb-6 tracking-tighter">
-            אקלים משתנה – הנחישות גוברת
-          </h2>
-          
-          <div className="max-w-md mx-auto">
-            <div className="flex justify-between items-end mb-2">
-              <span className="text-xs font-black text-cyan-600 uppercase tracking-widest">התקדמות המסע</span>
-              <span className="text-2xl font-black text-[#00426a]">{unlockedCount}/{totalCount}</span>
-            </div>
-            <div className="h-3 w-full bg-[#00426a]/5 rounded-full overflow-hidden border border-[#00426a]/10 p-0.5" dir="ltr">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercent}%` }}
-                transition={{ duration: 1.5, ease: "circOut" }}
-                className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.3)]"
-              />
+          {/* Explanation Sticky Note */}
+          <div className={`relative w-full max-w-sm mx-auto transform ${compact ? '-translate-x-12 rotate-[-3deg] z-20 scale-90' : 'rotate-[-1deg]'}`} style={{ filter: 'drop-shadow(3px 5px 5px rgba(0,0,0,0.2))' }}>
+            {/* Tape */}
+            <div 
+              className={`absolute ${compact ? '-top-3' : '-top-4'} left-1/2 -translate-x-1/2 ${compact ? 'w-16 h-8' : 'w-24 h-10'} z-20`}
+              style={{
+                backgroundColor: '#d69b3a',
+                backgroundImage: 'linear-gradient(90deg, rgba(0,0,0,0.05) 50%, transparent 50%)',
+                backgroundSize: '4px 100%',
+                transform: 'translateX(-50%) rotate(-2deg)',
+                boxShadow: '1px 2px 4px rgba(0,0,0,0.15)',
+                borderRadius: '2px'
+              }}
+            />
+            
+            {/* Paper */}
+            <div 
+              className={`relative ${compact ? 'p-5 pl-8 min-h-[200px]' : 'p-8 pl-12 min-h-[320px]'}`}
+              style={{
+                backgroundColor: '#f5efe6',
+                backgroundImage: `repeating-linear-gradient(transparent, transparent ${compact ? '23px' : '31px'}, #d1c8b8 ${compact ? '23px' : '31px'}, #d1c8b8 ${compact ? '24px' : '32px'})`,
+                backgroundPosition: `0 ${compact ? '12px' : '16px'}`,
+                maskImage: `radial-gradient(circle at 0px ${compact ? '12px' : '16px'}, transparent ${compact ? '6px' : '8px'}, black ${compact ? '6.5px' : '8.5px'})`,
+                maskSize: `100% ${compact ? '24px' : '32px'}`,
+                maskRepeat: 'repeat-y',
+                WebkitMaskImage: `radial-gradient(circle at 0px ${compact ? '12px' : '16px'}, transparent ${compact ? '6px' : '8px'}, black ${compact ? '6.5px' : '8.5px'})`,
+                WebkitMaskSize: `100% ${compact ? '24px' : '32px'}`,
+                WebkitMaskRepeat: 'repeat-y',
+              }}
+            >
+              <h4 style={{ fontFamily: "'Dana Yad Alef Alef', cursive" }} className={`${compact ? 'text-2xl mb-2' : 'text-3xl mb-4'} font-black text-slate-800 text-center mt-2`}>איך מתקדמים במסע?</h4>
+              <ul style={{ fontFamily: "'Dana Yad Alef Alef', cursive", lineHeight: compact ? '24px' : '32px' }} className={`space-y-0 ${compact ? 'text-lg' : 'text-2xl'} font-bold text-slate-800 text-right`}>
+                <li><strong className="text-amber-600">כוכב ים:</strong> מוענק לכל חבר חדש.</li>
+                <li><strong className="text-blue-600">פינגווין:</strong> התמדה באימוני חורף.</li>
+                <li><strong className="text-orange-600">מנטה ריי:</strong> רצף אימונים בקיץ.</li>
+                <li><strong className="text-slate-600">כריש:</strong> הגעה עקבית לכל הסשנים.</li>
+                <li><strong className="text-indigo-600">אורקה:</strong> המאסטר האמיתי!</li>
+              </ul>
             </div>
           </div>
         </div>
 
         {/* Quest Path Visualization */}
-        <div className="relative w-full pb-8 pt-4">
+        <div className={`relative w-full ${compact ? 'pb-2 pt-2' : 'pb-8 pt-8'}`}>
           <div className="w-full relative mx-auto px-4 md:px-0">
             {/* Connecting Line (Desktop only) */}
-            <div className="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-[#00426a]/5 -translate-y-1/2 z-0" />
+            {!compact && <div className="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-[#00426a]/5 -translate-y-1/2 z-0" />}
             
-            <div className="flex flex-row gap-2 overflow-x-auto pb-4 md:grid md:grid-cols-5 md:gap-4 relative z-10 no-scrollbar">
+            <div className={`flex ${compact ? 'flex-col items-center' : 'flex-row overflow-x-auto md:grid md:grid-cols-5 gap-2 md:gap-4'} pb-4 pt-4 relative z-10 no-scrollbar`}>
               {milestones.map((milestone, index) => {
                 const isUnlocked = activeCategories.has(milestone.id);
+                
+                const noteStyles = [
+                  { bg: '#eaf645', pin: 'radial-gradient(circle at 30% 30%, #5c95ff, #1a5bb8)', rotate: 'rotate-[-4deg]', compactX: '-translate-x-16', mt: 'mt-0' },
+                  { bg: '#ffbe4d', pin: 'radial-gradient(circle at 30% 30%, #ffffff, #d0d0d0)', rotate: 'rotate-[6deg]', compactX: 'translate-x-16', mt: '-mt-16' },
+                  { bg: '#ffb5c5', pin: 'radial-gradient(circle at 30% 30%, #ff6b4a, #c92a18)', rotate: 'rotate-[-3deg]', compactX: '-translate-x-16', mt: '-mt-16' },
+                  { bg: '#7ae0f5', pin: 'radial-gradient(circle at 30% 30%, #5c95ff, #1a5bb8)', rotate: 'rotate-[5deg]', compactX: 'translate-x-16', mt: '-mt-16' },
+                  { bg: '#ffb5c5', pin: 'radial-gradient(circle at 30% 30%, #ff6b4a, #c92a18)', rotate: 'rotate-[-4deg]', compactX: '-translate-x-16', mt: '-mt-16' }
+                ];
+                
+                const style = noteStyles[index % noteStyles.length];
                 
                 return (
                   <motion.div
@@ -273,55 +275,67 @@ export const OceanJourney: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.1 }}
-                    className="relative group flex-shrink-0 w-32 md:w-full"
+                    className={`relative group flex-shrink-0 ${compact ? `w-48 ${index > 0 ? style.mt : ''} ${style.compactX}` : 'w-44 md:w-full'} ${style.rotate}`}
+                    style={{ zIndex: compact ? index + 1 : 1 }}
                   >
-                  {/* Milestone Card */}
-                  <div className={`
-                    relative z-10 flex flex-col items-center p-4 rounded-[2rem] transition-all duration-500
-                    ${isUnlocked 
-                      ? `bg-gradient-to-b ${milestone.color} shadow-xl ${milestone.glow}` 
-                      : 'bg-white/40 border border-[#00426a]/10 grayscale opacity-60'}
-                  `}>
-                    {/* Status Icon */}
-                    <div className="absolute -top-2 -right-2 z-20">
-                      {isUnlocked ? (
-                        <div className="bg-green-500 rounded-full p-0.5 shadow-lg border-2 border-white">
-                          <CheckCircle2 size={14} className="text-white" />
-                        </div>
-                      ) : (
-                        <div className="bg-slate-100 rounded-full p-1 shadow-lg border border-[#00426a]/10">
-                          <Lock size={12} className="text-slate-400" />
-                        </div>
-                      )}
+                  {/* Milestone Note */}
+                  <div 
+                    className={`
+                      relative flex flex-col items-center justify-center text-center p-4 transition-all duration-500
+                      opacity-100 min-h-[240px]
+                    `}
+                    style={{
+                      backgroundColor: style.bg,
+                      backgroundImage: `
+                        linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 35%, rgba(0,0,0,0.05) 100%),
+                        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.06'/%3E%3C/svg%3E")
+                      `,
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.15), 4px 8px 15px rgba(0,0,0,0.12), -2px 10px 15px rgba(0,0,0,0.08), inset 0 -12px 15px -5px rgba(0,0,0,0.08)',
+                      borderRadius: '2px 255px 3px 25px / 255px 5px 225px 3px'
+                    }}
+                  >
+                    {/* Thumbtack Pin */}
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20">
+                      {/* Pin Shadow */}
+                      <div className="absolute top-2 left-2 w-3 h-3 bg-black/30 rounded-full blur-[2px]" />
+                      {/* Pin Head */}
+                      <div 
+                        className="relative w-4 h-4 rounded-full shadow-[inset_-1px_-1px_3px_rgba(0,0,0,0.3),0_1px_2px_rgba(0,0,0,0.4)] border border-black/10"
+                        style={{ background: style.pin }}
+                      />
                     </div>
 
+                    {/* Locked Icon (Top Right) */}
+                    {!isUnlocked && (
+                      <div className="absolute top-3 right-3 z-20">
+                        <Lock className="w-6 h-6 text-slate-800/40" />
+                      </div>
+                    )}
+
                     {/* Image Container */}
-                    <div className={`
-                      w-20 h-20 rounded-full flex items-center justify-center mb-3 relative
-                      ${isUnlocked ? 'bg-white/30 backdrop-blur-md' : 'bg-white/20'}
-                    `}>
-                      {isUnlocked && (
-                        <motion.div 
-                          animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
-                          transition={{ duration: 3, repeat: Infinity }}
-                          className="absolute inset-0 rounded-full bg-white blur-lg"
-                        />
-                      )}
+                    <div className={`${milestone.name.includes('מנטה') ? 'w-56 h-56' : 'w-32 h-32'} mb-4 flex items-center justify-center relative flex-shrink-0`}>
                       <img 
                         src={milestone.src} 
                         alt={milestone.alt} 
-                        className={`w-16 h-16 object-contain relative z-10 ${isUnlocked ? 'drop-shadow-xl' : ''}`}
+                        className={`object-contain relative z-10 ${!isUnlocked ? 'opacity-40 grayscale' : ''} ${
+                          milestone.name.includes('כריש') ? 'w-36 h-36' : 
+                          milestone.name.includes('אורקה') ? 'w-44 h-44 max-w-none max-h-none' : 
+                          milestone.name.includes('פינגווין') ? 'w-36 h-36' : 
+                          milestone.name.includes('מנטה') ? 'w-56 h-56 max-w-none max-h-none' : 'w-32 h-32'
+                        }`}
                         referrerPolicy="no-referrer"
                       />
                     </div>
 
-                    <h4 className={`text-sm font-black mb-1 ${isUnlocked ? 'text-white' : 'text-slate-500'}`}>
-                      {milestone.name}
+                    <h4 className="text-base font-black text-slate-800 mb-1">
+                        {milestone.name}
                     </h4>
                     
-                    <p className={`text-[8px] text-center font-bold leading-tight ${isUnlocked ? 'text-white/90' : 'text-slate-400'}`}>
-                      {milestone.desc}
-                    </p>
+                    {!compact && (
+                        <p className={`text-xs font-bold leading-tight text-slate-700`}>
+                        {milestone.desc}
+                        </p>
+                    )}
                   </div>
                 </motion.div>
               );
@@ -331,39 +345,58 @@ export const OceanJourney: React.FC = () => {
         </div>
 
         {/* Footer Motivation */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
-          className="mt-20 text-center"
-        >
-          <div className="inline-block p-8 rounded-[2.5rem] bg-white/60 border border-white/40 backdrop-blur-md shadow-2xl relative overflow-hidden group">
-            {/* Decorative background glow */}
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            
-            <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-right relative z-10">
-              <motion.div 
-                animate={{ 
-                  rotate: [0, 10, -10, 0],
-                  scale: [1, 1.1, 1]
-                }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30"
-              >
-                <Waves size={32} />
-              </motion.div>
-              <div>
-                <h3 className="text-2xl md:text-3xl font-black mb-2 bg-gradient-to-l from-[#00426a] to-cyan-600 bg-clip-text text-transparent">
-                  חוף הבית מחכה לך
-                </h3>
-                <p className="text-sm md:text-base font-bold text-[#00426a]/80 leading-relaxed">
-                  המשך להתמיד, כל סשן מקרב אותך לדרגה הבאה במסע.
-                </p>
+        {!compact && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+            className="mt-20 text-center"
+          >
+            <div 
+              className="inline-block p-8 relative transform rotate-[-1deg] max-w-2xl mx-auto"
+              style={{
+                backgroundColor: '#fdfdfd',
+                backgroundImage: `
+                  linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,0.03) 100%),
+                  url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E")
+                `,
+                boxShadow: '0 2px 5px rgba(0,0,0,0.15), 5px 10px 15px rgba(0,0,0,0.1), -3px 12px 15px rgba(0,0,0,0.08), inset 0 -10px 15px -5px rgba(0,0,0,0.05)',
+                borderRadius: '2px 255px 3px 25px / 255px 5px 225px 3px'
+              }}
+            >
+              {/* Thumbtack */}
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20">
+                <div className="absolute top-2 left-2 w-3 h-3 bg-black/30 rounded-full blur-[2px]" />
+                <div 
+                  className="relative w-4 h-4 rounded-full shadow-[inset_-1px_-1px_3px_rgba(0,0,0,0.3),0_1px_2px_rgba(0,0,0,0.4)] border border-black/10"
+                  style={{ background: 'radial-gradient(circle at 30% 30%, #ffea4d, #d4b517)' }}
+                />
+              </div>
+              
+              <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-right relative z-10">
+                <motion.div 
+                  animate={{ 
+                    rotate: [0, 10, -10, 0],
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30"
+                >
+                  <Waves size={32} />
+                </motion.div>
+                <div>
+                  <h3 className="text-2xl md:text-3xl font-black mb-2 bg-gradient-to-l from-[#00426a] to-cyan-600 bg-clip-text text-transparent">
+                    חוף הבית מחכה לך
+                  </h3>
+                  <p className="text-sm md:text-base font-bold text-[#00426a]/80 leading-relaxed">
+                    המשך להתמיד, כל סשן מקרב אותך לדרגה הבאה במסע.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
       </div>
     </section>
   );

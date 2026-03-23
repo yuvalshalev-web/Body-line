@@ -425,6 +425,37 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
         </div>
       </motion.div>
 
+      {/* Surf Compass (Radar Chart) - Future Use - Dynamic Premium Style */}
+      <motion.div 
+        className="p-4 md:p-6 bg-[#f5e6d3]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#432818]/10 border-r-[#432818]/10 shadow-[0_8px_32px_rgba(212,163,115,0.15),0_4px_16px_rgba(212,163,115,0.1)] rounded-[2rem] relative transition-all duration-1000"
+      >
+        {/* Grit Overlay */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
+          <div className="relative z-10">
+            <div className="flex flex-col items-center mb-8">
+              <div className="flex items-center gap-[var(--spacing-xs)]">
+                <div className="p-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-sm mr-2">
+                  <Compass size={18} className="text-[#D4A373]" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-3xl font-black name-title-text">רדאר השיפור שלך</h3>
+                  <p className="text-sm text-gray-500 font-medium mt-1">לא פעיל - לשימוש עתידי</p>
+                </div>
+              </div>
+            </div>
+
+          <div className="h-[500px] w-full relative z-20">
+            <RadarChart userId={userId} />
+          </div>
+
+          <div className="mt-12 p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/20 shadow-md shadow-black/5">
+            <p className="text-[12px] secondary-detail-text font-bold text-center leading-relaxed">
+              המצפן מנתח את היכולות המקצועיות שלך בים. נתונים אלו יוזנו על ידי המדריכים לאחר הערכות תקופתיות.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Session History - Collapsible Dropbox Style - Dynamic Premium Style */}
       <motion.div 
         className="bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_8px_32px_rgba(49,170,193,0.15),0_4px_16px_rgba(49,170,193,0.1)] rounded-[2rem] relative overflow-hidden transition-all duration-1000"
@@ -564,37 +595,6 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
-
-      {/* Surf Compass (Radar Chart) - Future Use - Dynamic Premium Style */}
-      <motion.div 
-        className="p-4 md:p-6 bg-[#f5e6d3]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#432818]/10 border-r-[#432818]/10 shadow-[0_8px_32px_rgba(212,163,115,0.15),0_4px_16px_rgba(212,163,115,0.1)] rounded-[2rem] relative transition-all duration-1000"
-      >
-        {/* Grit Overlay */}
-        <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
-          <div className="relative z-10">
-            <div className="flex flex-col items-center mb-8">
-              <div className="flex items-center gap-[var(--spacing-xs)]">
-                <div className="p-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-sm mr-2">
-                  <Compass size={18} className="text-[#D4A373]" />
-                </div>
-                <div className="flex flex-col">
-                  <h3 className="text-3xl font-black name-title-text">רדאר השיפור שלך</h3>
-                  <p className="text-sm text-gray-500 font-medium mt-1">לא פעיל - לשימוש עתידי</p>
-                </div>
-              </div>
-            </div>
-
-          <div className="h-[500px] w-full relative z-20">
-            <RadarChart userId={userId} />
-          </div>
-
-          <div className="mt-12 p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/20 shadow-md shadow-black/5">
-            <p className="text-[12px] secondary-detail-text font-bold text-center leading-relaxed">
-              המצפן מנתח את היכולות המקצועיות שלך בים. נתונים אלו יוזנו על ידי המדריכים לאחר הערכות תקופתיות.
-            </p>
-          </div>
-        </div>
       </motion.div>
 
       <AnimatePresence>

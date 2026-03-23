@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Waves, 
@@ -21,42 +21,13 @@ import {
   Zap
 } from 'lucide-react';
 
-import { getDoc, doc, setDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
-import { db } from '../services/firebase';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 
-interface CoastalData {
-  waterTemp: number;
-  waveHeight: number;
-  windSpeed: number;
-  windDirection: number;
-  uvIndex: number;
-  timestamp: string;
-  location: string;
-  source: string;
-  syncStatus?: {
-    waterTemp: boolean;
-    waveHeight: boolean;
-    wind: boolean;
-    uvIndex: boolean;
-  };
-}
-
-interface SeaStats {
-  maxWaveHeight: number;
-  minWaveHeight: number;
-  maxWaterTemp: number;
-  minWaterTemp: number;
-  maxWindSpeed: number;
-  minWindSpeed: number;
-  maxUvIndex: number;
-  minUvIndex: number;
-}
-
 export const CoastalDashboard: React.FC = () => {
-  const [data, setData] = useState<CoastalData | null>(null);
-  const [stats, setStats] = useState<SeaStats | null>(null);
+  const { coastalWeather: data, seaStats: stats, isLoading: contextLoading } = useData();
+  const { currentUser } = useAuth();
+  
   const getAdvice = (uv: number) => {
     if (uv <= 2) return { 
       text: "הגנה מינימלית. אין חשש להימצא בשמש.", 
@@ -95,105 +66,9 @@ export const CoastalDashboard: React.FC = () => {
     };
   };
 
-  const { currentUser } = useAuth();
   const advice = data ? getAdvice(data.uvIndex) : null;
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const weatherRes = await fetch('/api/coastal-weather', {
-          headers: { 'Accept': 'application/json' }
-        });
-        
-        if (!weatherRes.ok) throw new Error(`Failed to fetch coastal data: ${weatherRes.status}`);
-        
-        const contentType = weatherRes.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await weatherRes.text();
-          console.error('Expected JSON but got:', text.substring(0, 100));
-          throw new Error('Server returned non-JSON response');
-        }
-
-        const weatherJson = await weatherRes.json();
-        setData(weatherJson);
-        
-        // Fetch current stats
-        const statsRef = doc(db, 'seaConditionsStats', 'current');
-        const statsDoc = await getDoc(statsRef);
-        
-        let currentStats: SeaStats;
-
-        if (!statsDoc.exists()) {
-          // Initialize stats if they don't exist
-          currentStats = {
-            maxWaveHeight: weatherJson.waveHeight,
-            minWaveHeight: weatherJson.waveHeight,
-            maxWaterTemp: weatherJson.waterTemp,
-            minWaterTemp: weatherJson.waterTemp,
-            maxWindSpeed: weatherJson.windSpeed,
-            minWindSpeed: weatherJson.windSpeed,
-            maxUvIndex: weatherJson.uvIndex,
-            minUvIndex: weatherJson.uvIndex
-          };
-          await setDoc(statsRef, currentStats);
-          setStats(currentStats);
-        } else {
-          currentStats = statsDoc.data() as SeaStats;
-          
-          // Check if we need to update any peaks
-          const needsUpdate = 
-            weatherJson.waveHeight > currentStats.maxWaveHeight ||
-            weatherJson.waveHeight < currentStats.minWaveHeight ||
-            weatherJson.waterTemp > currentStats.maxWaterTemp ||
-            weatherJson.waterTemp < currentStats.minWaterTemp ||
-            weatherJson.windSpeed > currentStats.maxWindSpeed ||
-            weatherJson.windSpeed < currentStats.minWindSpeed ||
-            weatherJson.uvIndex > currentStats.maxUvIndex ||
-            weatherJson.uvIndex < currentStats.minUvIndex;
-
-          if (needsUpdate) {
-            const newStats = {
-              maxWaveHeight: Math.max(currentStats.maxWaveHeight, weatherJson.waveHeight),
-              minWaveHeight: Math.min(currentStats.minWaveHeight, weatherJson.waveHeight),
-              maxWaterTemp: Math.max(currentStats.maxWaterTemp, weatherJson.waterTemp),
-              minWaterTemp: Math.min(currentStats.minWaterTemp, weatherJson.waterTemp),
-              maxWindSpeed: Math.max(currentStats.maxWindSpeed, weatherJson.windSpeed),
-              minWindSpeed: Math.min(currentStats.minWindSpeed, weatherJson.windSpeed),
-              maxUvIndex: Math.max(currentStats.maxUvIndex, weatherJson.uvIndex),
-              minUvIndex: Math.min(currentStats.minUvIndex, weatherJson.uvIndex)
-            };
-            await updateDoc(statsRef, newStats);
-            setStats(newStats);
-          } else {
-            setStats(currentStats);
-          }
-        }
-        
-        // Optionally log the condition to history (fire and forget) - ONLY FOR ADMINS
-        if (currentUser?.role === 'Admin') {
-          addDoc(collection(db, 'seaConditions'), {
-            timestamp: new Date().toISOString(),
-            waveHeight: weatherJson.waveHeight,
-            waterTemp: weatherJson.waterTemp,
-            windSpeed: weatherJson.windSpeed,
-            uvIndex: weatherJson.uvIndex
-          }).catch(console.error);
-        }
-
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-    const interval = setInterval(fetchData, 1000 * 60 * 15); // Refresh every 15 mins
-    return () => clearInterval(interval);
-  }, []);
+  const loading = contextLoading || !data;
+  const error = null; // Error handling is now centralized in DataContext
 
   // ... (rest of the component)
 
