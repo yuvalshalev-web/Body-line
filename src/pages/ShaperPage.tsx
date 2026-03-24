@@ -384,11 +384,15 @@ const ShaperPage: React.FC = () => {
               <ul className="space-y-3 text-[#00426a]/50 text-sm font-bold">
                 <li className="flex items-start gap-2">
                   <ChevronRight size={14} className="mt-1 flex-shrink-0" />
-                  <span>נפח (מתחיל): משקל × 0.8 | (בינוני): משקל × 0.55 | (מתקדם): משקל × 0.4</span>
+                  <span>נפח: משקל × מקדם רמה (מתלמד: 1.1 | מתחיל: 1.0 | מיומן: 0.55 | מתקדם: 0.38)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <ChevronRight size={14} className="mt-1 flex-shrink-0" />
-                  <span>אורך (מתחיל): גובה + 40 ס"מ | (בינוני): גובה + 15 ס"מ | (מתקדם): גובה +/- 5 ס"מ</span>
+                  <span>אורך: גובה + תוספת רמה (מתלמד: 70+ | מתחיל: 50+ | מיומן: 15+ | מתקדם: 5+/-)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <ChevronRight size={14} className="mt-1 flex-shrink-0" />
+                  <span>שקלול כושר: מכפיל נפח משתנה (0.92 עד 1.10) בהתאם לרמת האימון השבועית.</span>
                 </li>
               </ul>
             </section>

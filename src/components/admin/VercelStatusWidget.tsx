@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, RefreshCw, AlertCircle, CheckCircle2, Clock, Loader2 } from 'lucide-react';
-import { fetchJson } from '../../utils/apiUtils';
 
 interface VercelStatus {
   project: {
@@ -57,7 +56,12 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchJson('/api/vercel/status');
+      const response = await fetch('/api/vercel/status');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'שגיאה בחיבור ל-Vercel');
+      }
+      const data = await response.json();
       setStatus(data);
     } catch (err: any) {
       setError(err.message);
@@ -127,8 +131,8 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
               <div className="flex items-center gap-3">
                 <p className="text-[9px] font-black text-[#00426a] uppercase tracking-widest">Health</p>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-[#2D6A4F] animate-pulse" />
-                  <p className="text-sm font-black text-[#2D6A4F]">STABLE</p>
+                  <div className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
+                  <p className="text-sm font-black text-[#10b981]">STABLE</p>
                 </div>
               </div>
             </div>
@@ -168,7 +172,7 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
             <div className="bg-white/20 backdrop-blur-md rounded-[2rem] p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-white/30 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-black text-[#00426a] uppercase tracking-widest">Project</span>
-                <div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${status?.latestDeployment?.readyState === 'READY' ? 'bg-[#2D6A4F]/20 text-[#2D6A4F]' : 'bg-amber-50 text-amber-600'}`}>
+                <div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${status?.latestDeployment?.readyState === 'READY' ? 'bg-[#10b981]/20 text-[#10b981]' : 'bg-amber-50 text-amber-600'}`}>
                   {status?.latestDeployment?.readyState || 'UNKNOWN'}
                 </div>
               </div>
@@ -249,7 +253,7 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
                 {status?.deployments && status.deployments.slice(0, 3).map((d, idx) => (
                   <div key={d.uid || idx} className="flex items-center justify-between p-2 bg-white/10 rounded-xl border border-white/20 transition-all group">
                     <div className="flex items-center gap-2 overflow-hidden">
-                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${d.state === 'READY' ? 'bg-[#2D6A4F]' : 'bg-amber-500'}`} />
+                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${d.state === 'READY' ? 'bg-[#10b981]' : 'bg-amber-500'}`} />
                       <div className="min-w-0">
                         <p className="text-[10px] font-bold text-[#00426a] truncate">{d.url}</p>
                         <p className="text-[9px] text-[#0071a1] font-bold uppercase tracking-widest">{formatDate(d.createdAt)}</p>

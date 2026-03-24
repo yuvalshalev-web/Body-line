@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Github, Activity, GitPullRequest, Bug } from 'lucide-react';
-import { fetchJson } from '../../utils/apiUtils';
 
 interface GitHubAction {
   id: number;
@@ -21,7 +20,8 @@ const GitHubCommandCenter: React.FC = () => {
 
   const fetchAction = async () => {
     try {
-      const data = await fetchJson('/api/github/actions');
+      const res = await fetch(`${window.location.origin}/api/github/actions`);
+      const data = await res.json();
       if (data.action) setAction(data.action);
     } catch (err) {
       console.error("Failed to fetch GitHub actions", err);
@@ -53,43 +53,54 @@ const GitHubCommandCenter: React.FC = () => {
         <div className="flex flex-col md:flex-row items-stretch justify-center gap-4 md:gap-6">
           
           {/* Issues Card */}
-          <div className="bg-white/20 backdrop-blur-md rounded-[2rem] p-6 md:px-8 flex items-center justify-between min-w-[220px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-white/30">
-            <Bug size={28} className="text-[#BC4749]" strokeWidth={2.5} />
-            <div className="text-right flex flex-col items-end">
-              <span className="text-[11px] font-black text-[#00426a] uppercase tracking-widest mb-1">ISSUES</span>
-              <div className="flex items-baseline gap-3">
-                <span className="text-3xl font-black text-[#0071a1]">1</span>
-                <span className="text-3xl font-black text-[#BC4749]">2</span>
+          <div className="flex flex-col gap-3 min-w-[220px]">
+            <span className="text-center text-[10px] font-black text-[#00426a]/60 uppercase tracking-[0.2em]">תקלות / משימות</span>
+            <div className="bg-white/20 backdrop-blur-md rounded-[2rem] p-6 md:px-8 flex items-center justify-between h-full shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-white/30">
+              <Bug size={28} className="text-[#BC4749]" strokeWidth={2.5} />
+              <div className="text-right flex flex-col items-end">
+                <span className="text-[11px] font-black text-[#00426a] uppercase tracking-widest mb-1">ISSUES</span>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-3xl font-black text-[#0071a1]">1</span>
+                  <span className="text-3xl font-black text-[#BC4749]">2</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* PRs Card */}
-          <div className="bg-white/20 backdrop-blur-md rounded-[2rem] p-6 md:px-8 flex items-center justify-between min-w-[220px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-white/30">
-            <GitPullRequest size={28} className="text-[#0071a1]" strokeWidth={2.5} />
-            <div className="text-right flex flex-col items-end">
-              <span className="text-[11px] font-black text-[#00426a] uppercase tracking-widest mb-1">PRS</span>
-              <span className="text-3xl font-black text-[#00426a]">4</span>
+          <div className="flex flex-col gap-3 min-w-[220px]">
+            <span className="text-center text-[10px] font-black text-[#00426a]/60 uppercase tracking-[0.2em]">בקשות למיזוג</span>
+            <div className="bg-white/20 backdrop-blur-md rounded-[2rem] p-6 md:px-8 flex items-center justify-between h-full shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-white/30">
+              <GitPullRequest size={28} className="text-[#0071a1]" strokeWidth={2.5} />
+              <div className="text-right flex flex-col items-end">
+                <span className="text-[11px] font-black text-[#00426a] uppercase tracking-widest mb-1">PRS</span>
+                <span className="text-3xl font-black text-[#00426a]">4</span>
+              </div>
             </div>
           </div>
 
           {/* Pipeline Card */}
-          <div className="bg-white/20 backdrop-blur-md rounded-[2rem] p-6 md:px-8 flex items-center justify-between flex-1 min-w-[320px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-white/30">
-            <div className={`px-5 py-2 rounded-full text-sm font-bold ${isGitHubActive ? 'bg-[#0071a1]/10 text-[#0071a1]' : isGitHubFailure ? 'bg-[#BC4749]/10 text-[#BC4749]' : 'bg-[#2D6A4F]/20 text-[#2D6A4F]'}`}>
-              {isGitHubActive ? 'Deploying' : isGitHubFailure ? 'Failed' : 'Stable'}
-            </div>
-            <div className="flex items-center gap-5">
-              <span className="text-[11px] font-black text-[#00426a] uppercase tracking-widest">PIPELINE</span>
-              <Github size={24} className="text-[#0071a1]" strokeWidth={2} />
-              <Activity size={24} className="text-[#00426a]" strokeWidth={2} />
+          <div className="flex flex-col gap-3 flex-1 min-w-[320px]">
+            <span className="text-center text-[10px] font-black text-[#00426a]/60 uppercase tracking-[0.2em]">צינור העבודה</span>
+            <div className="bg-white/20 backdrop-blur-md rounded-[2rem] p-6 md:px-8 flex items-center justify-between h-full shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-white/30">
+              <div className={`px-5 py-2 rounded-full text-sm font-bold ${isGitHubActive ? 'bg-[#0071a1]/10 text-[#0071a1]' : isGitHubFailure ? 'bg-[#BC4749]/10 text-[#BC4749]' : 'bg-[#10b981]/10 text-[#10b981]'}`}>
+                {isGitHubActive ? 'Deploying' : isGitHubFailure ? 'Failed' : 'Stable'}
+              </div>
+              <div className="flex items-center gap-5">
+                <span className="text-[11px] font-black text-[#00426a] uppercase tracking-widest">PIPELINE</span>
+                <div className="flex items-center gap-3">
+                  <Github size={24} className="text-[#0071a1]" strokeWidth={2} />
+                  <Activity size={24} className="text-[#00426a]" strokeWidth={2} />
+                </div>
+              </div>
             </div>
           </div>
 
         </div>
 
         {/* Bottom Row: Recent Commit */}
-        <div className="flex items-center justify-between px-4 pt-2">
-          <span className="text-sm font-bold text-[#0071a1]">
+        <div className="flex items-center justify-start gap-2 px-4 pt-2">
+          <span className="text-[15px] font-medium text-[#0071a1]" style={{ fontFamily: 'Georgia, serif' }}>
             20m ago
           </span>
           <span className="text-[15px] font-medium text-[#00426a]" style={{ fontFamily: 'Georgia, serif' }}>
