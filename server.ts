@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import { GoogleGenAI } from "@google/genai";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -17,7 +18,105 @@ async function startServer() {
   app.use(express.urlencoded({ extended: true }));
 
   // CORS middleware
-  app.use(cors());
+  app.use(cors({
+    origin: 'https://bodyline.shalev.io',
+    credentials: true
+  }));
+
+  // Gemini API Proxy
+  app.post("/api/gemini", async (req, res) => {
+    const { service, data } = req.body;
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      let responseText = "";
+
+      if (service === "analyzeImage") {
+        const response = await ai.models.generateContent({
+          model: 'gemini-3-flash-preview',
+          contents: {
+            parts: [
+              { inlineData: { mimeType: 'image/jpeg', data: data.base64Image.split(',')[1] || data.base64Image } },
+              { text: "Analyze this image and provide a one-sentence, poetic caption for a community photo gallery." },
+            ],
+          },
+        });
+        responseText = response.text || "A beautiful moment captured and shared.";
+      } else if (service === "generateBio") {
+        const prompt = `Rewrite the following community member's bio to be more professional, engaging, and concise. 
+        Name: ${data.name}
+        Role: ${data.role}
+        Current Bio: ${data.currentBio || 'Member of our community.'}
+        Return only the rewritten bio text, one single sentence.`;
+        const response = await ai.models.generateContent({
+          model: 'gemini-3-flash-preview',
+          contents: prompt,
+        });
+        responseText = response.text || "Dedicated community member contributing to our shared goals.";
+      } else if (service === "getShaperConsultation") {
+        const prompt = `You are an expert surfboard shaper with 30 years of experience. 
+        Provide a professional, encouraging, and highly technical (yet accessible) consultation for a surfer with the following data:
+        - Weight: ${data.weight}kg
+        - Height: ${data.height}cm
+        - Surfing Level: ${data.level}
+        - Fitness Level: ${data.fitness}
+        ${data.currentBoard ? `- Current Board: ${data.currentBoard.volume}L, ${data.currentBoard.length}` : ''}
+        - Recommended Board: ${data.recommendedBoard.volume}L, ${data.recommendedBoard.length} (${data.recommendedBoard.type})
+    
+        Explain WHY this board is recommended, what they should look for in rails, tail shape, and rocker. 
+        If they have a current board, compare it to the recommendation.
+        Keep the tone like a cool, experienced shaper in a dusty workshop.
+        Return the response in Hebrew, formatted with markdown (bullet points, bold text).
+        Maximum 4-5 sentences.`;
+        const response = await ai.models.generateContent({
+          model: 'gemini-3-flash-preview',
+          contents: prompt,
+        });
+        responseText = response.text || "הגלשן המומלץ ייתן לך את הציפה והיציבות הדרושים להתקדמות מהירה במים.";
+      } else if (service === "getCoachAnalysis") {
+        const prompt = `You are a legendary surfing coach with a focus on community and persistence.
+        Provide a short, powerful, and motivational analysis for a surfer with the following stats:
+        - Name: ${data.name}
+        - Rank: ${data.rank}
+        - Total Sessions: ${data.totalSessions}
+        - Current Streak: ${data.streak} weeks
+        - Sessions to Next Rank: ${data.sessionsToNextRank}
+    
+        Acknowledge their progress, emphasize the importance of their streak, and give them a "mission" for their next session.
+        Keep the tone very encouraging, slightly mystical (about the ocean), and professional.
+        Return the response in Hebrew, formatted with markdown (bold text).
+        Maximum 3-4 sentences.`;
+        const response = await ai.models.generateContent({
+          model: 'gemini-3-flash-preview',
+          contents: prompt,
+        });
+        responseText = response.text || "המשך להתמיד, הים מעריך את המאמץ שלך.";
+      } else if (service === "getForecastAnalysis") {
+        const prompt = `You are a local surf guru who knows every sandbar and reef.
+        Analyze the following surf forecast and provide a short, expert advice for today:
+        - Wave Height: ${data.waveHeight}m
+        - Water Temp: ${data.waterTemp}°C
+        - Wind: ${data.windSpeed} knots from ${data.windDir}
+        - Swell: ${data.swellDir} at ${data.period}s
+    
+        Tell the surfers what board to take, what wetsuit to wear, and what to expect from the conditions.
+        Keep the tone like a salty local who's seen it all.
+        Return the response in Hebrew, formatted with markdown (bold text).
+        Maximum 3-4 sentences.`;
+        const response = await ai.models.generateContent({
+          model: 'gemini-3-flash-preview',
+          contents: prompt,
+        });
+        responseText = response.text || "הים נראה טוב היום, צא למים ותהנה.";
+      } else {
+        return res.status(400).json({ error: "Invalid service" });
+      }
+
+      res.json({ text: responseText });
+    } catch (error) {
+      console.error("Gemini API Proxy error:", error);
+      res.status(500).json({ error: "Failed to process AI request" });
+    }
+  });
 
   // Global error tracking for "Sea Observation"
   let totalRequests = 0;
