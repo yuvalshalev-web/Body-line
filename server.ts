@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -16,11 +17,7 @@ async function startServer() {
   app.use(express.urlencoded({ extended: true }));
 
   // CORS middleware
-  app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    next();
-  });
+  app.use(cors());
 
   // Global error tracking for "Sea Observation"
   let totalRequests = 0;
@@ -91,6 +88,7 @@ async function startServer() {
   const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
   app.get("/api/coastal-weather", async (req, res) => {
+    console.log("DEBUG: /api/coastal-weather route reached!");
     const requestId = Math.random().toString(36).substring(7);
     const now = Date.now();
     console.log(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Start`);
