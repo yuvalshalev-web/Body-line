@@ -271,30 +271,56 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }, 10000); // 10s timeout
 
       try {
-        const url = `https://ais-dev-u46a7mul3zuvrxmagsujik-78575243013.europe-west2.run.app/api/coastal-weather`;
-        console.log("Fetching coastal weather from:", url);
-        const res = await fetch(url, {
-          headers: {
-            'Accept': 'application/json'
-          },
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
+        console.log("Fetching coastal weather directly from Open-Meteo API...");
         
-        if (!res.ok) {
-            console.error("Coastal weather fetch failed with status", res.status);
-            setIsLoading(false); // Ensure loading stops on error
-            return;
-        }
-        const text = await res.text();
-        console.log("Coastal weather response received, length:", text.length);
-        try {
-          const data = JSON.parse(text);
-          console.log("DataContext - Coastal weather data received:", data);
-          setCoastalWeather(data);
-          setIsLoading(false); // Ensure loading stops on success
+        const lat = 32.16;
+        const lng = 34.84;
+        
+        // Fetch Marine data (Waves, Water Temp)
+        const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=wave_height,sea_surface_temperature&timezone=auto`;
+        // Fetch Forecast data (Wind, UV Index)
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
 
-          // Centralized Side Effects: Update stats and log history (Admins only for history)
+        const [marineRes, weatherRes] = await Promise.all([
+          fetch(marineUrl, { signal: controller.signal }),
+          fetch(weatherUrl, { signal: controller.signal })
+        ]);
+
+        clearTimeout(timeoutId);
+
+        if (!marineRes.ok || !weatherRes.ok) {
+          console.error(`API Error: Marine ${marineRes.status}, Weather ${weatherRes.status}`);
+          setIsLoading(false);
+          return;
+        }
+
+        const marineData = await marineRes.json();
+        const weatherData = await weatherRes.json();
+
+        const data = {
+          waterTemp: marineData?.current?.sea_surface_temperature || 20,
+          waveHeight: marineData?.current?.wave_height || 1,
+          wavePeriod: marineData?.current?.wave_period || 6,
+          windSpeed: weatherData?.current?.wind_speed_10m || 10,
+          windDirection: weatherData?.current?.wind_direction_10m || 0,
+          uvIndex: weatherData?.current?.uv_index || 0,
+          timestamp: new Date().toISOString(),
+          location: "חוף מרכז",
+          source: "Open-Meteo Direct",
+          syncStatus: {
+            waterTemp: true,
+            waveHeight: true,
+            wavePeriod: true,
+            wind: true,
+            uvIndex: true
+          }
+        };
+
+        console.log("DataContext - Coastal weather data received (Direct):", data);
+        setCoastalWeather(data);
+        setIsLoading(false);
+
+        // Centralized Side Effects: Update stats and log history (Admins only for history)
           const db = getDb();
           const statsRef = doc(db, 'seaConditionsStats', 'current');
           const statsDoc = await getDoc(statsRef);
@@ -346,10 +372,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               uvIndex: data.uvIndex
             }).catch(console.error);
           }
-        } catch (e) {
-          console.error("Failed to parse coastal weather JSON:", e, "Response text:", text);
-          setIsLoading(false); // Ensure loading stops on error
-        }
       } catch (e: any) {
         clearTimeout(timeoutId);
         setIsLoading(false); // Ensure loading stops on error
