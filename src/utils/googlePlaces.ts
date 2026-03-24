@@ -1,5 +1,5 @@
-import { doc, updateDoc } from 'firebase/firestore';
-import { getDb } from '../services/firebase';
+import { doc } from 'firebase/firestore';
+import { getDb, trackedUpdateDoc } from '../services/firebase';
 
 export const extractAddressData = (place: any) => {
   if (!place.address_components) {
@@ -119,7 +119,7 @@ export const updateMemberAddress = async (userId: string, place: any) => {
   const userRef = doc(db, 'members', userId);
 
   try {
-    await updateDoc(userRef, {
+    await trackedUpdateDoc(userRef, {
       street_name: addressData.street,
       house_number: addressData.houseNum,
       city: addressData.city,

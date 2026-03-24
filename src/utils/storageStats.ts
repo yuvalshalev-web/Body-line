@@ -1,6 +1,6 @@
-import { doc, updateDoc, increment, getDoc, setDoc, getDocs, collection } from 'firebase/firestore';
+import { doc, increment, collection } from 'firebase/firestore';
 import { ref, listAll, getMetadata } from 'firebase/storage';
-import { db, getStorageInstance } from '../services/firebase';
+import { db, getStorageInstance, trackedGetDoc, trackedSetDoc, trackedUpdateDoc, trackedGetDocs } from '../services/firebase';
 
 /**
  * Updates the global storage statistics in Firestore.
@@ -8,16 +8,16 @@ import { db, getStorageInstance } from '../services/firebase';
 export const updateStorageStats = async (bytes: number) => {
   try {
     const statsRef = doc(db, "admin", "storage_metadata");
-    const statsDoc = await getDoc(statsRef);
+    const statsDoc = await trackedGetDoc(statsRef);
     
     if (!statsDoc.exists()) {
       // Initialize if doesn't exist
-      await setDoc(statsRef, {
+      await trackedSetDoc(statsRef, {
         totalBytes: bytes,
         updatedAt: new Date().toISOString()
       });
     } else {
-      await updateDoc(statsRef, {
+      await trackedUpdateDoc(statsRef, {
         totalBytes: increment(bytes),
         updatedAt: new Date().toISOString()
       });
@@ -33,7 +33,7 @@ export const updateStorageStats = async (bytes: number) => {
 export const getStorageSizeMB = async (): Promise<number> => {
   try {
     const statsRef = doc(db, "admin", "storage_metadata");
-    const statsDoc = await getDoc(statsRef);
+    const statsDoc = await trackedGetDoc(statsRef);
     
     if (statsDoc.exists()) {
       const totalBytes = statsDoc.data().totalBytes || 0;
@@ -52,16 +52,16 @@ export const getStorageSizeMB = async (): Promise<number> => {
 export const syncStorageOnUpload = async (fileSizeInBytes: number) => {
   try {
     const statsRef = doc(db, "admin", "storage_metadata");
-    const statsDoc = await getDoc(statsRef);
+    const statsDoc = await trackedGetDoc(statsRef);
     
     if (!statsDoc.exists()) {
-      await setDoc(statsRef, {
+      await trackedSetDoc(statsRef, {
         totalBytes: fileSizeInBytes,
         updatedAt: new Date().toISOString(),
         initialized: true
       });
     } else {
-      await updateDoc(statsRef, {
+      await trackedUpdateDoc(statsRef, {
         totalBytes: increment(fileSizeInBytes),
         updatedAt: new Date().toISOString()
       });
@@ -78,16 +78,16 @@ export const syncStorageOnUpload = async (fileSizeInBytes: number) => {
 export const syncStorageOnDelete = async (fileSizeInBytes: number) => {
   try {
     const statsRef = doc(db, "admin", "storage_metadata");
-    const statsDoc = await getDoc(statsRef);
+    const statsDoc = await trackedGetDoc(statsRef);
     
     if (!statsDoc.exists()) {
-      await setDoc(statsRef, {
+      await trackedSetDoc(statsRef, {
         totalBytes: 0,
         updatedAt: new Date().toISOString(),
         initialized: true
       });
     } else {
-      await updateDoc(statsRef, {
+      await trackedUpdateDoc(statsRef, {
         totalBytes: increment(-fileSizeInBytes),
         updatedAt: new Date().toISOString()
       });
@@ -125,7 +125,7 @@ export const recalculateStorageFromStorage = async (): Promise<number> => {
     const totalBytes = await listAllRecursive(rootRef);
 
     const statsRef = doc(db, "admin", "storage_metadata");
-    await setDoc(statsRef, {
+    await trackedSetDoc(statsRef, {
       totalBytes,
       updatedAt: new Date().toISOString(),
       initialized: true,
@@ -155,7 +155,7 @@ export const recalculateDatabaseSize = async (): Promise<number> => {
     let totalDocs = 0;
     for (const colName of collections) {
       try {
-        const snap = await getDocs(collection(db, colName));
+        const snap = await trackedGetDocs(collection(db, colName));
         totalDocs += snap.size;
       } catch (e) {
         console.warn(`Could not count collection ${colName}:`, e);
@@ -167,7 +167,7 @@ export const recalculateDatabaseSize = async (): Promise<number> => {
     const estimatedMB = Number((estimatedBytes / (1024 * 1024)).toFixed(2));
 
     const statsRef = doc(db, "admin", "database_metadata");
-    await setDoc(statsRef, {
+    await trackedSetDoc(statsRef, {
       estimatedBytes,
       estimatedMB,
       totalDocs,
@@ -192,12 +192,12 @@ export const initializeStorageStats = async () => {
     const dbStatsRef = doc(db, "admin", "database_metadata");
     
     const [storageSnap, dbSnap] = await Promise.all([
-      getDoc(storageStatsRef),
-      getDoc(dbStatsRef)
+      trackedGetDoc(storageStatsRef),
+      trackedGetDoc(dbStatsRef)
     ]);
 
     if (!storageSnap.exists()) {
-      await setDoc(storageStatsRef, {
+      await trackedSetDoc(storageStatsRef, {
         totalBytes: 11450000,
         updatedAt: new Date().toISOString(),
         initialized: true
@@ -206,7 +206,7 @@ export const initializeStorageStats = async () => {
     }
 
     if (!dbSnap.exists()) {
-      await setDoc(dbStatsRef, {
+      await trackedSetDoc(dbStatsRef, {
         estimatedBytes: 204800,
         estimatedMB: 0.2,
         totalDocs: 100,

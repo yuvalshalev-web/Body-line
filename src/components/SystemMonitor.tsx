@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import * as XLSX from 'xlsx';
+import Papa from 'papaparse';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
@@ -8,12 +10,19 @@ import { motion, AnimatePresence } from 'motion/react';
 import VercelStatusWidget from './admin/VercelStatusWidget';
 import GitHubCommandCenter from './admin/GitHubCommandCenter';
 import WorkflowVisualizer from './admin/WorkflowVisualizer';
+import { fetchJson } from '../utils/apiUtils';
 import { getStorageSizeMB, recalculateStorageFromStorage, recalculateDatabaseSize } from '../utils/storageStats';
-import { sessionReadCount, incrementReadCount, db, saveLogsToDatabase, loadLogsFromDatabase } from '../services/firebase';
+import { 
+  getDb, trackedGetDocs, setDbStatus, db_status, getStorageInstance, 
+  trackedAddDoc, trackedSetDoc, trackedUpdateDoc, trackedDeleteDoc, 
+  trackedOnSnapshot, incrementWriteCount, sessionReadCount, sessionWriteCount, 
+  incrementReadCount, saveLogsToDatabase, loadLogsFromDatabase 
+} from '../services/firebase';
 import { useData } from '../contexts/DataContext';
 import { get24hBandwidth } from '../utils/bandwidthTracker';
 import { getLogs, SystemLog, LogSeverity, clearLogs } from '../utils/systemLogs';
-import { doc, onSnapshot, collection, getDocs, query, limit } from 'firebase/firestore';
+import { doc, collection, query, limit, writeBatch, increment } from 'firebase/firestore';
+import { useModal } from '../contexts/ModalContext';
 
 interface CircularRingProps {
   value: number;
@@ -180,24 +189,61 @@ const DataHealthScore: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     let issues: { id: string, name: string, issue: string }[] = [];
-    let totalScore = 100;
+    const emails = new Set<string>();
 
     members.forEach(member => {
+      const fullName = `${member.firstName || ''} ${member.lastName || ''}`.trim() || 'ללא שם';
+      
       // Check mandatory fields
-      if (!member.firstName || !member.lastName || !member.mobile) {
+      if (!member.firstName || !member.lastName || !member.mobile || !member.email) {
         issues.push({
           id: member.id,
-          name: `${member.firstName || ''} ${member.lastName || ''}`.trim() || 'ללא שם',
+          name: fullName,
           issue: 'חסרים שדות חובה'
         });
       }
 
-      // Check Grit score anomalies (assuming grit is a number)
+      // Check email format
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (member.email && !emailRegex.test(member.email)) {
+        issues.push({
+          id: member.id,
+          name: fullName,
+          issue: 'פורמט אימייל לא תקין'
+        });
+      }
+
+      // Check for duplicate emails
+      if (member.email) {
+        if (emails.has(member.email.toLowerCase())) {
+          issues.push({
+            id: member.id,
+            name: fullName,
+            issue: 'אימייל כפול במערכת'
+          });
+        }
+        emails.add(member.email.toLowerCase());
+      }
+
+      // Check birthday validity
+      if (member.birthday) {
+        const bday = new Date(member.birthday);
+        const now = new Date();
+        if (isNaN(bday.getTime()) || bday > now || bday.getFullYear() < 1920) {
+          issues.push({
+            id: member.id,
+            name: fullName,
+            issue: 'תאריך לידה לא הגיוני'
+          });
+        }
+      }
+
+      // Check Grit score anomalies
       const grit = (member as any).grit;
       if (grit !== undefined && (grit < 0 || grit > 100)) {
         issues.push({
           id: member.id,
-          name: `${member.firstName} ${member.lastName}`,
+          name: fullName,
           issue: `ציון Grit לא תקין: ${grit}`
         });
       }
@@ -207,7 +253,7 @@ const DataHealthScore: React.FC = () => {
     const calculatedScore = Math.max(0, 100 - (issues.length * 2));
     
     setHealthScore(calculatedScore);
-    setAnomalies(issues.slice(0, 5)); // Show only top 5
+    setAnomalies(issues.slice(0, 8)); // Show more anomalies
     setLastScan(new Date());
     setIsScanning(false);
 
@@ -401,6 +447,7 @@ const QuotaMonitor: React.FC = () => {
 const TechnicalLogs: React.FC = () => {
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [filter, setFilter] = useState<LogSeverity | 'All'>('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -425,7 +472,13 @@ const TechnicalLogs: React.FC = () => {
     return () => window.removeEventListener('system-log-added', handleNewLog);
   }, []);
 
-  const filteredLogs = logs.filter(log => filter === 'All' || log.severity === filter);
+  const filteredLogs = logs.filter(log => {
+    const matchesSeverity = filter === 'All' || log.severity === filter;
+    const matchesSearch = log.message.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          log.source.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (log.details || '').toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSeverity && matchesSearch;
+  });
 
   const getSeverityColor = (severity: LogSeverity) => {
     switch (severity) {
@@ -463,34 +516,46 @@ const TechnicalLogs: React.FC = () => {
         </div>
 
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 justify-end">
-            <button 
-              onClick={async () => {
-                await saveLogsToDatabase(logs);
-                clearLogs();
-                refreshLogs();
-              }}
-              className="px-3 py-1.5 bg-rose-500 text-white rounded-lg text-[10px] font-black hover:bg-rose-600 transition-all shadow-sm"
-            >
-              נקה ושמור
-            </button>
-            <button 
-              onClick={async () => {
-                const loadedLogs = await loadLogsFromDatabase();
-                setLogs(loadedLogs);
-              }}
-              className="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-[10px] font-black hover:bg-emerald-600 transition-all shadow-sm"
-            >
-              טען אירועים
-            </button>
-            <button 
-              onClick={refreshLogs}
-              className="p-2 bg-white/30 border border-white/40 rounded-xl text-[#00426a]/40 hover:text-[#00426a] transition-all shadow-sm"
-            >
-              <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
-            </button>
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 min-w-[200px]">
+              <SearchIcon size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#00426a]/40" />
+              <input 
+                type="text"
+                placeholder="חיפוש ביומן..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pr-9 pl-4 py-2 bg-white/30 border border-white/40 rounded-xl text-xs font-bold text-[#00426a] outline-none focus:bg-white/50 transition-all shadow-sm"
+              />
+            </div>
+            <div className="flex items-center gap-2 justify-end">
+              <button 
+                onClick={async () => {
+                  await saveLogsToDatabase(logs);
+                  clearLogs();
+                  refreshLogs();
+                }}
+                className="px-3 py-1.5 bg-rose-500 text-white rounded-lg text-[10px] font-black hover:bg-rose-600 transition-all shadow-sm"
+              >
+                נקה ושמור
+              </button>
+              <button 
+                onClick={async () => {
+                  const loadedLogs = await loadLogsFromDatabase();
+                  setLogs(loadedLogs);
+                }}
+                className="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-[10px] font-black hover:bg-emerald-600 transition-all shadow-sm"
+              >
+                טען אירועים
+              </button>
+              <button 
+                onClick={refreshLogs}
+                className="p-2 bg-white/30 border border-white/40 rounded-xl text-[#00426a]/40 hover:text-[#00426a] transition-all shadow-sm"
+              >
+                <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+              </button>
+            </div>
           </div>
-          <div className="flex bg-black/5 p-1 rounded-xl border border-black/10 w-fit">
+          <div className="flex bg-black/5 p-1 rounded-xl border border-black/10 w-fit self-end">
             {(['All', 'Critical', 'Warning', 'Info', 'Security'] as const).map(s => (
               <button
                 key={s}
@@ -605,7 +670,8 @@ const Gauge = ({ value, label, color, sublabel }: { value: number, label: string
 );
 
 const SystemMonitor: React.FC = () => {
-  const { dbStatus, toggleDbStatus, members, events } = useData();
+  const { dbStatus, toggleDbStatus, members, weeklyHistory, yearConfig, siteConfig, events } = useData();
+  const { showSuccess, showError, showAlert } = useModal();
   const [data, setData] = useState<any>({
     dbSize: 0,
     errorRate: 0,
@@ -617,17 +683,20 @@ const SystemMonitor: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [liveReads, setLiveReads] = useState(sessionReadCount);
-  const [readHistory, setReadHistory] = useState<{ time: string, reads: number }[]>(() => {
+  const [liveWrites, setLiveWrites] = useState(sessionWriteCount);
+  const [readHistory, setReadHistory] = useState<{ time: string, reads: number, writes: number }[]>(() => {
     const now = new Date();
-    return Array.from({ length: 15 }).map((_, i) => {
-      const d = new Date(now.getTime() - (15 - i) * 5000);
+    return Array.from({ length: 20 }).map((_, i) => {
+      const d = new Date(now.getTime() - (20 - i) * 5000);
       return {
         time: d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-        reads: 0
+        reads: 0,
+        writes: 0
       };
     });
   });
   const [lastReadCount, setLastReadCount] = useState(sessionReadCount);
+  const [lastWriteCount, setLastWriteCount] = useState(sessionWriteCount);
   const [bandwidthData, setBandwidthData] = useState(get24hBandwidth());
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -659,11 +728,16 @@ const SystemMonitor: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const handleReadUpdate = (e: any) => {
-      setLiveReads(e.detail);
-    };
+    const handleReadUpdate = (e: any) => setLiveReads(e.detail);
+    const handleWriteUpdate = (e: any) => setLiveWrites(e.detail);
+    
     window.addEventListener('db-read-update', handleReadUpdate);
-    return () => window.removeEventListener('db-read-update', handleReadUpdate);
+    window.addEventListener('db-write-update', handleWriteUpdate);
+    
+    return () => {
+      window.removeEventListener('db-read-update', handleReadUpdate);
+      window.removeEventListener('db-write-update', handleWriteUpdate);
+    };
   }, []);
 
   // Live Request Rate Logic
@@ -672,19 +746,28 @@ const SystemMonitor: React.FC = () => {
       const now = new Date();
       const timeStr = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       
-      const currentTotal = sessionReadCount;
-      setLiveReads(currentTotal);
+      const currentReads = sessionReadCount;
+      const currentWrites = sessionWriteCount;
       
-      setLastReadCount(prevTotal => {
-        const delta = Math.max(0, currentTotal - prevTotal);
+      setLiveReads(currentReads);
+      setLiveWrites(currentWrites);
+      
+      setLastReadCount(prevReads => {
+        const readsDelta = Math.max(0, currentReads - prevReads);
         
-        setReadHistory(prevHistory => {
-          const newPoint = { time: timeStr, reads: delta };
-          const updatedHistory = [...prevHistory, newPoint].slice(-20);
-          return updatedHistory;
+        setLastWriteCount((prevWrites: number) => {
+          const writesDelta = Math.max(0, currentWrites - prevWrites);
+          
+          setReadHistory(prevHistory => {
+            const newPoint = { time: timeStr, reads: readsDelta, writes: writesDelta };
+            const updatedHistory = [...prevHistory, newPoint].slice(-20);
+            return updatedHistory;
+          });
+          
+          return currentWrites;
         });
         
-        return currentTotal;
+        return currentReads;
       });
     }, 5000); // Every 5 seconds for a "Live" feel
     
@@ -692,10 +775,11 @@ const SystemMonitor: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const db = getDb();
     const statsRef = doc(db, "admin", "storage_metadata");
     const dbStatsRef = doc(db, "admin", "database_metadata");
 
-    const unsubStorage = onSnapshot(statsRef, (snapshot) => {
+    const unsubStorage = trackedOnSnapshot(statsRef, (snapshot) => {
       if (snapshot.exists()) {
         const totalBytes = snapshot.data().totalBytes || 0;
         const mb = totalBytes / (1024 * 1024);
@@ -705,7 +789,7 @@ const SystemMonitor: React.FC = () => {
       console.error("Error listening to storage stats in SystemMonitor:", error);
     });
 
-    const unsubDb = onSnapshot(dbStatsRef, (snapshot) => {
+    const unsubDb = trackedOnSnapshot(dbStatsRef, (snapshot) => {
       if (snapshot.exists()) {
         const mb = snapshot.data().estimatedMB || 0;
         setDbSize(mb);
@@ -723,11 +807,7 @@ const SystemMonitor: React.FC = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const statsRes = await fetch('/api/stats/system');
-        
-        if (!statsRes.ok) throw new Error(`Server error: ${statsRes.status}`);
-        
-        const statsJson = await statsRes.json();
+        const statsJson = await fetchJson('/api/stats/system');
         setData(statsJson);
       } catch (err) {
         console.error('Error fetching system stats:', err);
@@ -753,8 +833,108 @@ const SystemMonitor: React.FC = () => {
     }
   };
 
-  const maxReads = Math.max(...readHistory.map(pt => pt.reads), 0);
-  const yAxisMax = Math.pow(10, Math.floor(Math.log10(Math.max(1, maxReads))) + 1);
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>, type: 'members' | 'sessions') => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const processData = async (data: any[]) => {
+      const db = getDb();
+      const batch = writeBatch(db);
+      let count = 0;
+
+      try {
+        if (type === 'members') {
+          for (const row of data) {
+            if (!row.email) continue;
+            
+            // Check if member already exists
+            const existingMember = members.find(m => m.email.toLowerCase() === row.email.toLowerCase());
+            const memberId = existingMember ? existingMember.id : doc(collection(db, 'members')).id;
+            
+            const memberData = {
+              firstName: row.firstName || row.first_name || '',
+              lastName: row.lastName || row.last_name || '',
+              email: row.email.toLowerCase(),
+              mobile: String(row.mobile || row.phone || ''),
+              role: row.role || 'Member',
+              joinedAt: row.joinedAt || row.joined_at || new Date().toISOString(),
+              isActive: row.isActive !== undefined ? (row.isActive === 'true' || row.isActive === true) : true,
+              avatar: row.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${row.email}`,
+              bio: row.bio || '',
+              id: memberId
+            };
+
+            batch.set(doc(db, 'members', memberId), memberData, { merge: true });
+            count++;
+          }
+        } else if (type === 'sessions') {
+          for (const row of data) {
+            const dateStr = row.date || row.Date;
+            if (!dateStr) continue;
+
+            const participantEmails = String(row.participantEmails || row.emails || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+            const participantIds = participantEmails.map(email => {
+              const m = members.find(member => member.email.toLowerCase() === email);
+              return m ? m.id : null;
+            }).filter(Boolean) as string[];
+
+            const sessionId = doc(collection(db, 'weekly_history')).id;
+            const sessionData = {
+              id: sessionId,
+              date: dateStr,
+              participantIds,
+              participantsCount: participantIds.length,
+              type: 'SEA',
+              status: 'COMPLETED'
+            };
+
+            batch.set(doc(db, 'weekly_history', sessionId), sessionData);
+            
+            // Update totalAttendance for each participant
+            for (const uid of participantIds) {
+              batch.update(doc(db, 'members', uid), {
+                totalAttendance: increment(1)
+              });
+            }
+            count++;
+          }
+        }
+
+        await batch.commit();
+        incrementWriteCount(count);
+        showSuccess(`ייבוא ${count} רשומות הושלם בהצלחה!`);
+      } catch (error) {
+        console.error('Import error:', error);
+        showError('שגיאה במהלך הייבוא. וודא שהפורמט תקין.');
+      }
+    };
+
+    if (file.name.endsWith('.csv')) {
+      Papa.parse(file, {
+        complete: (results) => {
+          processData(results.data);
+        },
+        header: true,
+        skipEmptyLines: true
+      });
+    } else {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet);
+        processData(json);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+    // Reset input
+    event.target.value = '';
+  };
+
+  const maxMetric = Math.max(...readHistory.map(pt => Math.max(pt.reads, pt.writes)), 0);
+  const yAxisMax = Math.pow(10, Math.floor(Math.log10(Math.max(1, maxMetric))) + 1);
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700 min-h-[400px]" dir="rtl">
@@ -780,9 +960,7 @@ const SystemMonitor: React.FC = () => {
                 setLoading(true);
                 const fetchStats = async () => {
                   try {
-                    const statsRes = await fetch('/api/stats/system');
-                    if (!statsRes.ok) throw new Error(`Server error: ${statsRes.status}`);
-                    const statsJson = await statsRes.json();
+                    const statsJson = await fetchJson('/api/stats/system');
                     setData(statsJson);
                   } catch (err) {
                     console.error('Error fetching system stats:', err);
@@ -870,10 +1048,11 @@ const SystemMonitor: React.FC = () => {
                     <span className="leading-none uppercase font-black tracking-tighter text-[10px]">RECONNECTING...</span>
                   </>
                 ) : countdown !== null ? (
-                  <>
-                    <TriangleAlert size={32} className="animate-pulse text-yellow-300 mb-1" />
-                    <span className="text-4xl font-black leading-none">{countdown}</span>
-                  </>
+                  <div className="flex flex-col items-center justify-center">
+                    <TriangleAlert size={40} className="animate-pulse text-yellow-300 mb-1" />
+                    <span className="text-5xl font-black leading-none drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{countdown}</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest mt-1">SECONDS</span>
+                  </div>
                 ) : (
                   <>
                     <TriangleAlert size={36} className="mb-1" />
@@ -1052,12 +1231,24 @@ const SystemMonitor: React.FC = () => {
               </div>
             </div>
             
-            <button 
-              onClick={() => incrementReadCount(1)}
-              className="px-4 py-2 bg-gradient-to-r from-[#007085] to-[#3dbbd3] hover:from-[#005a6a] hover:to-[#3098ad] text-white text-[12px] font-black rounded-xl transition-all uppercase tracking-wider border border-white/10 shadow-lg hover:shadow-xl active:scale-95"
-            >
-              בצע בדיקת קריאה
-            </button>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => {
+                  import('../services/firebase').then(m => m.incrementReadCount(1));
+                }}
+                className="px-4 py-2 bg-gradient-to-r from-[#007085] to-[#3dbbd3] hover:from-[#005a6a] hover:to-[#3098ad] text-white text-[10px] font-black rounded-xl transition-all uppercase tracking-wider border border-white/10 shadow-lg hover:shadow-xl active:scale-95"
+              >
+                בצע בדיקת קריאה
+              </button>
+              <button 
+                onClick={() => {
+                  import('../services/firebase').then(m => m.incrementWriteCount(1));
+                }}
+                className="px-4 py-2 bg-gradient-to-r from-rose-500 to-rose-400 hover:from-rose-600 hover:to-rose-500 text-white text-[10px] font-black rounded-xl transition-all uppercase tracking-wider border border-white/10 shadow-lg hover:shadow-xl active:scale-95"
+              >
+                בצע בדיקת כתיבה
+              </button>
+            </div>
           </div>
 
           <div className="h-[300px] w-full">
@@ -1082,20 +1273,42 @@ const SystemMonitor: React.FC = () => {
                 />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'rgba(240, 248, 255, 0.9)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.2)', color: '#00426a', backdropFilter: 'blur(10px)' }}
-                  itemStyle={{ color: '#0071a1', fontWeight: 900 }}
-                  formatter={(value: any) => [Math.round(value), 'קריאות']}
+                  itemStyle={{ fontWeight: 900 }}
+                  formatter={(value: any, name: any) => [Math.round(value), name === 'reads' ? 'קריאות' : 'כתיבות']}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="reads" 
+                  name="reads"
                   stroke="#0071a1" 
                   strokeWidth={4} 
                   dot={{ r: 4, fill: '#0071a1', strokeWidth: 2, stroke: '#fff' }}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                   isAnimationActive={false}
                 />
+                <Line 
+                  type="monotone" 
+                  dataKey="writes" 
+                  name="writes"
+                  stroke="#f43f5e" 
+                  strokeWidth={4} 
+                  dot={{ r: 4, fill: '#f43f5e', strokeWidth: 2, stroke: '#fff' }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                  isAnimationActive={false}
+                />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+          
+          <div className="flex justify-between items-center mt-6 px-4 bg-white/20 p-4 rounded-2xl border border-white/30">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-[#00426a]/60 uppercase tracking-widest">סה"כ קריאות (Session)</span>
+              <span className="text-2xl font-black text-[#00426a]">{liveReads.toLocaleString()}</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-bold text-rose-500/60 uppercase tracking-widest">סה"כ כתיבות (Session)</span>
+              <span className="text-2xl font-black text-rose-500">{liveWrites.toLocaleString()}</span>
+            </div>
           </div>
           
           {readHistory.every(pt => pt.reads === 0) && (
@@ -1158,6 +1371,21 @@ const SystemMonitor: React.FC = () => {
               <Area type="monotone" dataKey="out" name="Outgoing" stroke="#0071a1" strokeWidth={3} fillOpacity={1} fill="url(#colorOut)" />
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Data Import Section */}
+      <div className="bg-[#f0f8ff]/10 backdrop-blur-md p-8 border border-white/20 rounded-3xl shadow-xl mt-8">
+        <h3 className="text-lg font-black text-[#00426a] uppercase tracking-tight mb-6">ייבוא נתונים חיצוניים</h3>
+        <div className="flex gap-4">
+          <label className="cursor-pointer bg-[#00426a] text-white px-6 py-3 rounded-xl font-black hover:bg-[#0071a1] transition-colors">
+            ייבוא פרטי חברים (CSV/XLS)
+            <input type="file" accept=".csv, .xls, .xlsx" className="hidden" onChange={(e) => handleImport(e, 'members')} />
+          </label>
+          <label className="cursor-pointer bg-[#0071a1] text-white px-6 py-3 rounded-xl font-black hover:bg-[#00426a] transition-colors">
+            ייבוא סשנים היסטוריים (CSV/XLS)
+            <input type="file" accept=".csv, .xls, .xlsx" className="hidden" onChange={(e) => handleImport(e, 'sessions')} />
+          </label>
         </div>
       </div>
     </div>

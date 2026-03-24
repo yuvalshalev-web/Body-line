@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, RefreshCw, AlertCircle, CheckCircle2, Clock, Loader2 } from 'lucide-react';
+import { fetchJson } from '../../utils/apiUtils';
 
 interface VercelStatus {
   project: {
@@ -56,12 +57,7 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/vercel/status');
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'שגיאה בחיבור ל-Vercel');
-      }
-      const data = await response.json();
+      const data = await fetchJson('/api/vercel/status');
       setStatus(data);
     } catch (err: any) {
       setError(err.message);

@@ -1,3 +1,10 @@
+/**
+ * TODO: REFACTOR
+ * This component (DayPicker) uses a standard HTML select element, which does not 
+ * align with the "Elite Alabaster" (luxury white, glassmorphism) or 
+ * "Tangible Surfer" (premium materials) aesthetic. 
+ * Replace with a custom glass dropdown or a tactile selection component.
+ */
 import React from 'react';
 
 interface DayPickerProps {

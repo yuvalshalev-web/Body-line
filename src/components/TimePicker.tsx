@@ -1,3 +1,10 @@
+/**
+ * TODO: REFACTOR
+ * This component (TimePicker) uses a standard HTML time input, which does not 
+ * align with the "Elite Alabaster" (luxury white, glassmorphism) or 
+ * "Tangible Surfer" (premium materials) aesthetic. 
+ * Replace with a custom glass time picker or a tactile selection component.
+ */
 import React from 'react';
 
 interface TimePickerProps {

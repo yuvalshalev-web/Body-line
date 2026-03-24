@@ -1,5 +1,8 @@
-import { collection, writeBatch, doc, getDocs, deleteDoc, Timestamp, setDoc } from 'firebase/firestore';
-import { getDb } from '../services/firebase';
+import { collection, doc, Timestamp } from 'firebase/firestore';
+import { 
+  getDb, trackedGetDocs, trackedDeleteDoc, trackedSetDoc, 
+  trackedUpdateDoc, incrementWriteCount, writeBatch 
+} from '../services/firebase';
 import { Member, GlossaryTerm, Exercise, QuoteItem } from '../types';
 import { hashPassword } from './crypto';
 import { getCurrentDateFormatted } from './dateUtils';
@@ -12,7 +15,7 @@ import { getCurrentDateFormatted } from './dateUtils';
 
 export const updateHistoricalSeaTemperatures = async () => {
   const db = getDb();
-  const snapshot = await getDocs(collection(db, 'seaConditions'));
+  const snapshot = await trackedGetDocs(collection(db, 'seaConditions'));
   let count = 0;
   
   const batch = writeBatch(db);
@@ -24,7 +27,10 @@ export const updateHistoricalSeaTemperatures = async () => {
     }
   });
   
-  if (count > 0) await batch.commit();
+  if (count > 0) {
+    await batch.commit();
+    incrementWriteCount(count);
+  }
   return count;
 };
 
@@ -36,6 +42,7 @@ export const batchAddGlossary = async (items: Omit<GlossaryTerm, 'id'>[]) => {
     batch.set(ref, item);
   });
   await batch.commit();
+  incrementWriteCount(items.length);
 };
 
 export const batchAddExercises = async (items: Omit<Exercise, 'id'>[]) => {
@@ -46,6 +53,7 @@ export const batchAddExercises = async (items: Omit<Exercise, 'id'>[]) => {
     batch.set(ref, item);
   });
   await batch.commit();
+  incrementWriteCount(items.length);
 };
 
 export const batchAddQuotes = async (items: Omit<QuoteItem, 'id'>[]) => {
@@ -56,6 +64,7 @@ export const batchAddQuotes = async (items: Omit<QuoteItem, 'id'>[]) => {
     batch.set(ref, item);
   });
   await batch.commit();
+  incrementWriteCount(items.length);
 };
 
 export const batchAddMembers = async (items: any[]) => {
@@ -74,6 +83,7 @@ export const batchAddMembers = async (items: any[]) => {
     });
   }
   await batch.commit();
+  incrementWriteCount(items.length);
 };
 
 export const batchAddHistory = async (items: any[]) => {
@@ -84,20 +94,23 @@ export const batchAddHistory = async (items: any[]) => {
     batch.set(ref, item);
   });
   await batch.commit();
+  incrementWriteCount(items.length);
 };
 
 export const clearCollection = async (collectionName: string) => {
   const db = getDb();
-  const snapshot = await getDocs(collection(db, collectionName));
+  const snapshot = await trackedGetDocs(collection(db, collectionName));
   const batch = writeBatch(db);
   snapshot.docs.forEach(d => batch.delete(d.ref));
   await batch.commit();
+  incrementWriteCount(snapshot.docs.length);
 };
 
 export const seedPerformanceData = async (members: Member[]) => {
   const db = getDb();
   const months = ['2024-01', '2024-02', '2024-03'];
   const batch = writeBatch(db);
+  let totalWrites = 0;
   
   for (const member of members) {
     for (const month of months) {
@@ -110,18 +123,20 @@ export const seedPerformanceData = async (members: Member[]) => {
         improvement: Math.floor(Math.random() * 10),
         updatedAt: Timestamp.now()
       });
+      totalWrites++;
     }
   }
   await batch.commit();
+  incrementWriteCount(totalWrites);
 };
 
 export const seedInitialAdmin = async (superAdminEmail: string) => {
   const db = getDb();
-  const membersSnap = await getDocs(collection(db, 'members'));
+  const membersSnap = await trackedGetDocs(collection(db, 'members'));
   if (membersSnap.empty) {
     const tempPass = 'admin123';
     const hashedPassword = await hashPassword(tempPass);
-    await setDoc(doc(collection(db, 'members')), {
+    await trackedSetDoc(doc(collection(db, 'members')), {
       firstName: 'Admin',
       lastName: 'System',
       email: superAdminEmail,
@@ -145,7 +160,7 @@ export const seedInitialAdmin = async (superAdminEmail: string) => {
 export const syncUserStatsLegacy = async () => {
   try {
     const db = getDb();
-    const membersSnapshot = await getDocs(collection(db, 'members'));
+    const membersSnapshot = await trackedGetDocs(collection(db, 'members'));
     const members = membersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Member));
     
     const emailMap = new Map<string, Member[]>();
@@ -170,7 +185,7 @@ export const syncUserStatsLegacy = async () => {
       }
     }
     
-    const historySnapshot = await getDocs(collection(db, 'weekly_history'));
+    const historySnapshot = await trackedGetDocs(collection(db, 'weekly_history'));
     const historyDocs = historySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
     
     const batch = writeBatch(db);
@@ -201,9 +216,12 @@ export const syncUserStatsLegacy = async () => {
       updateCount++;
     }
     
-    if (updateCount > 0) await batch.commit();
+    if (updateCount > 0) {
+      await batch.commit();
+      incrementWriteCount(updateCount);
+    }
     
-    const finalHistorySnapshot = await getDocs(collection(db, 'weekly_history'));
+    const finalHistorySnapshot = await trackedGetDocs(collection(db, 'weekly_history'));
     const finalHistoryDocs = finalHistorySnapshot.docs.map(doc => doc.data());
     const attendanceMap = new Map<string, number>();
     finalHistoryDocs.forEach(session => {
@@ -215,7 +233,7 @@ export const syncUserStatsLegacy = async () => {
     
     const finalBatch = writeBatch(db);
     let finalUpdateCount = 0;
-    const finalMembersSnapshot = await getDocs(collection(db, 'members'));
+    const finalMembersSnapshot = await trackedGetDocs(collection(db, 'members'));
     finalMembersSnapshot.docs.forEach(memberDoc => {
       const uid = memberDoc.id;
       const currentAttendance = memberDoc.data().totalAttendance || 0;
@@ -226,7 +244,10 @@ export const syncUserStatsLegacy = async () => {
       }
     });
     
-    if (finalUpdateCount > 0) await finalBatch.commit();
+    if (finalUpdateCount > 0) {
+      await finalBatch.commit();
+      incrementWriteCount(finalUpdateCount);
+    }
     return { success: true, updatedCount: updateCount + finalUpdateCount };
   } catch (error: any) {
     console.error('Error syncing user stats:', error);

@@ -5,7 +5,6 @@ import { useData } from './contexts/DataContext';
 import { 
   Loader2
 } from 'lucide-react';
-import { AngryBird } from './components/AngryBird';
 
 
 import ErrorBoundary from './components/ErrorBoundary';

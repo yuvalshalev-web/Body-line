@@ -12,22 +12,27 @@
 }
 
 @theme {
-  --color-tm-magenta: #ff009f;
-  --color-tm-pink: #f063c1;
-  --color-tm-light-pink: #f7c1ea;
-  --color-tm-extra-light: #ffd2fa;
-  --color-tm-mist: #f2def0;
+  --ocean-1: #00426a;
+  --ocean-2: #0071a1;
+  --ocean-3: #368cb0;
+  --ocean-4: #31aac1;
+  --ocean-5: #3dbbd3;
+  --ocean-6: #99ccff;
+  --ocean-7: #baddff;
+  --ocean-8: #d0e7ff;
+  --ocean-9: #f0f8ff;
+  --ocean-10: #ffffff;
 
-  --color-ocean-1: #00426a;
-  --color-ocean-2: #0071a1;
-  --color-ocean-3: #368cb0;
-  --color-ocean-4: #31aac1;
-  --color-ocean-5: #3dbbd3;
-  --color-ocean-6: #99ccff;
-  --color-ocean-7: #baddff;
-  --color-ocean-8: #d0e7ff;
-  --color-ocean-9: #f0f8ff;
-  --color-ocean-10: #ffffff;
+  --surfer-cyan: #2563eb;
+  --surfer-teal: #059669;
+  --surfer-pink: #FF2D60;
+  --surfer-magenta: #CC2678;
+  --surfer-yellow: #FFDE45;
+  --surfer-orange: #FF9F1C;
+  --surfer-shadow: #7A1555;
+  --surfer-tan: #C29670;
+  --surfer-deep-blue: #1e3a8a;
+  --surfer-light-blue: #dbeafe;
 }
 
 @layer components {
@@ -35,6 +40,7 @@
   .premium-glass {
     background: rgba(240, 248, 255, 0.1); /* Ocean 9 at 10% */
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid rgba(255, 255, 255, 0.8); /* Beveled Edge: Light Catch */
     border-left: 1px solid rgba(255, 255, 255, 0.8);
     border-bottom: 1px solid rgba(0, 66, 106, 0.1); /* Beveled Edge: Physical Lip */
@@ -42,6 +48,8 @@
     box-shadow: 0 4px 12px rgba(49, 170, 193, 0.1), 0 8px 32px rgba(49, 170, 193, 0.05);
     position: relative;
     overflow: hidden;
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
   }
 
   .grain-overlay {
@@ -50,12 +58,13 @@
     opacity: 0.02;
     pointer-events: none;
     z-index: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   }
 
   .tangible-input {
     background: rgba(240, 248, 255, 0.1);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-top: 1px solid rgba(255, 255, 255, 0.8);
     border-left: 1px solid rgba(255, 255, 255, 0.8);
     border-bottom: 1px solid rgba(0, 66, 106, 0.1);
@@ -63,6 +72,8 @@
     color: #00426a; /* Ocean 1 */
     font-weight: 700;
     transition: all 0.3s ease;
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
   }
 
   .tangible-input:focus {
@@ -96,6 +107,8 @@
     position: relative;
     overflow: hidden;
     border: 1px solid rgba(0, 66, 106, 0.1);
+    will-change: transform;
+    transform: translateZ(0);
   }
 
   .weathered-sign::after {
@@ -104,7 +117,7 @@
     inset: 0;
     opacity: 0.05;
     pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='crazing'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='5' seed='1'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23crazing)'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='crazing'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='1' seed='1'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23crazing)'/%3E%3C/svg%3E");
   }
 
   /* --- UX WOW Effects --- */
@@ -179,18 +192,6 @@
   --text-main: #2D3748;
   --text-muted: #4A5568;
 
-  /* --- Ocean Combined Palette (Sorted Dark to Light) --- */
-  --ocean-1: #00426a; /* כחול צי עמוק (Waves) */
-  --ocean-2: #0071a1; /* כחול אוקיינוס (Waves) */
-  --ocean-3: #368cb0; /* כחול ים תיכון (Waves) */
-  --ocean-4: #31aac1; /* טורקיז בינוני (Waves) */
-  --ocean-5: #3dbbd3; /* טורקיז בהיר (Waves) */
-  --ocean-6: #99ccff; /* תכלת רך (Blue) */
-  --ocean-7: #baddff; /* תכלת שמיים (Blue) */
-  --ocean-8: #d0e7ff; /* תכלת בהיר מאוד (Blue) */
-  --ocean-9: #f0f8ff; /* לבן-תכלת Alice Blue (Blue) */
-  --ocean-10: #ffffff; /* לבן טהור (Blue) */
-
   /* --- Ocean Glassmorphism System --- */
   --ocean-bg: #021626;
   --ocean-pipe-empty: rgba(255, 255, 255, 0.05);
@@ -199,17 +200,6 @@
   --ocean-milestone: #ffffff;
   --ocean-text-main: #ffffff;
   --ocean-text-dim: rgba(255, 255, 255, 0.5);
-  /* --- Surfer Theme Palette --- */
-  --surfer-cyan: #2563eb; /* Royal Blue instead of Cyan */
-  --surfer-teal: #059669; /* Emerald Green instead of Teal */
-  --surfer-pink: #FF2D60;
-  --surfer-magenta: #CC2678;
-  --surfer-yellow: #FFDE45;
-  --surfer-orange: #FF9F1C;
-  --surfer-shadow: #7A1555;
-  --surfer-tan: #C29670;
-  --surfer-deep-teal: #1e3a8a; /* Deep Blue instead of Deep Teal */
-  --surfer-aqua: #dbeafe; /* Light Blue instead of Aqua */
 
   /* --- Global Glassmorphism Design Language (Body-line Standards) --- */
   --glass-bg: rgba(255, 255, 255, 0.1);
@@ -240,13 +230,6 @@
   --sand-accent: #D4A373;
   --sand-shadow: #432818;
   --sand-muted: #8B7E74;
-
-  /* --- T-Mobile Theme --- */
-  --t-mobile-magenta: #ff009f;
-  --t-mobile-pink: #f063c1;
-  --t-mobile-light-pink: #f7c1ea;
-  --t-mobile-extra-light: #ffd2fa;
-  --t-mobile-mist: #f2def0;
 
   /* --- Page Title System --- */
   --h1-font-family: 'Assistant', sans-serif;
@@ -301,41 +284,45 @@
   --surfer-sunshine-yellow: #FFDE45;
 }
 
-.elite-alabaster-modal {
-  background-color: #fdfdfd !important;
+body .elite-alabaster-modal {
+  background-color: #fdfdfd;
   background-image: 
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E"),
     radial-gradient(at 0% 0%, rgba(178, 235, 242, 0.15) 0px, transparent 40%),
-    radial-gradient(at 100% 100%, rgba(178, 235, 242, 0.15) 0px, transparent 40%) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.8) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.8) !important;
-  border-bottom: 1px solid rgba(0, 66, 106, 0.1) !important;
-  border-right: 1px solid rgba(0, 66, 106, 0.1) !important;
-  box-shadow: 0 40px 80px -15px rgba(0, 66, 106, 0.2) !important;
+    radial-gradient(at 100% 100%, rgba(178, 235, 242, 0.15) 0px, transparent 40%);
+  border-top: 1px solid rgba(255, 255, 255, 0.8);
+  border-left: 1px solid rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid rgba(0, 66, 106, 0.1);
+  border-right: 1px solid rgba(0, 66, 106, 0.1);
+  box-shadow: 0 40px 80px -15px rgba(0, 66, 106, 0.2);
+  will-change: transform;
+  transform: translateZ(0);
 }
 
-.floating-slab-deep {
-  background: rgba(240, 248, 255, 0.1) !important; /* Ocean 9 at 10% */
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.8) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.8) !important;
-  border-bottom: 1px solid rgba(0, 66, 106, 0.1) !important;
-  border-right: 1px solid rgba(0, 66, 106, 0.1) !important;
-  border-radius: 2rem !important;
+body .floating-slab-deep {
+  background: rgba(240, 248, 255, 0.1); /* Ocean 9 at 10% */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.8);
+  border-left: 1px solid rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid rgba(0, 66, 106, 0.1);
+  border-right: 1px solid rgba(0, 66, 106, 0.1);
+  border-radius: 2rem;
   box-shadow: 
     0 20px 40px -10px rgba(49, 170, 193, 0.15), /* Ocean 4 shadow */
     0 10px 20px -5px rgba(49, 170, 193, 0.1),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.5) !important;
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
 }
 
-.floating-slab-deep:hover {
-  transform: translateY(-8px);
+body .floating-slab-deep:hover {
+  transform: translateY(-8px) translateZ(0);
   box-shadow: 
     0 60px 100px -20px rgba(0, 0, 0, 0.25),
     0 30px 50px -10px rgba(0, 0, 0, 0.2),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.9) !important;
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9);
 }
 
 .surfer-image-feather {
@@ -353,21 +340,23 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 0;
 }
 
 .luxury-slab {
-  background: rgba(255, 255, 255, 0.85) !important;
-  backdrop-filter: blur(25px) !important;
-  -webkit-backdrop-filter: blur(25px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
-  border-radius: 28px !important;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 28px;
   box-shadow: 
     0 50px 100px -20px rgba(0, 0, 0, 0.25),
     0 30px 60px -30px rgba(0, 0, 0, 0.3),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.8) !important;
+    inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
 }
 
 .tangible-surfer-card {
@@ -669,17 +658,19 @@
     radial-gradient(at 100% 100%, rgba(175, 238, 238, 0.1) 0px, transparent 60%) !important;
 }
 
-.luxury-card {
-  background: rgba(255, 255, 255, 0.5) !important;
-  backdrop-filter: blur(40px) !important;
-  -webkit-backdrop-filter: blur(40px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.8) !important;
-  border-radius: 28px !important;
+body .luxury-card {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 28px;
   box-shadow: 
     0 40px 80px -15px rgba(0, 0, 0, 0.15),
     0 20px 40px -10px rgba(0, 0, 0, 0.1),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.9) !important;
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
 }
 
 .luxury-card:hover {
@@ -691,28 +682,30 @@
 }
 
 .admin-info-card {
-  background: rgba(240, 248, 255, 0.1) !important; /* Ocean 9 at 10% */
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: none !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.8) !important; /* Ocean 10 at 80% */
-  border-left: 1px solid rgba(255, 255, 255, 0.8) !important;
-  border-bottom: 1px solid rgba(0, 66, 106, 0.1) !important; /* Ocean 1 at 10% */
-  border-right: 1px solid rgba(0, 66, 106, 0.1) !important;
-  border-radius: 28px !important;
+  background: rgba(240, 248, 255, 0.1); /* Ocean 9 at 10% */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.8); /* Ocean 10 at 80% */
+  border-left: 1px solid rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid rgba(0, 66, 106, 0.1); /* Ocean 1 at 10% */
+  border-right: 1px solid rgba(0, 66, 106, 0.1);
+  border-radius: 28px;
   box-shadow: 
     0 10px 30px rgba(49, 170, 193, 0.15), 
     0 20px 40px rgba(49, 170, 193, 0.1),
-    0 4px 10px rgba(49, 170, 193, 0.1) !important; /* Ocean 4 Depth */
+    0 4px 10px rgba(49, 170, 193, 0.1); /* Ocean 4 Depth */
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
 }
 
 .admin-info-card::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   opacity: 0.02; /* 2% Grain */
   pointer-events: none;
   z-index: 1;
@@ -735,24 +728,26 @@
 }
 
 .home-glass-card {
-  background: rgba(255, 255, 255, 0.8) !important;
-  backdrop-filter: blur(25px) !important;
-  -webkit-backdrop-filter: blur(25px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.7) !important;
-  border-radius: 28px !important;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 28px;
   box-shadow: 
     0 35px 70px -12px rgba(0, 0, 0, 0.2),
     0 15px 30px -5px rgba(0, 0, 0, 0.1),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.8) !important;
+    inset 0 0 0 1px rgba(255, 255, 255, 0.8);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
 }
 
 .home-glass-card:hover {
-  transform: translateY(-8px);
+  transform: translateY(-8px) translateZ(0);
   box-shadow: 
     0 50px 100px -20px rgba(0, 0, 0, 0.3),
     0 25px 40px -5px rgba(0, 0, 0, 0.15),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.9) !important;
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9);
 }
 
 .glass-artifact {
@@ -1578,18 +1573,6 @@ header {
   color: white;
 }
 
-/* T-Mobile Theme */
-.t-mobile-light {
-  background-color: var(--t-mobile-mist);
-}
-.t-mobile-strong {
-  background-color: var(--t-mobile-magenta);
-  color: white;
-}
-.t-mobile-text-strong {
-  color: var(--t-mobile-magenta);
-}
-
 /* Surfer Card Animation Styles */
 .animate-shake {
     display: inline-block;
@@ -1651,31 +1634,37 @@ header {
 
 /* 2. Glass Containers & Cards */
 .glass-effect, .glass-panel {
-    background: var(--glass-bg) !important;
-    backdrop-filter: blur(var(--glass-blur)) !important;
-    -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
-    border: var(--glass-border) !important;
-    border-radius: var(--glass-radius) !important;
-    box-shadow: var(--glass-shadow) !important;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: var(--glass-border);
+    border-radius: var(--glass-radius);
+    box-shadow: var(--glass-shadow);
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
 }
 
 .hd-transparent-frame {
-    background: rgba(255, 255, 255, 0.05) !important;
-    backdrop-filter: blur(25px) !important;
-    -webkit-backdrop-filter: blur(25px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 32px !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2) !important;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 32px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
 }
 
 /* Update modern-card specifically */
 .modern-card {
-    background: var(--glass-bg) !important;
-    backdrop-filter: blur(var(--glass-blur)) !important;
-    -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
-    border: var(--glass-border) !important;
-    border-radius: var(--glass-radius) !important;
-    box-shadow: var(--glass-shadow) !important;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: var(--glass-border);
+    border-radius: var(--glass-radius);
+    box-shadow: var(--glass-shadow);
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
 }
 
 /* 3. Modals */
@@ -1685,12 +1674,14 @@ header {
 }
 
 .modal-content {
-    background: var(--glass-bg) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border: var(--glass-border) !important;
-    border-radius: 20px !important;
-    box-shadow: var(--glass-shadow) !important;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: var(--glass-border);
+    border-radius: 20px;
+    box-shadow: var(--glass-shadow);
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
 }
 
 /* 4. Buttons */
@@ -1968,24 +1959,25 @@ main.bg-slate-50 {
 /* --- שדרוג ה-Radar Chart למראה 3D ו-Glassmorphism (Sand Theme) --- */
 
 /* 1. מכולה ראשית - הוספת עומק ופרוספקטיבה (3D Perspective) */
-.radar-chart-container {
-    display: block !important;
-    position: relative !important;
-    padding: 40px !important;
-    border-radius: 30px !important;
+body .radar-chart-container {
+    display: block;
+    position: relative;
+    padding: 40px;
+    border-radius: 30px;
     
     /* אפקט Glassmorphism */
-    background: rgba(255, 255, 255, 0.08) !important;
-    backdrop-filter: blur(20px) !important;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
     
     /* אפקט עומק (3D) */
-    perspective: 1200px !important;
-    transform: rotateX(15deg) rotateY(-8deg) !important;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4) !important;
+    perspective: 1200px;
+    transform: rotateX(15deg) rotateY(-8deg);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
     
     transition: transform 0.6s ease;
+    will-change: transform, backdrop-filter;
 }
 
 /* 2. הרקע של הגרף - אפקט Glassmorphism */
@@ -2408,9 +2400,11 @@ main.bg-slate-50 {
   -webkit-backdrop-filter: blur(20px);
 }
 
-.glass-modal {
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
+body .glass-modal {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
 }
 
 /* Progress Bars */
@@ -2829,45 +2823,53 @@ h2.surfer-subtitle::after {
 }
 
 /* --- Subtle Neo-Glass (Member Profile Modal) --- */
-.neo-glass-modal {
+body .neo-glass-modal {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 2px solid var(--deep-teal-sea, #007085) !important;
-  border-radius: 8px !important;
-  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.8) !important;
+  border: 2px solid var(--deep-teal-sea, #007085);
+  border-radius: 8px;
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.8);
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
 }
 
-.neo-glass-panel {
+body .neo-glass-panel {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  border: 2px solid var(--deep-teal-sea, #007085) !important;
-  border-radius: 8px !important;
-  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8) !important;
+  border: 2px solid var(--deep-teal-sea, #007085);
+  border-radius: 8px;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
   transition: all 0.2s ease-in-out;
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
 }
 
-.neo-glass-panel-dark {
+body .neo-glass-panel-dark {
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  border: 2px solid var(--deep-teal-sea, #007085) !important;
-  border-radius: 8px !important;
-  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8) !important;
+  border: 2px solid var(--deep-teal-sea, #007085);
+  border-radius: 8px;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
 }
 
-.neo-glass-button {
+body .neo-glass-button {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
-  border: 2px solid var(--deep-teal-sea, #007085) !important;
-  border-radius: 8px !important;
-  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8) !important;
+  border: 2px solid var(--deep-teal-sea, #007085);
+  border-radius: 8px;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
   transition: all 0.2s ease-in-out;
   color: white;
   font-weight: 900;
   cursor: pointer;
+  will-change: transform, backdrop-filter;
+  transform: translateZ(0);
 }
 
 .neo-glass-button:hover {

@@ -2,6 +2,7 @@ import { Member } from '../types';
 import { formatDate, parseDate } from './dateUtils';
 import { getBodyLineStats } from './bodyLineStats';
 import { RANKS } from '../constants';
+import { roundToGritStandard } from './gritRounding';
 
 export interface UserStats {
   userId: string;
@@ -120,7 +121,8 @@ export const calculateUserStats = (
   }
 
   // Grit Score Logic: (Total Sessions * 2) + (Streak * 5)
-  const gritScore = Math.min(100, (totalSessions * 1.5) + (streak * 4));
+  const rawGritScore = (totalSessions * 1.5) + (streak * 4);
+  const gritScore = roundToGritStandard(rawGritScore);
 
   // Calculate total planned sessions based on unique session dates in the database for the season
   
@@ -169,7 +171,8 @@ export const calculateUserStats = (
       }
     }
     
-    const mGritScore = Math.min(100, (mTotalSessions * 1.5) + (mStreak * 4));
+    const rawMGritScore = (mTotalSessions * 1.5) + (mStreak * 4);
+    const mGritScore = roundToGritStandard(rawMGritScore);
     
     return {
       ...m,
@@ -324,10 +327,12 @@ export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) =
       totalCapacity += activeAtTime;
     });
 
-    const avgScore = totalCapacity > 0 ? Math.round((totalActuals / totalCapacity) * 100) : 0;
+    const rawAvgScore = totalCapacity > 0 ? Math.round((totalActuals / totalCapacity) * 100) : 0;
+    const avgScore = roundToGritStandard(rawAvgScore);
+    
     return { 
       name: season.name, 
-      score: Math.min(100, avgScore),
+      score: avgScore,
       actuals: totalActuals,
       capacity: totalCapacity,
       sessionCount: seasonSessions.length

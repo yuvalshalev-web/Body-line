@@ -54,6 +54,9 @@ export const AdminRolloverReport: React.FC = () => {
       const newLogs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       console.log('AdminRolloverReport: Received logs:', newLogs);
       setLogs(newLogs);
+    }, (error) => {
+      console.error('AdminRolloverReport: Error listening to rollover_logs:', error);
+      setError('שגיאה בטעינת לוגים של גלגול שבועי');
     });
     return unsub;
   }, []);

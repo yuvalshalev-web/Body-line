@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
-import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCircle, Phone, Twitter, Music2, Mail, MapPin } from 'lucide-react';
+import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCircle, Phone, Twitter, Music2, Mail, MapPin, ShieldCheck } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateUserStats } from '../utils/analytics';
@@ -298,6 +298,22 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
               </div>
               <div className="text-center text-xs text-[#000000] font-bold">
                 {member.gender === 'נקבה' ? 'את מבוגרת' : 'אתה מבוגר'} יותר מ-{agePercentile.roundedPercentile}% מחברי הקהילה
+              </div>
+            </div>
+          )}
+
+          {/* Certifications Section */}
+          {member.certifications && member.certifications.length > 0 && (
+            <div className="w-full p-4 bg-indigo-50/30 backdrop-blur-[20px] border border-indigo-100/50 rounded-2xl mt-4" dir="rtl">
+              <div className="text-indigo-600 text-sm font-black mb-3 flex items-center gap-2 justify-center">
+                <ShieldCheck size={16} /> הכשרות והסמכות
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {member.certifications.map((cert, idx) => (
+                  <span key={idx} className="px-3 py-1 bg-white/80 border border-indigo-100 text-indigo-700 text-[10px] font-bold rounded-lg shadow-sm">
+                    {cert === 'טקסט חופשי' ? (member.otherCertification || 'אחר') : cert}
+                  </span>
+                ))}
               </div>
             </div>
           )}

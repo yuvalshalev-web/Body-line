@@ -1,4 +1,6 @@
 
+import { roundToGritStandard } from './gritRounding';
+
 export type SurfingLevel = 'Learner' | 'Beginner' | 'Intermediate' | 'Advanced';
 export type FitnessLevel = 'Low' | 'Average' | 'High' | 'Elite';
 
@@ -10,6 +12,18 @@ export interface SurfboardRecommendation {
   boardType: string;
   boardTypeHebrew: string;
 }
+
+export const getBoardSize = (cm: number): string => {
+  // 1. המרה ועיגול למספר שלם הכי קרוב (כמו בחנות)
+  const totalInches = Math.round(cm / 2.54);
+  
+  // 2. חילוץ רגליים ואינצ'ים
+  const feet = Math.floor(totalInches / 12);
+  const inches = totalInches % 12;
+  
+  // 3. פורמט תצוגה של שייפרים
+  return `${feet}'${inches}"`;
+};
 
 export const calculateSurferFormula = (
   weight: number,
@@ -109,14 +123,14 @@ export const calculateSurferFormula = (
     }
   }
 
-  const feet = Math.floor(lengthInches / 12);
-  const inches = Math.round(lengthInches % 12);
-  const lengthFormatted = `${feet}'${inches}"`;
+  // 1. המרה ועיגול למספר שלם הכי קרוב (כמו בחנות)
+  const totalInches = Math.round(lengthCm / 2.54);
+  const lengthFormatted = getBoardSize(lengthCm);
 
   return {
     volume,
     lengthCm,
-    lengthInches,
+    lengthInches: totalInches,
     lengthFormatted,
     boardType,
     boardTypeHebrew

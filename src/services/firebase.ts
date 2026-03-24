@@ -1,6 +1,11 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, getDocs, Query, QuerySnapshot, collection, addDoc, query, orderBy, limit, deleteDoc, writeBatch, doc, getDocFromServer } from 'firebase/firestore';
+import { 
+  getFirestore, getDocs, getDoc, Query, QuerySnapshot, collection, addDoc, query, orderBy, 
+  limit, deleteDoc, writeBatch, doc, getDocFromServer, setDoc, updateDoc, onSnapshot,
+  DocumentReference, UpdateData, WithFieldValue, DocumentData, Unsubscribe, 
+  SnapshotListenOptions, FirestoreError, DocumentSnapshot, QueryConstraint
+} from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { trackBandwidth } from '../utils/bandwidthTracker';
 import { addLog, SystemLog } from '../utils/systemLogs';
@@ -18,15 +23,21 @@ const auth = getAuth(app);
 const storage = getStorage(app);
 
 export let sessionReadCount = 0;
+export let sessionWriteCount = 0;
 
-// Initialize read count from localStorage if it's from the same day
+// Initialize stats from localStorage if it's from the same day
 if (typeof window !== 'undefined') {
   const savedData = localStorage.getItem('db_read_stats');
   if (savedData) {
-    const { count, date } = JSON.parse(savedData);
-    const today = new Date().toDateString();
-    if (date === today) {
-      sessionReadCount = count;
+    try {
+      const { count, writeCount, date } = JSON.parse(savedData);
+      const today = new Date().toDateString();
+      if (date === today) {
+        sessionReadCount = count || 0;
+        sessionWriteCount = writeCount || 0;
+      }
+    } catch (e) {
+      console.error("Failed to parse db_read_stats from localStorage", e);
     }
   }
 }
@@ -54,12 +65,13 @@ export const saveLogsToDatabase = async (logs: SystemLog[]) => {
   });
   
   await batch.commit();
+  incrementWriteCount(logs.length);
 };
 
 export const loadLogsFromDatabase = async (): Promise<SystemLog[]> => {
   const logsCollection = collection(db, 'system_logs');
   const q = query(logsCollection, orderBy('timestamp', 'desc'), limit(100));
-  const snapshot = await getDocs(q);
+  const snapshot = await trackedGetDocs(q);
   
   return snapshot.docs.map(doc => {
     const data = doc.data();
@@ -129,8 +141,6 @@ export const handleFirestoreError = (error: unknown, operationType: OperationTyp
  * Wrapper חכם לשליפת מסמכים שסופר קריאות בזמן אמת
  */
 export const trackedGetDocs = async (query: Query): Promise<QuerySnapshot> => {
-    // בדיקת Kill Switch
-    // מאפשרים קריאה רק אם מדובר בבדיקת לוגין (members) כדי למנוע נעילה מוחלטת של מנהלים
     const path = (query as any)._query?.path?.segments?.join('/') || 'unknown';
     const isLoginQuery = path.includes('members');
 
@@ -142,32 +152,137 @@ export const trackedGetDocs = async (query: Query): Promise<QuerySnapshot> => {
 
     try {
       const snapshot = await getDocs(query);
-      // Firebase מחייב על כל מסמך שחזר + 1 על השאילתה עצמה
       const reads = snapshot.size || 1; 
-      sessionReadCount += reads;
+      incrementReadCount(reads);
       
-      // Estimate bandwidth: Average doc size 1.5KB + overhead
       const estimatedInBytes = reads * 1536; 
       trackBandwidth(estimatedInBytes, 'in');
-      // Outgoing query overhead (approx 200 bytes)
       trackBandwidth(200, 'out');
-      
-      // Persist to localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('db_read_stats', JSON.stringify({
-          count: sessionReadCount,
-          date: new Date().toDateString()
-        }));
-      }
-      
-      // עדכון אירוע מותאם אישית כדי שחדר המכונות יתעדכן
-      window.dispatchEvent(new CustomEvent('db-read-update', { detail: sessionReadCount }));
       
       return snapshot;
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, path);
-      throw error; // handleFirestoreError already throws, but for TS
+      throw error;
     }
+};
+
+/**
+ * Wrapper for onSnapshot that tracks reads
+ */
+export function trackedOnSnapshot<T = DocumentData>(
+  query: Query<T>,
+  onNext: (snapshot: QuerySnapshot<T>) => void,
+  onError?: (error: FirestoreError) => void,
+  options?: SnapshotListenOptions
+): Unsubscribe;
+export function trackedOnSnapshot<T = DocumentData>(
+  reference: DocumentReference<T>,
+  onNext: (snapshot: DocumentSnapshot<T>) => void,
+  onError?: (error: FirestoreError) => void,
+  options?: SnapshotListenOptions
+): Unsubscribe;
+export function trackedOnSnapshot(
+  refOrQuery: any,
+  onNext: any,
+  onError?: any,
+  options?: any
+): Unsubscribe {
+  const path = refOrQuery.path || (refOrQuery as any)._query?.path?.segments?.join('/') || 'unknown';
+  
+  return onSnapshot(
+    refOrQuery,
+    (snapshot: any) => {
+      // For query snapshots, we count the docs. For doc snapshots, it's 1.
+      const reads = snapshot.docs ? (snapshot.docs.length || 1) : 1;
+      incrementReadCount(reads);
+      
+      const estimatedInBytes = reads * 1536;
+      trackBandwidth(estimatedInBytes, 'in');
+      
+      onNext(snapshot);
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.GET, path);
+      if (onError) onError(error);
+    },
+    options
+  );
+}
+
+/**
+ * Tracked write operations
+ */
+export const trackedAddDoc = async <T = DocumentData>(
+  reference: any,
+  data: WithFieldValue<T>
+) => {
+  try {
+    const result = await addDoc(reference, data);
+    incrementWriteCount(1);
+    trackBandwidth(JSON.stringify(data).length, 'out');
+    return result;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, reference.path);
+    throw error;
+  }
+};
+
+export const trackedSetDoc = async <T = DocumentData>(
+  reference: DocumentReference<T>,
+  data: WithFieldValue<T>,
+  options?: any
+) => {
+  try {
+    const result = await setDoc(reference, data, options);
+    incrementWriteCount(1);
+    trackBandwidth(JSON.stringify(data).length, 'out');
+    return result;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, reference.path);
+    throw error;
+  }
+};
+
+export const trackedGetDoc = async <T = DocumentData>(
+  reference: DocumentReference<T>
+) => {
+  try {
+    const result = await getDoc(reference);
+    incrementReadCount(1);
+    const estimatedInBytes = JSON.stringify(result.data()).length;
+    trackBandwidth(estimatedInBytes, 'in');
+    return result;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, reference.path);
+    throw error;
+  }
+};
+
+export const trackedUpdateDoc = async (
+  reference: DocumentReference<any>,
+  data: any
+) => {
+  try {
+    const result = await updateDoc(reference, data);
+    incrementWriteCount(1);
+    trackBandwidth(JSON.stringify(data).length, 'out');
+    return result;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, reference.path);
+    throw error;
+  }
+};
+
+export const trackedDeleteDoc = async (reference: DocumentReference) => {
+  try {
+    const result = await deleteDoc(reference);
+    incrementWriteCount(1);
+    trackBandwidth(100, 'out');
+    return result;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, reference.path);
+    throw error;
+  }
 };
 
 export const incrementReadCount = (amount: number = 1) => {
@@ -175,13 +290,26 @@ export const incrementReadCount = (amount: number = 1) => {
   if (typeof window !== 'undefined') {
     localStorage.setItem('db_read_stats', JSON.stringify({
       count: sessionReadCount,
+      writeCount: sessionWriteCount,
       date: new Date().toDateString()
     }));
   }
   window.dispatchEvent(new CustomEvent('db-read-update', { detail: sessionReadCount }));
 };
 
-export { db, auth, storage };
+export const incrementWriteCount = (amount: number = 1) => {
+  sessionWriteCount += amount;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('db_read_stats', JSON.stringify({
+      count: sessionReadCount,
+      writeCount: sessionWriteCount,
+      date: new Date().toDateString()
+    }));
+  }
+  window.dispatchEvent(new CustomEvent('db-write-update', { detail: sessionWriteCount }));
+};
+
+export { db, auth, storage, writeBatch };
 
 // Connection test
 async function testConnection() {

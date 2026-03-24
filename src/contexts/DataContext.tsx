@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
-import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp, runTransaction, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp, runTransaction, serverTimestamp, where } from 'firebase/firestore';
 import { ref, deleteObject, getMetadata } from 'firebase/storage';
 import { getDb, trackedGetDocs, setDbStatus, db_status, getStorageInstance } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../utils/dateUtils';
@@ -363,19 +363,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const unsubSeaStats = onSnapshot(doc(db, 'seaConditionsStats', 'current'), (doc) => {
       if (doc.exists()) setSeaStats(doc.data());
-    });
+    }, (error) => handleFirestoreError(error, OperationType.GET, 'seaConditionsStats/current'));
 
     const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (doc) => {
       if (doc.exists()) setSiteAssets(doc.data());
-    });
+    }, (error) => handleFirestoreError(error, OperationType.GET, 'site_data/assets'));
 
     const unsubConfig = onSnapshot(doc(db, 'site_data', 'config'), (doc) => {
       if (doc.exists()) setSiteConfig(doc.data() as any);
-    });
+    }, (error) => handleFirestoreError(error, OperationType.GET, 'site_data/config'));
 
     const unsubYearConfig = onSnapshot(doc(db, 'site_data', 'year_config'), (doc) => {
       if (doc.exists()) setYearConfig(doc.data() as { startDate: string; endDate: string });
-    });
+    }, (error) => handleFirestoreError(error, OperationType.GET, 'site_data/year_config'));
 
     return () => {
       unsubSeaStats();
@@ -443,35 +443,45 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setMembers(filteredDocs);
       setIsDbEmpty(snapshot.empty);
       storage.set('cached_members_v3', filteredDocs, 2 / 60);
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'members'));
 
     const unsubHistory = onSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
       const hData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setWeeklyHistory(hData);
       storage.set('cached_history_v3', hData, 2 / 60);
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'weekly_history'));
 
     const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
       setEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event)));
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'events'));
     
     const unsubNews = onSnapshot(query(collection(db, 'news'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
       setNews(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as NewsItem)));
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'news'));
     
     const unsubPodcasts = onSnapshot(query(collection(db, 'podcasts'), orderBy('publishedAt', 'desc'), limit(200)), (snapshot) => {
       setPodcasts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Podcast)));
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'podcasts'));
     
     const unsubGallery = onSnapshot(query(collection(db, 'gallery'), orderBy('timestamp', 'desc'), limit(50)), (snapshot) => {
       setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
-    });
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'gallery'));
 
-    const unsubPerformance = onSnapshot(query(collection(db, 'performance_scores'), limit(500)), (snapshot) => {
-      const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
-      console.log('performanceScores updated:', scores);
-      setPerformanceScores(scores);
-    });
+    let unsubPerformance: (() => void) | null = null;
+    if (currentUser.role === 'Admin' || currentUser.role === 'Instructor') {
+      unsubPerformance = onSnapshot(query(collection(db, 'performance_scores'), limit(500)), (snapshot) => {
+        const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
+        console.log('performanceScores updated:', scores);
+        setPerformanceScores(scores);
+      }, (error) => handleFirestoreError(error, OperationType.LIST, 'performance_scores'));
+    } else if (currentUser.role === 'Member') {
+      // Members only see their own scores
+      const myScoresQuery = query(collection(db, 'performance_scores'), where('memberId', '==', currentUser.id), limit(100));
+      unsubPerformance = onSnapshot(myScoresQuery, (snapshot) => {
+        const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
+        setPerformanceScores(scores);
+      }, (error) => handleFirestoreError(error, OperationType.LIST, 'performance_scores/my_scores'));
+    }
 
     const unsubAttendees = onSnapshot(doc(db, 'site_data', 'active_session'), async (snapshot) => {
       if (snapshot.exists()) {
@@ -485,13 +495,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
       setIsLoading(false);
-    });
+    }, (error) => handleFirestoreError(error, OperationType.GET, 'site_data/active_session'));
 
     let unsubRequests: (() => void) | null = null;
     if (currentUser.role === 'Admin') {
       unsubRequests = onSnapshot(query(collection(db, 'joinRequests'), limit(200)), (snapshot) => {
         setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
-      });
+      }, (error) => handleFirestoreError(error, OperationType.LIST, 'joinRequests'));
       initializeStorageStats();
     }
 
@@ -505,7 +515,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       unsubNews();
       unsubPodcasts();
       unsubGallery();
-      unsubPerformance();
+      if (unsubPerformance) unsubPerformance();
       unsubAttendees();
       if (unsubRequests) unsubRequests();
     };

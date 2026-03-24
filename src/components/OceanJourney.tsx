@@ -53,6 +53,166 @@ const milestones = [
   },
 ];
 
+const MilestoneNote = ({ milestone, index, isUnlocked, compact, style }: { 
+  milestone: any; 
+  index: number; 
+  isUnlocked: boolean; 
+  compact: boolean; 
+  style: any; 
+}) => {
+  const [isShaking, setIsShaking] = useState(false);
+
+  const handleLockedClick = () => {
+    if (!isUnlocked) {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 400);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ 
+        opacity: 1, 
+        scale: 1,
+        x: isShaking ? [0, -4, 4, -4, 4, 0] : 0
+      }}
+      transition={{ 
+        opacity: { delay: index * 0.1 },
+        scale: { delay: index * 0.1 },
+        x: { duration: 0.4 }
+      }}
+      onClick={handleLockedClick}
+      className={`relative group flex-shrink-0 ${compact ? `w-48 ${index > 0 ? style.mt : ''} ${style.compactX}` : 'w-44 md:w-full'} ${style.rotate} ${!isUnlocked ? 'cursor-pointer' : ''}`}
+      style={{ zIndex: compact ? index + 1 : 1 }}
+    >
+      {/* Milestone Note Content */}
+      <div 
+        className={`
+          relative flex flex-col items-center justify-center text-center p-4 transition-all duration-500
+          opacity-100 min-h-[240px]
+        `}
+        style={{
+          backgroundColor: style.bg,
+          backgroundImage: `
+            linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 35%, rgba(0,0,0,0.05) 100%),
+            url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.06'/%3E%3C/svg%3E")
+          `,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.15), 4px 8px 15px rgba(0,0,0,0.12), -2px 10px 15px rgba(0,0,0,0.08), inset 0 -12px 15px -5px rgba(0,0,0,0.08)',
+          borderRadius: '2px 255px 3px 25px / 255px 5px 225px 3px'
+        }}
+      >
+        {/* Thumbtack Pin */}
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20">
+          <div className="absolute top-2 left-2 w-3 h-3 bg-black/30 rounded-full blur-[2px]" />
+          <div 
+            className="relative w-4 h-4 rounded-full shadow-[inset_-1px_-1px_3px_rgba(0,0,0,0.3),0_1px_2px_rgba(0,0,0,0.4)] border border-black/10"
+            style={{ background: style.pin }}
+          />
+        </div>
+
+        {/* Glass Overlay for Locked State */}
+        {!isUnlocked && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center rounded-[inherit] overflow-hidden group/locked">
+            <div className="absolute inset-0 bg-slate-900/5 backdrop-blur-[4px]" />
+            
+            {/* Animated Shimmer Background */}
+            <motion.div 
+              animate={{ 
+                rotate: [0, 360],
+              }}
+              transition={{ 
+                duration: 15, 
+                repeat: Infinity, 
+                ease: "linear" 
+              }}
+              className="absolute w-[200%] h-[200%] bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-20"
+            />
+
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="relative">
+                {/* Outer Pulse Glow */}
+                <motion.div 
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                    opacity: [0.2, 0.4, 0.2]
+                  }}
+                  transition={{ 
+                    duration: 3, 
+                    repeat: Infinity, 
+                    ease: "easeInOut" 
+                  }}
+                  className="absolute inset-0 bg-[#00426a]/30 blur-2xl rounded-full"
+                />
+                
+                {/* Icon Container - Porthole Style */}
+                <div className="relative w-24 h-24 rounded-full bg-white/20 backdrop-blur-xl border border-white/40 flex items-center justify-center shadow-[0_15px_35px_rgba(0,66,106,0.15),inset_0_2px_4px_rgba(255,255,255,0.5)] overflow-hidden">
+                  {/* Inner Shimmer Effect */}
+                  <motion.div 
+                    animate={{ x: [-120, 120] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12"
+                  />
+                  
+                  {/* The Lock Icon */}
+                  <div className="relative">
+                    <Lock className="w-12 h-12 text-[#00426a]/50 drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]" />
+                    {/* Tiny Sparkle */}
+                    <motion.div
+                      animate={{ 
+                        scale: [0, 1, 0],
+                        opacity: [0, 1, 0]
+                      }}
+                      transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
+                      className="absolute -top-1 -right-1"
+                    >
+                      <Star size={10} className="text-white fill-white" />
+                    </motion.div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Status Label */}
+              <motion.span 
+                animate={{ opacity: [0.4, 0.7, 0.4] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="text-[9px] font-black text-[#00426a]/50 uppercase tracking-[0.3em] mt-4 mr-1"
+              >
+                עדיין נעול
+              </motion.span>
+            </div>
+          </div>
+        )}
+
+        {/* Image Container */}
+        <div className={`${milestone.name.includes('מנטה') ? 'w-56 h-56' : 'w-32 h-32'} mb-4 flex items-center justify-center relative flex-shrink-0`}>
+          <img 
+            src={milestone.src} 
+            alt={milestone.alt} 
+            className={`object-contain relative z-10 ${!isUnlocked ? 'opacity-40 grayscale' : ''} ${
+              milestone.name.includes('כריש') ? 'w-36 h-36' : 
+              milestone.name.includes('אורקה') ? 'w-44 h-44 max-w-none max-h-none' : 
+              milestone.name.includes('פינגווין') ? 'w-36 h-36' : 
+              milestone.name.includes('מנטה') ? 'w-56 h-56 max-w-none max-h-none' : 'w-32 h-32'
+            }`}
+            referrerPolicy="no-referrer"
+          />
+        </div>
+
+        <h4 className="text-base font-black text-slate-800 mb-1">
+            {milestone.name}
+        </h4>
+        
+        {!compact && (
+            <p className={`text-xs font-bold leading-tight text-slate-700`}>
+            {milestone.desc}
+            </p>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
 export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = ({ compact = false, noFrame = false }) => {
   const { members, weeklyHistory } = useData();
   const { currentUser } = useAuth();
@@ -243,7 +403,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                 <li><strong className="text-blue-600">פינגווין:</strong> התמדה באימוני חורף.</li>
                 <li><strong className="text-orange-600">מנטה ריי:</strong> רצף אימונים בקיץ.</li>
                 <li><strong className="text-slate-600">כריש:</strong> הגעה עקבית לכל הסשנים.</li>
-                <li><strong className="text-indigo-600">אורקה:</strong> המאסטר האמיתי!</li>
+                <li><strong className="text-red-600">אורקה:</strong> המאסטר האמיתי!</li>
               </ul>
             </div>
           </div>
@@ -264,82 +424,22 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                   { bg: '#ffbe4d', pin: 'radial-gradient(circle at 30% 30%, #ffffff, #d0d0d0)', rotate: 'rotate-[6deg]', compactX: 'translate-x-16', mt: '-mt-16' },
                   { bg: '#ffb5c5', pin: 'radial-gradient(circle at 30% 30%, #ff6b4a, #c92a18)', rotate: 'rotate-[-3deg]', compactX: '-translate-x-16', mt: '-mt-16' },
                   { bg: '#7ae0f5', pin: 'radial-gradient(circle at 30% 30%, #5c95ff, #1a5bb8)', rotate: 'rotate-[5deg]', compactX: 'translate-x-16', mt: '-mt-16' },
-                  { bg: '#ffb5c5', pin: 'radial-gradient(circle at 30% 30%, #ff6b4a, #c92a18)', rotate: 'rotate-[-4deg]', compactX: '-translate-x-16', mt: '-mt-16' }
+                  { bg: '#ff8c8c', pin: 'radial-gradient(circle at 30% 30%, #ff6b4a, #c92a18)', rotate: 'rotate-[-4deg]', compactX: '-translate-x-16', mt: '-mt-16' }
                 ];
                 
                 const style = noteStyles[index % noteStyles.length];
                 
                 return (
-                  <motion.div
+                  <MilestoneNote
                     key={milestone.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`relative group flex-shrink-0 ${compact ? `w-48 ${index > 0 ? style.mt : ''} ${style.compactX}` : 'w-44 md:w-full'} ${style.rotate}`}
-                    style={{ zIndex: compact ? index + 1 : 1 }}
-                  >
-                  {/* Milestone Note */}
-                  <div 
-                    className={`
-                      relative flex flex-col items-center justify-center text-center p-4 transition-all duration-500
-                      opacity-100 min-h-[240px]
-                    `}
-                    style={{
-                      backgroundColor: style.bg,
-                      backgroundImage: `
-                        linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 35%, rgba(0,0,0,0.05) 100%),
-                        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.06'/%3E%3C/svg%3E")
-                      `,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.15), 4px 8px 15px rgba(0,0,0,0.12), -2px 10px 15px rgba(0,0,0,0.08), inset 0 -12px 15px -5px rgba(0,0,0,0.08)',
-                      borderRadius: '2px 255px 3px 25px / 255px 5px 225px 3px'
-                    }}
-                  >
-                    {/* Thumbtack Pin */}
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-20">
-                      {/* Pin Shadow */}
-                      <div className="absolute top-2 left-2 w-3 h-3 bg-black/30 rounded-full blur-[2px]" />
-                      {/* Pin Head */}
-                      <div 
-                        className="relative w-4 h-4 rounded-full shadow-[inset_-1px_-1px_3px_rgba(0,0,0,0.3),0_1px_2px_rgba(0,0,0,0.4)] border border-black/10"
-                        style={{ background: style.pin }}
-                      />
-                    </div>
-
-                    {/* Locked Icon (Top Right) */}
-                    {!isUnlocked && (
-                      <div className="absolute top-3 right-3 z-20">
-                        <Lock className="w-6 h-6 text-slate-800/40" />
-                      </div>
-                    )}
-
-                    {/* Image Container */}
-                    <div className={`${milestone.name.includes('מנטה') ? 'w-56 h-56' : 'w-32 h-32'} mb-4 flex items-center justify-center relative flex-shrink-0`}>
-                      <img 
-                        src={milestone.src} 
-                        alt={milestone.alt} 
-                        className={`object-contain relative z-10 ${!isUnlocked ? 'opacity-40 grayscale' : ''} ${
-                          milestone.name.includes('כריש') ? 'w-36 h-36' : 
-                          milestone.name.includes('אורקה') ? 'w-44 h-44 max-w-none max-h-none' : 
-                          milestone.name.includes('פינגווין') ? 'w-36 h-36' : 
-                          milestone.name.includes('מנטה') ? 'w-56 h-56 max-w-none max-h-none' : 'w-32 h-32'
-                        }`}
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-
-                    <h4 className="text-base font-black text-slate-800 mb-1">
-                        {milestone.name}
-                    </h4>
-                    
-                    {!compact && (
-                        <p className={`text-xs font-bold leading-tight text-slate-700`}>
-                        {milestone.desc}
-                        </p>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
+                    milestone={milestone}
+                    index={index}
+                    isUnlocked={isUnlocked}
+                    compact={compact}
+                    style={style}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>

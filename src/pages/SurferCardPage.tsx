@@ -31,8 +31,13 @@ const SurferCardPage: React.FC = () => {
   const { members, weeklyHistory, yearConfig, siteConfig, isLoading, dbStatus, events } = useData();
   
   const userData = useMemo(() => {
-    if (!currentUser || isLoading) return null;
-    return calculateUserStats(currentUser.id, members, weeklyHistory, yearConfig, events);
+    if (!currentUser || isLoading || !members || members.length === 0) return null;
+    try {
+      return calculateUserStats(currentUser.id, members, weeklyHistory, yearConfig, events);
+    } catch (error) {
+      console.error("Error calculating user stats:", error);
+      return null;
+    }
   }, [currentUser, members, weeklyHistory, yearConfig, events, isLoading]);
 
   if (isLoading) return (

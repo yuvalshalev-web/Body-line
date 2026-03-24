@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Waves, Info, CheckCircle2, AlertTriangle, Ruler, Weight } from 'lucide-react';
 import { Member } from '../types';
-import { calculateSurferFormula } from '../utils/surfMath';
+import { calculateSurferFormula, getBoardSize } from '../utils/surfMath';
+
+import { roundToGritStandard } from '../utils/gritRounding';
 
 interface SurfboardCalculatorProps {
   formData: Member;
@@ -44,10 +46,7 @@ export const SurfboardCalculator: React.FC<SurfboardCalculatorProps> = ({ formDa
   }, [formData.weight, formData.height, formData.surfingLevel, formData.fitnessLevel]);
 
   const formatLength = (cm: number) => {
-    const totalInches = cm / 2.54;
-    const feet = Math.floor(totalInches / 12);
-    const inches = Math.round(totalInches % 12);
-    return `${feet}'${inches}" (${Math.round(cm)} ס"מ)`;
+    return `${getBoardSize(cm)} (${Math.round(cm)} ס"מ)`;
   };
 
   const getVolumeComparison = () => {

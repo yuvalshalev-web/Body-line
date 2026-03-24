@@ -1,3 +1,10 @@
+/**
+ * TODO: REFACTOR
+ * The "Whiteboard" aesthetic of this component (RankRoadmap) is "Tangible" 
+ * but does not strongly align with the "Surfer" (wood, horizontal signs) 
+ * or "Elite Alabaster" (luxury white, glassmorphism) theme. 
+ * Consider replacing the whiteboard surface with a weathered wood sign or a premium glass panel.
+ */
 import React, { useState, useEffect } from "react";
 import { RANKS } from "../constants";
 import { motion } from "motion/react";

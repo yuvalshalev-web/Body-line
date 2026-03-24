@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, X, Cake, ChevronDown, Globe, Sparkles, Loader2, Save, Camera } from 'lucide-react';
+import { Plus, X, Cake, ChevronDown, Globe, Sparkles, Loader2, Save, Camera, Check, HeartPulse, Search } from 'lucide-react';
 import { Member, Gender } from '../../types';
 import { processImage } from '../../utils/imageProcessor';
 import { generateBio } from '../../services/geminiService';
@@ -18,12 +18,29 @@ interface AddMemberModalProps {
   addMember: (member: Member) => Promise<void>;
 }
 
+const CERTIFICATION_OPTIONS = [
+  'מדריך גלישה מוסמך (וינגייט / ISA)',
+  'עוזר מדריך (ניסיון קודם)',
+  'מציל ים מוסמך',
+  'רופא/ה',
+  'אח/ות',
+  'פראמדיק/ית',
+  'חובש/ת',
+  'מגיש/ת עזרה ראשונה (מעל 44 שעות)',
+  'משיט/ת אופנוע ים (רישיון בתוקף)',
+  'משיט/ת סירה / סקיפר',
+  'מציל/ה בריכה',
+  'טקסט חופשי'
+];
+
 const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMemberData, setNewMemberData, isSaving, setIsSaving, addMember }) => {
   const [isProcessingImage, setIsProcessingImage] = React.useState(false);
   const [isGeneratingBio, setIsGeneratingBio] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = React.useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = React.useState(false);
+  const [isCertDropdownOpen, setIsCertDropdownOpen] = React.useState(false);
+  const [certSearch, setCertSearch] = React.useState('');
   const addressInputRef = React.useRef<HTMLInputElement>(null);
   const autocompleteRef = React.useRef<any>(null);
 
@@ -317,8 +334,8 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
                             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                             className="w-full p-5 luxury-card font-black text-sm outline-none transition-all flex items-center justify-between group hover:bg-white/80"
                           >
-                            <span className="text-[#000000]">{newMemberData.role === 'Admin' ? 'רכז' : newMemberData.role === 'Instructor' ? 'מדריך' : 'חבר'}</span>
-                            <ChevronDown size={18} className="text-[#00426a] transition-transform duration-300" />
+                            <span className="text-[#000000] text-right flex-1">{newMemberData.role === 'Admin' ? 'רכז' : newMemberData.role === 'Instructor' ? 'מדריך' : 'חבר'}</span>
+                            <ChevronDown size={18} className={`text-[#00426a] transition-transform duration-300 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
                           </button>
 
                           <AnimatePresence>
@@ -360,8 +377,8 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
                             onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
                             className="w-full p-5 luxury-card font-black text-sm outline-none transition-all flex items-center justify-between group hover:bg-white/80"
                           >
-                            <span className="text-[#000000]">{newMemberData.gender || 'בחר/י מגדר'}</span>
-                            <ChevronDown size={18} className="text-[#00426a] transition-transform duration-300" />
+                            <span className="text-[#000000] text-right flex-1">{newMemberData.gender || 'בחר/י מגדר'}</span>
+                            <ChevronDown size={18} className={`text-[#00426a] transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
                           </button>
 
                           <AnimatePresence>
@@ -393,6 +410,148 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
                               </>
                             )}
                           </AnimatePresence>
+                        </div>
+                      </div>
+
+                      <div className="md:col-span-2 space-y-4">
+                        <label className="text-[12px] font-black text-[#00426a] uppercase tracking-widest pr-3">הכשרות והסמכות רלוונטיות</label>
+                        <div className="relative">
+                          <button 
+                            type="button"
+                            onClick={() => setIsCertDropdownOpen(!isCertDropdownOpen)}
+                            className="w-full p-5 luxury-card font-black text-sm outline-none transition-all flex items-center justify-between group hover:bg-white/80"
+                          >
+                            <span className="text-[#000000] text-right flex-1 truncate">
+                              {newMemberData.certifications && newMemberData.certifications.length > 0 
+                                ? newMemberData.certifications.join(', ') 
+                                : 'בחר הכשרות והסמכות'}
+                            </span>
+                            <ChevronDown size={18} className={`text-[#00426a] transition-transform duration-300 ${isCertDropdownOpen ? 'rotate-180' : ''}`} />
+                          </button>
+
+                          <AnimatePresence>
+                            {isCertDropdownOpen && (
+                              <>
+                                <div className="fixed inset-0 z-[160]" onClick={() => setIsCertDropdownOpen(false)} />
+                                <motion.div 
+                                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                  className="absolute top-full left-0 right-0 mt-2 bg-white/95 border border-white/30 !rounded-3xl shadow-2xl z-[170] overflow-hidden p-4 max-h-[400px] flex flex-col"
+                                >
+                                  <div className="p-2 border-b border-slate-50 mb-2">
+                                    <div className="relative">
+                                      <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                      <input 
+                                        type="text"
+                                        placeholder="חיפוש או הוספת הכשרה..."
+                                        value={certSearch}
+                                        onChange={(e) => setCertSearch(e.target.value)}
+                                        className="w-full pr-9 pl-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:bg-white focus:border-indigo-200 transition-all"
+                                        onClick={(e) => e.stopPropagation()}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 gap-1 overflow-y-auto pr-1">
+                                    {/* Show custom certifications that are already selected but not in the predefined list */}
+                                    {newMemberData.certifications?.filter(c => !CERTIFICATION_OPTIONS.includes(c)).map((cert) => (
+                                      <button
+                                        key={cert}
+                                        type="button"
+                                        onClick={() => {
+                                          const currentCerts = newMemberData.certifications || [];
+                                          setNewMemberData(prev => ({ ...prev, certifications: currentCerts.filter(c => c !== cert) }));
+                                        }}
+                                        className="w-full px-4 py-3 text-right font-bold rounded-xl transition-all flex items-center justify-between text-[#00426a] bg-[#00426a]/5 hover:bg-[#00426a]/10"
+                                      >
+                                        <span className="truncate">{cert}</span>
+                                        <Check size={16} />
+                                      </button>
+                                    ))}
+
+                                    {CERTIFICATION_OPTIONS.filter(cert => 
+                                      cert.toLowerCase().includes(certSearch.toLowerCase())
+                                    ).map((cert) => {
+                                      const isSelected = newMemberData.certifications?.includes(cert);
+                                      return (
+                                        <button
+                                          key={cert}
+                                          type="button"
+                                          onClick={() => {
+                                            const currentCerts = newMemberData.certifications || [];
+                                            const newCerts = isSelected 
+                                              ? currentCerts.filter(c => c !== cert)
+                                              : [...currentCerts, cert];
+                                            setNewMemberData(prev => ({ ...prev, certifications: newCerts }));
+                                          }}
+                                          className={`w-full px-4 py-3 text-right font-black rounded-xl transition-all flex items-center justify-between hover:bg-slate-50 ${
+                                            isSelected ? 'text-[#00426a] bg-white/50' : 'text-[#000000]'
+                                          }`}
+                                        >
+                                          <span className="truncate">{cert}</span>
+                                          {isSelected && <Check size={16} className="text-[#00426a]" />}
+                                        </button>
+                                      );
+                                    })}
+
+                                    {certSearch && !CERTIFICATION_OPTIONS.some(c => c.toLowerCase() === certSearch.toLowerCase()) && !newMemberData.certifications?.includes(certSearch) && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const currentCerts = newMemberData.certifications || [];
+                                          setNewMemberData(prev => ({ ...prev, certifications: [...currentCerts, certSearch] }));
+                                          setCertSearch('');
+                                        }}
+                                        className="w-full px-4 py-3 text-right font-bold rounded-xl transition-all flex items-center justify-between text-[#00426a] hover:bg-[#00426a]/5 border border-dashed border-[#00426a]/20 mt-1"
+                                      >
+                                        <span className="truncate">הוסף: "{certSearch}"</span>
+                                        <Sparkles size={14} />
+                                      </button>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <h4 className="text-[12px] font-black text-[#00426a] uppercase tracking-[0.3em] flex items-center gap-3">
+                        <HeartPulse size={14} /> מידע רפואי וחירום
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-[#00426a] uppercase tracking-widest pr-3">איש קשר לחירום</label>
+                          <input 
+                            type="text" 
+                            placeholder="שם מלא של איש הקשר" 
+                            value={newMemberData.emergencyContactName || ''} 
+                            onChange={e => setNewMemberData(prev => ({ ...prev, emergencyContactName: e.target.value }))} 
+                            className="w-full p-4 luxury-card font-black text-sm outline-none transition-all text-[#000000] placeholder:text-[#00426a]/40" 
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-[#00426a] uppercase tracking-widest pr-3">טלפון חירום</label>
+                          <input 
+                            type="tel" 
+                            placeholder="מספר טלפון לחירום" 
+                            value={newMemberData.emergencyContactPhone || ''} 
+                            onChange={e => setNewMemberData(prev => ({ ...prev, emergencyContactPhone: formatMobileNumber(e.target.value) }))} 
+                            className="w-full p-4 luxury-card font-black text-sm outline-none transition-all text-[#000000] placeholder:text-[#00426a]/40" 
+                          />
+                        </div>
+                        <div className="md:col-span-2 space-y-1">
+                          <label className="text-[10px] font-black text-[#00426a] uppercase tracking-widest pr-3">מידע רפואי / רגישויות</label>
+                          <textarea 
+                            placeholder="פרט כאן רגישויות, פציעות עבר או מידע רפואי שחשוב שנדע..." 
+                            value={newMemberData.medicalInfo || ''} 
+                            onChange={e => setNewMemberData(prev => ({ ...prev, medicalInfo: e.target.value }))} 
+                            className="w-full p-4 luxury-card font-black text-sm outline-none transition-all text-[#000000] placeholder:text-[#00426a]/40 min-h-[100px] resize-none" 
+                          />
                         </div>
                       </div>
                     </div>

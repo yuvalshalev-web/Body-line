@@ -1,3 +1,9 @@
+/**
+ * TODO: REPLACE OR REFACTOR
+ * This component (OperationalChartHeader) does not align with the hybrid 
+ * "Tangible Surfer UI" (wood, horizontal signs) and "Elite Alabaster" (glassmorphism, luxury white) 
+ * design language. It is too standard/corporate.
+ */
 import React from 'react';
 
 interface OperationalChartHeaderProps {

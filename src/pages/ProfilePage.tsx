@@ -27,7 +27,8 @@ import {
   Trash2,
   AlertTriangle,
   HelpCircle,
-  Activity
+  Award,
+  Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,7 +41,6 @@ import { hashPassword } from '../utils/crypto';
 import { loadGoogleMaps } from '../utils/googlePlaces';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useRandomHeader } from '../hooks/useRandomHeader';
-import { PerformanceRadar } from '../components/PerformanceRadar';
 
 const ensureAbsoluteUrl = (url?: string) => {
   if (!url) return '';
@@ -50,6 +50,21 @@ const ensureAbsoluteUrl = (url?: string) => {
 };
 
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
+
+const CERTIFICATION_OPTIONS = [
+  'מדריך גלישה מוסמך (וינגייט / ISA)',
+  'עוזר מדריך (ניסיון קודם)',
+  'מציל ים מוסמך',
+  'רופא/ה',
+  'אח/ות',
+  'פראמדיק/ית',
+  'חובש/ת',
+  'מגיש/ת עזרה ראשונה (מעל 44 שעות)',
+  'משיט/ת אופנוע ים (רישיון בתוקף)',
+  'משיט/ת סירה / סקיפר',
+  'מציל/ה בריכה',
+  'טקסט חופשי'
+];
 
 const SocialInput = React.memo(({ 
   label, name, value, onChange, icon: Icon, placeholder, brandColor,
@@ -85,12 +100,15 @@ const SocialInput = React.memo(({
 });
 
 // Sub-components for better performance and readability
-const SectionHeader = React.memo(({ icon: Icon, title, colorClass, bgColorClass }: any) => (
-  <div className="flex items-center gap-3 md:gap-4 mb-2 md:mb-4">
-    <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl ${bgColorClass} flex items-center justify-center ${colorClass} shadow-sm`}>
-      <Icon size={18} className="md:w-5 md:h-5" />
+const SectionHeader = React.memo(({ icon: Icon, title, subtitle, colorClass, bgColorClass }: any) => (
+  <div className="flex items-center gap-4 mb-8">
+    <div className={`w-12 h-12 rounded-2xl ${bgColorClass} flex items-center justify-center ${colorClass} shadow-sm`}>
+      <Icon size={24} />
     </div>
-    <h4 className="text-xs md:text-sm font-black text-[#0f172a] uppercase tracking-[0.2em] md:tracking-[0.3em]">{title}</h4>
+    <div>
+      <h2 className="text-xl font-black text-[#0f172a]">{title}</h2>
+      {subtitle && <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{subtitle}</p>}
+    </div>
   </div>
 ));
 
@@ -205,21 +223,14 @@ const ProfileCompletion = React.memo(({ percentage, onShowDetails }: { percentag
 const ProfilePage: React.FC = () => {
   const headerImage = useRandomHeader();
   const { currentUser, updateUser } = useAuth();
-  const { updateMember, performanceScores } = useData();
+  const { updateMember } = useData();
   
-  const userScores = useMemo(() => {
-    if (!currentUser) return [];
-    const scores = performanceScores.filter(s => s.memberId === currentUser.id);
-    console.log('currentUser:', currentUser);
-    console.log('performanceScores:', performanceScores);
-    console.log('userScores:', scores);
-    return scores;
-  }, [performanceScores, currentUser]);
-
   const [formData, setFormData] = useState<Member | null>(currentUser ? { ...currentUser } : null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
+  const [isCertDropdownOpen, setIsCertDropdownOpen] = useState(false);
+  const [certSearch, setCertSearch] = useState('');
   const [isGeneratingBio, setIsGeneratingBio] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [toast, setToast] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
@@ -229,7 +240,7 @@ const ProfilePage: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [isPlaceSelected, setIsPlaceSelected] = useState(false);
+  const [isPlaceSelected, setIsPlaceSelected] = useState(!!currentUser?.full_address);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
   
@@ -296,11 +307,15 @@ const ProfilePage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (currentUser && !formData) {
-      setFormData({...currentUser});
-      if (currentUser.full_address && addressInputRef.current) {
-        addressInputRef.current.value = currentUser.full_address;
+    if (currentUser) {
+      if (!formData) {
+        setFormData({...currentUser});
+      }
+      if (currentUser.full_address) {
         setIsPlaceSelected(true);
+        if (addressInputRef.current && !addressInputRef.current.value) {
+          addressInputRef.current.value = currentUser.full_address;
+        }
       }
     }
   }, [currentUser?.id]);
@@ -323,14 +338,39 @@ const ProfilePage: React.FC = () => {
       { label: 'מגדר', value: formData.gender },
       { label: 'כתובת מגורים', value: formData.full_address },
       { label: 'שם איש קשר לחירום', value: formData.emergencyContactName },
-      { label: 'טלפון לחירום', value: formData.emergencyContactPhone }
+      { label: 'טלפון לחירום', value: formData.emergencyContactPhone },
+      { label: 'מידע רפואי', value: formData.medicalInfo },
+      { label: 'הכשרות והסמכות', value: formData.certifications && formData.certifications.length > 0 },
+      { label: 'אינסטגרם', value: formData.instagramUrl },
+      { label: 'פייסבוק', value: formData.facebookUrl },
+      { label: 'טיקטוק', value: formData.tiktokUrl },
+      { label: 'לינקדאין', value: formData.linkedinUrl },
+      { label: 'טוויטר / X', value: formData.twitterUrl }
     ];
     
     const missing = fieldMap.filter(f => !f.value).map(f => f.label);
     const percentage = Math.round(((fieldMap.length - missing.length) / fieldMap.length) * 100);
     
     return { percentage, missing };
-  }, [formData?.firstName, formData?.lastName, formData?.mobile, formData?.avatar, formData?.bio, formData?.birthday, formData?.gender, formData?.full_address, formData?.emergencyContactName, formData?.emergencyContactPhone]);
+  }, [
+    formData?.firstName, 
+    formData?.lastName, 
+    formData?.mobile, 
+    formData?.avatar, 
+    formData?.bio, 
+    formData?.birthday, 
+    formData?.gender, 
+    formData?.full_address, 
+    formData?.emergencyContactName, 
+    formData?.emergencyContactPhone,
+    formData?.medicalInfo,
+    formData?.certifications,
+    formData?.instagramUrl,
+    formData?.facebookUrl,
+    formData?.tiktokUrl,
+    formData?.linkedinUrl,
+    formData?.twitterUrl
+  ]);
 
   const completionPercentage = completionDetails.percentage;
 
@@ -484,132 +524,270 @@ const ProfilePage: React.FC = () => {
             onShowDetails={() => setShowCompletionModal(true)}
           />
 
+          <section className="space-y-6 md:space-y-8 mb-16 md:mb-20 relative z-10">
+            <SectionHeader 
+              icon={User} 
+              title="פרטים אישיים" 
+              subtitle="Personal Information"
+              colorClass="text-sky-600" 
+              bgColorClass="bg-sky-100" 
+            />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              <div className="space-y-2 group">
+                <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">שם פרטי</label>
+                <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 focus:shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all text-[#0f172a]" />
+              </div>
+              <div className="space-y-2 group">
+                <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">שם משפחה</label>
+                <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 focus:shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all text-[#0f172a]" />
+              </div>
+              <div className="space-y-2 group">
+                <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">אימייל</label>
+                <input 
+                  type="email" 
+                  value={formData.email || ''} 
+                  onChange={e => handleFieldChange('email', e.target.value)} 
+                  className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 focus:shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all text-[#0f172a]" 
+                />
+              </div>
+              <div className="space-y-2 group">
+                <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">טלפון נייד</label>
+                <div className="relative">
+                  <Phone size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-amber-400 transition-transform group-focus-within:scale-110" />
+                  <input 
+                    type="tel" 
+                    value={formData.mobile} 
+                    onChange={handleMobileChange} 
+                    className="w-full pr-14 pl-6 py-4 md:py-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 focus:shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all text-[#0f172a]" 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2 group">
+                <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">תאריך יום הולדת</label>
+                <div className="relative">
+                  <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-rose-400 transition-transform group-focus-within:scale-110" />
+                  <input 
+                    type="date" 
+                    value={formData.birthday || ''} 
+                    onChange={e => handleFieldChange('birthday', e.target.value)} 
+                    className="w-full pr-14 pl-6 py-4 md:py-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 focus:shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all cursor-pointer text-[#0f172a]" 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2 group">
+                <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">מגדר</label>
+                <div className="relative">
+                  <User size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-sky-400 transition-transform group-focus-within:scale-110" />
+                  <button 
+                    type="button"
+                    onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
+                    className="w-full pr-14 pl-12 py-4 md:py-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold text-sm outline-none focus:bg-white focus:border-sky-200 transition-all flex items-center justify-between group/btn text-[#0f172a]"
+                  >
+                    <span className="text-right flex-1">{formData.gender || 'בחר מגדר'}</span>
+                    <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isGenderDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-[60]" onClick={() => setIsGenderDropdownOpen(false)} />
+                        <motion.div 
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                          className="absolute top-full left-0 right-0 mt-3 bg-white/95 border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-[70] overflow-hidden p-2 rounded-[1.5rem]"
+                        >
+                          {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
+                            <button
+                              key={g}
+                              type="button"
+                              onClick={() => {
+                                handleFieldChange('gender', g);
+                                setIsGenderDropdownOpen(false);
+                              }}
+                              className={`w-full px-6 py-4 text-right font-bold rounded-xl transition-all hover:bg-slate-50 ${
+                                formData.gender === g ? 'text-sky-600 bg-sky-50' : 'text-slate-600'
+                              }`}
+                            >
+                              {g}
+                            </button>
+                          ))}
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+              <div className="md:col-span-2 lg:col-span-3 space-y-2 group">
+                <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">כתובת מגורים (חובה)</label>
+                <div className="relative">
+                  <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-400 transition-transform group-focus-within:scale-110" />
+                  <input 
+                    type="text" 
+                    id="address-input"
+                    ref={addressInputRef}
+                    defaultValue={currentUser?.full_address || ''} 
+                    onFocus={handleAddressFocus}
+                    onChange={(e) => {
+                      setIsPlaceSelected(false);
+                      setIsDirty(true);
+                    }} 
+                    placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
+                    className="w-full pr-14 pl-6 py-4 md:py-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 focus:shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all text-[#0f172a]" 
+                    required
+                    autoComplete="off"
+                  />
+                </div>
+                <input type="hidden" id="city" ref={cityRef} />
+                <input type="hidden" id="street" ref={streetRef} />
+                <input type="hidden" id="house_num" ref={houseNumRef} />
+                <input type="hidden" id="lat" ref={latRef} />
+                <input type="hidden" id="lng" ref={lngRef} />
+                <p className="text-[9px] md:text-[10px] text-slate-400 pr-3 font-bold uppercase tracking-wider">חובה לבחור את הכתובת מתוך הרשימה שנפתחת</p>
+              </div>
+            </div>
+          </section>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-16 relative z-10">
             <div className="lg:col-span-7 space-y-12 md:space-y-16">
               <section className="space-y-6 md:space-y-8">
-                <SectionHeader icon={User} title="פרטים אישיים" colorClass="text-sky-600" bgColorClass="bg-sky-100" />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                  <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">שם פרטי</label>
-                    <input type="text" value={formData.firstName || ''} onChange={e => handleFieldChange('firstName', e.target.value)} className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 focus:shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all text-[#0f172a]" />
-                  </div>
-                  <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">שם משפחה</label>
-                    <input type="text" value={formData.lastName || ''} onChange={e => handleFieldChange('lastName', e.target.value)} className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 focus:shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all text-[#0f172a]" />
-                  </div>
-                  <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">טלפון נייד</label>
-                    <div className="relative">
-                      <Phone size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-amber-400 transition-transform group-focus-within:scale-110" />
-                      <input 
-                        type="tel" 
-                        value={formData.mobile} 
-                        onChange={handleMobileChange} 
-                        className="w-full pr-14 pl-6 py-4 md:py-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 focus:shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all text-[#0f172a]" 
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">תאריך יום הולדת</label>
-                    <div className="relative">
-                      <Cake size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-rose-400 transition-transform group-focus-within:scale-110" />
-                      <input 
-                        type="date" 
-                        value={formData.birthday || ''} 
-                        onChange={e => handleFieldChange('birthday', e.target.value)} 
-                        className="w-full pr-14 pl-6 py-4 md:py-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 focus:shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all cursor-pointer text-[#0f172a]" 
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">מגדר</label>
-                    <div className="relative">
-                      <User size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-sky-400 transition-transform group-focus-within:scale-110" />
-                      <button 
-                        type="button"
-                        onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                        className="w-full pr-14 pl-12 py-4 md:py-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold text-sm outline-none focus:bg-white focus:border-sky-200 transition-all flex items-center justify-between group/btn text-[#0f172a]"
-                      >
-                        <span>{formData.gender || 'בחר מגדר'}</span>
-                        <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
-                      </button>
+                <SectionHeader 
+                  icon={Award} 
+                  title="הכשרות והסמכות רלוונטיות" 
+                  subtitle="Relevant Certifications"
+                  colorClass="text-indigo-600" 
+                  bgColorClass="bg-indigo-100" 
+                />
+                <div className="space-y-4">
+                  <div className="relative">
+                    <button 
+                      type="button"
+                      onClick={() => setIsCertDropdownOpen(!isCertDropdownOpen)}
+                      className="w-full pr-6 pl-12 py-4 md:py-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold text-sm outline-none focus:bg-white focus:border-indigo-200 transition-all flex items-center justify-between group/btn text-[#0f172a]"
+                    >
+                      <span className="truncate text-right flex-1">
+                        {formData.certifications && formData.certifications.length > 0 
+                          ? formData.certifications.join(', ') 
+                          : 'בחר הכשרות והסמכות'}
+                      </span>
+                      <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 ${isCertDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
 
-                      <AnimatePresence>
-                        {isGenderDropdownOpen && (
-                          <>
-                            <div className="fixed inset-0 z-[60]" onClick={() => setIsGenderDropdownOpen(false)} />
-                            <motion.div 
-                              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                              className="absolute top-full left-0 right-0 mt-3 bg-white/95 border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-[70] overflow-hidden p-2 rounded-[1.5rem]"
-                            >
-                              {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
+                    <AnimatePresence>
+                      {isCertDropdownOpen && (
+                        <>
+                          <div className="fixed inset-0 z-[60]" onClick={() => setIsCertDropdownOpen(false)} />
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                            className="absolute top-full left-0 right-0 mt-3 bg-white/95 border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-[70] overflow-hidden p-4 rounded-[1.5rem] max-h-[300px] overflow-y-auto"
+                          >
+                            <div className="p-2 border-b border-slate-50 mb-2">
+                              <div className="relative">
+                                <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input 
+                                  type="text"
+                                  placeholder="חיפוש או הוספת הכשרה..."
+                                  value={certSearch}
+                                  onChange={(e) => setCertSearch(e.target.value)}
+                                  className="w-full pr-9 pl-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:bg-white focus:border-indigo-200 transition-all"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-1 max-h-[200px] overflow-y-auto pr-1">
+                              {/* Show custom certifications that are already selected but not in the predefined list */}
+                              {formData.certifications?.filter(c => !CERTIFICATION_OPTIONS.includes(c)).map((cert) => (
                                 <button
-                                  key={g}
+                                  key={cert}
                                   type="button"
                                   onClick={() => {
-                                    handleFieldChange('gender', g);
-                                    setIsGenderDropdownOpen(false);
+                                    const currentCerts = formData.certifications || [];
+                                    handleFieldChange('certifications', currentCerts.filter(c => c !== cert));
                                   }}
-                                  className={`w-full px-6 py-4 text-right font-bold rounded-xl transition-all hover:bg-slate-50 ${
-                                    formData.gender === g ? 'text-sky-600 bg-sky-50' : 'text-slate-600'
-                                  }`}
+                                  className="w-full px-4 py-3 text-right font-bold rounded-xl transition-all flex items-center justify-between text-indigo-600 bg-indigo-50/50 hover:bg-indigo-50"
                                 >
-                                  {g}
+                                  <span className="truncate">{cert}</span>
+                                  <Check size={16} />
                                 </button>
                               ))}
-                            </motion.div>
-                          </>
-                        )}
-                      </AnimatePresence>
-                    </div>
+
+                              {CERTIFICATION_OPTIONS.filter(cert => 
+                                cert.toLowerCase().includes(certSearch.toLowerCase())
+                              ).map((cert) => {
+                                const isSelected = formData.certifications?.includes(cert);
+                                return (
+                                  <button
+                                    key={cert}
+                                    type="button"
+                                    onClick={() => {
+                                      const currentCerts = formData.certifications || [];
+                                      const newCerts = isSelected 
+                                        ? currentCerts.filter(c => c !== cert)
+                                        : [...currentCerts, cert];
+                                      handleFieldChange('certifications', newCerts);
+                                    }}
+                                    className={`w-full px-4 py-3 text-right font-bold rounded-xl transition-all flex items-center justify-between hover:bg-slate-50 ${
+                                      isSelected ? 'text-indigo-600 bg-indigo-50' : 'text-slate-600'
+                                    }`}
+                                  >
+                                    <span className="truncate">{cert}</span>
+                                    {isSelected && <Check size={16} />}
+                                  </button>
+                                );
+                              })}
+
+                              {certSearch && !CERTIFICATION_OPTIONS.some(c => c.toLowerCase() === certSearch.toLowerCase()) && !formData.certifications?.includes(certSearch) && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const currentCerts = formData.certifications || [];
+                                    handleFieldChange('certifications', [...currentCerts, certSearch]);
+                                    setCertSearch('');
+                                  }}
+                                  className="w-full px-4 py-3 text-right font-bold rounded-xl transition-all flex items-center justify-between text-indigo-600 hover:bg-indigo-50 border border-dashed border-indigo-200 mt-1"
+                                >
+                                  <span className="truncate">הוסף: "{certSearch}"</span>
+                                  <Sparkles size={14} />
+                                </button>
+                              )}
+                            </div>
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">כתובת מגורים (חובה)</label>
-                    <div className="relative">
-                      <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-400 transition-transform group-focus-within:scale-110" />
-                      <input 
-                        type="text" 
-                        id="address-input"
-                        ref={addressInputRef}
-                        defaultValue={currentUser?.full_address || ''} 
-                        onFocus={handleAddressFocus}
-                        onChange={(e) => {
-                          setIsPlaceSelected(false);
-                          setIsDirty(true);
-                        }} 
-                        placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
-                        className="w-full pr-14 pl-6 py-4 md:py-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 focus:shadow-[0_10px_25px_rgba(0,0,0,0.05)] transition-all text-[#0f172a]" 
-                        required
-                        autoComplete="off"
+
+                  {formData.certifications?.includes('טקסט חופשי') && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="space-y-2 group"
+                    >
+                      <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-indigo-600 transition-colors">פירוט הכשרה נוספת</label>
+                      <textarea 
+                        value={formData.otherCertification || ''} 
+                        onChange={e => handleFieldChange('otherCertification', e.target.value)} 
+                        placeholder="פרט כאן הכשרות נוספות..."
+                        className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-indigo-200 transition-all text-[#0f172a] min-h-[100px] resize-none" 
                       />
-                    </div>
-                    <input type="hidden" id="city" ref={cityRef} />
-                    <input type="hidden" id="street" ref={streetRef} />
-                    <input type="hidden" id="house_num" ref={houseNumRef} />
-                    <input type="hidden" id="lat" ref={latRef} />
-                    <input type="hidden" id="lng" ref={lngRef} />
-                    <p className="text-[9px] md:text-[10px] text-slate-400 pr-3 font-bold uppercase tracking-wider">חובה לבחור את הכתובת מתוך הרשימה שנפתחת</p>
-                  </div>
+                    </motion.div>
+                  )}
                 </div>
               </section>
 
               <section className="space-y-6 md:space-y-8">
-                <SectionHeader icon={Sparkles} title="נוכחות דיגיטלית" colorClass="text-emerald-600" bgColorClass="bg-emerald-100" />
-                  <div className="grid grid-cols-1 gap-8 md:gap-10">
-                    <SocialInput label="Instagram" value={formData.instagramUrl} onChange={handleInstagramChange} icon={Instagram} brandColor="#E4405F" placeholder="קישור לפרופיל אינסטגרם" />
-                    <SocialInput label="Facebook" value={formData.facebookUrl} onChange={handleFacebookChange} icon={Facebook} brandColor="#1877F2" placeholder="קישור לפרופיל פייסבוק" />
-                    <SocialInput label="TikTok" value={formData.tiktokUrl} onChange={handleTikTokChange} icon={Music2} brandColor="#000000" placeholder="קישור לפרופיל טיקטוק" />
-                    <SocialInput label="LinkedIn" value={formData.linkedinUrl} onChange={handleLinkedInChange} icon={Linkedin} brandColor="#0A66C2" placeholder="קישור לפרופיל לינקדאין" />
-                    <SocialInput label="Twitter / X" value={formData.twitterUrl} onChange={handleTwitterChange} icon={Twitter} brandColor="#000000" placeholder="קישור לפרופיל טוויטר" />
-                  </div>
-                </section>
-
-                <section className="space-y-6 md:space-y-8">
-                  <SectionHeader icon={HeartPulse} title="מידע רפואי וחירום" colorClass="text-rose-600" bgColorClass="bg-rose-100" />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                <SectionHeader 
+                  icon={HeartPulse} 
+                  title="מידע רפואי וחירום" 
+                  subtitle="Medical & Emergency Info"
+                  colorClass="text-rose-600" 
+                  bgColorClass="bg-rose-100" 
+                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                   <div className="space-y-2 group">
                     <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-rose-600 transition-colors">איש קשר לחירום</label>
                     <input 
@@ -641,31 +819,56 @@ const ProfilePage: React.FC = () => {
                   </div>
                 </div>
               </section>
+
+              <section className="space-y-6 md:space-y-8">
+                <SectionHeader 
+                  icon={Sparkles} 
+                  title="נוכחות דיגיטלית" 
+                  subtitle="Social Media Presence"
+                  colorClass="text-emerald-600" 
+                  bgColorClass="bg-emerald-100" 
+                />
+                <div className="grid grid-cols-1 gap-8 md:gap-10">
+                  <SocialInput label="Instagram" value={formData.instagramUrl} onChange={handleInstagramChange} icon={Instagram} brandColor="#E4405F" placeholder="קישור לפרופיל אינסטגרם" />
+                  <SocialInput label="Facebook" value={formData.facebookUrl} onChange={handleFacebookChange} icon={Facebook} brandColor="#1877F2" placeholder="קישור לפרופיל פייסבוק" />
+                  <SocialInput label="TikTok" value={formData.tiktokUrl} onChange={handleTikTokChange} icon={Music2} brandColor="#000000" placeholder="קישור לפרופיל טיקטוק" />
+                  <SocialInput label="LinkedIn" value={formData.linkedinUrl} onChange={handleLinkedInChange} icon={Linkedin} brandColor="#0A66C2" placeholder="קישור לפרופיל לינקדאין" />
+                  <SocialInput label="Twitter / X" value={formData.twitterUrl} onChange={handleTwitterChange} icon={Twitter} brandColor="#000000" placeholder="קישור לפרופיל טוויטר" />
+                </div>
+              </section>
             </div>
 
             <div className="lg:col-span-5">
-               <div className="lg:sticky lg:top-24 space-y-6">
-                  <div className="flex justify-between items-center px-2 md:px-4">
-                    <SectionHeader icon={Music2} title="הסיפור שלי" colorClass="text-violet-600" bgColorClass="bg-violet-100" />
-                    <button 
-                      type="button" 
-                      onClick={handleGenerateBio} 
-                      disabled={isGeneratingBio} 
-                      className="text-[9px] md:text-[11px] font-black text-white bg-gradient-to-r from-violet-600 to-indigo-600 flex items-center gap-1.5 md:gap-2 hover:from-violet-500 hover:to-indigo-500 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl transition-all shadow-[0_10px_20px_rgba(124,58,237,0.2)] hover:scale-105 active:scale-95 disabled:opacity-50 group mb-4"
-                    >
-                      {isGeneratingBio ? <Loader2 size={12} className="animate-spin md:w-3.5 md:h-3.5" /> : <Sparkles size={12} className="md:w-3.5 md:h-3.5 transition-transform group-hover:rotate-12" />} 
-                      <span>שדרג ביוגרפיה עם AI</span>
-                    </button>
-                  </div>
-                  <div className="relative group/bio">
-                    <div className="absolute -inset-1 bg-gradient-to-tr from-violet-500/10 to-indigo-500/10 rounded-[1.5rem] md:rounded-[2rem] blur-lg opacity-0 group-focus-within/bio:opacity-100 transition-opacity duration-500" />
-                    <textarea 
-                      value={formData.bio} 
-                      onChange={e => handleFieldChange('bio', e.target.value)} 
-                      className="w-full p-6 md:p-10 bg-white/70 border border-white/80 shadow-sm rounded-[1.5rem] md:rounded-[2rem] font-bold h-[20rem] md:h-[40rem] resize-none outline-none focus:bg-white focus:border-violet-200 transition-all text-base md:text-lg leading-relaxed text-[#0f172a] relative z-10" 
-                      placeholder="ספר קצת על עצמך, על הגלישה, על החיים..." 
-                    />
-                  </div>
+               <div className="lg:sticky lg:top-24 space-y-12">
+                  <section className="space-y-6">
+                    <div className="flex justify-between items-center px-2 md:px-4">
+                      <SectionHeader 
+                        icon={Music2} 
+                        title="הסיפור שלי" 
+                        subtitle="My Story"
+                        colorClass="text-violet-600" 
+                        bgColorClass="bg-violet-100" 
+                      />
+                      <button 
+                        type="button" 
+                        onClick={handleGenerateBio} 
+                        disabled={isGeneratingBio} 
+                        className="text-[9px] md:text-[11px] font-black text-white bg-gradient-to-r from-violet-600 to-indigo-600 flex items-center gap-1.5 md:gap-2 hover:from-violet-500 hover:to-indigo-500 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl transition-all shadow-[0_10px_20px_rgba(124,58,237,0.2)] hover:scale-105 active:scale-95 disabled:opacity-50 group mb-4"
+                      >
+                        {isGeneratingBio ? <Loader2 size={12} className="animate-spin md:w-3.5 md:h-3.5" /> : <Sparkles size={12} className="md:w-3.5 md:h-3.5 transition-transform group-hover:rotate-12" />} 
+                        <span>שדרג ביוגרפיה עם AI</span>
+                      </button>
+                    </div>
+                    <div className="relative group/bio">
+                      <div className="absolute -inset-1 bg-gradient-to-tr from-violet-500/10 to-indigo-500/10 rounded-[1.5rem] md:rounded-[2rem] blur-lg opacity-0 group-focus-within/bio:opacity-100 transition-opacity duration-500" />
+                      <textarea 
+                        value={formData.bio} 
+                        onChange={e => handleFieldChange('bio', e.target.value)} 
+                        className="w-full p-6 md:p-10 bg-white/70 border border-white/80 shadow-sm rounded-[1.5rem] md:rounded-[2rem] font-bold h-[20rem] md:h-[40rem] resize-none outline-none focus:bg-white focus:border-violet-200 transition-all text-base md:text-lg leading-relaxed text-[#0f172a] relative z-10" 
+                        placeholder="ספר קצת על עצמך, על הגלישה, על החיים..." 
+                      />
+                    </div>
+                  </section>
                </div>
             </div>
           </div>

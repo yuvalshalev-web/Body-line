@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Github, Activity, GitPullRequest, Bug } from 'lucide-react';
+import { fetchJson } from '../../utils/apiUtils';
 
 interface GitHubAction {
   id: number;
@@ -20,8 +21,7 @@ const GitHubCommandCenter: React.FC = () => {
 
   const fetchAction = async () => {
     try {
-      const res = await fetch(`${window.location.origin}/api/github/actions`);
-      const data = await res.json();
+      const data = await fetchJson('/api/github/actions');
       if (data.action) setAction(data.action);
     } catch (err) {
       console.error("Failed to fetch GitHub actions", err);

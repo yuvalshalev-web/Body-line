@@ -52,6 +52,8 @@ export interface Member {
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   medicalInfo?: string;
+  certifications?: string[];
+  otherCertification?: string;
   status?: 'אלוף' | 'מתמיד' | 'לא יציב' | 'בנסיגה' | 'מזדמן';
 }
 

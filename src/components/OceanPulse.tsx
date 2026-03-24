@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, ComposedChart, Bar, Cell } from 'recharts';
 import { Waves, Sun, Snowflake, Leaf, Loader2, Calendar } from 'lucide-react';
+import { fetchJson } from '../utils/apiUtils';
 import { useData } from '../contexts/DataContext';
 import { calculateSeasonalGrit } from '../utils/analytics';
 import { getBodyLineStats } from '../utils/bodyLineStats';
@@ -23,10 +24,11 @@ export const OceanPulse: React.FC = () => {
         };
 
         // 1. Fetch current data
-        const currentRes = await fetch('/api/ocean-data');
-        if (currentRes.ok) {
-          const data = await currentRes.json();
+        try {
+          const data = await fetchJson('/api/ocean-data');
           setCurrentOceanData(data);
+        } catch (err) {
+          console.error('Error fetching current ocean data:', err);
         }
 
         // 2. Fetch historical data for correlation
@@ -62,9 +64,8 @@ export const OceanPulse: React.FC = () => {
           const startDate = firstDate.toISOString().split('T')[0];
           const endDate = lastDate.toISOString().split('T')[0];
 
-          const historyRes = await fetch(`/api/ocean-data/historical?start=${startDate}&end=${endDate}`);
-          if (historyRes.ok) {
-            const hData = await historyRes.json();
+          try {
+            const hData = await fetchJson(`/api/ocean-data/historical?start=${startDate}&end=${endDate}`);
             const hourlyTemps = hData.hourly;
 
             const combined = sortedHistory.map(session => {
@@ -86,6 +87,8 @@ export const OceanPulse: React.FC = () => {
             });
 
             setCorrelationData(combined);
+          } catch (err) {
+            console.error('Error fetching historical ocean data:', err);
           }
         }
       } catch (err) {

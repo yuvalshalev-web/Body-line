@@ -615,10 +615,10 @@ const LoginPage: React.FC = () => {
                 <button 
                   type="button"
                   onClick={() => setIsGroupMenuOpen(!isGroupMenuOpen)}
-                  className="w-full pr-6 pl-14 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none flex items-center justify-end gap-2 group hover:bg-white/10 transition-all text-right"
+                  className="w-full pr-6 pl-14 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none flex items-center justify-between group hover:bg-white/10 transition-all text-right"
                 >
+                  <span className="flex-1 text-right">{selectedGroup}</span>
                   <ChevronDown size={20} className={`text-white/40 transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
-                  <span>{selectedGroup}</span>
                 </button>
                 <MapPin size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#00FFFF] pointer-events-none" />
 
@@ -811,9 +811,9 @@ const LoginPage: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => setIsGenderMenuOpen(!isGenderMenuOpen)}
-                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none flex items-center justify-end gap-2 group hover:bg-white/10 transition-all text-right"
+                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none flex items-center justify-between group hover:bg-white/10 transition-all text-right"
                     >
-                      <span className={joinGender ? 'text-white' : 'text-white/40'}>{joinGender || 'מגדר'}</span>
+                      <span className={`flex-1 text-right ${joinGender ? 'text-white' : 'text-white/40'}`}>{joinGender || 'מגדר'}</span>
                       <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 

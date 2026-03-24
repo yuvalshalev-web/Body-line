@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Bot, Github, Cloud, ArrowRight, CheckCircle2, Activity, AlertCircle, RefreshCw } from 'lucide-react';
+import { fetchJson } from '../../utils/apiUtils';
 
 const WorkflowVisualizer: React.FC = () => {
   const [githubStatus, setGithubStatus] = useState<'synced' | 'building' | 'error'>('synced');
@@ -11,14 +12,10 @@ const WorkflowVisualizer: React.FC = () => {
     let interval: NodeJS.Timeout;
 
     const fetchStatuses = async () => {
-      console.log('Fetching statuses...');
       try {
         // Fetch GitHub Status
-        console.log('Fetching GitHub Status from /api/github/actions');
-        const ghRes = await fetch(`${window.location.origin}/api/github/actions`);
-        console.log('GitHub Status response:', ghRes.status, ghRes.ok);
-        if (ghRes.ok) {
-          const ghData = await ghRes.json();
+        try {
+          const ghData = await fetchJson('/api/github/actions');
           const action = ghData.action;
           if (action) {
             if (action.status === 'in_progress' || action.status === 'queued') {
@@ -29,12 +26,13 @@ const WorkflowVisualizer: React.FC = () => {
               setGithubStatus('synced');
             }
           }
+        } catch (err) {
+          console.error('Error fetching GitHub status:', err);
         }
 
         // Fetch Vercel Status
-        const vercelRes = await fetch('/api/vercel/status');
-        if (vercelRes.ok) {
-          const vercelData = await vercelRes.json();
+        try {
+          const vercelData = await fetchJson('/api/vercel/status');
           const deployment = vercelData.latestDeployment;
           if (deployment) {
             if (deployment.readyState === 'READY') {
@@ -45,6 +43,8 @@ const WorkflowVisualizer: React.FC = () => {
               setVercelStatus('building');
             }
           }
+        } catch (err) {
+          console.error('Error fetching Vercel status:', err);
         }
       } catch (error) {
         console.error('Error fetching workflow statuses:', error);

@@ -18,7 +18,9 @@
         "isActive": { "type": "boolean" },
         "birthday": { "type": "string" },
         "gender": { "type": "string" },
-        "full_address": { "type": "string" }
+        "full_address": { "type": "string" },
+        "certifications": { "type": "array", "items": { "type": "string" } },
+        "otherCertification": { "type": "string" }
       },
       "required": ["firstName", "lastName", "email", "role"]
     },
