@@ -25,12 +25,12 @@ interface PerformanceInputProps {
 }
 
 const PARAMETERS = [
-  { key: 'paddle', label: 'חתירה', icon: Activity, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
-  { key: 'takeOff', label: 'טייק-אוף', icon: Zap, color: 'text-amber-500', bgColor: 'bg-amber-500/10' },
-  { key: 'turns', label: 'סיבובים', icon: RotateCw, color: 'text-purple-500', bgColor: 'bg-purple-500/10' },
-  { key: 'positioning', label: 'מיקום', icon: Target, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
-  { key: 'stamina', label: 'כושר', icon: Dumbbell, color: 'text-rose-500', bgColor: 'bg-rose-500/10' },
-  { key: 'style', label: 'סטייל', icon: Palette, color: 'text-indigo-500', bgColor: 'bg-indigo-500/10' },
+  { key: 'paddle', label: 'יעילות החתירה', icon: Activity, color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
+  { key: 'positioning', label: 'קריאת גלים', icon: Target, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
+  { key: 'takeOff', label: 'Take-off ודרופ', icon: Zap, color: 'text-amber-500', bgColor: 'bg-amber-500/10' },
+  { key: 'style', label: 'זרימה וחיבור', icon: Palette, color: 'text-indigo-500', bgColor: 'bg-indigo-500/10' },
+  { key: 'turns', label: 'שליטה בציוד', icon: RotateCw, color: 'text-purple-500', bgColor: 'bg-purple-500/10' },
+  { key: 'stamina', label: 'חוסן מנטלי', icon: Dumbbell, color: 'text-rose-500', bgColor: 'bg-rose-500/10' },
 ];
 
 export const PerformanceInput: React.FC<PerformanceInputProps> = ({ member, onClose }) => {
@@ -62,9 +62,12 @@ export const PerformanceInput: React.FC<PerformanceInputProps> = ({ member, onCl
     try {
       await addPerformanceScore({
         memberId: member.id,
-        month,
-        year,
-        ...scores,
+        paddle: scores.paddle,
+        takeOff: scores.takeOff,
+        turns: scores.turns,
+        positioning: scores.positioning,
+        stamina: scores.stamina,
+        style: scores.style,
         instructorId: currentUser.id,
         instructorName: `${currentUser.firstName} ${currentUser.lastName}`,
         updatedAt: new Date().toISOString()
@@ -99,7 +102,7 @@ export const PerformanceInput: React.FC<PerformanceInputProps> = ({ member, onCl
                 <Activity size={24} />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-slate-900">הזנת ציוני ביצועים</h3>
+                <h3 className="text-2xl font-black text-slate-900">הזנת הערכות ביצועים</h3>
                 <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">עבור: {member.firstName} {member.lastName}</p>
               </div>
             </div>
@@ -177,7 +180,7 @@ export const PerformanceInput: React.FC<PerformanceInputProps> = ({ member, onCl
                 isLoading={isSaving}
               >
                 <Save size={20} />
-                <span>שמור ציונים</span>
+                <span>שמור הערכות</span>
               </GlassButton>
               <GlassButton 
                 type="button" 

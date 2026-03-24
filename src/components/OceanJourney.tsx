@@ -266,7 +266,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
 
       weeklyHistory.forEach(s => {
         if (s.participantIds?.includes(member.id)) {
-          const date = s.date?.toDate ? s.date.toDate() : new Date(s.date);
+          const date = parseDate(s.date) || new Date();
           seasonalCounts[getSeasonIndex(date)]++;
         }
       });

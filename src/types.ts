@@ -60,8 +60,10 @@ export interface Member {
 export interface PerformanceScore {
   id: string;
   memberId: string;
-  month: number; // 1-12
-  year: number;
+  month?: number; // 1-12
+  year?: number;
+  eventId?: string;
+  date?: string;
   paddle: number; // 1-10
   takeOff: number; // 1-10
   turns: number; // 1-10

@@ -397,7 +397,7 @@ const QuotaChart = ({ data, dataKey, limit, title, color }: { data: any[], dataK
         מכסה יומית: {limit.toLocaleString()}
       </span>
     </div>
-    <div className="h-[120px] w-full">
+    <div className="h-[120px] w-full min-h-[120px]">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
@@ -635,7 +635,7 @@ const TechnicalLogs: React.FC = () => {
 // --- End New Modular Components ---
 
 const Gauge = ({ value, label, color, sublabel }: { value: number, label: string, color: string, sublabel?: string }) => (
-  <div className="relative w-full h-[300px] mx-auto">
+  <div className="relative w-full h-[300px] min-h-[300px] mx-auto">
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
         <Pie
@@ -1086,7 +1086,7 @@ const SystemMonitor: React.FC = () => {
             </button>
           </div>
 
-          <div className="h-[300px] w-full">
+          <div className="h-[300px] w-full min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={readHistory} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
                 <CartesianGrid strokeDasharray="0" vertical={false} stroke="rgba(0,66,106,0.1)" />
@@ -1153,7 +1153,7 @@ const SystemMonitor: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="h-[300px] w-full">
+        <div className="h-[300px] w-full min-h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={bandwidthData} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
               <defs>

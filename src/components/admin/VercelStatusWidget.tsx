@@ -56,7 +56,7 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/vercel/status');
+      const response = await fetch(`${window.location.origin}/api/vercel/status`);
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'שגיאה בחיבור ל-Vercel');
@@ -115,6 +115,7 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
             </div>
             <div>
               <div className="flex items-center gap-2">
+                <div className={`w-4 h-4 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)] animate-blink ${!loading && !error ? 'bg-green-500' : error ? 'bg-red-500' : 'bg-gray-500'}`} />
                 <h2 className="text-[#00426a] text-2xl md:text-[28px] font-black tracking-wide uppercase" style={{ fontFamily: 'Georgia, serif' }}>
                   VERCEL COMMAND CENTER
                 </h2>

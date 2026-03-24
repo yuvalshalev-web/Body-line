@@ -13,6 +13,7 @@ import { useData } from '../contexts/DataContext';
 import { calculateUserStats } from '../utils/analytics';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateMonthlyAverages } from '../utils/performanceUtils';
+import { parseDate } from '../utils/dateUtils';
 
 const RADAR_PARAMETERS = [
   {
@@ -140,19 +141,25 @@ export const RadarChart: React.FC<RadarChartProps> = ({ userId }) => {
     if (!targetUserId || !members || !weeklyHistory) return { data: [], sortedScores: [], isHistorical: false };
 
     // Check if we have performance scores for this user
-    const userScores = performanceScores.filter(s => s.memberId === targetUserId);
+    const userScores = performanceScores.filter(s => {
+      if (s.memberId !== targetUserId) return false;
+      // Exclude seeded scores that have no valid date
+      if (!s.date || !parseDate(s.date)) return false;
+      return true;
+    });
 
     if (userScores.length > 0) {
       // Use historical data
       const averagedScores = calculateMonthlyAverages(userScores);
       const sortedScores = [...averagedScores].sort((a, b) => {
-        if (a.year !== b.year) return a.year - b.year;
-        return a.month - b.month;
+        if (a.year !== b.year) return (a.year || 0) - (b.year || 0);
+        return (a.month || 0) - (b.month || 0);
       }).slice(-6);
 
       const data = RADAR_PARAMETERS.map(param => {
         const entry: any = { subject: param.label };
         sortedScores.forEach(score => {
+          if (score.month === undefined || score.year === undefined) return;
           const key = `${score.month}/${score.year}`;
           entry[key] = (score as any)[param.key];
         });
@@ -195,12 +202,12 @@ export const RadarChart: React.FC<RadarChartProps> = ({ userId }) => {
   const userName = members.find(m => m.id === targetUserId)?.firstName || 'אני';
 
   return (
-    <div className="w-full h-[500px] min-h-0 relative">
+    <div className="w-full h-[600px] min-h-0 relative">
       <div className="flex flex-wrap gap-4 mb-4 relative z-10">
         <div className="flex items-center gap-2"><div className="w-4 h-4 bg-[#003366] rounded-full opacity-60"></div><span className="text-[#003366] font-medium font-['Inter',sans-serif]">{userName}</span></div>
       </div>
       <ResponsiveContainer width="100%" height="100%">
-        <RechartsRadar cx="50%" cy="50%" outerRadius="65%" data={data}>
+        <RechartsRadar cx="50%" cy="50%" outerRadius="85%" data={data}>
           <PolarGrid stroke="#e2e8f0" strokeOpacity={1} gridType="circle" />
           <PolarAngleAxis 
             dataKey="subject" 
@@ -230,6 +237,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ userId }) => {
           />
           {isHistorical ? (
             sortedScores.map((score, index) => {
+              if (score.month === undefined || score.year === undefined) return null;
               const key = `${score.month}/${score.year}`;
               const color = MONTH_COLORS[index % MONTH_COLORS.length];
               const name = `${MONTH_NAMES[score.month - 1]} ${score.year}`;

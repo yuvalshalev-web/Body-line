@@ -18,8 +18,10 @@ interface GitHubAction {
 const GitHubCommandCenter: React.FC = () => {
   const [action, setAction] = useState<GitHubAction | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchStatus, setFetchStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-  const getTimeAgo = (dateString: string) => {
+  const getTimeAgo = (dateString?: string) => {
+    if (!dateString) return '...';
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
@@ -29,10 +31,13 @@ const GitHubCommandCenter: React.FC = () => {
   const fetchAction = async () => {
     try {
       const res = await fetch(`${window.location.origin}/api/github/actions`);
+      if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       if (data.action) setAction(data.action);
+      setFetchStatus('success');
     } catch (err) {
       console.error("Failed to fetch GitHub actions", err);
+      setFetchStatus('error');
     } finally {
       setLoading(false);
     }
@@ -95,7 +100,10 @@ const GitHubCommandCenter: React.FC = () => {
                 {isGitHubActive ? 'Deploying' : isGitHubFailure ? 'Failed' : 'Stable'}
               </div>
               <div className="flex items-center gap-5">
-                <span className="text-[11px] font-black text-[#00426a] uppercase tracking-widest">PIPELINE</span>
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)] animate-blink ${fetchStatus === 'success' ? 'bg-green-500' : fetchStatus === 'error' ? 'bg-red-500' : 'bg-gray-500'}`} />
+                  <span className="text-[11px] font-black text-[#00426a] uppercase tracking-widest">PIPELINE</span>
+                </div>
                 <div className="flex items-center gap-3">
                   <Github size={24} className="text-[#0071a1]" strokeWidth={2} />
                   <Activity size={24} className="text-[#00426a]" strokeWidth={2} />

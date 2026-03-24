@@ -31,6 +31,7 @@ import { PostEditor } from '../components/admin/PostEditor';
 import { AdminRolloverReport } from './AdminRolloverReport';
 import SystemMonitor from '../components/SystemMonitor';
 import { MarkdownViewer } from '../components/admin/MarkdownViewer';
+import MemberGradingPage from './MemberGradingPage';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { calculateUserStats } from '../utils/analytics';
 
@@ -53,13 +54,14 @@ const AdminPage: React.FC = () => {
     yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, weeklyHistory
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM'>('USERS');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM' | 'GRADES'>('USERS');
   const [newSessionDay, setNewSessionDay] = useState(0);
   const [newSessionTime, setNewSessionTime] = useState('07:00');
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
 
   const adminTabs = [
     { id: 'USERS', label: 'משתמשים', icon: <Users size={20} /> },
+    { id: 'GRADES', label: 'הערכות', icon: <UserCheck size={20} /> },
     { id: 'POSTS', label: 'פוסטים', icon: <Newspaper size={20} /> },
     { id: 'GALLERY', label: 'גלריה', icon: <ImageIcon size={20} /> },
     { id: 'EVENTS', label: 'אירועים', icon: <Calendar size={20} /> },
@@ -946,6 +948,10 @@ const AdminPage: React.FC = () => {
               addMember={addMember}
             />
           </div>
+        )}
+
+        {activeTab === 'GRADES' && (
+          <MemberGradingPage />
         )}
 
         {activeTab === 'ARCHIVE' && (

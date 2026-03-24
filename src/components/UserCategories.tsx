@@ -85,7 +85,6 @@ const UserCategories: React.FC<UserCategoriesProps> = ({ userId }) => {
     if (!userStats) return [];
 
     const categories = [];
-    if (penguins.some(p => p.id === userId)) categories.push({ name: 'פינגווין', icon: Snowflake, color: 'text-[#00426a]', iconColor: 'text-[#0071a1]', bg: 'bg-[#f0f8ff]/50 border border-[#00426a]/10 shadow-sm' });
     if (jellyfish.some(j => j.id === userId)) categories.push({ name: 'מנטה ריי', icon: Sun, color: 'text-[#00426a]', iconColor: 'text-[#0071a1]', bg: 'bg-[#f0f8ff]/50 border border-[#00426a]/10 shadow-sm' });
     if (sharks.some(s => s.id === userId)) categories.push({ name: 'כריש', icon: Zap, color: 'text-[#00426a]', iconColor: 'text-[#0071a1]', bg: 'bg-[#f0f8ff]/50 border border-[#00426a]/10 shadow-sm' });
     if (orcas.some(o => o.id === userId)) categories.push({ name: 'אורקה', icon: Trophy, color: 'text-[#00426a]', iconColor: 'text-[#0071a1]', bg: 'bg-[#f0f8ff]/50 border border-[#00426a]/10 shadow-sm' });

@@ -321,7 +321,8 @@ async function startServer() {
               id: "none",
               author: { name: "System" }
             },
-            html_url: `https://github.com/${repo}/actions`
+            html_url: `https://github.com/${repo}/actions`,
+            updated_at: new Date().toISOString()
           }
         });
       }
@@ -347,6 +348,8 @@ async function startServer() {
     try {
       const projectId = process.env.VERCEL_PROJECT_ID;
       const accessToken = process.env.VERCEL_ACCESS_TOKEN;
+      console.log("DEBUG: VERCEL_PROJECT_ID present:", !!projectId);
+      console.log("DEBUG: VERCEL_ACCESS_TOKEN present:", !!accessToken);
 
       // Usage Data placeholder
       let usageData = { 

@@ -4,9 +4,6 @@ import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCir
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateUserStats } from '../utils/analytics';
-import { getBodyLineStats } from '../utils/bodyLineStats';
-import { calculateAge } from '../utils/dateUtils';
-import { calculateDistance } from '../utils/distanceCalculator';
 import UserCategories from './UserCategories';
 
 interface PlayerCardProps {
@@ -17,8 +14,6 @@ interface PlayerCardProps {
 const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   const { members, weeklyHistory, yearConfig, siteConfig, isLoading, events } = useData();
   const { currentUser } = useAuth();
-  const [showPopup, setShowPopup] = useState(false);
-  const [showDriftPopup, setShowDriftPopup] = useState(false);
 
   const [imageError, setImageError] = useState(false);
 
@@ -35,68 +30,6 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
     return calculateUserStats(userId, members, weeklyHistory, yearConfig, events);
   }, [userId, members, weeklyHistory, yearConfig, events, isLoading]);
 
-  const agePercentile = useMemo(() => {
-    if (!member?.birthday || members.length === 0) return null;
-
-    const userAge = calculateAge(member.birthday);
-    if (userAge === null) return null;
-    
-    // Use getBodyLineStats for age percentile
-    const membersWithAge = members.map(m => ({
-      ...m,
-      age: m.birthday ? calculateAge(m.birthday) : undefined
-    }));
-
-    const statsHelper = getBodyLineStats(membersWithAge as any);
-    const percentile = parseFloat(statsHelper.calculatePercentile(userAge, 'age'));
-    const roundedPercentile = Math.round(percentile);
-
-    let label = `גולש מנוסה: אתה בוגר ומנוסה יותר מ-${roundedPercentile}% מהקהילה`;
-    let badge = null;
-
-    if (percentile <= 10) {
-      badge = 'פופ-אפיסט';
-      label = 'פופ-אפיסט: מהצעירים והמבטיחים ביותר בקהילה!';
-    } else if (percentile >= 90) {
-      badge = 'קלי סלייטר';
-      label = 'קלי סלייטר: מעמודי התווך המנוסים ביותר שלנו!';
-    } else if (percentile > 50) {
-      label = `גולש מנוסה: אתה בוגר ומנוסה יותר מ-${roundedPercentile}% מהקהילה`;
-    } else {
-      label = `גולש צעיר: יש לך עוד המון גלים לכבוש, אתה צעיר יותר מ-${100 - roundedPercentile}% מהקהילה`;
-    }
-
-    return { percentile, roundedPercentile, label, badge };
-  }, [member, members]);
-
-  const driftPercentile = useMemo(() => {
-    const homeBreak = siteConfig?.home_break;
-    if (!homeBreak?.lat || !homeBreak?.lng || !member?.lat || !member?.lng || members.length === 0) return null;
-
-    const userDistance = calculateDistance(member.lat, member.lng, homeBreak.lat, homeBreak.lng);
-    
-    // Use getBodyLineStats for distance percentile
-    const membersWithDistance = members.map(m => ({
-      ...m,
-      distance: m.lat && m.lng ? calculateDistance(m.lat!, m.lng!, homeBreak.lat!, homeBreak.lng!) : undefined
-    }));
-
-    const statsHelper = getBodyLineStats(membersWithDistance as any);
-    const percentile = parseFloat(statsHelper.calculatePercentile(userDistance, 'distance'));
-    const roundedPercentile = Math.round(percentile);
-    const distanceKm = userDistance.toFixed(1);
-
-    // Calculate decile
-    const validMembers = membersWithDistance.filter(m => typeof m.distance === 'number');
-    const sorted = validMembers.sort((a, b) => (a.distance || 0) - (b.distance || 0));
-    const index = sorted.findIndex(m => m.id === member.id);
-    const decile = index !== -1 ? Math.min(10, Math.floor((index / sorted.length) * 10) + 1) : null;
-
-    let label = `מדד הסחף: אתה נמצא במרחק של ${distanceKm} ק"מ מהחוף`;
-    
-    return { percentile, roundedPercentile, distanceKm, label, decile };
-  }, [member, members, siteConfig]);
-
   const openWhatsApp = (mobile: string) => {
     const formattedMobile = mobile.replace(/\D/g, '');
     window.open(`https://wa.me/${formattedMobile}`, '_blank');
@@ -104,6 +37,14 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
   const callMobile = (mobile: string) => {
     window.location.href = `tel:${mobile}`;
+  };
+
+  const ensureAbsoluteUrl = (url: string) => {
+    if (!url) return url;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `https://${url}`;
   };
 
   if (isLoading) return <div className="p-4 glass-panel rounded-2xl border border-white/20 animate-pulse">טוען...</div>;
@@ -158,29 +99,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
               </span>
             )}
           </div>
-          <div className="flex flex-wrap gap-2 justify-center">
-            <span className={`inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm ${
-              member.isActive !== false 
-                ? 'bg-[#2D6A4F]/20 text-[#2D6A4F] border-[#2D6A4F]/30' 
-                : 'bg-[#BC4749]/20 text-[#BC4749] border-[#BC4749]/30'
-            }`}>
-              סטטוס: {member.isActive !== false ? 'פעיל' : 'מושהה'}
-            </span>
-            <span className="inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm bg-[#0071a1]/20 text-[#00426a] border-[#0071a1]/30">
-              זהות: {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
-            </span>
-            {agePercentile?.badge && (
-              <span className="inline-flex px-3 py-1 rounded-md text-[12px] font-black uppercase tracking-widest border shadow-sm bg-yellow-500/20 text-yellow-700 border-yellow-500/30">
-                ותק: {agePercentile.badge}
-              </span>
-            )}
-          </div>
 
           {/* Social Media Links */}
           <div className="flex flex-wrap gap-3 justify-center mt-4">
             {/* Facebook */}
             {member.facebookUrl ? (
-              <a href={member.facebookUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#1877F2]/10 rounded-xl hover:bg-[#1877F2] hover:text-white transition-all text-[#1877F2] shadow-sm" title="Facebook">
+              <a href={ensureAbsoluteUrl(member.facebookUrl)} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#1877F2]/10 rounded-xl hover:bg-[#1877F2] hover:text-white transition-all text-[#1877F2] shadow-sm" title="Facebook">
                 <Facebook size={20} />
               </a>
             ) : (
@@ -191,7 +115,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
             {/* Instagram */}
             {member.instagramUrl ? (
-              <a href={member.instagramUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#E4405F]/10 rounded-xl hover:bg-[#E4405F] hover:text-white transition-all text-[#E4405F] shadow-sm" title="Instagram">
+              <a href={ensureAbsoluteUrl(member.instagramUrl)} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#E4405F]/10 rounded-xl hover:bg-[#E4405F] hover:text-white transition-all text-[#E4405F] shadow-sm" title="Instagram">
                 <Instagram size={20} />
               </a>
             ) : (
@@ -202,7 +126,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
             {/* TikTok */}
             {member.tiktokUrl ? (
-              <a href={member.tiktokUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-black/10 rounded-xl hover:bg-black hover:text-white transition-all text-black shadow-sm" title="TikTok">
+              <a href={ensureAbsoluteUrl(member.tiktokUrl)} target="_blank" rel="noopener noreferrer" className="p-2 bg-black/10 rounded-xl hover:bg-black hover:text-white transition-all text-black shadow-sm" title="TikTok">
                 <Music2 size={20} />
               </a>
             ) : (
@@ -213,7 +137,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
             {/* LinkedIn */}
             {member.linkedinUrl ? (
-              <a href={member.linkedinUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#0077B5]/10 rounded-xl hover:bg-[#0077B5] hover:text-white transition-all text-[#0077B5] shadow-sm" title="LinkedIn">
+              <a href={ensureAbsoluteUrl(member.linkedinUrl)} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#0077B5]/10 rounded-xl hover:bg-[#0077B5] hover:text-white transition-all text-[#0077B5] shadow-sm" title="LinkedIn">
                 <Linkedin size={20} />
               </a>
             ) : (
@@ -224,7 +148,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
             {/* Twitter/X */}
             {member.twitterUrl ? (
-              <a href={member.twitterUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-black/10 rounded-xl hover:bg-black hover:text-white transition-all text-black shadow-sm" title="X (Twitter)">
+              <a href={ensureAbsoluteUrl(member.twitterUrl)} target="_blank" rel="noopener noreferrer" className="p-2 bg-black/10 rounded-xl hover:bg-black hover:text-white transition-all text-black shadow-sm" title="X (Twitter)">
                 <Twitter size={20} />
               </a>
             ) : (
@@ -235,7 +159,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
             {/* Website */}
             {member.websiteUrl ? (
-              <a href={member.websiteUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#3dbbd3]/10 rounded-xl hover:bg-[#3dbbd3] hover:text-white transition-all text-[#3dbbd3] shadow-sm" title="Website">
+              <a href={ensureAbsoluteUrl(member.websiteUrl)} target="_blank" rel="noopener noreferrer" className="p-2 bg-[#3dbbd3]/10 rounded-xl hover:bg-[#3dbbd3] hover:text-white transition-all text-[#3dbbd3] shadow-sm" title="Website">
                 <Globe size={20} />
               </a>
             ) : (
@@ -247,60 +171,27 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
           {/* Communication Buttons */}
           {currentUser?.id !== userId && (
-            <div className="flex flex-wrap gap-3 justify-center mt-4">
+            <div className="flex flex-wrap gap-4 justify-center mt-6">
               <button 
                 onClick={() => member.mobile && openWhatsApp(member.mobile)}
-                className="p-2 bg-[#25D366]/10 rounded-xl hover:bg-[#25D366] hover:text-white transition-all text-[#25D366] shadow-sm" 
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-b from-[#25D366] to-[#1DA851] rounded-2xl hover:brightness-110 active:translate-y-1 transition-all text-white shadow-[0_6px_0_#14833b,0_10px_20px_rgba(37,211,102,0.4)] font-black" 
                 title="WhatsApp"
               >
-                <MessageCircle size={20} />
+                <MessageCircle size={24} />
+                <span>וואטסאפ</span>
               </button>
               <button 
                 onClick={() => member.mobile && callMobile(member.mobile)}
-                className="p-2 bg-[#00426a]/10 rounded-xl hover:bg-[#00426a] hover:text-white transition-all text-[#00426a] shadow-sm" 
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-b from-[#00A8E8] to-[#007EA7] rounded-2xl hover:brightness-110 active:translate-y-1 transition-all text-white shadow-[0_6px_0_#005A7A,0_10px_20px_rgba(0,168,232,0.4)] font-black" 
                 title="התקשר"
               >
-                <Phone size={20} />
+                <Phone size={24} />
+                <span>התקשר</span>
               </button>
             </div>
           )}
 
           <UserCategories userId={userId} />
-
-          {/* Drift Metric */}
-          {driftPercentile && (
-            <div className="w-full p-4 bg-[#f0f8ff]/10 backdrop-blur-[20px] border border-[#00426a]/10 rounded-2xl mt-4" dir="rtl">
-              <div className="text-[#00426a] text-sm font-black mb-2 text-center">מדד ה-Drift (סחף) 🌊</div>
-              <div className="flex items-center justify-between w-full mb-2" dir="ltr">
-                <span className="text-xl">📍</span>
-                <div className="flex-1 h-2 bg-black/10 rounded-full mx-2 relative">
-                  <div className="absolute top-0 left-0 h-full bg-[#3dbbd3] rounded-full" style={{ width: `${driftPercentile.roundedPercentile}%` }} />
-                </div>
-                <span className="text-xl">🪐</span>
-              </div>
-              <div className="text-center text-xs text-[#000000] font-bold flex flex-col gap-1">
-                <span>{member.gender === 'נקבה' ? 'את גרה' : 'אתה גר'} במרחק {driftPercentile.distanceKm} ק"מ מהחוף</span>
-                {driftPercentile.decile && <span className="text-[#00426a]/80">עשירון {driftPercentile.decile} בקירבה לחוף (1 = הכי קרוב)</span>}
-              </div>
-            </div>
-          )}
-
-          {/* Vintage Metric */}
-          {agePercentile && (
-            <div className="w-full p-4 bg-[#f0f8ff]/10 backdrop-blur-[20px] border border-[#00426a]/10 rounded-2xl mt-4" dir="rtl">
-              <div className="text-[#00426a] text-sm font-black mb-2 text-center">מדד ה-Vintage 🍷</div>
-              <div className="flex items-center justify-between w-full mb-2" dir="ltr">
-                <span className="text-xl">🐣</span>
-                <div className="flex-1 h-2 bg-black/10 rounded-full mx-2 relative">
-                  <div className="absolute top-0 left-0 h-full bg-[#FFDE45] rounded-full" style={{ width: `${agePercentile.roundedPercentile}%` }} />
-                </div>
-                <span className="text-xl">🐢</span>
-              </div>
-              <div className="text-center text-xs text-[#000000] font-bold">
-                {member.gender === 'נקבה' ? 'את מבוגרת' : 'אתה מבוגר'} יותר מ-{agePercentile.roundedPercentile}% מחברי הקהילה
-              </div>
-            </div>
-          )}
 
           {/* Certifications Section */}
           {member.certifications && member.certifications.length > 0 && (

@@ -121,6 +121,14 @@
   }
 
   /* --- UX WOW Effects --- */
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .animate-blink {
+    animation: blink 1.5s ease-in-out infinite;
+  }
+  
   @keyframes premium-sweep {
     0% { transform: translateX(-200%) skewX(-20deg); opacity: 0; }
     20% { opacity: 1; }

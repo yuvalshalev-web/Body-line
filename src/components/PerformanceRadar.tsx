@@ -17,12 +17,12 @@ interface PerformanceRadarProps {
 }
 
 const PARAMETERS = [
-  { key: 'paddle', label: 'חתירה' },
-  { key: 'takeOff', label: 'טייק-אוף' },
-  { key: 'turns', label: 'סיבובים' },
-  { key: 'positioning', label: 'מיקום' },
-  { key: 'stamina', label: 'כושר' },
-  { key: 'style', label: 'סטייל' },
+  { key: 'paddle', label: 'יעילות החתירה' },
+  { key: 'positioning', label: 'קריאת גלים' },
+  { key: 'takeOff', label: 'Take-off ודרופ' },
+  { key: 'style', label: 'זרימה וחיבור' },
+  { key: 'turns', label: 'שליטה בציוד' },
+  { key: 'stamina', label: 'חוסן מנטלי' },
 ];
 
 const MONTH_COLORS = [
@@ -45,10 +45,10 @@ export const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ scores }) =>
   }
 
   // Sort scores by year and month
-  const averagedScores = calculateMonthlyAverages(scores);
+  const averagedScores = calculateMonthlyAverages(scores.filter(s => s.year !== undefined && s.month !== undefined));
   const sortedScores = [...averagedScores].sort((a, b) => {
-    if (a.year !== b.year) return a.year - b.year;
-    return a.month - b.month;
+    if (a.year !== b.year) return (a.year || 0) - (b.year || 0);
+    return (a.month || 0) - (b.month || 0);
   }).slice(-6); // Take only the last 6 months
 
   // Prepare data for Recharts
@@ -57,6 +57,7 @@ export const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ scores }) =>
   const data = PARAMETERS.map(param => {
     const entry: any = { subject: param.label };
     sortedScores.forEach(score => {
+      if (score.month === undefined || score.year === undefined) return;
       const key = `${score.month}/${score.year}`;
       entry[key] = (score as any)[param.key];
     });
@@ -67,7 +68,7 @@ export const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ scores }) =>
   console.log('Sorted Scores:', sortedScores);
 
   return (
-    <div className="w-full min-w-0 h-[400px] bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
+    <div className="w-full min-w-0 h-[520px] bg-white/5 rounded-2xl p-4 border border-white/10 backdrop-blur-sm">
       <div className="text-white text-xs">DEBUG: {sortedScores.length} scores</div>
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
@@ -84,6 +85,7 @@ export const PerformanceRadar: React.FC<PerformanceRadarProps> = ({ scores }) =>
           />
           
           {sortedScores.map((score, index) => {
+            if (score.month === undefined || score.year === undefined) return null;
             const key = `${score.month}/${score.year}`;
             const color = MONTH_COLORS[(score.month - 1) % MONTH_COLORS.length];
             const name = `${MONTH_NAMES[score.month - 1]} ${score.year}`;
