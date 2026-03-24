@@ -271,7 +271,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }, 10000); // 10s timeout
 
       try {
-        const url = `https://ais-dev-u46a7mul3zuvrxmagsujik-78575243013.europe-west2.run.app/api/coastal-weather`;
+        const url = `/api/coastal-weather`;
         console.log("Fetching coastal weather from:", url);
         const res = await fetch(url, {
           headers: {
