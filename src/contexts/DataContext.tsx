@@ -259,14 +259,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // 2. Coastal Weather Fetcher (Interval)
   useEffect(() => {
-    if (dbStatus === 'OFFLINE') return;
-
+    console.log("Coastal weather useEffect running, dbStatus:", dbStatus, "currentUser:", currentUser);
+    // Removed the dbStatus check to ensure it runs
+    
     const fetchCoastalWeather = async () => {
+      console.log("Starting coastal weather fetch...");
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      const timeoutId = setTimeout(() => {
+        console.warn("Coastal weather fetch timed out");
+        controller.abort();
+      }, 10000); // 10s timeout
 
       try {
-        const url = `${window.location.origin}/api/coastal-weather`;
+        const url = `/api/coastal-weather`;
         console.log("Fetching coastal weather from:", url);
         const res = await fetch(url, {
           headers: {
@@ -278,13 +283,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         if (!res.ok) {
             console.error("Coastal weather fetch failed with status", res.status);
+            setIsLoading(false); // Ensure loading stops on error
             return;
         }
         const text = await res.text();
+        console.log("Coastal weather response received, length:", text.length);
         try {
           const data = JSON.parse(text);
           console.log("DataContext - Coastal weather data received:", data);
           setCoastalWeather(data);
+          setIsLoading(false); // Ensure loading stops on success
 
           // Centralized Side Effects: Update stats and log history (Admins only for history)
           const db = getDb();
@@ -340,9 +348,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         } catch (e) {
           console.error("Failed to parse coastal weather JSON:", e, "Response text:", text);
+          setIsLoading(false); // Ensure loading stops on error
         }
       } catch (e: any) {
         clearTimeout(timeoutId);
+        setIsLoading(false); // Ensure loading stops on error
         if (e.name === 'AbortError') {
           console.error("Coastal weather fetch timed out");
         } else {
