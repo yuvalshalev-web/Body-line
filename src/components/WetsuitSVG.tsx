@@ -15,7 +15,7 @@ const WetsuitSVG: React.FC<WetsuitSVGProps> = ({ thickness = '4/3', alignBottom 
     setImgError(false);
   }, [thickness]);
 
-  const imgSrc = thickness === '4/3' ? '/wetsuit-4-3.png' : thickness === '3/2' ? '/wetsuit-3-2.png' : thickness === '2/2' ? '/wetsuit-2-2.png' : thickness === '2/2-ss' ? '/wetsuit-2-2-ss.png' : '/sun-shirt.png';
+  const imgSrc = thickness === '4/3' ? '/images/wetsuit-4-3.png' : thickness === '3/2' ? '/images/wetsuit-3-2.png' : thickness === '2/2' ? '/images/wetsuit-2-2.png' : thickness === '2/2-ss' ? '/images/wetsuit-2-2-ss.png' : '/images/sun-shirt.png';
 
   return (
     <div className={`flex ${alignBottom ? 'items-end' : 'items-center'} justify-center w-full h-full ${alignBottom ? 'p-0' : 'p-2'} bg-transparent`}>
@@ -43,7 +43,7 @@ const WetsuitSVG: React.FC<WetsuitSVGProps> = ({ thickness = '4/3', alignBottom 
               תמונת החליפה חסרה<br/>
               <span className="text-xs mt-2 block opacity-70">
                 יש להעלות את התמונה לתיקיית<br/>
-                <code className="bg-black/5 px-2 py-1 rounded mt-1 inline-block" dir="ltr">public/wetsuit-{thickness.replace('/', '-')}.png</code>
+                <code className="bg-black/5 px-2 py-1 rounded mt-1 inline-block" dir="ltr">public/images/wetsuit-{thickness.replace('/', '-')}.png</code>
               </span>
             </p>
           </div>
