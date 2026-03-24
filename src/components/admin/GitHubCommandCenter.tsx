@@ -12,11 +12,19 @@ interface GitHubAction {
     author: { name: string };
   };
   html_url: string;
+  updated_at: string;
 }
 
 const GitHubCommandCenter: React.FC = () => {
   const [action, setAction] = useState<GitHubAction | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
+    return `${diffInMinutes}m ago`;
+  };
 
   const fetchAction = async () => {
     try {
@@ -101,10 +109,10 @@ const GitHubCommandCenter: React.FC = () => {
         {/* Bottom Row: Recent Commit */}
         <div className="flex items-center justify-start gap-2 px-4 pt-2">
           <span className="text-[15px] font-medium text-[#0071a1]" style={{ fontFamily: 'Georgia, serif' }}>
-            20m ago
+            {action ? getTimeAgo(action.updated_at) : '...'}
           </span>
           <span className="text-[15px] font-medium text-[#00426a]" style={{ fontFamily: 'Georgia, serif' }}>
-            Implement real-time quota monitoring
+            {action?.head_commit.message || 'Loading...'}
           </span>
         </div>
 

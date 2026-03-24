@@ -17,6 +17,7 @@ import { updateMemberAddress, loadGoogleMaps } from '../../utils/googlePlaces';
 
 interface EditMemberFormProps {
   member: Member;
+  gritScore: number;
   isSuperAdmin: boolean;
   onSave: (updatedMember: Member) => Promise<void>;
   onArchive: (id: string) => Promise<void>;
@@ -38,7 +39,7 @@ const CERTIFICATION_OPTIONS = [
   'טקסט חופשי'
 ];
 
-const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, onSave, onArchive, onClose }) => {
+const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSuperAdmin, onSave, onArchive, onClose }) => {
   const { showSuccess, showError, showConfirm } = useModal();
   const [editingMember, setEditingMember] = useState<Member>(member);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -330,147 +331,31 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
                     </button>
                   ))}
                 </div>
+                <div className="space-y-4 flex flex-col items-center">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] block">סטטוס חבר</label>
+                  <div className="px-8 py-4 bg-[#00AFC2]/5 border border-[#00AFC2]/20 rounded-2xl flex flex-col items-center gap-2">
+                    <span className="text-xl font-black text-[#00AFC2] tracking-wider">
+                      {editingMember.status || 'מזדמן'}
+                    </span>
+                    <div className="flex gap-4">
+                      <span className="text-sm font-bold text-slate-600">
+                        מדד התמדה: {Math.round(gritScore || 0)}%
+                      </span>
+                      <span className="text-sm font-bold text-slate-600">
+                        הערכת מדריך: -
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">
+                    סטטוס מחושב אוטומטית לפי ביצועים ונוכחות
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Section 1: Certifications */}
-        <section className="space-y-10">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-              <Award size={24} />
-            </div>
-            <div>
-              <h2 className="text-xl font-black text-[#1e293b]">הכשרות והסמכות רלוונטיות</h2>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Relevant Certifications</p>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">בחר הכשרות והסמכות</label>
-              <div className="relative">
-                <button 
-                  type="button"
-                  onClick={() => setIsCertDropdownOpen(!isCertDropdownOpen)}
-                  className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all outline-none flex items-center justify-between"
-                >
-                  <span className="text-right flex-1 truncate">
-                    {editingMember.certifications && editingMember.certifications.length > 0 
-                      ? editingMember.certifications.join(', ') 
-                      : 'בחר הכשרות והסמכות'}
-                  </span>
-                  <ChevronDown size={20} className={`text-[#00AFC2] transition-transform duration-500 ${isCertDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                <AnimatePresence>
-                  {isCertDropdownOpen && (
-                    <>
-                      <div className="fixed inset-0 z-[60]" onClick={() => setIsCertDropdownOpen(false)} />
-                      <motion.div 
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-200 rounded-[2rem] shadow-2xl z-[70] overflow-hidden p-4 max-h-[400px] flex flex-col"
-                      >
-                        <div className="p-2 border-b border-slate-50 mb-2">
-                          <div className="relative">
-                            <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input 
-                              type="text"
-                              placeholder="חיפוש או הוספת הכשרה..."
-                              value={certSearch}
-                              onChange={(e) => setCertSearch(e.target.value)}
-                              className="w-full pr-9 pl-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:bg-white focus:border-indigo-200 transition-all"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-1 overflow-y-auto pr-1">
-                          {/* Show custom certifications that are already selected but not in the predefined list */}
-                          {editingMember.certifications?.filter(c => !CERTIFICATION_OPTIONS.includes(c)).map((cert) => (
-                            <button
-                              key={cert}
-                              type="button"
-                              onClick={() => {
-                                const currentCerts = editingMember.certifications || [];
-                                setEditingMember({ ...editingMember, certifications: currentCerts.filter(c => c !== cert) });
-                              }}
-                              className="w-full px-4 py-3 text-right font-bold rounded-xl transition-all flex items-center justify-between text-[#00AFC2] bg-[#00AFC2]/5 hover:bg-[#00AFC2]/10"
-                            >
-                              <span className="truncate">{cert}</span>
-                              <Check size={16} />
-                            </button>
-                          ))}
-
-                          {CERTIFICATION_OPTIONS.filter(cert => 
-                            cert.toLowerCase().includes(certSearch.toLowerCase())
-                          ).map((cert) => {
-                            const isSelected = editingMember.certifications?.includes(cert);
-                            return (
-                              <button
-                                key={cert}
-                                type="button"
-                                onClick={() => {
-                                  const currentCerts = editingMember.certifications || [];
-                                  const newCerts = isSelected 
-                                    ? currentCerts.filter(c => c !== cert)
-                                    : [...currentCerts, cert];
-                                  setEditingMember({ ...editingMember, certifications: newCerts });
-                                }}
-                                className={`w-full px-4 py-3 text-right font-bold rounded-xl transition-all flex items-center justify-between hover:bg-slate-50 ${
-                                  isSelected ? 'text-[#00AFC2] bg-[#00AFC2]/5' : 'text-slate-700'
-                                }`}
-                              >
-                                <span className="truncate">{cert}</span>
-                                {isSelected && <Check size={16} className="text-[#00AFC2]" />}
-                              </button>
-                            );
-                          })}
-
-                          {certSearch && !CERTIFICATION_OPTIONS.some(c => c.toLowerCase() === certSearch.toLowerCase()) && !editingMember.certifications?.includes(certSearch) && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const currentCerts = editingMember.certifications || [];
-                                setEditingMember({ ...editingMember, certifications: [...currentCerts, certSearch] });
-                                setCertSearch('');
-                              }}
-                              className="w-full px-4 py-3 text-right font-bold rounded-xl transition-all flex items-center justify-between text-[#00AFC2] hover:bg-[#00AFC2]/5 border border-dashed border-[#00AFC2]/20 mt-1"
-                            >
-                              <span className="truncate">הוסף: "{certSearch}"</span>
-                              <Sparkles size={14} />
-                            </button>
-                          )}
-                        </div>
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-
-            {editingMember.certifications?.includes('טקסט חופשי') && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="space-y-3"
-              >
-                <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">פירוט הכשרה נוספת</label>
-                <textarea 
-                  value={editingMember.otherCertification || ''} 
-                  onChange={e => setEditingMember({ ...editingMember, otherCertification: e.target.value })} 
-                  placeholder="פרט כאן הכשרות נוספות..."
-                  className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all min-h-[100px] resize-none outline-none leading-relaxed" 
-                />
-              </motion.div>
-            )}
-          </div>
-        </section>
-
-        {/* Section 4: Personal Information */}
+        {/* Section 2: Personal Information */}
         <section className="space-y-10">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-[#00AFC2]/10 flex items-center justify-center text-[#00AFC2]">
@@ -609,6 +494,141 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
           </div>
         </section>
 
+        {/* Section 3: Relevant Certifications */}
+        <section className="space-y-10">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+              <Award size={24} />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-[#1e293b]">הכשרות והסמכות רלוונטיות</h2>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Relevant Certifications</p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">בחר הכשרות והסמכות</label>
+              <div className="relative">
+                <button 
+                  type="button"
+                  onClick={() => setIsCertDropdownOpen(!isCertDropdownOpen)}
+                  className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all outline-none flex items-center justify-between"
+                >
+                  <span className="text-right flex-1 truncate">
+                    {editingMember.certifications && editingMember.certifications.length > 0 
+                      ? editingMember.certifications.join(', ') 
+                      : 'בחר הכשרות והסמכות'}
+                  </span>
+                  <ChevronDown size={20} className={`text-[#00AFC2] transition-transform duration-500 ${isCertDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {isCertDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-[60]" onClick={() => setIsCertDropdownOpen(false)} />
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-200 rounded-[2rem] shadow-2xl z-[70] overflow-hidden p-4 max-h-[400px] flex flex-col"
+                      >
+                        <div className="p-2 border-b border-slate-50 mb-2">
+                          <div className="relative">
+                            <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input 
+                              type="text"
+                              placeholder="חיפוש או הוספת הכשרה..."
+                              value={certSearch}
+                              onChange={(e) => setCertSearch(e.target.value)}
+                              className="w-full pr-9 pl-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:bg-white focus:border-indigo-200 transition-all"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-1 overflow-y-auto pr-1">
+                          {/* Show custom certifications that are already selected but not in the predefined list */}
+                          {editingMember.certifications?.filter(c => !CERTIFICATION_OPTIONS.includes(c)).map((cert) => (
+                            <button
+                              key={cert}
+                              type="button"
+                              onClick={() => {
+                                const currentCerts = editingMember.certifications || [];
+                                setEditingMember({ ...editingMember, certifications: currentCerts.filter(c => c !== cert) });
+                              }}
+                              className="w-full px-4 py-3 text-right font-bold rounded-xl transition-all flex items-center justify-between text-[#00AFC2] bg-[#00AFC2]/5 hover:bg-[#00AFC2]/10"
+                            >
+                              <span className="truncate">{cert}</span>
+                              <Check size={16} />
+                            </button>
+                          ))}
+
+                          {CERTIFICATION_OPTIONS.filter(cert => 
+                            cert.toLowerCase().includes(certSearch.toLowerCase())
+                          ).map((cert) => {
+                            const isSelected = editingMember.certifications?.includes(cert);
+                            return (
+                              <button
+                                key={cert}
+                                type="button"
+                                onClick={() => {
+                                  const currentCerts = editingMember.certifications || [];
+                                  const newCerts = isSelected 
+                                    ? currentCerts.filter(c => c !== cert)
+                                    : [...currentCerts, cert];
+                                  setEditingMember({ ...editingMember, certifications: newCerts });
+                                }}
+                                className={`w-full px-4 py-3 text-right font-bold rounded-xl transition-all flex items-center justify-between hover:bg-slate-50 ${
+                                  isSelected ? 'text-[#00AFC2] bg-[#00AFC2]/5' : 'text-slate-700'
+                                }`}
+                              >
+                                <span className="truncate">{cert}</span>
+                                {isSelected && <Check size={16} className="text-[#00AFC2]" />}
+                              </button>
+                            );
+                          })}
+
+                          {certSearch && !CERTIFICATION_OPTIONS.some(c => c.toLowerCase() === certSearch.toLowerCase()) && !editingMember.certifications?.includes(certSearch) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const currentCerts = editingMember.certifications || [];
+                                setEditingMember({ ...editingMember, certifications: [...currentCerts, certSearch] });
+                                setCertSearch('');
+                              }}
+                              className="w-full px-4 py-3 text-right font-bold rounded-xl transition-all flex items-center justify-between text-[#00AFC2] hover:bg-[#00AFC2]/5 border border-dashed border-[#00AFC2]/20 mt-1"
+                            >
+                              <span className="truncate">הוסף: "{certSearch}"</span>
+                              <Sparkles size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {editingMember.certifications?.includes('טקסט חופשי') && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="space-y-3"
+              >
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">פירוט הכשרה נוספת</label>
+                <textarea 
+                  value={editingMember.otherCertification || ''} 
+                  onChange={e => setEditingMember({ ...editingMember, otherCertification: e.target.value })} 
+                  placeholder="פרט כאן הכשרות נוספות..."
+                  className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all min-h-[100px] resize-none outline-none leading-relaxed" 
+                />
+              </motion.div>
+            )}
+          </div>
+        </section>
+
         {/* Section 2.5: Medical Info */}
         <section className="space-y-10">
           <div className="flex items-center gap-4">
@@ -653,6 +673,8 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, isSuperAdmin, o
             </div>
           </div>
         </section>
+
+
 
         {/* Section 3: Social Networks */}
         <section className="space-y-10">

@@ -269,7 +269,8 @@ async function startServer() {
               id: "a1b2c3d4e5f6g7h8i9j0",
               author: { name: "Yuval Shalev" }
             },
-            html_url: repo ? `https://github.com/${repo}/actions` : "https://github.com"
+            html_url: repo ? `https://github.com/${repo}/actions` : "https://github.com",
+            updated_at: new Date().toISOString()
           }
         });
       }
@@ -331,7 +332,8 @@ async function startServer() {
           status: latestRun.status,
           conclusion: latestRun.conclusion,
           head_commit: latestRun.head_commit,
-          html_url: latestRun.html_url
+          html_url: latestRun.html_url,
+          updated_at: latestRun.updated_at
         }
       });
     } catch (err: any) {

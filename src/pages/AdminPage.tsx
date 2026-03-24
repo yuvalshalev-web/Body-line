@@ -32,6 +32,7 @@ import { AdminRolloverReport } from './AdminRolloverReport';
 import SystemMonitor from '../components/SystemMonitor';
 import { MarkdownViewer } from '../components/admin/MarkdownViewer';
 import { useRandomHeader } from '../hooks/useRandomHeader';
+import { calculateUserStats } from '../utils/analytics';
 
 const ASSET_LABELS: Record<string, string> = {
   habalZugLogo: 'לוגו חבל זוג',
@@ -49,7 +50,7 @@ const AdminPage: React.FC = () => {
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
     joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember, addMember,
-    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins
+    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, weeklyHistory
   } = useData();
 
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM'>('USERS');
@@ -843,6 +844,7 @@ const AdminPage: React.FC = () => {
             {editingMember ? (
               <EditMemberForm
                 member={editingMember}
+                gritScore={calculateUserStats(editingMember.id, members, weeklyHistory, yearConfig, events)?.gritScore || 0}
                 isSuperAdmin={isSuperAdmin}
                 onSave={async (updatedMember) => {
                   await updateMember(updatedMember);

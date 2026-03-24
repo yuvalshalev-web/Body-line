@@ -409,7 +409,7 @@ export const CoastalDashboard: React.FC = () => {
 
         {/* Live Cam Tile */}
         <motion.a 
-          href="https://beachcam.co.il" 
+          href="https://beachcam.co.il/marina.html" 
           target="_blank" 
           rel="noopener noreferrer"
           whileHover={{ 

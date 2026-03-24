@@ -345,7 +345,14 @@ const ProfilePage: React.FC = () => {
       { label: 'פייסבוק', value: formData.facebookUrl },
       { label: 'טיקטוק', value: formData.tiktokUrl },
       { label: 'לינקדאין', value: formData.linkedinUrl },
-      { label: 'טוויטר / X', value: formData.twitterUrl }
+      { label: 'טוויטר / X', value: formData.twitterUrl },
+      { label: 'אתר אישי', value: formData.websiteUrl },
+      { label: 'משקל', value: formData.weight },
+      { label: 'גובה', value: formData.height },
+      { label: 'רמת גלישה', value: formData.surfingLevel },
+      { label: 'רמת כושר', value: formData.fitnessLevel },
+      { label: 'נפח גלשן נוכחי', value: formData.currentBoardVolume },
+      { label: 'אורך גלשן נוכחי', value: formData.currentBoardLength }
     ];
     
     const missing = fieldMap.filter(f => !f.value).map(f => f.label);
@@ -390,6 +397,7 @@ const ProfilePage: React.FC = () => {
   const handleTikTokChange = useCallback((v: string) => handleFieldChange('tiktokUrl', v), [handleFieldChange]);
   const handleLinkedInChange = useCallback((v: string) => handleFieldChange('linkedinUrl', v), [handleFieldChange]);
   const handleTwitterChange = useCallback((v: string) => handleFieldChange('twitterUrl', v), [handleFieldChange]);
+  const handleWebsiteChange = useCallback((v: string) => handleFieldChange('websiteUrl', v), [handleFieldChange]);
 
   const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -834,6 +842,83 @@ const ProfilePage: React.FC = () => {
                   <SocialInput label="TikTok" value={formData.tiktokUrl} onChange={handleTikTokChange} icon={Music2} brandColor="#000000" placeholder="קישור לפרופיל טיקטוק" />
                   <SocialInput label="LinkedIn" value={formData.linkedinUrl} onChange={handleLinkedInChange} icon={Linkedin} brandColor="#0A66C2" placeholder="קישור לפרופיל לינקדאין" />
                   <SocialInput label="Twitter / X" value={formData.twitterUrl} onChange={handleTwitterChange} icon={Twitter} brandColor="#000000" placeholder="קישור לפרופיל טוויטר" />
+                  <SocialInput label="Personal Website" value={formData.websiteUrl} onChange={handleWebsiteChange} icon={Globe} brandColor="#00AFC2" placeholder="קישור לאתר אישי" />
+                </div>
+              </section>
+
+              <section className="space-y-6 md:space-y-8">
+                <SectionHeader 
+                  icon={Sparkles} 
+                  title="פרופיל גלישה" 
+                  subtitle="Surfing Profile"
+                  colorClass="text-sky-600" 
+                  bgColorClass="bg-sky-100" 
+                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                  <div className="space-y-2 group">
+                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">משקל (ק"ג)</label>
+                    <input 
+                      type="number" 
+                      value={formData.weight || ''} 
+                      onChange={e => handleFieldChange('weight', Number(e.target.value))} 
+                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a]" 
+                    />
+                  </div>
+                  <div className="space-y-2 group">
+                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">גובה (ס"מ)</label>
+                    <input 
+                      type="number" 
+                      value={formData.height || ''} 
+                      onChange={e => handleFieldChange('height', Number(e.target.value))} 
+                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a]" 
+                    />
+                  </div>
+                  <div className="space-y-2 group">
+                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">רמת גלישה</label>
+                    <select 
+                      value={formData.surfingLevel || ''} 
+                      onChange={e => handleFieldChange('surfingLevel', e.target.value)}
+                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a] appearance-none"
+                    >
+                      <option value="">בחר רמת גלישה</option>
+                      <option value="Learner">לומד (Learner)</option>
+                      <option value="Beginner">מתחיל (Beginner)</option>
+                      <option value="Intermediate">בינוני (Intermediate)</option>
+                      <option value="Advanced">מתקדם (Advanced)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2 group">
+                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">רמת כושר</label>
+                    <select 
+                      value={formData.fitnessLevel || ''} 
+                      onChange={e => handleFieldChange('fitnessLevel', e.target.value)}
+                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a] appearance-none"
+                    >
+                      <option value="">בחר רמת כושר</option>
+                      <option value="Low">נמוכה (Low)</option>
+                      <option value="Average">ממוצעת (Average)</option>
+                      <option value="High">גבוהה (High)</option>
+                      <option value="Elite">עילית (Elite)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2 group">
+                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">נפח גלשן נוכחי (ליטר)</label>
+                    <input 
+                      type="number" 
+                      value={formData.currentBoardVolume || ''} 
+                      onChange={e => handleFieldChange('currentBoardVolume', Number(e.target.value))} 
+                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a]" 
+                    />
+                  </div>
+                  <div className="space-y-2 group">
+                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">אורך גלשן נוכחי (למשל "6'2)</label>
+                    <input 
+                      type="text" 
+                      value={formData.currentBoardLength || ''} 
+                      onChange={e => handleFieldChange('currentBoardLength', e.target.value)} 
+                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a]" 
+                    />
+                  </div>
                 </div>
               </section>
             </div>
