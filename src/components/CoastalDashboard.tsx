@@ -349,9 +349,9 @@ export const CoastalDashboard: React.FC = () => {
             <SyncIndicator isSynced={data.syncStatus?.uvIndex ?? true} />
             <div className="flex flex-col items-center gap-1 mb-4">
               <span className="text-4xl font-black text-slate-900 tracking-tighter">
-                {data.uvIndex.toFixed(1)}
+                {Math.round(data.uvIndex)}
               </span>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">אינדקס קרינה בזמן אמת</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">אינדקס קרינה מקסימלי להיום</span>
             </div>
             {advice && (
               <div className="flex items-center gap-2 text-center">

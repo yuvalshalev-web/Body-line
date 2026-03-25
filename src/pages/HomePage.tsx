@@ -238,7 +238,7 @@ const HomePage: React.FC = () => {
         <section className="relative w-full min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] rounded-3xl border border-white/10 shadow-2xl">
           <div className="absolute inset-0 bg-transparent rounded-3xl overflow-hidden">
             <img 
-              src={siteAssets.loginBg || siteAssets.heroBg || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Fimages%2Fbig-wedensday.jpg?alt=media"} 
+              src={siteAssets.heroBg || headerImage} 
               className="w-full h-full object-contain" 
               style={{ objectPosition: 'center 5%' }}
               alt="Hero"

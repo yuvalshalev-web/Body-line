@@ -271,50 +271,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }, 10000); // 10s timeout
 
       try {
-        console.log("Fetching coastal weather directly from Open-Meteo API...");
+        console.log("Fetching coastal weather from local API proxy...");
         
-        const lat = 32.16;
-        const lng = 34.84;
-        
-        // Fetch Marine data (Waves, Water Temp)
-        const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=wave_height,sea_surface_temperature&timezone=auto`;
-        // Fetch Forecast data (Wind, UV Index)
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
-
-        const [marineRes, weatherRes] = await Promise.all([
-          fetch(marineUrl, { signal: controller.signal }),
-          fetch(weatherUrl, { signal: controller.signal })
-        ]);
-
+        const response = await fetch('/api/coastal-weather', { signal: controller.signal });
         clearTimeout(timeoutId);
 
-        if (!marineRes.ok || !weatherRes.ok) {
-          console.error(`API Error: Marine ${marineRes.status}, Weather ${weatherRes.status}`);
+        if (!response.ok) {
+          console.error(`API Error: ${response.status}`);
           setIsLoading(false);
           return;
         }
 
-        const marineData = await marineRes.json();
-        const weatherData = await weatherRes.json();
-
-        const data = {
-          waterTemp: marineData?.current?.sea_surface_temperature || 20,
-          waveHeight: marineData?.current?.wave_height || 1,
-          wavePeriod: marineData?.current?.wave_period || 6,
-          windSpeed: weatherData?.current?.wind_speed_10m || 10,
-          windDirection: weatherData?.current?.wind_direction_10m || 0,
-          uvIndex: weatherData?.current?.uv_index || 0,
-          timestamp: new Date().toISOString(),
-          location: "חוף מרכז",
-          source: "Open-Meteo Direct",
-          syncStatus: {
-            waterTemp: true,
-            waveHeight: true,
-            wavePeriod: true,
-            wind: true,
-            uvIndex: true
-          }
-        };
+        const data = await response.json();
 
         console.log("DataContext - Coastal weather data received (Direct):", data);
         setCoastalWeather(data);

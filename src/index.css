@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700;900&family=Heebo:wght@300;400;600;700;900&family=Rubik:wght@300;400;600;700;900&family=Varela+Round&family=Secular+One&family=Roboto+Slab:wght@100..900&family=Permanent+Marker&family=Special+Elite&display=swap');
+@import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
 @layer utilities {
@@ -501,7 +501,7 @@ body .floating-slab-deep:hover {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1537519646099-ee2f9430ff3c?auto=format&fit=crop&w=1600&q=80') !important;
+  background-image: var(--bg-image) !important;
   background-size: cover !important;
   background-position: center 45% !important;
   background-repeat: no-repeat !important;

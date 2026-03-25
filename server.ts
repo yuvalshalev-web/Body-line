@@ -267,7 +267,7 @@ async function startServer() {
         wavePeriod: marineData?.current?.wave_period || 6,
         windSpeed: weatherData?.current?.wind_speed_10m || 10,
         windDirection: weatherData?.current?.wind_direction_10m || 0,
-        uvIndex: weatherData?.current?.uv_index || 0,
+        uvIndex: Math.round(weatherData?.current?.uv_index || 0),
         timestamp: new Date().toISOString(),
         location: "חוף מרכז",
         source: marineData && weatherData ? "Open-Meteo Real-time" : "Partial Real-time / Fallback",

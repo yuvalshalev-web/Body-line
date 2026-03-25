@@ -40,7 +40,7 @@ const MemberGradingPage: React.FC = () => {
             onClick={() => setSelectedMember(member)}
           >
             <img 
-              src={member.avatar || '/default-avatar.png'} 
+              src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.firstName + ' ' + member.lastName)}&background=00426a&color=fff`}
               alt={`${member.firstName} ${member.lastName}`}
               className="w-20 h-20 rounded-full mx-auto mb-3 object-cover"
               referrerPolicy="no-referrer"

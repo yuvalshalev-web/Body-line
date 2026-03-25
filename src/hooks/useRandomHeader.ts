@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 // Import all images from the headers directory
-const headerImages = import.meta.glob('../assets/headers/*.{jpg,jpeg,png}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
+const headerImages = import.meta.glob('../assets/headers/*.{jpg,jpeg,png}', { eager: true, query: 'url', import: 'default' }) as Record<string, string>;
 const headerUrls = Object.values(headerImages);
 
 export const useRandomHeader = () => {
