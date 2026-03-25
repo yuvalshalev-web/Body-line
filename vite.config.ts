@@ -4,7 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/',
+  // עדכון ה-base לשם הרפוזיטורי שלך כדי שהנכסים ייטענו נכון ב-Production
+  base: '/Body-line/', 
   plugins: [react(), tailwindcss()],
   server: {
     port: 3000,
