@@ -218,6 +218,7 @@ async function startServer() {
       
       console.log(`[${new Date().toISOString()}] [${requestId}] Fetching marine data from: ${marineUrl}`);
       console.log(`[${new Date().toISOString()}] [${requestId}] Fetching weather data from: ${weatherUrl}`);
+      console.log(`[${new Date().toISOString()}] [${requestId}] Fetch defined:`, typeof fetch !== 'undefined');
 
       const [marineRes, weatherRes] = await Promise.all([
         fetch(marineUrl).catch(err => {
