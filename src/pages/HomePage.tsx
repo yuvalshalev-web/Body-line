@@ -231,19 +231,36 @@ const HomePage: React.FC = () => {
 
   const brandColor = '#F1D179';
 
+  const heroBg = useMemo(() => {
+    const bg = (siteAssets?.heroBg && typeof siteAssets.heroBg === 'string' && siteAssets.heroBg.trim().length > 0) 
+      ? siteAssets.heroBg 
+      : headerImage;
+    console.log('HomePage Hero BG:', bg);
+    return bg;
+  }, [siteAssets?.heroBg, headerImage]);
+
   return (
     <div className="space-y-16 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
       {/* Hero & Attendees Group */}
       <div className="space-y-20 md:space-y-6">
-        <section className="relative w-full min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] rounded-3xl border border-white/10 shadow-2xl">
-          <div className="absolute inset-0 bg-transparent rounded-3xl overflow-hidden">
+        <section className="relative w-full min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] rounded-3xl border border-white/10 shadow-2xl bg-slate-900">
+          <div className="absolute inset-0 rounded-3xl overflow-hidden">
             <img 
-              src={siteAssets.heroBg || headerImage} 
-              className="w-full h-full object-contain" 
+              key={heroBg}
+              src={heroBg} 
+              className="w-full h-full object-cover" 
               style={{ objectPosition: 'center 5%' }}
               alt="Hero"
               loading="lazy"
+              onError={(e) => {
+                console.error('Hero image failed to load:', heroBg);
+                const target = e.target as HTMLImageElement;
+                if (headerImage && target.src !== headerImage) {
+                  target.src = headerImage;
+                }
+              }}
             />
+            <div className="absolute inset-0 bg-black/20" />
           </div>
           <div className="relative z-10 min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] flex flex-col items-center justify-between p-6 md:p-12 text-center">
              {/* Top Section: Quote & Title & Countdown */}
