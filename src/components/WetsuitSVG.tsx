@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Image as ImageIcon } from 'lucide-react';
 
-import wetsuit43 from '../assets/images/wetsuit-4-3.png';
-import wetsuit32 from '../assets/images/wetsuit-3-2.png';
-import wetsuit22 from '../assets/images/wetsuit-2-2.png';
-import wetsuit22ss from '../assets/images/wetsuit-2-2-ss.png';
-import sunShirt from '../assets/images/sun-shirt.png';
+import wetsuit43 from '/images/wetsuit-4-3.png';
+import wetsuit32 from '/images/wetsuit-3-2.png';
+import wetsuit22 from '/images/wetsuit-2-2.png';
+import wetsuit22ss from '/images/wetsuit-2-2-ss.png';
+import sunShirt from '/images/sun-shirt.png';
 
 interface WetsuitSVGProps {
   thickness?: '4/3' | '3/2' | '2/2' | '2/2-ss' | 'sun-shirt';
