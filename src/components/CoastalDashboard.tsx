@@ -24,6 +24,12 @@ import {
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 
+import wetsuit43 from '../assets/images/wetsuit-4-3.png';
+import wetsuit32 from '../assets/images/wetsuit-3-2.png';
+import wetsuit22 from '../assets/images/wetsuit-2-2.png';
+import wetsuit22ss from '../assets/images/wetsuit-2-2-ss.png';
+import sunShirt from '../assets/images/sun-shirt.png';
+
 export const CoastalDashboard: React.FC = () => {
   const { coastalWeather: data, seaStats: stats, isLoading: contextLoading } = useData();
   const { currentUser } = useAuth();
@@ -317,14 +323,14 @@ export const CoastalDashboard: React.FC = () => {
             {(() => {
               const waterTemp = data.waterTemp;
               let label = 'חליפה ארוכה (4/3)';
-              let imgSrc = '/images/wetsuit-4-3.png';
+              let imgSrc = wetsuit43;
               
-              if (waterTemp < 16) { label = 'חליפה ארוכה (4/3)'; imgSrc = '/images/wetsuit-4-3.png'; }
-              else if (waterTemp <= 19) { label = 'חליפה ארוכה (4/3)'; imgSrc = '/images/wetsuit-4-3.png'; }
-              else if (waterTemp <= 23) { label = 'מעבר (3/2)'; imgSrc = '/images/wetsuit-3-2.png'; }
-              else if (waterTemp <= 25) { label = 'קיץ ארוך (2/2)'; imgSrc = '/images/wetsuit-2-2.png'; }
-              else if (waterTemp <= 27) { label = 'קיץ קצר (2/2)'; imgSrc = '/images/wetsuit-2-2-ss.png'; }
-              else { label = 'חולצת לייקרה'; imgSrc = '/images/sun-shirt.png'; }
+              if (waterTemp < 16) { label = 'חליפה ארוכה (4/3)'; imgSrc = wetsuit43; }
+              else if (waterTemp <= 19) { label = 'חליפה ארוכה (4/3)'; imgSrc = wetsuit43; }
+              else if (waterTemp <= 23) { label = 'מעבר (3/2)'; imgSrc = wetsuit32; }
+              else if (waterTemp <= 25) { label = 'קיץ ארוך (2/2)'; imgSrc = wetsuit22; }
+              else if (waterTemp <= 27) { label = 'קיץ קצר (2/2)'; imgSrc = wetsuit22ss; }
+              else { label = 'חולצת לייקרה'; imgSrc = sunShirt; }
               
               return (
                 <div className="mt-4 flex items-center gap-2">

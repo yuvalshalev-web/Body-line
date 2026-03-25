@@ -3,12 +3,18 @@ import { motion } from 'motion/react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
 
+import starfishImg from '../../assets/images/starfish.png';
+import penguinImg from '../../assets/images/penguin.png';
+import mantaRayImg from '../../assets/images/manta_ray.png';
+import sharkImg from '../../assets/images/shark.png';
+import orcaImg from '../../assets/images/orca.png';
+
 const categories = [
-  { id: 'starfish', name: 'כוכב ים', image: '/images/starfish.jpg' },
-  { id: 'penguin', name: 'פינגווין', image: '/images/penguin.jpg' },
-  { id: 'manta_ray', name: 'מנטה ריי', image: '/images/manta_ray.png' },
-  { id: 'shark', name: 'כריש', image: '/images/shark.jpg' },
-  { id: 'orca', name: 'אורקה', image: '/images/orca.jpg' },
+  { id: 'starfish', name: 'כוכב ים', image: starfishImg },
+  { id: 'penguin', name: 'פינגווין', image: penguinImg },
+  { id: 'manta_ray', name: 'מנטה ריי', image: mantaRayImg },
+  { id: 'shark', name: 'כריש', image: sharkImg },
+  { id: 'orca', name: 'אורקה', image: orcaImg },
 ];
 
 const GamificationCategories: React.FC = () => {

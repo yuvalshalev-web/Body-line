@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Image as ImageIcon } from 'lucide-react';
 
+import wetsuit43 from '../assets/images/wetsuit-4-3.png';
+import wetsuit32 from '../assets/images/wetsuit-3-2.png';
+import wetsuit22 from '../assets/images/wetsuit-2-2.png';
+import wetsuit22ss from '../assets/images/wetsuit-2-2-ss.png';
+import sunShirt from '../assets/images/sun-shirt.png';
+
 interface WetsuitSVGProps {
   thickness?: '4/3' | '3/2' | '2/2' | '2/2-ss' | 'sun-shirt';
   alignBottom?: boolean;
@@ -15,7 +21,7 @@ const WetsuitSVG: React.FC<WetsuitSVGProps> = ({ thickness = '4/3', alignBottom 
     setImgError(false);
   }, [thickness]);
 
-  const imgSrc = thickness === '4/3' ? '/images/wetsuit-4-3.png' : thickness === '3/2' ? '/images/wetsuit-3-2.png' : thickness === '2/2' ? '/images/wetsuit-2-2.png' : thickness === '2/2-ss' ? '/images/wetsuit-2-2-ss.png' : '/images/sun-shirt.png';
+  const imgSrc = thickness === '4/3' ? wetsuit43 : thickness === '3/2' ? wetsuit32 : thickness === '2/2' ? wetsuit22 : thickness === '2/2-ss' ? wetsuit22ss : sunShirt;
 
   return (
     <div className={`flex ${alignBottom ? 'items-end' : 'items-center'} justify-center w-full h-full ${alignBottom ? 'p-0' : 'p-2'} bg-transparent`}>
