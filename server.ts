@@ -662,11 +662,6 @@ async function startServer() {
     res.sendFile(path.join(__dirname, "PROJECT_MAP.md"));
   });
 
-  // 404 handler for API routes to prevent falling through to SPA fallback
-  app.use("/api/*all", (req, res) => {
-    res.status(404).json({ error: `API route not found: ${req.originalUrl}` });
-  });
-
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     console.log("Initializing Vite server...");
@@ -682,6 +677,7 @@ async function startServer() {
     console.log("Vite server initialized and middleware added.");
   } else {
     // Serve static files with aggressive caching for better performance
+    app.use(express.static(path.join(__dirname, "public"), { maxAge: '1h' })); // Serve public assets directly
     app.use(express.static(path.join(__dirname, "dist"), {
       maxAge: '1y',
       setHeaders: (res, filePath) => {
@@ -691,6 +687,10 @@ async function startServer() {
       }
     }));
     app.get("*all", (req, res) => {
+      // Check if it's an API request that missed
+      if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: "API route not found" });
+      }
       res.sendFile(path.join(__dirname, "dist", "index.html"));
     });
   }
