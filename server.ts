@@ -162,8 +162,6 @@ async function startServer() {
     res.json({ status: "test ok" });
   });
 
-  // ... (rest of API routes remain the same, just ensuring they are before static/vite)
-
   app.get("/api/ocean-data", async (req, res) => {
     try {
       const lat = 32.16;
@@ -685,11 +683,8 @@ async function startServer() {
     // Serve static files in PRODUCTION mode
     console.log("Serving static files in PRODUCTION mode...");
     const distPath = path.join(__dirname, "dist");
-    const publicPath = path.join(__dirname, "public");
     
-    // Serve public assets first (for things like /assets/headers/header_1.jpeg)
-    app.use(express.static(publicPath, { maxAge: '1h' }));
-    // Serve built assets from dist
+    // Serve built assets from dist (which includes public assets)
     app.use(express.static(distPath, { maxAge: '1y' }));
     
     // SPA Fallback - ONLY for non-API routes
