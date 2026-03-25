@@ -334,7 +334,7 @@ export const CoastalDashboard: React.FC = () => {
               
               return (
                 <div className="mt-4 flex items-center gap-2">
-                  <img src={imgSrc} alt={label} className="w-8 h-8 object-contain drop-shadow-md" />
+                  <img src={imgSrc} alt={label} className="w-8 h-8 object-contain drop-shadow-md" loading="lazy" />
                   <span className="text-xs font-bold text-slate-800">{label}</span>
                 </div>
               );

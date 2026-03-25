@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import compression from "compression";
 import { GoogleGenAI } from "@google/genai";
 import { createServer as createViteServer } from "vite";
 import path from "path";
@@ -14,6 +15,7 @@ async function startServer() {
   const PORT = 3000;
 
   // Basic middleware
+  app.use(compression()); // Enable gzip/brotli compression for faster load times
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
@@ -678,7 +680,15 @@ async function startServer() {
     app.use(vite.middlewares);
     console.log("Vite server initialized and middleware added.");
   } else {
-    app.use(express.static(path.join(__dirname, "dist")));
+    // Serve static files with aggressive caching for better performance
+    app.use(express.static(path.join(__dirname, "dist"), {
+      maxAge: '1y',
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache'); // Always revalidate HTML
+        }
+      }
+    }));
     app.get("*all", (req, res) => {
       res.sendFile(path.join(__dirname, "dist", "index.html"));
     });
