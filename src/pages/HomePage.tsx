@@ -33,7 +33,7 @@ import { getForecastAnalysis } from '../services/geminiService';
 import Markdown from 'react-markdown';
 
 import { useRandomHeader } from '../hooks/useRandomHeader';
-const staticHeroImage = 'https://images.unsplash.com/photo-1502680399488-2a6574c5037e?auto=format&fit=crop&q=80&w=1920';
+const staticHeroImage = '/assets/headers/header_1.jpeg';
 // import staticHeroImage from '../assets/headers/header_1.jpeg';
 
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
@@ -251,6 +251,7 @@ const HomePage: React.FC = () => {
                 style={{ objectPosition: 'center 0%' }}
                 alt="Hero"
                 loading="lazy"
+                referrerPolicy="no-referrer"
                 onError={(e) => {
                   console.error('Hero image failed to load, falling back to Elite Alabaster background:', heroBg);
                   setHeroImageError(true);
