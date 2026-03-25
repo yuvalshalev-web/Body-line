@@ -5,10 +5,17 @@ import { parseDate } from '../utils/dateUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Lock, CheckCircle2, Star, Info, Waves, HelpCircle, X } from 'lucide-react';
 
+import starfishImg from '../assets/images/starfish.png';
+import penguinImg from '../assets/images/penguin.png';
+import mantaRayImg from '../assets/images/manta_ray.png';
+import sharkImg from '../assets/images/shark.png';
+import orcaImg from '../assets/images/orca.png';
+import corkImg from '../assets/images/cork.jpeg';
+
 const milestones = [
   { 
     id: 'starfish', 
-    src: `${import.meta.env.BASE_URL}images/starfish.png`, 
+    src: starfishImg, 
     alt: 'Starfish', 
     name: 'כוכב ים', 
     desc: 'הצעד הראשון שלך במים. ברוך הבא לקהילה!',
@@ -17,7 +24,7 @@ const milestones = [
   },
   { 
     id: 'penguin', 
-    src: `${import.meta.env.BASE_URL}images/penguin.png`, 
+    src: penguinImg, 
     alt: 'Penguin', 
     name: 'פינגווין', 
     desc: 'לוחם חורף אמיתי. המים הקרים הם הבית שלך.',
@@ -26,7 +33,7 @@ const milestones = [
   },
   { 
     id: 'manta_ray', 
-    src: `${import.meta.env.BASE_URL}images/manta_ray.png`, 
+    src: mantaRayImg, 
     alt: 'Manta Ray', 
     name: 'מנטה ריי', 
     desc: 'שורד את חום הקיץ עם חיוך. אנרגיה טהורה.',
@@ -35,7 +42,7 @@ const milestones = [
   },
   { 
     id: 'shark', 
-    src: `${import.meta.env.BASE_URL}images/shark.png`, 
+    src: sharkImg, 
     alt: 'Shark', 
     name: 'כריש', 
     desc: 'טורף עקביות. אתה מגיע לכל סשן, בכל מצב.',
@@ -44,7 +51,7 @@ const milestones = [
   },
   { 
     id: 'orca', 
-    src: `${import.meta.env.BASE_URL}images/orca.png`, 
+    src: orcaImg, 
     alt: 'Orca', 
     name: 'אורקה', 
     desc: 'מאסטר חוף הבית. השלמת את כל האתגרים!',
@@ -309,7 +316,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
         backgroundColor: '#b87e4a',
         backgroundImage: `
           radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.5) 100%),
-          url("${import.meta.env.BASE_URL}cork%20/cork.jpg")
+          url("${corkImg}")
         `,
         backgroundSize: '100%, cover',
         backgroundPosition: 'center, center',
