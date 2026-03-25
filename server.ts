@@ -150,13 +150,19 @@ async function startServer() {
     next();
   });
 
+  const isProd = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+  console.log(`Server mode: ${isProd ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+
+  // API routes FIRST - explicitly defined before any static/vite middleware
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
+    res.json({ status: "ok", mode: isProd ? 'production' : 'development' });
   });
 
-  app.get("/api/test-weather", async (req, res) => {
+  app.get("/api/test-weather", (req, res) => {
     res.json({ status: "test ok" });
   });
+
+  // ... (rest of API routes remain the same, just ensuring they are before static/vite)
 
   app.get("/api/ocean-data", async (req, res) => {
     try {
@@ -663,8 +669,8 @@ async function startServer() {
   });
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    console.log("Initializing Vite server...");
+  if (!isProd) {
+    console.log("Initializing Vite server in DEVELOPMENT mode...");
     const vite = await createViteServer({
       server: { 
         middlewareMode: true,
@@ -674,24 +680,24 @@ async function startServer() {
       root: process.cwd(),
     });
     app.use(vite.middlewares);
-    console.log("Vite server initialized and middleware added.");
+    console.log("Vite server initialized.");
   } else {
-    // Serve static files with aggressive caching for better performance
-    app.use(express.static(path.join(__dirname, "public"), { maxAge: '1h' })); // Serve public assets directly
-    app.use(express.static(path.join(__dirname, "dist"), {
-      maxAge: '1y',
-      setHeaders: (res, filePath) => {
-        if (filePath.endsWith('.html')) {
-          res.setHeader('Cache-Control', 'no-cache'); // Always revalidate HTML
-        }
-      }
-    }));
+    // Serve static files in PRODUCTION mode
+    console.log("Serving static files in PRODUCTION mode...");
+    const distPath = path.join(__dirname, "dist");
+    const publicPath = path.join(__dirname, "public");
+    
+    // Serve public assets first (for things like /assets/headers/header_1.jpeg)
+    app.use(express.static(publicPath, { maxAge: '1h' }));
+    // Serve built assets from dist
+    app.use(express.static(distPath, { maxAge: '1y' }));
+    
+    // SPA Fallback - ONLY for non-API routes
     app.get("*all", (req, res) => {
-      // Check if it's an API request that missed
       if (req.path.startsWith('/api')) {
         return res.status(404).json({ error: "API route not found" });
       }
-      res.sendFile(path.join(__dirname, "dist", "index.html"));
+      res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
