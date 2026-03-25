@@ -651,6 +651,14 @@ async function startServer() {
     }
   });
 
+  // Serve markdown files from root for admin panel
+  app.get("/README.md", (req, res) => {
+    res.sendFile(path.join(__dirname, "README.md"));
+  });
+  app.get("/PROJECT_MAP.md", (req, res) => {
+    res.sendFile(path.join(__dirname, "PROJECT_MAP.md"));
+  });
+
   // 404 handler for API routes to prevent falling through to SPA fallback
   app.use("/api/*all", (req, res) => {
     res.status(404).json({ error: `API route not found: ${req.originalUrl}` });
