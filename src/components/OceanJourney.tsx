@@ -5,18 +5,12 @@ import { parseDate } from '../utils/dateUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Lock, CheckCircle2, Star, Info, Waves, HelpCircle, X } from 'lucide-react';
 
-// import starfishImg from '../assets/images/starfish.png';
-const starfishImg = '/assets/images/starfish.png';
-// import penguinImg from '../assets/images/penguin.png';
-const penguinImg = '/assets/images/penguin.png';
-// import mantaRayImg from '../assets/images/manta_ray.png';
-const mantaRayImg = '/assets/images/manta_ray.png';
-// import sharkImg from '../assets/images/shark.png';
-const sharkImg = '/assets/images/shark.png';
-// import orcaImg from '../assets/images/orca.png';
-const orcaImg = '/assets/images/orca.png';
-// import corkImg from '../assets/images/cork_asset.jpg';
-const corkImg = '/assets/images/cork_asset.jpg';
+import starfishImg from '../assets/images/starfish.png';
+import penguinImg from '../assets/images/penguin.png';
+import mantaRayImg from '../assets/images/manta_ray.png';
+import sharkImg from '../assets/images/shark.png';
+import orcaImg from '../assets/images/orca.png';
+import corkImg from '../assets/images/cork_asset.jpg';
 
 const milestones = [
   { 

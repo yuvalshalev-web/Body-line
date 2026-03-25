@@ -2,16 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Image as ImageIcon } from 'lucide-react';
 
-// import wetsuit43 from '../assets/images/wetsuit-4-3.png';
-const wetsuit43 = '/assets/images/wetsuit-4-3.png';
-// import wetsuit32 from '../assets/images/wetsuit-3-2.png';
-const wetsuit32 = '/assets/images/wetsuit-3-2.png';
-// import wetsuit22 from '../assets/images/wetsuit-2-2.png';
-const wetsuit22 = '/assets/images/wetsuit-2-2.png';
-// import wetsuit22ss from '../assets/images/wetsuit-2-2-ss.png';
-const wetsuit22ss = '/assets/images/wetsuit-2-2-ss.png';
-// import sunShirt from '../assets/images/sun-shirt.png';
-const sunShirt = '/assets/images/sun-shirt.png';
+import wetsuit43 from '../assets/images/wetsuit-4-3.png';
+import wetsuit32 from '../assets/images/wetsuit-3-2.png';
+import wetsuit22 from '../assets/images/wetsuit-2-2.png';
+import wetsuit22ss from '../assets/images/wetsuit-2-2-ss.png';
+import sunShirt from '../assets/images/sun-shirt.png';
 
 interface WetsuitSVGProps {
   thickness?: '4/3' | '3/2' | '2/2' | '2/2-ss' | 'sun-shirt';
@@ -54,7 +49,7 @@ const WetsuitSVG: React.FC<WetsuitSVGProps> = ({ thickness = '4/3', alignBottom 
               תמונת החליפה חסרה<br/>
               <span className="text-xs mt-2 block opacity-70">
                 יש להעלות את התמונה לתיקיית<br/>
-                <code className="bg-black/5 px-2 py-1 rounded mt-1 inline-block" dir="ltr">/assets/images/wetsuit-{thickness.replace('/', '-')}.png</code>
+                <code className="bg-black/5 px-2 py-1 rounded mt-1 inline-block" dir="ltr">src/assets/images/wetsuit-{thickness.replace('/', '-')}.png</code>
               </span>
             </p>
           </div>
