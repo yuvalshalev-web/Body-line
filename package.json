@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build --base=/Body-line/",
+    "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
     "start": "node server.ts"
