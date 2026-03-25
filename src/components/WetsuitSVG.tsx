@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Image as ImageIcon } from 'lucide-react';
 
-const wetsuit43 = '/assets/images/wetsuit-4-3.png';
-const wetsuit32 = '/assets/images/wetsuit-3-2.png';
-const wetsuit22 = '/assets/images/wetsuit-2-2.png';
-const wetsuit22ss = '/assets/images/wetsuit-2-2-ss.png';
-const sunShirt = '/assets/images/sun-shirt.png';
+const wetsuit43 = '';
+const wetsuit32 = '';
+const wetsuit22 = '';
+const wetsuit22ss = '';
+const sunShirt = '';
 
 interface WetsuitSVGProps {
   thickness?: '4/3' | '3/2' | '2/2' | '2/2-ss' | 'sun-shirt';

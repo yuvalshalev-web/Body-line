@@ -33,7 +33,7 @@ import { getForecastAnalysis } from '../services/geminiService';
 import Markdown from 'react-markdown';
 
 import { useRandomHeader } from '../hooks/useRandomHeader';
-const staticHeroImage = '/assets/headers/header_1.jpeg';
+const staticHeroImage = 'https://images.unsplash.com/photo-1502680399488-2a6574c5037e?auto=format&fit=crop&q=80&w=1920';
 // import staticHeroImage from '../assets/headers/header_1.jpeg';
 
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
