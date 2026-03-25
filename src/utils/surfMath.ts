@@ -102,7 +102,7 @@ export const calculateSurferFormula = (
     }
   }
 
-  const volume = Math.round(weight * volMultiplier * fitnessModifier * 10) / 10;
+  const volume = Math.ceil(weight * volMultiplier * fitnessModifier);
   let lengthCm = heightCm + lengthOffset;
   let lengthInches = lengthCm / 2.54;
   

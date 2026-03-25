@@ -176,7 +176,7 @@ export const SurfboardCalculator: React.FC<SurfboardCalculatorProps> = ({ formDa
                   animate={{ scale: 1, opacity: 1 }}
                 >
                   <div className="flex items-baseline justify-center gap-1 text-[var(--surfer-cyan)] drop-shadow-[0_0_10px_rgba(61,187,211,0.5)]">
-                    <span className="text-5xl font-black tracking-tighter">{recommendedVolume.toFixed(1)}</span>
+                    <span className="text-5xl font-black tracking-tighter">{Math.ceil(recommendedVolume)}</span>
                     <span className="text-xl font-bold">L</span>
                   </div>
                 </motion.div>

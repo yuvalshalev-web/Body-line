@@ -258,7 +258,7 @@ const AdminHelpPage = () => {
 
       {/* התאמה אישית לפי מדדי גוף, רמת גלישה ומצב הים */}
       <section>
-        <h2 className="text-2xl font-black text-[#00426a] mb-6 border-b-2 border-[#00426a]/10 pb-2">🌊 התאמה אישית לפי מדדי גוף, רמת גלישה ומצב הים</h2>
+        <h2 className="text-2xl font-black text-[#00426a] mb-6 border-b-2 border-[#00426a]/10 pb-2">✨ התאמה אישית לפי מדדי גוף, רמת גלישה ומצב הים</h2>
         <div className="admin-info-card p-8 rounded-3xl border border-white/20">
           <p className="text-[#00426a] mb-6 font-bold text-lg">אלגוריתם ההמלצה היומית מבצע אופטימיזציה בזמן אמת בין נתוני הגולש לתנאי הים המשתנים.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

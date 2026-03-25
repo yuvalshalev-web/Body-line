@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Waves, AlertTriangle, CheckCircle2, Info, Compass, Save, Loader2 } from 'lucide-react';
+import { Sparkles, AlertTriangle, CheckCircle2, Info, Compass, Save, Loader2 } from 'lucide-react';
 import WetsuitSVG from './WetsuitSVG';
 import { SurfboardOverlay } from './SurfboardOverlay';
 import { Member } from '../types';
@@ -168,7 +168,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
 
       <div className="flex items-center gap-4 mb-8 relative z-10">
         <div className="p-3 bg-[#007085]/10 rounded-2xl border border-[#007085]/20 shadow-[0_0_15px_rgba(0,112,133,0.1)]">
-          <Waves className="text-[#007085]" size={24} />
+          <Sparkles className="text-[#007085]" size={24} />
         </div>
         <div>
           <h3 className="text-2xl font-black text-[#002b44] tracking-tight">התאמה אישית לפי מדדי גוף, רמת גלישה ומצב הים</h3>
@@ -194,7 +194,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                     <div className="flex justify-center md:justify-start gap-6 mb-4">
                       <div>
                         <p className="text-[10px] text-[#007085] uppercase tracking-widest mb-1">נפח מומלץ</p>
-                        <p className="text-2xl font-black text-[#002b44]">{recVol.toFixed(1)}<span className="text-sm text-[#007085] ml-1">L</span></p>
+                        <p className="text-2xl font-black text-[#002b44]">{Math.ceil(recVol)}<span className="text-sm text-[#007085] ml-1">L</span></p>
                       </div>
                       <div>
                         <p className="text-[10px] text-[#007085] uppercase tracking-widest mb-1">אורך מומלץ</p>
