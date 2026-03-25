@@ -10,7 +10,7 @@ import penguinImg from '../assets/images/penguin.png';
 import mantaRayImg from '../assets/images/manta_ray.png';
 import sharkImg from '../assets/images/shark.png';
 import orcaImg from '../assets/images/orca.png';
-import corkImg from '../assets/images/cork.jpeg';
+import corkImg from '../assets/images/cork_asset.jpg';
 
 const milestones = [
   { 
