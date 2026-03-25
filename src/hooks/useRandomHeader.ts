@@ -1,18 +1,7 @@
 import { useState, useEffect } from 'react';
 
 // Hardcoded list of headers from the public directory for absolute consistency
-const headerUrls = [
-  '/assets/headers/header_2.jpeg',
-  '/assets/headers/header_3.jpeg',
-  '/assets/headers/header_4.jpg',
-  '/assets/headers/header_5.jpg',
-  '/assets/headers/header_6.jpg',
-  '/assets/headers/header_7.jpg',
-  '/assets/headers/header_8.jpeg',
-  '/assets/headers/header_9.jpeg',
-  '/assets/headers/header_10.jpeg',
-  '/assets/headers/header_11.jpg',
-];
+const headerUrls: string[] = [];
 
 console.log('Header URLs defined (excluding static hero):', headerUrls.length);
 
