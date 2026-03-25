@@ -83,7 +83,7 @@ const LoginPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const headerImage = useRandomHeader();
-  const currentBg = siteAssets?.loginBg || siteAssets?.heroBg || headerImage;
+  const currentBg = siteAssets?.loginBg || headerImage;
   const logoUrl = siteAssets?.habalZugLogo;
 
   // @ai-preserve

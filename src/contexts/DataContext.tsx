@@ -273,7 +273,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         console.log("Fetching coastal weather from local API proxy...");
         
-        const response = await fetch('/api/coastal-weather', { signal: controller.signal });
+        const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? '/api/coastal-weather'
+          : `${window.location.origin}/api/coastal-weather`;
+        
+        const response = await fetch(apiUrl, { signal: controller.signal });
         clearTimeout(timeoutId);
 
         if (!response.ok) {

@@ -33,6 +33,7 @@ import { getForecastAnalysis } from '../services/geminiService';
 import Markdown from 'react-markdown';
 
 import { useRandomHeader } from '../hooks/useRandomHeader';
+import staticHeroImage from '../assets/headers/header_1.jpeg';
 
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -47,6 +48,8 @@ const HomePage: React.FC = () => {
   const { 
     members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats
   } = useData();
+
+  const [heroImageError, setHeroImageError] = useState(false);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAttendees, setShowAttendees] = useState(false);
@@ -231,46 +234,42 @@ const HomePage: React.FC = () => {
 
   const brandColor = '#F1D179';
 
-  const heroBg = useMemo(() => {
-    const bg = (siteAssets?.heroBg && typeof siteAssets.heroBg === 'string' && siteAssets.heroBg.trim().length > 0) 
-      ? siteAssets.heroBg 
-      : headerImage;
-    console.log('HomePage Hero BG:', bg);
-    return bg;
-  }, [siteAssets?.heroBg, headerImage]);
+  const heroBg = staticHeroImage;
 
   return (
     <div className="space-y-16 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
       {/* Hero & Attendees Group */}
       <div className="space-y-20 md:space-y-6">
-        <section className="relative w-full min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] rounded-3xl border border-white/10 shadow-2xl bg-slate-900">
-          <div className="absolute inset-0 rounded-3xl overflow-hidden">
-            <img 
-              key={heroBg}
-              src={heroBg} 
-              className="w-full h-full object-cover" 
-              style={{ objectPosition: 'center 5%' }}
-              alt="Hero"
-              loading="lazy"
-              onError={(e) => {
-                console.error('Hero image failed to load:', heroBg);
-                const target = e.target as HTMLImageElement;
-                if (headerImage && target.src !== headerImage) {
-                  target.src = headerImage;
-                }
-              }}
-            />
+        <section className="relative w-full min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+          <div className={`absolute inset-0 rounded-3xl overflow-hidden ${heroImageError ? 'luxury-bg' : ''}`}>
+            {!heroImageError && (
+              <img 
+                key={heroBg}
+                src={heroBg} 
+                className="w-full h-full object-cover scale-[1.25] md:scale-[1.15] origin-top" 
+                style={{ objectPosition: 'center 0%' }}
+                alt="Hero"
+                loading="lazy"
+                onError={(e) => {
+                  console.error('Hero image failed to load, falling back to Elite Alabaster background:', heroBg);
+                  setHeroImageError(true);
+                }}
+              />
+            )}
             <div className="absolute inset-0 bg-black/20" />
           </div>
           <div className="relative z-10 min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] flex flex-col items-center justify-between p-6 md:p-12 text-center">
-             {/* Top Section: Quote & Title & Countdown */}
+             {/* Top Section: Quote */}
              <div className="w-full pt-4 md:pt-8 flex flex-col items-center">
                <p className="text-white font-semibold italic text-sm md:text-2xl max-w-2xl mx-auto tracking-[0.08em] leading-relaxed mb-6 md:mb-10 drop-shadow-lg">
                  "A day will come that is like no other... and nothing that happens after will ever be the same."
                </p>
+             </div>
+             
+             {/* Lower Third Section: Title & Countdown */}
+             <div className="w-full flex flex-col items-center pb-12 md:pb-20 relative z-20 mt-auto">
                <h1 className="text-[var(--surfer-yellow)] big-thursday-title" data-text="יום חמישי הגדול">יום חמישי הגדול</h1>
                
-               {/* Countdown moved here for fixed positioning relative to title */}
                <div className="mt-8 md:mt-12 space-y-4 flex flex-col items-center">
                  <p className="text-base md:text-xl font-bold text-white drop-shadow-md">נכנסים למים בעוד...</p>
                  <div className="flex gap-2 md:gap-4 text-white font-black" dir="ltr">
@@ -289,36 +288,29 @@ const HomePage: React.FC = () => {
                </div>
              </div>
              
-             {/* Middle Section: Hotspot */}
-             <div className="w-full flex flex-col items-center py-8 md:py-12 flex-1 justify-center">
-               {/* Surfer Action Hotspot - Absolute positioned in CSS */}
-               <div className="surfer-hotspot-container">
-                 <button 
-                   onClick={handleToggle}
-                   disabled={isProcessing}
-                   className="surfer-hotspot"
-                   aria-label={isUserAttending ? "בטל הגעה" : "אני מגיע/ה"}
-                 >
-                   <div className="pulse-halo"></div>
-                   {isProcessing ? (
-                     <Loader2 className="animate-spin text-white/50" size={32} />
-                   ) : (
-                      null
-                   )}
-                 </button>
-                 <motion.span 
-                   className="secondary-label w-max mt-6"
-                   style={{ color: isUserAttending ? '#FF2D60' : '#A2FF00' }}
-                   animate={{ opacity: [1, 0.4, 1], scale: [1, 1.02, 1] }}
-                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                 >
-                   {isUserAttending ? 'לחץ על הגולש לביטול הגעה' : 'לחץ על הגולש לאישור הגעה'}
-                 </motion.span>
-               </div>
-
-
-
-
+             {/* Hotspot */}
+             <div className="surfer-hotspot-container">
+               <button 
+                 onClick={handleToggle}
+                 disabled={isProcessing}
+                 className="surfer-hotspot"
+                 aria-label={isUserAttending ? "בטל הגעה" : "אני מגיע/ה"}
+               >
+                 <div className="pulse-halo"></div>
+                 {isProcessing ? (
+                   <Loader2 className="animate-spin text-white/50" size={32} />
+                 ) : (
+                    null
+                 )}
+               </button>
+               <motion.span 
+                 className="secondary-label w-max mt-6"
+                 style={{ color: isUserAttending ? '#FF2D60' : '#A2FF00' }}
+                 animate={{ opacity: [1, 0.4, 1], scale: [1, 1.02, 1] }}
+                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+               >
+                 {isUserAttending ? 'לחץ על הגולש לביטול הגעה' : 'לחץ על הגולש לאישור הגעה'}
+               </motion.span>
              </div>
           </div>
         </section>
@@ -326,9 +318,7 @@ const HomePage: React.FC = () => {
         {/* Confirmed Members Bar - Positioned below Hero, above AstroDecks */}
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
           <div className="home-glass-card p-6 md:p-10 flex flex-col items-center justify-center gap-8 overflow-hidden relative">
-            {/* Decorative background glows - enhanced for Glassmorphism */}
-            <div className="absolute left-1/4 top-0 w-64 h-64 bg-cyan-500/5 blur-[120px] pointer-events-none" />
-            <div className="absolute right-1/4 bottom-0 w-64 h-64 bg-amber-500/5 blur-[120px] pointer-events-none" />
+            {/* Decorative background glows removed per user request */}
 
             <div className="flex flex-col items-center gap-6 relative z-10 w-full">
               {/* Centered Avatars */}
