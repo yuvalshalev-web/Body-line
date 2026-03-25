@@ -33,7 +33,8 @@ import { getForecastAnalysis } from '../services/geminiService';
 import Markdown from 'react-markdown';
 
 import { useRandomHeader } from '../hooks/useRandomHeader';
-import staticHeroImage from '../assets/headers/header_1.jpeg';
+// import staticHeroImage from '../assets/headers/header_1.jpeg';
+const staticHeroImage = '/assets/headers/header_1.jpeg';
 
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>

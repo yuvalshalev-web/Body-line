@@ -3,11 +3,16 @@ import { motion } from 'motion/react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
 
-import starfishImg from '../../assets/images/starfish.png';
-import penguinImg from '../../assets/images/penguin.png';
-import mantaRayImg from '../../assets/images/manta_ray.png';
-import sharkImg from '../../assets/images/shark.png';
-import orcaImg from '../../assets/images/orca.png';
+// import starfishImg from '../../assets/images/starfish.png';
+const starfishImg = '/assets/images/starfish.png';
+// import penguinImg from '../../assets/images/penguin.png';
+const penguinImg = '/assets/images/penguin.png';
+// import mantaRayImg from '../../assets/images/manta_ray.png';
+const mantaRayImg = '/assets/images/manta_ray.png';
+// import sharkImg from '../../assets/images/shark.png';
+const sharkImg = '/assets/images/shark.png';
+// import orcaImg from '../../assets/images/orca.png';
+const orcaImg = '/assets/images/orca.png';
 
 const categories = [
   { id: 'starfish', name: 'כוכב ים', image: starfishImg },
