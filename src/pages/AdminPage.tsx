@@ -599,30 +599,30 @@ const AdminPage: React.FC = () => {
   return (
     <div className="relative min-h-screen luxury-bg text-right space-y-12 pb-20 pt-8" dir="rtl">
       <div className="max-w-7xl mx-auto">
-        {/* Body-line Standard Header Stack */}
-        <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
-          <div className="header-content-wrapper relative z-20">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
-              <Settings size={40} />
+        {/* Combined Header Unit with Integrated Nav - Boxed Inset */}
+        <div className="bg-white/50 backdrop-blur-sm rounded-[2.5rem] p-6 mb-12 shadow-sm border border-white/20">
+          <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10 rounded-[2rem]" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+            <div className="header-content-wrapper relative z-20">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
+                <Settings size={40} />
+              </div>
+              <h1 className="main-page-title">
+                <span className="surfer-title">פאנל ניהול</span>
+              </h1>
+              <p className="header-subtitle max-w-2xl mx-auto">
+                ניהול משתמשים, בקשות הצטרפות והגדרות מערכת מתקדמות 🛡️
+              </p>
             </div>
-            <h1 className="main-page-title">
-              <span className="surfer-title">פאנל ניהול</span>
-            </h1>
-            <p className="header-subtitle max-w-2xl mx-auto">
-              ניהול משתמשים, בקשות הצטרפות והגדרות מערכת מתקדמות 🛡️
-            </p>
           </div>
-        </div>
 
-        <div className="flex flex-col gap-12 items-start">
-          {/* Top Navigation - Glass Style like AdminInfoPage */}
-          <div className="w-full mb-8">
+          <div className="w-full">
             <GlassNavigationBar 
               items={adminTabs}
               activeId={activeTab}
               onChange={handleTabChange}
             />
           </div>
+        </div>
 
           {/* Main Content Area */}
           <div className="flex-1 min-w-0 w-full">
@@ -2676,7 +2676,6 @@ const AdminPage: React.FC = () => {
         filePath={markdownConfig.path}
         title={markdownConfig.title}
       />
-    </div>
     </div>
     </div>
     </div>

@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 
 async function startServer() {
   console.log("Starting server...");
+  console.log("NODE_ENV:", process.env.NODE_ENV);
   const app = express();
   const PORT = 3000;
 

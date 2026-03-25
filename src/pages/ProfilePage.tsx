@@ -113,7 +113,7 @@ const SectionHeader = React.memo(({ icon: Icon, title, subtitle, colorClass, bgC
 ));
 
 const ProfileHeader = React.memo(({ headerImage, isDirty }: { headerImage: string, isDirty: boolean }) => (
-  <div className="surfboard-hero-container mb-4 md:mb-2 space-y-2 header-wallpaper py-8 md:py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+  <div className="surfboard-hero-container mb-0 space-y-2 header-wallpaper !py-12 pb-24" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
     <div className="header-content-wrapper relative z-20 px-4">
       <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
         <User size={32} className="md:w-10 md:h-10" />
@@ -510,7 +510,7 @@ const ProfilePage: React.FC = () => {
       {/* Body-line Standard Header Stack */}
       <ProfileHeader headerImage={headerImage} isDirty={isDirty} />
 
-      <div className="rounded-[3.5rem] overflow-hidden relative shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)]">
+      <div className="relative z-30 -mt-16 mx-4 md:mx-0 rounded-[3.5rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)]">
         <form onSubmit={handleSubmit} className="px-6 md:px-16 pb-20 md:pb-24 tangible-surfer-card !bg-white/60 border-none relative z-20 overflow-hidden">
           {/* Decorative background elements - reduced blur and opacity */}
           <div className="absolute top-0 right-0 w-[25rem] md:w-[30rem] h-[25rem] md:h-[30rem] bg-sky-200/5 blur-[50px] md:blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />

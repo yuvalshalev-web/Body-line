@@ -157,9 +157,9 @@ const GalleryPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-right animate-in fade-in duration-700" dir="rtl" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+    <div className="min-h-screen bg-transparent text-right animate-in fade-in duration-700 pb-20" dir="rtl" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
       {/* Body-line Standard Header Stack */}
-      <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+      <div className="surfboard-hero-container mb-0 space-y-2 header-wallpaper !py-12 pb-24" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
         <div className="header-content-wrapper relative z-20">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
             <ImageIcon size={40} />
@@ -185,7 +185,8 @@ const GalleryPage: React.FC = () => {
         </div>
       </div>
 
-      {isUploading && (
+      <div className="relative z-30 -mt-16 mx-4 md:mx-8">
+        {isUploading && (
         <div className={`mb-12 bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_15px_30px_-10px_var(--surfer-deep-shadow),inset_0_0_15px_var(--surfer-aqua-mist)] rounded-2xl p-8 animate-in slide-in-from-top-4 ${errorMsg ? 'border-rose-500' : ''}`}>
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
@@ -219,7 +220,7 @@ const GalleryPage: React.FC = () => {
           >
             <img 
               src={item.imageUrl} 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 scale-[0.7]" 
               alt={item.uploaderName} 
               loading="lazy" 
             />
@@ -275,6 +276,7 @@ const GalleryPage: React.FC = () => {
            </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

@@ -57,29 +57,30 @@ const AdminInfoPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 font-yehuda" dir="rtl">
-      {/* Header */}
-      <div className="surfboard-hero-container mb-8 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
-        <div className="header-content-wrapper relative z-20">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
-            <TrendingUp size={40} />
+      {/* Combined Header Unit with Integrated Nav - Boxed Inset */}
+      <div className="bg-white/50 backdrop-blur-sm rounded-[2.5rem] p-6 mb-12 shadow-sm border border-white/20">
+        <div className="surfboard-hero-container mb-6 header-wallpaper !py-10 rounded-[2rem]" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+          <div className="header-content-wrapper relative z-20">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
+              <TrendingUp size={40} />
+            </div>
+            <h1 className="main-page-title">
+              <span className="surfer-title">דופק הקהילה</span>
+            </h1>
+            <p className="header-subtitle max-w-2xl mx-auto">
+              ניטור בזמן אמת של פעילות הקהילה והמערכת 📈
+            </p>
           </div>
-          <h1 className="main-page-title">
-            <span className="surfer-title">דופק הקהילה</span>
-          </h1>
-          <p className="header-subtitle max-w-2xl mx-auto">
-            ניטור בזמן אמת של פעילות הקהילה והמערכת 📈
-          </p>
         </div>
-      </div>
 
-      {/* Tab Navigation */}
-      <div className="mb-16">
-        <GlassNavigationBar 
-          items={tabs}
-          activeId={activeTab}
-          onChange={(id) => setActiveTab(id as Tab)}
-          theme="sunset"
-        />
+        <div className="w-full">
+          <GlassNavigationBar 
+            items={tabs}
+            activeId={activeTab}
+            onChange={(id) => setActiveTab(id as Tab)}
+            theme="sunset"
+          />
+        </div>
       </div>
 
       {/* Content Area */}

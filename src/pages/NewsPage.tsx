@@ -11,9 +11,9 @@ const NewsPage: React.FC = () => {
   const sortedNews = [...news].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4" dir="rtl">
+    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 pb-20" dir="rtl">
       {/* Body-line Standard Header Stack */}
-      <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+      <div className="surfboard-hero-container mb-0 space-y-2 header-wallpaper !py-12 pb-24" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
         <div className="header-content-wrapper relative z-20">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
             <Newspaper size={40} />
@@ -27,7 +27,7 @@ const NewsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid gap-8">
+      <div className="relative z-30 -mt-16 mx-4 md:mx-0 space-y-8">
         {sortedNews.map(item => (
           <div key={item.id} className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-4 mb-6">

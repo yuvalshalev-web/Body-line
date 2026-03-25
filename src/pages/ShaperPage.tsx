@@ -185,7 +185,7 @@ const ShaperPage: React.FC = () => {
     }}>
       <div className="max-w-4xl mx-auto pt-12 relative z-10">
         {/* Body-line Standard Header Stack */}
-        <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+        <div className="surfboard-hero-container mb-0 space-y-2 header-wallpaper !py-12 pb-24" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
           <div className="header-content-wrapper relative z-20">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
               <Hammer size={40} />
@@ -199,9 +199,11 @@ const ShaperPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* Controls Section */}
-          <div className="lg:col-span-5 space-y-8">
+        <div className="relative z-30 -mt-16 mx-4 md:mx-0 space-y-8">
+          <div className="bg-white/50 backdrop-blur-sm rounded-[2.5rem] p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+              {/* Controls Section */}
+              <div className="lg:col-span-5 space-y-8">
             <section className="bg-white/70 backdrop-blur-xl border border-white/80 rounded-[2.5rem] p-10 space-y-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.12),0_30px_60px_-30px_rgba(0,0,0,0.15)]">
               <div className="flex items-center gap-3 mb-2">
                 <Pencil className="text-[var(--surfer-deep-teal)]" size={24} />
@@ -484,8 +486,7 @@ const ShaperPage: React.FC = () => {
             </section>
 
             {/* Pro Tip Card */}
-            <motion.div 
-              whileHover={{ scale: 1.02 }}
+            <div 
               className="bg-white/60 backdrop-blur-xl border border-white/80 rounded-[2.5rem] p-10 flex flex-col gap-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)]"
             >
               <div className="flex gap-8 items-center">
@@ -534,12 +535,14 @@ const ShaperPage: React.FC = () => {
                   )}
                 </AnimatePresence>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  );
+  </div>
+</div>
+);
 };
 
 export default ShaperPage;

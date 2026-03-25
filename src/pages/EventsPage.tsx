@@ -41,9 +41,9 @@ const EventsPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4" dir="rtl">
+    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 pb-20" dir="rtl">
       {/* Body-line Standard Header Stack */}
-      <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+      <div className="surfboard-hero-container mb-0 space-y-2 header-wallpaper !py-12 pb-24" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
         <div className="header-content-wrapper relative z-20">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
             <Calendar size={40} />
@@ -57,7 +57,8 @@ const EventsPage: React.FC = () => {
         </div>
       </div>
 
-      {upcomingEvents.length > 0 && (
+      <div className="relative z-30 -mt-16 mx-4 md:mx-0 space-y-12">
+        {upcomingEvents.length > 0 && (
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
             <Calendar className="text-indigo-500" />
@@ -192,6 +193,7 @@ const EventsPage: React.FC = () => {
           <p className="text-slate-500 mt-2">ברגע שיתווספו אירועים חדשים הם יופיעו כאן</p>
         </div>
       )}
+      </div>
     </div>
   );
 };
