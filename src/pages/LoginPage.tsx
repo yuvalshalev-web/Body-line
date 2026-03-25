@@ -40,6 +40,7 @@ import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { useRandomHeader } from '../hooks/useRandomHeader';
 import { processImage } from '../utils/imageProcessor';
 import emailjs from '@emailjs/browser';
 
@@ -81,7 +82,8 @@ const LoginPage: React.FC = () => {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const currentBg = siteAssets?.loginBg || siteAssets?.heroBg || 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=2000';
+  const headerImage = useRandomHeader();
+  const currentBg = siteAssets?.loginBg || siteAssets?.heroBg || headerImage;
   const logoUrl = siteAssets?.habalZugLogo;
 
   // @ai-preserve
@@ -162,7 +164,7 @@ const LoginPage: React.FC = () => {
               lastName: 'שלו',
               email: SUPER_ADMIN_EMAIL,
               mobile: '050-0000000',
-              avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
+              avatar: '',
               bio: 'רכז מערכת',
               role: 'Admin',
               joinedAt: new Date().toISOString(),
@@ -230,7 +232,7 @@ const LoginPage: React.FC = () => {
                  lastName: 'שלו',
                  email: SUPER_ADMIN_EMAIL,
                  mobile: '050-0000000',
-                 avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200',
+                 avatar: '',
                  bio: 'רכז מערכת',
                  role: 'Admin',
                  joinedAt: new Date().toISOString(),

@@ -49,7 +49,7 @@ const WetsuitSVG: React.FC<WetsuitSVGProps> = ({ thickness = '4/3', alignBottom 
               תמונת החליפה חסרה<br/>
               <span className="text-xs mt-2 block opacity-70">
                 יש להעלות את התמונה לתיקיית<br/>
-                <code className="bg-black/5 px-2 py-1 rounded mt-1 inline-block" dir="ltr">src/assets/images/wetsuit-{thickness.replace('/', '-')}.png</code>
+                <code className="bg-black/5 px-2 py-1 rounded mt-1 inline-block" dir="ltr">public/assets/images/wetsuit-{thickness.replace('/', '-')}.png</code>
               </span>
             </p>
           </div>
