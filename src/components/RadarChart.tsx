@@ -204,7 +204,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({ userId }) => {
   return (
     <div className="w-full h-[600px] min-h-0 relative">
       <div className="flex flex-wrap gap-4 mb-4 relative z-10">
-        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-[#003366] rounded-full opacity-60"></div><span className="text-[#003366] font-medium font-['Inter',sans-serif]">{userName}</span></div>
+        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-[#003366] rounded-full opacity-60"></div><span className="text-[#003366] font-medium font-inter">{userName}</span></div>
       </div>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsRadar cx="50%" cy="50%" outerRadius="85%" data={data}>

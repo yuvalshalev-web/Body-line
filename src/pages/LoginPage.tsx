@@ -557,7 +557,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden font-['Yehuda_CLM']" dir="rtl">
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden font-yehuda" dir="rtl">
       <div className="absolute inset-0 z-0">
         <img src={currentBg} className="w-full h-full object-cover animate-in fade-in duration-1000" alt="Background" />
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>

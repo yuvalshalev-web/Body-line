@@ -104,7 +104,7 @@ const SurfingSessionAttendance: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f0] relative overflow-hidden font-['Yehuda_CLM'] pb-20" dir="rtl">
+    <div className="min-h-screen bg-[#f5f5f0] relative overflow-hidden font-yehuda pb-20" dir="rtl">
       {/* Texture Overlay */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]" />
       

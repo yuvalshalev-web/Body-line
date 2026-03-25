@@ -34,6 +34,13 @@
   --surfer-tan: #C29670;
   --surfer-deep-blue: #1e3a8a;
   --surfer-light-blue: #dbeafe;
+
+  --font-yehuda: "Yehuda CLM", sans-serif;
+  --font-miri: "Miriwin", sans-serif;
+  --font-dana-yad: "Dana Yad Alef Alef", cursive;
+  --font-assistant: "Assistant", sans-serif;
+  --font-inter: "Inter", sans-serif;
+  --font-heebo: "Heebo", sans-serif;
 }
 
 @layer components {
@@ -177,8 +184,8 @@
 
 @font-face {
   font-family: 'Yehuda CLM';
-  src: url('/assets/fonts/yehudaclm-light-webfont.woff') format('woff'),
-       url('/assets/fonts/yehudaclm-light-webfont.ttf') format('truetype');
+  src: url('./assets/fonts/yehudaclm-light-webfont.woff') format('woff'),
+       url('./assets/fonts/yehudaclm-light-webfont.ttf') format('truetype');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -186,8 +193,8 @@
 
 @font-face {
   font-family: 'Yehuda CLM';
-  src: url('/assets/fonts/yehudaclm-bold-webfont.woff') format('woff'),
-       url('/assets/fonts/yehudaclm-bold-webfont.ttf') format('truetype');
+  src: url('./assets/fonts/yehudaclm-bold-webfont.woff') format('woff'),
+       url('./assets/fonts/yehudaclm-bold-webfont.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -195,11 +202,11 @@
 
 @font-face {
     font-family: 'Miriwin';
-    src: url('/assets/fonts/miriwin-webfont.eot');
-    src: url('/assets/fonts/miriwin-webfont.eot?#iefix') format('embedded-opentype'),
-         url('/assets/fonts/miriwin-webfont.woff') format('woff'),
-         url('/assets/fonts/miriwin-webfont.ttf') format('truetype'),
-         url('/assets/fonts/miriwin-webfont.svg#miriwin') format('svg');
+    src: url('./assets/fonts/miriwin-webfont.eot');
+    src: url('./assets/fonts/miriwin-webfont.eot?#iefix') format('embedded-opentype'),
+         url('./assets/fonts/miriwin-webfont.woff') format('woff'),
+         url('./assets/fonts/miriwin-webfont.ttf') format('truetype'),
+         url('./assets/fonts/miriwin-webfont.svg#miriwin') format('svg');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -207,10 +214,10 @@
 
 @font-face {
     font-family: 'Dana Yad Alef Alef';
-    src: url('/assets/fonts/DanaYadAlefAlefAlef-Normal.eot');
-    src: url('/assets/fonts/DanaYadAlefAlefAlef-Normal.eot?#iefix') format('embedded-opentype'),
-         url('/assets/fonts/DanaYadAlefAlefAlef-Normal.woff') format('woff'),
-         url('/assets/fonts/DanaYadAlefAlefAlef-Normal.otf') format('opentype');
+    src: url('./assets/fonts/DanaYadAlefAlefAlef-Normal.eot');
+    src: url('./assets/fonts/DanaYadAlefAlefAlef-Normal.eot?#iefix') format('embedded-opentype'),
+         url('./assets/fonts/DanaYadAlefAlefAlef-Normal.woff') format('woff'),
+         url('./assets/fonts/DanaYadAlefAlefAlef-Normal.otf') format('opentype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;

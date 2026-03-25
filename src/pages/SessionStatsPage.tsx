@@ -571,7 +571,7 @@ const SessionStatsPage: React.FC = () => {
   }, [stats]);
 
   return (
-    <div className="max-w-7xl mx-auto font-['Yehuda_CLM'] pb-20 relative" dir="rtl">
+    <div className="max-w-7xl mx-auto font-yehuda pb-20 relative" dir="rtl">
       {/* Unified Header */}
       <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10 weathered-sign" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
         <div className="header-content-wrapper relative z-20">

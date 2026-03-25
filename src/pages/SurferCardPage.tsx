@@ -50,7 +50,7 @@ const SurferCardPage: React.FC = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-[var(--spacing-md)] md:px-[var(--spacing-lg)] py-[var(--spacing-lg)] font-['Yehuda_CLM']" dir="rtl">
+    <div className="max-w-7xl mx-auto px-[var(--spacing-md)] md:px-[var(--spacing-lg)] py-[var(--spacing-lg)] font-yehuda" dir="rtl">
       {/* Body-line Standard Header Stack */}
       <div className="surfboard-hero-container mb-12 header-wallpaper !py-8 md:!py-12 rounded-3xl overflow-hidden" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
         <div className="relative z-20 flex flex-col lg:flex-row items-center justify-between px-4 lg:px-12 gap-8">

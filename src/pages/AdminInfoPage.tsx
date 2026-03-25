@@ -56,7 +56,7 @@ const AdminInfoPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 font-['Yehuda_CLM']" dir="rtl">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 font-yehuda" dir="rtl">
       {/* Header */}
       <div className="surfboard-hero-container mb-8 header-wallpaper !py-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
         <div className="header-content-wrapper relative z-20">

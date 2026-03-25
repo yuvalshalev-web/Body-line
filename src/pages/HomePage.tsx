@@ -264,7 +264,7 @@ const HomePage: React.FC = () => {
                      { label: 'שניות', value: countdown.seconds }
                    ].map((item, i) => (
                      <div key={i} className="flex flex-col items-center bg-white/10 backdrop-blur-[15px] border border-white/20 px-3 py-2 md:px-5 md:py-3 rounded-2xl shadow-lg min-w-[60px] md:min-w-[80px]">
-                       <span className="text-2xl md:text-4xl font-black text-[var(--surfer-yellow)]" style={{ fontFamily: "'Heebo', sans-serif" }}>{item.value}</span>
+                       <span className="text-2xl md:text-4xl font-black text-[var(--surfer-yellow)] font-heebo">{item.value}</span>
                        <span className="text-[9px] md:text-[12px] uppercase font-bold tracking-tighter opacity-80 text-white">{item.label}</span>
                      </div>
                    ))}
@@ -344,10 +344,10 @@ const HomePage: React.FC = () => {
               </div>
               
               <div className="text-center space-y-2">
-                <h4 className="text-2xl md:text-3xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+                <h4 className="text-2xl md:text-3xl font-black text-[#000000] tracking-tight font-yehuda">
                   הכוכבים שאישרו הגעה
                 </h4>
-                <p className="text-sm md:text-base font-bold text-[#000000] uppercase tracking-widest" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+                <p className="text-sm md:text-base font-bold text-[#000000] uppercase tracking-widest font-yehuda">
                   {attendees.length} גולשים כבר בפנים. מה איתך?
                 </p>
               </div>
@@ -382,7 +382,7 @@ const HomePage: React.FC = () => {
             <div className="p-3 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-xl border border-white/20 shadow-lg shadow-[var(--surfer-yellow)]/10">
               <Waves size={20} />
             </div>
-            <h3 className="text-2xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מצב הים – עכשיו ושיאי השנה</h3>
+            <h3 className="text-2xl font-black text-[#000000] tracking-tight font-yehuda">מצב הים – עכשיו ושיאי השנה</h3>
           </div>
 
           <button
@@ -425,7 +425,7 @@ const HomePage: React.FC = () => {
               <div className="p-4 bg-[var(--surfer-yellow)]/20 rounded-xl border border-white/20 shadow-sm">
                 <Quote className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
               </div>
-              <h3 className="text-2xl font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>חוכמת הליין-אפ</h3>
+              <h3 className="text-2xl font-black text-[#000000] font-yehuda">חוכמת הליין-אפ</h3>
            </div>
            <div className="flex-1 relative">
              <AnimatePresence mode="wait">
@@ -443,8 +443,8 @@ const HomePage: React.FC = () => {
                      transition={{ duration: 0.5, ease: "easeOut" }}
                      className="p-10 bg-white/10 backdrop-blur-[15px] border border-white/20 rounded-2xl shadow-lg shadow-black/5 h-full flex flex-col justify-center"
                    >
-                     <p className="text-2xl font-black text-[#000000] leading-tight italic" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>"{text}"</p>
-                     <p className="text-lg font-bold text-[#000000]/60 italic mt-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>— {author}</p>
+                     <p className="text-2xl font-black text-[#000000] leading-tight italic font-yehuda">"{text}"</p>
+                     <p className="text-lg font-bold text-[#000000]/60 italic mt-6 font-yehuda">— {author}</p>
                    </motion.div>
                  );
                })}
@@ -457,7 +457,7 @@ const HomePage: React.FC = () => {
               <div className="p-4 bg-[var(--surfer-cyan)]/20 rounded-xl border border-white/20 shadow-sm">
                 <BookOpen className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
               </div>
-              <h3 className="text-2xl font-black text-[#000000]" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מילון מונחים</h3>
+              <h3 className="text-2xl font-black text-[#000000] font-yehuda">מילון מונחים</h3>
            </div>
            <div className="flex-1 relative">
              <AnimatePresence mode="wait">
@@ -475,8 +475,8 @@ const HomePage: React.FC = () => {
                      transition={{ duration: 0.5, ease: "easeOut" }}
                      className="p-10 bg-white/10 backdrop-blur-[15px] border border-white/20 rounded-2xl shadow-lg shadow-black/5 h-full flex flex-col justify-center"
                    >
-                     <h4 className="text-4xl font-black text-[#000000] mb-4" dir="ltr" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{term}</h4>
-                     <p className="text-xl font-bold text-[#000000]/70 italic border-r-4 border-white/30 pr-6" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>{definition}</p>
+                     <h4 className="text-4xl font-black text-[#000000] mb-4 font-yehuda" dir="ltr">{term}</h4>
+                     <p className="text-xl font-bold text-[#000000]/70 italic border-r-4 border-white/30 pr-6 font-yehuda">{definition}</p>
                    </motion.div>
                  );
                })}
