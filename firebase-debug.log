@@ -1,0 +1,159 @@
+[debug] [2026-03-26T12:00:05.335Z] ----------------------------------------------------------------------
+[debug] [2026-03-26T12:00:05.338Z] Command:       /usr/local/nodejs/bin/node /root/.npm/_npx/872b751b2f16d338/node_modules/.bin/firebase projects:list
+[debug] [2026-03-26T12:00:05.338Z] CLI Version:   13.35.1
+[debug] [2026-03-26T12:00:05.338Z] Platform:      linux
+[debug] [2026-03-26T12:00:05.338Z] Node Version:  v22.22.0
+[debug] [2026-03-26T12:00:05.339Z] Time:          Thu Mar 26 2026 12:00:05 GMT+0000 (Coordinated Universal Time)
+[debug] [2026-03-26T12:00:05.339Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-03-26T12:00:05.627Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-03-26T12:00:05.690Z] Running auto auth
+[debug] [2026-03-26T12:00:05.708Z] No OAuth tokens found
+[debug] [2026-03-26T12:00:05.710Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2026-03-26T12:00:05.783Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 403
+[debug] [2026-03-26T12:00:05.783Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[debug] [2026-03-26T12:00:05.784Z] Request to https://firebase.googleapis.com/v1beta1/projects?pageSize=1000 had HTTP Error: 403, Firebase Management API has not been used in project 78575243013 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/firebase.googleapis.com/overview?project=78575243013 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+[debug] [2026-03-26T12:00:05.785Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects?pageSize=1000 had HTTP Error: 403, Firebase Management API has not been used in project 78575243013 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/firebase.googleapis.com/overview?project=78575243013 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+    at responseToError (/tmp/.npm/_npx/872b751b2f16d338/node_modules/firebase-tools/lib/responseToError.js:52:12)
+    at RetryOperation._fn (/tmp/.npm/_npx/872b751b2f16d338/node_modules/firebase-tools/lib/apiv2.js:312:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[error] 
+[error] Error: Failed to list Firebase projects. See firebase-debug.log for more info.
+[debug] [2026-03-26T12:01:38.832Z] ----------------------------------------------------------------------
+[debug] [2026-03-26T12:01:38.834Z] Command:       /usr/local/nodejs/bin/node /root/.npm/_npx/7750544ccf494d8b/node_modules/.bin/firebase deploy --only storage --project body-line-67637 --debug
+[debug] [2026-03-26T12:01:38.834Z] CLI Version:   15.11.0
+[debug] [2026-03-26T12:01:38.834Z] Platform:      linux
+[debug] [2026-03-26T12:01:38.834Z] Node Version:  v22.22.0
+[debug] [2026-03-26T12:01:38.835Z] Time:          Thu Mar 26 2026 12:01:38 GMT+0000 (Coordinated Universal Time)
+[debug] [2026-03-26T12:01:38.835Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-03-26T12:01:40.426Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-03-26T12:01:40.451Z] Running auto auth
+[debug] [2026-03-26T12:01:40.455Z] [iam] checking project body-line-67637 for permissions ["firebase.projects.get","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]
+[debug] [2026-03-26T12:01:40.456Z] No OAuth tokens found
+[debug] [2026-03-26T12:01:40.458Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/body-line-67637:testIamPermissions [none]
+[debug] [2026-03-26T12:01:40.458Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/body-line-67637:testIamPermissions  x-goog-user-project=body-line-67637
+[debug] [2026-03-26T12:01:40.458Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/body-line-67637:testIamPermissions {"permissions":["firebase.projects.get","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[debug] [2026-03-26T12:01:41.209Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/body-line-67637:testIamPermissions 403
+[debug] [2026-03-26T12:01:41.209Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/body-line-67637:testIamPermissions {"error":{"code":403,"message":"Caller does not have required permission to use project body-line-67637. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=body-line-67637 and then retry. Propagation of the new permission may take a few minutes.","status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"USER_PROJECT_DENIED","domain":"googleapis.com","metadata":{"service":"cloudresourcemanager.googleapis.com","containerInfo":"body-line-67637","consumer":"projects/body-line-67637","consoleUrl":"https://console.developers.google.com/iam-admin/iam?project=body-line-67637"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Caller does not have required permission to use project body-line-67637. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=body-line-67637 and then retry. Propagation of the new permission may take a few minutes."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developer console IAM admin","url":"https://console.developers.google.com/iam-admin/iam?project=body-line-67637"}]}]}}
+[debug] [2026-03-26T12:01:41.211Z] [iam] error while checking permissions, command may fail: Request to https://cloudresourcemanager.googleapis.com/v1/projects/body-line-67637:testIamPermissions had HTTP Error: 403, Caller does not have required permission to use project body-line-67637. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=body-line-67637 and then retry. Propagation of the new permission may take a few minutes.
+[info] 
+[info] === Deploying to 'body-line-67637'...
+[info] 
+[info] i  deploying storage 
+[info] i  storage: ensuring required API firebasestorage.googleapis.com is enabled... 
+[debug] [2026-03-26T12:01:41.214Z] No OAuth tokens found
+[debug] [2026-03-26T12:01:41.215Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/body-line-67637/services/firebasestorage.googleapis.com [none]
+[debug] [2026-03-26T12:01:41.215Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/body-line-67637/services/firebasestorage.googleapis.com  x-goog-user-project=body-line-67637
+[debug] [2026-03-26T12:01:41.888Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/body-line-67637/services/firebasestorage.googleapis.com 403
+[debug] [2026-03-26T12:01:41.889Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/body-line-67637/services/firebasestorage.googleapis.com [omitted]
+[error] 
+[error] Error: Request to https://serviceusage.googleapis.com/v1/projects/body-line-67637/services/firebasestorage.googleapis.com had HTTP Error: 403, Caller does not have required permission to use project body-line-67637. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=body-line-67637 and then retry. Propagation of the new permission may take a few minutes.
+[debug] [2026-03-26T12:01:41.890Z] Error Context: {
+  "body": {
+    "error": {
+      "code": 403,
+      "message": "Caller does not have required permission to use project body-line-67637. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=body-line-67637 and then retry. Propagation of the new permission may take a few minutes.",
+      "status": "PERMISSION_DENIED",
+      "details": [
+        {
+          "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+          "reason": "USER_PROJECT_DENIED",
+          "domain": "googleapis.com",
+          "metadata": {
+            "containerInfo": "body-line-67637",
+            "service": "serviceusage.googleapis.com",
+            "consumer": "projects/body-line-67637",
+            "consoleUrl": "https://console.developers.google.com/iam-admin/iam?project=body-line-67637"
+          }
+        },
+        {
+          "@type": "type.googleapis.com/google.rpc.LocalizedMessage",
+          "locale": "en-US",
+          "message": "Caller does not have required permission to use project body-line-67637. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=body-line-67637 and then retry. Propagation of the new permission may take a few minutes."
+        },
+        {
+          "@type": "type.googleapis.com/google.rpc.Help",
+          "links": [
+            {
+              "description": "Google developer console IAM admin",
+              "url": "https://console.developers.google.com/iam-admin/iam?project=body-line-67637"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "response": {
+    "statusCode": 403
+  }
+}
+[debug] [2026-03-26T12:03:14.452Z] ----------------------------------------------------------------------
+[debug] [2026-03-26T12:03:14.455Z] Command:       /usr/local/nodejs/bin/node /root/.npm/_npx/7750544ccf494d8b/node_modules/.bin/firebase deploy --only storage --project body-line-67637 --debug
+[debug] [2026-03-26T12:03:14.455Z] CLI Version:   15.11.0
+[debug] [2026-03-26T12:03:14.455Z] Platform:      linux
+[debug] [2026-03-26T12:03:14.455Z] Node Version:  v22.22.0
+[debug] [2026-03-26T12:03:14.456Z] Time:          Thu Mar 26 2026 12:03:14 GMT+0000 (Coordinated Universal Time)
+[debug] [2026-03-26T12:03:14.456Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-03-26T12:03:16.123Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-03-26T12:03:16.155Z] Running auto auth
+[debug] [2026-03-26T12:03:16.159Z] [iam] checking project body-line-67637 for permissions ["firebase.projects.get","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]
+[debug] [2026-03-26T12:03:16.160Z] No OAuth tokens found
+[debug] [2026-03-26T12:03:16.162Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/body-line-67637:testIamPermissions [none]
+[debug] [2026-03-26T12:03:16.162Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/body-line-67637:testIamPermissions  x-goog-user-project=body-line-67637
+[debug] [2026-03-26T12:03:16.162Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/body-line-67637:testIamPermissions {"permissions":["firebase.projects.get","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[debug] [2026-03-26T12:03:16.893Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/body-line-67637:testIamPermissions 403
+[debug] [2026-03-26T12:03:16.893Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/body-line-67637:testIamPermissions {"error":{"code":403,"message":"Caller does not have required permission to use project body-line-67637. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=body-line-67637 and then retry. Propagation of the new permission may take a few minutes.","status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"USER_PROJECT_DENIED","domain":"googleapis.com","metadata":{"consoleUrl":"https://console.developers.google.com/iam-admin/iam?project=body-line-67637","containerInfo":"body-line-67637","consumer":"projects/body-line-67637","service":"cloudresourcemanager.googleapis.com"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Caller does not have required permission to use project body-line-67637. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=body-line-67637 and then retry. Propagation of the new permission may take a few minutes."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developer console IAM admin","url":"https://console.developers.google.com/iam-admin/iam?project=body-line-67637"}]}]}}
+[debug] [2026-03-26T12:03:16.894Z] [iam] error while checking permissions, command may fail: Request to https://cloudresourcemanager.googleapis.com/v1/projects/body-line-67637:testIamPermissions had HTTP Error: 403, Caller does not have required permission to use project body-line-67637. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=body-line-67637 and then retry. Propagation of the new permission may take a few minutes.
+[info] 
+[info] === Deploying to 'body-line-67637'...
+[info] 
+[info] i  deploying storage 
+[info] i  storage: ensuring required API firebasestorage.googleapis.com is enabled... 
+[debug] [2026-03-26T12:03:16.896Z] No OAuth tokens found
+[debug] [2026-03-26T12:03:16.896Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/body-line-67637/services/firebasestorage.googleapis.com [none]
+[debug] [2026-03-26T12:03:16.896Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/body-line-67637/services/firebasestorage.googleapis.com  x-goog-user-project=body-line-67637
+[debug] [2026-03-26T12:03:17.092Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/body-line-67637/services/firebasestorage.googleapis.com 403
+[debug] [2026-03-26T12:03:17.093Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/body-line-67637/services/firebasestorage.googleapis.com [omitted]
+[error] 
+[error] Error: Request to https://serviceusage.googleapis.com/v1/projects/body-line-67637/services/firebasestorage.googleapis.com had HTTP Error: 403, Caller does not have required permission to use project body-line-67637. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=body-line-67637 and then retry. Propagation of the new permission may take a few minutes.
+[debug] [2026-03-26T12:03:17.094Z] Error Context: {
+  "body": {
+    "error": {
+      "code": 403,
+      "message": "Caller does not have required permission to use project body-line-67637. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=body-line-67637 and then retry. Propagation of the new permission may take a few minutes.",
+      "status": "PERMISSION_DENIED",
+      "details": [
+        {
+          "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+          "reason": "USER_PROJECT_DENIED",
+          "domain": "googleapis.com",
+          "metadata": {
+            "consoleUrl": "https://console.developers.google.com/iam-admin/iam?project=body-line-67637",
+            "service": "serviceusage.googleapis.com",
+            "containerInfo": "body-line-67637",
+            "consumer": "projects/body-line-67637"
+          }
+        },
+        {
+          "@type": "type.googleapis.com/google.rpc.LocalizedMessage",
+          "locale": "en-US",
+          "message": "Caller does not have required permission to use project body-line-67637. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=body-line-67637 and then retry. Propagation of the new permission may take a few minutes."
+        },
+        {
+          "@type": "type.googleapis.com/google.rpc.Help",
+          "links": [
+            {
+              "description": "Google developer console IAM admin",
+              "url": "https://console.developers.google.com/iam-admin/iam?project=body-line-67637"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "response": {
+    "statusCode": 403
+  }
+}

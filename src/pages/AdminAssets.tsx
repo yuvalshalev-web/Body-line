@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
+import { storage as firebaseStorage } from '../services/firebase';
 import { ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage';
-import { getStorage } from 'firebase/storage';
 import { Upload, Trash2, Image as ImageIcon, Type, Loader2, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
+
+import { SURFBOARD_CATALOG } from '../data/surfboardCatalog';
 
 export const AdminAssets: React.FC = () => {
   const { siteAssets, updateSiteAssets } = useData();
@@ -10,7 +12,7 @@ export const AdminAssets: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'staticHero' | 'headers' | 'fonts' | 'loginBg' | 'uiImages' | 'atalefLogo' | 'reefLogo' | 'habalZugLogo' | 'starfish' | 'penguin' | 'mantaRay' | 'shark' | 'orca' | 'cork' | 'wetsuit43' | 'wetsuit32' | 'wetsuit22' | 'wetsuit22ss' | 'sunShirt', fontName?: string) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'staticHero' | 'headers' | 'fonts' | 'loginBg' | 'uiImages' | 'atalefLogo' | 'reefLogo' | 'habalZugLogo' | 'starfish' | 'penguin' | 'mantaRay' | 'shark' | 'orca' | 'cork' | 'wetsuit43' | 'wetsuit32' | 'wetsuit22' | 'wetsuit22ss' | 'sunShirt' | 'surfboardModels', fontName?: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -19,7 +21,7 @@ export const AdminAssets: React.FC = () => {
     setUploading(type + (fontName || ''));
 
     try {
-      const storage = getStorage();
+      console.log('Starting upload for type:', type, 'fontName:', fontName);
       let path = '';
       if (type === 'staticHero') {
         path = `assets/headers/static_hero_${Date.now()}_${file.name}`;
@@ -37,10 +39,27 @@ export const AdminAssets: React.FC = () => {
         path = `assets/ui/${type}_${Date.now()}_${file.name}`;
       }
 
-      const storageRef = ref(storage, path);
-      await uploadBytes(storageRef, file);
+      const storageRef = ref(firebaseStorage, path);
+      console.log('Uploading to path:', path);
+      try {
+        await uploadBytes(storageRef, file, {
+          contentType: file.type,
+          customMetadata: {
+            uploadedBy: 'admin',
+            timestamp: new Date().toISOString()
+          }
+        });
+      } catch (uploadErr: any) {
+        console.error('UploadBytes failed:', uploadErr);
+        console.error('Error code:', uploadErr.code);
+        console.error('Error message:', uploadErr.message);
+        console.error('Error server response:', uploadErr.serverResponse);
+        throw uploadErr;
+      }
+      console.log('Upload successful, getting download URL...');
       const url = await getDownloadURL(storageRef);
 
+      console.log('Uploading asset:', { type, fontName, url });
       let newAssets = { ...siteAssets };
       if (type === 'staticHero') {
         newAssets.staticHeroImage = url;
@@ -57,11 +76,15 @@ export const AdminAssets: React.FC = () => {
         const currentFonts = siteAssets?.fonts?.[fontName] || [];
         const updatedFonts = Array.isArray(currentFonts) ? [...currentFonts, fontData] : [{ url: currentFonts, name: 'קובץ קודם', format: 'woff' }, fontData];
         newAssets.fonts = { ...(newAssets.fonts || {}), [fontName]: updatedFonts };
+      } else if (type === 'surfboardModels' && fontName) {
+        console.log('Updating surfboardModels:', fontName, url);
+        newAssets.surfboardModels = { ...(newAssets.surfboardModels || {}), [fontName]: url };
       } else {
         // Handle specific UI assets
         newAssets[type] = url;
       }
 
+      console.log('New assets to save:', newAssets);
       await updateSiteAssets(newAssets);
       setSuccess('הקובץ הועלה בהצלחה!');
     } catch (err: any) {
@@ -73,18 +96,19 @@ export const AdminAssets: React.FC = () => {
     }
   };
 
-  const handleDelete = async (type: 'staticHero' | 'headers' | 'fonts' | 'loginBg' | 'uiImages' | 'atalefLogo' | 'reefLogo' | 'habalZugLogo' | 'starfish' | 'penguin' | 'mantaRay' | 'shark' | 'orca' | 'cork' | 'wetsuit43' | 'wetsuit32' | 'wetsuit22' | 'wetsuit22ss' | 'sunShirt', urlToDelete: string, fontName?: string) => {
+  const handleDelete = async (type: 'staticHero' | 'headers' | 'fonts' | 'loginBg' | 'uiImages' | 'atalefLogo' | 'reefLogo' | 'habalZugLogo' | 'starfish' | 'penguin' | 'mantaRay' | 'shark' | 'orca' | 'cork' | 'wetsuit43' | 'wetsuit32' | 'wetsuit22' | 'wetsuit22ss' | 'sunShirt' | 'surfboardModels', urlToDelete: string, fontName?: string) => {
     if (!window.confirm('האם אתה בטוח שברצונך למחוק קובץ זה?')) return;
 
     setError(null);
     setSuccess(null);
 
     try {
-      const storage = getStorage();
-      const storageRef = ref(storage, urlToDelete);
+      console.log('Deleting asset:', { type, urlToDelete, fontName });
+      const storageRef = ref(firebaseStorage, urlToDelete);
       
       try {
         await deleteObject(storageRef);
+        console.log('File deleted from storage');
       } catch (e) {
         console.warn('File might not exist in storage, removing from DB anyway', e);
       }
@@ -110,6 +134,10 @@ export const AdminAssets: React.FC = () => {
           delete newFonts[fontName];
           newAssets.fonts = newFonts;
         }
+      } else if (type === 'surfboardModels' && fontName) {
+        const newModels = { ...newAssets.surfboardModels };
+        delete newModels[fontName];
+        newAssets.surfboardModels = newModels;
       } else {
         // Handle specific UI assets
         newAssets[type] = null;
@@ -453,6 +481,48 @@ export const AdminAssets: React.FC = () => {
                     className="cursor-pointer inline-flex items-center gap-2 px-2 py-1 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100 transition-colors font-bold text-[10px] w-full justify-center border border-slate-100"
                   >
                     {uploading === asset.id ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
+                    העלה
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            <hr className="border-slate-100" />
+
+            {/* Surfboard Models */}
+            <h4 className="font-bold text-slate-700">דגמי גלשנים</h4>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {SURFBOARD_CATALOG.map(board => (
+                <div key={board.type} className="space-y-2">
+                  <p className="font-bold text-xs text-slate-600">{board.name}</p>
+                  {siteAssets?.surfboardModels?.[board.type] ? (
+                    <div className="relative rounded-xl overflow-hidden border border-slate-200 group h-24">
+                      <img src={siteAssets.surfboardModels[board.type]} alt={board.name} className="w-full h-full object-contain p-1" />
+                      <button
+                        onClick={() => handleDelete('surfboardModels', siteAssets.surfboardModels[board.type], board.type)}
+                        className="absolute top-1 left-1 p-1 bg-rose-500 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 size={10} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="h-24 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 text-[10px]">
+                      חסר
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    id={`upload-board-${board.type}`}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => handleUpload(e, 'surfboardModels', board.type)}
+                    disabled={uploading !== null}
+                  />
+                  <label
+                    htmlFor={`upload-board-${board.type}`}
+                    className="cursor-pointer inline-flex items-center gap-2 px-2 py-1 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100 transition-colors font-bold text-[10px] w-full justify-center border border-slate-100"
+                  >
+                    {uploading === 'surfboardModels' + board.type ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
                     העלה
                   </label>
                 </div>

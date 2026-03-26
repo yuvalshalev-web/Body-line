@@ -1,8 +1,28 @@
 import React, { useId } from 'react';
 import { motion } from 'motion/react';
+import { useData } from '../contexts/DataContext';
 
 export const ExactSurfboard = ({ type, isSelected }: { type: string; isSelected?: boolean }) => {
+  const { siteAssets } = useData();
   const idPrefix = useId().replace(/:/g, '');
+  
+  const customImage = siteAssets?.surfboardModels?.[type];
+  
+  if (customImage) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <img 
+          src={customImage} 
+          alt={type} 
+          className={`max-w-full max-h-full object-contain drop-shadow-2xl transition-all duration-500 ${isSelected ? 'scale-110' : 'scale-100'}`}
+          referrerPolicy="no-referrer"
+          style={{
+            filter: isSelected ? 'drop-shadow(0 0 15px rgba(6, 182, 212, 0.4))' : 'grayscale(100%) opacity(0.3)'
+          }}
+        />
+      </div>
+    );
+  }
   
   const GlossGradient = () => (
     <linearGradient id={`gloss-${type}-${idPrefix}`} x1="0%" y1="0%" x2="100%" y2="0%">

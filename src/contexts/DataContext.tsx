@@ -371,9 +371,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (snapshot) => {
       if (snapshot.exists()) {
-        setSiteAssets(snapshot.data());
+        const data = snapshot.data();
+        console.log('Site assets updated from Firestore:', data);
+        setSiteAssets(data);
       } else {
         // Seed initial assets if they don't exist
+        console.log('Site assets do not exist, seeding...');
         seedInitialAssets();
       }
     }, (error) => handleFirestoreError(error, OperationType.GET, 'site_data/assets'));
@@ -994,6 +997,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [finalizeSession]);
 
   const updateSiteAssets = useCallback(async (assets: any) => {
+    console.log('Updating site assets in Firestore:', assets);
     await setDoc(doc(getDb(), 'site_data', 'assets'), assets, { merge: true });
   }, []);
 
