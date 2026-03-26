@@ -1,7 +1,21 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp, runTransaction, serverTimestamp, where } from 'firebase/firestore';
 import { ref, deleteObject, getMetadata } from 'firebase/storage';
-import { getDb, trackedGetDocs, setDbStatus, db_status, getStorageInstance } from '../services/firebase';
+import { 
+  getDb, 
+  trackedGetDocs, 
+  trackedGetDoc,
+  trackedAddDoc,
+  trackedSetDoc,
+  trackedUpdateDoc,
+  trackedDeleteDoc,
+  trackedOnSnapshot,
+  setDbStatus, 
+  db_status, 
+  getStorageInstance,
+  OperationType,
+  FirestoreErrorInfo
+} from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../utils/dateUtils';
 import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
@@ -79,6 +93,7 @@ interface DataContextType {
   rejectRequest: (id: string) => Promise<void>;
   addEvent: (details: Omit<Event, 'id'>) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
+  archiveEvent: (id: string) => Promise<void>;
   updateEvent: (event: Event) => Promise<void>;
   toggleEventAttendance: (eventId: string, userId: string) => Promise<void>;
   addNews: (details: Omit<NewsItem, 'id'>) => Promise<void>;
@@ -112,34 +127,6 @@ interface DataContextType {
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
-
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId: string | undefined;
-    email: string | null | undefined;
-    emailVerified: boolean | undefined;
-    isAnonymous: boolean | undefined;
-    tenantId: string | null | undefined;
-    providerInfo: {
-      providerId: string;
-      displayName: string | null;
-      email: string | null;
-      photoUrl: string | null;
-    }[];
-  }
-}
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { currentUser, firebaseUser } = useAuth();
@@ -537,6 +524,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const { id, ...data } = member;
     const db = getDb();
     
+    // Normalize email if present
+    if (data.email) {
+      data.email = data.email.toLowerCase().trim();
+    }
+    
     // Delta Checking: Only update if data actually changed
     const existing = members.find(m => m.id === id);
     if (existing) {
@@ -547,11 +539,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     }
 
-    await updateDoc(doc(db, 'members', id), data);
+    await trackedUpdateDoc(doc(db, 'members', id), data);
   }, [members]);
 
   const deleteMember = useCallback(async (id: string) => {
-    await deleteDoc(doc(getDb(), 'members', id));
+    await trackedDeleteDoc(doc(getDb(), 'members', id));
   }, []);
 
   const toggleStatus = useCallback(async (id: string) => {
@@ -687,16 +679,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
-    await setDoc(doc(collection(getDb(), 'events')), details);
+    await trackedAddDoc(collection(getDb(), 'events'), details);
   }, []);
 
   const deleteEvent = useCallback(async (id: string) => {
-    await deleteDoc(doc(getDb(), 'events', id));
+    await trackedDeleteDoc(doc(getDb(), 'events', id));
+  }, []);
+
+  const archiveEvent = useCallback(async (id: string) => {
+    await trackedUpdateDoc(doc(getDb(), 'events', id), { isArchived: true });
   }, []);
 
   const updateEvent = useCallback(async (event: Event) => {
     const { id, ...data } = event;
-    await updateDoc(doc(getDb(), 'events', id), data);
+    await trackedUpdateDoc(doc(getDb(), 'events', id), data);
   }, []);
 
   const toggleEventAttendance = useCallback(async (eventId: string, userId: string) => {
@@ -708,7 +704,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const event = events.find(e => e.id === eventId);
     if (!event) return;
     const isAttending = (event.attendees || []).includes(userId);
-    await updateDoc(doc(getDb(), 'events', eventId), {
+    
+    // Check if user is the creator and trying to cancel
+    if (isAttending && event.creatorId === userId) {
+      showAlert("מארגן האירוע אינו יכול לבטל את השתתפותו", "שים לב");
+      return;
+    }
+
+    await trackedUpdateDoc(doc(getDb(), 'events', eventId), {
       attendees: isAttending ? arrayRemove(userId) : arrayUnion(userId)
     });
   }, [members, events, showAlert]);
@@ -1168,14 +1171,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const contextValue = React.useMemo(() => ({ 
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
-      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
+      addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
       isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets
     }), [
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
-      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
+      addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
       isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets

@@ -117,6 +117,7 @@ export interface Event {
   creatorId?: string;
   attendees: string[]; // Array of member IDs
   attendeeCount?: number; // Added for analysis
+  isArchived?: boolean;
 }
 
 export interface Podcast {

@@ -70,11 +70,13 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
 
     setIsSaving(true);
     try {
+      const normalizedEmail = (newMemberData.email || '').toLowerCase().trim();
       const finalPass = newMemberData.password || Math.random().toString(36).slice(-8);
       const hashed = await hashPassword(finalPass);
       
       await addMember({
         ...newMemberData as Member,
+        email: normalizedEmail,
         password: hashed,
         isTemporary: true,
         joinedAt: new Date().toISOString()

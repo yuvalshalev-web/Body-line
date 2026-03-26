@@ -1,36 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, increment, addDoc, limit, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, ChevronDown, MapPin, CheckCircle2, UserPlus, Mail, RotateCcw, X, UserCheck, Sparkles, Waves, User } from 'lucide-react';
-import { getDb, trackedGetDocs, auth } from '../services/firebase';
+import { getDb, trackedGetDocs, auth, handleFirestoreError, OperationType } from '../services/firebase';
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword, getAuth } from 'firebase/auth';
-
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId: string | undefined;
-    email: string | null | undefined;
-    emailVerified: boolean | undefined;
-    isAnonymous: boolean | undefined;
-    tenantId: string | null | undefined;
-    providerInfo: {
-      providerId: string;
-      displayName: string | null;
-      email: string | null;
-      photoUrl: string | null;
-    }[];
-  }
-}
 import { Member } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -85,31 +57,6 @@ const LoginPage: React.FC = () => {
   const headerImage = useRandomHeader();
   const currentBg = siteAssets?.loginBg || headerImage;
   const logoUrl = siteAssets?.habalZugLogo;
-
-  // @ai-preserve
-  const handleFirestoreError = (error: any, operationType: OperationType, path: string | null) => {
-    const auth = getAuth();
-    const errInfo: FirestoreErrorInfo = {
-      error: error instanceof Error ? error.message : String(error),
-      authInfo: {
-        userId: auth.currentUser?.uid,
-        email: auth.currentUser?.email,
-        emailVerified: auth.currentUser?.emailVerified,
-        isAnonymous: auth.currentUser?.isAnonymous,
-        tenantId: auth.currentUser?.tenantId,
-        providerInfo: auth.currentUser?.providerData.map(provider => ({
-          providerId: provider.providerId,
-          displayName: provider.displayName,
-          email: provider.email,
-          photoUrl: provider.photoURL
-        })) || []
-      },
-      operationType,
-      path
-    };
-    console.error('Firestore Error Details:', JSON.stringify(errInfo, null, 2));
-    throw new Error(error.message || 'שגיאת הרשאות במסד הנתונים');
-  };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -304,7 +251,11 @@ const LoginPage: React.FC = () => {
               try {
                 await setDoc(doc(db, 'members', newUser.uid), memberData);
               } catch (setErr: any) {
-                handleFirestoreError(setErr, OperationType.WRITE, `members/${newUser.uid}`);
+                console.error('LoginPage: Failed to create member doc after Auth creation:', setErr);
+                // If this fails, we might still be logged in to Auth, but the member doc is missing.
+                // We should probably sign out to keep things consistent.
+                await auth.signOut();
+                throw setErr;
               }
               
               login(memberData);
@@ -328,8 +279,59 @@ const LoginPage: React.FC = () => {
         }
       }
     } catch (err: any) {
-      console.error(err);
-      setError('שגיאת מערכת בעת ההתחברות');
+      console.error('LoginPage: Login error:', err);
+      
+      let errorMessage = err.message || 'שגיאת מערכת בעת ההתחברות';
+      
+      // Check if it's a Firestore error (JSON string)
+      if (errorMessage.startsWith('{')) {
+        try {
+          const errInfo = JSON.parse(errorMessage);
+          if (errInfo.error === 'Missing or insufficient permissions.') {
+            errorMessage = 'שגיאת הרשאות: אין לך הרשאה לגשת לנתונים אלו. וודא שאתה מחובר לחשבון הנכון.';
+          } else {
+            errorMessage = `שגיאת מערכת: ${errInfo.error}`;
+          }
+        } catch (e) {
+          errorMessage = 'שגיאת מערכת בעת ההתחברות';
+        }
+      }
+
+      if (err.code === 'auth/wrong-password') {
+        // Check if user is already migrated but admin reset password
+        const normalizedEmail = email.toLowerCase().trim();
+        const membersRef = collection(getDb(), 'members');
+        const q = query(membersRef, where('email', '==', normalizedEmail), limit(1));
+        const memberSnap = await trackedGetDocs(q);
+        
+        if (!memberSnap.empty) {
+          const memberData = memberSnap.docs[0].data();
+          if (memberData.isTemporary && memberData.password) {
+            const isValid = await verifyPassword(password, memberData.password);
+            if (isValid) {
+              // Valid temp password, update Firebase Auth
+              try {
+                const user = auth.currentUser;
+                if (user) {
+                  await updatePassword(user, password);
+                  // Retry login
+                  await signInWithEmailAndPassword(auth, email, password);
+                  return; // Success
+                }
+              } catch (updateErr) {
+                console.error('Failed to update password after reset:', updateErr);
+              }
+            }
+          }
+        }
+        setError('הסיסמה שהזנת אינה נכונה');
+      } else if (err.code === 'auth/network-request-failed') {
+        setError('שגיאת חיבור לרשת. אנא בדוק את החיבור שלך.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('יותר מדי ניסיונות כושלים. אנא נסה שוב מאוחר יותר.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }

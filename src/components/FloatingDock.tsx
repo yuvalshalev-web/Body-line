@@ -17,6 +17,7 @@ import {
   LayoutDashboard,
   HeartPulse,
   ClipboardList,
+  UserCheck,
   X
 } from 'lucide-react';
 
@@ -50,12 +51,18 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
   const navigate = useNavigate();
   
   const isAdmin = currentUser?.role === 'Admin';
+  const isInstructor = currentUser?.role === 'Instructor';
 
   const allNavItems = [
     ...navItems,
     ...(isAdmin ? [
       { id: 'admin-panel', label: 'פאנל ניהול', icon: LayoutDashboard, path: '/admin' },
+    ] : []),
+    ...(isAdmin || isInstructor ? [
       { id: 'community-pulse', label: 'דופק הקהילה', icon: HeartPulse, path: '/admin-info' },
+      { id: 'grading', label: 'הערכות', icon: UserCheck, path: '/grading' },
+    ] : []),
+    ...(isAdmin ? [
       { id: 'session-log', label: 'יומן סשנים', icon: ClipboardList, path: '/attendance' },
     ] : [])
   ];

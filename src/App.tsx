@@ -27,6 +27,7 @@ const SurferCardPage = lazy(() => import('./pages/SurferCardPage'));
 const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance'));
 const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage'));
 const ShaperPage = lazy(() => import('./pages/ShaperPage'));
+const MemberGradingPage = lazy(() => import('./pages/MemberGradingPage'));
 
 const PageLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -220,7 +221,7 @@ const App: React.FC = () => {
       <main 
         ref={mainRef}
         className={`flex-1 overflow-y-auto pb-20 relative z-10 ${
-          ['/', '/events', '/gallery', '/directory', '/posts'].includes(location.pathname) ? 'luxury-bg' : ''
+          ['/', '/events', '/gallery', '/directory', '/posts', '/admin'].includes(location.pathname) ? 'luxury-bg' : ''
         }`}
       >
         <ErrorBoundary>
@@ -235,15 +236,17 @@ const App: React.FC = () => {
               <Route path="/surfer-card" element={<SurferCardPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/shaper" element={<ShaperPage />} />
+              {(currentUser.role === 'Admin' || currentUser.role === 'Instructor') && (
+                <>
+                  <Route path="/admin-info" element={<AdminInfoPage />} />
+                  <Route path="/grading" element={<MemberGradingPage />} />
+                </>
+              )}
               {currentUser.role === 'Admin' && (
                 <>
                   <Route path="/admin" element={<AdminPage />} />
-                  <Route path="/admin-info" element={<AdminInfoPage />} />
                   <Route path="/attendance" element={<SurfingSessionAttendance />} />
                 </>
-              )}
-              {currentUser.role === 'Instructor' && (
-                <Route path="/admin-info" element={<AdminInfoPage />} />
               )}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

@@ -49,13 +49,13 @@ service cloud.firestore {
       return isAuthenticated() && 
         ((exists(/databases/$(database)/documents/members/$(request.auth.uid)) && 
           get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role == 'Admin') ||
-         (request.auth.token.email in ["yuval.shalev@gmail.com", "yuval@shalev.io"]));
+         (request.auth.token.email.lower() in ["yuval.shalev@gmail.com", "yuval@shalev.io"]));
     }
 
     function isInstructor() {
       return isAuthenticated() && 
-        (exists(/databases/$(database)/documents/members/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role == 'Instructor');
+        exists(/databases/$(database)/documents/members/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role == 'Instructor';
     }
 
     function isValidEmail(email) {
@@ -109,19 +109,24 @@ service cloud.firestore {
 
     match /events/{eventId} {
       allow read: if true;
+      allow create: if isAuthenticated() && request.resource.data.creatorId == request.auth.uid;
       allow update: if isAdmin() || (
-        isAuthenticated() && 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees']) &&
-        (
-          (request.resource.data.attendees.size() == resource.data.attendees.size() + 1 && 
-           request.resource.data.attendees.hasAll(resource.data.attendees) && 
-           request.resource.data.attendees.hasAll([request.auth.uid])) ||
-          (request.resource.data.attendees.size() == resource.data.attendees.size() - 1 && 
-           resource.data.attendees.hasAll(request.resource.data.attendees) && 
-           resource.data.attendees.hasAll([request.auth.uid]))
+        isAuthenticated() && (
+          (resource.data.creatorId == request.auth.uid && request.resource.data.creatorId == resource.data.creatorId) || 
+          (
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees']) &&
+            (
+              (request.resource.data.attendees.size() == resource.data.attendees.size() + 1 && 
+               request.resource.data.attendees.hasAll(resource.data.attendees) && 
+               request.resource.data.attendees.hasAll([request.auth.uid])) ||
+              (request.resource.data.attendees.size() == resource.data.attendees.size() - 1 && 
+               resource.data.attendees.hasAll(request.resource.data.attendees) && 
+               resource.data.attendees.hasAll([request.auth.uid]))
+            )
+          )
         )
       );
-      allow write: if isAdmin();
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.creatorId == request.auth.uid);
     }
 
     match /news/{document=**} {
@@ -172,11 +177,11 @@ service cloud.firestore {
     }
 
     match /members/{memberId} {
-      allow read: if isAuthenticated();
-      allow create: if isValidMember(request.resource.data) && (isAdmin() || isOwner(memberId));
-      allow update: if isValidMember(request.resource.data) && 
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidMember(request.resource.data) && (isAdmin() || isOwner(memberId));
+      allow update: if isAuthenticated() && isValidMember(request.resource.data) && 
                     (isAdmin() || (isOwner(memberId) && request.resource.data.role == resource.data.role));
-      allow delete: if isAdmin() || (isAuthenticated() && resource.data.email == request.auth.token.email);
+      allow delete: if isAdmin();
     }
 
     match /gallery/{document=**} {
@@ -204,11 +209,6 @@ service cloud.firestore {
     
     match /storage_stats/{document=**} {
       allow read: if isAdmin();
-      allow write: if isAdmin();
-    }
-
-    match /events/{document=**} {
-      allow read: if true;
       allow write: if isAdmin();
     }
 

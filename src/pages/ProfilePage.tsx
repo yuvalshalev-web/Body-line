@@ -911,12 +911,14 @@ const ProfilePage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">אורך גלשן נוכחי (למשל "6'2)</label>
+                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">אורך גלשן נוכחי (למשל 6'2")</label>
                     <input 
                       type="text" 
+                      dir="ltr"
                       value={formData.currentBoardLength || ''} 
                       onChange={e => handleFieldChange('currentBoardLength', e.target.value)} 
-                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a]" 
+                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a] text-right" 
+                      placeholder='6&apos;2"'
                     />
                   </div>
                 </div>

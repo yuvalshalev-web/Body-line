@@ -43,18 +43,17 @@ const AdminPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
-    joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember, addMember,
+    joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, archiveEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember, addMember,
     yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, weeklyHistory
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM' | 'GRADES' | 'ASSETS'>('USERS');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM' | 'ASSETS'>('USERS');
   const [newSessionDay, setNewSessionDay] = useState(0);
   const [newSessionTime, setNewSessionTime] = useState('07:00');
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
 
   const adminTabs = [
     { id: 'USERS', label: 'משתמשים', icon: <Users size={20} /> },
-    { id: 'GRADES', label: 'הערכות', icon: <UserCheck size={20} /> },
     { id: 'POSTS', label: 'פוסטים', icon: <Newspaper size={20} /> },
     { id: 'GALLERY', label: 'גלריה', icon: <ImageIcon size={20} /> },
     { id: 'EVENTS', label: 'אירועים', icon: <Calendar size={20} /> },
@@ -714,10 +713,6 @@ const AdminPage: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'GRADES' && (
-          <MemberGradingPage />
-        )}
-
         {activeTab === 'ARCHIVE' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Suspended Members Summary Card */}
@@ -840,6 +835,76 @@ const AdminPage: React.FC = () => {
                 </table>
               </div>
             </div>
+
+            {/* Archived Events Section */}
+            <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group mt-12">
+              <div className="absolute -right-12 -top-12 w-40 h-40 bg-amber-500/5 rounded-full blur-3xl group-hover:bg-amber-500/10 transition-colors" />
+              
+              <div className="flex items-center gap-6 relative z-10">
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20 group-hover:rotate-6 transition-transform">
+                  <Archive size={32} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tight">ארכיון אירועים</h3>
+                  <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mt-1">אירועים שבוטלו או הועברו לארכיון</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 relative z-10">
+                <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-xl border border-amber-100 text-xs font-bold shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  בארכיון {events.filter(e => e.isArchived).length}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {events.filter(e => e.isArchived).map(event => (
+                <div key={event.id} className="admin-info-card p-6 flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
+                  <div className="flex items-center gap-6 flex-1">
+                    {event.imageUrl ? (
+                      <div className="relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 shadow-md border border-white/20">
+                        <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                    ) : (
+                      <div className="w-24 h-24 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 border border-white/30">
+                        <Calendar size={24} />
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="text-lg font-black text-slate-800">{event.title}</h4>
+                      <p className="text-xs font-bold text-slate-500">{formatDate(event.date)} | {event.location}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-4 sm:mt-0">
+                    <button 
+                      onClick={() => updateEvent({ ...event, isArchived: false })}
+                      className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white transition-all border border-emerald-100"
+                      title="החזר משימוש"
+                    >
+                      <RefreshCw size={18} />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        showConfirm({
+                          message: 'האם למחוק אירוע זה לצמיתות?',
+                          onConfirm: () => deleteEvent(event.id)
+                        });
+                      }}
+                      className="p-3 bg-rose-50 text-rose-400 rounded-xl hover:bg-rose-500 hover:text-white transition-all border border-rose-100"
+                      title="מחיקה לצמיתות"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {events.filter(e => e.isArchived).length === 0 && (
+                <div className="col-span-full py-12 text-center text-slate-400 font-bold bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                  אין אירועים בארכיון
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -891,7 +956,7 @@ const AdminPage: React.FC = () => {
                 <div className="flex flex-col gap-8">
                   <div className="flex items-center gap-8">
                     <div className="p-5 bg-rose-100 text-rose-600 rounded-2xl shadow-sm border border-rose-200">
-                      <ShieldAlert size={40} />
+                      <ShieldAlert size={40} className="animate-siren" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
@@ -1223,7 +1288,7 @@ const AdminPage: React.FC = () => {
               <div className="flex flex-wrap items-center gap-4 relative z-10">
                 <div className="flex items-center gap-2 px-4 py-2 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)] rounded-xl border border-[var(--surfer-aqua-mist)]/20 text-xs font-bold shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                  אירועים מתוכננים {events.length}
+                  אירועים מתוכננים {events.filter(e => !e.isArchived).length}
                 </div>
                 
                 <button 
@@ -1237,7 +1302,7 @@ const AdminPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {events.map(event => {
+              {events.filter(e => !e.isArchived).map(event => {
                 const eventDate = new Date(`${event.date}T${event.time || '00:00'}`);
                 const isPastEvent = eventDate < new Date();
 
@@ -1303,12 +1368,12 @@ const AdminPage: React.FC = () => {
                         <button 
                           onClick={() => {
                             showConfirm({
-                              message: 'האם למחוק אירוע זה?',
-                              onConfirm: () => deleteEvent(event.id)
+                              message: 'האם לבטל אירוע זה ולהעבירו לארכיון?',
+                              onConfirm: () => archiveEvent(event.id)
                             });
                           }}
                           className="p-4 bg-rose-50 text-rose-400 rounded-2xl hover:bg-rose-500 hover:text-white transition-all border border-rose-100"
-                          title="מחיקת אירוע"
+                          title="ביטול והעברה לארכיון"
                         >
                           <Trash2 size={20} />
                         </button>
@@ -1378,7 +1443,7 @@ const AdminPage: React.FC = () => {
                     }}
                     className="w-14 h-14 text-white rounded-2xl flex items-center justify-center relative z-10"
                   >
-                    <AlertTriangle size={28} strokeWidth={3} className="animate-pulse" />
+                    <AlertTriangle size={28} strokeWidth={3} className="animate-siren" />
                   </motion.div>
                 </div>
                 

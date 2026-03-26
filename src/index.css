@@ -148,6 +148,14 @@
     animation: blink 1.5s ease-in-out infinite;
   }
   
+  @keyframes siren-blink {
+    0%, 100% { color: #ef4444; filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.5)); }
+    50% { color: #3b82f6; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5)); }
+  }
+  .animate-siren {
+    animation: siren-blink 0.5s linear infinite;
+  }
+  
   @keyframes premium-sweep {
     0% { transform: translateX(-200%) skewX(-20deg); opacity: 0; }
     20% { opacity: 1; }
@@ -606,7 +614,7 @@ body .floating-slab-deep:hover {
 .header-wallpaper {
   position: relative;
   overflow: hidden;
-  height: 225px; /* Shortened height by 25% */
+  min-height: 225px; /* Shortened height by 25% */
   background-image: var(--bg-image);
   background-size: cover;
   background-position: center;

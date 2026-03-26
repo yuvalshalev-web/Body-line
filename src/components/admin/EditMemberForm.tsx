@@ -131,7 +131,11 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
 
     setIsProcessing(true);
     try {
-      await onSave(editingMember);
+      const normalizedMember = {
+        ...editingMember,
+        email: (editingMember.email || '').toLowerCase().trim()
+      };
+      await onSave(normalizedMember);
       showSuccess('השינויים נשמרו בהצלחה');
       onClose();
     } catch (err) {
