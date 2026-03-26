@@ -11,6 +11,13 @@ interface PlayerCardProps {
 }
 
 
+const SurferSilhouette = () => (
+  <svg viewBox="0 0 100 100" className="w-32 h-32 opacity-20" fill="currentColor">
+    <path d="M50 20c5.5 0 10-4.5 10-10S55.5 0 50 0s-10 4.5-10 10 4.5 10 10 10zM30 40c0-5.5 4.5-10 10-10h20c5.5 0 10 4.5 10 10v20H30V40zM40 70h20v30H40V70z" />
+    <path d="M10 80c0-5.5 10-10 20-10h40c10 0 20 4.5 20 10v10H10V80z" opacity="0.5" />
+  </svg>
+);
+
 const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   const { members, weeklyHistory, yearConfig, siteConfig, isLoading, events } = useData();
   const { currentUser } = useAuth();
@@ -72,8 +79,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-white/20">
-                <Star size={100} className="animate-pulse" />
+              <div className="w-full h-full flex items-center justify-center text-[#00426a]/20 bg-white/5 backdrop-blur-sm">
+                <SurferSilhouette />
               </div>
             )}
           </div>

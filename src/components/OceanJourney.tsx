@@ -5,17 +5,17 @@ import { parseDate } from '../utils/dateUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Lock, CheckCircle2, Star, Info, Waves, HelpCircle, X } from 'lucide-react';
 
-const starfishImg = '/assets/images/starfish.png';
-const penguinImg = '/assets/images/penguin.png';
-const mantaRayImg = '/assets/images/manta_ray.png';
-const sharkImg = '/assets/images/shark.png';
-const orcaImg = '/assets/images/orca.png';
-const corkImg = '/assets/images/cork_asset.jpg';
+const starfishImg = '';
+const penguinImg = '';
+const mantaRayImg = '';
+const sharkImg = '';
+const orcaImg = '';
+const corkImg = '';
 
-const milestones = [
+const getMilestones = (assets: any) => [
   { 
     id: 'starfish', 
-    src: starfishImg, 
+    src: assets?.starfish || starfishImg, 
     alt: 'Starfish', 
     name: 'כוכב ים', 
     desc: 'הצעד הראשון שלך במים. ברוך הבא לקהילה!',
@@ -24,7 +24,7 @@ const milestones = [
   },
   { 
     id: 'penguin', 
-    src: penguinImg, 
+    src: assets?.penguin || penguinImg, 
     alt: 'Penguin', 
     name: 'פינגווין', 
     desc: 'לוחם חורף אמיתי. המים הקרים הם הבית שלך.',
@@ -33,7 +33,7 @@ const milestones = [
   },
   { 
     id: 'manta_ray', 
-    src: mantaRayImg, 
+    src: assets?.mantaRay || mantaRayImg, 
     alt: 'Manta Ray', 
     name: 'מנטה ריי', 
     desc: 'שורד את חום הקיץ עם חיוך. אנרגיה טהורה.',
@@ -42,7 +42,7 @@ const milestones = [
   },
   { 
     id: 'shark', 
-    src: sharkImg, 
+    src: assets?.shark || sharkImg, 
     alt: 'Shark', 
     name: 'כריש', 
     desc: 'טורף עקביות. אתה מגיע לכל סשן, בכל מצב.',
@@ -51,7 +51,7 @@ const milestones = [
   },
   { 
     id: 'orca', 
-    src: orcaImg, 
+    src: assets?.orca || orcaImg, 
     alt: 'Orca', 
     name: 'אורקה', 
     desc: 'מאסטר חוף הבית. השלמת את כל האתגרים!',
@@ -59,6 +59,68 @@ const milestones = [
     glow: 'shadow-indigo-500/50'
   },
 ];
+
+const MilestoneIllustration: React.FC<{ name: string; isUnlocked: boolean }> = ({ name, isUnlocked }) => {
+  const color = isUnlocked ? '#007085' : '#94a3b8';
+  
+  if (name.includes('כוכב ים')) {
+    return (
+      <svg viewBox="0 0 100 100" className="w-24 h-24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 5 L61 35 L95 35 L68 55 L78 85 L50 65 L22 85 L32 55 L5 35 L39 35 Z" fill={color} opacity="0.6" />
+        <circle cx="50" cy="50" r="5" fill="white" opacity="0.3" />
+      </svg>
+    );
+  }
+  if (name.includes('פינגווין')) {
+    return (
+      <svg viewBox="0 0 100 100" className="w-24 h-24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="60" rx="25" ry="35" fill={color} opacity="0.6" />
+        <ellipse cx="50" cy="55" rx="15" ry="25" fill="white" opacity="0.2" />
+        <circle cx="50" cy="25" r="15" fill={color} opacity="0.6" />
+        <circle cx="45" cy="22" r="2" fill="white" />
+        <circle cx="55" cy="22" r="2" fill="white" />
+        <path d="M48 30 L52 30 L50 35 Z" fill="#f59e0b" />
+      </svg>
+    );
+  }
+  if (name.includes('מנטה')) {
+    return (
+      <svg viewBox="0 0 200 100" className="w-48 h-24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 50 Q100 10 180 50 Q100 90 20 50 Z" fill={color} opacity="0.6" />
+        <path d="M90 50 Q100 40 110 50" stroke="white" strokeWidth="2" opacity="0.3" />
+        <path d="M100 80 L100 120" stroke={color} strokeWidth="4" opacity="0.4" />
+      </svg>
+    );
+  }
+  if (name.includes('כריש')) {
+    return (
+      <svg viewBox="0 0 100 100" className="w-24 h-24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q50 20 90 50 Q50 80 10 50 Z" fill={color} opacity="0.6" />
+        <path d="M50 35 L70 20 L60 40 Z" fill={color} opacity="0.6" />
+        <circle cx="75" cy="45" r="2" fill="white" />
+      </svg>
+    );
+  }
+  if (name.includes('אורקה')) {
+    return (
+      <svg viewBox="0 0 100 100" className="w-24 h-24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 60 Q50 20 90 60 Q50 90 10 60 Z" fill={color} opacity="0.6" />
+        <path d="M40 40 L55 15 L50 45 Z" fill={color} opacity="0.6" />
+        <ellipse cx="70" cy="50" rx="8" ry="4" fill="white" opacity="0.4" />
+      </svg>
+    );
+  }
+  if (name.includes('פקק')) {
+    return (
+      <svg viewBox="0 0 100 100" className="w-24 h-24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="35" y="30" width="30" height="40" rx="4" fill={color} opacity="0.6" />
+        <rect x="30" y="25" width="40" height="10" rx="2" fill={color} opacity="0.8" />
+        <path d="M40 45 L60 45 M40 55 L60 55" stroke="white" strokeWidth="2" opacity="0.3" />
+      </svg>
+    );
+  }
+  return <HelpCircle size={48} color={color} />;
+};
 
 const MilestoneNote = ({ milestone, index, isUnlocked, compact, style }: { 
   milestone: any; 
@@ -192,19 +254,36 @@ const MilestoneNote = ({ milestone, index, isUnlocked, compact, style }: {
         )}
 
         {/* Image Container */}
-        <div className={`${milestone.name.includes('מנטה') ? 'w-56 h-56' : 'w-32 h-32'} mb-4 flex items-center justify-center relative flex-shrink-0`}>
-          <img 
-            src={milestone.src} 
-            alt={milestone.alt} 
-            className={`object-contain relative z-10 ${!isUnlocked ? 'opacity-40 grayscale' : ''} ${
-              milestone.name.includes('כריש') ? 'w-36 h-36' : 
-              milestone.name.includes('אורקה') ? 'w-44 h-44 max-w-none max-h-none' : 
-              milestone.name.includes('פינגווין') ? 'w-36 h-36' : 
-              milestone.name.includes('מנטה') ? 'w-56 h-56 max-w-none max-h-none' : 'w-32 h-32'
-            }`}
-            referrerPolicy="no-referrer"
-          />
-        </div>
+        {(() => {
+          const getMilestoneSrc = (name: string, currentSrc: string) => {
+            if (currentSrc) return currentSrc;
+            return '';
+          };
+          
+          const milestoneSrc = getMilestoneSrc(milestone.name, milestone.src);
+          
+          return (
+            <div className={`${milestone.name.includes('מנטה') ? 'w-56 h-56' : 'w-32 h-32'} mb-4 flex items-center justify-center relative flex-shrink-0`}>
+              {milestoneSrc ? (
+                <img 
+                  src={milestoneSrc} 
+                  alt={milestone.alt} 
+                  className={`object-contain relative z-10 ${!isUnlocked ? 'opacity-40 grayscale' : ''} ${
+                    milestone.name.includes('כריש') ? 'w-36 h-36' : 
+                    milestone.name.includes('אורקה') ? 'w-44 h-44 max-w-none max-h-none' : 
+                    milestone.name.includes('פינגווין') ? 'w-36 h-36' : 
+                    milestone.name.includes('מנטה') ? 'w-56 h-56 max-w-none max-h-none' : 'w-32 h-32'
+                  }`}
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className={`w-24 h-24 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center ${!isUnlocked ? 'opacity-40 grayscale' : ''}`}>
+                   <MilestoneIllustration name={milestone.name} isUnlocked={isUnlocked} />
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         <h4 className="text-base font-black text-slate-800 mb-1">
             {milestone.name}
@@ -221,9 +300,12 @@ const MilestoneNote = ({ milestone, index, isUnlocked, compact, style }: {
 };
 
 export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = ({ compact = false, noFrame = false }) => {
-  const { members, weeklyHistory } = useData();
+  const { members, weeklyHistory, siteAssets } = useData();
   const { currentUser } = useAuth();
   const [showHelp, setShowHelp] = useState(false);
+
+  const milestones = useMemo(() => getMilestones(siteAssets), [siteAssets]);
+  const currentCorkImg = siteAssets?.cork || corkImg;
 
   const activeCategories = useMemo(() => {
     if (!currentUser || !members || !weeklyHistory) return new Set(['starfish']);
@@ -316,7 +398,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
         backgroundColor: '#b87e4a',
         backgroundImage: `
           radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.5) 100%),
-          url("${corkImg}")
+          url("${currentCorkImg}")
         `,
         backgroundSize: '100%, cover',
         backgroundPosition: 'center, center',

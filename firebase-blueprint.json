@@ -168,7 +168,7 @@
     },
     "site_data": {
       "schema": "object",
-      "description": "Global site configuration and assets"
+      "description": "Global site configuration and assets (includes staticHeroImage, loginBg, headers, uiImages, and fonts)"
     },
     "admin": {
       "schema": "object",

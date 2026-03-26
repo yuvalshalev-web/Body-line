@@ -10,7 +10,7 @@ import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageSta
 import { storage } from '../utils/storage';
 import { useAuth } from './AuthContext';
 import { useModal } from './ModalContext';
-import { finalizeSession as finalizeSessionService, getNextSessionDate } from '../services/rolloverService';
+import { getNextSessionDate } from '../services/rolloverService';
 
 interface DataContextType {
   members: Member[];
@@ -91,7 +91,6 @@ interface DataContextType {
   addGalleryItem: (item: Omit<GalleryItem, 'id'>) => Promise<void>;
   toggleSessionAttendance: (userId: string) => Promise<void>;
   updateHistory: (id: string, participantIds: string[]) => Promise<void>;
-  forceResetSession: () => Promise<void>;
   finalizeSession: () => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
   updateSiteConfig: (config: Partial<{ 
@@ -109,6 +108,7 @@ interface DataContextType {
   isDbEmpty: boolean;
   conflictingAdmins: Member[];
   seedInitialAdmin: () => Promise<boolean>;
+  seedInitialAssets: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -369,8 +369,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (doc.exists()) setSeaStats(doc.data());
     }, (error) => handleFirestoreError(error, OperationType.GET, 'seaConditionsStats/current'));
 
-    const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (doc) => {
-      if (doc.exists()) setSiteAssets(doc.data());
+    const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (snapshot) => {
+      if (snapshot.exists()) {
+        setSiteAssets(snapshot.data());
+      } else {
+        // Seed initial assets if they don't exist
+        seedInitialAssets();
+      }
     }, (error) => handleFirestoreError(error, OperationType.GET, 'site_data/assets'));
 
     const unsubConfig = onSnapshot(doc(db, 'site_data', 'config'), (doc) => {
@@ -819,14 +824,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await batch.commit();
   }, [weeklyHistory]);
 
-  const forceResetSession = useCallback(async () => {
-    const nextSession = getNextSessionDate(siteConfig?.weeklySessions);
-    await setDoc(doc(getDb(), 'site_data', 'active_session'), {
-      attendees: [],
-      date: nextSession
-    }, { merge: true });
-  }, [siteConfig?.weeklySessions]);
-
   const addRolloverLog = useCallback(async (action: string, status: 'pending' | 'success' | 'failed', details: string, metrics?: any) => {
     console.log("addRolloverLog called:", { action, status, details, metrics });
     const db = getDb();
@@ -905,6 +902,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         finalizedAt: new Date().toISOString(),
         seaState: coastalWeather || null
       });
+      await addRolloverLog('archive', 'success', 'הסשן נשמר בהיסטוריה');
+      await addRolloverLog('save_sea_state', 'success', 'נתוני הים נשמרו');
       
       updatedFields += 1;
 
@@ -935,11 +934,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log("finalizeSession: Calculating next session date...");
       const nextDate = getNextSessionDate(currentWeeklySessions);
       console.log("finalizeSession: Next session date calculated:", nextDate);
+      await addRolloverLog('create_new', 'success', 'סשן חדש הוקם');
       updatedFields += 1;
 
       // 6. Reset timer
       console.log("finalizeSession: Resetting timer...");
       // This is combined with reset_attendance in the next step
+      await addRolloverLog('reset_timer', 'success', 'טיימר אופס');
       updatedFields += 1;
 
       // 7. Reset attendance
@@ -948,10 +949,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         date: nextDate,
         attendees: []
       }, { merge: true });
+      await addRolloverLog('reset_attendance', 'success', 'רשימת משתתפים אופסה');
       updatedFields += 1;
 
       // 8. Update stats (batch update for members)
       console.log("finalizeSession: Preparing batch update for member stats...");
+      await addRolloverLog('update_stats', 'success', 'סטטיסטיקות עודכנו');
       const batch = writeBatch(db);
       for (const uid of currentAttendees) {
         const memberRef = doc(db, 'members', uid);
@@ -965,6 +968,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log("finalizeSession: Committing batch update...");
       await batch.commit();
       console.log("finalizeSession: Batch commit successful!");
+      await addRolloverLog('save_db', 'success', 'עדכונים נשמרו במסד הנתונים');
 
       const metrics = {
         expectedFields: 5 + currentAttendees.length,
@@ -1095,6 +1099,35 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [handleFirestoreError]);
 
+  const seedInitialAssets = useCallback(async () => {
+    const db = getDb();
+    const storageBucket = 'body-line-67637.firebasestorage.app';
+    const uiPath = 'assets%2Fui';
+    const getStorageUrl = (filename: string) => `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/${uiPath}%2F${filename}?alt=media`;
+
+    const initialAssets = {
+      starfish: '',
+      penguin: '',
+      mantaRay: '',
+      shark: '',
+      orca: '',
+      cork: '',
+      staticHeroImage: '',
+      loginBg: '',
+      wetsuit43: getStorageUrl('wetsuit43.png'),
+      wetsuit32: getStorageUrl('wetsuit32.png'),
+      wetsuit22: getStorageUrl('wetsuit22.png'),
+      wetsuit22ss: getStorageUrl('wetsuit22ss.png'),
+      sunShirt: getStorageUrl('sunShirt.png')
+    };
+    try {
+      await setDoc(doc(db, 'site_data', 'assets'), initialAssets);
+      setSiteAssets(initialAssets);
+    } catch (e) {
+      console.error('Error seeding initial assets:', e);
+    }
+  }, []);
+
   const seedInitialAdmin = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -1111,7 +1144,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isActive: true,
         loginCount: 0,
         totalAttendance: 0,
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin',
+        avatar: '',
         bio: 'מנהל מערכת ראשוני',
         gender: 'זכר',
         isTemporary: true
@@ -1131,17 +1164,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const contextValue = React.useMemo(() => ({ 
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
-      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory, forceResetSession,
+      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
-      isDbEmpty, conflictingAdmins, seedInitialAdmin
+      isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets
     }), [
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
-      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory, forceResetSession,
+      addEvent, deleteEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
-      isDbEmpty, conflictingAdmins, seedInitialAdmin
+      isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets
     ]);
 
   return (

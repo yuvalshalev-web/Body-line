@@ -611,7 +611,10 @@ const TrendsDashboard: React.FC = () => {
                   tooltip.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
                   tooltip.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 8px;">
-                      <img src="${m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.firstName + ' ' + m.lastName)}&background=00426a&color=fff`}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" />
+                      ${m.avatar ? 
+                        `<img src="${m.avatar}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" />` :
+                        `<div style="width: 30px; height: 30px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #64748b; font-weight: bold;">${m.firstName[0]}</div>`
+                      }
                       <div style="text-align: right;">
                         <div style="font-weight: bold; color: #333;">${m.firstName} ${m.lastName}</div>
                         <div style="font-size: 12px; color: #666;">${m.calculatedDistance.toFixed(2)} ק"מ מהחוף</div>

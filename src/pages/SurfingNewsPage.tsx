@@ -118,26 +118,12 @@ const SurfingNewsPage: React.FC = () => {
               rel="noopener noreferrer"
               className="group bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 flex flex-col"
             >
-              {item.thumbnail ? (
-                <div className="h-48 overflow-hidden relative">
-                  <img 
-                    src={item.thumbnail} 
-                    alt={item.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full">
-                    {item.source}
-                  </div>
+              <div className="h-48 bg-slate-100 flex items-center justify-center relative">
+                <Globe className="text-slate-300" size={48} />
+                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                  {item.source}
                 </div>
-              ) : (
-                <div className="h-48 bg-slate-100 flex items-center justify-center relative">
-                  <Globe className="text-slate-300" size={48} />
-                  <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full">
-                    {item.source}
-                  </div>
-                </div>
-              )}
+              </div>
               
               <div className="p-6 flex-1 flex flex-col">
                 <h3 className="text-lg font-bold text-slate-800 mb-3 line-clamp-2 group-hover:text-sky-600 transition-colors" dir="ltr">

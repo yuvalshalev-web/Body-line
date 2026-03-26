@@ -572,12 +572,13 @@ const LoginPage: React.FC = () => {
                <div className="text-center mb-8 drop-shadow-2xl flex flex-col items-center min-h-[120px] justify-center">
                  {isDataLoading ? (
                    <Loader2 className="animate-spin text-white/20" size={32} />
-                 ) : (!logoError && logoUrl) ? (
+                 ) : (siteAssets?.habalZugLogo) ? (
                    <img 
-                     src={logoUrl} 
+                     src={siteAssets.habalZugLogo} 
                      className="h-28 w-auto mx-auto object-contain animate-in fade-in duration-500" 
                      alt="Logo" 
                      onError={() => setLogoError(true)}
+                     referrerPolicy="no-referrer"
                    />
                  ) : (
                    <div className="flex flex-col items-center gap-2 animate-in fade-in zoom-in-95">
@@ -717,8 +718,8 @@ const LoginPage: React.FC = () => {
                   onClick={handleGoogleLogin} 
                   className="group relative flex items-center gap-3 bg-white/5 border border-white/10 text-white/70 px-6 py-3 rounded-2xl font-black overflow-hidden transition-all duration-300 hover:text-white hover:bg-white/10 hover:border-white/20 hover:scale-105"
                 >
-                  <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center p-1 shadow-inner">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-full h-full" />
+                  <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-inner">
+                    <span className="text-blue-600 font-black text-sm">G</span>
                   </div>
                   <span className="text-base">התחברות עם Google</span>
                 </button>
@@ -861,34 +862,36 @@ const LoginPage: React.FC = () => {
 
         {/* Logos at the bottom */}
         <div className="mt-12 flex items-center justify-center gap-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-700">
-          {(siteAssets?.atalefLogo || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Flogo%2Fatalef-logo.png?alt=media") && (
-            <a 
-              href="https://www.atalef.com" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="group transition-all duration-500 hover:scale-110"
-            >
+          <a 
+            href="https://www.atalef.com" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group transition-all duration-500 hover:scale-110"
+          >
+            {siteAssets?.atalefLogo && (
               <img 
-                src={siteAssets?.atalefLogo || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Flogo%2Fatalef-logo.png?alt=media"} 
+                src={siteAssets.atalefLogo} 
                 alt="עמותת העטלף" 
                 className="h-14 w-auto opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0 group-hover:brightness-125 transition-all duration-500 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]" 
+                referrerPolicy="no-referrer"
               />
-            </a>
-          )}
-          {(siteAssets?.reefLogo || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Flogo%2Freef-logo.jpeg?alt=media") && (
-            <a 
-              href="https://www.reefseacenter.com" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="group transition-all duration-500 hover:scale-110"
-            >
+            )}
+          </a>
+          <a 
+            href="https://www.reefseacenter.com" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group transition-all duration-500 hover:scale-110"
+          >
+            {siteAssets?.reefLogo && (
               <img 
-                src={siteAssets?.reefLogo || "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Flogo%2Freef-logo.jpeg?alt=media"} 
+                src={siteAssets.reefLogo} 
                 alt="מועדון ריף" 
                 className="h-14 w-auto opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0 group-hover:brightness-125 transition-all duration-500 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]" 
+                referrerPolicy="no-referrer"
               />
-            </a>
-          )}
+            )}
+          </a>
         </div>
       </div>
       {/* Sea Water Alert Modal (Forgot Password) */}

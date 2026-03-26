@@ -18,20 +18,17 @@ import {
   Sun,
   Droplets,
   ShieldAlert,
-  Zap
+  Zap,
+  Image as ImageIcon
 } from 'lucide-react';
 
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 
-const wetsuit43 = '/assets/images/wetsuit-4-3.png';
-const wetsuit32 = '/assets/images/wetsuit-3-2.png';
-const wetsuit22 = '/assets/images/wetsuit-2-2.png';
-const wetsuit22ss = '/assets/images/wetsuit-2-2-ss.png';
-const sunShirt = '/assets/images/sun-shirt.png';
+import WetsuitSVG from './WetsuitSVG';
 
 export const CoastalDashboard: React.FC = () => {
-  const { coastalWeather: data, seaStats: stats, isLoading: contextLoading } = useData();
+  const { coastalWeather: data, seaStats: stats, isLoading: contextLoading, siteAssets } = useData();
   const { currentUser } = useAuth();
   
   const getAdvice = (uv: number) => {
@@ -323,19 +320,45 @@ export const CoastalDashboard: React.FC = () => {
             {(() => {
               const waterTemp = data.waterTemp;
               let label = 'חליפה ארוכה (4/3)';
-              let imgSrc = wetsuit43;
+              let thickness: '4/3' | '3/2' | '2/2' | '2/2-ss' | 'sun-shirt' = '4/3';
               
-              if (waterTemp < 16) { label = 'חליפה ארוכה (4/3)'; imgSrc = wetsuit43; }
-              else if (waterTemp <= 19) { label = 'חליפה ארוכה (4/3)'; imgSrc = wetsuit43; }
-              else if (waterTemp <= 23) { label = 'מעבר (3/2)'; imgSrc = wetsuit32; }
-              else if (waterTemp <= 25) { label = 'קיץ ארוך (2/2)'; imgSrc = wetsuit22; }
-              else if (waterTemp <= 27) { label = 'קיץ קצר (2/2)'; imgSrc = wetsuit22ss; }
-              else { label = 'חולצת לייקרה'; imgSrc = sunShirt; }
+              if (waterTemp < 16) { 
+                label = 'חליפה ארוכה (4/3)'; 
+                thickness = '4/3';
+              }
+              else if (waterTemp <= 19) { 
+                label = 'חליפה ארוכה (4/3)'; 
+                thickness = '4/3';
+              }
+              else if (waterTemp <= 23) { 
+                label = 'מעבר (3/2)'; 
+                thickness = '3/2';
+              }
+              else if (waterTemp <= 25) { 
+                label = 'קיץ ארוך (2/2)'; 
+                thickness = '2/2';
+              }
+              else if (waterTemp <= 27) { 
+                label = 'קיץ קצר (2/2)'; 
+                thickness = '2/2-ss';
+              }
+              else { 
+                label = 'חולצת לייקרה'; 
+                thickness = 'sun-shirt';
+              }
               
               return (
-                <div className="mt-4 flex items-center gap-2">
-                  <img src={imgSrc} alt={label} className="w-8 h-8 object-contain drop-shadow-md" loading="lazy" />
-                  <span className="text-xs font-bold text-slate-800">{label}</span>
+                <div className="mt-6 flex items-center gap-6 luxury-card p-6 shadow-lg group transition-all hover:shadow-xl relative overflow-hidden">
+                  <div className="grain-overlay" />
+                  <div className="premium-sweep-fx" />
+                  <div className="w-20 h-20 transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-2 relative z-10">
+                    <div className="absolute inset-0 bg-blue-500/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    <WetsuitSVG thickness={thickness} />
+                  </div>
+                  <div className="flex flex-col relative z-10">
+                    <span className="text-[11px] font-black text-[#007085] uppercase tracking-[0.3em] leading-none mb-2 opacity-60">חליפה מומלצת</span>
+                    <span className="text-xl font-black text-[#002b44] leading-none tracking-tighter font-yehuda">{label}</span>
+                  </div>
                 </div>
               );
             })()}

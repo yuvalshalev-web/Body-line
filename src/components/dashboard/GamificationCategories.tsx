@@ -3,23 +3,25 @@ import { motion } from 'motion/react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
 
-const starfishImg = '/assets/images/starfish.png';
-const penguinImg = '/assets/images/penguin.png';
-const mantaRayImg = '/assets/images/manta_ray.png';
-const sharkImg = '/assets/images/shark.png';
-const orcaImg = '/assets/images/orca.png';
+const starfishImg = '';
+const penguinImg = '';
+const mantaRayImg = '';
+const sharkImg = '';
+const orcaImg = '';
 
-const categories = [
-  { id: 'starfish', name: 'כוכב ים', image: starfishImg },
-  { id: 'penguin', name: 'פינגווין', image: penguinImg },
-  { id: 'manta_ray', name: 'מנטה ריי', image: mantaRayImg },
-  { id: 'shark', name: 'כריש', image: sharkImg },
-  { id: 'orca', name: 'אורקה', image: orcaImg },
+const getCategories = (assets: any) => [
+  { id: 'starfish', name: 'כוכב ים', image: assets?.starfish || starfishImg },
+  { id: 'penguin', name: 'פינגווין', image: assets?.penguin || penguinImg },
+  { id: 'manta_ray', name: 'מנטה ריי', image: assets?.mantaRay || mantaRayImg },
+  { id: 'shark', name: 'כריש', image: assets?.shark || sharkImg },
+  { id: 'orca', name: 'אורקה', image: assets?.orca || orcaImg },
 ];
 
 const GamificationCategories: React.FC = () => {
-  const { members, weeklyHistory } = useData();
+  const { members, weeklyHistory, siteAssets } = useData();
   const { currentUser } = useAuth();
+
+  const categories = useMemo(() => getCategories(siteAssets), [siteAssets]);
 
   const userCategory = useMemo(() => {
     if (!currentUser || !members || !weeklyHistory) return 'starfish';

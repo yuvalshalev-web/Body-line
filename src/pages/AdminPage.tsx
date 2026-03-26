@@ -29,6 +29,7 @@ import EditMemberForm from '../components/admin/EditMemberForm';
 import AddMemberModal from '../components/admin/AddMemberModal';
 import { PostEditor } from '../components/admin/PostEditor';
 import { AdminRolloverReport } from './AdminRolloverReport';
+import { AdminAssets } from './AdminAssets';
 import SystemMonitor from '../components/SystemMonitor';
 import { MarkdownViewer } from '../components/admin/MarkdownViewer';
 import MemberGradingPage from './MemberGradingPage';
@@ -54,7 +55,7 @@ const AdminPage: React.FC = () => {
     yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, weeklyHistory
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM' | 'GRADES'>('USERS');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM' | 'GRADES' | 'ASSETS'>('USERS');
   const [newSessionDay, setNewSessionDay] = useState(0);
   const [newSessionTime, setNewSessionTime] = useState('07:00');
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
@@ -69,6 +70,7 @@ const AdminPage: React.FC = () => {
     { id: 'ARCHIVE', label: 'ארכיון', icon: <Archive size={20} /> },
     { id: 'REQUESTS', label: 'בקשות', icon: <UserCheck size={20} />, count: joinRequests.length },
     { id: 'ENGINE_ROOM', label: 'חדר מכונות', icon: <Terminal size={20} /> },
+    { id: 'ASSETS', label: 'נכסים ועיצוב', icon: <ImageIcon size={20} /> },
     { id: 'SITE', label: 'הגדרות', icon: <Settings size={20} /> }
   ];
 
@@ -516,11 +518,11 @@ const AdminPage: React.FC = () => {
       message: 'האם לאפס את כל הנכסים לערכי ברירת המחדל?',
       onConfirm: async () => {
         const defaults = {
-          habalZugLogo: "", // Let user upload the correct one
-          atalefLogo: "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Flogo%2Fatalef-logo.png?alt=media",
-          reefLogo: "https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/assets%2Flogo%2Freef-logo.jpeg?alt=media",
+          habalZugLogo: "",
+          atalefLogo: "",
+          reefLogo: "",
           heroBg: "",
-          loginBg: "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=2000"
+          loginBg: ""
         };
         try {
           await updateSiteAssets(defaults);
@@ -643,6 +645,7 @@ const AdminPage: React.FC = () => {
                   ...(isAdmin ? [
                     { id: 'REQUESTS', label: 'בקשות הצטרפות', desc: `${joinRequests.length} ממתינים לאישור`, icon: UserCheck, color: 'bg-[#FF2D60]', count: joinRequests.length },
                     { id: 'ENGINE_ROOM', label: 'חדר מכונות', desc: 'ניטור תשתיות ומערכות', icon: Terminal, color: 'bg-[#8B5CF6]' },
+                    { id: 'ASSETS', label: 'נכסים ועיצוב', desc: 'תמונות ופונטים', icon: ImageIcon, color: 'bg-[#FF9F1C]' },
                     { id: 'SITE', label: 'הגדרות אתר', desc: 'לוגואים, רקעים ונכסים', icon: Settings, color: 'bg-[#00FFFF]' },
                     { id: 'ARCHIVE', label: 'ארכיון משתמשים', desc: 'ניהול חברים שהושעו', icon: Archive, color: 'bg-[#FFD700]' }
                   ] : [])
@@ -1570,6 +1573,12 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'ROLLOVER' && (
           <AdminRolloverReport />
+        )}
+
+        {activeTab === 'ASSETS' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <AdminAssets />
+          </div>
         )}
 
         {activeTab === 'SITE' && (

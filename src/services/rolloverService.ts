@@ -37,22 +37,3 @@ export const getNextSessionDate = (weeklySessions?: { dayOfWeek: number, time: s
   nextSession.setDate(now.getDate() + 1);
   return nextSession.toISOString();
 };
-
-export const finalizeSession = async (weeklyHistory: any[], yearConfig: any, db?: any, weeklySessions?: any[]) => {
-  console.log("Finalizing session...");
-  
-  const startTime = Date.now();
-  
-  // Example metrics tracking
-  const metrics = {
-    expectedFields: 10,
-    updatedFields: 8,
-    saveStatus: 'success',
-    durationMs: Date.now() - startTime
-  };
-
-  // This is a placeholder for the actual rollover logic
-  // You would perform the database updates here and track the actual number of fields updated
-  
-  return metrics;
-};

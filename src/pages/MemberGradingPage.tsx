@@ -39,12 +39,18 @@ const MemberGradingPage: React.FC = () => {
             className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 cursor-pointer text-center"
             onClick={() => setSelectedMember(member)}
           >
-            <img 
-              src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.firstName + ' ' + member.lastName)}&background=00426a&color=fff`}
-              alt={`${member.firstName} ${member.lastName}`}
-              className="w-20 h-20 rounded-full mx-auto mb-3 object-cover"
-              referrerPolicy="no-referrer"
-            />
+            {member.avatar ? (
+              <img 
+                src={member.avatar}
+                alt={`${member.firstName} ${member.lastName}`}
+                className="w-20 h-20 rounded-full mx-auto mb-3 object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full mx-auto mb-3 bg-indigo-50 flex items-center justify-center text-indigo-500">
+                <User size={32} />
+              </div>
+            )}
             <h3 className="font-bold text-[#00426a]">{member.firstName} {member.lastName}</h3>
           </motion.div>
         ))}

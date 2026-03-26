@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Users, 
+  User,
   TrendingUp, 
   MessageSquare,
   Activity,
@@ -241,7 +242,10 @@ const CommunityAnalytics: React.FC = () => {
                       
                       <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin: 2px 0;">
                         <div style="font-size: 12px; font-weight: 700; color: #444;">${m.calculatedDistance.toFixed(2)} ק"מ</div>
-                        <img src="${m.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.firstName + ' ' + m.lastName)}&background=00426a&color=fff`}" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;" />
+                        ${m.avatar ? 
+                          `<img src="${m.avatar}" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;" />` :
+                          `<div style="width: 26px; height: 26px; border-radius: 50%; background: #00426a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 1px solid #eee;">${m.firstName[0]}</div>`
+                        }
                       </div>
                       
                       <div style="font-size: 10px; color: #777; font-weight: 700; margin-top: 2px; border-top: 1px solid #f5f5f5; padding-top: 4px; line-height: 1.1;">
@@ -1117,11 +1121,17 @@ const CommunityAnalytics: React.FC = () => {
                     stats.lowPulseMembers.map(member => (
                       <div key={member.id} className="flex items-center justify-between p-6 rounded-2xl admin-info-card border border-white/20 hover:bg-white/10 transition-all group/item shadow-lg">
                         <div className="flex items-center gap-4">
-                          <img 
-                            src={member.avatar || `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}&background=random`} 
-                            alt="" 
-                            className="w-12 h-12 rounded-xl border-2 border-white/20 shadow-inner object-cover"
-                          />
+                          {member.avatar ? (
+                            <img 
+                              src={member.avatar} 
+                              alt="" 
+                              className="w-12 h-12 rounded-xl border-2 border-white/20 shadow-inner object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 border-2 border-white/20 shadow-inner">
+                              <User size={24} />
+                            </div>
+                          )}
                           <div>
                             <p className="text-base font-black text-[#7A1555]">{member.firstName} {member.lastName}</p>
                             <p className="text-[12px] font-bold text-[#000000] italic">פעם אחרונה: {(member as any).lastSessionDate}</p>

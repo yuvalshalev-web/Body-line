@@ -33,7 +33,7 @@ import { getForecastAnalysis } from '../services/geminiService';
 import Markdown from 'react-markdown';
 
 import { useRandomHeader } from '../hooks/useRandomHeader';
-const staticHeroImage = '/assets/headers/header_1.jpeg';
+const staticHeroImage = '';
 // import staticHeroImage from '../assets/headers/header_1.jpeg';
 
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
@@ -235,7 +235,7 @@ const HomePage: React.FC = () => {
 
   const brandColor = '#F1D179';
 
-  const heroBg = staticHeroImage;
+  const heroBg = siteAssets?.staticHeroImage || '';
 
   return (
     <div className="space-y-16 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
@@ -319,44 +319,45 @@ const HomePage: React.FC = () => {
 
         {/* Confirmed Members Bar - Positioned below Hero, above AstroDecks */}
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-          <div className="home-glass-card p-6 md:p-10 flex flex-col items-center justify-center gap-8 overflow-hidden relative">
-            {/* Decorative background glows removed per user request */}
+          <div className="luxury-card p-10 flex flex-col items-center justify-center gap-8 overflow-hidden relative shadow-2xl">
+            <div className="grain-overlay" />
+            <div className="premium-sweep-fx" />
 
-            <div className="flex flex-col items-center gap-6 relative z-10 w-full">
+            <div className="flex flex-col items-center gap-8 relative z-10 w-full">
               {/* Centered Avatars */}
-              <div className="flex justify-center -space-x-3 md:-space-x-4 space-x-reverse">
+              <div className="flex justify-center -space-x-4 md:-space-x-6 space-x-reverse">
                 {attendees.slice(0, 12).map(a => (
                   <Link to={`/directory?id=${a.id}`} key={a.id} className="relative group feathered-avatar-hover">
                     {a.avatar ? (
                       <img 
                         src={a.avatar} 
-                        className="w-12 h-12 md:w-14 md:h-14 rounded-xl border border-white/20 shadow-md object-cover transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6 feathered-avatar" 
+                        className="w-14 h-14 md:w-16 md:h-16 rounded-2xl border-2 border-white/40 shadow-xl object-cover transition-all duration-500 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-4 group-hover:rotate-6 feathered-avatar" 
                         alt="" 
                         loading="lazy" 
                       />
                     ) : (
-                      <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 border border-white/20 flex items-center justify-center text-xs text-white font-black shadow-md transition-all duration-300 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-2 group-hover:rotate-6">
+                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-[#002b44] to-[#00426a] border-2 border-white/40 flex items-center justify-center text-sm text-white font-black shadow-xl transition-all duration-500 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-4 group-hover:rotate-6">
                         {a.firstName.charAt(0)}
                       </div>
                     )}
                     {/* Tooltip on hover */}
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 backdrop-blur-md text-white text-[12px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-30">
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 px-3 py-1.5 bg-[#002b44]/90 backdrop-blur-md text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap pointer-events-none z-30 shadow-xl border border-white/20">
                       {a.firstName} {a.lastName}
                     </div>
                   </Link>
                 ))}
                 {attendees.length > 12 && (
-                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-slate-800/80 backdrop-blur-md border border-white/20 flex items-center justify-center text-xs text-white font-black shadow-md z-10">
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-[#002b44]/80 backdrop-blur-md border-2 border-white/40 flex items-center justify-center text-sm text-white font-black shadow-xl z-10">
                     +{attendees.length - 12}
                   </div>
                 )}
               </div>
               
-              <div className="text-center space-y-2">
-                <h4 className="text-2xl md:text-3xl font-black text-[#000000] tracking-tight font-yehuda">
+              <div className="text-center space-y-3">
+                <h4 className="text-3xl md:text-5xl font-black text-[#002b44] tracking-tighter font-yehuda">
                   הכוכבים שאישרו הגעה
                 </h4>
-                <p className="text-sm md:text-base font-bold text-[#000000] uppercase tracking-widest font-yehuda">
+                <p className="text-sm md:text-lg font-black text-[#007085] uppercase tracking-[0.3em] font-yehuda opacity-80">
                   {attendees.length} גולשים כבר בפנים. מה איתך?
                 </p>
               </div>
@@ -364,7 +365,7 @@ const HomePage: React.FC = () => {
 
             <button 
               onClick={() => setShowAttendees(true)} 
-              className="px-10 py-4 bg-[var(--surfer-yellow)] text-black rounded-2xl font-black text-xs md:text-sm uppercase tracking-[0.2em] shadow-lg hover:scale-105 active:scale-95 transition-all relative z-10"
+              className="px-12 py-5 bg-[#007085] text-white rounded-2xl font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-2xl hover:scale-105 active:scale-95 transition-all relative z-10 border border-white/20"
             >
               צפה ברשימה המלאה
             </button>

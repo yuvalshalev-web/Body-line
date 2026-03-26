@@ -61,6 +61,14 @@ export const AdminRolloverReport: React.FC = () => {
     return unsub;
   }, []);
 
+  const recentLogs = useMemo(() => {
+    if (!logs.length) return [];
+    const lastStartIdx = logs.findIndex(l => l.action === 'start');
+    if (lastStartIdx === -1) return logs;
+    // Since logs are sorted desc, the logs for the most recent run are from index 0 to lastStartIdx
+    return logs.slice(0, lastStartIdx + 1);
+  }, [logs]);
+
   const rolloverSteps = [
     { id: 'start', label: 'התחלת תהליך סגירה' },
     { id: 'archive', label: 'הפיכת הסשן הקרוב להיסטורי' },
@@ -72,12 +80,6 @@ export const AdminRolloverReport: React.FC = () => {
     { id: 'save_db', label: 'שמירת כל העדכונים במסד הנתונים' },
     { id: 'complete', label: 'סיום תהליך סגירה' },
   ];
-
-  const getStepStatus = (stepId: string) => {
-    const log = logs.find(l => l.action === stepId);
-    if (!log) return 'pending';
-    return log.status;
-  };
 
   const handleFinalize = async () => {
     setError(null);
@@ -112,17 +114,17 @@ export const AdminRolloverReport: React.FC = () => {
       )}
 
       {/* Last Rollover Summary */}
-      {logs.find(l => l.action === 'complete') && (
+      {recentLogs.find(l => l.action === 'complete') && (
         <div className="mb-8 p-6 bg-slate-800 rounded-xl text-white">
           <h3 className="text-lg font-black mb-4">סיכום סגירת סשן אחרונה</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-slate-400 font-bold">מתוכנן (Expected)</p>
-              <p className="text-xl font-black">{logs.find(l => l.action === 'complete')?.metrics?.expectedFields || 'N/A'}</p>
+              <p className="text-xl font-black">{recentLogs.find(l => l.action === 'complete')?.metrics?.expectedFields || 'N/A'}</p>
             </div>
             <div>
               <p className="text-xs text-slate-400 font-bold">בוצע בפועל (Actual)</p>
-              <p className="text-xl font-black">{logs.find(l => l.action === 'complete')?.metrics?.updatedFields || 'N/A'}</p>
+              <p className="text-xl font-black">{recentLogs.find(l => l.action === 'complete')?.metrics?.updatedFields || 'N/A'}</p>
             </div>
           </div>
         </div>
@@ -139,7 +141,7 @@ export const AdminRolloverReport: React.FC = () => {
         <h3 className="text-lg font-black text-slate-800 mb-4">תהליך סגירת סשן</h3>
         <div className="space-y-3">
           {rolloverSteps.map((step) => {
-            const log = logs.find(l => l.action === step.id);
+            const log = recentLogs.find(l => l.action === step.id);
             const status = log ? log.status : 'idle';
             const metrics = log?.metrics;
             

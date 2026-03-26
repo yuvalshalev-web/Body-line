@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Save, Loader2, Calendar } from 'lucide-react';
+import { X, Save, Loader2, Calendar, User } from 'lucide-react';
 import { Member, PerformanceScore } from '../../types';
 import { db } from '../../services/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -197,12 +197,18 @@ const MemberGradingModal: React.FC<MemberGradingModalProps> = ({ isOpen, onClose
             </div>
 
             <div className="flex flex-col items-center mb-6 relative z-10">
-              <img 
-                src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.firstName + ' ' + member.lastName)}&background=0ea5e9&color=fff`} 
-                alt={`${member.firstName} ${member.lastName}`}
-                className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-[0_10px_25px_-5px_rgba(14,165,233,0.3)] mb-4"
-                referrerPolicy="no-referrer"
-              />
+              {member.avatar ? (
+                <img 
+                  src={member.avatar} 
+                  alt={`${member.firstName} ${member.lastName}`}
+                  className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-[0_10px_25px_-5px_rgba(14,165,233,0.3)] mb-4"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-sky-50 flex items-center justify-center text-sky-500 border-4 border-white shadow-[0_10px_25px_-5px_rgba(14,165,233,0.3)] mb-4">
+                  <User size={32} />
+                </div>
+              )}
               
               {averages && (
                 <div className="w-full p-4 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/60">

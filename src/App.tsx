@@ -39,7 +39,7 @@ const PageLoader = () => (
 
 const App: React.FC = () => {
   const { currentUser, logout, loading } = useAuth();
-  const { siteConfig } = useData();
+  const { siteConfig, siteAssets } = useData();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -74,6 +74,43 @@ const App: React.FC = () => {
       }
     };
   }, []);
+
+  // Inject Custom Fonts
+  React.useEffect(() => {
+    if (siteAssets?.fonts) {
+      const styleId = 'custom-fonts-style';
+      let styleEl = document.getElementById(styleId) as HTMLStyleElement;
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = styleId;
+        document.head.appendChild(styleEl);
+      }
+
+      const generateFontFace = (family: string, fontData: any, weight: string = 'normal') => {
+        if (!fontData) return '';
+        const files = Array.isArray(fontData) ? fontData : [{ url: fontData, format: 'woff' }];
+        if (files.length === 0) return '';
+        const src = files.map((f: any) => `url('${f.url}') format('${f.format || 'woff'}')`).join(', ');
+        return `
+          @font-face {
+            font-family: '${family}';
+            src: ${src};
+            font-weight: ${weight};
+            font-style: normal;
+            font-display: swap;
+          }
+        `;
+      };
+
+      let css = '';
+      css += generateFontFace('Yehuda CLM', siteAssets.fonts.yehudaLight, '300');
+      css += generateFontFace('Yehuda CLM', siteAssets.fonts.yehudaBold, '700');
+      css += generateFontFace('Miriwin', siteAssets.fonts.miriwin);
+      css += generateFontFace('Dana Yad Alef Alef', siteAssets.fonts.danaYad);
+      
+      styleEl.innerHTML = css;
+    }
+  }, [siteAssets?.fonts]);
 
   // Apply H1 Global Styles
   React.useEffect(() => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, AlertTriangle, CheckCircle2, Info, Compass, Save, Loader2 } from 'lucide-react';
 import WetsuitSVG from './WetsuitSVG';
-import { SurfboardOverlay } from './SurfboardOverlay';
+import { SurfboardOverlay, ExactSurfboard } from './SurfboardOverlay';
 import { Member } from '../types';
 import { SURFBOARD_CATALOG } from '../data/surfboardCatalog';
 import { calculateSurferFormula, calculateMatchScore, getBoardSize } from '../utils/surfMath';
@@ -188,60 +188,74 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
           >
             <div className="relative">
               <div className="space-y-8 transition-all duration-500">
-                <div className="bg-white/60 border border-white/40 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-8 shadow-sm">
-                  <div className="flex-1 text-center md:text-right">
-                    <h4 className="text-3xl font-black text-[#002b44] mb-3">{boardType}</h4>
-                    <div className="flex justify-center md:justify-start gap-6 mb-4">
-                      <div>
-                        <p className="text-[10px] text-[#007085] uppercase tracking-widest mb-1">נפח מומלץ</p>
-                        <p className="text-2xl font-black text-[#002b44]">{Math.ceil(recVol)}<span className="text-sm text-[#007085] ml-1">L</span></p>
+                <div className="luxury-card p-10 flex flex-col lg:flex-row items-center gap-12 shadow-2xl relative overflow-hidden">
+                  <div className="grain-overlay" />
+                  <div className="premium-sweep-fx" />
+                  
+                  <div className="flex-1 text-center lg:text-right space-y-8 relative z-10">
+                    <div>
+                      <h4 className="text-5xl font-black text-[#002b44] mb-3 tracking-tighter font-yehuda">{boardType}</h4>
+                      <div className="h-1.5 w-24 bg-[#007085] rounded-full mx-auto lg:mx-0 mb-8" />
+                    </div>
+                    
+                    <div className="flex justify-center lg:justify-start gap-8">
+                      <div className="bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-sm min-w-[140px] transition-transform hover:scale-105">
+                        <p className="text-[10px] text-[#007085] uppercase tracking-[0.2em] mb-2 font-black">נפח מומלץ</p>
+                        <p className="text-4xl font-black text-[#002b44]">{Math.ceil(recVol)}<span className="text-sm text-[#007085] ml-1">L</span></p>
                       </div>
-                      <div>
-                        <p className="text-[10px] text-[#007085] uppercase tracking-widest mb-1">אורך מומלץ</p>
-                        <p className="text-2xl font-black text-[#002b44]" dir="ltr">{getBoardSize(recLenInches * 2.54)}</p>
+                      <div className="bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-sm min-w-[140px] transition-transform hover:scale-105">
+                        <p className="text-[10px] text-[#007085] uppercase tracking-[0.2em] mb-2 font-black">אורך מומלץ</p>
+                        <p className="text-4xl font-black text-[#002b44]" dir="ltr">{getBoardSize(recLenInches * 2.54)}</p>
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <p className="text-[#002b44]/80 text-sm leading-relaxed bg-white/50 p-4 rounded-xl border border-white/40">{explanation}</p>
+
+                    <div className="space-y-6">
+                      <p className="text-[#002b44]/90 text-xl leading-relaxed font-bold font-yehuda">{explanation}</p>
+                      
                       {catalogItem && (
-                        <div className="bg-cyan-50/50 p-4 rounded-xl border border-cyan-100/50 space-y-3">
-                          <div className="flex justify-between items-center">
-                            <p className="text-[10px] text-cyan-700 uppercase tracking-widest font-bold">על סוג הגלשן:</p>
+                        <div className="bg-white/30 backdrop-blur-md p-8 rounded-3xl border border-white/40 space-y-6 text-right shadow-inner">
+                          <div className="flex flex-wrap justify-between items-center gap-4">
+                            <p className="text-xs text-[#007085] uppercase tracking-[0.3em] font-black">על סוג הגלשן:</p>
                             <div className="flex gap-3">
-                              <span className="text-[9px] bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full font-bold">אורך: {catalogItem.lengthRange}</span>
-                              <span className="text-[9px] bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded-full font-bold">נפח: {catalogItem.volumeRange}</span>
+                              <span className="text-[11px] bg-[#007085] text-white px-4 py-1.5 rounded-full font-black shadow-sm">אורך: {catalogItem.lengthRange}</span>
+                              <span className="text-[11px] bg-[#007085] text-white px-4 py-1.5 rounded-full font-black shadow-sm">נפח: {catalogItem.volumeRange}</span>
                             </div>
                           </div>
-                          <p className="text-[#002b44]/70 text-xs leading-relaxed italic">{catalogItem.description}</p>
-                          <div className="pt-2 border-t border-cyan-200/30">
-                            <p className="text-[9px] text-cyan-600 font-bold uppercase mb-1">השורה התחתונה:</p>
-                            <p className="text-[#002b44]/80 text-[11px] leading-relaxed font-medium">{catalogItem.bottomLine}</p>
+                          <p className="text-[#002b44]/80 text-base leading-relaxed font-medium">{catalogItem.description}</p>
+                          <div className="pt-6 border-t border-[#007085]/10">
+                            <p className="text-[11px] text-[#007085] font-black uppercase tracking-widest mb-2">השורה התחתונה:</p>
+                            <p className="text-[#002b44] text-lg leading-relaxed font-black italic font-yehuda">"{catalogItem.bottomLine}"</p>
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
                   
-                  <div className="flex justify-center items-end shrink-0 w-full md:w-auto -mx-4 md:mx-0">
+                  <div className="flex flex-col sm:flex-row justify-center items-center gap-16 lg:gap-12 shrink-0 w-full lg:w-auto py-12 relative z-10">
                     {wetsuit && (
-                      <div className="flex flex-col items-center gap-3 w-[185px] md:w-[200px] z-10 -mr-7 md:-mr-14 relative pt-10">
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-[#2A3F45] text-white text-[11px] font-bold px-4 py-1.5 rounded-full whitespace-nowrap shadow-lg z-30">
-                          {wetsuit.label} (המומלץ!)
-                        </div>
-                        <div className="h-[400px] md:h-[350px] w-full relative flex items-end justify-center bg-transparent p-0">
+                      <div className="flex flex-col items-center gap-8 w-full sm:w-[220px] group">
+                        <div className="relative h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
+                          <div className="absolute inset-0 bg-blue-500/10 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                           <WetsuitSVG thickness={wetsuit.thickness} alignBottom />
                         </div>
-                        <span className="text-[11px] font-bold text-[#002b44] text-center w-full leading-tight bg-white/50 px-2 py-1 rounded-lg border border-white/40">ביגוד מומלץ: {wetsuit.label}</span>
+                        <div className="text-center space-y-2">
+                          <p className="text-[11px] font-black text-[#007085] uppercase tracking-[0.3em] opacity-60">ביגוד מומלץ</p>
+                          <p className="text-2xl font-black text-[#002b44] tracking-tighter font-yehuda">{wetsuit.label}</p>
+                        </div>
                       </div>
                     )}
-                    <div className="flex flex-col items-center gap-3 w-[185px] md:w-[255px] z-20 relative pt-10">
-                      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-[#2A3F45] text-white text-[11px] font-bold px-4 py-1.5 rounded-full whitespace-nowrap shadow-lg z-30">
-                        {catalogItem?.name || boardType} (המומלץ!)
+                    
+                    <div className="flex flex-col items-center gap-8 w-full sm:w-[220px] group">
+                      <div className="relative h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
+                        <div className="absolute inset-0 bg-orange-500/10 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        <div className="w-28 h-full">
+                          <ExactSurfboard type={boardKey} isSelected={true} />
+                        </div>
                       </div>
-                      <div className="h-[400px] w-full relative flex items-end justify-center">
-                        <SurfboardOverlay selectedBoardType={boardKey} hideLabel />
+                      <div className="text-center space-y-2">
+                        <p className="text-[11px] font-black text-[#007085] uppercase tracking-[0.3em] opacity-60">גלשן מומלץ</p>
+                        <p className="text-2xl font-black text-[#002b44] tracking-tighter font-yehuda">{boardType}</p>
                       </div>
-                      <span className="text-[11px] font-bold text-[#002b44] text-center w-full leading-tight bg-white/50 px-2 py-1 rounded-lg border border-white/40">גלשן מומלץ: {boardType}</span>
                     </div>
                   </div>
                 </div>

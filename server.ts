@@ -200,126 +200,59 @@ async function startServer() {
   const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
   app.get("/api/coastal-weather", async (req, res) => {
-    console.log("DEBUG: /api/coastal-weather route reached!");
-    const requestId = Math.random().toString(36).substring(7);
-    const now = Date.now();
-    console.log(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Start`);
-
-    // Cache-Aside Pattern: Check if valid cache exists
-    if (coastalWeatherCache && (now - coastalWeatherCacheTime < CACHE_TTL)) {
-      console.log(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Returning cached data`);
-      return res.json(coastalWeatherCache);
-    }
-
-    console.log(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Cache miss, fetching fresh data`);
+    console.log("DEBUG: /api/coastal-weather route reached (Open-Meteo Proxy)!");
+    
     try {
-      const lat = req.query.lat || 32.16;
-      const lng = req.query.lng || 34.84;
+      const lat = 32.08;
+      const lon = 34.78;
       
-      // Fetch Marine data (Waves, Water Temp)
-      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&current=wave_height,sea_surface_temperature&timezone=auto`;
-      // Fetch Forecast data (Wind, UV Index)
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
+      // Fetch marine data
+      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period&hourly=sea_surface_temperature&timezone=auto`;
+      const marineRes = await fetch(marineUrl);
+      if (!marineRes.ok) throw new Error(`Marine API error: ${marineRes.status}`);
+      const marineData = await marineRes.json();
       
-      console.log(`[${new Date().toISOString()}] [${requestId}] Fetching marine data from: ${marineUrl}`);
-      console.log(`[${new Date().toISOString()}] [${requestId}] Fetching weather data from: ${weatherUrl}`);
-      console.log(`[${new Date().toISOString()}] [${requestId}] Fetch defined:`, typeof fetch !== 'undefined');
-
-      const [marineRes, weatherRes] = await Promise.all([
-        fetch(marineUrl).catch(err => {
-          console.error(`[${new Date().toISOString()}] [${requestId}] Marine fetch failed:`, err);
-          return { ok: false, status: 500 } as any;
-        }),
-        fetch(weatherUrl).catch(err => {
-          console.error(`[${new Date().toISOString()}] [${requestId}] Weather fetch failed:`, err);
-          return { ok: false, status: 500 } as any;
-        })
-      ]);
-
-      console.log(`[${new Date().toISOString()}] [${requestId}] Marine response: status=${marineRes.status}, type=${marineRes.headers?.get('content-type')}`);
-      console.log(`[${new Date().toISOString()}] [${requestId}] Weather response: status=${weatherRes.status}, type=${weatherRes.headers?.get('content-type')}`);
-
-      let marineData = null;
-      if (marineRes.ok) {
-        const contentType = marineRes.headers?.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          marineData = await marineRes.json().catch((err: any) => {
-            console.error(`[${new Date().toISOString()}] [${requestId}] Failed to parse marine JSON:`, err);
-            return null;
-          });
-        } else {
-          const text = await marineRes.text();
-          console.warn(`[${new Date().toISOString()}] [${requestId}] Marine API returned non-JSON: ${text.substring(0, 200)}...`);
+      // Fetch weather data
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m&daily=uv_index_max&timezone=auto`;
+      const weatherRes = await fetch(weatherUrl);
+      if (!weatherRes.ok) throw new Error(`Weather API error: ${weatherRes.status}`);
+      const weatherData = await weatherRes.json();
+      
+      // Find current sea surface temp
+      const now = new Date();
+      const currentHour = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:00`;
+      
+      let waterTemp = 20; // fallback
+      if (marineData.hourly && marineData.hourly.time) {
+        const index = marineData.hourly.time.findIndex((t: string) => t === currentHour);
+        if (index !== -1 && marineData.hourly.sea_surface_temperature[index] !== null) {
+          waterTemp = marineData.hourly.sea_surface_temperature[index];
+        } else if (marineData.hourly.sea_surface_temperature.length > 0) {
+          waterTemp = marineData.hourly.sea_surface_temperature[0];
         }
       }
 
-      let weatherData = null;
-      if (weatherRes.ok) {
-        const contentType = weatherRes.headers?.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          weatherData = await weatherRes.json().catch((err: any) => {
-            console.error(`[${new Date().toISOString()}] [${requestId}] Failed to parse weather JSON:`, err);
-            return null;
-          });
-        } else {
-          const text = await weatherRes.text();
-          console.warn(`[${new Date().toISOString()}] [${requestId}] Weather API returned non-JSON: ${text.substring(0, 200)}...`);
-        }
-      }
-
-      const data = {
-        waterTemp: marineData?.current?.sea_surface_temperature || 20,
-        waveHeight: marineData?.current?.wave_height || 1,
-        wavePeriod: marineData?.current?.wave_period || 6,
-        windSpeed: weatherData?.current?.wind_speed_10m || 10,
-        windDirection: weatherData?.current?.wind_direction_10m || 0,
-        uvIndex: Math.round(weatherData?.current?.uv_index || 0),
+      const result = {
+        location: "תל אביב",
         timestamp: new Date().toISOString(),
-        location: "חוף מרכז",
-        source: marineData && weatherData ? "Open-Meteo Real-time" : "Partial Real-time / Fallback",
+        waveHeight: marineData.current?.wave_height || 0,
+        wavePeriod: marineData.current?.wave_period || 0,
+        windSpeed: weatherData.current?.wind_speed_10m || 0,
+        windDirection: weatherData.current?.wind_direction_10m || 0,
+        waterTemp: waterTemp,
+        uvIndex: weatherData.daily?.uv_index_max?.[0] || 0,
         syncStatus: {
-          waterTemp: !!marineData,
-          waveHeight: !!marineData,
-          wavePeriod: !!marineData,
-          wind: !!weatherData,
-          uvIndex: !!weatherData
+          waveHeight: true,
+          wind: true,
+          waterTemp: true,
+          uvIndex: true
         }
       };
-
-      // Update cache
-      coastalWeatherCache = data;
-      coastalWeatherCacheTime = now;
-
-      console.log(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Success, cache updated`);
-      res.json(data);
-    } catch (error: any) {
-      console.error(`[${new Date().toISOString()}] [${requestId}] GET /api/coastal-weather - Critical Error:`, error);
       
-      // If we have a stale cache, return it on error as fallback
-      if (coastalWeatherCache) {
-        console.log(`[${new Date().toISOString()}] [${requestId}] Returning stale cache due to error`);
-        return res.json(coastalWeatherCache);
-      }
-
-      const hour = new Date().getHours();
-      res.json({
-        waterTemp: 20,
-        waveHeight: 1,
-        wavePeriod: 6,
-        windSpeed: 10,
-        windDirection: 0,
-        uvIndex: (hour >= 19 || hour < 6) ? 0 : 3,
-        timestamp: new Date().toISOString(),
-        location: "חוף מרכז (מצב חירום)",
-        source: "Fallback",
-        syncStatus: {
-          waterTemp: false,
-          waveHeight: false,
-          wavePeriod: false,
-          wind: false,
-          uvIndex: false
-        }
-      });
+      res.json(result);
+    } catch (error) {
+      console.error("Open-Meteo API Proxy error:", error);
+      res.status(500).json({ error: 'Failed to fetch weather data' });
     }
   });
 
