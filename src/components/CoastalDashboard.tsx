@@ -409,7 +409,7 @@ export const CoastalDashboard: React.FC = () => {
           
           <Waves className="text-cyan-500 mb-1 group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 relative z-10 drop-shadow-sm" size={28} />
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-none relative z-10">Forecast</span>
-          <span className="text-lg font-black text-slate-800 relative z-10" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>תחזית גלים</span>
+          <span className="text-lg font-black text-slate-800 relative z-10" style={{ fontFamily: "var(--primary-font)" }}>תחזית גלים</span>
           
           {/* Interaction Indicator */}
           <div 
@@ -434,7 +434,7 @@ export const CoastalDashboard: React.FC = () => {
           
           <Video className="text-amber-500 mb-1 group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 relative z-10 drop-shadow-sm" size={28} />
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-none relative z-10">Live Stream</span>
-          <span className="text-lg font-black text-slate-800 relative z-10" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>מצלמת חוף</span>
+          <span className="text-lg font-black text-slate-800 relative z-10" style={{ fontFamily: "var(--primary-font)" }}>מצלמת חוף</span>
           
           {/* Interaction Indicator */}
           <div 

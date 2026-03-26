@@ -122,7 +122,7 @@ const SeasonalPersistence: React.FC = () => {
             <Waves className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
           </div>
           <div className="flex items-center gap-2">
-            <h3 className="text-3xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>דופק האוקיינוס</h3>
+            <h3 className="text-3xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "var(--primary-font)" }}>דופק האוקיינוס</h3>
             <div className="gt-info-wrapper relative cursor-help">
               <Info size={16} className="text-black/40 hover:text-black transition-colors" />
               <div className="gt-tooltip">
@@ -140,7 +140,7 @@ const SeasonalPersistence: React.FC = () => {
             <Zap className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
           </div>
           <div className="flex items-center gap-2">
-            <h3 className="text-3xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>אחוזי התמדה קהילתיים</h3>
+            <h3 className="text-3xl font-black text-[#000000] tracking-tight" style={{ fontFamily: "var(--primary-font)" }}>אחוזי התמדה קהילתיים</h3>
             <div className="gt-info-wrapper relative cursor-help">
               <Info size={16} className="text-black/40 hover:text-black transition-colors" />
               <div className="gt-tooltip">

@@ -18,8 +18,8 @@ export const RankRoadmap: React.FC<{ name: string, sessions: number, overallProg
       <div className="absolute inset-0 pointer-events-none opacity-40 whiteboard-smudge z-0" />
 
       {/* Content */}
-      <div className="relative z-10 p-6 md:p-10 flex flex-col gap-8 text-right font-dana-yad" dir="rtl" style={{ color: '#164E63' }}>
-        <h2 className="text-4xl md:text-5xl font-bold mb-2 text-center font-dana-yad" style={{ transform: 'rotate(-2deg)' }}>
+      <div className="relative z-10 p-6 md:p-10 flex flex-col gap-8 text-right font-dana-yad" dir="rtl" style={{ color: '#164E63', fontFamily: "'Dana Yad Alef Alef', 'DanaYad', 'DanaYadBackup', 'Amatic SC', cursive" }}>
+        <h2 className="text-4xl md:text-5xl font-normal mb-2 text-center font-dana-yad" style={{ transform: 'rotate(-2deg)', fontFamily: "'Dana Yad Alef Alef', 'DanaYad', 'DanaYadBackup', 'Amatic SC', cursive" }}>
           מה הוויב שלך בליין-אפ?
         </h2>
         

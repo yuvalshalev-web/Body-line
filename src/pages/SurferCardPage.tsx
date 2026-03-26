@@ -74,7 +74,7 @@ const SurferCardPage: React.FC = () => {
 
       {/* Motivation Card & Rank Roadmap */}
       <div className="max-w-5xl mx-auto mb-6 text-center lg:text-right px-4" dir="rtl">
-        <h2 className="text-3xl md:text-4xl font-black text-[#0c4a6e] tracking-tight">
+        <h2 className="text-3xl md:text-4xl font-normal text-red-500 tracking-tight font-dana-yad" style={{ fontFamily: "'Dana Yad Alef Alef', 'DanaYad', 'DanaYadBackup', 'Amatic SC', cursive" }}>
           הגעת – ניצחת. כל השאר בונוס
         </h2>
       </div>

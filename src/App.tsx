@@ -88,13 +88,26 @@ const App: React.FC = () => {
 
       const generateFontFace = (family: string, fontData: any, weight: string = 'normal') => {
         if (!fontData) return '';
-        const files = Array.isArray(fontData) ? fontData : [{ url: fontData, format: 'woff' }];
-        if (files.length === 0) return '';
-        const src = files.map((f: any) => `url('${f.url}') format('${f.format || 'woff'}')`).join(', ');
+        
+        // AdminAssets stores fonts as an array of {url, name, format}
+        const fonts = Array.isArray(fontData) ? fontData : [fontData];
+        if (fonts.length === 0) return '';
+        
+        // We'll take the first valid font in the array (usually the most recent or only one)
+        const font = fonts[fonts.length - 1]; 
+        const url = typeof font === 'string' ? font : font.url;
+        if (!url) return '';
+        
+        // Detect format from URL extension if not provided
+        let format = typeof font === 'object' && font.format ? font.format : 'woff';
+        if (url.toLowerCase().includes('.ttf')) format = 'truetype';
+        if (url.toLowerCase().includes('.otf')) format = 'opentype';
+        if (url.toLowerCase().includes('.woff2')) format = 'woff2';
+
         return `
           @font-face {
             font-family: '${family}';
-            src: ${src};
+            src: url('${url}') format('${format}');
             font-weight: ${weight};
             font-style: normal;
             font-display: swap;
@@ -103,6 +116,7 @@ const App: React.FC = () => {
       };
 
       let css = '';
+      // Unify under 'Yehuda CLM' family name
       css += generateFontFace('Yehuda CLM', siteAssets.fonts.yehudaLight, '300');
       css += generateFontFace('Yehuda CLM', siteAssets.fonts.yehudaBold, '700');
       css += generateFontFace('Miriwin', siteAssets.fonts.miriwin);

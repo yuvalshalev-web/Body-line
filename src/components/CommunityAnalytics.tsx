@@ -1198,7 +1198,7 @@ const CommunityAnalytics: React.FC = () => {
         <div className="admin-info-card p-8 rounded-[3rem] border border-white/40 shadow-[0_20px_40px_rgba(0,0,0,0.1)] flex flex-col items-center mt-8 relative overflow-hidden backdrop-blur-xl bg-white/30">
           <div className="absolute inset-0 bg-gradient-to-br from-[var(--surfer-cyan)]/10 to-transparent pointer-events-none" />
           
-          <h3 className="text-3xl font-black text-[#000000] tracking-tight mb-8 z-10" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>רדיוס הקהילה</h3>
+          <h3 className="text-3xl font-black text-[#000000] tracking-tight mb-8 z-10" style={{ fontFamily: "var(--primary-font)" }}>רדיוס הקהילה</h3>
           
           <div className="w-[450px] relative darts-wrapper flex flex-col items-center z-10">
             <canvas ref={canvasRef} id="dartsBoard" width="450" height="450" className="rounded-full" />

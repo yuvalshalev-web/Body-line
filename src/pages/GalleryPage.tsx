@@ -157,7 +157,7 @@ const GalleryPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-right animate-in fade-in duration-700 pb-20" dir="rtl" style={{ fontFamily: "'Yehuda CLM', sans-serif" }}>
+    <div className="min-h-screen bg-transparent text-right animate-in fade-in duration-700 pb-20" dir="rtl" style={{ fontFamily: "var(--primary-font)" }}>
       {/* Body-line Standard Header Stack */}
       <div className="surfboard-hero-container mb-0 space-y-2 header-wallpaper !py-12 pb-24" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
         <div className="header-content-wrapper relative z-20">
