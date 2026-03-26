@@ -21,7 +21,6 @@ export const AdminAssets: React.FC = () => {
     setUploading(type + (fontName || ''));
 
     try {
-      console.log('Starting upload for type:', type, 'fontName:', fontName);
       let path = '';
       if (type === 'staticHero') {
         path = `assets/headers/static_hero_${Date.now()}_${file.name}`;
@@ -40,26 +39,15 @@ export const AdminAssets: React.FC = () => {
       }
 
       const storageRef = ref(firebaseStorage, path);
-      console.log('Uploading to path:', path);
-      try {
-        await uploadBytes(storageRef, file, {
-          contentType: file.type,
-          customMetadata: {
-            uploadedBy: 'admin',
-            timestamp: new Date().toISOString()
-          }
-        });
-      } catch (uploadErr: any) {
-        console.error('UploadBytes failed:', uploadErr);
-        console.error('Error code:', uploadErr.code);
-        console.error('Error message:', uploadErr.message);
-        console.error('Error server response:', uploadErr.serverResponse);
-        throw uploadErr;
-      }
-      console.log('Upload successful, getting download URL...');
+      await uploadBytes(storageRef, file, {
+        contentType: file.type,
+        customMetadata: {
+          uploadedBy: 'admin',
+          timestamp: new Date().toISOString()
+        }
+      });
       const url = await getDownloadURL(storageRef);
 
-      console.log('Uploading asset:', { type, fontName, url });
       let newAssets = { ...siteAssets };
       if (type === 'staticHero') {
         newAssets.staticHeroImage = url;
@@ -77,18 +65,15 @@ export const AdminAssets: React.FC = () => {
         const updatedFonts = Array.isArray(currentFonts) ? [...currentFonts, fontData] : [{ url: currentFonts, name: 'קובץ קודם', format: 'woff' }, fontData];
         newAssets.fonts = { ...(newAssets.fonts || {}), [fontName]: updatedFonts };
       } else if (type === 'surfboardModels' && fontName) {
-        console.log('Updating surfboardModels:', fontName, url);
         newAssets.surfboardModels = { ...(newAssets.surfboardModels || {}), [fontName]: url };
       } else {
         // Handle specific UI assets
         newAssets[type] = url;
       }
 
-      console.log('New assets to save:', newAssets);
       await updateSiteAssets(newAssets);
       setSuccess('הקובץ הועלה בהצלחה!');
     } catch (err: any) {
-      console.error('Upload error:', err);
       setError('שגיאה בהעלאת הקובץ: ' + err.message);
     } finally {
       setUploading(null);
@@ -103,12 +88,10 @@ export const AdminAssets: React.FC = () => {
     setSuccess(null);
 
     try {
-      console.log('Deleting asset:', { type, urlToDelete, fontName });
       const storageRef = ref(firebaseStorage, urlToDelete);
       
       try {
         await deleteObject(storageRef);
-        console.log('File deleted from storage');
       } catch (e) {
         console.warn('File might not exist in storage, removing from DB anyway', e);
       }
@@ -146,7 +129,6 @@ export const AdminAssets: React.FC = () => {
       await updateSiteAssets(newAssets);
       setSuccess('הקובץ נמחק בהצלחה!');
     } catch (err: any) {
-      console.error('Delete error:', err);
       setError('שגיאה במחיקת הקובץ: ' + err.message);
     }
   };

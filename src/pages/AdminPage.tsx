@@ -6,7 +6,7 @@ import {
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
-  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Sparkles, Globe, Activity, AlertTriangle, Terminal,
+  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Globe, Activity, AlertTriangle, Terminal,
   FileText, Map as MapIcon, Clock, Upload
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -20,7 +20,6 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getStorageInstance } from '../services/firebase';
 import { processImage } from '../utils/imageProcessor';
 import { updateStorageStats, syncStorageOnUpload } from '../utils/storageStats';
-import { ColorPickerIcon } from '../components/icons/ColorPickerIcon';
 import { extractAddressData, loadGoogleMaps } from '../utils/googlePlaces';
 import { TimePicker } from '../components/TimePicker';
 import { DayPicker } from '../components/DayPicker';
@@ -36,14 +35,7 @@ import MemberGradingPage from './MemberGradingPage';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { calculateUserStats } from '../utils/analytics';
 
-const ASSET_LABELS: Record<string, string> = {
-  habalZugLogo: 'לוגו חבל זוג',
-  atalefLogo: 'לוגו עמותת העטלף',
-  reefLogo: 'לוגו מועדון ריף',
-  heroBg: 'תמונת רקע ראשית',
-  loginBg: 'תמונת רקע כניסה',
-  favicon: 'אייקון אתר (Favicon)'
-};
+
 
 const AdminPage: React.FC = () => {
   const headerImage = useRandomHeader();
@@ -55,7 +47,7 @@ const AdminPage: React.FC = () => {
     yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, weeklyHistory
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'SITE' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM' | 'GRADES' | 'ASSETS'>('USERS');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM' | 'GRADES' | 'ASSETS'>('USERS');
   const [newSessionDay, setNewSessionDay] = useState(0);
   const [newSessionTime, setNewSessionTime] = useState('07:00');
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
@@ -70,8 +62,7 @@ const AdminPage: React.FC = () => {
     { id: 'ARCHIVE', label: 'ארכיון', icon: <Archive size={20} /> },
     { id: 'REQUESTS', label: 'בקשות', icon: <UserCheck size={20} />, count: joinRequests.length },
     { id: 'ENGINE_ROOM', label: 'חדר מכונות', icon: <Terminal size={20} /> },
-    { id: 'ASSETS', label: 'נכסים ועיצוב', icon: <ImageIcon size={20} /> },
-    { id: 'SITE', label: 'הגדרות', icon: <Settings size={20} /> }
+    { id: 'ASSETS', label: 'נכסים ועיצוב', icon: <ImageIcon size={20} /> }
   ];
 
   const isAdmin = currentUser?.role === 'Admin';
@@ -82,10 +73,7 @@ const AdminPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [approvedUser, setApprovedUser] = useState<{ firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null>(null);
-  const [editingAsset, setEditingAsset] = useState<{ key: string, value: string } | null>(null);
-  const [isUploadingAsset, setIsUploadingAsset] = useState<string | null>(null);
-  const assetFileInputRef = useRef<HTMLInputElement>(null);
-  const [replacingAssetKey, setReplacingAssetKey] = useState<string | null>(null);
+
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [editingConflictId, setEditingConflictId] = useState<string | null>(null);
@@ -126,7 +114,7 @@ const AdminPage: React.FC = () => {
   const selectedPlaceRef = useRef<any>(null);
 
   useEffect(() => {
-    if (activeTab !== 'SITE') return;
+    if (activeTab !== 'ASSETS') return;
 
     const initAutocomplete = () => {
       // הגנה משופרת: בודקים שכל שרשרת האובייקטים קיימת לפני הגישה אליהם
@@ -197,82 +185,6 @@ const AdminPage: React.FC = () => {
     };
   }, [activeTab]);
 
-  // לוגיקה לאובייקטים של Turquoise Glassmorphism
-  useEffect(() => {
-    if (activeTab !== 'SITE') return;
-
-    const cleanupFns: (() => void)[] = [];
-
-    // 1. תפעול ה-Toggle (הדלקה/כיבוי)
-    const toggles = document.querySelectorAll('.gt-toggle');
-    toggles.forEach(toggle => {
-        const handleClick = () => toggle.classList.toggle('active');
-        toggle.addEventListener('click', handleClick);
-        cleanupFns.push(() => toggle.removeEventListener('click', handleClick));
-    });
-
-    // 2. תפעול ה-Segmented Control (מעבר בין אפשרויות)
-    const segmentedContainers = document.querySelectorAll('.gt-segmented');
-    segmentedContainers.forEach(container => {
-        const items = container.querySelectorAll('.gt-segment-item');
-        items.forEach(item => {
-            const handleClick = () => {
-                items.forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-            };
-            item.addEventListener('click', handleClick);
-            cleanupFns.push(() => item.removeEventListener('click', handleClick));
-        });
-    });
-
-    // 3. תפעול ה-Stepper (פלוס/מינוס)
-    const steppers = document.querySelectorAll('.gt-stepper');
-    steppers.forEach(stepper => {
-        const valDisplay = stepper.querySelector('.gt-step-val');
-        const btnMinus = stepper.querySelector('.minus');
-        const btnPlus = stepper.querySelector('.plus');
-        
-        if (!valDisplay || !btnMinus || !btnPlus) return;
-
-        let count = parseInt(valDisplay.textContent || '0') || 0;
-
-        const handleMinus = () => {
-            count--;
-            valDisplay.textContent = count.toString();
-        };
-        
-        const handlePlus = () => {
-            count++;
-            valDisplay.textContent = count.toString();
-        };
-
-        btnMinus.addEventListener('click', handleMinus);
-        btnPlus.addEventListener('click', handlePlus);
-        cleanupFns.push(() => {
-            btnMinus.removeEventListener('click', handleMinus);
-            btnPlus.removeEventListener('click', handlePlus);
-        });
-    });
-
-    // 4. תפעול ה-Color Picker הגלובלי
-    const colorPicker = document.getElementById('global-theme-color-picker') as HTMLInputElement;
-    const hexDisplay = document.getElementById('hex-display');
-    
-    if (colorPicker && hexDisplay) {
-        const handleInput = (e: any) => {
-            const newColor = e.target.value;
-            document.documentElement.style.setProperty('--gt-accent', newColor);
-            hexDisplay.textContent = newColor.toUpperCase();
-            (hexDisplay as HTMLElement).style.background = newColor;
-        };
-
-        colorPicker.addEventListener('input', handleInput);
-        cleanupFns.push(() => colorPicker.removeEventListener('input', handleInput));
-    }
-
-    return () => cleanupFns.forEach(fn => fn());
-  }, [activeTab]);
-
   // Year Config State
   const [isEditingYear, setIsEditingYear] = useState(false);
   const [yearForm, setYearForm] = useState({ startDate: '', endDate: '' });
@@ -308,107 +220,6 @@ const AdminPage: React.FC = () => {
   // Event Editing State
   const [editingEvent, setEditingEvent] = useState<any>(null);
 
-  // Color Catalog Logic
-  useEffect(() => {
-    if (activeTab !== 'SITE') return;
-
-    const generateColorCatalog = () => {
-      const container = document.getElementById('palettes-container');
-      if (!container) return;
-      
-      container.innerHTML = ''; // Clear existing
-
-      const themes = [
-        { 
-          name: 'פלטת Ocean', 
-          variables: [
-            '--ocean-1', '--ocean-2', '--ocean-3', '--ocean-4', '--ocean-5',
-            '--ocean-6', '--ocean-7', '--ocean-8', '--ocean-9', '--ocean-10',
-            '--ocean-bg', '--ocean-liquid'
-          ] 
-        },
-        { 
-          name: 'פלטת Sand', 
-          variables: [
-            '--sand-light', '--sand-medium', '--sand-dark', '--sand-deep', '--sand-accent'
-          ] 
-        },
-        {
-          name: 'פלטת Surfers Theme',
-          variables: [
-            '--vibrant-cyan', '--turquoise-teal', '--electric-red-pink', 
-            '--deep-magenta', '--sunshine-yellow', '--golden-orange',
-            '--deep-shadow', '--tan-skin', '--deep-teal-sea', '--aqua-mist'
-          ]
-        },
-        {
-          name: 'צבעי מערכת ו-Glassmorphism',
-          variables: [
-            '--accent-blue', '--bg-main', '--bg-alt', '--text-main', '--text-muted',
-            '--glass-bg', '--glass-text', '--glass-text-dark'
-          ]
-        },
-        {
-          name: 'פלטת Neo-Brutalism',
-          variables: [
-            '--electric-pink', '--vibrant-cyan', '--sunshine-yellow', '--acid-green',
-            '--safety-orange', '--deep-magenta', '--midnight-black', '--soft-sand', '--pure-white'
-          ]
-        }
-      ];
-
-      themes.forEach(theme => {
-        const group = document.createElement('div');
-        group.className = 'palette-group';
-        group.innerHTML = `<h3>${theme.name}</h3>`;
-        
-        const grid = document.createElement('div');
-        grid.className = 'color-grid';
-
-        theme.variables.forEach(v => {
-          const value = getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-          if (value) {
-            const card = document.createElement('div');
-            card.className = 'color-card';
-            
-            card.innerHTML = `
-              <div class="color-swatch" style="background-color: var(${v})"></div>
-              <span class="color-hex">${value}</span>
-              <span class="color-var-name">${v}</span>
-            `;
-
-            card.onclick = async () => {
-              try {
-                await navigator.clipboard.writeText(value);
-                const hexSpan = card.querySelector('.color-hex') as HTMLElement;
-                const originalText = hexSpan.innerText;
-                hexSpan.innerText = "הועתק! ✅";
-                hexSpan.style.color = "#ff009f";
-                setTimeout(() => { 
-                  hexSpan.innerText = originalText; 
-                  hexSpan.style.color = "#666";
-                }, 1500);
-              } catch (err) {
-                console.error('שגיאה בהעתקה:', err);
-              }
-            };
-
-            grid.appendChild(card);
-          }
-        });
-
-        if (grid.children.length > 0) {
-          group.appendChild(grid);
-          container.appendChild(group);
-        }
-      });
-    };
-
-    // Run after a short delay to ensure CSS is applied
-    const timer = setTimeout(generateColorCatalog, 500);
-    return () => clearTimeout(timer);
-  }, [activeTab]);
-  
   // Post Editing State
   const [editingPost, setEditingPost] = useState<any>(null);
 
@@ -430,31 +241,7 @@ const AdminPage: React.FC = () => {
     setEditingEvent(event);
   };
 
-  const handleAssetFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !replacingAssetKey) return;
 
-    setIsUploadingAsset(replacingAssetKey);
-    try {
-      const processed = await processImage(file, 1200, 0.9, 500);
-      const storage = getStorageInstance();
-      const storageRef = ref(storage, `assets/site/${replacingAssetKey}_${Date.now()}`);
-      
-      await uploadBytes(storageRef, processed.blob);
-      await syncStorageOnUpload(processed.blob.size);
-      const downloadUrl = await getDownloadURL(storageRef);
-      
-      await updateSiteAssets({ [replacingAssetKey]: downloadUrl });
-      showSuccess('הנכס עודכן בהצלחה');
-    } catch (err) {
-      console.error(err);
-      showError('שגיאה בהעלאת הנכס');
-    } finally {
-      setIsUploadingAsset(null);
-      setReplacingAssetKey(null);
-      if (e.target) e.target.value = '';
-    }
-  };
 
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -502,38 +289,7 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const handleUpdateAsset = async () => {
-    if (!editingAsset) return;
-    try {
-      await updateSiteAssets({ [editingAsset.key]: editingAsset.value });
-      setEditingAsset(null);
-    } catch (err) {
-      console.error(err);
-      showError('שגיאה בעדכון הנכס');
-    }
-  };
 
-  const resetAssets = async () => {
-    showConfirm({
-      message: 'האם לאפס את כל הנכסים לערכי ברירת המחדל?',
-      onConfirm: async () => {
-        const defaults = {
-          habalZugLogo: "",
-          atalefLogo: "",
-          reefLogo: "",
-          heroBg: "",
-          loginBg: ""
-        };
-        try {
-          await updateSiteAssets(defaults);
-          showSuccess('הנכסים אופסו בהצלחה');
-        } catch (err) {
-          console.error(err);
-          showError('שגיאה באיפוס הנכסים');
-        }
-      }
-    });
-  };
 
   const filteredRequests = joinRequests.filter(req => 
     (req.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -600,9 +356,15 @@ const AdminPage: React.FC = () => {
 
   return (
     <div className="relative min-h-screen luxury-bg text-right space-y-12 pb-20 pt-8" dir="rtl">
-      <div className="max-w-7xl mx-auto">
+      {/* Background Glows to make glassmorphism pop */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-sky-200/20 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-rose-200/20 blur-[120px] rounded-full" />
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Combined Header Unit with Integrated Nav - Boxed Inset */}
-        <div className="bg-white/50 backdrop-blur-sm rounded-[2.5rem] p-6 mb-12 shadow-sm border border-white/20">
+        <div className="luxury-card p-6 mb-12 border border-white/40">
           <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10 rounded-[2rem]" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
             <div className="header-content-wrapper relative z-20">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
@@ -646,7 +408,6 @@ const AdminPage: React.FC = () => {
                     { id: 'REQUESTS', label: 'בקשות הצטרפות', desc: `${joinRequests.length} ממתינים לאישור`, icon: UserCheck, color: 'bg-[#FF2D60]', count: joinRequests.length },
                     { id: 'ENGINE_ROOM', label: 'חדר מכונות', desc: 'ניטור תשתיות ומערכות', icon: Terminal, color: 'bg-[#8B5CF6]' },
                     { id: 'ASSETS', label: 'נכסים ועיצוב', desc: 'תמונות ופונטים', icon: ImageIcon, color: 'bg-[#FF9F1C]' },
-                    { id: 'SITE', label: 'הגדרות אתר', desc: 'לוגואים, רקעים ונכסים', icon: Settings, color: 'bg-[#00FFFF]' },
                     { id: 'ARCHIVE', label: 'ארכיון משתמשים', desc: 'ניהול חברים שהושעו', icon: Archive, color: 'bg-[#FFD700]' }
                   ] : [])
                 ].map((item) => (
@@ -1083,65 +844,63 @@ const AdminPage: React.FC = () => {
         )}
 
         {activeTab === 'ENGINE_ROOM' && (
-          <div className="min-h-screen bg-[#fdfdfd] relative overflow-hidden pb-32 pt-8">
-            {/* Elite Alabaster Background Elements */}
-            <div className="absolute inset-0 opacity-[0.015] pointer-events-none" 
-                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
-            <div className="absolute top-0 left-0 w-[1000px] h-[1000px] bg-[#B2EBF2]/5 rounded-full blur-[200px] -translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute bottom-0 right-0 w-[1000px] h-[1000px] bg-[#B2EBF2]/5 rounded-full blur-[200px] translate-x-1/2 translate-y-1/2" />
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            {/* Header Section */}
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-black text-slate-800">חדר מכונות</h2>
+            </div>
 
-            <div className="max-w-7xl mx-auto px-8 flex flex-col gap-16 relative z-10">
-              <SystemMonitor />
+            <SystemMonitor />
 
-              <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <button 
-                    onClick={() => setMarkdownConfig({ isOpen: true, path: '/README.md', title: 'מדריך למשתמש (User Guide)' })}
-                    className="w-full admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-8 group hover:scale-[1.01] transition-all text-right flex items-center gap-6 border-l-8 border-l-[#00426a] relative shadow-xl border border-white/20"
-                  >
-                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
-                      <FileText size={100} color="#0071a1" />
-                    </div>
-                    <div className="p-5 bg-[#0071a1]/10 text-[#0071a1] rounded-2xl group-hover:bg-[#0071a1] group-hover:text-white transition-all shadow-inner relative z-10 shrink-0 border border-white/20">
-                      <FileText size={32} />
-                    </div>
-                    <div className="relative z-10">
-                      <h4 className="text-xl font-black text-[#00426a] mb-1">מדריך למשתמש</h4>
-                      <p className="text-xs text-[#00426a] font-bold leading-relaxed opacity-80">צפייה בקובץ README.md לקבלת מידע טכני ותפעולי על הפרויקט</p>
-                    </div>
-                  </button>
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <button 
+                onClick={() => setMarkdownConfig({ isOpen: true, path: '/README.md', title: 'מדריך למשתמש (User Guide)' })}
+                className="w-full luxury-card p-8 group hover:scale-[1.01] transition-all text-right flex items-center gap-6 relative overflow-hidden"
+              >
+                <div className="absolute -right-8 -top-8 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+                  <FileText size={160} className="text-slate-900" />
+                </div>
+                <div className="p-5 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-sky-500 group-hover:text-white transition-all shadow-sm relative z-10 shrink-0 border border-slate-100">
+                  <FileText size={32} />
+                </div>
+                <div className="relative z-10">
+                  <h4 className="text-xl font-black text-slate-800 mb-1">מדריך למשתמש</h4>
+                  <p className="text-xs text-slate-500 font-bold leading-relaxed opacity-80">צפייה בקובץ README.md לקבלת מידע טכני ותפעולי על הפרויקט</p>
+                </div>
+              </button>
 
-                  <button 
-                    onClick={() => setMarkdownConfig({ isOpen: true, path: '/PROJECT_MAP.md', title: 'מפת הפרויקט (Project Map)' })}
-                    className="w-full admin-info-card bg-[#f0f8ff]/10 backdrop-blur-md p-8 group hover:scale-[1.01] transition-all text-right flex items-center gap-6 border-l-8 border-l-[#0071a1] relative shadow-xl border border-white/20"
-                  >
-                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
-                      <MapIcon size={100} color="#0071a1" />
-                    </div>
-                    <div className="p-5 bg-[#0071a1]/10 text-[#0071a1] rounded-2xl group-hover:bg-[#0071a1] group-hover:text-white transition-all shadow-inner relative z-10 shrink-0 border border-white/20">
-                      <MapIcon size={32} />
-                    </div>
-                    <div className="relative z-10">
-                      <h4 className="text-xl font-black text-[#00426a] mb-1">מפת הפרויקט</h4>
-                      <p className="text-xs text-[#00426a] font-bold leading-relaxed opacity-80">צפייה בקובץ PROJECT_MAP.md להבנת מבנה הרכיבים והקשרים ביניהם</p>
-                    </div>
-                  </button>
-              </section>
+              <button 
+                onClick={() => setMarkdownConfig({ isOpen: true, path: '/PROJECT_MAP.md', title: 'מפת הפרויקט (Project Map)' })}
+                className="w-full luxury-card p-8 group hover:scale-[1.01] transition-all text-right flex items-center gap-6 relative overflow-hidden"
+              >
+                <div className="absolute -right-8 -top-8 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+                  <MapIcon size={160} className="text-slate-900" />
+                </div>
+                <div className="p-5 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-sky-500 group-hover:text-white transition-all shadow-sm relative z-10 shrink-0 border border-slate-100">
+                  <MapIcon size={32} />
+                </div>
+                <div className="relative z-10">
+                  <h4 className="text-xl font-black text-slate-800 mb-1">מפת הפרויקט</h4>
+                  <p className="text-xs text-slate-500 font-bold leading-relaxed opacity-80">צפייה בקובץ PROJECT_MAP.md להבנת מבנה הרכיבים והקשרים ביניהם</p>
+                </div>
+              </button>
+            </section>
 
-              {conflictingAdmins.length > 1 && (
-                  <div className="admin-info-card p-10 bg-rose-50/10 backdrop-blur-md border-rose-200/30 border-r-8 border-r-rose-400/80 shadow-xl border border-white/20">
-                    <div className="flex flex-col gap-8">
-                      <div className="flex items-center gap-8">
-                        <div className="p-5 bg-rose-100/50 text-rose-600 rounded-3xl shadow-inner border border-rose-200/50">
-                          <ShieldAlert size={40} />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-black rounded uppercase tracking-tighter">Critical</span>
-                            <h4 className="text-2xl font-black text-[var(--surfer-electric-pink)]">התנגשויות אימייל (Super Admin)</h4>
-                          </div>
-                          <p className="text-base text-[var(--surfer-turquoise-teal)] font-bold opacity-80">נמצאו כפילויות של אימייל מנהל המערכת. יש להשאיר רק חשבון אחד עם האימייל הראשי.</p>
-                        </div>
+            {conflictingAdmins.length > 1 && (
+              <div className="p-8 bg-rose-50 border border-rose-200 rounded-2xl shadow-sm">
+                <div className="flex flex-col gap-8">
+                  <div className="flex items-center gap-8">
+                    <div className="p-5 bg-rose-100 text-rose-600 rounded-2xl shadow-sm border border-rose-200">
+                      <ShieldAlert size={40} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2 py-0.5 bg-rose-200 text-rose-700 text-[10px] font-black rounded uppercase tracking-tighter">Critical</span>
+                        <h4 className="text-2xl font-black text-rose-800">התנגשויות אימייל (Super Admin)</h4>
                       </div>
+                      <p className="text-base text-rose-700 font-bold opacity-80">נמצאו כפילויות של אימייל מנהל המערכת. יש להשאיר רק חשבון אחד עם האימייל הראשי.</p>
+                    </div>
+                  </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {conflictingAdmins.map(admin => (
@@ -1214,7 +973,6 @@ const AdminPage: React.FC = () => {
                   </div>
                 )}
             </div>
-          </div>
         )}
 
         {activeTab === 'POSTS' && (
@@ -1576,363 +1334,210 @@ const AdminPage: React.FC = () => {
         )}
 
         {activeTab === 'ASSETS' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <AdminAssets />
-          </div>
-        )}
-
-        {activeTab === 'SITE' && (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
-            {/* Design and Settings Section */}
-            <div className="space-y-8">
-              <div className="flex items-center gap-4">
-                <div className="p-4 bg-[var(--deep-teal-sea)] text-white rounded-2xl shadow-lg shadow-[var(--deep-teal-sea)]/20">
-                  <Settings size={24} className="text-[#00FFFF]" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">עיצוב והגדרות</h3>
-                  <p className="text-[var(--deep-teal-sea)]/60 font-bold">ניהול פרמטרים עיצוביים והגדרות מערכת מתקדמות</p>
-                </div>
-              </div>
-
-              <div className="bg-red-600 border-4 border-red-800 py-6 px-[5%] rounded-[1.5rem] flex flex-col items-center justify-center gap-3 shadow-[0_0_25px_rgba(220,38,38,0.8)] animate-pulse text-center transform hover:scale-105 transition-transform duration-300 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-50"></div>
-                <ShieldAlert size={48} className="text-[#FF2D60] mb-2 animate-bounce relative z-10" />
-                <h2 className="text-2xl md:text-3xl font-black text-white tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] relative z-10">
-                  ⚠️ אל תיגע כאן! ⚠️
-                </h2>
-                <p className="text-lg md:text-xl font-black text-white/95 leading-relaxed max-w-2xl drop-shadow-md relative z-10">
-                  שינוי פרמטרים אלה עלול להפוך את האתר למדפסת בלי דפים ולגרום לדיכאון תכנותי
-                </p>
-              </div>
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Header Section */}
+            <div className="flex flex-col gap-1">
+              <h2 className="text-3xl font-black text-slate-800 tracking-tight">הגדרות מערכת</h2>
+              <p className="text-slate-500 font-medium">ניהול פרמטרים טכניים וקונפיגורציית ליבה של האתר</p>
             </div>
 
-            {/* Habal Zug Year Config Widget */}
-            <div className="luxury-slab p-[2px] group">
-              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
+            {/* Warning Banner - Redesigned for Elegance & Impact */}
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-rose-500/20 via-rose-50/50 to-rose-500/20 blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
+              <div className="relative p-6 bg-white/40 backdrop-blur-2xl border border-rose-200/50 rounded-[2rem] flex items-center gap-6 shadow-xl shadow-rose-500/5 group-hover:shadow-rose-500/10 transition-all duration-500">
+                <div className="relative shrink-0">
+                  <motion.div 
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      opacity: [0.2, 0.5, 0.2],
+                    }}
+                    transition={{ 
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="absolute inset-0 bg-rose-500 blur-xl rounded-full"
+                  />
+                  <motion.div 
+                    animate={{ 
+                      backgroundColor: ["#f43f5e", "#3b82f6", "#f43f5e"],
+                      boxShadow: [
+                        "0 0 20px rgba(244, 63, 94, 0.4)",
+                        "0 0 50px rgba(59, 130, 246, 0.9)",
+                        "0 0 20px rgba(244, 63, 94, 0.4)"
+                      ]
+                    }}
+                    transition={{ 
+                      duration: 0.3,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                    className="w-14 h-14 text-white rounded-2xl flex items-center justify-center relative z-10"
+                  >
+                    <AlertTriangle size={28} strokeWidth={3} className="animate-pulse" />
+                  </motion.div>
+                </div>
                 
-                <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
-                    <Calendar size={32} />
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-sm">
+                      אזהרת מערכת
+                    </span>
+                    <div className="h-px flex-1 bg-rose-100 min-w-[20px]" />
+                  </div>
+                  <p className="text-slate-700 font-bold text-lg leading-tight tracking-tight">
+                    שינוי פרמטרים אלו עלול להשפיע על <span className="text-rose-600 underline decoration-rose-200 underline-offset-4">יציבות האתר</span>. מומלץ לבצע שינויים בזהירות רבה.
+                  </p>
+                </div>
+
+                <div className="hidden md:flex ml-auto items-center gap-2 text-rose-300">
+                  <div className="w-1 h-1 rounded-full bg-current" />
+                  <div className="w-1 h-1 rounded-full bg-current opacity-60" />
+                  <div className="w-1 h-1 rounded-full bg-current opacity-30" />
+                </div>
+              </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Year Config Widget */}
+              <div className="luxury-card p-8 space-y-8">
+                <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
+                  <div className="w-12 h-12 bg-sky-50 text-sky-500 rounded-2xl flex items-center justify-center shadow-sm border border-sky-100">
+                    <Calendar size={24} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">הגדרת שנת פעילות</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest">תקופה פעילה כעת</p>
-                    </div>
+                    <h3 className="text-xl font-black text-slate-800 tracking-tight">הגדרת שנת פעילות</h3>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">YEAR CYCLE CONFIG</p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 lg:gap-12 relative z-10">
-                  <div 
-                    className="flex items-center gap-4 bg-slate-50/50 p-4 rounded-3xl border border-slate-100 cursor-pointer hover:bg-white hover:shadow-md transition-all group/dates"
+                <div className="space-y-8">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">תחילת שנה</p>
+                      <p className="text-xl font-black text-slate-700 tabular-nums">{formatDate(yearConfig?.startDate || '---')}</p>
+                    </div>
+                    <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">סיום שנה</p>
+                      <p className="text-xl font-black text-slate-700 tabular-nums">{formatDate(yearConfig?.endDate || '---')}</p>
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-xs font-black text-slate-500 uppercase tracking-widest">שבוע נוכחי</span>
+                      </div>
+                      <span className="text-3xl font-black text-slate-800 tabular-nums">{calculateWeeks(yearConfig?.startDate || '')}</span>
+                    </div>
+                    
+                    <div className="space-y-2.5">
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">התקדמות שנתית</span>
+                        <span className="text-[10px] font-black text-sky-600 uppercase tracking-widest">
+                          {Math.round((calculateWeeks(yearConfig?.startDate || '') / 52) * 100)}%
+                        </span>
+                      </div>
+                      <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, (calculateWeeks(yearConfig?.startDate || '') / 52) * 100)}%` }}
+                          transition={{ duration: 1.5, ease: "easeOut" }}
+                          className="h-full bg-sky-500 rounded-full"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
                     onClick={() => setIsEditingYear(true)}
+                    className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-sm active:scale-95"
                   >
-                    <div className="text-right">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-1">
-                        תחילת שנת פעילות
-                        <Calendar size={10} className="text-[var(--vibrant-cyan)] opacity-0 group-hover/dates:opacity-100 transition-opacity" />
-                      </p>
-                      <p className="text-base font-black text-[var(--deep-teal-sea)] tabular-nums">{formatDate(yearConfig?.startDate || '---')}</p>
-                    </div>
-                    <div className="w-px h-8 bg-slate-200 mx-2" />
-                    <div className="text-right">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-1">
-                        סיום שנת פעילות
-                        <Calendar size={10} className="text-[var(--vibrant-cyan)] opacity-0 group-hover/dates:opacity-100 transition-opacity" />
-                      </p>
-                      <p className="text-base font-black text-[#000000] tabular-nums">{formatDate(yearConfig?.endDate || '---')}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-6">
-                    <div className="text-center">
-                      <p className="text-[9px] font-black text-[#000000]/60 uppercase tracking-widest mb-1">שבועות שחלפו</p>
-                      <div className="flex items-baseline gap-1 justify-center">
-                        <span className="text-4xl font-black text-[var(--vibrant-cyan)] tabular-nums">{calculateWeeks(yearConfig?.startDate || '')}</span>
-                        <span className="text-[12px] font-black text-slate-400">/ 52</span>
-                      </div>
-                    </div>
-
-                    <button 
-                      onClick={() => setIsEditingYear(true)}
-                      className="w-14 h-14 bg-[var(--deep-teal-sea)] text-white rounded-2xl flex items-center justify-center hover:bg-[var(--vibrant-cyan)] transition-all shadow-xl shadow-[var(--deep-teal-sea)]/10 active:scale-90"
-                      title="עריכת הגדרות שנה"
-                    >
-                      <Save size={24} className="text-[#00FFFF]" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Weekly Sessions Config Widget */}
-            <div className="luxury-slab p-[2px] group mb-12">
-              <div className="luxury-card p-10 relative overflow-hidden bg-[#f5f5f0]/40 backdrop-blur-3xl rounded-[50px] border border-white/40 shadow-[0_40px_100px_rgba(122,21,85,0.1)]">
-                {/* Header Section - Top Right */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 relative z-10" dir="rtl">
-                  <div className="flex items-center gap-8">
-                    <div className="w-20 h-20 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-[25px] flex items-center justify-center text-white shadow-[0_15px_35px_rgba(0,209,255,0.3)] group-hover:rotate-6 transition-transform duration-700">
-                      <Calendar size={40} strokeWidth={2} />
-                    </div>
-                    <div>
-                      <h3 className="text-4xl font-black text-[#000000] tracking-tight mb-2">ניהול מועדי סשנים</h3>
-                      <p className="text-[14px] font-black text-[#000000]/50 uppercase tracking-widest">ניהול ימים ושעות לסשנים קבועים</p>
-                    </div>
-                  </div>
-                  <h4 className="text-2xl font-black text-[#000000]/70 tracking-tight">מועדי סשנים שמורים:</h4>
-                </div>
-
-                <div className="flex flex-col gap-16 relative z-10" dir="rtl">
-                  {/* Top Section: Active Sessions List */}
-                  <div className="space-y-4">
-                    {weeklySessions.map((session, index) => (
-                      <motion.div 
-                        key={`${session.dayOfWeek}-${session.time}`} 
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="gt-stepper w-full flex items-center h-20 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
-                      >
-                        {/* Delete Button - Left Segment */}
-                        <button
-                          onClick={() => setSessionToDelete(index)}
-                          className="gt-step-btn minus h-full flex items-center justify-center px-6 border-l border-[var(--gt-border-soft)] text-rose-500 hover:bg-rose-50 transition-all group/delete"
-                          title="מחיקת סשן"
-                        >
-                          <Trash2 size={20} className="group-hover/delete:scale-110 transition-transform" />
-                        </button>
-
-                        {/* Session Details - Middle Segment */}
-                        <div className="flex-1 flex items-center justify-between px-8">
-                          <div className="flex items-center gap-6">
-                            <div className="w-12 h-12 rounded-2xl bg-[var(--gt-accent)]/10 flex items-center justify-center text-[var(--gt-accent)] font-black text-lg shadow-inner border border-[var(--gt-accent)]/20">
-                              {['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'][session.dayOfWeek]}
-                            </div>
-                            <div>
-                              <h4 className="text-xl font-black text-[var(--deep-teal-sea)] tracking-tight">
-                                יום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][session.dayOfWeek]}
-                              </h4>
-                              <p className="text-sm font-bold text-[var(--turquoise-teal)]/50 flex items-center gap-1.5">
-                                <Clock size={14} strokeWidth={3} />
-                                {session.time}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Toggles - Right Part of Middle Segment */}
-                          <div className="flex items-center gap-6">
-                            {/* Status Toggle */}
-                            <div className="gt-toggle-container scale-90">
-                              <div 
-                                onClick={() => {
-                                  const newSessions = [...weeklySessions];
-                                  newSessions[index] = { ...newSessions[index], isActive: !session.isActive };
-                                  setWeeklySessions(newSessions);
-                                }}
-                                className={`gt-toggle ${session.isActive !== false ? 'active' : ''}`}
-                              />
-                              <span className="gt-label label-list">מושעה</span>
-                              <span className="gt-label label-grid">פעיל</span>
-                            </div>
-
-                            {/* Type Toggle */}
-                            <div className="gt-toggle-container scale-90">
-                              <div 
-                                onClick={() => {
-                                  const newSessions = [...weeklySessions];
-                                  newSessions[index] = { ...newSessions[index], isRecurring: !session.isRecurring };
-                                  setWeeklySessions(newSessions);
-                                }}
-                                className={`gt-toggle ${session.isRecurring !== false ? 'active' : ''}`}
-                              />
-                              <span className="gt-label label-list">חד-פעמי</span>
-                              <span className="gt-label label-grid">סדרתי</span>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Bottom Section: Add New Session Controls */}
-                  <div className="flex flex-col items-center">
-                    <div className="gt-card w-full max-w-2xl p-10 relative overflow-hidden border-2 border-[var(--gt-accent)]/10">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--gt-accent)]/5 rounded-full -mr-16 -mt-16 blur-3xl" />
-                      
-                      <h4 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight text-center mb-10 relative z-10">הוספת מועד סשן שבועי</h4>
-                      
-                      <div className="grid grid-cols-2 gap-8 mb-10 relative z-10">
-                        <div className="space-y-4">
-                          <label className="block text-[12px] font-black text-[var(--deep-teal-sea)]/40 uppercase tracking-widest text-center">יום בשבוע</label>
-                          <DayPicker 
-                            value={newSessionDay} 
-                            onChange={setNewSessionDay} 
-                            className="gt-select w-full text-center font-black text-lg"
-                          />
-                        </div>
-                        <div className="space-y-4">
-                          <label className="block text-[12px] font-black text-[var(--deep-teal-sea)]/40 uppercase tracking-widest text-center">שעה</label>
-                          <div className="relative">
-                            <TimePicker 
-                              value={newSessionTime} 
-                              onChangeValue={setNewSessionTime} 
-                              className="gt-input w-full text-center font-black text-lg"
-                            />
-                            <Clock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--gt-accent)]/30 pointer-events-none" />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <button
-                        onClick={() => {
-                          const newSession = {
-                            dayOfWeek: newSessionDay,
-                            time: newSessionTime,
-                            isActive: false,
-                            isRecurring: true
-                          };
-                          if (!weeklySessions.some(s => s.dayOfWeek === newSession.dayOfWeek && s.time === newSession.time)) {
-                            setWeeklySessions([...weeklySessions, newSession]);
-                            showSuccess('הסשן נוסף לרשימה (יש לשמור נתונים)');
-                          } else {
-                            showError('סשן זה כבר קיים ברשימה');
-                          }
-                        }}
-                        className="gt-btn-primary w-full py-6 text-xl shadow-xl shadow-[var(--gt-accent)]/20 relative z-10"
-                      >
-                        הוסף סשן
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Save Button - Bottom Center */}
-                <div className="flex justify-center mt-16 relative z-10">
-                  <button
-                    onClick={async () => {
-                      setIsSavingSessions(true);
-                      try {
-                        await updateSiteConfig({ weeklySessions });
-                        showSuccess('מועדי הסשנים נשמרו בהצלחה');
-                      } catch (err) {
-                        console.error(err);
-                        showError('שגיאה בשמירת מועדי הסשנים');
-                      } finally {
-                        setIsSavingSessions(false);
-                      }
-                    }}
-                    disabled={isSavingSessions}
-                    className="gt-btn-primary px-20 py-6 text-2xl shadow-2xl shadow-[var(--gt-accent)]/30 disabled:opacity-50"
-                  >
-                    {isSavingSessions ? <Loader2 className="animate-spin" size={28} /> : <Save size={28} />}
-                    שמירת נתונים
+                    <Edit2 size={18} />
+                    ערוך הגדרות שנה
                   </button>
                 </div>
-
-                {/* Delete Session Warning Modal */}
-                {sessionToDelete !== null && (
-                  <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      className="relative bg-[#f5f5f0]/90 backdrop-blur-3xl rounded-[40px] p-10 max-w-md w-full shadow-[0_40px_100px_rgba(0,0,0,0.3)] border border-white/40 overflow-hidden"
-                    >
-                      <div className="absolute top-0 left-0 w-full h-full border-t border-l border-white/60 rounded-[40px] pointer-events-none" />
-                      <div className="relative z-10">
-                        <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner border border-rose-100/50 rotate-3">
-                          <AlertTriangle size={40} strokeWidth={2.5} />
-                        </div>
-                        <h3 className="text-2xl font-black text-center text-[#000000] mb-4 tracking-tight">⚠️ אזהרה: רגע לפני מחיקה</h3>
-                        <p className="text-center text-[#000000]/70 mb-10 font-bold leading-relaxed">מחיקת הסשן עלולה למחוק נתונים, לעצור פעילויות, ואולי לגרום למפתחים שלנו לדיכאון תכנותי כרוני… אתה עדיין רוצה להמשיך?</p>
-                        <div className="flex gap-4" dir="rtl">
-                          <button onClick={() => setSessionToDelete(null)} className="flex-1 py-5 rounded-2xl font-black text-[#000000] bg-white/50 hover:bg-white/80 transition-all duration-300 border border-white/60 shadow-sm active:scale-95">אני אוותר</button>
-                          <button onClick={() => {
-                            const newSessions = [...weeklySessions];
-                            newSessions.splice(sessionToDelete, 1);
-                            setWeeklySessions(newSessions);
-                            setSessionToDelete(null);
-                          }} className="flex-1 py-5 rounded-2xl font-black text-white bg-rose-500 hover:bg-rose-600 transition-all duration-300 shadow-[0_10px_25px_rgba(244,63,94,0.3)] active:scale-95">אני מתעקש</button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </div>
-                )}
               </div>
-            </div>
 
-            {/* Home Break Config Widget */}
-            <div className="luxury-slab p-[2px] group mb-6">
-              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
-                
-                <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
-                    <MapPin size={32} />
+              {/* Home Break Config Widget */}
+              <div className="luxury-card p-8 space-y-8">
+                <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
+                  <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center shadow-sm border border-indigo-100">
+                    <MapPin size={24} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-[#000000] tracking-tight">חוף הבית</h3>
-                    <p className="text-[12px] font-black text-[#000000]/60 uppercase tracking-widest mt-1">עוגן לחישוב מרחקים גיאוגרפים</p>
+                    <h3 className="text-xl font-black text-slate-800 tracking-tight">חוף הבית</h3>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">HOME BREAK LOCATION</p>
                   </div>
                 </div>
 
-                <div className="flex-1 max-w-3xl relative z-10 space-y-2">
-                  <label className="text-[12px] font-black text-[#000000]/60 uppercase tracking-widest mr-4">כתובת</label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Globe size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input 
-                        type="text" 
-                        ref={addressInputRef}
-                        defaultValue={siteConfig.home_break?.formatted || ''} 
-                        readOnly={!hasConfirmedHomeBreakEdit}
-                        onClick={() => {
-                          if (!hasConfirmedHomeBreakEdit) {
-                            showConfirm({
-                              title: 'שינוי חוף הבית',
-                              message: 'השאר את החוף במקומו, לטובת השלווה של כולנו.',
-                              confirmText: 'המשך לשינוי',
-                              cancelText: 'חזור אחורה',
-                              onConfirm: () => {
-                                setHasConfirmedHomeBreakEdit(true);
-                                setTimeout(() => addressInputRef.current?.focus(), 100);
-                              },
-                              onCancel: () => {}
-                            });
-                          }
-                        }}
-                        onChange={(e) => {
-                          setIsPlaceSelected(false);
-                          selectedPlaceRef.current = null;
-                        }} 
-                        placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
-                        className={`w-full pr-14 pl-6 py-5 rounded-2xl font-black outline-none border transition-all text-[var(--deep-teal-sea)] ${hasConfirmedHomeBreakEdit ? 'bg-white border-[var(--vibrant-cyan)]/50 shadow-lg shadow-[var(--vibrant-cyan)]/10' : 'bg-slate-50 border-slate-50 cursor-pointer hover:bg-slate-100'}`}
-                        autoComplete="off"
-                      />
+                <div className="space-y-8">
+                  <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                    נקודת העוגן של המערכת המשמשת לחישובי מרחקים, זמני הגעה ותצוגת מפות עבור המשתמשים.
+                  </p>
+
+                  <div className="relative">
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                      <Globe size={20} />
                     </div>
-                    {hasConfirmedHomeBreakEdit && (
+                    <input 
+                      type="text" 
+                      ref={addressInputRef}
+                      defaultValue={siteConfig.home_break?.formatted || ''} 
+                      readOnly={!hasConfirmedHomeBreakEdit}
+                      onClick={() => {
+                        if (!hasConfirmedHomeBreakEdit) {
+                          showConfirm({
+                            title: 'שינוי חוף הבית',
+                            message: 'האם אתה בטוח שברצונך לשנות את נקודת העוגן של המערכת?',
+                            confirmText: 'כן, שנה מיקום',
+                            cancelText: 'ביטול',
+                            onConfirm: () => {
+                              setHasConfirmedHomeBreakEdit(true);
+                              setTimeout(() => addressInputRef.current?.focus(), 100);
+                            }
+                          });
+                        }
+                      }}
+                      placeholder="הזן כתובת מדויקת..."
+                      className={`w-full pr-12 pl-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 outline-none focus:ring-2 ring-indigo-500/20 focus:bg-white transition-all font-bold ${
+                        !hasConfirmedHomeBreakEdit ? 'cursor-pointer' : ''
+                      }`}
+                      autoComplete="off"
+                    />
+                  </div>
+
+                  {hasConfirmedHomeBreakEdit ? (
+                    <div className="flex gap-3 animate-in slide-in-from-top-2">
+                      <button 
+                        onClick={() => setHasConfirmedHomeBreakEdit(false)}
+                        className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs hover:bg-slate-200 transition-all"
+                      >
+                        ביטול
+                      </button>
                       <button 
                         onClick={async () => {
                           const currentValue = addressInputRef.current?.value || '';
                           if (currentValue.trim() === '') {
                             try {
                               await updateSiteConfig({ home_break: null });
-                              showSuccess('כתובת חוף הבית נמחקה בהצלחה!');
+                              showSuccess('כתובת חוף הבית נמחקה');
                               setHasConfirmedHomeBreakEdit(false);
                             } catch (err) {
-                              console.error(err);
                               showError('שגיאה בעדכון הכתובת');
                             }
                           } else if (isPlaceSelected && selectedPlaceRef.current) {
                             try {
                               const addressData = extractAddressData(selectedPlaceRef.current);
                               await updateSiteConfig({ home_break: addressData });
-                              showSuccess('כתובת חוף הבית עודכנה בהצלחה!');
+                              showSuccess('חוף הבית עודכן בהצלחה');
                               setHasConfirmedHomeBreakEdit(false);
                             } catch (err) {
-                              console.error(err);
                               showError('שגיאה בעדכון הכתובת');
                             }
                           } else {
@@ -1943,589 +1548,202 @@ const AdminPage: React.FC = () => {
                                   try {
                                     const addressData = extractAddressData(results[0]);
                                     await updateSiteConfig({ home_break: addressData });
-                                    showSuccess('כתובת חוף הבית עודכנה בהצלחה!');
+                                    showSuccess('חוף הבית עודכן בהצלחה');
                                     setHasConfirmedHomeBreakEdit(false);
-                                    if (addressInputRef.current) {
-                                      addressInputRef.current.value = results[0].formatted_address;
-                                    }
+                                    if (addressInputRef.current) addressInputRef.current.value = results[0].formatted_address;
                                   } catch (err) {
-                                    console.error(err);
                                     showError('שגיאה בעדכון הכתובת');
                                   }
                                 } else {
-                                  showError('לא הצלחנו למצוא את הכתובת המבוקשת. אנא בחר מהרשימה.');
+                                  showError('כתובת לא נמצאה, אנא בחר מהרשימה');
                                 }
                               });
-                            } else {
-                              showError('שירות המפות אינו זמין כרגע.');
                             }
                           }
                         }}
-                        className="bg-[var(--vibrant-cyan)] text-white px-8 rounded-2xl font-black hover:bg-[var(--turquoise-teal)] transition-colors shadow-lg shadow-[var(--vibrant-cyan)]/20 whitespace-nowrap"
+                        className="flex-[2] py-4 bg-indigo-500 text-white rounded-2xl font-black text-xs shadow-sm hover:bg-indigo-600 transition-all"
                       >
-                        שמור
+                        שמור מיקום חדש
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-4">
+                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-emerald-100 shrink-0">
+                        <CheckCircle2 size={20} className="text-emerald-500" />
+                      </div>
+                      <p className="text-sm font-bold text-emerald-700">המיקום מוגדר ומסונכרן עם שירותי המפות</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Navigation Position Toggle Widget */}
-            <div className="luxury-slab p-[2px] group mb-6">
-              <div className="luxury-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
-                
-                <div className="flex items-center gap-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[var(--vibrant-cyan)] to-[var(--turquoise-teal)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
-                    <LayoutDashboard size={32} />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">מיקום תפריט הניווט</h3>
-                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">החלפה בין תפריט עליון לתחתון</p>
-                  </div>
+            {/* Weekly Sessions Config Widget */}
+            <div className="luxury-card p-8 space-y-10">
+              <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
+                <div className="w-12 h-12 bg-sky-50 text-sky-500 rounded-2xl flex items-center justify-center shadow-sm border border-sky-100">
+                  <Clock size={24} />
                 </div>
-
-                <div className="inline-flex w-max self-start lg:self-auto bg-white/50 backdrop-blur p-1 rounded-xl relative z-10 border border-white/40 shadow-inner">
-                  <button
-                    onClick={() => updateSiteConfig({ navPosition: 'bottom' })}
-                    className={`px-6 py-2 rounded-lg text-sm font-black transition-all duration-300 ${
-                      (siteConfig?.navPosition || 'bottom') === 'bottom'
-                        ? 'bg-white text-[var(--deep-teal-sea)] shadow-md'
-                        : 'text-[var(--deep-teal-sea)]/60 hover:text-[var(--deep-teal-sea)] hover:bg-white/30'
-                    }`}
-                  >
-                    תחתון
-                  </button>
-                  <button
-                    onClick={() => updateSiteConfig({ navPosition: 'top' })}
-                    className={`px-6 py-2 rounded-lg text-sm font-black transition-all duration-300 ${
-                      siteConfig?.navPosition === 'top'
-                        ? 'bg-white text-[var(--deep-teal-sea)] shadow-md'
-                        : 'text-[var(--deep-teal-sea)]/60 hover:text-[var(--deep-teal-sea)] hover:bg-white/30'
-                    }`}
-                  >
-                    עליון
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Global Color Picker Widget */}
-            <div className="luxury-slab p-[2px] group mb-6 inline-block">
-              <div className="luxury-card p-4 flex items-center gap-6 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
-                
                 <div>
-                  <h3 className="text-lg font-black text-[var(--deep-teal-sea)] tracking-tight">בקר צבע גלובלי</h3>
-                  <p className="text-[9px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-0.5">שינוי גוון הטורקיז</p>
-                </div>
-
-                <div className="relative">
-                  <input 
-                    type="color" 
-                    value={siteConfig.globalColor || '#40E0D0'} 
-                    onChange={(e) => {
-                      const newColor = e.target.value;
-                      document.documentElement.style.setProperty('--gt-accent', newColor);
-                      updateSiteConfig({ globalColor: newColor });
-                    }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <div className="w-12 h-12 rounded-xl shadow-lg border-2 border-white flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" style={{ backgroundColor: siteConfig.globalColor || '#40E0D0' }}>
-                    <ColorPickerIcon className="w-7 h-7 text-white drop-shadow-md" />
-                  </div>
+                  <h3 className="text-xl font-black text-slate-800 tracking-tight">ניהול מועדי סשנים</h3>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">WEEKLY SCHEDULE MANAGEMENT</p>
                 </div>
               </div>
-            </div>
 
-            {/* H1 Ultra Design Studio Widget */}
-            <div className="luxury-slab p-[2px] group mb-10">
-              <div className="luxury-card p-8 relative overflow-hidden">
-                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--vibrant-cyan)]/10 transition-colors" />
-                
-                <div className="flex items-center gap-6 mb-10 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#6366f1] to-[#a855f7] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#6366f1]/20 group-hover:rotate-6 transition-transform">
-                    <Sparkles size={32} />
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-12" dir="rtl">
+                {/* Left Column: Sessions List */}
+                <div className="xl:col-span-7 space-y-6">
+                  <div className="flex items-center justify-between mb-2 px-2">
+                    <h4 className="text-lg font-black text-slate-700 tracking-tight">רשימת מועדים פעילים</h4>
+                    <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">{weeklySessions.length} סשנים מוגדרים</span>
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] tracking-tight">Ultra Design Studio</h3>
-                    <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">אולטרה סטודיו לעיצוב</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
-                  {/* Preview Area */}
-                  <div className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 rounded-[2rem] min-h-[160px] border border-slate-100 relative overflow-hidden">
-                    <p className="text-[12px] font-black text-white/80 uppercase tracking-widest mb-2 relative z-10">תצוגה מקדימה</p>
-                    <div className="surfboard-hero-container" style={{ minHeight: 'auto', padding: '20px 0' }}>
-                      <h1 className="main-page-title m-0 relative z-10">
-          <span className="surfer-title">כותרת אולטרה</span>
-        </h1>
-                    </div>
-                  </div>
-
-                  {/* Controls Area */}
-                  <div className="space-y-6 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
-                    {/* Basic Typography */}
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center px-1">
-                          <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest">גודל פונט</label>
-                          <span className="text-xs font-black text-[#6366f1]">{siteConfig.h1Styles?.fontSize || '50px'}</span>
-                        </div>
-                        <div className="gt-stepper w-full !justify-between">
-                          <button 
-                            type="button"
-                            onClick={() => {
-                              const current = parseInt(siteConfig.h1Styles?.fontSize || '50');
-                              if (current > 20) updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, fontSize: (current - 1) + 'px' } });
-                            }}
-                            className="gt-step-btn minus"
-                          >-</button>
-                          <div className="gt-step-val">{parseInt(siteConfig.h1Styles?.fontSize || '50')}</div>
-                          <button 
-                            type="button"
-                            onClick={() => {
-                              const current = parseInt(siteConfig.h1Styles?.fontSize || '50');
-                              if (current < 120) updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, fontSize: (current + 1) + 'px' } });
-                            }}
-                            className="gt-step-btn plus"
-                          >+</button>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center px-1">
-                          <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest">ריווח אותיות</label>
-                          <span className="text-xs font-black text-[#6366f1]">{siteConfig.h1Styles?.letterSpacing || '0'}px</span>
-                        </div>
-                        <div className="gt-stepper w-full !justify-between">
-                          <button 
-                            type="button"
-                            onClick={() => {
-                              const current = parseInt(siteConfig.h1Styles?.letterSpacing || '0');
-                              if (current > -5) updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, letterSpacing: (current - 1) + 'px' } });
-                            }}
-                            className="gt-step-btn minus"
-                          >-</button>
-                          <div className="gt-step-val">{parseInt(siteConfig.h1Styles?.letterSpacing || '0')}</div>
-                          <button 
-                            type="button"
-                            onClick={() => {
-                              const current = parseInt(siteConfig.h1Styles?.letterSpacing || '0');
-                              if (current < 20) updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, letterSpacing: (current + 1) + 'px' } });
-                            }}
-                            className="gt-step-btn plus"
-                          >+</button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Gradient Colors */}
-                    <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                      <div className="space-y-2">
-                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block text-center">צבע 1</label>
-                        <input 
-                          type="color" 
-                          value={siteConfig.h1Styles?.color1 || '#ffffff'}
-                          onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, color1: e.target.value } })}
-                          className="w-full h-10 rounded-lg cursor-pointer bg-transparent border-none"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block text-center">צבע 2</label>
-                        <input 
-                          type="color" 
-                          value={siteConfig.h1Styles?.color2 || '#ffffff'}
-                          onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, color2: e.target.value } })}
-                          className="w-full h-10 rounded-lg cursor-pointer bg-transparent border-none"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block text-center">זווית ({siteConfig.h1Styles?.gradAngle || '90'}°)</label>
-                        <input 
-                          type="range" min="0" max="360" 
-                          value={parseInt(siteConfig.h1Styles?.gradAngle || '90')}
-                          onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, gradAngle: e.target.value } })}
-                          className="gt-slider-input w-full" 
-                        />
-                      </div>
-                    </div>
-
-                    {/* Stroke & Glow */}
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block mb-2">קו מתאר (Stroke)</label>
-                        <div className="flex items-center gap-3 mb-3">
-                          <input 
-                            type="color" 
-                            value={siteConfig.h1Styles?.strokeColor || '#ffffff'}
-                            onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, strokeColor: e.target.value } })}
-                            className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-none"
-                          />
-                          <input 
-                            type="range" min="0" max="10" 
-                            value={parseInt(siteConfig.h1Styles?.strokeWidth || '0')}
-                            onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, strokeWidth: e.target.value } })}
-                            className="gt-slider-input flex-1" 
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block mb-2">הילה (Glow)</label>
-                        <div className="flex items-center gap-3 mb-3">
-                          <input 
-                            type="color" 
-                            value={siteConfig.h1Styles?.glowColor || '#ffffff'}
-                            onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, glowColor: e.target.value } })}
-                            className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-none"
-                          />
-                          <input 
-                            type="range" min="0" max="50" 
-                            value={parseInt(siteConfig.h1Styles?.glowSize || '0')}
-                            onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, glowSize: e.target.value } })}
-                            className="gt-slider-input flex-1" 
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Glassmorphism Controls */}
-                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-6">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest">אפקט Glassmorphism</label>
-                        <button 
-                          onClick={() => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, showGlass: siteConfig.h1Styles?.showGlass === false ? true : false } })}
-                          className={`px-6 py-2 rounded-xl font-black text-xs transition-all ${
-                            siteConfig.h1Styles?.showGlass !== false ? 'bg-[#6366f1] text-white' : 'bg-slate-200 text-slate-500'
-                          }`}
+                  
+                  <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                    <AnimatePresence mode="popLayout">
+                      {weeklySessions.map((session, index) => (
+                        <motion.div 
+                          key={`${session.dayOfWeek}-${session.time}`} 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3, delay: index * 0.03 }}
+                          className="bg-white rounded-2xl p-5 border border-slate-100 hover:border-sky-200 hover:shadow-md transition-all duration-300 group/item flex items-center justify-between shadow-sm"
                         >
-                          {siteConfig.h1Styles?.showGlass !== false ? 'פעיל' : 'מושהה'}
-                        </button>
-                      </div>
-                      
-                      {siteConfig.h1Styles?.showGlass !== false && (
-                        <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-200">
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center px-1">
-                              <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest">טשטוש</label>
-                              <span className="text-xs font-black text-[#6366f1]">{siteConfig.h1Styles?.glassBlur || '10'}px</span>
+                          <div className="flex items-center gap-6">
+                            <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 font-black text-xl group-hover:bg-sky-500 group-hover:text-white group-hover:border-sky-500 transition-all duration-500 shadow-inner">
+                              {['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'][session.dayOfWeek]}
                             </div>
-                            <input 
-                              type="range" min="0" max="30" 
-                              value={parseInt(siteConfig.h1Styles?.glassBlur || '10')}
-                              onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, glassBlur: e.target.value } })}
-                              className="gt-slider-input w-full" 
-                            />
-                          </div>
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center px-1">
-                              <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest">שקיפות</label>
-                              <span className="text-xs font-black text-[#6366f1]">{Math.round(parseFloat(siteConfig.h1Styles?.glassOpacity || '0.1') * 100)}%</span>
+                            <div>
+                              <h4 className="text-lg font-black text-slate-800 tracking-tight">
+                                יום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][session.dayOfWeek]}
+                              </h4>
+                              <div className="flex items-center gap-4 mt-1">
+                                <span className="text-sm font-black text-sky-600 flex items-center gap-2 bg-sky-50 px-3 py-1 rounded-lg border border-sky-100/50">
+                                  <Clock size={14} strokeWidth={3} />
+                                  {session.time}
+                                </span>
+                                <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${session.isRecurring !== false ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
+                                  {session.isRecurring !== false ? 'סדרתי' : 'חד-פעמי'}
+                                </span>
+                              </div>
                             </div>
-                            <input 
-                              type="range" min="0" max="100" 
-                              value={parseFloat(siteConfig.h1Styles?.glassOpacity || '0.1') * 100}
-                              onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, glassOpacity: (parseInt(e.target.value) / 100).toString() } })}
-                              className="gt-slider-input w-full" 
-                            />
                           </div>
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Final Adjustments */}
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block">סוג פונט</label>
-                        <select 
-                          className="gt-select w-full"
-                          value={siteConfig.h1Styles?.fontFamily || "'Assistant', sans-serif"}
-                          onChange={(e) => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, fontFamily: e.target.value } })}
-                        >
-                          <option value="'Miriwin', sans-serif">MiriWin</option>
-                          <option value="'Yehuda CLM', sans-serif">Yehuda CLM</option>
-                          <option value="'Assistant', sans-serif">Assistant</option>
-                          <option value="'Inter', sans-serif">Inter</option>
-                          <option value="'Heebo', sans-serif">Heebo</option>
-                          <option value="'Rubik', sans-serif">Rubik</option>
-                          <option value="'Varela Round', sans-serif">Varela Round</option>
-                          <option value="'Secular One', sans-serif">Secular One</option>
-                        </select>
-                      </div>
-                      <div className="space-y-3">
-                        <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest block">יישור</label>
-                        <div className="gt-segmented">
-                          {['right', 'center', 'left'].map(id => (
-                            <button 
-                              key={id}
-                              onClick={() => updateSiteConfig({ h1Styles: { ...siteConfig.h1Styles, align: id } })}
-                              className={`gt-segment-item ${siteConfig.h1Styles?.align === id || (!siteConfig.h1Styles?.align && id === 'center') ? 'active' : ''}`}
+                          <div className="flex items-center gap-6">
+                            <div className="flex flex-col items-center gap-2">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">סטטוס</span>
+                              <div 
+                                onClick={() => {
+                                  const newSessions = [...weeklySessions];
+                                  newSessions[index] = { ...newSessions[index], isActive: !session.isActive };
+                                  setWeeklySessions(newSessions);
+                                }}
+                                className={`w-12 h-6 p-1 rounded-full cursor-pointer transition-all duration-500 relative ${session.isActive !== false ? 'bg-sky-500' : 'bg-slate-200'}`}
+                              >
+                                <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-500 ${session.isActive !== false ? '-translate-x-6' : 'translate-x-0'}`} />
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => setSessionToDelete(index)}
+                              className="w-11 h-11 rounded-xl bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white transition-all duration-300 flex items-center justify-center shadow-sm border border-rose-100 group-hover/item:scale-105"
                             >
-                              {id === 'right' ? 'ימין' : id === 'center' ? 'מרכז' : 'שמאל'}
+                              <Trash2 size={18} />
                             </button>
-                          ))}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                {/* Right Column: Add Form */}
+                <div className="xl:col-span-5">
+                  <div className="bg-slate-50 rounded-3xl p-8 border border-slate-100 shadow-inner sticky top-8">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 bg-white text-sky-500 rounded-2xl flex items-center justify-center shadow-sm border border-slate-100">
+                        <Plus size={24} />
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-black text-slate-800 tracking-tight">הוספת סשן חדש</h4>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">ADD NEW TIME SLOT</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-6 mb-10">
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">יום בשבוע</label>
+                        <DayPicker 
+                          value={newSessionDay} 
+                          onChange={setNewSessionDay} 
+                          className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-slate-700 outline-none focus:ring-4 ring-sky-500/10 transition-all font-bold"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">שעת התחלה</label>
+                        <div className="relative">
+                          <TimePicker 
+                            value={newSessionTime} 
+                            onChangeValue={setNewSessionTime} 
+                            className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-slate-700 outline-none focus:ring-4 ring-sky-500/10 text-center tracking-widest transition-all font-black text-lg"
+                          />
+                          <Clock size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
                         </div>
                       </div>
                     </div>
+                    
+                    <button
+                      onClick={() => {
+                        const newSession = {
+                          dayOfWeek: newSessionDay,
+                          time: newSessionTime,
+                          isActive: true,
+                          isRecurring: true
+                        };
+                        if (!weeklySessions.some(s => s.dayOfWeek === newSession.dayOfWeek && s.time === newSession.time)) {
+                          setWeeklySessions([...weeklySessions, newSession]);
+                          showSuccess('הסשן נוסף לרשימה');
+                        } else {
+                          showError('סשן זה כבר קיים ברשימה');
+                        }
+                      }}
+                      className="w-full py-5 bg-sky-500 text-white rounded-2xl font-black text-base shadow-lg shadow-sky-500/20 hover:bg-sky-600 transition-all duration-300 active:scale-95 flex items-center justify-center gap-3"
+                    >
+                      <Plus size={20} strokeWidth={3} />
+                      הוסף לרשימה
+                    </button>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Color Catalog Section */}
-            <section id="color-catalog" className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <div className="flex items-center gap-4 mb-8">
-                    <div className="p-4 bg-gradient-to-br from-[#00FFFF] to-[#FFD700] text-white rounded-2xl shadow-lg">
-                        <Sparkles size={24} />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-black text-[var(--deep-teal-sea)] m-0">קטלוג פלטות צבעים</h2>
-                        <p className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mt-1">ניהול ויזואלי של צבעי המערכת (לחיצה להעתקה)</p>
-                    </div>
-                </div>
-                <div id="palettes-container">
-                    {/* Will be populated by useEffect */}
-                    <div className="flex items-center justify-center w-full py-12">
-                        <Loader2 className="animate-spin text-[var(--vibrant-cyan)]" size={32} />
-                    </div>
-                </div>
-            </section>
-
-            <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-[4rem] p-12 shadow-xl">
-             <div className="flex items-center justify-between mb-10">
-                <div className="flex items-center gap-4">
-                   <div className="p-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl shadow-lg"><RotateCcw size={24} /></div>
-                   <div>
-                      <h3 className="text-2xl font-black text-[var(--deep-teal-sea)]">הגדרות ונכסי אתר</h3>
-                      <p className="text-[var(--turquoise-teal)]/60 font-bold">צפייה ועדכון הנכסים הוויזואליים של המערכת</p>
-                   </div>
-                </div>
-                <button 
-                  onClick={resetAssets}
-                  className="px-6 py-3 bg-[var(--aqua-mist)]/10 text-[var(--vibrant-cyan)] rounded-2xl font-black text-xs hover:bg-[var(--aqua-mist)]/20 transition-all flex items-center gap-2 active:scale-95"
+              {/* Global Save Action */}
+              <div className="pt-10 flex flex-col items-center gap-4 border-t border-slate-100">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">יש לשמור את השינויים כדי לעדכן את המערכת</p>
+                <button
+                  onClick={async () => {
+                    setIsSavingSessions(true);
+                    try {
+                      await updateSiteConfig({ weeklySessions });
+                      showSuccess('מועדי הסשנים נשמרו בהצלחה');
+                    } catch (err) {
+                      console.error(err);
+                      showError('שגיאה בשמירת מועדי הסשנים');
+                    } finally {
+                      setIsSavingSessions(false);
+                    }
+                  }}
+                  disabled={isSavingSessions}
+                  className="px-16 py-5 bg-slate-900 text-white rounded-2xl font-black text-lg shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all duration-300 disabled:opacity-50 flex items-center gap-4 active:scale-95"
                 >
-                  <RotateCcw size={14} />
-                  איפוס לברירת מחדל
+                  {isSavingSessions ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
+                  שמור את כל השינויים
                 </button>
-             </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {Object.entries(siteAssets || {}).map(([key, value]: [string, any]) => (
-                   <div key={key} className="p-6 bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/20 flex items-center justify-between group shadow-lg">
-                      <div className="flex items-center gap-4">
-                         <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center overflow-hidden shadow-sm border border-[var(--vibrant-cyan)]/10 relative group/avatar">
-                            {typeof value === 'string' && value.startsWith('http') ? (
-                               <img src={value} className="w-full h-full object-contain p-2" alt="" />
-                            ) : (
-                               <span className="text-[var(--turquoise-teal)]/40 font-black text-[12px] uppercase">{key.slice(0, 2)}</span>
-                            )}
-                            
-                            <button 
-                              onClick={() => {
-                                setReplacingAssetKey(key);
-                                assetFileInputRef.current?.click();
-                              }}
-                              disabled={isUploadingAsset === key}
-                              className="absolute inset-0 bg-[var(--deep-teal-sea)]/40 text-white flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-all disabled:opacity-100"
-                            >
-                              {isUploadingAsset === key ? (
-                                <Loader2 size={20} className="animate-spin" />
-                              ) : (
-                                <Camera size={20} />
-                              )}
-                            </button>
-                         </div>
-                         <div>
-                            <p className="text-[12px] font-black text-[var(--vibrant-cyan)] uppercase tracking-widest mb-1">{key}</p>
-                            <h4 className="text-lg font-black text-[var(--deep-teal-sea)]">{ASSET_LABELS[key] || key}</h4>
-                            <p className="text-[12px] font-bold text-[var(--turquoise-teal)]/40 truncate max-w-[180px]">{typeof value === 'string' ? value : 'נתון מורכב'}</p>
-                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => setEditingAsset({ key, value: typeof value === 'string' ? value : '' })}
-                          className="p-2 text-[var(--turquoise-teal)]/20 hover:text-[var(--vibrant-cyan)] opacity-0 group-hover:opacity-100 transition-all"
-                        >
-                          <Settings size={16} />
-                        </button>
-                        {typeof value === 'string' && value.startsWith('http') && (
-                          <a href={value} target="_blank" rel="noreferrer" className="p-2 text-[var(--turquoise-teal)]/20 hover:text-[var(--deep-teal-sea)] opacity-0 group-hover:opacity-100 transition-all">
-                            <ExternalLink size={16} />
-                          </a>
-                        )}
-                      </div>
-                   </div>
-                ))}
-              </div>
-
-              {/* Visual Component Gallery - Turquoise Glassmorphism */}
-              <div className="mt-16 pt-16 border-t border-[var(--vibrant-cyan)]/10">
-                <div className="flex items-center gap-4 mb-10">
-                  <div className="p-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl shadow-lg shadow-[var(--vibrant-cyan)]/20"><Sparkles size={24} /></div>
-                  <div>
-                    <h3 className="text-2xl font-black text-[var(--deep-teal-sea)]">גלריית רכיבים ויזואלית</h3>
-                    <p className="text-[var(--vibrant-cyan)] font-bold">Turquoise Glassmorphism Component System</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {/* 1. Primary Button */}
-                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">כפתור ראשי</p>
-                    <button className="gt-btn-primary">לחץ כאן</button>
-                  </div>
-
-                  {/* 2. Glass Button */}
-                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">כפתור זכוכית</p>
-                    <button className="gt-btn-glass">כפתור שקוף</button>
-                  </div>
-
-                  {/* 3. Toggle */}
-                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">מפסק טורקיז (Toggle)</p>
-                    <div className="gt-toggle-container">
-                      <div className="gt-toggle" />
-                      <span className="gt-label label-list">LIST</span>
-                      <span className="gt-label label-grid">GRID</span>
-                    </div>
-                  </div>
-
-                  {/* 4. Segmented Control */}
-                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">בקר מקטעים (Segmented)</p>
-                    <div className="gt-segmented">
-                      <div className="gt-segment-item active">LIST</div>
-                      <div className="gt-segment-item">GRID</div>
-                    </div>
-                  </div>
-
-                  {/* 5. Real Slider */}
-                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4 w-full">
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">סליידר אמיתי</p>
-                    <input type="range" className="gt-slider-input w-full" defaultValue="50" />
-                  </div>
-
-                  {/* 6. Stepper */}
-                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">מונה (Stepper)</p>
-                    <div className="gt-stepper">
-                      <div className="gt-step-btn minus">-</div>
-                      <div className="gt-step-val">10</div>
-                      <div className="gt-step-btn plus">+</div>
-                    </div>
-                  </div>
-
-                  {/* 7. Input Field */}
-                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4 w-full">
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">שדה טקסט (Input)</p>
-                    <input type="text" className="gt-input" placeholder="הקלד כאן..." />
-                  </div>
-
-                  {/* 8. Select/Dropdown */}
-                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4 w-full">
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">תפריט בחירה (Select)</p>
-                    <select className="gt-select">
-                      <option>אופציה 1</option>
-                      <option>אופציה 2</option>
-                      <option>אופציה 3</option>
-                    </select>
-                  </div>
-
-                  {/* 9. Checkbox */}
-                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">צ'קבוקס (Checkbox)</p>
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" className="gt-checkbox" id="gt-check-demo" />
-                      <label htmlFor="gt-check-demo" className="text-xs font-bold text-slate-500">בחר אותי</label>
-                    </div>
-                  </div>
-
-                  {/* 10. Sample Card */}
-                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4 w-full">
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">כרטיס לדוגמה (Card)</p>
-                    <div className="gt-card w-full">
-                      <h4 className="font-black text-[var(--deep-teal-sea)] mb-2">כותרת כרטיס</h4>
-                      <p className="text-[12px] text-slate-500">זהו כרטיס זכוכית מעוצב עם אפקט טשטוש עדין.</p>
-                    </div>
-                  </div>
-
-                  {/* 11. Status Badge */}
-                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">תווית סטטוס (Badge)</p>
-                    <div className="flex gap-2">
-                      <span className="gt-badge">פעיל</span>
-                      <span className="gt-badge" style={{ background: 'rgba(255, 0, 159, 0.1)', color: '#ff009f' }}>חדש</span>
-                    </div>
-                  </div>
-
-                  {/* 12. Tooltip */}
-                  <div className="p-8 bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-white/20 flex flex-col items-center gap-4">
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest">אייקון מידע (Tooltip)</p>
-                    <div className="gt-info-wrapper">
-                      <div className="gt-info-icon">i</div>
-                      <span className="gt-tooltip">זהו הסבר קצר שמופיע רק כשמרחפים מעל האייקון!</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
+
+            <AdminAssets />
           </div>
         )}
-
-      {/* Hidden File Input for Assets */}
-      <input 
-        type="file"
-        ref={assetFileInputRef}
-        onChange={handleAssetFileChange}
-        accept="image/*"
-        className="hidden"
-      />
-
-      {/* Edit Asset Modal */}
-      {editingAsset && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-[var(--deep-teal-sea)]/60 backdrop-blur-md animate-in fade-in">
-          <div className="bg-white/60 backdrop-blur-xl w-full max-w-lg rounded-[3.5rem] shadow-2xl p-10 border border-white/30 animate-in zoom-in-95">
-            <h3 className="text-2xl font-black text-[var(--deep-teal-sea)] mb-2">עדכון נכס: {editingAsset.key}</h3>
-            <p className="text-[var(--turquoise-teal)]/60 font-bold text-sm mb-8">הזן כתובת URL חדשה עבור הנכס</p>
-            
-            <div className="space-y-6 mb-10">
-              <div className="space-y-2">
-                <label className="text-[12px] font-black text-[var(--turquoise-teal)]/60 uppercase tracking-widest mr-4">כתובת URL</label>
-                <input 
-                  type="text"
-                  value={editingAsset.value}
-                  onChange={(e) => setEditingAsset({ ...editingAsset, value: e.target.value })}
-                  className="w-full bg-[var(--aqua-mist)]/10 border border-[var(--vibrant-cyan)]/5 rounded-2xl px-6 py-4 font-bold text-[var(--deep-teal-sea)] focus:ring-2 focus:ring-[var(--vibrant-cyan)] outline-none transition-all"
-                  placeholder="https://..."
-                />
-              </div>
-              
-              {editingAsset.value.startsWith('http') && (
-                <div className="aspect-video rounded-2xl overflow-hidden border border-[var(--vibrant-cyan)]/10 bg-[var(--aqua-mist)]/10">
-                  <img src={editingAsset.value} className="w-full h-full object-contain" alt="Preview" />
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <button 
-                onClick={() => setEditingAsset(null)}
-                className="py-4 bg-[var(--sun-bleached)] text-[var(--deep-teal-sea)] rounded-2xl font-black text-sm hover:bg-[var(--sunshine-yellow)]/20 transition-all"
-              >
-                ביטול
-              </button>
-              <button 
-                onClick={handleUpdateAsset}
-                className="py-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl font-black text-sm shadow-lg hover:bg-[var(--deep-teal-sea)] transition-all"
-              >
-                עדכון נכס
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Edit Event Modal */}
       {editingEvent && (
@@ -2545,49 +1763,48 @@ const AdminPage: React.FC = () => {
 
       {/* Year Config Warning Modal */}
       {isEditingYear && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl animate-in fade-in">
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-white/60 backdrop-blur-xl w-full max-w-lg rounded-[3.5rem] shadow-2xl border border-white/30 overflow-hidden relative"
+            className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden relative"
             onClick={e => e.stopPropagation()}
           >
-            <div className="bg-rose-500 p-10 text-white text-center relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-              <ShieldAlert size={64} className="mx-auto mb-6 animate-bounce" />
-              <h3 className="text-3xl font-black mb-2">אזהרת מערכת קריטית</h3>
-              <p className="text-white/80 font-bold">שינוי הגדרות זמן ליבה</p>
+            <div className="bg-rose-500 p-8 text-white text-center relative">
+              <ShieldAlert size={48} className="mx-auto mb-4" />
+              <h3 className="text-2xl font-bold mb-1">אזהרת מערכת קריטית</h3>
+              <p className="text-rose-100 font-medium">שינוי הגדרות זמן ליבה</p>
             </div>
 
-            <div className="p-10 space-y-8">
-              <div className="bg-rose-50 p-6 rounded-2xl border border-rose-100 text-rose-700 text-center font-black leading-relaxed">
+            <div className="p-8 space-y-6">
+              <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 text-rose-700 text-center font-bold leading-relaxed text-sm">
                 ⚠️ שים לב: שינוי התאריכים ישבש את תפקוד האתר ואת הדוחות. נגיעה מותרת רק בחירום.
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-2">תאריך התחלה חדש</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pr-1">תאריך התחלה חדש</label>
                   <input 
                     type="date" 
                     value={yearForm.startDate}
                     onChange={e => setYearForm(prev => ({ ...prev, startDate: e.target.value }))}
                     onClick={(e) => (e.currentTarget as any).showPicker?.()}
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 ring-[#ff009f]/5 focus:bg-white transition-all cursor-pointer"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 ring-sky-500/20 focus:bg-white transition-all cursor-pointer text-slate-700"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[12px] font-black text-slate-400 uppercase tracking-widest pr-2">תאריך סיום חדש</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pr-1">תאריך סיום חדש</label>
                   <input 
                     type="date" 
                     value={yearForm.endDate}
                     onChange={e => setYearForm(prev => ({ ...prev, endDate: e.target.value }))}
                     onClick={(e) => (e.currentTarget as any).showPicker?.()}
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 ring-[#ff009f]/5 focus:bg-white transition-all cursor-pointer"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 ring-sky-500/20 focus:bg-white transition-all cursor-pointer text-slate-700"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 pt-4">
+              <div className="flex flex-col gap-3 pt-2">
                 <button 
                   onClick={async () => {
                     setIsSavingYear(true);
@@ -2602,14 +1819,14 @@ const AdminPage: React.FC = () => {
                     }
                   }}
                   disabled={isSavingYear}
-                  className="w-full py-5 bg-rose-500 text-white rounded-[2rem] font-black text-lg shadow-xl shadow-rose-500/20 hover:bg-rose-600 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                  className="w-full py-4 bg-rose-500 text-white rounded-xl font-bold text-base shadow-sm hover:bg-rose-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  {isSavingYear ? <Loader2 className="animate-spin" /> : <Save size={20} />}
+                  {isSavingYear ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                   אני מבין את ההשלכות - שמור שינויים
                 </button>
                 <button 
                   onClick={() => setIsEditingYear(false)}
-                  className="w-full py-5 bg-slate-100 text-slate-500 rounded-[2rem] font-black text-lg hover:bg-slate-200 transition-all"
+                  className="w-full py-4 bg-slate-100 text-slate-600 rounded-xl font-bold text-base hover:bg-slate-200 transition-all"
                 >
                   ביטול וחזרה
                 </button>
@@ -2621,40 +1838,38 @@ const AdminPage: React.FC = () => {
 
       {/* Success Modal for Approved Member */}
       {approvedUser && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-[#4a002e]/60 backdrop-blur-md animate-in fade-in">
-           <div className="bg-white/60 backdrop-blur-xl w-full max-w-md rounded-[3.5rem] shadow-2xl p-10 md:p-14 border border-white/30 text-center animate-in zoom-in-95 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff009f]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-              
-              <div className="w-20 h-20 bg-[var(--vibrant-cyan)] text-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-[var(--vibrant-cyan)]/10">
-                 <CheckCircle2 size={40} />
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in">
+           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8 border border-slate-200 text-center animate-in zoom-in-95 relative overflow-hidden">
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                 <CheckCircle2 size={32} />
               </div>
               
-              <h3 className="text-3xl font-black text-[var(--deep-teal-sea)] mb-4">חבר/ה חדש/ה בנבחרת!</h3>
-              <p className="text-[var(--turquoise-teal)]/60 font-bold text-lg mb-10 leading-relaxed">
-                הבקשה של <span className="text-[var(--vibrant-cyan)]">{approvedUser.firstName} {approvedUser.lastName}</span> אושרה.
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">חבר/ה חדש/ה בנבחרת!</h3>
+              <p className="text-slate-500 font-medium mb-8 leading-relaxed">
+                הבקשה של <span className="text-sky-600 font-bold">{approvedUser.firstName} {approvedUser.lastName}</span> אושרה.
                 נא לשלוח לו/ה את פרטי הגישה:
               </p>
               
-              <div className="bg-[var(--aqua-mist)]/10 rounded-[2rem] p-8 mb-6 border border-[var(--vibrant-cyan)]/5 relative group">
+              <div className="bg-slate-50 rounded-xl p-6 mb-8 border border-slate-100 relative group">
                  <div className="space-y-4">
                     <div className="flex justify-between items-center text-right">
-                       <span className="text-[12px] font-black text-[var(--turquoise-teal)]/40 uppercase tracking-widest">שם משתמש</span>
-                       <span className="font-black text-[var(--deep-teal-sea)]">{approvedUser.email}</span>
+                       <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">שם משתמש</span>
+                       <span className="font-bold text-slate-700">{approvedUser.email}</span>
                     </div>
-                    <div className="h-px bg-[var(--vibrant-cyan)]/10"></div>
+                    <div className="h-px bg-slate-200"></div>
                     <div className="flex justify-between items-center text-right">
-                       <span className="text-[12px] font-black text-[var(--turquoise-teal)]/40 uppercase tracking-widest">סיסמה זמנית</span>
-                       <span className="font-black text-[var(--vibrant-cyan)] text-xl tracking-wider select-all">{approvedUser.tempPassword}</span>
+                       <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">סיסמה זמנית</span>
+                       <span className="font-bold text-sky-600 text-xl tracking-wider select-all">{approvedUser.tempPassword}</span>
                     </div>
                  </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 mb-10">
+              <div className="grid grid-cols-1 gap-3 mb-8">
                  <button 
                    onClick={() => openWhatsApp(approvedUser.mobile, `${approvedUser.firstName} ${approvedUser.lastName}`, approvedUser.email, approvedUser.tempPassword)}
-                   className="w-full py-4 bg-[var(--vibrant-cyan)] text-white rounded-2xl font-black text-sm shadow-lg hover:bg-[var(--deep-teal-sea)] transition-all flex items-center justify-center gap-3"
+                   className="w-full py-3.5 bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-sm hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
                  >
-                   <MessageCircle size={20} />
+                   <MessageCircle size={18} />
                    שלח בוואטסאפ
                  </button>
                  <button 
@@ -2662,7 +1877,7 @@ const AdminPage: React.FC = () => {
                      navigator.clipboard.writeText(formatWhatsAppMessage(`${approvedUser.firstName} ${approvedUser.lastName}`, approvedUser.email, approvedUser.tempPassword));
                      showSuccess('הודעת ההצטרפות הועתקה ללוח');
                    }}
-                   className="w-full py-4 bg-[var(--aqua-mist)]/20 text-[var(--vibrant-cyan)] rounded-2xl font-black text-sm hover:bg-[var(--aqua-mist)]/30 transition-all flex items-center justify-center gap-3"
+                   className="w-full py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
                  >
                    <Copy size={18} />
                    העתק הודעה ללוח
@@ -2671,7 +1886,7 @@ const AdminPage: React.FC = () => {
               
               <button 
                 onClick={() => setApprovedUser(null)} 
-                className="w-full py-5 bg-[var(--deep-teal-sea)] text-white rounded-[2rem] font-black text-lg shadow-xl hover:bg-[var(--vibrant-cyan)] transition-all"
+                className="w-full py-4 bg-slate-800 text-white rounded-xl font-bold text-base shadow-sm hover:bg-slate-900 transition-all"
               >
                 סגור פאנל
               </button>

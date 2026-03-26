@@ -126,7 +126,7 @@ const WetsuitSVG: React.FC<WetsuitSVGProps> = ({ thickness = '4/3', alignBottom 
               transition={{ duration: 0.8, ease: "easeOut" }}
               src={imgSrc} 
               alt={`${thickness} Full Wetsuit`}
-              className="w-full h-auto scale-125 drop-shadow-[0_30px_40px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-135"
+              className="w-full h-auto scale-125 origin-bottom drop-shadow-[0_30px_40px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-135"
               onError={() => setImgError(true)}
             />
           </div>
@@ -135,7 +135,7 @@ const WetsuitSVG: React.FC<WetsuitSVGProps> = ({ thickness = '4/3', alignBottom 
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="w-full h-auto"
+              className="w-full h-auto scale-125 origin-bottom"
             >
               <WetsuitIllustration thickness={thickness} />
             </motion.div>

@@ -231,7 +231,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row justify-center items-center gap-16 lg:gap-12 shrink-0 w-full lg:w-auto py-12 relative z-10">
+                  <div className="flex flex-col sm:flex-row justify-center items-end gap-16 lg:gap-12 shrink-0 w-full lg:w-auto py-12 relative z-10">
                     {wetsuit && (
                       <div className="flex flex-col items-center gap-8 w-full sm:w-[220px] group">
                         <div className="relative h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
@@ -248,7 +248,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                     <div className="flex flex-col items-center gap-8 w-full sm:w-[220px] group">
                       <div className="relative h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
                         <div className="absolute inset-0 bg-orange-500/10 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                        <div className="w-28 h-full">
+                        <div className="w-full h-full scale-[1.25] origin-bottom -translate-y-10">
                           <ExactSurfboard type={boardKey} isSelected={true} />
                         </div>
                       </div>

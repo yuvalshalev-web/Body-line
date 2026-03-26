@@ -22,7 +22,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { calculateSurferFormula, calculateMatchScore } from '../utils/surfMath';
-import { SurfboardOverlay } from '../components/SurfboardOverlay';
+import { SurfboardOverlay, ExactSurfboard } from '../components/SurfboardOverlay';
 import WetsuitSVG from '../components/WetsuitSVG';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useRandomHeader } from '../hooks/useRandomHeader';
@@ -425,8 +425,10 @@ const ShaperPage: React.FC = () => {
               </div>
 
               {/* Board Visualization */}
-              <div className="relative w-full aspect-[4/3] md:aspect-[16/9] flex items-center justify-center bg-slate-50/50 rounded-[2.5rem] border border-slate-100">
-                <SurfboardOverlay selectedBoardType={recommendation.boardType} />
+              <div className="relative w-full aspect-[2/3] md:aspect-[3/4] flex items-end justify-center bg-slate-50/50 rounded-[2.5rem] border border-slate-100">
+                <div className="w-full h-full scale-[1.2] origin-bottom flex items-end justify-center pb-8">
+                  <ExactSurfboard type={recommendation.boardType} isSelected={true} />
+                </div>
               </div>
 
               <div className="mt-10 text-center bg-white/60 backdrop-blur-md border border-white/80 rounded-3xl p-8 w-full shadow-sm">

@@ -10,11 +10,11 @@ export const ExactSurfboard = ({ type, isSelected }: { type: string; isSelected?
   
   if (customImage) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
+      <div className="w-full h-full flex items-end justify-center">
         <img 
           src={customImage} 
           alt={type} 
-          className={`max-w-full max-h-full object-contain drop-shadow-2xl transition-all duration-500 ${isSelected ? 'scale-110' : 'scale-100'}`}
+          className={`max-w-full max-h-full object-contain drop-shadow-2xl transition-all duration-500 scale-100`}
           referrerPolicy="no-referrer"
           style={{
             filter: isSelected ? 'drop-shadow(0 0 15px rgba(6, 182, 212, 0.4))' : 'grayscale(100%) opacity(0.3)'
