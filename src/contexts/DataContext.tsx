@@ -249,8 +249,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     console.log("Coastal weather useEffect running, dbStatus:", dbStatus, "currentUser:", currentUser);
     // Removed the dbStatus check to ensure it runs
     
-    const fetchCoastalWeather = async () => {
-      console.log("Starting coastal weather fetch...");
+    const fetchCoastalWeather = async (retryCount = 0) => {
+      console.log(`Starting coastal weather fetch (Attempt ${retryCount + 1})...`);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
         console.warn("Coastal weather fetch timed out");
@@ -258,12 +258,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }, 10000); // 10s timeout
 
       try {
-        console.log("Fetching coastal weather from local API proxy...");
-        
-        const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-          ? '/api/coastal-weather'
-          : `${window.location.origin}/api/coastal-weather`;
-        
+        const apiUrl = '/api/coastal-weather';
         const response = await fetch(apiUrl, { signal: controller.signal });
         clearTimeout(timeoutId);
 
@@ -274,70 +269,76 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
 
         const data = await response.json();
-
-        console.log("DataContext - Coastal weather data received (Direct):", data);
+        console.log("DataContext - Coastal weather data received:", data);
         setCoastalWeather(data);
         setIsLoading(false);
 
         // Centralized Side Effects: Update stats and log history (Admins only for history)
-          const db = getDb();
-          const statsRef = doc(db, 'seaConditionsStats', 'current');
-          const statsDoc = await getDoc(statsRef);
-          
-          if (!statsDoc.exists()) {
-            await setDoc(statsRef, {
-              maxWaveHeight: data.waveHeight,
-              minWaveHeight: data.waveHeight,
-              maxWaterTemp: data.waterTemp,
-              minWaterTemp: data.waterTemp,
-              maxWindSpeed: data.windSpeed,
-              minWindSpeed: data.windSpeed,
-              maxUvIndex: data.uvIndex,
-              minUvIndex: data.uvIndex
+        const db = getDb();
+        const statsRef = doc(db, 'seaConditionsStats', 'current');
+        const statsDoc = await getDoc(statsRef);
+        
+        if (!statsDoc.exists()) {
+          await setDoc(statsRef, {
+            maxWaveHeight: data.waveHeight,
+            minWaveHeight: data.waveHeight,
+            maxWaterTemp: data.waterTemp,
+            minWaterTemp: data.waterTemp,
+            maxWindSpeed: data.windSpeed,
+            minWindSpeed: data.windSpeed,
+            maxUvIndex: data.uvIndex,
+            minUvIndex: data.uvIndex
+          });
+        } else {
+          const currentStats = statsDoc.data();
+          const needsUpdate = 
+            data.waveHeight > currentStats.maxWaveHeight ||
+            data.waveHeight < currentStats.minWaveHeight ||
+            data.waterTemp > currentStats.maxWaterTemp ||
+            data.waterTemp < currentStats.minWaterTemp ||
+            data.windSpeed > currentStats.maxWindSpeed ||
+            data.windSpeed < currentStats.minWindSpeed ||
+            data.uvIndex > currentStats.maxUvIndex ||
+            data.uvIndex < currentStats.minUvIndex;
+
+          if (needsUpdate) {
+            await updateDoc(statsRef, {
+              maxWaveHeight: Math.max(currentStats.maxWaveHeight, data.waveHeight),
+              minWaveHeight: Math.min(currentStats.minWaveHeight, data.waveHeight),
+              maxWaterTemp: Math.max(currentStats.maxWaterTemp, data.waterTemp),
+              minWaterTemp: Math.min(currentStats.minWaterTemp, data.waterTemp),
+              maxWindSpeed: Math.max(currentStats.maxWindSpeed, data.windSpeed),
+              minWindSpeed: Math.min(currentStats.minWindSpeed, data.windSpeed),
+              maxUvIndex: Math.max(currentStats.maxUvIndex, data.uvIndex),
+              minUvIndex: Math.min(currentStats.minUvIndex, data.uvIndex)
             });
-          } else {
-            const currentStats = statsDoc.data();
-            const needsUpdate = 
-              data.waveHeight > currentStats.maxWaveHeight ||
-              data.waveHeight < currentStats.minWaveHeight ||
-              data.waterTemp > currentStats.maxWaterTemp ||
-              data.waterTemp < currentStats.minWaterTemp ||
-              data.windSpeed > currentStats.maxWindSpeed ||
-              data.windSpeed < currentStats.minWindSpeed ||
-              data.uvIndex > currentStats.maxUvIndex ||
-              data.uvIndex < currentStats.minUvIndex;
-
-            if (needsUpdate) {
-              await updateDoc(statsRef, {
-                maxWaveHeight: Math.max(currentStats.maxWaveHeight, data.waveHeight),
-                minWaveHeight: Math.min(currentStats.minWaveHeight, data.waveHeight),
-                maxWaterTemp: Math.max(currentStats.maxWaterTemp, data.waterTemp),
-                minWaterTemp: Math.min(currentStats.minWaterTemp, data.waterTemp),
-                maxWindSpeed: Math.max(currentStats.maxWindSpeed, data.windSpeed),
-                minWindSpeed: Math.min(currentStats.minWindSpeed, data.windSpeed),
-                maxUvIndex: Math.max(currentStats.maxUvIndex, data.uvIndex),
-                minUvIndex: Math.min(currentStats.minUvIndex, data.uvIndex)
-              });
-            }
           }
+        }
 
-          // Log to history if Admin
-          if (currentUser?.role === 'Admin') {
-            addDoc(collection(db, 'seaConditions'), {
-              timestamp: new Date().toISOString(),
-              waveHeight: data.waveHeight,
-              waterTemp: data.waterTemp,
-              windSpeed: data.windSpeed,
-              uvIndex: data.uvIndex
-            }).catch(console.error);
-          }
+        // Log to history if Admin
+        if (currentUser?.role === 'Admin') {
+          addDoc(collection(db, 'seaConditions'), {
+            timestamp: new Date().toISOString(),
+            waveHeight: data.waveHeight,
+            waterTemp: data.waterTemp,
+            windSpeed: data.windSpeed,
+            uvIndex: data.uvIndex
+          }).catch(console.error);
+        }
       } catch (e: any) {
         clearTimeout(timeoutId);
-        setIsLoading(false); // Ensure loading stops on error
         if (e.name === 'AbortError') {
           console.error("Coastal weather fetch timed out");
         } else {
           console.error("Failed to fetch coastal weather - network error or server down:", e);
+        }
+        
+        // Retry logic for transient errors
+        if (retryCount < 3) {
+          console.log(`Retrying coastal weather fetch in 5 seconds...`);
+          setTimeout(() => fetchCoastalWeather(retryCount + 1), 5000);
+        } else {
+          setIsLoading(false); // Ensure loading stops on final error
         }
       }
     };
