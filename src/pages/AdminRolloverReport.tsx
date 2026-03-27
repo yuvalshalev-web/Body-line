@@ -231,7 +231,8 @@ export const AdminRolloverReport: React.FC = () => {
                       return 'תאריך לא תקין';
                     }
                     
-                    return formatDateTime(dateValue);
+                    const formattedDate = formatDateTime(dateValue);
+                    return session.isEvent ? `${session.title || 'אירוע קהילה'} - ${formattedDate}` : formattedDate;
                   })()}
                 </td>
                 <td className="py-3 px-4 text-slate-600">{session.participantsCount || 0}</td>

@@ -273,6 +273,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
+          const text = await response.text();
+          console.error("Non-JSON response body:", text.substring(0, 500));
           throw new Error(`Received non-JSON response from server: ${contentType}`);
         }
 
@@ -482,9 +484,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.log('performanceScores updated:', scores);
         setPerformanceScores(scores);
       }, (error) => handleFirestoreError(error, OperationType.LIST, 'performance_scores'));
-    } else if (currentUser.role === 'Member') {
+    } else if (currentUser.role === 'Member' && firebaseUser) {
       // Members only see their own scores
-      const myScoresQuery = query(collection(db, 'performance_scores'), where('memberId', '==', currentUser.id), limit(100));
+      const myScoresQuery = query(collection(db, 'performance_scores'), where('memberId', '==', firebaseUser.uid), limit(100));
       unsubPerformance = onSnapshot(myScoresQuery, (snapshot) => {
         const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
         setPerformanceScores(scores);
@@ -527,7 +529,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       unsubAttendees();
       if (unsubRequests) unsubRequests();
     };
-  }, [dbStatus, currentUser?.id, currentUser?.role, handleFirestoreError]);
+  }, [dbStatus, currentUser?.id, currentUser?.role, firebaseUser?.uid, handleFirestoreError]);
 
   const updateMember = useCallback(async (member: Member) => {
     const { id, ...data } = member;
@@ -536,6 +538,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Normalize email if present
     if (data.email) {
       data.email = data.email.toLowerCase().trim();
+      
+      // Check if email already exists for a different user
+      const q = query(collection(db, 'members'), where('email', '==', data.email), limit(2));
+      const snapshot = await trackedGetDocs(q);
+      
+      const existingWithEmail = snapshot.docs.find(doc => doc.id !== id);
+      if (existingWithEmail) {
+        throw new Error('משתמש עם אימייל זה כבר קיים במערכת.');
+      }
     }
     
     // Delta Checking: Only update if data actually changed
@@ -548,8 +559,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     }
 
-    await trackedUpdateDoc(doc(db, 'members', id), data);
-  }, [members]);
+    try {
+      await trackedUpdateDoc(doc(db, 'members', id), data);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `members/${id}`);
+    }
+  }, [members, handleFirestoreError]);
 
   const deleteMember = useCallback(async (id: string) => {
     await trackedDeleteDoc(doc(getDb(), 'members', id));
@@ -615,21 +630,36 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const requestRef = doc(db, 'joinRequests', id);
       const memberRef = doc(db, 'members', id);
       
-      const result = await runTransaction(db, async (transaction) => {
-        const requestSnap = await transaction.get(requestRef);
-        const memberSnap = await transaction.get(memberRef);
+      // Get the request data first to check email
+      const requestSnap = await getDoc(requestRef);
+      if (requestSnap.exists()) {
+        const reqData = requestSnap.data() as JoinRequest;
+        const normalizedEmail = (reqData.email || '').toLowerCase().trim();
         
-        if (!requestSnap.exists()) {
+        // Check if email already exists in members collection
+        const emailQuery = query(collection(db, 'members'), where('email', '==', normalizedEmail), limit(1));
+        const emailSnapshot = await getDocs(emailQuery);
+        if (!emailSnapshot.empty) {
+          throw new Error('משתמש עם אימייל זה כבר קיים במערכת.');
+        }
+      }
+      
+      const result = await runTransaction(db, async (transaction) => {
+        const txRequestSnap = await transaction.get(requestRef);
+        const txMemberSnap = await transaction.get(memberRef);
+        
+        if (!txRequestSnap.exists()) {
           // If member exists but request doesn't, it was likely already approved
-          if (memberSnap.exists()) {
+          if (txMemberSnap.exists()) {
             console.log('DataContext: Member already exists, likely already approved.');
             return { alreadyApproved: true };
           }
           return null;
         }
         
-        const reqData = requestSnap.data() as JoinRequest;
+        const reqData = txRequestSnap.data() as JoinRequest;
         const normalizedEmail = (reqData.email || '').toLowerCase().trim();
+
         const tempPassword = Math.random().toString(36).slice(-8);
         const hashedPassword = await hashPassword(tempPassword);
         
@@ -1008,6 +1038,85 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     finalizeSessionRef.current = finalizeSession;
   }, [finalizeSession]);
 
+  // 5. Event Auto-Archiver
+  useEffect(() => {
+    if (dbStatus === 'OFFLINE' || !events.length) return;
+
+    const checkEvents = async () => {
+      const now = new Date();
+      const activeEvents = events.filter(e => !e.isArchived);
+
+      for (const event of activeEvents) {
+        if (!event.date || !event.time) continue;
+        
+        const eventDateTime = new Date(`${event.date}T${event.time}:00`);
+        if (isNaN(eventDateTime.getTime())) continue;
+        
+        if (now >= eventDateTime) {
+          console.log(`Event ${event.id} has started. Archiving and updating stats...`);
+          
+          try {
+            const db = getDb();
+            const eventRef = doc(db, 'events', event.id);
+            
+            await runTransaction(db, async (transaction) => {
+              // --- ALL READS FIRST ---
+              const eventDoc = await transaction.get(eventRef);
+              if (!eventDoc.exists()) return;
+              
+              const eventData = eventDoc.data();
+              if (eventData.isArchived) {
+                // Already archived by another client
+                return;
+              }
+
+              let memberDocs: any[] = [];
+              if (eventData.attendees && eventData.attendees.length > 0) {
+                const memberRefs = eventData.attendees.map((uid: string) => doc(db, 'members', uid));
+                // Perform all reads before any writes
+                memberDocs = await Promise.all(memberRefs.map((ref: any) => transaction.get(ref)));
+              }
+              
+              // --- ALL WRITES SECOND ---
+              // 1. Mark as archived
+              transaction.update(eventRef, { isArchived: true });
+              
+              // 2. Add to weekly_history
+              const historyRef = doc(collection(db, 'weekly_history'));
+              transaction.set(historyRef, {
+                date: eventDateTime.toISOString(),
+                participantIds: eventData.attendees || [],
+                participantsCount: (eventData.attendees || []).length,
+                status: 'finalized',
+                finalizedAt: new Date().toISOString(),
+                seaState: coastalWeather || null,
+                isEvent: true,
+                title: eventData.title || 'אירוע קהילה'
+              });
+              
+              // 3. Update attendees stats
+              memberDocs.forEach((memberDoc) => {
+                if (memberDoc.exists()) {
+                  transaction.update(memberDoc.ref, {
+                    totalAttendance: increment(1)
+                  });
+                }
+              });
+            });
+            console.log(`Event ${event.id} successfully auto-archived and stats updated.`);
+          } catch (error) {
+            console.error(`Failed to auto-archive event ${event.id}:`, error);
+          }
+        }
+      }
+    };
+
+    const intervalId = setInterval(checkEvents, 60000); // Check every minute
+    checkEvents(); // Check immediately on mount/update
+
+    return () => clearInterval(intervalId);
+  }, [events, dbStatus, coastalWeather]);
+
   const updateSiteAssets = useCallback(async (assets: any) => {
     console.log('Updating site assets in Firestore:', assets);
     await setDoc(doc(getDb(), 'site_data', 'assets'), assets, { merge: true });
@@ -1075,9 +1184,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const path = 'members';
     try {
       const membersRef = collection(db, path);
+      const normalizedEmail = memberData.email.toLowerCase().trim();
+      
+      // Check if email already exists
+      const q = query(membersRef, where('email', '==', normalizedEmail), limit(1));
+      const snapshot = await trackedGetDocs(q);
+      
+      if (!snapshot.empty) {
+        throw new Error('משתמש עם אימייל זה כבר קיים במערכת.');
+      }
+
       await addDoc(membersRef, {
         ...memberData,
-        email: memberData.email.toLowerCase().trim(),
+        email: normalizedEmail,
         joinedAt: memberData.joinedAt || getCurrentDateFormatted(),
         isActive: memberData.isActive !== undefined ? memberData.isActive : true,
         loginCount: 0,

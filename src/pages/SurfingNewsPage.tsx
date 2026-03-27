@@ -123,7 +123,11 @@ const SurfingNewsPage: React.FC = () => {
               className="group bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 flex flex-col"
             >
               <div className="h-48 bg-slate-100 flex items-center justify-center relative">
-                <Globe className="text-slate-300" size={48} />
+                {item.thumbnail ? (
+                  <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <Globe className="text-slate-300" size={48} />
+                )}
                 <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full">
                   {item.source}
                 </div>

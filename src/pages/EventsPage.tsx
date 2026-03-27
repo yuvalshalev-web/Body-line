@@ -15,11 +15,10 @@ const EventsPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
 
-  // Sort events by date
   const sortedEvents = [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const activeEvents = sortedEvents.filter(e => !e.isArchived);
   const upcomingEvents = activeEvents.filter(e => new Date(e.date) >= new Date(new Date().setHours(0,0,0,0)));
-  const pastEvents = activeEvents.filter(e => new Date(e.date) < new Date(new Date().setHours(0,0,0,0))).reverse();
+  const pastEvents = sortedEvents.filter(e => new Date(e.date) < new Date(new Date().setHours(0,0,0,0))).reverse();
 
   const handleRSVP = async (e: React.MouseEvent, eventId: string) => {
     e.stopPropagation();
@@ -50,8 +49,8 @@ const EventsPage: React.FC = () => {
   };
 
   const handleDeleteEvent = async (eventId: string) => {
-    if (window.confirm('האם אתה בטוח שברצונך לבטל את האירוע ולהעבירו לארכיון?')) {
-      await archiveEvent(eventId);
+    if (window.confirm('האם אתה בטוח שברצונך לבטל ולמחוק את האירוע?')) {
+      await deleteEvent(eventId);
       setIsModalOpen(false);
     }
   };
@@ -306,8 +305,13 @@ const EventsPage: React.FC = () => {
           <h2 className="text-2xl font-bold text-slate-800 opacity-60">אירועי עבר</h2>
           <div className="grid gap-4 opacity-70">
             {pastEvents.map(event => (
-              <div key={event.id} className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex items-center gap-4">
-                <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
+              <div key={event.id} className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex items-center gap-4 relative overflow-hidden">
+                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                  <span className="text-4xl md:text-6xl font-black text-slate-500/10 transform -rotate-12 select-none tracking-widest">
+                    הסתיים
+                  </span>
+                </div>
+                <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0 relative z-10">
                   {event.imageUrl ? (
                     <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover grayscale" />
                   ) : (

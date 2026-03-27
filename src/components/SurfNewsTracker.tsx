@@ -17,14 +17,14 @@ export const SurfNewsTracker: React.FC = () => {
       try {
         const response = await fetch('/api/ims/marine-forecast');
         if (response.ok) {
-          const contentType = response.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-            const data = await response.json();
+          const text = await response.text();
+          try {
+            const data = JSON.parse(text);
             if (data.forecast) {
               setMarineForecast(data.forecast);
             }
-          } else {
-            console.warn("Marine forecast API returned non-JSON response:", contentType);
+          } catch (e) {
+            console.warn("Marine forecast API returned non-JSON response");
           }
         }
       } catch (err) {

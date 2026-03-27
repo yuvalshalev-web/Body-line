@@ -49,7 +49,7 @@ service cloud.firestore {
       return isAuthenticated() && 
         ((exists(/databases/$(database)/documents/members/$(request.auth.uid)) && 
           get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role == 'Admin') ||
-         (request.auth.token.email.lower() in ["yuval.shalev@gmail.com", "yuval@shalev.io"]));
+         (('email' in request.auth.token) && request.auth.token.email.lower() in ["yuval.shalev@gmail.com", "yuval@shalev.io"]));
     }
 
     function isInstructor() {
@@ -181,7 +181,7 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isValidMember(request.resource.data) && (isAdmin() || isOwner(memberId));
       allow update: if isAuthenticated() && isValidMember(request.resource.data) && 
                     (isAdmin() || (isOwner(memberId) && request.resource.data.role == resource.data.role));
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.email.lower() == request.auth.token.email.lower());
     }
 
     match /gallery/{document=**} {
@@ -257,7 +257,7 @@ service cloud.firestore {
     }
     
     match /performance_scores/{scoreId} {
-      allow read: if isAuthenticated() && (isAdmin() || isInstructor() || isOwner(resource.data.memberId));
+      allow read: if isAuthenticated() && (resource.data.memberId == request.auth.uid || isAdmin() || isInstructor());
       allow write: if isAdmin() || isInstructor();
     }
     

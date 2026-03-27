@@ -261,7 +261,7 @@ const SessionStatsPage: React.FC = () => {
     // Age Mapping (Local Map for efficiency)
     const ageMap = new Map<string, string | null>();
     members.forEach(m => {
-      const age = calculateAge(m.birthday);
+      const age = calculateAge(m.birthday || (m as any).birthDate);
       if (age === null) {
         ageMap.set(m.id, null);
       } else {
@@ -1139,7 +1139,7 @@ const SessionStatsPage: React.FC = () => {
                         <tr key={member.id} className="group hover:bg-[rgba(240,248,255,0.1)] transition-colors">
                           <td className="py-5 pr-4">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white/30 shadow-sm bg-slate-100 flex items-center justify-center">
+                              <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white/30 shadow-sm bg-slate-100 flex items-center justify-center flex-shrink-0">
                                 {member.avatar ? (
                                   <img src={member.avatar} className="w-full h-full object-cover" alt="" />
                                 ) : (

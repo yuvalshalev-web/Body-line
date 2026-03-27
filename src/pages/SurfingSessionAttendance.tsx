@@ -274,7 +274,9 @@ const SurfingSessionAttendance: React.FC = () => {
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                     <div>
-                      <h4 className="text-2xl font-black text-[#00426a] mb-2">{formatDate(session.date)}</h4>
+                      <h4 className="text-2xl font-black text-[#00426a] mb-2">
+                        {session.isEvent ? `${session.title || 'אירוע קהילה'} - ${formatDate(session.date)}` : formatDate(session.date)}
+                      </h4>
                       <div className="flex flex-wrap items-center gap-4 text-[#00426a] font-bold">
                         <div className="flex items-center gap-2">
                           <Users size={16} className="text-[#0071a1]" />
@@ -480,7 +482,7 @@ const SurfingSessionAttendance: React.FC = () => {
                             : 'bg-transparent opacity-30 grayscale hover:opacity-100 hover:grayscale-0'
                         }`}
                       >
-                        <div className={`w-24 h-24 rounded-[30px] overflow-hidden border-4 transition-all duration-700 relative ${
+                        <div className={`w-24 h-24 rounded-[30px] overflow-hidden border-4 transition-all duration-700 relative flex-shrink-0 ${
                           isAttending 
                             ? 'border-[#A2FF00] shadow-[0_0_30px_rgba(162,255,0,0.4)] scale-110' 
                             : 'border-white/40'

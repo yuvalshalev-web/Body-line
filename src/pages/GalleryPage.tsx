@@ -220,7 +220,7 @@ const GalleryPage: React.FC = () => {
           >
             <img 
               src={item.imageUrl} 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 scale-[0.7]" 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
               alt={item.uploaderName} 
               loading="lazy" 
             />

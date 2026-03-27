@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { 
   X, Camera, UserCircle, ChevronLeft, Save, Archive, Loader2, Cake, Phone, Mail, 
   ChevronDown, Instagram, Facebook, Music2, Linkedin, Twitter, Globe, Key, Check, HeartPulse,
-  Award, Search, Sparkles, User
+  Award, Search, Sparkles, User, RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Member } from '../../types';
@@ -726,11 +726,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               type="button"
               onClick={handleSave}
               disabled={isProcessing}
-              className={`flex-[2] py-8 rounded-[2rem] font-black text-xl transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 shadow-xl relative overflow-hidden group ${
-                editingMember.isActive !== false 
-                  ? 'bg-[#00AFC2] text-white' 
-                  : 'bg-rose-500 text-white'
-              }`}
+              className="flex-[2] py-8 rounded-[2rem] font-black text-xl transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 shadow-xl relative overflow-hidden group bg-[#00AFC2] text-white"
             >
               <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               {isProcessing ? (
@@ -739,7 +735,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
                 <>
                   <Save size={28} /> 
                   <span className="tracking-tight">
-                    {editingMember.isActive !== false ? 'שמירת שינויים' : 'אשר והשעה משתמש'}
+                    שמירת שינויים
                   </span>
                 </>
               )}
@@ -749,15 +745,20 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               type="button"
               onClick={() => {
                 showConfirm({
-                  title: 'העברה לארכיון',
-                  message: `האם להעביר את ${editingMember.firstName} ${editingMember.lastName} לארכיון?`,
-                  confirmText: 'העבר לארכיון',
+                  title: editingMember.isActive !== false ? 'השעיית חבר' : 'שחרור חבר',
+                  message: editingMember.isActive !== false ? `האם להשעות את ${editingMember.firstName} ${editingMember.lastName}?` : `האם לשחרר את ${editingMember.firstName} ${editingMember.lastName} ולהחזירו לפעילות?`,
+                  confirmText: editingMember.isActive !== false ? 'השעה חבר' : 'שחרר חבר',
                   cancelText: 'ביטול',
                   onConfirm: async () => {
                     setIsProcessing(true);
                     try {
-                      await onArchive(editingMember.id);
-                      showSuccess('המשתמש הועבר לארכיון בהצלחה');
+                      if (editingMember.isActive !== false) {
+                        await onArchive(editingMember.id);
+                        showSuccess('החבר הושעה בהצלחה');
+                      } else {
+                        await onSave({ ...editingMember, isActive: true });
+                        showSuccess('החבר הוחזר לפעילות');
+                      }
                       onClose();
                     } catch (err: any) {
                       showError('שגיאה: ' + err.message);
@@ -768,9 +769,17 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
                 });
               }}
               disabled={isProcessing}
-              className="flex-1 py-8 bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-600 rounded-[2rem] font-black text-xl transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50"
+              className={`flex-1 py-8 rounded-[2rem] font-black text-xl transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 ${
+                editingMember.isActive !== false 
+                  ? 'bg-[#FF2D60] text-white hover:bg-[#FF2D60]/90 shadow-lg shadow-[#FF2D60]/30' 
+                  : 'bg-[#FF2D60] text-white hover:bg-[#FF2D60]/90 shadow-lg shadow-[#FF2D60]/30'
+              }`}
             >
-              <Archive size={28} /> ארכיון
+              {editingMember.isActive !== false ? (
+                <><Archive size={28} /> השעייה</>
+              ) : (
+                <><RefreshCw size={28} /> שחרור</>
+              )}
             </button>
           </div>
           
@@ -781,7 +790,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               className="flex items-center gap-3 text-slate-400 hover:text-[#00AFC2] font-black transition-all uppercase tracking-[0.2em] text-[11px] px-8 py-4 rounded-full border border-slate-200"
             >
               <Key size={16} />
-              <span>החלפת סיסמה למשתמש</span>
+              <span>החלפת סיסמה לחבר</span>
             </button>
           </div>
         </div>

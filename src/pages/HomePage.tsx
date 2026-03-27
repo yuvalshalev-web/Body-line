@@ -327,7 +327,7 @@ const HomePage: React.FC = () => {
               {/* Centered Avatars */}
               <div className="flex justify-center -space-x-4 md:-space-x-6 space-x-reverse">
                 {attendees.slice(0, 12).map(a => (
-                  <Link to={`/directory?id=${a.id}`} key={a.id} className="relative group feathered-avatar-hover">
+                  <Link to={`/directory?id=${a.id}`} key={a.id} className="relative group feathered-avatar-hover flex-shrink-0">
                     {a.avatar ? (
                       <img 
                         src={a.avatar} 
@@ -496,27 +496,35 @@ const HomePage: React.FC = () => {
       </div>
 
       {showAttendees && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in" onClick={() => setShowAttendees(false)}>
-           <div className="bg-white/10 backdrop-blur-[15px] border border-white/20 shadow-2xl shadow-black/20 rounded-2xl w-full max-w-lg p-10 animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-              <h3 className="text-3xl font-black mb-8 glass-text-primary">נבחרת הסשן</h3>
-              <div className="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar">
-                {attendees.map(a => (
-                  <div key={a.id} className="flex items-center gap-4 p-4 bg-white/5 backdrop-blur-[15px] border border-white/10 rounded-xl shadow-md shadow-black/5 feathered-avatar-hover">
-                    {a.avatar ? (
-                      <img src={a.avatar} className="w-12 h-12 rounded-xl border border-white/20 object-cover feathered-avatar" alt="" loading="lazy" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-slate-400">
-                        <UserCircle size={24} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-md animate-in fade-in" onClick={() => setShowAttendees(false)}>
+           <div className="relative bg-gradient-to-br from-[#FCFCFC] via-[#FFFFFF] to-[#F0F7F9] border border-white/80 shadow-[0_40px_80px_-20px_rgba(0,43,68,0.2)] rounded-[2rem] w-full max-w-lg p-8 sm:p-10 animate-in zoom-in-95 overflow-hidden" onClick={e => e.stopPropagation()}>
+              {/* Micro-grain texture */}
+              <div className="absolute inset-0 opacity-[0.04] mix-blend-multiply pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+              
+              <div className="relative z-10">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-3xl font-black text-[#002b44] tracking-tight font-yehuda">נבחרת הסשן</h3>
+                  <div className="px-4 py-1.5 bg-[#007085]/10 text-[#007085] rounded-full text-sm font-black tracking-widest">{attendees.length} גולשים</div>
+                </div>
+                <div className="space-y-4 max-h-[55vh] overflow-y-auto custom-scrollbar pr-2 pb-4">
+                  {attendees.map(a => (
+                    <div key={a.id} className="flex items-center gap-5 p-4 bg-white/80 backdrop-blur-sm rounded-2xl shadow-[0_16px_40px_-12px_rgba(0,43,68,0.12)] border border-white hover:shadow-[0_24px_50px_-16px_rgba(0,43,68,0.2)] hover:-translate-y-1 transition-all duration-300">
+                      {a.avatar ? (
+                        <img src={a.avatar} className="w-14 h-14 rounded-2xl object-cover shadow-md border border-slate-100/50 flex-shrink-0" alt="" loading="lazy" />
+                      ) : (
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-white shadow-inner flex items-center justify-center text-slate-400 flex-shrink-0">
+                          <UserCircle size={28} strokeWidth={1.5} />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-black text-[#002b44] text-lg">{a.firstName} {a.lastName}</p>
+                        <p className="text-[10px] font-black text-[#007085] uppercase tracking-[0.2em] opacity-80">{a.role === 'Admin' ? 'רכז' : 'חבר'}</p>
                       </div>
-                    )}
-                    <div>
-                      <p className="font-black glass-text-primary">{a.firstName} {a.lastName}</p>
-                      <p className="text-[12px] font-black glass-text-secondary uppercase tracking-widest">{a.role === 'Admin' ? 'רכז' : 'חבר'}</p>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                <button onClick={() => setShowAttendees(false)} className="w-full mt-6 py-4 bg-[#002b44] text-white rounded-2xl shadow-[0_12px_24px_-8px_rgba(0,43,68,0.4)] font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-95 hover:bg-[#003b5c] hover:shadow-[0_16px_32px_-8px_rgba(0,43,68,0.5)]">סגור</button>
               </div>
-              <button onClick={() => setShowAttendees(false)} className="w-full mt-8 py-4 bg-[var(--surfer-cyan)] text-black rounded-2xl shadow-lg font-black text-lg transition-all active:scale-95 hover:bg-[var(--surfer-teal)]">סגור</button>
            </div>
         </div>
       )}

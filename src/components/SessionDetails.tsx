@@ -153,7 +153,7 @@ const SessionDetails: React.FC<SessionDetailsProps> = ({ session, members, onClo
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {participantList.map(member => (
                 <div key={member.id} className="flex items-center gap-3 p-3 floating-slab-deep !rounded-2xl !p-3">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#00426a]/10">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#00426a]/10 flex-shrink-0">
                     {member.avatar ? (
                       <img src={member.avatar} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
                     ) : (

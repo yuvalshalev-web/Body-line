@@ -123,12 +123,21 @@ const CommunityAnalytics: React.FC = () => {
       ctx.fillStyle = coreGradient;
       ctx.fill();
 
-      if (logoImg.complete) {
+      if (logoImg.complete && logoImg.naturalWidth > 0) {
         ctx.save();
         ctx.beginPath();
         ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
         ctx.clip();
-        ctx.drawImage(logoImg, centerX - logoSize / 2, centerY - logoSize / 2, logoSize, logoSize);
+        try {
+          ctx.drawImage(logoImg, centerX - logoSize / 2, centerY - logoSize / 2, logoSize, logoSize);
+        } catch (e) {
+          console.warn("Failed to draw logo image:", e);
+          // Fallback cyan dot if drawImage fails
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
+          ctx.fillStyle = '#00fbff';
+          ctx.fill();
+        }
         ctx.restore();
         
         // Glass reflection on the sphere
@@ -382,7 +391,7 @@ const CommunityAnalytics: React.FC = () => {
     };
 
     activeMembers.forEach(m => {
-      const age = calculateAge(m.birthday);
+      const age = calculateAge(m.birthday || (m as any).birthDate);
       if (age === null) {
         ageGroups['לא צוין / אחר']++;
         return;
@@ -395,7 +404,7 @@ const CommunityAnalytics: React.FC = () => {
     });
 
     members.forEach(m => {
-      const age = calculateAge(m.birthday);
+      const age = calculateAge(m.birthday || (m as any).birthDate);
       if (age === null) {
         ageGroupsTotal['לא צוין / אחר']++;
         return;
@@ -418,7 +427,7 @@ const CommunityAnalytics: React.FC = () => {
       { label: 'ותיקים', key: 'ותיקים (60+)' }
     ].map(c => {
       const groupMembers = activeMembers.filter(m => {
-        const age = calculateAge(m.birthday);
+        const age = calculateAge(m.birthday || (m as any).birthDate);
         if (age === null) return false;
         if (c.key === 'צעירים (18-25)') return age >= 18 && age <= 25;
         if (c.key === 'בוגרים (26-40)') return age >= 26 && age <= 40;
@@ -1125,10 +1134,10 @@ const CommunityAnalytics: React.FC = () => {
                             <img 
                               src={member.avatar} 
                               alt="" 
-                              className="w-12 h-12 rounded-xl border-2 border-white/20 shadow-inner object-cover"
+                              className="w-12 h-12 rounded-xl border-2 border-white/20 shadow-inner object-cover flex-shrink-0"
                             />
                           ) : (
-                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 border-2 border-white/20 shadow-inner">
+                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 border-2 border-white/20 shadow-inner flex-shrink-0">
                               <User size={24} />
                             </div>
                           )}

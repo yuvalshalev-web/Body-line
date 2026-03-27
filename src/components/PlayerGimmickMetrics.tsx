@@ -16,16 +16,20 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
   }, [userId, members]);
 
   const agePercentile = useMemo(() => {
-    if (!member?.birthday || members.length === 0) return null;
+    const bday = member?.birthday || (member as any)?.birthDate;
+    if (!bday || members.length === 0) return null;
 
-    const userAge = calculateAge(member.birthday);
+    const userAge = calculateAge(bday);
     if (userAge === null) return null;
     
     // Use getBodyLineStats for age percentile
-    const membersWithAge = members.map(m => ({
-      ...m,
-      age: m.birthday ? calculateAge(m.birthday) : undefined
-    }));
+    const membersWithAge = members.map(m => {
+      const mBday = m.birthday || (m as any).birthDate;
+      return {
+        ...m,
+        age: mBday ? calculateAge(mBday) : undefined
+      };
+    });
 
     const statsHelper = getBodyLineStats(membersWithAge as any);
     const percentile = parseFloat(statsHelper.calculatePercentile(userAge, 'age'));

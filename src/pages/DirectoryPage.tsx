@@ -92,12 +92,12 @@ const DirectoryPage: React.FC = () => {
         className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-4 cursor-pointer"
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl overflow-hidden">
+          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
             {member.avatar ? (
               <img 
                 src={member.avatar} 
                 alt=""
-                className="w-full h-1/2 object-cover feathered-edges"
+                className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
             ) : (

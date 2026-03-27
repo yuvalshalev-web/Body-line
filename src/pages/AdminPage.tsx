@@ -7,7 +7,7 @@ import {
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
   PanelTop, ArrowUpCircle, ArrowDownCircle, User, Globe, Activity, AlertTriangle, Terminal,
-  FileText, Map as MapIcon, Clock, Upload
+  FileText, Map as MapIcon, Clock, Upload, BarChart2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -26,6 +26,7 @@ import { DayPicker } from '../components/DayPicker';
 import { EventEditor } from '../components/admin/EventEditor';
 import EditMemberForm from '../components/admin/EditMemberForm';
 import AddMemberModal from '../components/admin/AddMemberModal';
+import ImportMembersModal from '../components/admin/ImportMembersModal';
 import { PostEditor } from '../components/admin/PostEditor';
 import { AdminRolloverReport } from './AdminRolloverReport';
 import { AdminAssets } from './AdminAssets';
@@ -34,8 +35,141 @@ import { MarkdownViewer } from '../components/admin/MarkdownViewer';
 import MemberGradingPage from './MemberGradingPage';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { calculateUserStats } from '../utils/analytics';
+import { calculateAge } from '../utils/dateUtils';
 
 
+
+const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) => {
+  const startDate = yearConfig?.startDate ? new Date(yearConfig.startDate) : new Date(0);
+  const endDate = yearConfig?.endDate ? new Date(yearConfig.endDate) : new Date();
+
+  // From events collection (past events not yet archived, or archived ones still in events collection)
+  const pastEvents = events.filter((e: any) => {
+    const d = new Date(`${e.date}T${e.time || '00:00'}`);
+    return d < new Date() && d >= startDate && d <= endDate;
+  });
+
+  // From weeklyHistory collection (archived events)
+  const historyEvents = weeklyHistory.filter((h: any) => {
+    if (!h.isEvent) return false;
+    const d = new Date(h.date);
+    return d >= startDate && d <= endDate;
+  });
+
+  // Combine unique events by ID
+  const allPastEventsMap = new Map();
+  pastEvents.forEach((e: any) => allPastEventsMap.set(e.id, e));
+  historyEvents.forEach((h: any) => allPastEventsMap.set(h.id || h.date, h));
+
+  const totalEvents = allPastEventsMap.size;
+
+  // Active members participation
+  const activeMembers = members.filter((m: any) => m.isActive);
+  
+  // Get all unique attendees from these events
+  const allAttendeeIds = new Set<string>();
+  allPastEventsMap.forEach((e: any) => {
+    const attendees = e.attendees || e.participantIds || [];
+    attendees.forEach((id: string) => allAttendeeIds.add(id));
+  });
+
+  const getParticipationStats = (group: any[]) => {
+    if (group.length === 0) return { rate: 0, count: 0, total: 0 };
+    const attended = group.filter(m => allAttendeeIds.has(m.id)).length;
+    return {
+      rate: Math.round((attended / group.length) * 100),
+      count: attended,
+      total: group.length
+    };
+  };
+
+  const overallStats = getParticipationStats(activeMembers);
+
+  // By Role
+  const membersStats = getParticipationStats(activeMembers.filter((m: any) => m.role === 'Member'));
+  const instructorsStats = getParticipationStats(activeMembers.filter((m: any) => m.role === 'Instructor'));
+  const coordinatorsStats = getParticipationStats(activeMembers.filter((m: any) => m.role === 'Admin' || m.role === 'Coordinator'));
+
+  // By Gender
+  const maleStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'male'));
+  const femaleStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'female'));
+
+  // By Age
+  const ageUnder18 = getParticipationStats(activeMembers.filter((m: any) => { const age = calculateAge(m.birthday || m.birthDate); return age !== null && age >= 0 && age < 18; }));
+  const age18_25 = getParticipationStats(activeMembers.filter((m: any) => { const age = calculateAge(m.birthday || m.birthDate); return age !== null && age >= 18 && age <= 25; }));
+  const age26_35 = getParticipationStats(activeMembers.filter((m: any) => { const age = calculateAge(m.birthday || m.birthDate); return age !== null && age >= 26 && age <= 35; }));
+  const age36_45 = getParticipationStats(activeMembers.filter((m: any) => { const age = calculateAge(m.birthday || m.birthDate); return age !== null && age >= 36 && age <= 45; }));
+  const age46plus = getParticipationStats(activeMembers.filter((m: any) => { const age = calculateAge(m.birthday || m.birthDate); return age !== null && age >= 46; }));
+
+  const StatBar = ({ label, stats, color }: { label: string, stats: any, color: string }) => (
+    <div>
+      <div className="flex justify-between text-xs font-bold mb-1">
+        <span className="text-[var(--deep-teal-sea)]/70">{label}</span>
+        <span className="text-[var(--deep-teal-sea)]" dir="ltr">{stats.rate}% ({stats.count}/{stats.total})</span>
+      </div>
+      <div className="h-2 bg-[var(--deep-teal-sea)]/5 rounded-full overflow-hidden" dir="ltr">
+        <div className={`h-full ${color} rounded-full transition-all duration-1000`} style={{ width: `${stats.rate}%` }} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="admin-info-card p-6 mb-8 relative overflow-hidden group">
+      <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-electric-pink)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-electric-pink)]/10 transition-colors" />
+      
+      <h3 className="text-xl font-black text-[var(--surfer-electric-pink)] mb-6 flex items-center gap-2 relative z-10">
+        <BarChart2 size={24} />
+        סטטיסטיקת אירועים (שנת הפעילות)
+      </h3>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 relative z-10">
+        <div className="bg-[var(--surfer-aqua-mist)]/10 rounded-2xl p-4 text-center border border-[var(--surfer-aqua-mist)]/20">
+          <div className="text-3xl font-black text-[var(--deep-teal-sea)] mb-1">{totalEvents}</div>
+          <div className="text-xs font-bold text-[var(--deep-teal-sea)]/60 uppercase tracking-wider">אירועים שהתקיימו</div>
+        </div>
+        <div className="bg-[var(--surfer-vibrant-cyan)]/10 rounded-2xl p-4 text-center border border-[var(--surfer-vibrant-cyan)]/20">
+          <div className="text-3xl font-black text-[var(--surfer-vibrant-cyan)] mb-1">{overallStats.rate}%</div>
+          <div className="text-xs font-bold text-[var(--surfer-vibrant-cyan)]/60 uppercase tracking-wider">השתתפות כללית</div>
+          <div className="text-[10px] text-[var(--surfer-vibrant-cyan)]/40 mt-1">{overallStats.count} מתוך {overallStats.total} חברים פעילים</div>
+        </div>
+        <div className="bg-[var(--surfer-sunshine-yellow)]/10 rounded-2xl p-4 text-center border border-[var(--surfer-sunshine-yellow)]/20">
+          <div className="text-3xl font-black text-[var(--surfer-sunshine-yellow)] mb-1">{femaleStats.rate}%</div>
+          <div className="text-xs font-bold text-[var(--surfer-sunshine-yellow)]/60 uppercase tracking-wider">השתתפות נשים</div>
+          <div className="text-[10px] text-[var(--surfer-sunshine-yellow)]/40 mt-1">{femaleStats.count} מתוך {femaleStats.total}</div>
+        </div>
+        <div className="bg-indigo-500/10 rounded-2xl p-4 text-center border border-indigo-500/20">
+          <div className="text-3xl font-black text-indigo-500 mb-1">{maleStats.rate}%</div>
+          <div className="text-xs font-bold text-indigo-500/60 uppercase tracking-wider">השתתפות גברים</div>
+          <div className="text-[10px] text-indigo-500/40 mt-1">{maleStats.count} מתוך {maleStats.total}</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+        {/* By Role */}
+        <div>
+          <h4 className="text-sm font-black text-[var(--deep-teal-sea)] mb-4 border-b border-[var(--deep-teal-sea)]/10 pb-2">השתתפות לפי תפקיד</h4>
+          <div className="space-y-3">
+            <StatBar label="חברים" stats={membersStats} color="bg-[var(--surfer-vibrant-cyan)]" />
+            <StatBar label="מדריכים" stats={instructorsStats} color="bg-[var(--surfer-sunshine-yellow)]" />
+            <StatBar label="רכזים" stats={coordinatorsStats} color="bg-[var(--surfer-electric-pink)]" />
+          </div>
+        </div>
+
+        {/* By Age */}
+        <div>
+          <h4 className="text-sm font-black text-[var(--deep-teal-sea)] mb-4 border-b border-[var(--deep-teal-sea)]/10 pb-2">השתתפות לפי קבוצת גיל</h4>
+          <div className="space-y-3">
+            <StatBar label="עד 18" stats={ageUnder18} color="bg-green-400" />
+            <StatBar label="18-25" stats={age18_25} color="bg-emerald-400" />
+            <StatBar label="26-35" stats={age26_35} color="bg-teal-400" />
+            <StatBar label="36-45" stats={age36_45} color="bg-cyan-400" />
+            <StatBar label="46+" stats={age46plus} color="bg-blue-400" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AdminPage: React.FC = () => {
   const headerImage = useRandomHeader();
@@ -47,18 +181,17 @@ const AdminPage: React.FC = () => {
     yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, weeklyHistory
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ARCHIVE' | 'ROLLOVER' | 'ENGINE_ROOM' | 'ASSETS'>('USERS');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ROLLOVER' | 'ENGINE_ROOM' | 'ASSETS'>('USERS');
   const [newSessionDay, setNewSessionDay] = useState(0);
   const [newSessionTime, setNewSessionTime] = useState('07:00');
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
 
   const adminTabs = [
-    { id: 'USERS', label: 'משתמשים', icon: <Users size={20} /> },
+    { id: 'USERS', label: 'חברים', icon: <Users size={20} /> },
     { id: 'POSTS', label: 'פוסטים', icon: <Newspaper size={20} /> },
     { id: 'GALLERY', label: 'גלריה', icon: <ImageIcon size={20} /> },
     { id: 'EVENTS', label: 'אירועים', icon: <Calendar size={20} /> },
     { id: 'ROLLOVER', label: 'דו"ח יום חמישי', icon: <Activity size={20} /> },
-    { id: 'ARCHIVE', label: 'ארכיון', icon: <Archive size={20} /> },
     { id: 'REQUESTS', label: 'בקשות', icon: <UserCheck size={20} />, count: joinRequests.length },
     { id: 'ENGINE_ROOM', label: 'חדר מכונות', icon: <Terminal size={20} /> },
     { id: 'ASSETS', label: 'נכסים ועיצוב', icon: <ImageIcon size={20} /> }
@@ -75,6 +208,7 @@ const AdminPage: React.FC = () => {
 
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingConflictId, setEditingConflictId] = useState<string | null>(null);
   const [conflictNewEmail, setConflictNewEmail] = useState('');
   const [newMemberData, setNewMemberData] = useState<Partial<Member>>({
@@ -97,6 +231,78 @@ const AdminPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isCleaningDuplicates, setIsCleaningDuplicates] = useState(false);
+
+  const handleCleanupDuplicates = () => {
+    showConfirm({
+      title: "מחיקת כפילויות",
+      message: "האם אתה בטוח שברצונך למחוק את כל המשתמשים הכפולים? פעולה זו תשאיר רק משתמש אחד לכל כתובת אימייל (המשתמש עם הכי הרבה נתונים) ותמחק את השאר לצמיתות.",
+      confirmText: "כן, נקה כפילויות",
+      cancelText: "ביטול",
+      onConfirm: async () => {
+        setIsCleaningDuplicates(true);
+        try {
+          const emailGroups: Record<string, any[]> = {};
+          members.forEach(m => {
+            if (!m.email) return;
+            const email = m.email.toLowerCase().trim();
+            if (!emailGroups[email]) emailGroups[email] = [];
+            emailGroups[email].push(m);
+          });
+
+          let deletedCount = 0;
+
+          for (const [email, group] of Object.entries(emailGroups)) {
+            if (group.length > 1) {
+              // Sort to find the best one to keep
+              // Best: current user > auth UID (length 28) > higher loginCount > higher totalAttendance > isActive
+              group.sort((a, b) => {
+                if (a.id === currentUser?.id) return -1;
+                if (b.id === currentUser?.id) return 1;
+                
+                const aIsAuthId = a.id.length === 28;
+                const bIsAuthId = b.id.length === 28;
+                if (aIsAuthId && !bIsAuthId) return -1;
+                if (!aIsAuthId && bIsAuthId) return 1;
+
+                const aLogins = a.loginCount || 0;
+                const bLogins = b.loginCount || 0;
+                if (aLogins !== bLogins) return bLogins - aLogins;
+
+                const aAtt = a.totalAttendance || 0;
+                const bAtt = b.totalAttendance || 0;
+                if (aAtt !== bAtt) return bAtt - aAtt;
+
+                if (a.isActive && !b.isActive) return -1;
+                if (!a.isActive && b.isActive) return 1;
+
+                return 0; // tie
+              });
+
+              // The first one is the primary, delete the rest
+              const [primary, ...duplicates] = group;
+              for (const dup of duplicates) {
+                await deleteMember(dup.id);
+                deletedCount++;
+              }
+            }
+          }
+
+          if (deletedCount > 0) {
+            showSuccess(`נמחקו ${deletedCount} משתמשים כפולים בהצלחה.`);
+          } else {
+            showSuccess("לא נמצאו משתמשים כפולים במערכת.");
+          }
+        } catch (error) {
+          console.error("Error cleaning up duplicates:", error);
+          showError("שגיאה במחיקת כפילויות. אנא נסה שוב.");
+        } finally {
+          setIsCleaningDuplicates(false);
+        }
+      }
+    });
+  };
 
   // Markdown Viewer State
   const [markdownConfig, setMarkdownConfig] = useState<{ isOpen: boolean; path: string; title: string }>({
@@ -373,7 +579,7 @@ const AdminPage: React.FC = () => {
                 <span className="surfer-title">פאנל ניהול</span>
               </h1>
               <p className="header-subtitle max-w-2xl mx-auto">
-                ניהול משתמשים, בקשות הצטרפות והגדרות מערכת מתקדמות 🛡️
+                ניהול חברים, בקשות הצטרפות והגדרות מערכת מתקדמות 🛡️
               </p>
             </div>
           </div>
@@ -398,7 +604,7 @@ const AdminPage: React.FC = () => {
             {activeTab === 'DASHBOARD' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
                 {[
-                  { id: 'USERS', label: 'ניהול משתמשים', desc: `${members.length} חברים רשומים`, icon: Users, color: 'bg-[#00FFFF]' },
+                  { id: 'USERS', label: 'ניהול חברים', desc: `${members.length} חברים רשומים`, icon: Users, color: 'bg-[#00FFFF]' },
                   { id: 'EVENTS', label: 'ניהול אירועים', desc: `${events.length} אירועים בלוח`, icon: Calendar, color: 'bg-[#FFD700]' },
                   { id: 'GALLERY', label: 'גלריית תמונות', desc: `${galleryItems.length} פריטים במדיה`, icon: ImageIcon, color: 'bg-[#FF007F]' },
                   { id: 'POSTS', label: 'פוסטים', desc: 'ניהול תכני האתר', icon: Newspaper, color: 'bg-[#00FFFF]' },
@@ -406,8 +612,7 @@ const AdminPage: React.FC = () => {
                   ...(isAdmin ? [
                     { id: 'REQUESTS', label: 'בקשות הצטרפות', desc: `${joinRequests.length} ממתינים לאישור`, icon: UserCheck, color: 'bg-[#FF2D60]', count: joinRequests.length },
                     { id: 'ENGINE_ROOM', label: 'חדר מכונות', desc: 'ניטור תשתיות ומערכות', icon: Terminal, color: 'bg-[#8B5CF6]' },
-                    { id: 'ASSETS', label: 'נכסים ועיצוב', desc: 'תמונות ופונטים', icon: ImageIcon, color: 'bg-[#FF9F1C]' },
-                    { id: 'ARCHIVE', label: 'ארכיון משתמשים', desc: 'ניהול חברים שהושעו', icon: Archive, color: 'bg-[#FFD700]' }
+                    { id: 'ASSETS', label: 'נכסים ועיצוב', desc: 'תמונות ופונטים', icon: ImageIcon, color: 'bg-[#FF9F1C]' }
                   ] : [])
                 ].map((item) => (
                   <button
@@ -480,9 +685,9 @@ const AdminPage: React.FC = () => {
                   <div key={req.id} className={`admin-info-card p-8 group flex flex-col h-full ${isProcessing === req.id ? 'opacity-50' : ''}`}>
                     <div className="flex items-start gap-5 mb-8">
                        {req.avatar ? (
-                         <img src={req.avatar} className="w-16 h-16 rounded-2xl object-cover shadow-md border border-white/30" alt="" />
+                         <img src={req.avatar} className="w-16 h-16 rounded-2xl object-cover shadow-md border border-white/30 flex-shrink-0" alt="" />
                        ) : (
-                         <div className="w-16 h-16 rounded-2xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)] shadow-md border border-white/30">
+                         <div className="w-16 h-16 rounded-2xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)] shadow-md border border-white/30 flex-shrink-0">
                            <UserCircle size={32} />
                          </div>
                        )}
@@ -597,12 +802,18 @@ const AdminPage: React.FC = () => {
               );
             })()}
 
-            <div className="flex justify-center mt-6">
+            <div className="flex justify-center mt-6 gap-4">
               <button 
                 onClick={() => setIsAddMemberModalOpen(true)}
                 className="flex items-center gap-2 px-8 py-4 bg-[#FF9F1C] text-white rounded-2xl font-black text-sm hover:bg-[#FF9F1C]/90 transition-all shadow-lg shadow-[#FF9F1C]/20"
               >
                 <Plus size={18} /> הוספת חבר
+              </button>
+              <button 
+                onClick={() => setIsImportModalOpen(true)}
+                className="flex items-center gap-2 px-8 py-4 bg-blue-500 text-white rounded-2xl font-black text-sm hover:bg-blue-600 transition-all shadow-lg shadow-blue-500/20"
+              >
+                <Upload size={18} /> ייבוא חברים
               </button>
             </div>
 
@@ -612,13 +823,22 @@ const AdminPage: React.FC = () => {
                 gritScore={calculateUserStats(editingMember.id, members, weeklyHistory, yearConfig, events)?.gritScore || 0}
                 isSuperAdmin={isSuperAdmin}
                 onSave={async (updatedMember) => {
-                  await updateMember(updatedMember);
-                  setEditingMember(null);
+                  try {
+                    await updateMember(updatedMember);
+                    setEditingMember(null);
+                  } catch (err: any) {
+                    let errorMessage = err.message || err;
+                    try {
+                      const errObj = JSON.parse(errorMessage);
+                      if (errObj.error) errorMessage = errObj.error;
+                    } catch (e) {}
+                    alert('שגיאה בעדכון: ' + errorMessage);
+                  }
                 }}
                 onArchive={async (memberId) => {
                   await archiveMember(memberId);
                   setEditingMember(null);
-                  setActiveTab('ARCHIVE');
+                  setActiveTab('USERS');
                 }}
                 onClose={() => setEditingMember(null)}
               />
@@ -628,14 +848,14 @@ const AdminPage: React.FC = () => {
                   <table className="w-full text-right">
                     <thead className="bg-[var(--surfer-aqua-mist)]/10 border-b border-[var(--surfer-vibrant-cyan)]/10">
                       <tr>
-                        <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">משתמש</th>
+                        <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">חבר</th>
                         <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">זהות</th>
                         <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">סטטוס</th>
                         <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest text-center">עריכה</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--surfer-aqua-mist)]/10">
-                      {members.filter(m => m.isActive !== false).sort((a, b) => {
+                      {members.sort((a, b) => {
                         const aLast = a.lastName || '';
                         const bLast = b.lastName || '';
                         const aFirst = a.firstName || '';
@@ -647,16 +867,23 @@ const AdminPage: React.FC = () => {
                         }
                         return aFirst.localeCompare(bFirst, 'he');
                       }).map(member => (
-                        <tr key={member.id} className="hover:bg-[var(--surfer-aqua-mist)]/10 transition-all group">
+                        <tr key={member.id} className={`hover:bg-[var(--surfer-aqua-mist)]/10 transition-all group ${member.isActive === false ? 'grayscale opacity-60' : ''}`}>
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-4">
-                              {member.avatar ? (
-                                <img src={member.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm border border-white/30" alt="" />
-                              ) : (
-                                <div className="w-12 h-12 rounded-xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)]/40 border border-white/30">
-                                  <UserCircle size={24} />
-                                </div>
-                              )}
+                              <div className="relative flex-shrink-0">
+                                {member.avatar ? (
+                                  <img src={member.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm border border-white/30" alt="" />
+                                ) : (
+                                  <div className="w-12 h-12 rounded-xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)]/40 border border-white/30">
+                                    <UserCircle size={24} />
+                                  </div>
+                                )}
+                                {member.isActive === false && (
+                                  <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md" title="מושעה">
+                                    <Archive size={12} />
+                                  </div>
+                                )}
+                              </div>
                               <div>
                                 <h4 className="font-black text-[var(--surfer-electric-pink)]">{member.firstName} {member.lastName}</h4>
                                 <p className="text-[12px] text-[#000000]/70 font-black truncate max-w-[150px]">{member.email}</p>
@@ -676,11 +903,11 @@ const AdminPage: React.FC = () => {
                           </td>
                           <td className="px-8 py-6">
                             <span className={`px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest ${
-                              (member as any).status === 'suspended'
+                              member.isActive === false
                                 ? 'bg-[#BC4749]/10 text-[#BC4749]'
                                 : 'bg-[#2D6A4F]/10 text-[#2D6A4F]'
                             }`}>
-                              {(member as any).status === 'suspended' ? 'מושעה' : 'פעיל'}
+                              {member.isActive === false ? 'מושעה' : 'פעיל'}
                             </span>
                           </td>
                           <td className="px-8 py-6">
@@ -688,7 +915,7 @@ const AdminPage: React.FC = () => {
                               <button 
                                 onClick={() => setEditingMember(member)}
                                 className="w-10 h-10 bg-white/40 backdrop-blur-md border border-white/30 rounded-xl flex items-center justify-center text-[#000000]/40 hover:text-[var(--surfer-electric-pink)] hover:border-[var(--surfer-electric-pink)]/30 hover:shadow-lg transition-all"
-                                title="עריכת משתמש"
+                                title="עריכת חבר"
                               >
                                 <Pencil size={18} />
                               </button>
@@ -710,204 +937,12 @@ const AdminPage: React.FC = () => {
               setIsSaving={setIsSaving}
               addMember={addMember}
             />
+            <ImportMembersModal
+              isOpen={isImportModalOpen}
+              onClose={() => setIsImportModalOpen(false)}
+            />
           </div>
         )}
-
-        {activeTab === 'ARCHIVE' && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-            {/* Suspended Members Summary Card */}
-            {(() => {
-              const suspendedCount = members.filter(m => m.isActive === false).length;
-              return (
-                <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
-                  <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
-                  
-                  <div className="flex items-center gap-6 relative z-10">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-sunshine-yellow)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
-                      <UserX size={32} />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">חברים מושעים</h3>
-                      <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול משתמשים שהוצאו מהמערכת</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3 relative z-10">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-xs font-bold shadow-sm">
-                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                      מושעים {suspendedCount}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            <div className="admin-info-card overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-right">
-                  <thead className="bg-[var(--surfer-aqua-mist)]/10 border-b border-[var(--surfer-vibrant-cyan)]/10">
-                    <tr>
-                      <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">משתמש מושעה</th>
-                      <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">זהות</th>
-                      <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest text-center">פעולות</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--surfer-aqua-mist)]/10">
-                    {members.filter(m => m.isActive === false).sort((a, b) => {
-                      const aLast = a.lastName || '';
-                      const bLast = b.lastName || '';
-                      const aFirst = a.firstName || '';
-                      const bFirst = b.firstName || '';
-                      if (aLast || bLast) {
-                        const lastCompare = aLast.localeCompare(bLast, 'he');
-                        if (lastCompare !== 0) return lastCompare;
-                        return aFirst.localeCompare(bFirst, 'he');
-                      }
-                      return aFirst.localeCompare(bFirst, 'he');
-                    }).map(member => (
-                      <tr key={member.id} className="hover:bg-[var(--surfer-aqua-mist)]/10 transition-all group">
-                        <td className="px-8 py-6">
-                          <div className="flex items-center gap-4">
-                            {member.avatar ? (
-                              <img 
-                                src={member.avatar} 
-                                className="w-12 h-12 rounded-xl object-cover shadow-sm opacity-50 cursor-pointer hover:opacity-100 transition-opacity border border-white/30" 
-                                alt="" 
-                                onClick={() => setEditingMember(member)}
-                              />
-                            ) : (
-                              <div 
-                                className="w-12 h-12 rounded-xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)]/20 cursor-pointer hover:bg-[var(--surfer-aqua-mist)]/30 transition-colors border border-white/30"
-                                onClick={() => setEditingMember(member)}
-                              >
-                                <UserCircle size={24} />
-                              </div>
-                            )}
-                            <div>
-                              <h4 className="font-black text-[#000000]/60">{member.firstName} {member.lastName}</h4>
-                              <p className="text-[12px] text-[#000000]/40 font-black truncate max-w-[150px]">{member.email}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6">
-                          <span className="px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest bg-[var(--surfer-aqua-mist)]/10 text-[#000000]/60">
-                            {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
-                          </span>
-                        </td>
-                        <td className="px-8 py-6">
-                          <div className="flex items-center justify-center gap-2">
-                            <button 
-                              onClick={() => setEditingMember(member)}
-                              className="w-10 h-10 bg-white/40 backdrop-blur-md border border-white/30 rounded-xl flex items-center justify-center text-[#000000]/60 hover:text-[var(--surfer-electric-pink)] hover:border-[var(--surfer-electric-pink)]/30 hover:shadow-lg transition-all"
-                              title="עריכה"
-                            >
-                              <Pencil size={18} />
-                            </button>
-                            <button 
-                              onClick={async () => {
-                                showConfirm({
-                                  message: 'האם להחזיר את המשתמש לפעילות?',
-                                  onConfirm: async () => {
-                                    try {
-                                      await updateMember({ ...member, isActive: true });
-                                      showSuccess('המשתמש הוחזר לפעילות');
-                                    } catch (err) {
-                                      showError('שגיאה בהחזרת המשתמש');
-                                    }
-                                  }
-                                });
-                              }}
-                              className="w-10 h-10 bg-white/40 backdrop-blur-md border border-white/30 rounded-xl flex items-center justify-center text-[#000000]/60 hover:text-[var(--surfer-vibrant-cyan)] hover:border-[var(--surfer-vibrant-cyan)]/30 hover:shadow-lg transition-all"
-                              title="החזר לפעילות"
-                            >
-                              <RefreshCw size={18} className="text-[var(--surfer-vibrant-cyan)]" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {members.filter(m => m.isActive === false).length === 0 && (
-                      <tr>
-                        <td colSpan={3} className="px-8 py-12 text-center text-[#000000]/40 font-black">אין משתמשים בארכיון</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Archived Events Section */}
-            <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group mt-12">
-              <div className="absolute -right-12 -top-12 w-40 h-40 bg-amber-500/5 rounded-full blur-3xl group-hover:bg-amber-500/10 transition-colors" />
-              
-              <div className="flex items-center gap-6 relative z-10">
-                <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20 group-hover:rotate-6 transition-transform">
-                  <Archive size={32} />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-black text-slate-800 tracking-tight">ארכיון אירועים</h3>
-                  <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mt-1">אירועים שבוטלו או הועברו לארכיון</p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 relative z-10">
-                <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-xl border border-amber-100 text-xs font-bold shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                  בארכיון {events.filter(e => e.isArchived).length}
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {events.filter(e => e.isArchived).map(event => (
-                <div key={event.id} className="admin-info-card p-6 flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
-                  <div className="flex items-center gap-6 flex-1">
-                    {event.imageUrl ? (
-                      <div className="relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 shadow-md border border-white/20">
-                        <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                      </div>
-                    ) : (
-                      <div className="w-24 h-24 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 border border-white/30">
-                        <Calendar size={24} />
-                      </div>
-                    )}
-                    <div>
-                      <h4 className="text-lg font-black text-slate-800">{event.title}</h4>
-                      <p className="text-xs font-bold text-slate-500">{formatDate(event.date)} | {event.location}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 mt-4 sm:mt-0">
-                    <button 
-                      onClick={() => updateEvent({ ...event, isArchived: false })}
-                      className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white transition-all border border-emerald-100"
-                      title="החזר משימוש"
-                    >
-                      <RefreshCw size={18} />
-                    </button>
-                    <button 
-                      onClick={() => {
-                        showConfirm({
-                          message: 'האם למחוק אירוע זה לצמיתות?',
-                          onConfirm: () => deleteEvent(event.id)
-                        });
-                      }}
-                      className="p-3 bg-rose-50 text-rose-400 rounded-xl hover:bg-rose-500 hover:text-white transition-all border border-rose-100"
-                      title="מחיקה לצמיתות"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {events.filter(e => e.isArchived).length === 0 && (
-                <div className="col-span-full py-12 text-center text-slate-400 font-bold bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                  אין אירועים בארכיון
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {activeTab === 'ENGINE_ROOM' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Header Section */}
@@ -951,6 +986,33 @@ const AdminPage: React.FC = () => {
               </button>
             </section>
 
+            <section className="mt-8">
+              <h3 className="text-xl font-black text-slate-800 mb-4">תחזוקת נתונים (Data Maintenance)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="luxury-card p-8 flex flex-col justify-between border-l-4 border-rose-500">
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 bg-rose-100 text-rose-600 rounded-xl">
+                        <Users size={24} />
+                      </div>
+                      <h4 className="text-lg font-black text-slate-800">ניקוי משתמשים כפולים</h4>
+                    </div>
+                    <p className="text-sm text-slate-500 font-medium leading-relaxed mb-6">
+                      סריקת כל המשתמשים במערכת ומחיקת כפילויות לפי כתובת אימייל. המערכת תשמור את המשתמש עם כמות ההתחברויות והנוכחות הגבוהה ביותר, ותמחק את השאר.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleCleanupDuplicates}
+                    disabled={isCleaningDuplicates}
+                    className="w-full py-4 bg-rose-500 text-white rounded-xl font-black text-sm shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition-all duration-300 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isCleaningDuplicates ? <Loader2 className="animate-spin" size={20} /> : <ShieldAlert size={20} />}
+                    {isCleaningDuplicates ? 'מנקה כפילויות...' : 'הפעל ניקוי כפילויות'}
+                  </button>
+                </div>
+              </div>
+            </section>
+
             {conflictingAdmins.length > 1 && (
               <div className="p-8 bg-rose-50 border border-rose-200 rounded-2xl shadow-sm">
                 <div className="flex flex-col gap-8">
@@ -971,7 +1033,7 @@ const AdminPage: React.FC = () => {
                         {conflictingAdmins.map(admin => (
                           <div key={admin.id} className="flex items-center justify-between p-5 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/80 shadow-sm group hover:shadow-md transition-all">
                             <div className="flex items-center gap-4">
-                              <div className="relative">
+                              <div className="relative flex-shrink-0">
                                 <img src={admin.avatar} className="w-12 h-12 rounded-2xl object-cover border-2 border-white shadow-sm" alt="" />
                                 {admin.email === SUPER_ADMIN_EMAIL && (
                                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
@@ -1076,7 +1138,7 @@ const AdminPage: React.FC = () => {
               {news.map(item => (
                 <div key={item.id} className="admin-info-card p-6 flex flex-col relative group">
                   {item.imageUrl && (
-                    <img src={item.imageUrl} className="w-full h-40 object-cover rounded-xl mb-4 border border-white/30" alt="" />
+                    <img src={item.imageUrl} className="w-full aspect-video object-cover rounded-xl mb-4 border border-white/30" alt="" />
                   )}
                   <h3 className="font-black text-lg text-[var(--surfer-electric-pink)] mb-2">{item.title}</h3>
                   <p className="text-[var(--deep-teal-sea)] text-sm line-clamp-3 mb-4 flex-1 font-bold">{item.content}</p>
@@ -1271,6 +1333,8 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'EVENTS' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            <EventStatistics events={events} members={members} yearConfig={yearConfig} weeklyHistory={weeklyHistory} />
+            
             {/* Events Summary Card */}
             <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
               <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
@@ -1302,23 +1366,25 @@ const AdminPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {events.filter(e => !e.isArchived).map(event => {
+              {events.map(event => {
                 const eventDate = new Date(`${event.date}T${event.time || '00:00'}`);
                 const isPastEvent = eventDate < new Date();
 
                 return (
-                  <div key={event.id} className={`admin-info-card p-6 flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden ${isPastEvent ? 'opacity-75' : ''}`}>
+                  <div key={event.id} className={`admin-info-card p-6 flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden ${isPastEvent ? 'grayscale opacity-60' : ''}`}>
                     
                     {isPastEvent && (
-                      <div className="absolute -right-12 top-6 transform rotate-45 bg-[var(--surfer-aqua-mist)]/20 text-[var(--deep-teal-sea)]/40 text-[12px] font-black uppercase tracking-widest px-12 py-1 shadow-sm z-10">
-                        הסתיים
+                      <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                        <span className="text-6xl md:text-8xl font-black text-slate-500/20 transform -rotate-12 select-none tracking-widest">
+                          התקיים
+                        </span>
                       </div>
                     )}
 
                     <div className="flex items-center gap-6 flex-1">
                       {/* Event Image - Smart Display */}
                       {event.imageUrl ? (
-                        <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden flex-shrink-0 shadow-md border border-white/20">
+                        <div className="relative w-32 sm:w-48 aspect-video rounded-2xl overflow-hidden flex-shrink-0 shadow-md border border-white/20">
                           <img 
                             src={event.imageUrl} 
                             alt={event.title} 
@@ -1328,7 +1394,7 @@ const AdminPage: React.FC = () => {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                       ) : (
-                        <div className={`w-24 h-24 sm:w-32 sm:h-32 rounded-2xl flex items-center justify-center font-black flex-shrink-0 border border-white/30 ${isPastEvent ? 'bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/40' : 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)]'}`}>
+                        <div className={`w-32 sm:w-48 aspect-video rounded-2xl flex items-center justify-center font-black flex-shrink-0 border border-white/30 ${isPastEvent ? 'bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/40' : 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)]'}`}>
                           <span className="text-sm whitespace-nowrap tabular-nums">{formatDate(event.date)}</span>
                         </div>
                       )}

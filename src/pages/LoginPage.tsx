@@ -101,30 +101,7 @@ const LoginPage: React.FC = () => {
           // If logged in but no member doc exists (e.g. first time Google login or ID mismatch)
           console.log('LoginPage: Auth success but no member doc for UID:', user.uid, 'Email:', normalizedEmail);
           
-          // Fallback 1: Check if it's the Super Admin
-          if (normalizedEmail === SUPER_ADMIN_EMAIL.toLowerCase()) {
-            console.log('LoginPage: Re-creating missing Super Admin document');
-            const adminData: Member = {
-              id: user.uid,
-              uid: user.uid,
-              firstName: 'יובל',
-              lastName: 'שלו',
-              email: SUPER_ADMIN_EMAIL,
-              mobile: '050-0000000',
-              avatar: '',
-              bio: 'רכז מערכת',
-              role: 'Admin',
-              joinedAt: new Date().toISOString(),
-              isActive: true,
-              loginCount: 1
-            };
-            await setDoc(doc(db, 'members', user.uid), adminData);
-            login(adminData);
-            navigate('/');
-            return;
-          }
-
-          // Fallback 2: Try to find by email to see if we need to migrate the ID
+          // Try to find by email to see if we need to migrate the ID
           const qEmail = query(collection(db, 'members'), where('email', '==', normalizedEmail), limit(1));
           const emailSnapshot = await trackedGetDocs(qEmail);
           
@@ -158,6 +135,29 @@ const LoginPage: React.FC = () => {
             
             login(memberData);
             navigate('/');
+          } else if (normalizedEmail === SUPER_ADMIN_EMAIL.toLowerCase()) {
+            console.log('LoginPage: Re-creating missing Super Admin document');
+            const adminData: Member = {
+              id: user.uid,
+              uid: user.uid,
+              firstName: 'יובל',
+              lastName: 'שלו',
+              email: SUPER_ADMIN_EMAIL,
+              mobile: '050-0000000',
+              avatar: '',
+              bio: 'רכז מערכת',
+              role: 'Admin',
+              joinedAt: new Date().toISOString(),
+              isActive: true,
+              loginCount: 1
+            };
+            try {
+              await setDoc(doc(db, 'members', user.uid), adminData);
+            } catch (setErr: any) {
+              handleFirestoreError(setErr, OperationType.WRITE, `members/${user.uid}`);
+            }
+            login(adminData);
+            navigate('/');
           } else {
             setError('משתמש זה אינו רשום במערכת כחבר.');
             await auth.signOut();
@@ -187,10 +187,10 @@ const LoginPage: React.FC = () => {
                  loginCount: 1
                };
                try {
-                await setDoc(doc(db, 'members', newUser.uid), adminData);
-              } catch (setErr: any) {
-                handleFirestoreError(setErr, OperationType.WRITE, `members/${newUser.uid}`);
-              }
+                 await setDoc(doc(db, 'members', newUser.uid), adminData);
+               } catch (setErr: any) {
+                 handleFirestoreError(setErr, OperationType.WRITE, `members/${newUser.uid}`);
+               }
                login(adminData);
                navigate('/');
                return;
@@ -252,10 +252,8 @@ const LoginPage: React.FC = () => {
                 await setDoc(doc(db, 'members', newUser.uid), memberData);
               } catch (setErr: any) {
                 console.error('LoginPage: Failed to create member doc after Auth creation:', setErr);
-                // If this fails, we might still be logged in to Auth, but the member doc is missing.
-                // We should probably sign out to keep things consistent.
                 await auth.signOut();
-                throw setErr;
+                handleFirestoreError(setErr, OperationType.WRITE, `members/${newUser.uid}`);
               }
               
               login(memberData);
@@ -518,10 +516,11 @@ const LoginPage: React.FC = () => {
           };
           
           try {
-            await deleteDoc(doc(db, 'members', legacyDoc.id));
             await setDoc(doc(db, 'members', user.uid), memberData);
+            await deleteDoc(doc(db, 'members', legacyDoc.id));
           } catch (err: any) {
             console.error('Failed to migrate Google user doc:', err);
+            handleFirestoreError(err, OperationType.WRITE, `members/${user.uid}`);
           }
           
           login(memberData);
@@ -545,7 +544,11 @@ const LoginPage: React.FC = () => {
           isActive: true,
           joinedAt: new Date().toISOString()
         };
-        await setDoc(doc(db, 'members', user.uid), adminData);
+        try {
+          await setDoc(doc(db, 'members', user.uid), adminData);
+        } catch (setErr: any) {
+          handleFirestoreError(setErr, OperationType.WRITE, `members/${user.uid}`);
+        }
         login(adminData);
         navigate('/');
       } else {

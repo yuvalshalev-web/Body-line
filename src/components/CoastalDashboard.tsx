@@ -71,12 +71,12 @@ export const CoastalDashboard: React.FC = () => {
       try {
         const res = await fetch(`/api/ims/history/${selectedStationId}`);
         if (res.ok) {
-          const contentType = res.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-            const data = await res.json();
+          const text = await res.text();
+          try {
+            const data = JSON.parse(text);
             setHistory(data);
-          } else {
-            console.warn("IMS history API returned non-JSON response:", contentType);
+          } catch (e) {
+            console.warn("IMS history API returned non-JSON response");
           }
         }
       } catch (err) {
@@ -94,15 +94,14 @@ export const CoastalDashboard: React.FC = () => {
       try {
         const res = await fetch('/api/ims/warnings');
         if (res.ok) {
-          const contentType = res.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-            const data = await res.json();
-            // Filter for active marine/coastal warnings if possible, or just take the first few
+          const text = await res.text();
+          try {
+            const data = JSON.parse(text);
             if (data && Array.isArray(data.data)) {
               setImsWarnings(data.data);
             }
-          } else {
-            console.warn("IMS warnings API returned non-JSON response:", contentType);
+          } catch (e) {
+            console.warn("IMS warnings API returned non-JSON response");
           }
         }
       } catch (err) {
@@ -278,7 +277,7 @@ export const CoastalDashboard: React.FC = () => {
         {/* Beach Links */}
         <div className="flex flex-wrap gap-3">
           <a 
-            href="https://www.beachcam.co.il/marina_north.html" 
+            href="https://beachcam.co.il/marina.html" 
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-2xl text-xs font-black border border-indigo-100 hover:bg-indigo-100 transition-all shadow-sm"
@@ -287,7 +286,7 @@ export const CoastalDashboard: React.FC = () => {
             מצלמת מרינה צפון
           </a>
           <a 
-            href="https://www.gosurf.co.il/beaches/marina-north" 
+            href="https://gosurf.co.il/forecast/herzliya-marina" 
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-2xl text-xs font-black border border-emerald-100 hover:bg-emerald-100 transition-all shadow-sm"

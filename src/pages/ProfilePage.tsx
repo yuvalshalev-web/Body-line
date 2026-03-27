@@ -439,9 +439,16 @@ const ProfilePage: React.FC = () => {
       setToast({ msg: 'הפרופיל עודכן בהצלחה!', type: 'success' });
       setIsDirty(false);
       setTimeout(() => setToast(null), 3000);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Save profile error:", err);
-      setToast({ msg: 'שגיאה בעדכון הפרופיל', type: 'error' });
+      let errorMessage = 'שגיאה בעדכון הפרופיל';
+      try {
+        const errObj = JSON.parse(err.message || err);
+        if (errObj.error) errorMessage = errObj.error;
+      } catch (e) {
+        if (err.message) errorMessage = err.message;
+      }
+      setToast({ msg: errorMessage, type: 'error' });
       setTimeout(() => setToast(null), 3000);
     } finally {
       setIsSaving(false);
@@ -484,9 +491,16 @@ const ProfilePage: React.FC = () => {
       setNewPassword('');
       setConfirmPassword('');
       setTimeout(() => setToast(null), 3000);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setToast({ msg: 'שגיאה בשינוי הסיסמה', type: 'error' });
+      let errorMessage = 'שגיאה בשינוי הסיסמה';
+      try {
+        const errObj = JSON.parse(err.message || err);
+        if (errObj.error) errorMessage = errObj.error;
+      } catch (e) {
+        if (err.message) errorMessage = err.message;
+      }
+      setToast({ msg: errorMessage, type: 'error' });
       setTimeout(() => setToast(null), 3000);
     } finally {
       setIsChangingPassword(false);

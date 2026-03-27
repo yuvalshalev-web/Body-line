@@ -217,85 +217,92 @@ async function startServer() {
     try {
       const { lat, lon } = coords;
       
-      // Fetch marine data
       const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period&hourly=sea_surface_temperature&timezone=auto`;
-      const marineRes = await fetch(marineUrl);
-      if (!marineRes.ok) throw new Error(`Marine API error: ${marineRes.status}`);
-      const marineData = await marineRes.json();
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m,uv_index,surface_pressure,relative_humidity_2m&timezone=auto`;
+      const imsUrl = `https://api.ims.gov.il/v1/envista/stations/${stationId}/data/latest`;
       
-      // Fetch weather data
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
-      const weatherRes = await fetch(weatherUrl);
-      if (!weatherRes.ok) throw new Error(`Weather API error: ${weatherRes.status}`);
-      const weatherData = await weatherRes.json();
+      const fetchMarine = fetch(marineUrl).then(res => {
+        if (!res.ok) throw new Error(`Marine API error: ${res.status}`);
+        return res.json();
+      });
+
+      const fetchWeather = fetch(weatherUrl).then(res => {
+        if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
+        return res.json();
+      });
+
+      const fetchIms = process.env.IMS_API_TOKEN ? fetch(imsUrl, {
+        headers: { "Authorization": `ApiToken ${process.env.IMS_API_TOKEN}` }
+      }).then(async res => {
+        if (!res.ok) throw new Error(`IMS API error: ${res.status}`);
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          console.warn("IMS API returned non-JSON response (likely invalid token or API down). Skipping IMS data.");
+          return null;
+        }
+      }).catch(err => {
+        console.error("IMS Wind fetch error:", err);
+        return null;
+      }) : Promise.resolve(null);
+
+      // Fetch all data concurrently
+      const [marineData, weatherData, imsData] = await Promise.all([
+        fetchMarine,
+        fetchWeather,
+        fetchIms
+      ]);
       
       // Default to Open-Meteo
       let windSpeed = (weatherData.current?.wind_speed_10m || 0) * 0.539957; // km/h to knots
       let windDirection = weatherData.current?.wind_direction_10m || 0;
       let windGusts = 0;
-      let pressure = null;
+      let pressure = weatherData.current?.surface_pressure || null;
       let humidity = weatherData.current?.relative_humidity_2m || null;
       let airTemp = weatherData.current?.temperature_2m || 0;
       let rain = 0;
       let dataSource = "Open-Meteo";
       let isImsWind = false;
 
-      // Try to fetch from IMS
-      if (process.env.IMS_API_TOKEN) {
-        try {
-          const imsRes = await fetch(`https://api.ims.gov.il/v1/envista/stations/${stationId}/data/latest`, {
-            headers: { "Authorization": `ApiToken ${process.env.IMS_API_TOKEN}` }
-          });
-          
-          if (imsRes.ok) {
-            const contentType = imsRes.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-              const text = await imsRes.text();
-              console.warn(`IMS Wind fetch returned non-JSON (${contentType}):`, text.substring(0, 100));
-              throw new Error("IMS API returned non-JSON response");
-            }
-
-            const imsData = await imsRes.json();
-            const channels = imsData.data?.[0]?.channels || [];
-            const wsChannel = channels.find((c: any) => c.name === 'WS');
-            const wdChannel = channels.find((c: any) => c.name === 'WD');
-            const wsMaxChannel = channels.find((c: any) => c.name === 'WSmax');
-            const bpChannel = channels.find((c: any) => c.name === 'BP');
-            const rhChannel = channels.find((c: any) => c.name === 'RH');
-            
-            if (wsChannel && wsChannel.valid) {
-              windSpeed = wsChannel.value * 1.94384; // m/s to knots
-              isImsWind = true;
-            }
-            if (wdChannel && wdChannel.valid) {
-              windDirection = wdChannel.value;
-            }
-            if (wsMaxChannel && wsMaxChannel.valid) {
-              windGusts = wsMaxChannel.value * 1.94384; // m/s to knots
-            }
-            if (bpChannel && bpChannel.valid) {
-              pressure = bpChannel.value;
-            }
-            if (rhChannel && rhChannel.valid) {
-              humidity = rhChannel.value;
-            }
-            
-            const tdChannel = channels.find((c: any) => c.name === 'TD');
-            const rainChannel = channels.find((c: any) => c.name === 'Rain');
-            
-            if (tdChannel && tdChannel.valid) {
-              airTemp = tdChannel.value;
-            }
-            if (rainChannel && rainChannel.valid) {
-              rain = rainChannel.value;
-            }
-            
-            if (isImsWind) {
-              dataSource = `IMS (${coords.name}) + Open-Meteo`;
-            }
-          }
-        } catch (err) {
-          console.error("IMS Wind fetch error:", err);
+      // Process IMS data if available
+      if (imsData) {
+        const channels = imsData.data?.[0]?.channels || [];
+        const wsChannel = channels.find((c: any) => c.name === 'WS');
+        const wdChannel = channels.find((c: any) => c.name === 'WD');
+        const wsMaxChannel = channels.find((c: any) => c.name === 'WSmax');
+        const bpChannel = channels.find((c: any) => c.name === 'BP');
+        const rhChannel = channels.find((c: any) => c.name === 'RH');
+        
+        if (wsChannel && wsChannel.valid) {
+          windSpeed = wsChannel.value * 1.94384; // m/s to knots
+          isImsWind = true;
+        }
+        if (wdChannel && wdChannel.valid) {
+          windDirection = wdChannel.value;
+        }
+        if (wsMaxChannel && wsMaxChannel.valid) {
+          windGusts = wsMaxChannel.value * 1.94384; // m/s to knots
+        }
+        if (bpChannel && bpChannel.valid) {
+          pressure = bpChannel.value;
+        }
+        if (rhChannel && rhChannel.valid) {
+          humidity = rhChannel.value;
+        }
+        
+        const tdChannel = channels.find((c: any) => c.name === 'TD');
+        const rainChannel = channels.find((c: any) => c.name === 'Rain');
+        
+        if (tdChannel && tdChannel.valid) {
+          airTemp = tdChannel.value;
+        }
+        if (rainChannel && rainChannel.valid) {
+          rain = rainChannel.value;
+        }
+        
+        if (isImsWind) {
+          dataSource = `IMS (${coords.name}) + Open-Meteo`;
         }
       }
 
@@ -366,14 +373,14 @@ async function startServer() {
         return res.status(response.status).json({ error: `IMS History error: ${response.status}` });
       }
 
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await response.text();
-        console.error(`IMS History returned non-JSON (${contentType}):`, text.substring(0, 100));
-        return res.status(502).json({ error: "IMS API returned non-JSON response" });
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.warn("IMS History API returned non-JSON response (likely invalid token or API down).");
+        return res.json([]);
       }
-
-      const data = await response.json();
 
       // Extract wind speed and gusts for the last 12-24 hours
       const history = (data.data || []).map((entry: any) => {
@@ -404,13 +411,18 @@ async function startServer() {
         headers: { "Authorization": `ApiToken ${token}` }
       });
       
-      const contentType = response.headers.get("content-type");
-      if (!response.ok || !contentType || !contentType.includes("application/json")) {
-        // IMS API might return HTML error pages with 200 OK for invalid endpoints
+      if (!response.ok) {
         return res.json({ data: [] });
       }
       
-      const data = await response.json();
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        return res.json({ data: [] });
+      }
+      
       res.json(data);
     } catch (error) {
       console.error("IMS API Proxy error:", error);

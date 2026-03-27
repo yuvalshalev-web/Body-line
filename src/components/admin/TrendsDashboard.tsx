@@ -115,7 +115,7 @@ const TrendsDashboard: React.FC = () => {
     };
 
     activeMembers.forEach(m => {
-      const age = calculateAge(m.birthday);
+      const age = calculateAge(m.birthday || (m as any).birthDate);
       if (age === null) {
         ageGroups['לא צוין / אחר']++;
         return;
@@ -128,7 +128,7 @@ const TrendsDashboard: React.FC = () => {
     });
 
     members.forEach(m => {
-      const age = calculateAge(m.birthday);
+      const age = calculateAge(m.birthday || (m as any).birthDate);
       if (age === null) {
         ageGroupsTotal['לא צוין / אחר']++;
         return;
@@ -151,7 +151,7 @@ const TrendsDashboard: React.FC = () => {
       { label: 'ותיקים', key: 'ותיקים (60+)' }
     ].map(c => {
       const groupMembers = activeMembers.filter(m => {
-        const age = calculateAge(m.birthday);
+        const age = calculateAge(m.birthday || (m as any).birthDate);
         if (age === null) return false;
         if (c.key === 'צעירים (18-25)') return age >= 18 && age <= 25;
         if (c.key === 'בוגרים (26-40)') return age >= 26 && age <= 40;
@@ -509,7 +509,7 @@ const TrendsDashboard: React.FC = () => {
       });
 
       // Draw Logo
-      if (logoImg.complete) {
+      if (logoImg.complete && logoImg.naturalWidth > 0) {
         const logoSize = 40;
         // Center the logo in the middle of the radar
         const newX = centerX;
@@ -519,7 +519,16 @@ const TrendsDashboard: React.FC = () => {
         ctx.beginPath();
         ctx.arc(newX, newY, logoSize / 2, 0, Math.PI * 2);
         ctx.clip();
-        ctx.drawImage(logoImg, newX - logoSize / 2, newY - logoSize / 2, logoSize, logoSize);
+        try {
+          ctx.drawImage(logoImg, newX - logoSize / 2, newY - logoSize / 2, logoSize, logoSize);
+        } catch (e) {
+          console.warn("Failed to draw logo image:", e);
+          // Fallback blue dot if drawImage fails
+          ctx.beginPath();
+          ctx.arc(newX, newY, logoSize / 2, 0, Math.PI * 2);
+          ctx.fillStyle = '#007bff';
+          ctx.fill();
+        }
         ctx.restore();
         
         // Logo border
@@ -697,7 +706,7 @@ const TrendsDashboard: React.FC = () => {
               if (group.id === 'female') return m.gender === 'נקבה';
               if (group.id === 'other') return !m.gender || m.gender === 'מעדיף/ה לא לציין';
               
-              const age = calculateAge(m.birthday);
+              const age = calculateAge(m.birthday || (m as any).birthDate);
               if (age === null) return false;
               if (group.id === 'age1') return age >= 18 && age <= 25;
               if (group.id === 'age2') return age >= 26 && age <= 40;
