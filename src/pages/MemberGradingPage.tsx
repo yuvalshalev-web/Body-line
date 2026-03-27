@@ -158,7 +158,7 @@ const MemberGradingPage: React.FC = () => {
                     </div>
                     <span className="font-black text-slate-900 text-lg">{metric.value.toFixed(1)}<span className="text-xs text-slate-400 font-normal ml-1">/10</span></span>
                   </div>
-                  <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                  <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner" dir="ltr">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${(metric.value / 10) * 100}%` }}

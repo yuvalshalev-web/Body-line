@@ -32,6 +32,10 @@ const GitHubCommandCenter: React.FC = () => {
     try {
       const res = await fetch(`${window.location.origin}/api/github/actions`);
       if (!res.ok) throw new Error('Failed');
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error(`Received non-JSON response from server: ${contentType}`);
+      }
       const data = await res.json();
       if (data.action) setAction(data.action);
       setFetchStatus('success');

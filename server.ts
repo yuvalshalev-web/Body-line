@@ -200,11 +200,22 @@ async function startServer() {
   const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
   app.get("/api/coastal-weather", async (req, res) => {
-    console.log("DEBUG: /api/coastal-weather route reached (Open-Meteo Proxy)!");
+    const stationId = req.query.stationId ? String(req.query.stationId) : "178"; // Default to Tel Aviv Coast
+    
+    // Map station IDs to coordinates for Open-Meteo fallback
+    const stationCoords: Record<string, { lat: number, lon: number, name: string }> = {
+      "178": { lat: 32.08, lon: 34.78, name: "תל אביב" },
+      "26": { lat: 32.82, lon: 34.99, name: "חיפה" },
+      "124": { lat: 31.81, lon: 34.64, name: "אשדוד" },
+      "208": { lat: 31.67, lon: 34.56, name: "אשקלון" },
+      "343": { lat: 32.98, lon: 35.08, name: "שבי ציון" },
+      "46": { lat: 32.44, lon: 34.88, name: "חדרה" }
+    };
+
+    const coords = stationCoords[stationId] || stationCoords["178"];
     
     try {
-      const lat = 32.08;
-      const lon = 34.78;
+      const { lat, lon } = coords;
       
       // Fetch marine data
       const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period&hourly=sea_surface_temperature&timezone=auto`;
@@ -213,11 +224,81 @@ async function startServer() {
       const marineData = await marineRes.json();
       
       // Fetch weather data
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m&daily=uv_index_max&timezone=auto`;
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m,uv_index&timezone=auto`;
       const weatherRes = await fetch(weatherUrl);
       if (!weatherRes.ok) throw new Error(`Weather API error: ${weatherRes.status}`);
       const weatherData = await weatherRes.json();
       
+      // Default to Open-Meteo
+      let windSpeed = (weatherData.current?.wind_speed_10m || 0) * 0.539957; // km/h to knots
+      let windDirection = weatherData.current?.wind_direction_10m || 0;
+      let windGusts = 0;
+      let pressure = null;
+      let humidity = weatherData.current?.relative_humidity_2m || null;
+      let airTemp = weatherData.current?.temperature_2m || 0;
+      let rain = 0;
+      let dataSource = "Open-Meteo";
+      let isImsWind = false;
+
+      // Try to fetch from IMS
+      if (process.env.IMS_API_TOKEN) {
+        try {
+          const imsRes = await fetch(`https://api.ims.gov.il/v1/envista/stations/${stationId}/data/latest`, {
+            headers: { "Authorization": `ApiToken ${process.env.IMS_API_TOKEN}` }
+          });
+          
+          if (imsRes.ok) {
+            const contentType = imsRes.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+              const text = await imsRes.text();
+              console.warn(`IMS Wind fetch returned non-JSON (${contentType}):`, text.substring(0, 100));
+              throw new Error("IMS API returned non-JSON response");
+            }
+
+            const imsData = await imsRes.json();
+            const channels = imsData.data?.[0]?.channels || [];
+            const wsChannel = channels.find((c: any) => c.name === 'WS');
+            const wdChannel = channels.find((c: any) => c.name === 'WD');
+            const wsMaxChannel = channels.find((c: any) => c.name === 'WSmax');
+            const bpChannel = channels.find((c: any) => c.name === 'BP');
+            const rhChannel = channels.find((c: any) => c.name === 'RH');
+            
+            if (wsChannel && wsChannel.valid) {
+              windSpeed = wsChannel.value * 1.94384; // m/s to knots
+              isImsWind = true;
+            }
+            if (wdChannel && wdChannel.valid) {
+              windDirection = wdChannel.value;
+            }
+            if (wsMaxChannel && wsMaxChannel.valid) {
+              windGusts = wsMaxChannel.value * 1.94384; // m/s to knots
+            }
+            if (bpChannel && bpChannel.valid) {
+              pressure = bpChannel.value;
+            }
+            if (rhChannel && rhChannel.valid) {
+              humidity = rhChannel.value;
+            }
+            
+            const tdChannel = channels.find((c: any) => c.name === 'TD');
+            const rainChannel = channels.find((c: any) => c.name === 'Rain');
+            
+            if (tdChannel && tdChannel.valid) {
+              airTemp = tdChannel.value;
+            }
+            if (rainChannel && rainChannel.valid) {
+              rain = rainChannel.value;
+            }
+            
+            if (isImsWind) {
+              dataSource = `IMS (${coords.name}) + Open-Meteo`;
+            }
+          }
+        } catch (err) {
+          console.error("IMS Wind fetch error:", err);
+        }
+      }
+
       // Find current sea surface temp
       const now = new Date();
       const currentHour = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:00`;
@@ -233,17 +314,24 @@ async function startServer() {
       }
 
       const result = {
-        location: "תל אביב",
+        location: coords.name,
+        stationId: stationId,
         timestamp: new Date().toISOString(),
         waveHeight: marineData.current?.wave_height || 0,
         wavePeriod: marineData.current?.wave_period || 0,
-        windSpeed: weatherData.current?.wind_speed_10m || 0,
-        windDirection: weatherData.current?.wind_direction_10m || 0,
+        windSpeed: windSpeed,
+        windGusts: windGusts,
+        windDirection: windDirection,
         waterTemp: waterTemp,
-        uvIndex: weatherData.daily?.uv_index_max?.[0] || 0,
+        airTemp: airTemp,
+        rain: rain,
+        uvIndex: weatherData.current?.uv_index || 0,
+        pressure: pressure,
+        humidity: humidity,
+        dataSource: dataSource,
         syncStatus: {
           waveHeight: true,
-          wind: true,
+          wind: isImsWind,
           waterTemp: true,
           uvIndex: true
         }
@@ -251,8 +339,136 @@ async function startServer() {
       
       res.json(result);
     } catch (error) {
-      console.error("Open-Meteo API Proxy error:", error);
+      console.error("Coastal Weather API error:", error);
       res.status(500).json({ error: 'Failed to fetch weather data' });
+    }
+  });
+
+  // IMS History Endpoint for Wind Trends
+  app.get("/api/ims/history/:stationId", async (req, res) => {
+    try {
+      const { stationId } = req.params;
+      const token = process.env.IMS_API_TOKEN;
+      if (!token) return res.status(500).json({ error: "Token missing" });
+
+      const now = new Date();
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const from = yesterday.toISOString().split('T')[0].replace(/-/g, '/');
+      const to = now.toISOString().split('T')[0].replace(/-/g, '/');
+
+      const response = await fetch(`https://api.ims.gov.il/v1/envista/stations/${stationId}/data/?from=${from}&to=${to}`, {
+        headers: { "Authorization": `ApiToken ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`IMS History error (${response.status}):`, errorText.substring(0, 100));
+        return res.status(response.status).json({ error: `IMS History error: ${response.status}` });
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error(`IMS History returned non-JSON (${contentType}):`, text.substring(0, 100));
+        return res.status(502).json({ error: "IMS API returned non-JSON response" });
+      }
+
+      const data = await response.json();
+
+      // Extract wind speed and gusts for the last 12-24 hours
+      const history = (data.data || []).map((entry: any) => {
+        const ws = entry.channels.find((c: any) => c.name === 'WS');
+        const wsMax = entry.channels.find((c: any) => c.name === 'WSmax');
+        return {
+          time: entry.datetime,
+          windSpeed: ws && ws.valid ? ws.value * 1.94384 : null,
+          windGusts: wsMax && wsMax.valid ? wsMax.value * 1.94384 : null
+        };
+      }).filter((e: any) => e.windSpeed !== null);
+
+      res.json(history);
+    } catch (error) {
+      console.error("IMS History Proxy error:", error);
+      res.status(500).json({ error: "Failed to fetch history" });
+    }
+  });
+
+  // IMS API Proxy for Warnings
+  app.get("/api/ims/warnings", async (req, res) => {
+    try {
+      const token = process.env.IMS_API_TOKEN;
+      if (!token) {
+        return res.status(500).json({ error: "IMS API token not configured" });
+      }
+      const response = await fetch("https://api.ims.gov.il/v1/envista/warnings", {
+        headers: { "Authorization": `ApiToken ${token}` }
+      });
+      
+      const contentType = response.headers.get("content-type");
+      if (!response.ok || !contentType || !contentType.includes("application/json")) {
+        // IMS API might return HTML error pages with 200 OK for invalid endpoints
+        return res.json({ data: [] });
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error("IMS API Proxy error:", error);
+      res.status(500).json({ error: "Failed to fetch IMS warnings" });
+    }
+  });
+
+  // IMS Marine Forecast Proxy
+  app.get("/api/ims/marine-forecast", async (req, res) => {
+    try {
+      console.log("Fetching IMS marine forecast...");
+      const response = await fetch("https://ims.gov.il/sites/default/files/ims_data/xml_files/isr_sea.xml");
+      if (!response.ok) {
+        console.error(`IMS XML fetch failed with status ${response.status}`);
+        return res.status(response.status).json({ error: "IMS API unavailable" });
+      }
+      
+      const buffer = await response.arrayBuffer();
+      const decoder = new TextDecoder('iso-8859-8');
+      const xml = decoder.decode(buffer);
+      
+      // Parse Central Coast data
+      const centralCoastMatch = xml.match(/<LocationNameEng>Central Coast<\/LocationNameEng>.*?<LocationData>(.*?)<\/LocationData>/);
+      if (!centralCoastMatch) {
+        console.warn("Central Coast data not found in IMS XML");
+        return res.json({ forecast: null });
+      }
+      
+      const data = centralCoastMatch[1];
+      const timeUnitMatch = data.match(/<TimeUnitData>(.*?)<\/TimeUnitData>/);
+      if (!timeUnitMatch) {
+        console.warn("TimeUnitData not found in IMS XML");
+        return res.json({ forecast: null });
+      }
+      
+      const timeUnit = timeUnitMatch[1];
+      
+      // Extract values
+      const waveMatch = timeUnit.match(/<ElementName>Sea status and waves height<\/ElementName><ElementValue>.*?\/ (.*?)<\/ElementValue>/);
+      const tempMatch = timeUnit.match(/<ElementName>Sea temperature<\/ElementName><ElementValue>(.*?)<\/ElementValue>/);
+      const windMatch = timeUnit.match(/<ElementName>Wind direction and speed<\/ElementName><ElementValue>(.*?)<\/ElementValue>/);
+      
+      const waveHeight = waveMatch ? waveMatch[1].trim() : '';
+      const waterTemp = tempMatch ? tempMatch[1].trim() : '';
+      const wind = windMatch ? windMatch[1].trim() : '';
+      
+      let windSpeed = '';
+      if (wind && wind.includes('/')) {
+        windSpeed = wind.split('/')[1].trim();
+      }
+      
+      const forecastText = `תחזית ימית רשמית (החוף המרכזי): גלים ${waveHeight} ס״מ, טמפ׳ מים ${waterTemp}°C, רוח ${windSpeed} קשר.`;
+      console.log("IMS Marine Forecast parsed successfully");
+      
+      res.json({ forecast: forecastText, raw: { waveHeight, waterTemp, wind } });
+    } catch (error) {
+      console.error("IMS Marine Forecast error:", error);
+      res.status(500).json({ error: "Failed to fetch marine forecast" });
     }
   });
 
@@ -611,6 +827,12 @@ async function startServer() {
       appType: "spa",
       root: process.cwd(),
     });
+
+    // 404 handler for API routes BEFORE Vite middleware
+    app.use('/api', (req, res) => {
+      res.status(404).json({ error: `API route not found: ${req.method} ${req.path}` });
+    });
+
     app.use(vite.middlewares);
     console.log("Vite server initialized.");
   } else {

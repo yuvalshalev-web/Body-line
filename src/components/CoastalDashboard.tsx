@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Waves, 
@@ -19,8 +19,22 @@ import {
   Droplets,
   ShieldAlert,
   Zap,
-  Image as ImageIcon
+  Image as ImageIcon,
+  MapPin,
+  Activity,
+  Gauge
 } from 'lucide-react';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  AreaChart,
+  Area
+} from 'recharts';
 
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,8 +42,78 @@ import { useAuth } from '../contexts/AuthContext';
 import WetsuitSVG from './WetsuitSVG';
 
 export const CoastalDashboard: React.FC = () => {
-  const { coastalWeather: data, seaStats: stats, isLoading: contextLoading, siteAssets } = useData();
+  const { 
+    coastalWeather: data, 
+    selectedStationId, 
+    setSelectedStationId, 
+    seaStats: stats, 
+    isLoading: contextLoading, 
+    siteAssets 
+  } = useData();
   const { currentUser } = useAuth();
+  const [imsWarnings, setImsWarnings] = useState<any[]>([]);
+  const [imsLoading, setImsLoading] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const stations = [
+    { id: "178", name: "תל אביב" },
+    { id: "26", name: "חיפה" },
+    { id: "124", name: "אשדוד" },
+    { id: "208", name: "אשקלון" },
+    { id: "343", name: "שבי ציון" },
+    { id: "46", name: "חדרה" }
+  ];
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      setHistoryLoading(true);
+      try {
+        const res = await fetch(`/api/ims/history/${selectedStationId}`);
+        if (res.ok) {
+          const contentType = res.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const data = await res.json();
+            setHistory(data);
+          } else {
+            console.warn("IMS history API returned non-JSON response:", contentType);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch history", err);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+    fetchHistory();
+  }, [selectedStationId]);
+
+  useEffect(() => {
+    const fetchImsWarnings = async () => {
+      setImsLoading(true);
+      try {
+        const res = await fetch('/api/ims/warnings');
+        if (res.ok) {
+          const contentType = res.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const data = await res.json();
+            // Filter for active marine/coastal warnings if possible, or just take the first few
+            if (data && Array.isArray(data.data)) {
+              setImsWarnings(data.data);
+            }
+          } else {
+            console.warn("IMS warnings API returned non-JSON response:", contentType);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch IMS warnings", err);
+      } finally {
+        setImsLoading(false);
+      }
+    };
+    
+    fetchImsWarnings();
+  }, []);
   
   const getAdvice = (uv: number) => {
     if (uv <= 2) return { 
@@ -67,6 +151,11 @@ export const CoastalDashboard: React.FC = () => {
       bg: "bg-purple-600",
       icon: <ShieldAlert className="animate-pulse w-12 h-12 text-purple-600" />
     };
+  };
+
+  const getWindDirText = (deg: number) => {
+    const directions = ['צפון', 'צפ-מז', 'מזרח', 'דר-מז', 'דרום', 'דר-מע', 'מערב', 'צפ-מע'];
+    return directions[Math.round(deg / 45) % 8];
   };
 
   const advice = data ? getAdvice(data.uvIndex) : null;
@@ -110,349 +199,459 @@ export const CoastalDashboard: React.FC = () => {
     return { label: 'קיצוני', color: 'text-purple-500' };
   };
 
-  const uv = getUVLevel(data.uvIndex);
+  const getPeriodGrade = (period: number) => {
+    if (period > 10.0) return { 
+      grade: 'Epic', hand: '👌', symbol: '👑', status: 'Ultra-Clean', 
+      desc: 'יום נדיר, גלים מסודרים מאוד ("שורות").',
+      color: 'text-purple-600', bg: 'bg-purple-100/50', border: 'border-purple-200' 
+    };
+    if (period >= 8.1) return { 
+      grade: 'Great', hand: '🤙', symbol: '💎', status: 'High Energy', 
+      desc: 'סוול איכותי, כוח טוב בגל, מרווח נשימה.',
+      color: 'text-emerald-600', bg: 'bg-emerald-100/50', border: 'border-emerald-200' 
+    };
+    if (period >= 6.6) return { 
+      grade: 'Good', hand: '👍', symbol: '✅', status: 'Solid Swell', 
+      desc: 'ים גליש ומהנה, קצת צפוף אבל מסודר.',
+      color: 'text-cyan-600', bg: 'bg-cyan-100/50', border: 'border-cyan-200' 
+    };
+    if (period >= 5.1) return { 
+      grade: 'Fair', hand: '✊', symbol: '🪵', status: 'Wind-Chopped', 
+      desc: 'גלי רוח קלאסיים, צפופים, דורשים הרבה חתירה.',
+      color: 'text-amber-600', bg: 'bg-amber-100/50', border: 'border-amber-200' 
+    };
+    return { 
+      grade: 'Poor', hand: '👎', symbol: '💩', status: 'Messy', 
+      desc: 'ים "מעוך", קצפים, כמעט חסר כוח גלישה.',
+      color: 'text-red-600', bg: 'bg-red-100/50', border: 'border-red-200' 
+    };
+  };
 
-  const SyncIndicator: React.FC<{ isSynced: boolean }> = ({ isSynced }) => (
-    <div className="absolute top-3 right-3 flex items-center gap-1.5">
-      <div className={`w-1.5 h-1.5 rounded-full ${isSynced ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.8)]' : 'bg-amber-500 shadow-[0_0_5px_rgba(245,158,11,0.8)]'}`} />
-      <span className="text-[7px] font-black uppercase tracking-tighter text-slate-400">
-        {isSynced ? 'Live' : 'Cached'}
-      </span>
-    </div>
-  );
+  const getWaveHeightGrade = (height: number) => {
+    if (height >= 2.5) return { score: 10, name: 'הירושימה (קירות)', hand: '🙌', symbol: '🌪️', color: 'text-purple-600', bg: 'bg-purple-100/50', border: 'border-purple-200' };
+    if (height >= 1.8) return { score: 9, name: 'גובה ראש פלוס', hand: '🤙', symbol: '💨', color: 'text-emerald-600', bg: 'bg-emerald-100/50', border: 'border-emerald-200' };
+    if (height >= 1.2) return { score: 8, name: 'גובה ראש', hand: '👍', symbol: '🌊', color: 'text-cyan-600', bg: 'bg-cyan-100/50', border: 'border-cyan-200' };
+    if (height >= 0.9) return { score: 7, name: 'גובה כתף', hand: '👌', symbol: '🎯', color: 'text-blue-600', bg: 'bg-blue-100/50', border: 'border-blue-200' };
+    if (height >= 0.7) return { score: 6, name: 'גובה חזה', hand: '🤘', symbol: '✨', color: 'text-indigo-600', bg: 'bg-indigo-100/50', border: 'border-indigo-200' };
+    if (height >= 0.5) return { score: 5, name: 'גובה מותן', hand: '🖐️', symbol: '🪵', color: 'text-amber-600', bg: 'bg-amber-100/50', border: 'border-amber-200' };
+    if (height >= 0.3) return { score: 4, name: 'גובה ברך', hand: '🤏', symbol: '🦵', color: 'text-orange-600', bg: 'bg-orange-100/50', border: 'border-orange-200' };
+    if (height >= 0.2) return { score: 3, name: 'קרסול / קצף', hand: '🫳', symbol: '🦶', color: 'text-red-500', bg: 'bg-red-100/50', border: 'border-red-200' };
+    if (height >= 0.1) return { score: 2, name: 'פלטה עם קפלים', hand: '🤏', symbol: '〰️', color: 'text-slate-500', bg: 'bg-slate-100/50', border: 'border-slate-200' };
+    if (height >= 0.05) return { score: 1, name: 'זכוכית (Glassy)', hand: '🤲', symbol: '🪟', color: 'text-slate-400', bg: 'bg-slate-100/50', border: 'border-slate-200' };
+    return { score: 0, name: 'בריכה (Flat)', hand: '👎', symbol: '🏊‍♀️', color: 'text-slate-400', bg: 'bg-slate-100/50', border: 'border-slate-200' };
+  };
+
+  const uv = getUVLevel(data.uvIndex);
+  const periodGrade = getPeriodGrade(data.wavePeriod);
+  const heightGrade = getWaveHeightGrade(data.waveHeight);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-br from-[#f8fafc] via-[#ffffff] to-[#e0f2fe] rounded-[2rem] border border-slate-200/50 overflow-hidden relative shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]"
-      dir="rtl"
-    >
-      {/* Micro-grain texture overlay */}
-      <div 
-        className="absolute inset-0 opacity-[0.03] mix-blend-multiply pointer-events-none z-0" 
-        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}
-      />
-
-      {/* Internal Glowing Pulse for the whole dashboard */}
-      <motion.div 
-        animate={{ 
-          opacity: [0.05, 0.15, 0.05],
-        }}
-        transition={{ 
-          duration: 6, 
-          repeat: Infinity, 
-          ease: "easeInOut" 
-        }}
-        className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 to-transparent pointer-events-none"
-      />
-
-      <div className="p-4 border-b border-slate-200/50 flex items-center justify-between bg-white/40 relative z-10 backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-cyan-500/10 rounded-xl relative overflow-hidden">
-            <motion.div 
-              animate={{ opacity: [0.1, 0.3, 0.1] }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="absolute inset-0 bg-cyan-400 blur-md"
-            />
-            <Waves className="text-cyan-600 relative z-10" size={20} />
-          </div>
-          <div>
-            <h3 className="text-lg font-black text-slate-800 tracking-tight">מצב הים - {data.location}</h3>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Real-time Marine Observations</p>
-          </div>
+    <div className="space-y-8 pb-12" dir="rtl">
+      {/* Station Selector & Beach Links */}
+      <div className="flex flex-col gap-6 mb-6">
+        {/* Segmented Control for Stations */}
+        <div className="flex p-1.5 bg-slate-100/80 backdrop-blur-md rounded-2xl border border-slate-200/60 overflow-x-auto hide-scrollbar shadow-inner w-full">
+          {stations.map((station) => {
+            const isActive = selectedStationId === station.id;
+            return (
+              <button
+                key={station.id}
+                onClick={() => setSelectedStationId(station.id)}
+                className={`relative flex-1 min-w-[80px] px-4 py-2.5 text-sm font-bold text-center rounded-xl transition-colors z-10 whitespace-nowrap flex items-center justify-center gap-2 ${
+                  isActive ? 'text-cyan-900' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeStation"
+                    className="absolute inset-0 bg-white rounded-xl shadow-sm border border-slate-200/50 -z-10"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+                <MapPin className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-600' : 'opacity-50'}`} />
+                {station.name}
+              </button>
+            );
+          })}
         </div>
-        <div className="text-left">
-          <span className="text-[10px] font-bold text-slate-500 block uppercase">עודכן</span>
-          <span className="text-sm font-black text-slate-800">{new Date(data.timestamp).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}</span>
+
+        {/* Beach Links */}
+        <div className="flex flex-wrap gap-3">
+          <a 
+            href="https://www.beachcam.co.il/marina_north.html" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-2xl text-xs font-black border border-indigo-100 hover:bg-indigo-100 transition-all shadow-sm"
+          >
+            <Video className="w-3 h-3" />
+            מצלמת מרינה צפון
+          </a>
+          <a 
+            href="https://www.gosurf.co.il/beaches/marina-north" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-2xl text-xs font-black border border-emerald-100 hover:bg-emerald-100 transition-all shadow-sm"
+          >
+            <ImageIcon className="w-3 h-3" />
+            GoSurf מרינה צפון
+          </a>
         </div>
       </div>
 
-      <div className="relative z-10 p-4 md:p-6">
-        <div className="grid grid-cols-2 gap-4">
-          {/* Wave Height */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Stats Card */}
+        <div className="lg:col-span-2 space-y-8">
           <motion.div 
-            whileHover={{ scale: 1.05, y: -5 }}
-            className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-between relative transition-all duration-500 group"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 relative overflow-hidden"
           >
-            <SyncIndicator isSynced={data.syncStatus?.waveHeight ?? true} />
-            <div className="flex flex-col items-center gap-1 mb-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">גובה גלים</span>
-              <span className="text-4xl font-black text-slate-900 tracking-tighter">
-                {data.waveHeight.toFixed(1)} <span className="text-xl font-bold text-slate-400">m</span>
-              </span>
-            </div>
-
-            {/* Annual Axis Gradient */}
-            <div className="relative w-full h-12 flex items-center mt-2" dir="ltr">
-              <div className="absolute w-full h-4 bg-gradient-to-r from-sky-200 via-cyan-500 to-blue-950 rounded-full" />
-              
-              {/* Markers */}
-              <div className="absolute w-full flex justify-between -top-8 text-[10px] font-bold text-slate-500">
-                <div className="flex flex-col items-center gap-1">
-                  <Waves className="w-5 h-5 text-sky-300" />
-                  <span>{stats?.minWaveHeight.toFixed(1)}m</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <Crown className="w-3 h-3 text-amber-500" />
-                  <span>{stats?.maxWaveHeight.toFixed(1)}m</span>
-                </div>
-              </div>
-
-              {/* Tracker */}
-              {stats && (() => {
-                const min = stats.minWaveHeight;
-                const max = stats.maxWaveHeight;
-                const current = data.waveHeight;
-                const progress = max === min ? 50 : Math.max(0, Math.min(100, ((current - min) / (max - min)) * 100));
-                return (
-                  <motion.div 
-                    className="absolute w-6 h-6 bg-white rounded-full border-4 border-white shadow-lg"
-                    style={{ left: `${progress}%`, transform: 'translateX(-50%)' }}
-                    initial={{ left: '0%' }}
-                    animate={{ left: `${progress}%` }}
-                  />
-                );
-              })()}
-            </div>
-          </motion.div>
-
-          {/* Wind */}
-          <motion.div 
-            whileHover={{ scale: 1.05, y: -5 }}
-            className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-between relative transition-all duration-500 group"
-          >
-            <SyncIndicator isSynced={data.syncStatus?.wind ?? true} />
-            <div className="flex flex-col items-center gap-1 mb-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">רוח ({getWindDirection(data.windDirection)})</span>
-              <span className="text-4xl font-black text-slate-900 tracking-tighter">
-                {data.windSpeed.toFixed(0)} <span className="text-xl font-bold text-slate-400">kts</span>
-              </span>
-            </div>
-
-            {/* Annual Axis Gradient */}
-            <div className="relative w-full h-12 flex items-center mt-2" dir="ltr">
-              <div className="absolute w-full h-4 rounded-full" style={{ background: 'linear-gradient(to right, #bae6fd, #4ade80, #facc15, #ef4444, #7e22ce)' }} />
-              
-              {/* Markers */}
-              <div className="absolute w-full flex justify-between -top-8 text-[10px] font-bold text-slate-500">
-                <div className="flex flex-col items-center gap-1">
-                  <Feather className="w-5 h-5 text-sky-300" />
-                  <span>{stats?.minWindSpeed.toFixed(0)}</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="relative">
-                    <Wind className="w-5 h-5 text-purple-900" />
-                    <Crown className="w-3 h-3 text-amber-500 absolute -top-2 -right-2" />
-                  </div>
-                  <span>{stats?.maxWindSpeed.toFixed(0)}</span>
-                </div>
-              </div>
-
-              {/* Tracker */}
-              {stats && (() => {
-                const min = stats.minWindSpeed;
-                const max = stats.maxWindSpeed;
-                const current = data.windSpeed;
-                const progress = max === min ? 50 : Math.max(0, Math.min(100, ((current - min) / (max - min)) * 100));
-                return (
-                  <motion.div 
-                    className="absolute w-6 h-6 bg-white rounded-full border-4 border-white shadow-lg"
-                    style={{ left: `${progress}%`, transform: 'translateX(-50%)' }}
-                    initial={{ left: '0%' }}
-                    animate={{ left: `${progress}%` }}
-                  />
-                );
-              })()}
-            </div>
-          </motion.div>
-
-          {/* Water Temp */}
-          <motion.div 
-            whileHover={{ scale: 1.05, y: -5 }}
-            className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-between relative transition-all duration-500 group"
-          >
-            <SyncIndicator isSynced={data.syncStatus?.waterTemp ?? true} />
-            <div className="flex flex-col items-center gap-1 mb-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">טמפ' מים</span>
-              <span className="text-4xl font-black text-slate-900 tracking-tighter">
-                {data.waterTemp.toFixed(1)} <span className="text-xl font-bold text-slate-400">°C</span>
-              </span>
-            </div>
-
-            {/* Annual Axis Gradient */}
-            <div className="relative w-full h-12 flex items-center mt-2" dir="ltr">
-              <div className="absolute w-full h-4 bg-gradient-to-r from-blue-900 via-teal-400 to-amber-400 rounded-full" />
-              
-              {/* Markers */}
-              <div className="absolute w-full flex justify-between -top-8 text-[10px] font-bold text-slate-500">
-                <div className="flex flex-col items-center gap-1">
-                  <Snowflake className="w-5 h-5 text-blue-500" />
-                  <span>{stats?.minWaterTemp.toFixed(1)}°</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="relative">
-                    <Sun className="w-5 h-5 text-amber-500" />
-                    <Crown className="w-3 h-3 text-amber-600 absolute -top-2 -right-2" />
-                  </div>
-                  <span>{stats?.maxWaterTemp.toFixed(1)}°</span>
-                </div>
-              </div>
-
-              {/* Tracker */}
-              {stats && (() => {
-                const min = stats.minWaterTemp;
-                const max = stats.maxWaterTemp;
-                const current = data.waterTemp;
-                const progress = max === min ? 50 : Math.max(0, Math.min(100, ((current - min) / (max - min)) * 100));
-                return (
-                  <motion.div 
-                    className="absolute w-6 h-6 bg-white rounded-full border-4 border-white shadow-lg"
-                    style={{ left: `${progress}%`, transform: 'translateX(-50%)' }}
-                    initial={{ left: '0%' }}
-                    animate={{ left: `${progress}%` }}
-                  />
-                );
-              })()}
-            </div>
+            {/* Background Decoration */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-50 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50 blur-3xl" />
             
-            {/* Wetsuit Recommendation */}
-            {(() => {
-              const waterTemp = data.waterTemp;
-              let label = 'חליפה ארוכה (4/3)';
-              let thickness: '4/3' | '3/2' | '2/2' | '2/2-ss' | 'sun-shirt' = '4/3';
-              
-              if (waterTemp < 16) { 
-                label = 'חליפה ארוכה (4/3)'; 
-                thickness = '4/3';
-              }
-              else if (waterTemp <= 19) { 
-                label = 'חליפה ארוכה (4/3)'; 
-                thickness = '4/3';
-              }
-              else if (waterTemp <= 23) { 
-                label = 'מעבר (3/2)'; 
-                thickness = '3/2';
-              }
-              else if (waterTemp <= 25) { 
-                label = 'קיץ ארוך (2/2)'; 
-                thickness = '2/2';
-              }
-              else if (waterTemp <= 27) { 
-                label = 'קיץ קצר (2/2)'; 
-                thickness = '2/2-ss';
-              }
-              else { 
-                label = 'חולצת לייקרה'; 
-                thickness = 'sun-shirt';
-              }
-              
-              return (
-                <div className="mt-6 flex items-center gap-6 luxury-card p-6 shadow-lg group transition-all hover:shadow-xl relative overflow-hidden">
-                  <div className="grain-overlay" />
-                  <div className="premium-sweep-fx" />
-                  <div className="w-20 h-20 transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-2 relative z-10">
-                    <div className="absolute inset-0 bg-blue-500/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                    <WetsuitSVG thickness={thickness} />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-3xl font-black text-[#00426a] flex items-center gap-3 tracking-tighter">
+                    <Waves className="w-8 h-8 text-[#0071a1]" />
+                    מצב הים - {data.location}
+                  </h2>
+                  <p className="text-[#00426a]/60 mt-1 flex items-center gap-2 font-medium text-sm">
+                    <Activity className="w-4 h-4" />
+                    עדכון אחרון: {new Date(data.timestamp).toLocaleTimeString('he-IL')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Hero Stats: Wave Height & Period */}
+              <div className="flex items-start justify-center gap-4 md:gap-8 mb-10 bg-gradient-to-b from-[#f0f8ff]/80 to-white border border-[#00426a]/10 rounded-[2.5rem] p-8 shadow-[0_8px_30px_rgb(0,66,106,0.04)] relative overflow-hidden">
+                {/* Subtle background wave pattern */}
+                <Waves className="absolute -bottom-12 -right-12 w-64 h-64 text-[#0071a1]/5 -rotate-12" />
+                
+                <div className="flex-1 flex flex-col items-center text-center relative z-10 group">
+                  <span className="text-[#0071a1] text-xs font-black uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5">
+                    <Waves className="w-3.5 h-3.5" />
+                    גובה גלים
+                  </span>
+                  <div className="flex items-baseline gap-1.5 text-[#00426a] group-hover:scale-105 transition-transform duration-500">
+                    <span className="text-7xl md:text-8xl font-black tracking-tighter leading-none drop-shadow-sm">{data.waveHeight.toFixed(1)}</span>
+                    <span className="text-2xl font-bold opacity-60">מ׳</span>
                   </div>
-                  <div className="flex flex-col relative z-10">
-                    <span className="text-[11px] font-black text-[#007085] uppercase tracking-[0.3em] leading-none mb-2 opacity-60">חליפה מומלצת</span>
-                    <span className="text-xl font-black text-[#002b44] leading-none tracking-tighter font-yehuda">{label}</span>
+                  
+                  {/* Height Grade UI */}
+                  <div className="flex flex-col items-center gap-2 mt-4">
+                    <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${heightGrade.bg} border ${heightGrade.border} shadow-sm group-hover:scale-105 transition-transform duration-500 delay-75`}>
+                      <span className="text-lg leading-none">{heightGrade.hand}</span>
+                      <span className={`text-[10px] md:text-xs font-black uppercase tracking-wider ${heightGrade.color}`}>
+                        {heightGrade.score}/10 • {heightGrade.name}
+                      </span>
+                      <span className="text-lg leading-none">{heightGrade.symbol}</span>
+                    </div>
                   </div>
                 </div>
-              );
-            })()}
+                
+                <div className="w-px h-32 mt-4 bg-gradient-to-b from-transparent via-[#00426a]/15 to-transparent relative z-10" />
+                
+                <div className="flex-1 flex flex-col items-center text-center relative z-10 group">
+                  <span className="text-[#0071a1] text-xs font-black uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5">
+                    <Activity className="w-3.5 h-3.5" />
+                    מחזוריות
+                  </span>
+                  <div className="flex items-baseline gap-1.5 text-[#00426a] group-hover:scale-105 transition-transform duration-500">
+                    <span className="text-7xl md:text-8xl font-black tracking-tighter leading-none drop-shadow-sm">{data.wavePeriod.toFixed(1)}</span>
+                    <span className="text-2xl font-bold opacity-60">ש׳</span>
+                  </div>
+                  
+                  {/* Period Grade UI */}
+                  <div className="flex flex-col items-center gap-2 mt-4">
+                    <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${periodGrade.bg} border ${periodGrade.border} shadow-sm group-hover:scale-105 transition-transform duration-500 delay-75`}>
+                      <span className="text-lg leading-none">{periodGrade.hand}</span>
+                      <span className={`text-[10px] md:text-xs font-black uppercase tracking-wider ${periodGrade.color}`}>
+                        {periodGrade.grade} {periodGrade.status ? `• ${periodGrade.status}` : ''}
+                      </span>
+                      <span className="text-lg leading-none">{periodGrade.symbol}</span>
+                    </div>
+                    <p className={`text-[10px] md:text-[11px] font-bold ${periodGrade.color} opacity-80 max-w-[180px] leading-tight`}>
+                      {periodGrade.desc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 hover:bg-white hover:shadow-md transition-all group">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2 group-hover:text-cyan-500 transition-colors">
+                    <Wind className="w-4 h-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">רוח</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black text-slate-900">{Math.round(data.windSpeed)}</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase">kts</span>
+                  </div>
+                  {data.windGusts > 0 && (
+                    <div className="text-[10px] text-orange-600 font-black mt-1 uppercase tracking-wider">
+                      משבים: {Math.round(data.windGusts)}
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 hover:bg-white hover:shadow-md transition-all group">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2 group-hover:text-cyan-500 transition-colors">
+                    <Navigation className="w-4 h-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">כיוון</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-8 h-8 bg-cyan-600 rounded-full flex items-center justify-center transition-transform duration-700 shadow-lg shadow-cyan-200"
+                      style={{ transform: `rotate(${data.windDirection}deg)` }}
+                    >
+                      <Navigation className="w-4 h-4 text-white fill-current" />
+                    </div>
+                    <span className="text-xl font-black text-slate-900">{data.windDirection}°</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">{getWindDirText(data.windDirection)}</span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 hover:bg-white hover:shadow-md transition-all group">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2 group-hover:text-cyan-500 transition-colors">
+                    <Thermometer className="w-4 h-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">מים</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black text-slate-900">{data.waterTemp.toFixed(1)}°</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase">C</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-bold mt-1 uppercase tracking-wider">
+                    אוויר: {data.airTemp?.toFixed(1) || '--'}°C
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 hover:bg-white hover:shadow-md transition-all group">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2 group-hover:text-cyan-500 transition-colors">
+                    <Gauge className="w-4 h-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">לחץ</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black text-slate-900">{data.pressure || '--'}</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase">hPa</span>
+                  </div>
+                  {data.rain > 0 && (
+                    <div className="text-[10px] text-blue-600 font-black mt-1 uppercase tracking-wider flex items-center gap-1">
+                      <Droplets className="w-2 h-2" />
+                      גשם: {data.rain} מ"מ
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </motion.div>
 
-          {/* UV Index */}
+          {/* Wind Trend Graph */}
           <motion.div 
-            whileHover={{ scale: 1.05, y: -5 }}
-            className="col-span-1 bg-white/70 backdrop-blur-xl border border-white shadow-[0_15px_35px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.12)] rounded-3xl p-5 flex flex-col items-center justify-center relative transition-all duration-500 group"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-slate-100"
           >
-            <SyncIndicator isSynced={data.syncStatus?.uvIndex ?? true} />
-            <div className="flex flex-col items-center gap-1 mb-4">
-              <span className="text-4xl font-black text-slate-900 tracking-tighter">
-                {Math.round(data.uvIndex)}
-              </span>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">אינדקס קרינה מקסימלי להיום</span>
-            </div>
-            {advice && (
-              <div className="flex items-center gap-2 text-center">
-                <div className="p-2 bg-slate-100 rounded-xl">
-                  {advice.icon}
+            <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3 tracking-tight">
+              <TrendingUp className="w-6 h-6 text-cyan-600" />
+              מגמת רוח (24 שעות אחרונות)
+            </h3>
+            <div className="h-72 w-full">
+              {historyLoading ? (
+                <div className="h-full flex flex-col items-center justify-center gap-3">
+                  <Loader2 className="w-10 h-10 text-cyan-500 animate-spin" />
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">טוען היסטוריה...</span>
                 </div>
-                <p className={`text-xs font-bold ${advice.color}`}>{advice.text}</p>
+              ) : history.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={history}>
+                    <defs>
+                      <linearGradient id="colorWind" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0891b2" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#0891b2" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorGusts" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="time" 
+                      tickFormatter={(t) => new Date(t).getHours() + ':00'} 
+                      stroke="#94a3b8"
+                      fontSize={10}
+                      fontFamily="Inter"
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis 
+                      stroke="#94a3b8" 
+                      fontSize={10} 
+                      fontFamily="Inter"
+                      unit=" kts" 
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip 
+                      labelFormatter={(t) => new Date(t).toLocaleString('he-IL')}
+                      contentStyle={{ 
+                        borderRadius: '20px', 
+                        border: 'none', 
+                        boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.15)',
+                        padding: '12px'
+                      }}
+                      itemStyle={{ fontWeight: 'bold', fontSize: '12px' }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="windSpeed" 
+                      name="רוח ממוצעת"
+                      stroke="#0891b2" 
+                      strokeWidth={4}
+                      fillOpacity={1} 
+                      fill="url(#colorWind)" 
+                      animationDuration={1500}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="windGusts" 
+                      name="משבים"
+                      stroke="#f97316" 
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      fillOpacity={1} 
+                      fill="url(#colorGusts)" 
+                      animationDuration={1500}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
+                  <Feather className="w-16 h-16 opacity-20" />
+                  <p className="text-sm font-bold uppercase tracking-widest">אין נתוני היסטוריה זמינים לתחנה זו</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Sidebar: Advice & Warnings */}
+        <div className="space-y-8">
+          {/* UV Advice Card */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className={`rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 ${advice?.bg} bg-opacity-10 relative overflow-hidden group`}
+          >
+            <div className="absolute -top-6 -right-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
+              {advice?.icon}
+            </div>
+            <h3 className={`text-xl font-black mb-4 flex items-center gap-3 ${advice?.color} tracking-tight`}>
+              <Sun className="w-6 h-6" />
+              הגנה מהשמש (UV: {data.uvIndex})
+            </h3>
+            <p className={`text-sm leading-relaxed font-bold ${advice?.color}`}>
+              {advice?.text}
+            </p>
+          </motion.div>
+
+          {/* IMS Warnings */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-slate-100"
+          >
+            <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3 tracking-tight">
+              <ShieldAlert className="w-6 h-6 text-red-600" />
+              אזהרות מטאורולוגיות
+            </h3>
+            <div className="space-y-4">
+              {imsLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+                </div>
+              ) : imsWarnings.length > 0 ? (
+                imsWarnings.map((warning, idx) => (
+                  <motion.div 
+                    key={idx} 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-5 rounded-3xl bg-red-50 border border-red-100 relative overflow-hidden group"
+                  >
+                    <div className="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="flex items-start gap-4 relative z-10">
+                      <AlertTriangle className="w-6 h-6 text-red-600 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-black text-red-900 uppercase tracking-tight">{warning.warningType || "אזהרה"}</h4>
+                        <p className="text-xs font-bold text-red-700 mt-1 leading-relaxed">{warning.warningDescription || warning.description}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <Feather className="w-16 h-16 text-emerald-100 mx-auto mb-4 opacity-50" />
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">אין אזהרות פעילות כרגע</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Wetsuit Recommendation */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 group overflow-hidden relative"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3 tracking-tight relative z-10">
+              <Snowflake className="w-6 h-6 text-cyan-400" />
+              המלצת חליפה
+            </h3>
+            <div className="flex items-center gap-8 relative z-10">
+              <div className="w-28 h-36 bg-slate-50 rounded-3xl flex items-center justify-center border border-slate-100 group-hover:scale-105 transition-transform duration-700 shadow-inner">
+                <WetsuitSVG 
+                  thickness={
+                    data.waterTemp < 19 ? '4/3' : 
+                    data.waterTemp < 22 ? '3/2' : 
+                    data.waterTemp < 24 ? '2/2' : 
+                    data.waterTemp < 26 ? '2/2-ss' : 'sun-shirt'
+                  } 
+                />
               </div>
-            )}
+              <div>
+                <h4 className="text-2xl font-black text-slate-900 tracking-tighter">
+                  {data.waterTemp < 19 ? 'חליפה 4/3' : 
+                   data.waterTemp < 23 ? 'חליפה 3/2' : 
+                   data.waterTemp < 26 ? 'חליפה קצרה' : 'לייקרה / בגד ים'}
+                </h4>
+                <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest leading-relaxed">
+                  מבוסס על טמפרטורת מים של {data.waterTemp.toFixed(1)}°C
+                </p>
+              </div>
+            </div>
           </motion.div>
         </div>
       </div>
 
-
-
-      {/* Bottom Grid: Forecast & Live Cam */}
-      <div className="grid grid-cols-2 border-t border-slate-200/50 divide-x divide-x-reverse divide-slate-200/50 relative z-10">
-        {/* Forecast Tile */}
-        <a 
-          href="https://gosurf.co.il/forecast/herzliya-marina" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="p-6 flex flex-col items-center text-center gap-2 transition-all duration-300 group cursor-pointer relative overflow-hidden border-b-4 border-transparent hover:border-cyan-500/30 pulse-glow-interactive"
-        >
-          {/* Subtle Pulse for Mobile Interactivity */}
-          <div
-            className="absolute inset-0 bg-cyan-400 pointer-events-none opacity-0 group-hover:opacity-15 transition-opacity"
-          />
-
-          {/* Subtle Hover Glow */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          
-          <Waves className="text-cyan-500 mb-1 group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 relative z-10 drop-shadow-sm" size={28} />
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-none relative z-10">Forecast</span>
-          <span className="text-lg font-black text-slate-800 relative z-10" style={{ fontFamily: "var(--primary-font)" }}>תחזית גלים</span>
-          
-          {/* Interaction Indicator */}
-          <div 
-            className="absolute bottom-2 w-12 h-1 bg-cyan-500/40 rounded-full animate-pulse"
-          />
-        </a>
-
-        {/* Live Cam Tile */}
-        <a 
-          href="https://beachcam.co.il/marina.html" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="p-6 flex flex-col items-center text-center gap-2 transition-all duration-300 group cursor-pointer relative overflow-hidden border-b-4 border-transparent hover:border-amber-500/30 pulse-glow-interactive"
-        >
-          {/* Subtle Pulse for Mobile Interactivity */}
-          <div
-            className="absolute inset-0 bg-amber-400 pointer-events-none opacity-0 group-hover:opacity-15 transition-opacity"
-          />
-
-          {/* Subtle Hover Glow */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          
-          <Video className="text-amber-500 mb-1 group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-500 relative z-10 drop-shadow-sm" size={28} />
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-none relative z-10">Live Stream</span>
-          <span className="text-lg font-black text-slate-800 relative z-10" style={{ fontFamily: "var(--primary-font)" }}>מצלמת חוף</span>
-          
-          {/* Interaction Indicator */}
-          <div 
-            className="absolute bottom-2 w-12 h-1 bg-amber-500/40 rounded-full animate-pulse"
-          />
-        </a>
+      {/* Data Source Info */}
+      <div className="flex justify-center mt-12">
+        <div className="bg-white px-8 py-4 rounded-full border border-slate-100 shadow-xl flex items-center gap-6 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            מקור: {data.dataSource}
+          </div>
+          <div className="w-px h-4 bg-slate-200" />
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-cyan-500" />
+            תחנה: {data.location} ({data.stationId})
+          </div>
+        </div>
       </div>
-
-      <div className="p-4 bg-slate-50/50 border-t border-slate-200/50 flex justify-center relative z-10">
-        <a 
-          href="https://ims.gov.il/he/coasts" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-[10px] font-bold text-slate-400 hover:text-cyan-600 transition-colors flex items-center gap-1 uppercase tracking-widest"
-        >
-          מקור נתונים: השירות המטאורולוגי הישראלי (IMS) • סנכרון Open-Meteo
-        </a>
-      </div>
-    </motion.div>
+    </div>
   );
 };

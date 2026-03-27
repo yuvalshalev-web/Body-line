@@ -1,7 +1,7 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { analyzeIsraelSurfConditions } from '../utils/surfAnalysis';
-import { Radio, Waves, Wind, Clock, AlertTriangle, Zap } from 'lucide-react';
+import { Radio, Waves, Wind, Clock, AlertTriangle, Zap, Info } from 'lucide-react';
 
 const getWindDirCode = (deg: number): string => {
   const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
@@ -10,6 +10,32 @@ const getWindDirCode = (deg: number): string => {
 
 export const SurfNewsTracker: React.FC = () => {
   const { coastalWeather, seaStats } = useData();
+  const [marineForecast, setMarineForecast] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMarineForecast = async () => {
+      try {
+        const response = await fetch('/api/ims/marine-forecast');
+        if (response.ok) {
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            if (data.forecast) {
+              setMarineForecast(data.forecast);
+            }
+          } else {
+            console.warn("Marine forecast API returned non-JSON response:", contentType);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch marine forecast:", err);
+      }
+    };
+    
+    fetchMarineForecast();
+    const interval = setInterval(fetchMarineForecast, 15 * 60 * 1000); // Refresh every 15 minutes
+    return () => clearInterval(interval);
+  }, []);
 
   const trackerData = useMemo(() => {
     if (!coastalWeather) {
@@ -57,7 +83,7 @@ export const SurfNewsTracker: React.FC = () => {
 
   const config = severityConfig[severity];
 
-  const TickerContent = () => (
+  const renderTickerContent = () => (
     <div className="flex items-center shrink-0 px-8 gap-12" dir="rtl">
       {/* Tangible Message Capsule */}
       <div className={`flex items-center gap-4 px-5 py-2 rounded-xl ${config.bg} border-t border-l border-[#ffffff]/80 border-b border-[#00426a]/10 border-r border-[#00426a]/10 backdrop-blur-md shadow-sm transition-all duration-300`}>
@@ -76,6 +102,17 @@ export const SurfNewsTracker: React.FC = () => {
         </div>
       </div>
       
+      {marineForecast && (
+        <div className="flex items-center gap-4 px-5 py-2 rounded-xl bg-[#00426a]/5 border-t border-l border-[#ffffff]/80 border-b border-[#00426a]/10 border-r border-[#00426a]/10 backdrop-blur-md shadow-sm transition-all duration-300">
+          <div className="p-1.5 rounded-lg bg-white/40 shadow-sm border-t border-l border-white/80 border-b border-[#00426a]/10 border-r border-[#00426a]/10">
+            <Info className="w-4 h-4 text-[#0071a1]" />
+          </div>
+          <span className="text-[15px] font-bold tracking-tight text-[#00426a]">
+            {marineForecast}
+          </span>
+        </div>
+      )}
+
       {/* Tangible Meta Data */}
       <div className="flex items-center gap-3 px-4 py-1.5 rounded-lg bg-[#f0f8ff]/40 border-t border-l border-[#ffffff]/80 border-b border-[#00426a]/10 border-r border-[#00426a]/10 shadow-sm backdrop-blur-md">
         <Clock className="w-3.5 h-3.5 text-[#0071a1]" />
@@ -120,21 +157,26 @@ export const SurfNewsTracker: React.FC = () => {
 
       {/* Scrolling Container with Gradient Masks for smooth fade in/out */}
       <div className="flex-1 h-full relative overflow-hidden flex items-center" style={{ maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)' }}>
-        <div className="flex whitespace-nowrap animate-marquee hover:[animation-play-state:paused]" dir="ltr">
-          <TickerContent />
-          <TickerContent />
-          <TickerContent />
-          <TickerContent />
+        <div className="flex whitespace-nowrap animate-marquee-loop hover:[animation-play-state:paused]" dir="ltr">
+          <div className="flex shrink-0">
+            {renderTickerContent()}
+            {renderTickerContent()}
+          </div>
+          <div className="flex shrink-0">
+            {renderTickerContent()}
+            {renderTickerContent()}
+          </div>
         </div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes marquee-rtl {
-          0% { transform: translateX(0%); }
+        @keyframes marquee-loop {
+          0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
-        .animate-marquee {
-          animation: marquee-rtl 60s linear infinite;
+        .animate-marquee-loop {
+          animation: marquee-loop 60s linear infinite;
+          display: flex;
           width: max-content;
         }
       `}} />

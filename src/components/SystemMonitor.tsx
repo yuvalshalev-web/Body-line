@@ -696,6 +696,11 @@ const SystemMonitor: React.FC = () => {
         
         if (!statsRes.ok) throw new Error(`Server error: ${statsRes.status}`);
         
+        const contentType = statsRes.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error(`Received non-JSON response from server: ${contentType}`);
+        }
+
         const statsJson = await statsRes.json();
         setData(statsJson);
       } catch (err) {
@@ -751,6 +756,12 @@ const SystemMonitor: React.FC = () => {
                   try {
                     const statsRes = await fetch('/api/stats/system');
                     if (!statsRes.ok) throw new Error(`Server error: ${statsRes.status}`);
+                    
+                    const contentType = statsRes.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                      throw new Error(`Received non-JSON response from server: ${contentType}`);
+                    }
+
                     const statsJson = await statsRes.json();
                     setData(statsJson);
                   } catch (err) {

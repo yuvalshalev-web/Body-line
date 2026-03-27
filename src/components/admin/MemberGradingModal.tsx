@@ -266,6 +266,7 @@ const MemberGradingModal: React.FC<MemberGradingModalProps> = ({ isOpen, onClose
                               type="range" min="0" max="10" value={scores[param.id]}
                               onChange={(e) => setScores({...scores, [param.id]: parseInt(e.target.value)})}
                               className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                              dir="ltr"
                             />
                             <span className="text-2xl font-black text-sky-500 w-8 text-center">{scores[param.id]}</span>
                           </div>

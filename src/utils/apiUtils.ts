@@ -11,5 +11,10 @@ export async function fetchJson(url: string, options?: RequestInit) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
+  const contentType = response.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    throw new Error(`Received non-JSON response from server: ${contentType}`);
+  }
+
   return await response.json();
 }

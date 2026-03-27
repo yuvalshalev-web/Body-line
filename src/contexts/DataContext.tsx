@@ -76,6 +76,8 @@ interface DataContextType {
     };
   };
   coastalWeather: any | null;
+  selectedStationId: string;
+  setSelectedStationId: (id: string) => void;
   seaStats: any | null;
   yearConfig: { startDate: string; endDate: string } | null;
   attendeeIds: string[];
@@ -170,6 +172,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { navPosition: 'bottom', weeklySessions: [{ dayOfWeek: 4, time: '07:00', isActive: false, isRecurring: true }] };
   });
   const [coastalWeather, setCoastalWeather] = useState<any | null>(null);
+  const [selectedStationId, setSelectedStationId] = useState<string>("178");
   const [seaStats, setSeaStats] = useState<any | null>(null);
   const siteConfigRef = useRef(siteConfig);
 
@@ -250,7 +253,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Removed the dbStatus check to ensure it runs
     
     const fetchCoastalWeather = async (retryCount = 0) => {
-      console.log(`Starting coastal weather fetch (Attempt ${retryCount + 1})...`);
+      console.log(`Starting coastal weather fetch (Attempt ${retryCount + 1}) for station ${selectedStationId}...`);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
         console.warn("Coastal weather fetch timed out");
@@ -258,7 +261,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }, 10000); // 10s timeout
 
       try {
-        const apiUrl = '/api/coastal-weather';
+        const apiUrl = `/api/coastal-weather?stationId=${selectedStationId}`;
         const response = await fetch(apiUrl, { signal: controller.signal });
         clearTimeout(timeoutId);
 
@@ -266,6 +269,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           console.error(`API Error: ${response.status}`);
           setIsLoading(false);
           return;
+        }
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error(`Received non-JSON response from server: ${contentType}`);
         }
 
         const data = await response.json();
@@ -346,7 +354,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchCoastalWeather();
     const weatherInterval = setInterval(fetchCoastalWeather, 1000 * 60 * 15);
     return () => clearInterval(weatherInterval);
-  }, [dbStatus, currentUser]);
+  }, [dbStatus, currentUser, selectedStationId]);
 
   // 3. Public Site Data Listeners
   useEffect(() => {
@@ -1170,14 +1178,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const contextValue = React.useMemo(() => ({ 
-      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
+      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
       isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets
     }), [
-      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
+      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
       addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,

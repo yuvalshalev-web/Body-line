@@ -31,6 +31,10 @@ const SurfingNewsPage: React.FC = () => {
         for (const feed of RSS_FEEDS) {
           try {
             const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`);
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+              throw new Error(`Received non-JSON response from server: ${contentType}`);
+            }
             const data = await response.json();
             
             if (data.status === 'ok') {

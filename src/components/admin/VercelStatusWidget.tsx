@@ -57,6 +57,10 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
     setError(null);
     try {
       const response = await fetch(`${window.location.origin}/api/vercel/status`);
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error(`Received non-JSON response from server: ${contentType}`);
+      }
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'שגיאה בחיבור ל-Vercel');
