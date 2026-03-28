@@ -59,6 +59,11 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
       const response = await fetch(`${window.location.origin}/api/vercel/status`);
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        if (text.includes("<title>Starting Server...</title>")) {
+          console.warn("Server is starting up, retrying Vercel status later...");
+          return; // Silent retry
+        }
         throw new Error(`Received non-JSON response from server: ${contentType}`);
       }
       if (!response.ok) {

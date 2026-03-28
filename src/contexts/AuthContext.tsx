@@ -60,21 +60,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const memberDoc = await getDoc(doc(db, 'members', user.uid));
           if (memberDoc.exists()) {
             const memberData = { id: memberDoc.id, ...memberDoc.data() } as Member;
-            console.log("AuthContext: Member doc found:", memberData.email);
-            setCurrentUser(memberData);
-            localStorage.setItem('habal_zug_user', JSON.stringify(memberData));
+            if (memberData.isActive === false) {
+              console.warn("AuthContext: User is suspended. Not setting currentUser.");
+              setCurrentUser(null);
+              localStorage.removeItem('habal_zug_user');
+            } else {
+              console.log("AuthContext: Member doc found:", memberData.email);
+              setCurrentUser(memberData);
+              localStorage.setItem('habal_zug_user', JSON.stringify(memberData));
+            }
           } else {
             console.warn("AuthContext: Member doc NOT found for", user.uid);
             const savedUser = localStorage.getItem('habal_zug_user');
             if (savedUser) {
-              setCurrentUser(JSON.parse(savedUser));
+              const parsedUser = JSON.parse(savedUser);
+              if (parsedUser.isActive === false) {
+                setCurrentUser(null);
+                localStorage.removeItem('habal_zug_user');
+              } else {
+                setCurrentUser(parsedUser);
+              }
             }
           }
         } catch (error) {
           console.error("AuthContext: Error fetching user doc in AuthContext:", error);
           const savedUser = localStorage.getItem('habal_zug_user');
           if (savedUser) {
-            setCurrentUser(JSON.parse(savedUser));
+            const parsedUser = JSON.parse(savedUser);
+            if (parsedUser.isActive === false) {
+              setCurrentUser(null);
+              localStorage.removeItem('habal_zug_user');
+            } else {
+              setCurrentUser(parsedUser);
+            }
           }
         }
       } else {
@@ -96,13 +114,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const unsub = onSnapshot(doc(db, 'members', currentUser.id), (snapshot) => {
       if (snapshot.exists()) {
         const updatedData = { id: snapshot.id, ...snapshot.data() } as Member;
-        setCurrentUser(prev => {
-          if (JSON.stringify(updatedData) !== JSON.stringify(prev)) {
-            localStorage.setItem('habal_zug_user', JSON.stringify(updatedData));
-            return updatedData;
-          }
-          return prev;
-        });
+        if (updatedData.isActive === false) {
+          console.warn("AuthContext: User suspended in real-time. Logging out.");
+          logout();
+        } else {
+          setCurrentUser(prev => {
+            if (JSON.stringify(updatedData) !== JSON.stringify(prev)) {
+              localStorage.setItem('habal_zug_user', JSON.stringify(updatedData));
+              return updatedData;
+            }
+            return prev;
+          });
+        }
       } else if (currentUser.id !== 'dev-admin-id' && currentUser.id !== 'super-admin') {
         // User was deleted
         if (!snapshot.metadata.fromCache) {

@@ -28,10 +28,14 @@ const WorkflowVisualizer: React.FC = () => {
             }
           }
         } catch (err) {
-          console.error('Error fetching GitHub status:', err);
-          if (err instanceof Error) {
-            console.error('Error message:', err.message);
-            console.error('Error stack:', err.stack);
+          if (err instanceof Error && err.message === "SERVER_STARTING") {
+            // Silent retry
+          } else {
+            console.error('Error fetching GitHub status:', err);
+            if (err instanceof Error) {
+              console.error('Error message:', err.message);
+              console.error('Error stack:', err.stack);
+            }
           }
         }
 
@@ -49,10 +53,14 @@ const WorkflowVisualizer: React.FC = () => {
             }
           }
         } catch (err) {
-          console.error('Error fetching Vercel status:', err);
-          if (err instanceof Error) {
-            console.error('Error message:', err.message);
-            console.error('Error stack:', err.stack);
+          if (err instanceof Error && err.message === "SERVER_STARTING") {
+            // Silent retry
+          } else {
+            console.error('Error fetching Vercel status:', err);
+            if (err instanceof Error) {
+              console.error('Error message:', err.message);
+              console.error('Error stack:', err.stack);
+            }
           }
         }
       } catch (error) {

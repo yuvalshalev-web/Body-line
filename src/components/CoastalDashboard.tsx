@@ -72,6 +72,10 @@ export const CoastalDashboard: React.FC = () => {
         const res = await fetch(`/api/ims/history/${selectedStationId}`);
         if (res.ok) {
           const text = await res.text();
+          if (text.includes("<title>Starting Server...</title>")) {
+            console.warn("Server is starting up, retrying IMS history later...");
+            return;
+          }
           try {
             const data = JSON.parse(text);
             setHistory(data);
@@ -95,6 +99,10 @@ export const CoastalDashboard: React.FC = () => {
         const res = await fetch('/api/ims/warnings');
         if (res.ok) {
           const text = await res.text();
+          if (text.includes("<title>Starting Server...</title>")) {
+            console.warn("Server is starting up, retrying IMS warnings later...");
+            return;
+          }
           try {
             const data = JSON.parse(text);
             if (data && Array.isArray(data.data)) {

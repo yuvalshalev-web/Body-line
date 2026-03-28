@@ -13,6 +13,7 @@ import { validateMobileNumber, formatMobileNumber } from '../../utils/validation
 import { useModal } from '../../contexts/ModalContext';
 import { SUPER_ADMIN_EMAIL } from '../../constants';
 import { hashPassword } from '../../utils/crypto';
+import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import { updateMemberAddress, loadGoogleMaps } from '../../utils/googlePlaces';
 
 interface EditMemberFormProps {
@@ -161,11 +162,27 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
 
     setIsChangingPassword(true);
     try {
+      const auth = getAuth();
+      try {
+        await sendPasswordResetEmail(auth, editingMember.email.toLowerCase().trim());
+        showSuccess('נשלח מייל לאיפוס סיסמה לחבר (המשתמש כבר מחובר למערכת החדשה)');
+        setShowPasswordModal(false);
+        setNewPassword('');
+        setConfirmPassword('');
+        return;
+      } catch (emailErr: any) {
+        if (emailErr.code !== 'auth/user-not-found') {
+          throw emailErr;
+        }
+        // User not found in Firebase Auth, so they are a legacy user.
+        // We can safely update their password in Firestore.
+      }
+
       const hashed = await hashPassword(newPassword);
-      const updatedMember = { ...editingMember, password: hashed };
+      const updatedMember = { ...editingMember, password: hashed, isTemporary: true };
       setEditingMember(updatedMember);
       await onSave(updatedMember);
-      showSuccess('הסיסמה שונתה בהצלחה');
+      showSuccess('הסיסמה שונתה בהצלחה (סיסמה זמנית)');
       setShowPasswordModal(false);
       setNewPassword('');
       setConfirmPassword('');

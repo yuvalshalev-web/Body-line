@@ -90,7 +90,6 @@ interface DataContextType {
   deleteMember: (id: string) => Promise<void>;
   toggleStatus: (id: string) => Promise<void>;
   toggleRole: (id: string, requesterEmail?: string) => Promise<void>;
-  resetPassword: (id: string) => Promise<void>;
   approveRequest: (id: string) => Promise<{ firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null>;
   rejectRequest: (id: string) => Promise<void>;
   addEvent: (details: Omit<Event, 'id'>) => Promise<void>;
@@ -274,8 +273,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
           const text = await response.text();
-          console.error("Non-JSON response body:", text.substring(0, 500));
-          throw new Error(`Received non-JSON response from server: ${contentType}`);
+          if (text.includes("<title>Starting Server...</title>")) {
+            console.warn("Server is starting up, retrying coastal weather fetch later...");
+            throw new Error("SERVER_STARTING");
+          } else {
+            console.error("Non-JSON response body:", text.substring(0, 500));
+            throw new Error(`Received non-JSON response from server: ${contentType}`);
+          }
         }
 
         const data = await response.json();
@@ -339,6 +343,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         clearTimeout(timeoutId);
         if (e.name === 'AbortError') {
           console.error("Coastal weather fetch timed out");
+        } else if (e.message === 'SERVER_STARTING') {
+          // Silent retry, server is just starting
         } else {
           console.error("Failed to fetch coastal weather - network error or server down:", e);
         }
@@ -615,13 +621,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await updateDoc(doc(getDb(), 'members', id), { role: nextRole });
     }
   }, [members]);
-
-  const resetPassword = useCallback(async (id: string) => {
-    const tempPass = Math.random().toString(36).slice(-8);
-    const hashed = await hashPassword(tempPass);
-    await updateDoc(doc(getDb(), 'members', id), { password: hashed, isTemporary: true });
-    showAlert(`סיסמה זמנית חדשה: ${tempPass}`, "איפוס סיסמה");
-  }, [showAlert]);
 
   const approveRequest = useCallback(async (id: string) => {
     console.log('DataContext: approveRequest starting for id:', id);
@@ -1298,14 +1297,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const contextValue = React.useMemo(() => ({ 
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
-      updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
+      updateMember, deleteMember, toggleStatus, toggleRole, approveRequest, rejectRequest,
       addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
       isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets
     }), [
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
-      updateMember, deleteMember, toggleStatus, toggleRole, resetPassword, approveRequest, rejectRequest,
+      updateMember, deleteMember, toggleStatus, toggleRole, approveRequest, rejectRequest,
       addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,

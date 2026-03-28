@@ -18,6 +18,10 @@ export const SurfNewsTracker: React.FC = () => {
         const response = await fetch('/api/ims/marine-forecast');
         if (response.ok) {
           const text = await response.text();
+          if (text.includes("<title>Starting Server...</title>")) {
+            console.warn("Server is starting up, retrying marine forecast later...");
+            return;
+          }
           try {
             const data = JSON.parse(text);
             if (data.forecast) {

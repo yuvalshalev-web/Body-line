@@ -698,6 +698,11 @@ const SystemMonitor: React.FC = () => {
         
         const contentType = statsRes.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
+          const text = await statsRes.text();
+          if (text.includes("<title>Starting Server...</title>")) {
+            console.warn("Server is starting up, retrying system stats later...");
+            return;
+          }
           throw new Error(`Received non-JSON response from server: ${contentType}`);
         }
 
@@ -759,6 +764,11 @@ const SystemMonitor: React.FC = () => {
                     
                     const contentType = statsRes.headers.get("content-type");
                     if (!contentType || !contentType.includes("application/json")) {
+                      const text = await statsRes.text();
+                      if (text.includes("<title>Starting Server...</title>")) {
+                        console.warn("Server is starting up, retrying system stats later...");
+                        return;
+                      }
                       throw new Error(`Received non-JSON response from server: ${contentType}`);
                     }
 

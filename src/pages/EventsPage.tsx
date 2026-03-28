@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Calendar, MapPin, Clock, User, Users, X, Navigation, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, User, Users, X, Navigation, Plus, Edit2, Trash2, Upload } from 'lucide-react';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { Event } from '../types';
 import { EventEditor } from '../components/admin/EventEditor';
 
 const EventsPage: React.FC = () => {
   const headerImage = useRandomHeader();
-  const { events, members, toggleEventAttendance, addEvent, updateEvent, deleteEvent, archiveEvent } = useData();
+  const { events, members, toggleEventAttendance, addEvent, updateEvent, deleteEvent, archiveEvent, siteAssets } = useData();
   const { currentUser } = useAuth();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -102,7 +102,7 @@ const EventsPage: React.FC = () => {
 
       <div className="relative z-40 -mt-24 mx-4 md:mx-0 space-y-12">
         {currentUser && (
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center gap-4 mb-8">
             <button 
               onClick={handleCreateEvent}
               className="inline-flex items-center gap-3 px-12 py-5 bg-gradient-to-r from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-turquoise-teal)] text-white rounded-[2rem] font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-[0_20px_40px_-10px_rgba(212,163,115,0.4)] border-4 border-white/80 backdrop-blur-md relative z-50"
@@ -122,8 +122,8 @@ const EventsPage: React.FC = () => {
             {upcomingEvents.map(event => (
               <div key={event.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow cursor-pointer" onClick={() => openModal(event)}>
                 <div className="flex-shrink-0 w-full md:w-48 h-48 md:h-auto rounded-xl overflow-hidden bg-slate-100">
-                  {event.imageUrl ? (
-                    <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" />
+                  {event.imageUrl || siteAssets?.defaultEventImage ? (
+                    <img src={event.imageUrl || siteAssets?.defaultEventImage} alt={event.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-300">
                       <Calendar size={48} />
@@ -312,8 +312,8 @@ const EventsPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0 relative z-10">
-                  {event.imageUrl ? (
-                    <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover grayscale" />
+                  {event.imageUrl || siteAssets?.defaultEventImage ? (
+                    <img src={event.imageUrl || siteAssets?.defaultEventImage} alt={event.title} className="w-full h-full object-cover grayscale" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-300">
                       <Calendar size={24} />

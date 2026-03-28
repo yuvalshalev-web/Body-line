@@ -85,8 +85,14 @@ const LoginPage: React.FC = () => {
           const memberData = { ...memberDoc.data(), id: memberDoc.id } as Member;
           
           if (memberData.isActive === false) {
-            setError('חשבונך אינו פעיל. פנה לרכז המערכת.');
+            setError('החשבון שלך כרגע בחופשה קצרה ⛱️⛺🛫🍹🌴\nלא ניתן להתחבר כרגע בגלל השעיה זמנית');
             await auth.signOut();
+            setIsLoading(false);
+            return;
+          }
+
+          if (memberData.isTemporary) {
+            setMode('RESET_TEMP_PASSWORD');
             setIsLoading(false);
             return;
           }
@@ -118,6 +124,13 @@ const LoginPage: React.FC = () => {
               loginCount: (legacyData.loginCount || 0) + 1
             };
             
+            if (memberData.isActive === false) {
+              setError('החשבון שלך כרגע בחופשה קצרה ⛱️⛺🛫🍹🌴\nלא ניתן להתחבר כרגע בגלל השעיה זמנית');
+              await auth.signOut();
+              setIsLoading(false);
+              return;
+            }
+            
             // Delete old doc if ID was different
             if (legacyDoc.id !== user.uid) {
               try {
@@ -131,6 +144,12 @@ const LoginPage: React.FC = () => {
               await setDoc(doc(db, 'members', user.uid), memberData);
             } catch (setErr: any) {
               handleFirestoreError(setErr, OperationType.WRITE, `members/${user.uid}`);
+            }
+            
+            if (memberData.isTemporary) {
+              setMode('RESET_TEMP_PASSWORD');
+              setIsLoading(false);
+              return;
             }
             
             login(memberData);
@@ -238,6 +257,13 @@ const LoginPage: React.FC = () => {
                 loginCount: (legacyData.loginCount || 0) + 1
               };
               
+              if (memberData.isActive === false) {
+                setError('החשבון שלך כרגע בחופשה קצרה ⛱️⛺🛫🍹🌴\nלא ניתן להתחבר כרגע בגלל השעיה זמנית');
+                await auth.signOut();
+                setIsLoading(false);
+                return;
+              }
+              
               // Delete old doc if ID was different
               if (legacyDoc.id !== newUser.uid) {
                 try {
@@ -254,6 +280,12 @@ const LoginPage: React.FC = () => {
                 console.error('LoginPage: Failed to create member doc after Auth creation:', setErr);
                 await auth.signOut();
                 handleFirestoreError(setErr, OperationType.WRITE, `members/${newUser.uid}`);
+              }
+              
+              if (memberData.isTemporary) {
+                setMode('RESET_TEMP_PASSWORD');
+                setIsLoading(false);
+                return;
               }
               
               login(memberData);
@@ -295,35 +327,7 @@ const LoginPage: React.FC = () => {
         }
       }
 
-      if (err.code === 'auth/wrong-password') {
-        // Check if user is already migrated but admin reset password
-        const normalizedEmail = email.toLowerCase().trim();
-        const membersRef = collection(getDb(), 'members');
-        const q = query(membersRef, where('email', '==', normalizedEmail), limit(1));
-        const memberSnap = await trackedGetDocs(q);
-        
-        if (!memberSnap.empty) {
-          const memberData = memberSnap.docs[0].data();
-          if (memberData.isTemporary && memberData.password) {
-            const isValid = await verifyPassword(password, memberData.password);
-            if (isValid) {
-              // Valid temp password, update Firebase Auth
-              try {
-                const user = auth.currentUser;
-                if (user) {
-                  await updatePassword(user, password);
-                  // Retry login
-                  await signInWithEmailAndPassword(auth, email, password);
-                  return; // Success
-                }
-              } catch (updateErr) {
-                console.error('Failed to update password after reset:', updateErr);
-              }
-            }
-          }
-        }
-        setError('הסיסמה שהזנת אינה נכונה');
-      } else if (err.code === 'auth/network-request-failed') {
+      if (err.code === 'auth/network-request-failed') {
         setError('שגיאת חיבור לרשת. אנא בדוק את החיבור שלך.');
       } else if (err.code === 'auth/too-many-requests') {
         setError('יותר מדי ניסיונות כושלים. אנא נסה שוב מאוחר יותר.');
@@ -505,29 +509,34 @@ const LoginPage: React.FC = () => {
         const legacyDoc = snapshot.docs[0];
         const legacyData = legacyDoc.data() as Member;
         
-        // Migrate ID to UID if needed
-        if (legacyDoc.id !== user.uid) {
-          console.log('LoginPage: Google Login ID mismatch. Migrating', legacyDoc.id, 'to', user.uid);
-          const memberData: Member = {
-            ...legacyData,
-            id: user.uid,
-            uid: user.uid,
-            loginCount: (legacyData.loginCount || 0) + 1
-          };
-          
-          try {
-            await setDoc(doc(db, 'members', user.uid), memberData);
-            await deleteDoc(doc(db, 'members', legacyDoc.id));
-          } catch (err: any) {
-            console.error('Failed to migrate Google user doc:', err);
-            handleFirestoreError(err, OperationType.WRITE, `members/${user.uid}`);
-          }
-          
-          login(memberData);
-        } else {
-          const memberData = { ...legacyData, id: legacyDoc.id } as Member;
-          login(memberData);
+        if (legacyData.isActive === false) {
+          setError('החשבון שלך כרגע בחופשה קצרה ⛱️⛺🛫🍹🌴\nלא ניתן להתחבר כרגע בגלל השעיה זמנית');
+          await auth.signOut();
+          setIsLoading(false);
+          return;
         }
+        
+        // Migrate ID to UID if needed, update login count, and clear isTemporary
+        const memberData: Member = {
+          ...legacyData,
+          id: user.uid,
+          uid: user.uid,
+          loginCount: (legacyData.loginCount || 0) + 1,
+          isTemporary: false
+        };
+        
+        try {
+          await setDoc(doc(db, 'members', user.uid), memberData);
+          if (legacyDoc.id !== user.uid) {
+            console.log('LoginPage: Google Login ID mismatch. Migrating', legacyDoc.id, 'to', user.uid);
+            await deleteDoc(doc(db, 'members', legacyDoc.id));
+          }
+        } catch (err: any) {
+          console.error('Failed to update Google user doc:', err);
+          handleFirestoreError(err, OperationType.WRITE, `members/${user.uid}`);
+        }
+        
+        login(memberData);
         navigate('/');
       } else if (user.email?.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim()) {
         // Special case for super admin if not in members yet

@@ -14,12 +14,14 @@ import {
   Sun
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Member } from '../types';
 import { formatDate } from '../utils/dateUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { addDoc, collection } from 'firebase/firestore';
 import { getDb } from '../services/firebase';
+import ImportSessionsModal from '../components/admin/ImportSessionsModal';
 
 const SurfingSessionAttendance: React.FC = () => {
   const { 
@@ -33,11 +35,13 @@ const SurfingSessionAttendance: React.FC = () => {
     coastalWeather,
     siteConfig
   } = useData();
+  const { currentUser } = useAuth();
   
   const headerImage = useRandomHeader();
   const [selectedSession, setSelectedSession] = useState<{ id: string | 'active', date: any, participantIds: string[] } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateError, setDateError] = useState<string | null>(null);
+  const [isImportSessionsModalOpen, setIsImportSessionsModalOpen] = useState(false);
 
   // Sort history by date descending
   const sortedHistory = useMemo(() => {
@@ -126,7 +130,7 @@ const SurfingSessionAttendance: React.FC = () => {
             תיעוד וניהול נוכחות של סשני הקהילה 🌊
           </p>
           
-          <div className="mt-8">
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -134,11 +138,23 @@ const SurfingSessionAttendance: React.FC = () => {
                 setSelectedSession({ id: 'new', date: new Date().toISOString(), participantIds: [] });
                 setDateError(null);
               }}
-              className="px-8 py-4 bg-[#00426a] text-white rounded-2xl font-black text-lg shadow-[0_10px_30px_rgba(0,66,106,0.3)] hover:bg-[#003354] transition-all duration-300 flex items-center gap-3 mx-auto"
+              className="px-8 py-4 bg-[#00426a] text-white rounded-2xl font-black text-lg shadow-[0_10px_30px_rgba(0,66,106,0.3)] hover:bg-[#003354] transition-all duration-300 flex items-center gap-3"
             >
               <Sparkles size={20} />
               <span>הוסף סשן ידנית</span>
             </motion.button>
+            
+            {currentUser?.role === 'Admin' && (
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsImportSessionsModalOpen(true)}
+                className="px-8 py-4 bg-[#3dbbd3] text-white rounded-2xl font-black text-lg shadow-[0_10px_30px_rgba(61,187,211,0.3)] hover:bg-[#2ea0b8] transition-all duration-300 flex items-center gap-3"
+              >
+                <History size={20} />
+                <span>ייבוא סשנים</span>
+              </motion.button>
+            )}
           </div>
         </div>
       </div>
@@ -579,6 +595,11 @@ const SurfingSessionAttendance: React.FC = () => {
           background: rgba(0, 66, 106, 0.2);
         }
       `}</style>
+
+      <ImportSessionsModal
+        isOpen={isImportSessionsModalOpen}
+        onClose={() => setIsImportSessionsModalOpen(false)}
+      />
     </div>
   );
 };

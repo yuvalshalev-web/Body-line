@@ -8,6 +8,15 @@ const callProxy = async (service: string, data: any): Promise<string> => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ service, data })
     });
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const text = await response.text();
+      if (text.includes("<title>Starting Server...</title>")) {
+        console.warn("Server is starting up, retrying Gemini proxy later...");
+        return "המערכת באתחול, אנא נסה שוב בעוד מספר שניות.";
+      }
+      throw new Error(`Received non-JSON response from server: ${contentType}`);
+    }
     if (!response.ok) throw new Error("Proxy request failed");
     const result = await response.json();
     return result.text;

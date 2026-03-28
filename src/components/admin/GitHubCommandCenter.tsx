@@ -34,6 +34,11 @@ const GitHubCommandCenter: React.FC = () => {
       if (!res.ok) throw new Error('Failed');
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        if (text.includes("<title>Starting Server...</title>")) {
+          console.warn("Server is starting up, retrying GitHub actions later...");
+          return; // Silent retry
+        }
         throw new Error(`Received non-JSON response from server: ${contentType}`);
       }
       const data = await res.json();

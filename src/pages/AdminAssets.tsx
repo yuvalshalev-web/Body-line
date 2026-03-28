@@ -12,7 +12,7 @@ export const AdminAssets: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'staticHero' | 'headers' | 'fonts' | 'loginBg' | 'uiImages' | 'atalefLogo' | 'reefLogo' | 'habalZugLogo' | 'starfish' | 'penguin' | 'mantaRay' | 'shark' | 'orca' | 'cork' | 'wetsuit43' | 'wetsuit32' | 'wetsuit22' | 'wetsuit22ss' | 'sunShirt' | 'surfboardModels', fontName?: string) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'staticHero' | 'headers' | 'fonts' | 'loginBg' | 'uiImages' | 'atalefLogo' | 'reefLogo' | 'habalZugLogo' | 'starfish' | 'penguin' | 'mantaRay' | 'shark' | 'orca' | 'cork' | 'wetsuit43' | 'wetsuit32' | 'wetsuit22' | 'wetsuit22ss' | 'sunShirt' | 'surfboardModels' | 'defaultEventImage', fontName?: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -81,7 +81,7 @@ export const AdminAssets: React.FC = () => {
     }
   };
 
-  const handleDelete = async (type: 'staticHero' | 'headers' | 'fonts' | 'loginBg' | 'uiImages' | 'atalefLogo' | 'reefLogo' | 'habalZugLogo' | 'starfish' | 'penguin' | 'mantaRay' | 'shark' | 'orca' | 'cork' | 'wetsuit43' | 'wetsuit32' | 'wetsuit22' | 'wetsuit22ss' | 'sunShirt' | 'surfboardModels', urlToDelete: string, fontName?: string) => {
+  const handleDelete = async (type: 'staticHero' | 'headers' | 'fonts' | 'loginBg' | 'uiImages' | 'atalefLogo' | 'reefLogo' | 'habalZugLogo' | 'starfish' | 'penguin' | 'mantaRay' | 'shark' | 'orca' | 'cork' | 'wetsuit43' | 'wetsuit32' | 'wetsuit22' | 'wetsuit22ss' | 'sunShirt' | 'surfboardModels' | 'defaultEventImage', urlToDelete: string, fontName?: string) => {
     if (!window.confirm('האם אתה בטוח שברצונך למחוק קובץ זה?')) return;
 
     setError(null);
@@ -329,12 +329,13 @@ export const AdminAssets: React.FC = () => {
               <h3 className="text-xl font-bold text-slate-800">נכסי UI ספציפיים</h3>
             </div>
 
-            {/* Logos */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Logos & General Assets */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {[
                 { id: 'habalZugLogo', label: 'לוגו חבל זוג' },
                 { id: 'atalefLogo', label: 'לוגו עמותת העטלף' },
-                { id: 'reefLogo', label: 'לוגו Reef' }
+                { id: 'reefLogo', label: 'לוגו Reef' },
+                { id: 'defaultEventImage', label: 'תמונת אירוע ברירת מחדל' }
               ].map(asset => (
                 <div key={asset.id} className="space-y-2">
                   <p className="font-bold text-sm text-slate-700">{asset.label}</p>

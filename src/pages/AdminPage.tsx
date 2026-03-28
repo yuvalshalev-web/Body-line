@@ -177,7 +177,7 @@ const AdminPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
-    joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, archiveEvent, updateEvent, addEvent, toggleRole, toggleStatus, resetPassword, updateSiteAssets, updateMember, deleteMember, archiveMember, addMember,
+    joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, archiveEvent, updateEvent, addEvent, toggleRole, toggleStatus, updateSiteAssets, updateMember, deleteMember, archiveMember, addMember,
     yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, weeklyHistory
   } = useData();
 
@@ -1383,10 +1383,10 @@ const AdminPage: React.FC = () => {
 
                     <div className="flex items-center gap-6 flex-1">
                       {/* Event Image - Smart Display */}
-                      {event.imageUrl ? (
+                      {event.imageUrl || siteAssets?.defaultEventImage ? (
                         <div className="relative w-32 sm:w-48 aspect-video rounded-2xl overflow-hidden flex-shrink-0 shadow-md border border-white/20">
                           <img 
-                            src={event.imageUrl} 
+                            src={event.imageUrl || siteAssets?.defaultEventImage} 
                             alt={event.title} 
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                             referrerPolicy="no-referrer"
@@ -1401,7 +1401,7 @@ const AdminPage: React.FC = () => {
 
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          {event.imageUrl && (
+                          {(event.imageUrl || siteAssets?.defaultEventImage) && (
                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-black whitespace-nowrap ${isPastEvent ? 'bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/40' : 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)]'}`}>
                               {formatDate(event.date)}
                             </span>
@@ -1520,8 +1520,11 @@ const AdminPage: React.FC = () => {
                     </span>
                     <div className="h-px flex-1 bg-rose-100 min-w-[20px]" />
                   </div>
-                  <p className="text-slate-700 font-bold text-lg leading-tight tracking-tight">
-                    שינוי פרמטרים אלו עלול להשפיע על <span className="text-rose-600 underline decoration-rose-200 underline-offset-4">יציבות האתר</span>. מומלץ לבצע שינויים בזהירות רבה.
+                  <p className="text-slate-800 font-black text-lg leading-tight tracking-tight mt-1">
+                    אזהרה: אבן שזרק טיפש אחד לבאר, גם אלף חכמים לא יוציאו.
+                  </p>
+                  <p className="text-slate-700 font-bold text-sm leading-tight tracking-tight mt-1">
+                    אל תהיה הגיבור שבגללו כולם נשארים שבת. התעסקות עם ההגדרות האלו היא הזמנה רשמית לתקלות בלתי מוסברות, באגים על-טבעיים והתפטרות של צוות הפיתוח. נגיעה בזהירות מופלגת, או לא לגעת בכלל.
                   </p>
                 </div>
 

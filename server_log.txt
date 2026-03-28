@@ -1,0 +1,8 @@
+Starting server...
+NODE_ENV: development
+Server mode: DEVELOPMENT
+Initializing Vite server in DEVELOPMENT mode...
+WebSocket server error: Port 24678 is already in use
+Vite server initialized.
+Server running on http://localhost:3000
+Environment: development
