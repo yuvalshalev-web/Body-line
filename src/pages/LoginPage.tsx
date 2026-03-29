@@ -97,9 +97,13 @@ const LoginPage: React.FC = () => {
             return;
           }
 
-          await updateDoc(doc(db, 'members', user.uid), {
-            loginCount: increment(1)
-          });
+          try {
+            await updateDoc(doc(db, 'members', user.uid), {
+              loginCount: increment(1)
+            });
+          } catch (updateErr) {
+            console.warn('Could not update login count:', updateErr);
+          }
           
           login({ ...memberData, loginCount: (memberData.loginCount || 0) + 1 });
           navigate('/');
@@ -119,6 +123,10 @@ const LoginPage: React.FC = () => {
             // Migrate ID to UID
             const memberData: Member = {
               ...legacyData,
+              firstName: legacyData.firstName || 'משתמש',
+              lastName: legacyData.lastName || 'חדש',
+              email: legacyData.email || normalizedEmail,
+              role: legacyData.role || 'Member',
               id: user.uid,
               uid: user.uid,
               loginCount: (legacyData.loginCount || 0) + 1
@@ -252,6 +260,10 @@ const LoginPage: React.FC = () => {
               
               const memberData: Member = {
                 ...legacyData,
+                firstName: legacyData.firstName || 'משתמש',
+                lastName: legacyData.lastName || 'חדש',
+                email: legacyData.email || normalizedEmail,
+                role: legacyData.role || 'Member',
                 id: newUser.uid,
                 uid: newUser.uid,
                 loginCount: (legacyData.loginCount || 0) + 1
@@ -387,10 +399,14 @@ const LoginPage: React.FC = () => {
       const db = getDb();
       await updatePassword(auth.currentUser, newPassword);
       
-      await updateDoc(doc(db, 'members', auth.currentUser.uid), {
-        isTemporary: false,
-        loginCount: increment(1)
-      });
+      try {
+        await updateDoc(doc(db, 'members', auth.currentUser.uid), {
+          isTemporary: false,
+          loginCount: increment(1)
+        });
+      } catch (updateErr) {
+        console.warn('Could not update member doc after password reset:', updateErr);
+      }
       
       if (currentUser) {
         login({ 
@@ -519,6 +535,10 @@ const LoginPage: React.FC = () => {
         // Migrate ID to UID if needed, update login count, and clear isTemporary
         const memberData: Member = {
           ...legacyData,
+          firstName: legacyData.firstName || 'משתמש',
+          lastName: legacyData.lastName || 'חדש',
+          email: legacyData.email || user.email || '',
+          role: legacyData.role || 'Member',
           id: user.uid,
           uid: user.uid,
           loginCount: (legacyData.loginCount || 0) + 1,

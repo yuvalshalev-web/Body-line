@@ -41,6 +41,9 @@ export default defineConfig({
           }
         ]
       },
+      workbox: {
+        navigateFallbackDenylist: [/^\/__/]
+      },
       devOptions: {
         enabled: true
       }
