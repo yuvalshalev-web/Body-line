@@ -257,7 +257,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const timeoutId = setTimeout(() => {
         console.warn("Coastal weather fetch timed out");
         controller.abort();
-      }, 10000); // 10s timeout
+      }, 15000); // 15s timeout
 
       try {
         const apiUrl = `/api/coastal-weather?stationId=${selectedStationId}`;

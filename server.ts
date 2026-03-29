@@ -221,18 +221,28 @@ async function startServer() {
       const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m,uv_index,surface_pressure,relative_humidity_2m&timezone=auto`;
       const imsUrl = `https://api.ims.gov.il/v1/envista/stations/${stationId}/data/latest`;
       
-      const fetchMarine = fetch(marineUrl).then(res => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+      const fetchMarine = fetch(marineUrl, { signal: controller.signal }).then(res => {
         if (!res.ok) throw new Error(`Marine API error: ${res.status}`);
         return res.json();
+      }).catch(err => {
+        console.error("Marine fetch error:", err);
+        return { current: {}, hourly: { time: [], sea_surface_temperature: [] } };
       });
 
-      const fetchWeather = fetch(weatherUrl).then(res => {
+      const fetchWeather = fetch(weatherUrl, { signal: controller.signal }).then(res => {
         if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
         return res.json();
+      }).catch(err => {
+        console.error("Weather fetch error:", err);
+        return { current: {} };
       });
 
       const fetchIms = process.env.IMS_API_TOKEN ? fetch(imsUrl, {
-        headers: { "Authorization": `ApiToken ${process.env.IMS_API_TOKEN}` }
+        headers: { "Authorization": `ApiToken ${process.env.IMS_API_TOKEN}` },
+        signal: controller.signal
       }).then(async res => {
         if (!res.ok) throw new Error(`IMS API error: ${res.status}`);
         const text = await res.text();
@@ -253,6 +263,7 @@ async function startServer() {
         fetchWeather,
         fetchIms
       ]);
+      clearTimeout(timeoutId);
       
       // Default to Open-Meteo
       let windSpeed = (weatherData.current?.wind_speed_10m || 0) * 0.539957; // km/h to knots
