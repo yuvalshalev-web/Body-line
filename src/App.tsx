@@ -11,6 +11,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import FloatingMenu from './components/FloatingMenu';
 import { FloatingDrawer } from './components/FloatingDock';
 import { SurfNewsTracker } from './components/SurfNewsTracker';
+import { PWAInstallBanner } from './components/PWAInstallBanner';
 
 // Lazy loaded components
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -253,6 +254,9 @@ const App: React.FC = () => {
           </Suspense>
         </ErrorBoundary>
       </main>
+      
+      {/* PWA Install Banner */}
+      <PWAInstallBanner />
     </div>
   );
 };
