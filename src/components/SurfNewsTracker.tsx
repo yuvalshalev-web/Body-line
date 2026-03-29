@@ -32,7 +32,7 @@ export const SurfNewsTracker: React.FC = () => {
           }
         }
       } catch (err) {
-        console.error("Failed to fetch marine forecast:", err);
+        console.warn("Failed to fetch marine forecast:", err);
       }
     };
     

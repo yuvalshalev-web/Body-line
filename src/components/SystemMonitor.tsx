@@ -201,7 +201,7 @@ const DataHealthScore: React.FC<{ dbSize: number, storageSize: number }> = ({ db
         <button 
           onClick={runScan}
           disabled={isScanning}
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${isScanning ? 'bg-slate-100 text-slate-400 animate-spin' : 'bg-slate-50 text-slate-600 hover:bg-slate-900 hover:text-white shadow-sm border border-slate-100'}`}
+          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${isScanning ? 'bg-slate-100 text-slate-400 animate-spin' : 'bg-slate-50 text-slate-600 hover:bg-gradient-to-r hover:from-sky-500 hover:to-indigo-500 hover:text-white shadow-sm hover:shadow-lg hover:shadow-sky-500/30 border border-slate-100'}`}
         >
           <RefreshCw size={20} />
         </button>
@@ -801,7 +801,7 @@ const SystemMonitor: React.FC = () => {
                 }
               }}
               disabled={isRecalculating}
-              className="flex items-center gap-3 px-7 py-3.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black rounded-2xl transition-all shadow-lg shadow-slate-200 active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-3 px-7 py-3.5 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white text-xs font-black rounded-2xl transition-all shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 backdrop-blur-sm border border-white/20 active:scale-95 disabled:opacity-50"
             >
               <RefreshCw size={16} className={isRecalculating ? 'animate-spin' : ''} />
               <span>סנכרון נתוני מערכת</span>
@@ -957,7 +957,7 @@ const SystemMonitor: React.FC = () => {
             
             <button 
               onClick={() => incrementReadCount(1)}
-              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-black rounded-xl transition-all uppercase tracking-widest shadow-lg shadow-slate-100 active:scale-95"
+              className="px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white text-[11px] font-black rounded-xl transition-all uppercase tracking-widest shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 backdrop-blur-sm border border-white/20 active:scale-95"
             >
               בצע בדיקת קריאה
             </button>

@@ -33,7 +33,8 @@ import {
   Tooltip, 
   ResponsiveContainer,
   AreaChart,
-  Area
+  Area,
+  Legend
 } from 'recharts';
 
 import { useData } from '../contexts/DataContext';
@@ -84,7 +85,7 @@ export const CoastalDashboard: React.FC = () => {
           }
         }
       } catch (err) {
-        console.error("Failed to fetch history", err);
+        console.warn("Failed to fetch history", err);
       } finally {
         setHistoryLoading(false);
       }
@@ -113,7 +114,7 @@ export const CoastalDashboard: React.FC = () => {
           }
         }
       } catch (err) {
-        console.error("Failed to fetch IMS warnings", err);
+        console.warn("Failed to fetch IMS warnings", err);
       } finally {
         setImsLoading(false);
       }
@@ -498,11 +499,13 @@ export const CoastalDashboard: React.FC = () => {
                       fontSize={10} 
                       fontFamily="Inter"
                       unit=" kts" 
+                      tickFormatter={(value) => Math.ceil(value).toString()}
                       tickLine={false}
                       axisLine={false}
                     />
                     <Tooltip 
                       labelFormatter={(t) => new Date(t).toLocaleString('he-IL')}
+                      formatter={(value: any) => [`${Math.ceil(Number(value || 0))} kts`]}
                       contentStyle={{ 
                         borderRadius: '20px', 
                         border: 'none', 
@@ -510,6 +513,12 @@ export const CoastalDashboard: React.FC = () => {
                         padding: '12px'
                       }}
                       itemStyle={{ fontWeight: 'bold', fontSize: '12px' }}
+                    />
+                    <Legend 
+                      verticalAlign="top" 
+                      height={36} 
+                      iconType="circle" 
+                      wrapperStyle={{ fontSize: '12px', fontWeight: 'bold', paddingBottom: '10px' }}
                     />
                     <Area 
                       type="monotone" 

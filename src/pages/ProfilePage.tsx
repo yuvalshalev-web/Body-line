@@ -89,7 +89,7 @@ const SocialInput = React.memo(({
             href={ensureAbsoluteUrl(value)} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="absolute left-5 top-1/2 -translate-y-1/2 z-10 text-slate-400 hover:text-white hover:bg-slate-900 p-2.5 rounded-2xl shadow-sm transition-all duration-500 hover:scale-110 active:scale-90"
+            className="absolute left-5 top-1/2 -translate-y-1/2 z-10 text-slate-400 hover:text-white hover:bg-gradient-to-r hover:from-sky-500 hover:to-indigo-500 p-2.5 rounded-2xl shadow-sm transition-all duration-500 hover:scale-110 active:scale-90"
           >
             <ExternalLink size={16} />
           </a>
@@ -163,7 +163,7 @@ const ProfileAvatar = React.memo(({
           )}
         </div>
       </div>
-      <label className="absolute bottom-2 left-2 md:bottom-4 md:left-4 p-3 md:p-4 bg-white text-slate-900 rounded-xl md:rounded-2xl cursor-pointer hover:bg-slate-900 hover:text-white transition-all border border-slate-100 shadow-xl z-20 hover:scale-110 active:scale-95 group/cam">
+      <label className="absolute bottom-2 left-2 md:bottom-4 md:left-4 p-3 md:p-4 bg-white text-slate-900 rounded-xl md:rounded-2xl cursor-pointer hover:bg-gradient-to-r hover:from-sky-500 hover:to-indigo-500 hover:text-white transition-all border border-slate-100 shadow-xl z-20 hover:scale-110 active:scale-95 group/cam">
         <Camera size={18} className="md:w-5 md:h-5 transition-transform group-hover/cam:rotate-12" />
         <input type="file" className="hidden" accept="image/*" onChange={onAvatarSelect} disabled={isProcessingImage} />
       </label>
@@ -1084,7 +1084,7 @@ const ProfilePage: React.FC = () => {
                   <button 
                     type="submit"
                     disabled={isChangingPassword || !newPassword || !confirmPassword}
-                    className="w-full flex items-center justify-center gap-4 px-8 py-6 bg-slate-900 text-white rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.2)] font-black text-xl transition-all hover:bg-slate-800 hover:translate-y-[-4px] active:scale-95 disabled:opacity-50 group"
+                    className="w-full flex items-center justify-center gap-4 px-8 py-6 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.2)] font-black text-xl transition-all hover:from-sky-400 hover:to-indigo-400 hover:translate-y-[-4px] active:scale-95 disabled:opacity-50 group border border-white/20 backdrop-blur-sm"
                   >
                     {isChangingPassword ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} className="transition-transform group-hover:scale-110" />}
                     <span>עדכן סיסמה</span>
@@ -1275,7 +1275,7 @@ const ProfilePage: React.FC = () => {
 
                   <button 
                     onClick={() => setShowCompletionModal(false)}
-                    className="w-full py-6 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-2xl transition-all shadow-[0_20px_40px_rgba(0,0,0,0.2)] hover:translate-y-[-4px] active:scale-95"
+                    className="w-full py-6 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white font-black rounded-2xl transition-all shadow-[0_20px_40px_rgba(0,0,0,0.2)] hover:translate-y-[-4px] active:scale-95 border border-white/20 backdrop-blur-sm"
                   >
                     הבנתי, תודה
                   </button>

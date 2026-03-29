@@ -327,8 +327,8 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
       const winterSessions = penguinSessions.filter(s => s.participantIds?.includes(member.id));
       const summerSessions = jellyfishSessions.filter(s => s.participantIds?.includes(member.id));
       
-      const getStreak = (sessions: any[], memberId: string) => {
-        const sorted = [...sessions].sort((a, b) => {
+      const getStreak = (allRelevantSessions: any[], memberId: string) => {
+        const sorted = [...allRelevantSessions].sort((a, b) => {
           const da = parseDate(a.date) || new Date(0);
           const db = parseDate(b.date) || new Date(0);
           return db.getTime() - da.getTime();
@@ -336,13 +336,13 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
         let streak = 0;
         for (const s of sorted) {
           if (s.participantIds?.includes(memberId)) streak++;
-          else break;
+          else if (streak > 0) break; // Only break if we've started a streak
         }
         return streak;
       };
 
-      const winterGrit = (winterSessions.length * 1.5) + (getStreak(winterSessions, member.id) * 4);
-      const summerGrit = (summerSessions.length * 1.5) + (getStreak(summerSessions, member.id) * 4);
+      const winterGrit = (winterSessions.length * 1.5) + (getStreak(penguinSessions, member.id) * 4);
+      const summerGrit = (summerSessions.length * 1.5) + (getStreak(jellyfishSessions, member.id) * 4);
 
       const seasonalCounts = [0, 0, 0, 0];
       const getSeasonIndex = (date: Date) => {
@@ -369,14 +369,38 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
         winterGrit,
         summerGrit,
         variance,
-        totalAttendance
+        totalAttendance,
+        winterCount: winterSessions.length,
+        summerCount: summerSessions.length
       };
     });
 
-    const penguins = [...memberStats].filter(m => m.winterGrit > 0).sort((a, b) => b.winterGrit - a.winterGrit).slice(0, 5);
-    const jellyfish = [...memberStats].filter(m => m.summerGrit > 0).sort((a, b) => b.summerGrit - a.summerGrit).slice(0, 5);
-    const sharks = [...memberStats].filter(m => m.totalAttendance >= 4).sort((a, b) => a.variance - b.variance || b.totalAttendance - a.totalAttendance).slice(0, 5);
-    const orcas = memberStats.filter(m => penguins.some(p => p.id === m.id) && jellyfish.some(j => j.id === m.id) && sharks.some(s => s.id === m.id));
+    // Thresholds: Must have at least a few sessions to even be considered
+    const penguins = [...memberStats]
+      .filter(m => m.winterCount >= 8) // Increased from 3 to 8
+      .sort((a, b) => b.winterGrit - a.winterGrit)
+      .slice(0, 3); // Top 3 instead of Top 5
+
+    const jellyfish = [...memberStats]
+      .filter(m => m.summerCount >= 8) // Increased from 3 to 8
+      .sort((a, b) => b.summerGrit - a.summerGrit)
+      .slice(0, 3); // Top 3 instead of Top 5
+
+    const sharks = [...memberStats]
+      .filter(m => m.totalAttendance >= 20) // Increased from 8 to 20
+      .sort((a, b) => a.variance - b.variance || b.totalAttendance - a.totalAttendance)
+      .slice(0, 3); // Top 3 instead of Top 5
+
+    // Orca is the elite: Top 1 in all categories
+    const top1Penguins = penguins.slice(0, 1);
+    const top1Jellyfish = jellyfish.slice(0, 1);
+    const top1Sharks = sharks.slice(0, 1);
+
+    const orcas = memberStats.filter(m => 
+      top1Penguins.some(p => p.id === m.id) && 
+      top1Jellyfish.some(j => j.id === m.id) && 
+      top1Sharks.some(s => s.id === m.id)
+    );
 
     const active = new Set(['starfish']);
     if (penguins.some(p => p.id === userId)) active.add('penguin');

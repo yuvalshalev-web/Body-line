@@ -45,7 +45,7 @@ const GitHubCommandCenter: React.FC = () => {
       if (data.action) setAction(data.action);
       setFetchStatus('success');
     } catch (err) {
-      console.error("Failed to fetch GitHub actions", err);
+      console.warn("Failed to fetch GitHub actions", err);
       setFetchStatus('error');
     } finally {
       setLoading(false);

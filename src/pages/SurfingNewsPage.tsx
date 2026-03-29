@@ -61,7 +61,7 @@ const SurfingNewsPage: React.FC = () => {
               allNews.push(...items);
             }
           } catch (err) {
-            console.error(`Failed to fetch from ${feed.name}:`, err);
+            console.warn(`Failed to fetch from ${feed.name}:`, err);
           }
         }
 

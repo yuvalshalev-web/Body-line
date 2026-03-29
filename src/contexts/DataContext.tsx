@@ -346,7 +346,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } else if (e.message === 'SERVER_STARTING') {
           // Silent retry, server is just starting
         } else {
-          console.error("Failed to fetch coastal weather - network error or server down:", e);
+          console.warn("Failed to fetch coastal weather - network error or server down:", e);
         }
         
         // Retry logic for transient errors

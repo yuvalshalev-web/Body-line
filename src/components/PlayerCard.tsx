@@ -133,7 +133,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
             {/* TikTok */}
             {member.tiktokUrl ? (
-              <a href={ensureAbsoluteUrl(member.tiktokUrl)} target="_blank" rel="noopener noreferrer" className="p-2 bg-black/10 rounded-xl hover:bg-black hover:text-white transition-all text-black shadow-sm" title="TikTok">
+              <a href={ensureAbsoluteUrl(member.tiktokUrl)} target="_blank" rel="noopener noreferrer" className="p-2 bg-black/10 rounded-xl hover:bg-gradient-to-r hover:from-slate-700 hover:to-slate-900 hover:text-white transition-all text-slate-800 shadow-sm backdrop-blur-sm" title="TikTok">
                 <Music2 size={20} />
               </a>
             ) : (
@@ -155,7 +155,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
             {/* Twitter/X */}
             {member.twitterUrl ? (
-              <a href={ensureAbsoluteUrl(member.twitterUrl)} target="_blank" rel="noopener noreferrer" className="p-2 bg-black/10 rounded-xl hover:bg-black hover:text-white transition-all text-black shadow-sm" title="X (Twitter)">
+              <a href={ensureAbsoluteUrl(member.twitterUrl)} target="_blank" rel="noopener noreferrer" className="p-2 bg-black/10 rounded-xl hover:bg-gradient-to-r hover:from-slate-700 hover:to-slate-900 hover:text-white transition-all text-slate-800 shadow-sm backdrop-blur-sm" title="X (Twitter)">
                 <Twitter size={20} />
               </a>
             ) : (

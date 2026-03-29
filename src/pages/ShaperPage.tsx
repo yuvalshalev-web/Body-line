@@ -34,8 +34,11 @@ const ShaperPage: React.FC = () => {
   const { currentUser } = useAuth();
   const { updateMember, seaStats, coastalWeather, siteConfig } = useData();
   
-  const [weight, setWeight] = useState<number>(currentUser?.weight || 75);
-  const [height, setHeight] = useState<number>(currentUser?.height || 175);
+  const initialWeight = currentUser?.weight ? (currentUser.weight < 10 ? currentUser.weight * 10 : currentUser.weight) : 75;
+  const initialHeight = currentUser?.height ? (currentUser.height < 3 ? currentUser.height * 100 : currentUser.height) : 175;
+  
+  const [weight, setWeight] = useState<number>(initialWeight);
+  const [height, setHeight] = useState<number>(initialHeight);
   const [level, setLevel] = useState<'Learner' | 'Beginner' | 'Intermediate' | 'Advanced'>(
     (currentUser?.surfingLevel as any) || 'Intermediate'
   );
@@ -206,7 +209,7 @@ const ShaperPage: React.FC = () => {
               <div className="lg:col-span-5 space-y-8">
             <section className="bg-white/70 backdrop-blur-xl border border-white/80 rounded-[2.5rem] p-10 space-y-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.12),0_30px_60px_-30px_rgba(0,0,0,0.15)]">
               <div className="flex items-center gap-3 mb-2">
-                <Pencil className="text-[var(--surfer-deep-teal)]" size={24} />
+                <Pencil className="text-[var(--ocean-2)]" size={24} />
                 <h3 className="text-2xl font-black text-[#00426a]">המידות שלך</h3>
               </div>
 
@@ -216,15 +219,15 @@ const ShaperPage: React.FC = () => {
                   <label className="text-[#00426a]/70 font-bold flex items-center gap-2">
                     <Weight size={18} /> משקל גוף (ק"ג)
                   </label>
-                  <span className="text-2xl font-black text-[var(--surfer-deep-teal)]">{weight}</span>
+                  <span className="text-2xl font-black text-[var(--ocean-2)]">{weight}</span>
                 </div>
                 <input 
                   type="range" 
                   min="30" 
                   max="150" 
-                  value={weight} 
-                  onChange={(e) => setWeight(parseInt(e.target.value))}
-                  className="w-full accent-[var(--surfer-deep-teal)] h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                  value={weight || 75} 
+                  onChange={(e) => setWeight(Number(e.target.value))}
+                  className="w-full accent-[var(--ocean-2)] h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
                   dir="ltr"
                 />
               </div>
@@ -235,15 +238,15 @@ const ShaperPage: React.FC = () => {
                   <label className="text-[#00426a]/70 font-bold flex items-center gap-2">
                     <Ruler size={18} /> גובה (ס"מ)
                   </label>
-                  <span className="text-2xl font-black text-[var(--surfer-cyan)]">{height}</span>
+                  <span className="text-2xl font-black text-[var(--ocean-2)]">{height}</span>
                 </div>
                 <input 
                   type="range" 
                   min="100" 
                   max="220" 
                   value={height} 
-                  onChange={(e) => setHeight(parseInt(e.target.value))}
-                  className="w-full accent-[var(--surfer-cyan)] h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                  onChange={(e) => setHeight(Number(e.target.value))}
+                  className="w-full accent-[var(--ocean-2)] h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
                   dir="ltr"
                 />
               </div>
@@ -260,7 +263,7 @@ const ShaperPage: React.FC = () => {
                       onClick={() => setLevel(l)}
                       className={`py-3 rounded-xl font-black text-xs transition-all border ${
                         level === l 
-                          ? 'bg-[var(--surfer-deep-teal)] text-white border-[var(--surfer-deep-teal)] shadow-lg scale-105' 
+                          ? 'bg-gradient-to-r from-[var(--ocean-2)] to-[var(--ocean-3)] text-white border-transparent shadow-lg scale-105' 
                           : 'bg-slate-50 text-[#00426a]/40 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
@@ -379,7 +382,7 @@ const ShaperPage: React.FC = () => {
 
             {/* Scientific Logic Info */}
             <section className="bg-white/40 backdrop-blur-md border border-white/60 rounded-[2rem] p-8 shadow-sm">
-              <div className="flex items-center gap-2 mb-4 text-[var(--surfer-deep-teal)]">
+              <div className="flex items-center gap-2 mb-4 text-[var(--ocean-2)]">
                 <Info size={18} />
                 <h4 className="font-black text-sm uppercase tracking-widest">הלוגיקה המדעית (Surfer's Formula)</h4>
               </div>
@@ -414,7 +417,7 @@ const ShaperPage: React.FC = () => {
                 <div className="flex justify-center gap-12 mt-8">
                   <div className="text-center">
                     <p className="text-[#00426a]/40 text-[10px] font-black uppercase tracking-widest mb-2">נפח מומלץ</p>
-                    <p className="text-6xl font-black text-[var(--surfer-deep-teal)]">{recommendation.volume}<span className="text-2xl ml-1">L</span></p>
+                    <p className="text-6xl font-black text-[var(--ocean-2)]">{recommendation.volume}<span className="text-2xl ml-1">L</span></p>
                   </div>
                   <div className="w-px h-20 bg-slate-200" />
                   <div className="text-center">
@@ -433,7 +436,7 @@ const ShaperPage: React.FC = () => {
 
               <div className="mt-10 text-center bg-white/60 backdrop-blur-md border border-white/80 rounded-3xl p-8 w-full shadow-sm">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <Sparkles className="text-[var(--surfer-deep-teal)]" size={20} />
+                  <Sparkles className="text-[var(--ocean-2)]" size={20} />
                   <h4 className="text-2xl font-black text-[#00426a]">סוג הגלשן: {recommendation.boardTypeHebrew}</h4>
                 </div>
                 <p className="text-[#00426a]/60 font-bold text-lg">
@@ -507,7 +510,7 @@ const ShaperPage: React.FC = () => {
                 <button
                   onClick={handleConsultation}
                   disabled={isConsulting}
-                  className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[var(--surfer-deep-teal)] to-[var(--surfer-cyan)] text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[var(--ocean-2)] to-[var(--surfer-cyan)] text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                 >
                   {isConsulting ? <Loader2 className="animate-spin" size={24} /> : <MessageSquareQuote size={24} />}
                   <span>התייעצות עם שייפר AI (Gemini)</span>

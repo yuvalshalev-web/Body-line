@@ -1590,7 +1590,7 @@ const AdminPage: React.FC = () => {
 
                   <button 
                     onClick={() => setIsEditingYear(true)}
-                    className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                    className="w-full py-4 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white rounded-2xl font-black text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 backdrop-blur-sm border border-white/20 active:scale-95"
                   >
                     <Edit2 size={18} />
                     ערוך הגדרות שנה
@@ -1867,7 +1867,7 @@ const AdminPage: React.FC = () => {
                     }
                   }}
                   disabled={isSavingSessions}
-                  className="px-16 py-5 bg-slate-900 text-white rounded-2xl font-black text-lg shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all duration-300 disabled:opacity-50 flex items-center gap-4 active:scale-95"
+                  className="px-16 py-5 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white rounded-2xl font-black text-lg shadow-xl shadow-sky-500/30 hover:shadow-sky-500/50 backdrop-blur-sm border border-white/20 transition-all duration-300 disabled:opacity-50 flex items-center gap-4 active:scale-95"
                 >
                   {isSavingSessions ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
                   שמור את כל השינויים
@@ -2020,7 +2020,7 @@ const AdminPage: React.FC = () => {
               
               <button 
                 onClick={() => setApprovedUser(null)} 
-                className="w-full py-4 bg-slate-800 text-white rounded-xl font-bold text-base shadow-sm hover:bg-slate-900 transition-all"
+                className="w-full py-4 bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-400 hover:to-slate-500 text-white rounded-xl font-bold text-base shadow-lg shadow-slate-500/30 hover:shadow-slate-500/50 backdrop-blur-sm border border-white/20 transition-all active:scale-95"
               >
                 סגור פאנל
               </button>

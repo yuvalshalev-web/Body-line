@@ -171,7 +171,7 @@ export const AdminAssets: React.FC = () => {
                 <img src={siteAssets.staticHeroImage} alt="Static Hero" className="w-full h-48 object-cover" />
                 <button
                   onClick={() => handleDelete('staticHero', siteAssets.staticHeroImage)}
-                  className="absolute top-2 left-2 p-2 bg-rose-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-2 left-2 p-2 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg hover:shadow-rose-500/30 hover:-translate-y-1 active:scale-95"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -193,7 +193,7 @@ export const AdminAssets: React.FC = () => {
               />
               <label
                 htmlFor="upload-static-hero"
-                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-bold text-sm"
+                className="cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-xl hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-sm shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20 backdrop-blur-sm"
               >
                 {uploading === 'staticHero' ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                 העלה תמונה ראשית
@@ -213,7 +213,7 @@ export const AdminAssets: React.FC = () => {
                 <img src={siteAssets.loginBg} alt="Login Background" className="w-full h-48 object-cover" />
                 <button
                   onClick={() => handleDelete('loginBg', siteAssets.loginBg)}
-                  className="absolute top-2 left-2 p-2 bg-rose-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-2 left-2 p-2 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg hover:shadow-rose-500/30 hover:-translate-y-1 active:scale-95"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -235,7 +235,7 @@ export const AdminAssets: React.FC = () => {
               />
               <label
                 htmlFor="upload-login-bg"
-                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-bold text-sm"
+                className="cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-xl hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-sm shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20 backdrop-blur-sm"
               >
                 {uploading === 'loginBg' ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                 העלה תמונת כניסה
@@ -256,7 +256,7 @@ export const AdminAssets: React.FC = () => {
                   <img src={url} alt={`Header ${index + 1}`} className="w-full h-24 object-cover" />
                   <button
                     onClick={() => handleDelete('headers', url)}
-                    className="absolute top-2 left-2 p-1.5 bg-rose-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 left-2 p-1.5 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-md hover:shadow-rose-500/30 hover:-translate-y-0.5 active:scale-95"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -275,7 +275,7 @@ export const AdminAssets: React.FC = () => {
               />
               <label
                 htmlFor="upload-header"
-                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-bold text-sm"
+                className="cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-xl hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-sm shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20 backdrop-blur-sm"
               >
                 {uploading === 'headers' ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                 הוסף תמונת רקע
@@ -296,7 +296,7 @@ export const AdminAssets: React.FC = () => {
                   <img src={url} alt={`UI Image ${index + 1}`} className="w-full h-20 object-cover" />
                   <button
                     onClick={() => handleDelete('uiImages', url)}
-                    className="absolute top-1 left-1 p-1 bg-rose-500 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-1 left-1 p-1 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -315,7 +315,7 @@ export const AdminAssets: React.FC = () => {
               />
               <label
                 htmlFor="upload-ui-image"
-                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-bold text-sm"
+                className="cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-xl hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-sm shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20 backdrop-blur-sm"
               >
                 {uploading === 'uiImages' ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                 הוסף תמונת UI
@@ -344,7 +344,7 @@ export const AdminAssets: React.FC = () => {
                       <img src={siteAssets[asset.id]} alt={asset.label} className="w-full h-full object-contain p-2" />
                       <button
                         onClick={() => handleDelete(asset.id as any, siteAssets[asset.id])}
-                        className="absolute top-1 left-1 p-1 bg-rose-500 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 left-1 p-1 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95"
                       >
                         <Trash2 size={12} />
                       </button>
@@ -364,7 +364,7 @@ export const AdminAssets: React.FC = () => {
                   />
                   <label
                     htmlFor={`upload-${asset.id}`}
-                    className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-bold text-xs w-full justify-center"
+                    className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-lg hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-xs shadow-md shadow-sky-500/20 hover:shadow-sky-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20 w-full"
                   >
                     {uploading === asset.id ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
                     העלה לוגו
@@ -393,7 +393,7 @@ export const AdminAssets: React.FC = () => {
                       <img src={siteAssets[asset.id]} alt={asset.label} className="w-full h-full object-contain p-1" />
                       <button
                         onClick={() => handleDelete(asset.id as any, siteAssets[asset.id])}
-                        className="absolute top-1 left-1 p-1 bg-rose-500 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 left-1 p-1 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95"
                       >
                         <Trash2 size={10} />
                       </button>
@@ -413,7 +413,7 @@ export const AdminAssets: React.FC = () => {
                   />
                   <label
                     htmlFor={`upload-${asset.id}`}
-                    className="cursor-pointer inline-flex items-center gap-2 px-2 py-1 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100 transition-colors font-bold text-[10px] w-full justify-center border border-slate-100"
+                    className="cursor-pointer inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-md hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-bold text-[10px] shadow-sm shadow-sky-500/20 hover:shadow-sky-500/40 hover:-translate-y-px active:translate-y-0 active:scale-95 border border-white/20 w-full"
                   >
                     {uploading === asset.id ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
                     העלה
@@ -441,7 +441,7 @@ export const AdminAssets: React.FC = () => {
                       <img src={siteAssets[asset.id]} alt={asset.label} className="w-full h-full object-contain p-1" />
                       <button
                         onClick={() => handleDelete(asset.id as any, siteAssets[asset.id])}
-                        className="absolute top-1 left-1 p-1 bg-rose-500 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 left-1 p-1 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95"
                       >
                         <Trash2 size={10} />
                       </button>
@@ -461,7 +461,7 @@ export const AdminAssets: React.FC = () => {
                   />
                   <label
                     htmlFor={`upload-${asset.id}`}
-                    className="cursor-pointer inline-flex items-center gap-2 px-2 py-1 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100 transition-colors font-bold text-[10px] w-full justify-center border border-slate-100"
+                    className="cursor-pointer inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-md hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-bold text-[10px] shadow-sm shadow-sky-500/20 hover:shadow-sky-500/40 hover:-translate-y-px active:translate-y-0 active:scale-95 border border-white/20 w-full"
                   >
                     {uploading === asset.id ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
                     העלה
@@ -483,7 +483,7 @@ export const AdminAssets: React.FC = () => {
                       <img src={siteAssets.surfboardModels[board.type]} alt={board.name} className="w-full h-full object-contain p-1" />
                       <button
                         onClick={() => handleDelete('surfboardModels', siteAssets.surfboardModels[board.type], board.type)}
-                        className="absolute top-1 left-1 p-1 bg-rose-500 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 left-1 p-1 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95"
                       >
                         <Trash2 size={10} />
                       </button>
@@ -503,7 +503,7 @@ export const AdminAssets: React.FC = () => {
                   />
                   <label
                     htmlFor={`upload-board-${board.type}`}
-                    className="cursor-pointer inline-flex items-center gap-2 px-2 py-1 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100 transition-colors font-bold text-[10px] w-full justify-center border border-slate-100"
+                    className="cursor-pointer inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-md hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-bold text-[10px] shadow-sm shadow-sky-500/20 hover:shadow-sky-500/40 hover:-translate-y-px active:translate-y-0 active:scale-95 border border-white/20 w-full"
                   >
                     {uploading === 'surfboardModels' + board.type ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
                     העלה
@@ -557,7 +557,7 @@ export const AdminAssets: React.FC = () => {
                       />
                       <label
                         htmlFor={`upload-font-${font.id}`}
-                        className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-bold text-sm"
+                        className="cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-xl hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-sm shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20"
                       >
                         {uploading === 'fonts' + font.id ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                         הוסף קובץ
@@ -574,7 +574,7 @@ export const AdminAssets: React.FC = () => {
                             <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded uppercase">{file.format}</span>
                             <button
                               onClick={() => handleDelete('fonts', file.url, font.id)}
-                              className="p-1 text-rose-500 hover:bg-rose-50 rounded transition-colors"
+                              className="p-1.5 text-rose-400 hover:text-white hover:bg-rose-500 rounded-lg transition-all duration-300 hover:shadow-md hover:shadow-rose-500/30 active:scale-95"
                             >
                               <Trash2 size={14} />
                             </button>

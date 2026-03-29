@@ -84,7 +84,7 @@ export const ModalProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                   </button>
                   <button 
                     onClick={handleConfirm}
-                    className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors"
+                    className="flex-1 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white rounded-xl font-bold shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 backdrop-blur-sm border border-white/20 transition-all active:scale-95"
                   >
                     {confirmOptions?.confirmText || 'אישור'}
                   </button>
@@ -92,7 +92,7 @@ export const ModalProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               ) : (
                 <button 
                   onClick={() => setIsOpen(false)}
-                  className="w-full mt-4 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors"
+                  className="w-full mt-4 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white rounded-xl font-bold shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 backdrop-blur-sm border border-white/20 transition-all active:scale-95"
                 >
                   סגור
                 </button>
