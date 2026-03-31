@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background for maskable icon -->
+  <rect width="512" height="512" fill="#ffffff"/>
+  
+  <!-- Bat Wings -->
+  <path d="M256 256 L120 160 C80 140 40 160 30 200 C60 190 90 210 110 240 C90 250 70 280 80 310 C120 290 160 280 256 256 Z" fill="#2fb0c0"/>
+  <path d="M256 256 L392 160 C432 140 472 160 482 200 C452 190 422 210 402 240 C422 250 442 280 432 310 C392 290 352 280 256 256 Z" fill="#2fb0c0"/>
+  
+  <!-- Central Circle -->
+  <circle cx="256" cy="256" r="100" fill="#2fb0c0"/>
+  
+  <!-- Flexing Arms (White) -->
+  <path d="M210 260 Q190 220 230 220 Q250 220 245 250" fill="none" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  <path d="M302 260 Q322 220 282 220 Q262 220 267 250" fill="none" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="256" cy="245" r="15" fill="white"/>
+  <path d="M235 280 Q256 300 277 280" fill="none" stroke="white" stroke-width="10" stroke-linecap="round"/>
+</svg>

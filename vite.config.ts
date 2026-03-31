@@ -12,43 +12,33 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['apple-touch-icon.png', 'pwa-192x192.svg', 'pwa-512x512.svg'],
+      includeAssets: ['apple-touch-icon.png', 'app-logo.svg'],
       manifest: {
         name: 'Body-Line',
         short_name: 'Body-Line',
-        description: 'MemberHub/Body-Line - Community platform for surfing non-profit',
+        description: 'Body-Line - Community platform for surfers',
         theme_color: '#0f172a',
-        background_color: '#0f172a',
+        background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
         id: '/',
         icons: [
           {
-            src: '/pwa-192x192.svg',
+            src: '/app-logo.svg',
             sizes: '192x192',
             type: 'image/svg+xml',
             purpose: 'any'
           },
           {
-            src: '/pwa-512x512.svg',
+            src: '/app-logo.svg',
             sizes: '512x512',
             type: 'image/svg+xml',
             purpose: 'any'
           },
           {
-            src: '/pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/pwa-512x512.png',
+            src: '/app-logo.svg',
             sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'maskable'
           }
         ]
