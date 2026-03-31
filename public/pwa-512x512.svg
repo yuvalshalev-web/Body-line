@@ -1,5 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" fill="#0f172a" rx="100"/>
-  <path d="M256 128C185.3 128 128 185.3 128 256s57.3 128 128 128 128-57.3 128-128-57.3-128-128-128zm0 213.3c-47.1 0-85.3-38.2-85.3-85.3s38.2-85.3 85.3-85.3 85.3 38.2 85.3 85.3-38.2 85.3-85.3 85.3z" fill="#0ea5e9"/>
-  <path d="M256 192c-35.3 0-64 28.7-64 64s28.7 64 64 64 64-28.7 64-64-28.7-64-64-64z" fill="#6366f1"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0f172a"/>
+  <!-- Bat Wings -->
+  <path d="M256 256 L40 140 C80 160 100 140 120 120 C140 160 180 180 256 256 Z" fill="#2fb0c0"/>
+  <path d="M256 256 L472 140 C432 160 412 140 392 120 C372 160 332 180 256 256 Z" fill="#2fb0c0"/>
+  <!-- Circle -->
+  <circle cx="256" cy="256" r="110" fill="#2fb0c0"/>
+  <!-- Flexing Arms -->
+  <path d="M190 270 Q190 210 256 210 Q322 210 322 270" fill="none" stroke="white" stroke-width="14" stroke-linecap="round"/>
+  <path d="M205 285 Q230 315 256 285 Q282 315 307 285" fill="none" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="256" cy="235" r="20" fill="white"/>
 </svg>

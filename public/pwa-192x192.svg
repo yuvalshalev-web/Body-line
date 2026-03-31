@@ -1,5 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
-  <rect width="192" height="192" fill="#0f172a" rx="38"/>
-  <path d="M96 48C69.5 48 48 69.5 48 96s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm0 80c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z" fill="#0ea5e9"/>
-  <path d="M96 72c-13.3 0-24 10.7-24 24s10.7 24 24 24 24-10.7 24-24-10.7-24-24-24z" fill="#6366f1"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0f172a"/>
+  <!-- Bat Wings -->
+  <path d="M256 256 L40 140 C80 160 100 140 120 120 C140 160 180 180 256 256 Z" fill="#2fb0c0"/>
+  <path d="M256 256 L472 140 C432 160 412 140 392 120 C372 160 332 180 256 256 Z" fill="#2fb0c0"/>
+  <!-- Circle -->
+  <circle cx="256" cy="256" r="110" fill="#2fb0c0"/>
+  <!-- Flexing Arms -->
+  <path d="M190 270 Q190 210 256 210 Q322 210 322 270" fill="none" stroke="white" stroke-width="14" stroke-linecap="round"/>
+  <path d="M205 285 Q230 315 256 285 Q282 315 307 285" fill="none" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="256" cy="235" r="20" fill="white"/>
 </svg>
