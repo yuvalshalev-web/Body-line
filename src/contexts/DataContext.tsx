@@ -123,7 +123,7 @@ interface DataContextType {
   addGalleryItem: (item: Omit<GalleryItem, 'id'>) => Promise<void>;
   toggleSessionAttendance: (userId: string) => Promise<void>;
   updateHistory: (id: string, participantIds: string[]) => Promise<void>;
-  finalizeSession: () => Promise<void>;
+  finalizeSession: (saveWeather?: boolean) => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
   updateSiteConfig: (config: Partial<{ 
     navPosition: 'bottom' | 'top',
@@ -969,9 +969,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const isFinalizingRef = useRef(false);
-  const finalizeSessionRef = useRef<() => Promise<void>>();
+  const finalizeSessionRef = useRef<(saveWeather?: boolean) => Promise<void>>();
   
-  const finalizeSession = useCallback(async () => {
+  const finalizeSession = useCallback(async (saveWeather: boolean = true) => {
     if (isFinalizingRef.current) {
       console.log("finalizeSession: Already in progress, skipping...");
       return;
@@ -1015,10 +1015,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         participantsCount: currentAttendees.length,
         status: 'finalized',
         finalizedAt: new Date().toISOString(),
-        seaState: coastalWeather || null
+        ...(saveWeather ? { seaState: coastalWeather || null } : {})
       });
       await addRolloverLog('archive', 'success', 'הסשן נשמר בהיסטוריה');
-      await addRolloverLog('save_sea_state', 'success', 'נתוני הים נשמרו');
+      if (saveWeather) {
+        await addRolloverLog('save_sea_state', 'success', 'נתוני הים נשמרו');
+      } else {
+        await addRolloverLog('save_sea_state', 'success', 'נבחר שלא לשמור נתוני ים');
+      }
       
       updatedFields += 1;
 

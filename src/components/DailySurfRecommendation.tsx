@@ -233,17 +233,6 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                         <p className="text-[10px] text-[#007085] uppercase tracking-[0.2em] mb-2 font-black">אורך מומלץ</p>
                         <p className="text-4xl font-black text-[#002b44]" dir="ltr">{getBoardSize(recLenInches * 2.54)}</p>
                       </div>
-                      {wetsuit && (
-                        <div className="bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-sm min-w-[140px] transition-transform hover:scale-105 flex flex-col items-center justify-center">
-                          <p className="text-[10px] text-[#007085] uppercase tracking-[0.2em] mb-2 font-black">ביגוד מומלץ</p>
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10">
-                              <WetsuitSVG thickness={wetsuit.thickness} />
-                            </div>
-                            <p className="text-xl font-black text-[#002b44] leading-tight">{wetsuit.label}</p>
-                          </div>
-                        </div>
-                      )}
                     </div>
 
                     <div className="space-y-6">
@@ -269,6 +258,20 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                   </div>
                   
                   <div className="flex flex-col sm:flex-row justify-center items-end gap-16 lg:gap-12 shrink-0 w-full lg:w-auto py-12 relative z-10">
+                    {wetsuit && (
+                      <div className="flex flex-col items-center gap-8 w-full sm:w-[220px] group">
+                        <div className="relative h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
+                          <div className="absolute inset-0 bg-blue-500/10 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                          <div className="w-full h-full flex items-end justify-center pb-4">
+                            <WetsuitSVG thickness={wetsuit.thickness} alignBottom={true} />
+                          </div>
+                        </div>
+                        <div className="text-center space-y-2">
+                          <p className="text-[11px] font-black text-[#007085] uppercase tracking-[0.3em] opacity-60">ביגוד מומלץ</p>
+                          <p className="text-2xl font-black text-[#002b44] tracking-tighter font-yehuda">{wetsuit.label}</p>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex flex-col items-center gap-8 w-full sm:w-[220px] group">
                       <div className="relative h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
                         <div className="absolute inset-0 bg-orange-500/10 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />

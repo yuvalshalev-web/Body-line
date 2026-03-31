@@ -221,30 +221,22 @@ const SurfingSessionAttendance: React.FC = () => {
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0071a1]/5 border border-[#0071a1]/10 transition-all hover:bg-[#0071a1]/10" title="גובה גלים">
                           <Waves size={14} className="text-[#0071a1]" />
                           <span className="text-xs font-black text-[#00426a]/70">גובה גלים:</span>
-                          {(coastalWeather?.waveHeight !== undefined || siteConfig?.seaState?.waveHeight !== undefined) && (
-                            <span className="text-xs font-black text-[#0071a1]" dir="ltr">{coastalWeather?.waveHeight ?? siteConfig?.seaState?.waveHeight}m</span>
-                          )}
+                          <span className="text-xs font-black text-[#0071a1]" dir="ltr">TBC</span>
                         </div>
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0891b2]/5 border border-[#0891b2]/10 transition-all hover:bg-[#0891b2]/10" title="מהירות רוח">
                           <Wind size={14} className="text-[#0891b2]" />
                           <span className="text-xs font-black text-[#00426a]/70">מהירות רוח:</span>
-                          {(coastalWeather?.windSpeed !== undefined || siteConfig?.seaState?.windSpeed !== undefined) && (
-                            <span className="text-xs font-black text-[#0891b2]" dir="ltr">{coastalWeather?.windSpeed ?? siteConfig?.seaState?.windSpeed}kts</span>
-                          )}
+                          <span className="text-xs font-black text-[#0891b2]" dir="ltr">TBC</span>
                         </div>
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#4338ca]/5 border border-[#4338ca]/10 transition-all hover:bg-[#4338ca]/10" title="טמפ׳ מים">
                           <Thermometer size={14} className="text-[#4338ca]" />
                           <span className="text-xs font-black text-[#00426a]/70">טמפ׳ מים:</span>
-                          {(coastalWeather?.waterTemp !== undefined || siteConfig?.seaState?.waterTemp !== undefined) && (
-                            <span className="text-xs font-black text-[#4338ca]" dir="ltr">{coastalWeather?.waterTemp ?? siteConfig?.seaState?.waterTemp}°C</span>
-                          )}
+                          <span className="text-xs font-black text-[#4338ca]" dir="ltr">TBC</span>
                         </div>
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#b45309]/5 border border-[#b45309]/10 transition-all hover:bg-[#b45309]/10" title="אינדקס קרינה">
                           <Sun size={14} className="text-[#b45309]" />
                           <span className="text-xs font-black text-[#00426a]/70">אינדקס קרינה:</span>
-                          {(coastalWeather?.uvIndex !== undefined || siteConfig?.seaState?.uvIndex !== undefined) && (
-                            <span className="text-xs font-black text-[#b45309]" dir="ltr">{coastalWeather?.uvIndex ?? siteConfig?.seaState?.uvIndex} UV</span>
-                          )}
+                          <span className="text-xs font-black text-[#b45309]" dir="ltr">TBC</span>
                         </div>
                       </div>
                     </div>

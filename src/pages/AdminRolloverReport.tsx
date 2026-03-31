@@ -10,6 +10,7 @@ export const AdminRolloverReport: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<any[]>([]);
   const [timeLeft, setTimeLeft] = useState<string>('');
+  const [saveWeather, setSaveWeather] = useState<boolean>(true);
 
   useEffect(() => {
     console.log('AdminRolloverReport: activeSessionDate =', activeSessionDate);
@@ -84,7 +85,7 @@ export const AdminRolloverReport: React.FC = () => {
   const handleFinalize = async () => {
     setError(null);
     try {
-      await finalizeSession();
+      await finalizeSession(saveWeather);
     } catch (err: any) {
       console.error('Finalization error:', err);
       setError(err.message || 'אירעה שגיאה בלתי צפויה בתהליך הסגירה');
@@ -95,7 +96,19 @@ export const AdminRolloverReport: React.FC = () => {
     <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-black text-slate-800">דוח גלגול שבועי</h2>
-        <div className="flex gap-3">
+        <div className="flex flex-col items-end gap-3">
+          <div className="flex items-center gap-2">
+            <label htmlFor="saveWeather" className="text-sm font-bold text-slate-600 cursor-pointer">
+              שמור נתוני ים ומזג אוויר
+            </label>
+            <input
+              type="checkbox"
+              id="saveWeather"
+              checked={saveWeather}
+              onChange={(e) => setSaveWeather(e.target.checked)}
+              className="w-4 h-4 text-sky-600 bg-slate-100 border-slate-300 rounded focus:ring-sky-500 focus:ring-2 cursor-pointer"
+            />
+          </div>
           <button 
             onClick={handleFinalize}
             className="px-4 py-2 bg-sky-600 text-white rounded-lg font-bold hover:bg-sky-700 transition-colors flex items-center gap-2"
