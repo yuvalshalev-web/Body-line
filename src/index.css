@@ -1,17 +1,6 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Assistant:wght@200;300;400;500;600;700;800&family=Caveat:wght@400;700&family=Heebo:wght@100;300;400;500;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/earlyaccess/danayad.css');
-@import url('https://cdn.jsdelivr.net/gh/culmus/culmus@master/yehuda/yehuda.css');
+@import url('https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Caveat:wght@400;700&display=swap');
 @plugin "@tailwindcss/typography";
-
-/* Backup @font-face with a unique name */
-@font-face {
-  font-family: 'DanaYadBackup';
-  src: url('https://fonts.gstatic.com/ea/danayad/v3/DanaYadAlefAlef-Regular.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
 
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
@@ -48,7 +37,7 @@
 
   --font-yehuda: "Yehuda CLM", sans-serif;
   --font-miri: "Miriwin", sans-serif;
-  --font-dana-yad: "Dana Yad Alef Alef", "Amatic SC", "Caveat", cursive;
+  --font-dana-yad: "DanaYad", "Dana Yad", "Dana Yad Alef Alef", cursive;
   --font-assistant: "Assistant", sans-serif;
   --font-inter: "Inter", sans-serif;
   --font-heebo: "Heebo", sans-serif;
@@ -58,8 +47,8 @@
   /* --- Tangible Surfer UI: The Dark Anchor & Premium Glass Stack --- */
   .premium-glass {
     background: rgba(240, 248, 255, 0.1); /* Ocean 9 at 10% */
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-top: 1px solid rgba(255, 255, 255, 0.8); /* Beveled Edge: Light Catch */
     border-left: 1px solid rgba(255, 255, 255, 0.8);
     border-bottom: 1px solid rgba(0, 66, 106, 0.1); /* Beveled Edge: Physical Lip */
@@ -67,7 +56,6 @@
     box-shadow: 0 4px 12px rgba(49, 170, 193, 0.1), 0 8px 32px rgba(49, 170, 193, 0.05);
     position: relative;
     overflow: hidden;
-    will-change: transform, backdrop-filter;
     transform: translateZ(0);
   }
 
@@ -82,8 +70,8 @@
 
   .tangible-input {
     background: rgba(240, 248, 255, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-top: 1px solid rgba(255, 255, 255, 0.8);
     border-left: 1px solid rgba(255, 255, 255, 0.8);
     border-bottom: 1px solid rgba(0, 66, 106, 0.1);
@@ -91,7 +79,6 @@
     color: #00426a; /* Ocean 1 */
     font-weight: 700;
     transition: all 0.3s ease;
-    will-change: transform, backdrop-filter;
     transform: translateZ(0);
   }
 
@@ -201,22 +188,12 @@
   }
 }
 
-@layer base {
-  @font-face {
-    font-family: 'DanaYad';
-    src: url('https://fonts.gstatic.com/ea/danayad/v3/DanaYadAlefAlef-Regular.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-  }
-}
-
 @layer utilities {
   .font-miri {
     font-family: 'Miriwin', 'Miri', 'Caveat', cursive, sans-serif;
   }
   .font-dana-yad {
-    font-family: 'Dana Yad Alef Alef', 'DanaYad', 'DanaYadBackup', 'Amatic SC', cursive !important;
+    font-family: var(--font-dana-yad) !important;
   }
 }
 

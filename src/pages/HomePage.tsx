@@ -18,7 +18,9 @@ import {
   UserCircle,
   Hammer,
   ChevronRight,
-  MessageSquareQuote
+  MessageSquareQuote,
+  WifiOff,
+  AlertCircle
 } from 'lucide-react';
 import { CoastalDashboard } from '../components/CoastalDashboard';
 import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
@@ -32,10 +34,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { getForecastAnalysis } from '../services/geminiService';
 import Markdown from 'react-markdown';
 
-import { useRandomHeader } from '../hooks/useRandomHeader';
-const staticHeroImage = '';
-// import staticHeroImage from '../assets/headers/header_1.jpeg';
-
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M12 2c-2.5 4-3 9-2 14 1 5 2 6 2 6s1-1 2-6c1-5 .5-10-2-14Z" />
@@ -44,10 +42,10 @@ const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
 );
 
 const HomePage: React.FC = () => {
-  const headerImage = useRandomHeader();
   const { currentUser } = useAuth();
   const { 
-    members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats
+    members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats,
+    connectionError, retryConnection, isLoading: isDataLoading
   } = useData();
 
   const [heroImageError, setHeroImageError] = useState(false);
@@ -235,15 +233,49 @@ const HomePage: React.FC = () => {
 
   const brandColor = '#F1D179';
 
-  const heroBg = siteAssets?.staticHeroImage || '';
+  const heroBg = siteAssets?.staticHeroImage || 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?q=80&w=1920&auto=format&fit=crop';
+
+  useEffect(() => {
+    setHeroImageError(false);
+  }, [heroBg]);
 
   return (
     <div className="space-y-16 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
+      {/* Connection Status Banner */}
+      <AnimatePresence>
+        {connectionError && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-indigo-600 text-white p-4 rounded-2xl flex items-center justify-between shadow-lg">
+              <div className="flex items-center gap-3">
+                <WifiOff size={20} className="animate-pulse" />
+                <div>
+                  <p className="font-bold text-sm">בעיית חיבור למסד הנתונים</p>
+                  <p className="text-xs opacity-80">האפליקציה פועלת כרגע במצב לא מקוון. נתונים עשויים להיות חסרים.</p>
+                </div>
+              </div>
+              <button 
+                onClick={retryConnection}
+                disabled={isDataLoading}
+                className="px-4 py-2 bg-white text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-50 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isDataLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                {isDataLoading ? 'מתחבר...' : 'נסה שוב'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Hero & Attendees Group */}
       <div className="space-y-20 md:space-y-6">
         <section className="relative w-full min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
           <div className={`absolute inset-0 rounded-3xl overflow-hidden ${heroImageError ? 'luxury-bg' : ''}`}>
-            {!heroImageError && (
+            {!heroImageError && heroBg && (
               <img 
                 key={heroBg}
                 src={heroBg} 

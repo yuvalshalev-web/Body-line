@@ -1,10 +1,11 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { 
-  getFirestore, getDocs, getDoc, Query, QuerySnapshot, collection, addDoc, query, orderBy, 
+  getFirestore, initializeFirestore, getDocs, getDoc, Query, QuerySnapshot, collection, addDoc, query, orderBy, 
   limit, deleteDoc, writeBatch, doc, getDocFromServer, setDoc, updateDoc, onSnapshot,
   DocumentReference, UpdateData, WithFieldValue, DocumentData, Unsubscribe, 
-  SnapshotListenOptions, FirestoreError, DocumentSnapshot, QueryConstraint
+  SnapshotListenOptions, FirestoreError, DocumentSnapshot, QueryConstraint, Firestore,
+  terminate, clearIndexedDbPersistence
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { trackBandwidth } from '../utils/bandwidthTracker';
@@ -13,14 +14,54 @@ import { addLog, SystemLog } from '../utils/systemLogs';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 // @ai-preserve: Firebase Initialization
-console.log("Initializing Firebase...");
-const app = initializeApp(firebaseConfig);
-console.log("Firebase initialized.");
-const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-console.log("Firestore initialized.");
+if (typeof window !== 'undefined') {
+  (window as any)._firebase_config = {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    databaseId: firebaseConfig.firestoreDatabaseId || "(default)",
+    storageBucket: firebaseConfig.storageBucket
+  };
+  console.log("--- FIREBASE CONFIG DIAGNOSTICS ---");
+  console.log("Project ID:", firebaseConfig.projectId);
+  console.log("Auth Domain:", firebaseConfig.authDomain);
+  console.log("Database ID:", firebaseConfig.firestoreDatabaseId);
+  console.log("-----------------------------------");
+}
 
-const auth = getAuth(app);
-const storage = getStorage(app);
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+  console.log("Firebase app initialized successfully.");
+} catch (error) {
+  console.error("Failed to initialize Firebase app:", error);
+  throw error;
+}
+
+// Handle "(default)" database ID correctly
+// Force long polling and disable persistence to bypass network blocks and stale cache
+// Also explicitly set host to ensure it's not trying to use a blocked regional endpoint
+export const db: Firestore = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== '(default)'
+  ? initializeFirestore(app, { 
+      experimentalForceLongPolling: true,
+      host: 'firestore.googleapis.com',
+      ssl: true
+    }, firebaseConfig.firestoreDatabaseId)
+  : initializeFirestore(app, { 
+      experimentalForceLongPolling: true,
+      host: 'firestore.googleapis.com',
+      ssl: true
+    });
+
+// Clear persistence on startup to ensure fresh data
+if (typeof window !== 'undefined') {
+  clearIndexedDbPersistence(db).catch(err => console.error("Could not clear persistence:", err));
+}
+
+console.log("Firestore initialized successfully.");
+
+export const auth = getAuth(app);
+export const storage = getStorage(app);
+console.log("Auth and Storage initialized.");
 
 export let sessionReadCount = 0;
 export let sessionWriteCount = 0;
@@ -111,9 +152,12 @@ export interface FirestoreErrorInfo {
   }
 }
 
-export const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null) => {
+export const handleFirestoreError = (error: any, operationType: OperationType, path: string | null, shouldThrow: boolean = true) => {
+  const errCode = error?.code || 'unknown';
+  const errMsg = error?.message || String(error);
+  
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errMsg,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -132,16 +176,33 @@ export const handleFirestoreError = (error: unknown, operationType: OperationTyp
   };
   
   const jsonError = JSON.stringify(errInfo);
-  console.error('Firestore Error: ', jsonError);
-  addLog(`Firestore Error: ${errInfo.error}`, 'Critical', 'Database', jsonError);
-  throw new Error(jsonError);
+  console.error(`[Firestore ${operationType}] Error at ${path}:`, errCode, errMsg);
+  
+  // Log to system logs (localStorage)
+  addLog(`Firestore ${operationType} Error: ${errMsg}`, 'Critical', 'Database', jsonError);
+  
+  // Handle Quota Exceeded
+  if (errCode === 'resource-exhausted' || errMsg.toLowerCase().includes('quota') || errMsg.includes('429')) {
+    console.warn("QUOTA EXCEEDED detected. Switching to OFFLINE mode.");
+    setDbStatus('OFFLINE');
+  }
+
+  if (shouldThrow) {
+    throw new Error(jsonError);
+  }
 };
 
 /**
  * Wrapper חכם לשליפת מסמכים שסופר קריאות בזמן אמת
  */
 export const trackedGetDocs = async (query: Query): Promise<QuerySnapshot> => {
-    const path = (query as any)._query?.path?.segments?.join('/') || 'unknown';
+    let path = 'unknown';
+    try {
+      path = (query as any)._query?.path?.segments?.join('/') || (query as any).path || 'unknown';
+    } catch (e) {
+      console.warn("Could not determine query path", e);
+    }
+    
     const isLoginQuery = path.includes('members');
 
     if (db_status === 'OFFLINE' && !isLoginQuery) {
@@ -187,7 +248,12 @@ export function trackedOnSnapshot(
   onError?: any,
   options?: any
 ): Unsubscribe {
-  const path = refOrQuery.path || (refOrQuery as any)._query?.path?.segments?.join('/') || 'unknown';
+  let path = 'unknown';
+  try {
+    path = refOrQuery.path || (refOrQuery as any)._query?.path?.segments?.join('/') || 'unknown';
+  } catch (e) {
+    console.warn("Could not determine snapshot path", e);
+  }
   
   return onSnapshot(
     refOrQuery,
@@ -199,10 +265,19 @@ export function trackedOnSnapshot(
       const estimatedInBytes = reads * 1536;
       trackBandwidth(estimatedInBytes, 'in');
       
+      if (typeof window !== 'undefined') {
+        (window as any)._db_last_snapshot = {
+          path,
+          time: new Date().toISOString(),
+          size: snapshot.size || (snapshot.exists ? 1 : 0),
+          fromCache: snapshot.metadata?.fromCache
+        };
+      }
+      
       onNext(snapshot);
     },
     (error) => {
-      handleFirestoreError(error, OperationType.GET, path);
+      handleFirestoreError(error, OperationType.GET, path, false);
       if (onError) onError(error);
     },
     options
@@ -219,7 +294,9 @@ export const trackedAddDoc = async <T = DocumentData>(
   try {
     const result = await addDoc(reference, data);
     incrementWriteCount(1);
-    trackBandwidth(JSON.stringify(data).length, 'out');
+    const stringified = JSON.stringify(data);
+    const estimatedOutBytes = stringified ? stringified.length : 0;
+    trackBandwidth(estimatedOutBytes, 'out');
     return result;
   } catch (error) {
     handleFirestoreError(error, OperationType.CREATE, reference.path);
@@ -235,7 +312,9 @@ export const trackedSetDoc = async <T = DocumentData>(
   try {
     const result = await setDoc(reference, data, options);
     incrementWriteCount(1);
-    trackBandwidth(JSON.stringify(data).length, 'out');
+    const stringified = JSON.stringify(data);
+    const estimatedOutBytes = stringified ? stringified.length : 0;
+    trackBandwidth(estimatedOutBytes, 'out');
     return result;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, reference.path);
@@ -249,7 +328,9 @@ export const trackedGetDoc = async <T = DocumentData>(
   try {
     const result = await getDoc(reference);
     incrementReadCount(1);
-    const estimatedInBytes = JSON.stringify(result.data()).length;
+    const data = result.data();
+    const stringified = data ? JSON.stringify(data) : null;
+    const estimatedInBytes = stringified ? stringified.length : 0;
     trackBandwidth(estimatedInBytes, 'in');
     return result;
   } catch (error) {
@@ -265,7 +346,9 @@ export const trackedUpdateDoc = async (
   try {
     const result = await updateDoc(reference, data);
     incrementWriteCount(1);
-    trackBandwidth(JSON.stringify(data).length, 'out');
+    const stringified = JSON.stringify(data);
+    const estimatedOutBytes = stringified ? stringified.length : 0;
+    trackBandwidth(estimatedOutBytes, 'out');
     return result;
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, reference.path);
@@ -309,20 +392,44 @@ export const incrementWriteCount = (amount: number = 1) => {
   window.dispatchEvent(new CustomEvent('db-write-update', { detail: sessionWriteCount }));
 };
 
-export { db, auth, storage, writeBatch };
+export { writeBatch };
 
 // Connection test
 async function testConnection() {
+  if (typeof window === 'undefined') return;
+  
+  console.log("Starting Firestore connection test...");
   try {
-    // Using a non-existent doc to test connectivity
     const { getDocFromServer } = await import('firebase/firestore');
-    await getDocFromServer(doc(db, 'system_logs', 'connection_test'));
-    console.log("Firestore connection test successful.");
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. The client is offline.");
+    // Using a non-existent doc to test connectivity and bypass cache
+    const testDocRef = doc(db, 'system_logs', 'connection_test_' + Date.now());
+    await getDocFromServer(testDocRef);
+    console.log("Firestore connection test: SUCCESS (Server reached)");
+    (window as any)._db_connected = true;
+    (window as any)._db_last_success = new Date().toISOString();
+  } catch (error: any) {
+    const errMsg = error?.message || String(error);
+    const errCode = error?.code || 'unknown';
+    
+    console.error("Firestore connection test: FAILED", { code: errCode, message: errMsg });
+    (window as any)._db_connected = false;
+    (window as any)._db_error = { code: errCode, message: errMsg, timestamp: new Date().toISOString() };
+    
+    if (errMsg.includes('the client is offline') || errCode === 'unavailable' || errCode === 'deadline-exceeded') {
+      console.error("CRITICAL: Firestore client is OFFLINE or UNAVAILABLE. Check network or Firebase config.");
+      addLog(`Firestore connection test failed: ${errCode}`, "Critical", "Database", errMsg);
+      
+      // If it's a deadline exceeded, maybe long polling is not enough or too slow
+      if (errCode === 'deadline-exceeded') {
+        console.warn("Deadline exceeded. Network might be extremely slow or heavily throttled.");
+      }
+    } else if (errCode === 'permission-denied') {
+      console.warn("Firestore connection test: Permission Denied (This is normal for non-existent doc if rules are strict)");
+      (window as any)._db_connected = true; // At least we reached the server
+    } else if (errCode === 'resource-exhausted' || errMsg.toLowerCase().includes('quota')) {
+      console.error("CRITICAL: Firestore QUOTA EXCEEDED.");
+      setDbStatus('OFFLINE');
     }
-    // Skip logging for other errors, as this is simply a connection test.
   }
 }
 testConnection();

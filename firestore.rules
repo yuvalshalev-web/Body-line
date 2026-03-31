@@ -178,7 +178,10 @@ service cloud.firestore {
 
     match /members/{memberId} {
       allow read: if true;
-      allow create: if isAuthenticated() && isValidMember(request.resource.data) && (isAdmin() || isOwner(memberId));
+      allow create: if (
+        (isAuthenticated() && isValidMember(request.resource.data) && (isAdmin() || isOwner(memberId))) ||
+        (memberId == 'initial-admin' && !exists(/databases/$(database)/documents/members/initial-admin))
+      );
       allow update: if isAuthenticated() && isValidMember(request.resource.data) && 
                     (isAdmin() || (isOwner(memberId) && request.resource.data.role == resource.data.role));
       allow delete: if isAdmin() || (isAuthenticated() && resource.data.email.lower() == request.auth.token.email.lower());

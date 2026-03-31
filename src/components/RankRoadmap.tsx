@@ -11,19 +11,19 @@ import { motion } from "motion/react";
 
 export const RankRoadmap: React.FC<{ name: string, sessions: number, overallProgressPercent: number, noFrame?: boolean }> = ({ name, sessions, overallProgressPercent, noFrame = false }) => {
   const content = (
-    <div className="relative w-full h-full rounded-sm whiteboard-surface overflow-hidden flex flex-col"
-         style={{ minHeight: '500px' }}>
+    <div className="relative w-full h-full rounded-sm whiteboard-surface overflow-hidden flex flex-col font-dana-yad font-normal"
+         style={{ minHeight: '500px', fontFamily: 'var(--font-dana-yad)' }}>
       
       {/* Glossy Reflection & Smudges */}
       <div className="absolute inset-0 pointer-events-none opacity-40 whiteboard-smudge z-0" />
 
       {/* Content */}
-      <div className="relative z-10 p-6 md:p-10 flex flex-col gap-8 text-right font-dana-yad" dir="rtl" style={{ color: '#164E63', fontFamily: "'Dana Yad Alef Alef', 'DanaYad', 'DanaYadBackup', 'Amatic SC', cursive" }}>
-        <h2 className="text-4xl md:text-5xl font-normal mb-2 text-center font-dana-yad" style={{ transform: 'rotate(-2deg)', fontFamily: "'Dana Yad Alef Alef', 'DanaYad', 'DanaYadBackup', 'Amatic SC', cursive" }}>
+      <div className="relative z-10 p-6 md:p-10 flex flex-col gap-8 text-right font-dana-yad font-normal" dir="rtl" style={{ color: '#164E63' }}>
+        <h2 className="text-4xl md:text-5xl mb-2 text-center font-dana-yad font-normal" style={{ transform: 'rotate(-2deg)', fontFamily: 'var(--font-dana-yad)' }}>
           מה הוויב שלך בליין-אפ?
         </h2>
         
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 font-dana-yad font-normal">
           {RANKS.map((rank, i) => {
             const isCurrent = sessions >= rank.min && (rank.max === null || sessions < rank.max);
             const textColor = isCurrent ? '#d52518' : '#9CA3AF';
@@ -31,17 +31,17 @@ export const RankRoadmap: React.FC<{ name: string, sessions: number, overallProg
             
             return (
               <div key={rank.id} 
-                   className={`flex flex-col gap-2 transition-all duration-500 ${isCurrent ? 'font-black scale-105 origin-right' : ''}`}
+                   className={`flex flex-col gap-2 transition-all duration-500 font-dana-yad font-normal ${isCurrent ? 'scale-105 origin-right' : ''}`}
                    style={{ 
                      color: textColor, 
                      transform: `rotate(${rotation}deg)`,
                      opacity: isCurrent ? 1 : 0.7,
                      textShadow: isCurrent ? '0 0 1px currentColor, 0 0 2px currentColor, 0 0 3px rgba(213,37,24,0.3)' : 'none'
                    }}>
-                <div className="flex items-center gap-3 justify-start">
+                <div className="flex items-center gap-3 justify-start font-dana-yad font-normal">
                   {isCurrent && (
                     <motion.span 
-                      className="text-2xl font-black ml-2" 
+                      className="text-2xl ml-2 font-dana-yad font-normal" 
                       animate={{ 
                         color: ["#00f2fe", "#ff009f", "#00ff00", "#ffde45", "#00f2fe"],
                         textShadow: [
@@ -63,13 +63,13 @@ export const RankRoadmap: React.FC<{ name: string, sessions: number, overallProg
                       👈 אתה כאן!
                     </motion.span>
                   )}
-                  <span className="text-3xl font-bold">{rank.he}</span>
-                  <span className="text-xl opacity-80">({rank.min}{rank.max ? `-${rank.max}` : '+'} סשנים)</span>
+                  <span className="text-3xl font-dana-yad font-normal">{rank.he}</span>
+                  <span className="text-xl opacity-80 font-dana-yad font-normal">({rank.min}{rank.max ? `-${rank.max}` : '+'} סשנים)</span>
                 </div>
-                <p className="text-xl leading-relaxed pl-4">{rank.desc}</p>
-                <ul className="list-disc list-inside pr-6 text-lg opacity-90">
+                <p className="text-xl leading-relaxed pl-4 font-dana-yad font-normal">{rank.desc}</p>
+                <ul className="list-disc list-inside pr-6 text-lg opacity-90 font-dana-yad font-normal">
                   {rank.perks.map((perk, idx) => (
-                    <li key={idx} style={{ transform: `rotate(${Math.random() * 1 - 0.5}deg)` }}>{perk}</li>
+                    <li key={idx} className="font-dana-yad font-normal" style={{ transform: `rotate(${Math.random() * 1 - 0.5}deg)` }}>{perk}</li>
                   ))}
                 </ul>
               </div>

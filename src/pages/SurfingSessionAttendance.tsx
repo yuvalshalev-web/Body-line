@@ -45,11 +45,13 @@ const SurfingSessionAttendance: React.FC = () => {
 
   // Sort history by date descending
   const sortedHistory = useMemo(() => {
-    return [...weeklyHistory].sort((a, b) => {
-      const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
-      const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
-      return dateB.getTime() - dateA.getTime();
-    });
+    return [...weeklyHistory]
+      .filter(session => !session.isEvent)
+      .sort((a, b) => {
+        const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+        const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+        return dateB.getTime() - dateA.getTime();
+      });
   }, [weeklyHistory]);
 
   const activeMembers = useMemo(() => members.filter(m => m.isActive !== false), [members]);

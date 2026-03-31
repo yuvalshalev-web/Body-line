@@ -3,7 +3,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
-import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp, Skull, TriangleAlert, HeartPulse, Zap, Terminal, Filter, Search as SearchIcon, Clock } from 'lucide-react';
+import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp, Skull, TriangleAlert, HeartPulse, Zap, Terminal, Filter, Search as SearchIcon, Clock, Wifi, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import VercelStatusWidget from './admin/VercelStatusWidget';
 import GitHubCommandCenter from './admin/GitHubCommandCenter';
@@ -549,6 +549,91 @@ const TechnicalLogs: React.FC = () => {
   );
 };
 
+/**
+ * Repair & Recovery Component
+ * Tools for fixing database and connection issues.
+ */
+const RepairRecovery: React.FC = () => {
+  const { retryConnection, isLoading, seedInitialAssets, seedInitialAdmin } = useData();
+  const [isRepairing, setIsRepairing] = useState(false);
+
+  const handleClearCache = async () => {
+    if (window.confirm('האם אתה בטוח שברצונך לנקות את המטמון המקומי? המערכת תבצע טעינה מחדש.')) {
+      localStorage.clear();
+      sessionStorage.clear();
+      // Clear IndexedDB (Firebase persistence)
+      const dbs = await window.indexedDB.databases();
+      dbs.forEach(db => {
+        if (db.name) window.indexedDB.deleteDatabase(db.name);
+      });
+      window.location.reload();
+    }
+  };
+
+  const handleForceSeed = async () => {
+    if (window.confirm('האם אתה בטוח שברצונך להריץ Seed לנתוני המערכת? פעולה זו תוודא שכל נכסי האתר והרשאות האדמין קיימים.')) {
+      setIsRepairing(true);
+      try {
+        await seedInitialAssets();
+        await seedInitialAdmin();
+        alert('ה-Seed הושלם בהצלחה!');
+      } catch (err) {
+        console.error(err);
+        alert('שגיאה במהלך ה-Seed');
+      } finally {
+        setIsRepairing(false);
+      }
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-3xl p-8 relative overflow-hidden transition-all duration-500 border border-slate-200 shadow-sm hover:shadow-md">
+      <div className="relative z-10 flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-100">
+            <RefreshCw size={28} className={isRepairing ? 'animate-spin' : ''} />
+          </div>
+          <div>
+            <h3 className="text-2xl font-black text-slate-800 tracking-tight">תיקון ושחזור</h3>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">REPAIR & RECOVERY TOOLS</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <button 
+          onClick={retryConnection}
+          disabled={isLoading}
+          className="flex flex-col items-center gap-3 p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-indigo-50 hover:border-indigo-200 transition-all group"
+        >
+          <Wifi size={24} className="text-indigo-500 group-hover:scale-110 transition-transform" />
+          <span className="text-xs font-black text-slate-700 uppercase tracking-widest">חיבור מחדש</span>
+          <p className="text-[9px] text-slate-400 font-bold text-center">ניסיון התחברות יזום ל-Firestore</p>
+        </button>
+
+        <button 
+          onClick={handleClearCache}
+          className="flex flex-col items-center gap-3 p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-amber-50 hover:border-amber-200 transition-all group"
+        >
+          <Trash2 size={24} className="text-amber-500 group-hover:scale-110 transition-transform" />
+          <span className="text-xs font-black text-slate-700 uppercase tracking-widest">ניקוי מטמון</span>
+          <p className="text-[9px] text-slate-400 font-bold text-center">מחיקת נתונים מקומיים וטעינה מחדש</p>
+        </button>
+
+        <button 
+          onClick={handleForceSeed}
+          disabled={isRepairing}
+          className="flex flex-col items-center gap-3 p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-emerald-50 hover:border-emerald-200 transition-all group"
+        >
+          <Database size={24} className="text-emerald-500 group-hover:scale-110 transition-transform" />
+          <span className="text-xs font-black text-slate-700 uppercase tracking-widest">Force Seed</span>
+          <p className="text-[9px] text-slate-400 font-bold text-center">שחזור נכסי מערכת והרשאות בסיס</p>
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // --- End New Modular Components ---
 
 const Gauge = ({ value, label, color, sublabel }: { value: number, label: string, color: string, sublabel?: string }) => (
@@ -923,8 +1008,12 @@ const SystemMonitor: React.FC = () => {
       )}
 
       {/* New Enhanced Analytics Layer */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <DataHealthScore dbSize={dbSize} storageSize={storageSize} />
+        <RepairRecovery />
+      </div>
+
+      <div className="mb-12">
         <QuotaMonitor />
       </div>
 

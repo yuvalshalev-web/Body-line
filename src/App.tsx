@@ -1,5 +1,6 @@
 import React, { useState, useCallback, lazy, Suspense, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { useAuth } from './contexts/AuthContext';
 import { useData } from './contexts/DataContext';
 import { 
@@ -39,13 +40,41 @@ const PageLoader = () => (
   </div>
 );
 
+import { DatabaseStatus } from './components/DatabaseStatus';
+
 const App: React.FC = () => {
   const { currentUser, logout, loading } = useAuth();
-  const { siteConfig, siteAssets } = useData();
+  const { siteConfig, siteAssets, isLoading: dataLoading } = useData();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const mainRef = useRef<HTMLElement>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  // Ensure both auth and initial data are loaded before showing the app
+  React.useEffect(() => {
+    if (!loading && !dataLoading) {
+      // Wait for fonts to be ready to prevent layout shift and distorted look
+      if ('fonts' in document) {
+        document.fonts.ready.then(() => {
+          const timer = setTimeout(() => {
+            setIsReady(true);
+            console.log("App: Ready to render (fonts ready). Auth loading:", loading, "Data loading:", dataLoading);
+          }, 150);
+          return () => clearTimeout(timer);
+        }).catch(err => {
+          console.warn("App: Font loading error, proceeding anyway:", err);
+          setIsReady(true);
+        });
+      } else {
+        // Fallback for browsers that don't support document.fonts
+        const timer = setTimeout(() => {
+          setIsReady(true);
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [loading, dataLoading]);
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -91,28 +120,36 @@ const App: React.FC = () => {
       const generateFontFace = (family: string, fontData: any, weight: string = 'normal') => {
         if (!fontData) return '';
         
-        // AdminAssets stores fonts as an array of {url, name, format}
-        const fonts = Array.isArray(fontData) ? fontData : [fontData];
+        // Normalize fontData to an array of objects
+        const fonts = (Array.isArray(fontData) ? fontData : [fontData])
+          .map(f => {
+            if (typeof f === 'string') return { url: f, format: 'woff' };
+            if (f && typeof f === 'object' && f.url) return f;
+            return null;
+          })
+          .filter(Boolean);
+
         if (fonts.length === 0) return '';
         
-        // We'll take the first valid font in the array (usually the most recent or only one)
-        const font = fonts[fonts.length - 1]; 
-        const url = typeof font === 'string' ? font : font.url;
-        if (!url) return '';
-        
-        // Detect format from URL extension if not provided
-        let format = typeof font === 'object' && font.format ? font.format : 'woff';
-        if (url.toLowerCase().includes('.ttf')) format = 'truetype';
-        if (url.toLowerCase().includes('.otf')) format = 'opentype';
-        if (url.toLowerCase().includes('.woff2')) format = 'woff2';
+        const sources = fonts.map(f => {
+          const url = f.url;
+          let format = f.format || 'woff';
+          const lowerUrl = url.toLowerCase();
+          if (lowerUrl.includes('.ttf')) format = 'truetype';
+          else if (lowerUrl.includes('.otf')) format = 'opentype';
+          else if (lowerUrl.includes('.woff2')) format = 'woff2';
+          else if (lowerUrl.includes('.eot')) format = 'embedded-opentype';
+          
+          return `url("${url}") format("${format}")`;
+        }).join(', ');
 
         return `
           @font-face {
-            font-family: '${family}';
-            src: url('${url}') format('${format}');
+            font-family: "${family}";
+            src: ${sources};
             font-weight: ${weight};
             font-style: normal;
-            font-display: swap;
+            font-display: block;
           }
         `;
       };
@@ -122,9 +159,25 @@ const App: React.FC = () => {
       css += generateFontFace('Yehuda CLM', siteAssets.fonts.yehudaLight, '300');
       css += generateFontFace('Yehuda CLM', siteAssets.fonts.yehudaBold, '700');
       css += generateFontFace('Miriwin', siteAssets.fonts.miriwin);
-      css += generateFontFace('Dana Yad Alef Alef', siteAssets.fonts.danaYad);
       
-      styleEl.innerHTML = css;
+      // Dana Yad - Define for multiple weights to ensure it's used regardless of Tailwind classes
+      const danaYadData = siteAssets.fonts.danaYad;
+      if (danaYadData) {
+        // We use 'DanaYad' as the primary name, but also support common variations
+        const families = ['DanaYad', 'Dana Yad', 'Dana Yad Alef Alef'];
+        const weights = ['normal', '400', '700', 'bold', '900'];
+        
+        families.forEach(family => {
+          weights.forEach(weight => {
+            css += generateFontFace(family, danaYadData, weight);
+          });
+        });
+      }
+      
+      if (css) {
+        console.log('Injecting custom fonts CSS');
+        styleEl.textContent = css;
+      }
     }
   }, [siteAssets?.fonts]);
 
@@ -173,16 +226,19 @@ const App: React.FC = () => {
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  if (loading) {
+  if (loading || dataLoading || !isReady) {
     return <PageLoader />;
   }
 
   if (!currentUser) {
     return (
       <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="*" element={<LoginPage />} />
-        </Routes>
+        <div className="min-h-screen relative" dir="rtl">
+          <Routes>
+            <Route path="*" element={<LoginPage />} />
+          </Routes>
+          <DatabaseStatus />
+        </div>
       </Suspense>
     );
   }
@@ -205,23 +261,18 @@ const App: React.FC = () => {
       />
 
       {/* Edge Trigger for Mobile Swipe */}
-      <div 
-        className="fixed right-0 top-0 bottom-0 w-5 z-[9999] lg:hidden"
-        onMouseEnter={() => setIsDrawerOpen(true)}
-        onClick={() => setIsDrawerOpen(true)}
-      />
-
-      {/* Desktop Hover Trigger */}
-      <div 
-        className="fixed right-0 top-1/2 -translate-y-1/2 w-20 h-[400px] z-[9998] hidden lg:block"
-        onMouseEnter={() => setIsDrawerOpen(true)}
-      />
 
       {/* Main Content Area */}
       <FloatingMenu onLogout={handleLogout} scrollRef={mainRef} onOpenDrawer={() => setIsDrawerOpen(true)} />
-      <main 
+      <motion.main 
         ref={mainRef}
-        className={`flex-1 overflow-y-auto pb-20 relative z-10 ${
+        animate={{
+          scale: isDrawerOpen ? 0.95 : 1,
+          x: isDrawerOpen ? -20 : 0,
+          borderRadius: isDrawerOpen ? '32px' : '0px',
+        }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className={`flex-1 overflow-y-auto pb-20 relative z-10 origin-right shadow-[0_50px_100px_rgba(0,0,0,0.3)] ${
           ['/', '/events', '/gallery', '/directory', '/posts', '/admin'].includes(location.pathname) ? 'luxury-bg' : ''
         }`}
       >
@@ -253,10 +304,28 @@ const App: React.FC = () => {
             </Routes>
           </Suspense>
         </ErrorBoundary>
-      </main>
+      </motion.main>
       
       {/* PWA Install Banner */}
       <PWAInstallBanner />
+      
+      {/* Database Status Alert */}
+      <DatabaseStatus />
+
+      {/* Floating Diagnostics Button */}
+      <button
+        onClick={() => {
+          console.log("--- FIREBASE DIAGNOSTICS (APP) ---");
+          console.log("Config:", (window as any)._firebase_config);
+          console.log("Connected:", (window as any)._db_connected);
+          console.log("Last Error:", (window as any)._db_error);
+          console.log("Current User:", currentUser?.email);
+          alert("Diagnostics logged to console (F12)");
+        }}
+        className="fixed bottom-4 left-4 z-[9999] bg-black/50 text-white px-3 py-1.5 rounded-full text-xs font-mono hover:bg-black/70 transition-colors backdrop-blur-sm"
+      >
+        Diag
+      </button>
     </div>
   );
 };

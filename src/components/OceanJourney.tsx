@@ -159,10 +159,11 @@ const MilestoneNote = ({ milestone, index, isUnlocked, compact, style }: {
       <div 
         className={`
           relative flex flex-col items-center justify-center text-center p-4 transition-all duration-500
-          opacity-100 min-h-[240px]
+          opacity-100 min-h-[240px] font-dana-yad
         `}
         style={{
           backgroundColor: style.bg,
+          fontFamily: 'var(--font-dana-yad)',
           backgroundImage: `
             linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 35%, rgba(0,0,0,0.05) 100%),
             url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.06'/%3E%3C/svg%3E")
@@ -285,12 +286,12 @@ const MilestoneNote = ({ milestone, index, isUnlocked, compact, style }: {
           );
         })()}
 
-        <h4 className="text-base font-black text-slate-800 mb-1">
+        <h4 className="text-base font-normal text-slate-800 mb-1 font-dana-yad">
             {milestone.name}
         </h4>
         
         {!compact && (
-            <p className={`text-xs font-bold leading-tight text-slate-700`}>
+            <p className={`text-xs font-normal leading-tight text-slate-700 font-dana-yad`}>
             {milestone.desc}
             </p>
         )}
@@ -440,7 +441,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
         <div className={`flex ${compact ? 'flex-col items-center gap-4 mb-4' : 'flex-col lg:flex-row items-center justify-center gap-8 mb-16'}`}>
           {/* Main Title Container */}
           <div 
-            className={`text-center relative ${compact ? 'p-3 w-64 translate-x-12 rotate-[3deg] z-10' : 'p-4 md:p-6 w-full max-w-xl rotate-[1deg]'} transform`}
+            className={`text-center relative ${compact ? 'p-3 w-64 translate-x-12 rotate-[3deg] z-10' : 'p-4 md:p-6 w-full max-w-xl rotate-[1deg]'} transform font-dana-yad`}
             style={{
               backgroundColor: '#fdfdfd',
               backgroundImage: `
@@ -460,7 +461,10 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
               />
             </div>
 
-            <h2 className={`${compact ? 'text-lg md:text-xl mb-3 mt-2' : 'text-3xl md:text-4xl mb-6 mt-2'} font-black text-[#00426a] tracking-tighter`}>
+            <h2 
+              className={`${compact ? 'text-lg md:text-xl mb-3 mt-2' : 'text-3xl md:text-4xl mb-6 mt-2'} font-normal text-[#00426a] tracking-tighter font-dana-yad`}
+              style={{ fontFamily: 'var(--font-dana-yad)' }}
+            >
               איזו חיה ימית אתה?
             </h2>
             
@@ -497,7 +501,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
             
             {/* Paper */}
             <div 
-              className={`relative ${compact ? 'p-5 pl-8 min-h-[200px]' : 'p-8 pl-12 min-h-[320px]'}`}
+              className={`relative ${compact ? 'p-5 pl-8 min-h-[200px]' : 'p-8 pl-12 min-h-[320px]'} font-dana-yad`}
               style={{
                 backgroundColor: '#f5efe6',
                 backgroundImage: `repeating-linear-gradient(transparent, transparent ${compact ? '23px' : '31px'}, #d1c8b8 ${compact ? '23px' : '31px'}, #d1c8b8 ${compact ? '24px' : '32px'})`,
@@ -510,8 +514,8 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                 WebkitMaskRepeat: 'repeat-y',
               }}
             >
-              <h4 style={{ fontFamily: "'Dana Yad Alef Alef', cursive" }} className={`${compact ? 'text-2xl mb-2' : 'text-3xl mb-4'} font-black text-slate-800 text-center mt-2`}>איך מתקדמים במסע?</h4>
-              <ul style={{ fontFamily: "'Dana Yad Alef Alef', cursive", lineHeight: compact ? '24px' : '32px' }} className={`space-y-0 ${compact ? 'text-lg' : 'text-2xl'} font-bold text-slate-800 text-right`}>
+              <h4 className={`${compact ? 'text-2xl mb-2' : 'text-3xl mb-4'} font-normal text-slate-800 text-center mt-2 font-dana-yad`}>איך מתקדמים במסע?</h4>
+              <ul style={{ lineHeight: compact ? '24px' : '32px' }} className={`space-y-0 ${compact ? 'text-lg' : 'text-2xl'} font-normal text-slate-800 text-right font-dana-yad`}>
                 <li><strong className="text-amber-600">כוכב ים:</strong> מוענק לכל חבר חדש.</li>
                 <li><strong className="text-blue-600">פינגווין:</strong> התמדה באימוני חורף.</li>
                 <li><strong className="text-orange-600">מנטה ריי:</strong> רצף אימונים בקיץ.</li>

@@ -26,6 +26,20 @@ import { useAuth } from './AuthContext';
 import { useModal } from './ModalContext';
 import { getNextSessionDate } from '../services/rolloverService';
 
+interface SiteAssets {
+  headers: string[];
+  uiImages: string[];
+  fonts: {
+    [key: string]: any[];
+  };
+  staticHeroImage: string;
+  loginBg: string;
+  surfboardModels: {
+    [key: string]: string;
+  };
+  [key: string]: any;
+}
+
 interface DataContextType {
   members: Member[];
   joinRequests: JoinRequest[];
@@ -84,6 +98,8 @@ interface DataContextType {
   activeSessionDate: string;
   isLoading: boolean;
   hasQuotaError: boolean;
+  connectionError: string | null;
+  retryConnection: () => void;
   dbStatus: 'ONLINE' | 'OFFLINE';
   toggleDbStatus: () => void;
   updateMember: (member: Member) => Promise<void>;
@@ -143,7 +159,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
   const [performanceScores, setPerformanceScores] = useState<PerformanceScore[]>([]);
   const [weeklyHistory, setWeeklyHistory] = useState<any[]>([]);
-  const [siteAssets, setSiteAssets] = useState<any>({});
+  const [siteAssets, setSiteAssets] = useState<SiteAssets>({
+    headers: [],
+    uiImages: [],
+    fonts: {
+      yehudaLight: [],
+      yehudaBold: [],
+      miriwin: [],
+      danaYad: []
+    },
+    staticHeroImage: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?q=80&w=1920&auto=format&fit=crop',
+    loginBg: 'https://images.unsplash.com/photo-1505972186483-70ff335e0d78?q=80&w=1920&auto=format&fit=crop',
+    surfboardModels: {}
+  });
   const [siteConfig, setSiteConfig] = useState<{ 
     navPosition: 'bottom' | 'top',
     home_break?: any,
@@ -186,6 +214,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [activeSessionDate, setActiveSessionDate] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [hasQuotaError, setHasQuotaError] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [dbStatus, setDbStatusState] = useState<'ONLINE' | 'OFFLINE'>(() => {
     const saved = localStorage.getItem('kill_switch_active');
     return saved === 'true' ? 'OFFLINE' : 'ONLINE';
@@ -234,6 +264,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (error.code === 'resource-exhausted' || error.message?.includes('429') || error.message?.includes('quota')) {
       setHasQuotaError(true);
       showAlert("שגיאת מכסה (Quota Exceeded). המערכת עברה למצב לא מקוון זמנית.", "שגיאת מערכת");
+    } else if (error.code === 'unavailable' || error.code === 'deadline-exceeded' || error.message?.includes('client is offline')) {
+      setConnectionError(error.code || 'offline');
     }
 
     throw new Error(JSON.stringify(errInfo));
@@ -369,37 +401,72 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (dbStatus === 'OFFLINE') return;
     const db = getDb();
 
-    const unsubSeaStats = onSnapshot(doc(db, 'seaConditionsStats', 'current'), (doc) => {
-      if (doc.exists()) setSeaStats(doc.data());
-    }, (error) => handleFirestoreError(error, OperationType.GET, 'seaConditionsStats/current'));
+    let configLoaded = false;
+    let assetsLoaded = false;
+    const checkPublicDataReady = () => {
+      if (!firebaseUser?.uid && configLoaded && assetsLoaded) {
+        setIsLoading(false);
+      }
+    };
 
-    const unsubAssets = onSnapshot(doc(db, 'site_data', 'assets'), (snapshot) => {
+    const unsubSeaStats = trackedOnSnapshot(doc(db, 'seaConditionsStats', 'current'), (doc) => {
+      if (doc.exists()) setSeaStats(doc.data());
+    });
+
+    const unsubAssets = trackedOnSnapshot(doc(db, 'site_data', 'assets'), (snapshot) => {
       if (snapshot.exists()) {
-        const data = snapshot.data();
-        console.log('Site assets updated from Firestore:', data);
-        setSiteAssets(data);
+        const data = snapshot.data() as SiteAssets;
+        // Ensure default structure exists even if document is partially populated
+        const sanitizedData: SiteAssets = {
+          ...data,
+          headers: data.headers || [],
+          uiImages: data.uiImages || [],
+          fonts: data.fonts || {
+            yehudaLight: [],
+            yehudaBold: [],
+            miriwin: [],
+            danaYad: []
+          },
+          surfboardModels: data.surfboardModels || {}
+        };
+        console.log('Site assets updated from Firestore:', sanitizedData);
+        setSiteAssets(sanitizedData);
       } else {
         // Seed initial assets if they don't exist
         console.log('Site assets do not exist, seeding...');
         seedInitialAssets();
       }
-    }, (error) => handleFirestoreError(error, OperationType.GET, 'site_data/assets'));
+      assetsLoaded = true;
+      checkPublicDataReady();
+    });
 
-    const unsubConfig = onSnapshot(doc(db, 'site_data', 'config'), (doc) => {
-      if (doc.exists()) setSiteConfig(doc.data() as any);
-    }, (error) => handleFirestoreError(error, OperationType.GET, 'site_data/config'));
+    const unsubConfig = trackedOnSnapshot(doc(db, 'site_data', 'config'), (doc) => {
+      if (doc.exists()) {
+        setSiteConfig(doc.data() as any);
+      }
+      configLoaded = true;
+      checkPublicDataReady();
+    });
 
-    const unsubYearConfig = onSnapshot(doc(db, 'site_data', 'year_config'), (doc) => {
+    const unsubYearConfig = trackedOnSnapshot(doc(db, 'site_data', 'year_config'), (doc) => {
       if (doc.exists()) setYearConfig(doc.data() as { startDate: string; endDate: string });
-    }, (error) => handleFirestoreError(error, OperationType.GET, 'site_data/year_config'));
+    });
+
+    // Safety timeout for public data
+    const publicDataTimeout = setTimeout(() => {
+      if (!firebaseUser?.uid) {
+        setIsLoading(false);
+      }
+    }, 4000);
 
     return () => {
+      clearTimeout(publicDataTimeout);
       unsubSeaStats();
       unsubAssets();
       unsubConfig();
       unsubYearConfig();
     };
-  }, [dbStatus, handleFirestoreError]);
+  }, [dbStatus, firebaseUser?.uid, handleFirestoreError]);
 
   // 4. Auth-dependent Data Listeners
   useEffect(() => {
@@ -449,7 +516,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchData();
 
     // Real-time listeners
-    const unsubMembers = onSnapshot(query(collection(db, 'members'), limit(200)), (snapshot) => {
+    const unsubMembers = trackedOnSnapshot(query(collection(db, 'members'), limit(200)), (snapshot) => {
       const rawDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member));
       const filteredDocs = rawDocs.filter(m => {
         const isSuperAdmin = m.email?.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim();
@@ -459,47 +526,47 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setMembers(filteredDocs);
       setIsDbEmpty(snapshot.empty);
       storage.set('cached_members_v3', filteredDocs, 2 / 60);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'members'));
+    });
 
-    const unsubHistory = onSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
+    const unsubHistory = trackedOnSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
       const hData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setWeeklyHistory(hData);
       storage.set('cached_history_v3', hData, 2 / 60);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'weekly_history'));
+    });
 
-    const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
+    const unsubEvents = trackedOnSnapshot(query(collection(db, 'events'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
       setEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'events'));
+    });
     
-    const unsubNews = onSnapshot(query(collection(db, 'news'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
+    const unsubNews = trackedOnSnapshot(query(collection(db, 'news'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
       setNews(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as NewsItem)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'news'));
+    });
     
-    const unsubPodcasts = onSnapshot(query(collection(db, 'podcasts'), orderBy('publishedAt', 'desc'), limit(200)), (snapshot) => {
+    const unsubPodcasts = trackedOnSnapshot(query(collection(db, 'podcasts'), orderBy('publishedAt', 'desc'), limit(200)), (snapshot) => {
       setPodcasts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Podcast)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'podcasts'));
+    });
     
-    const unsubGallery = onSnapshot(query(collection(db, 'gallery'), orderBy('timestamp', 'desc'), limit(50)), (snapshot) => {
+    const unsubGallery = trackedOnSnapshot(query(collection(db, 'gallery'), orderBy('timestamp', 'desc'), limit(50)), (snapshot) => {
       setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'gallery'));
+    });
 
     let unsubPerformance: (() => void) | null = null;
     if (currentUser.role === 'Admin' || currentUser.role === 'Instructor') {
-      unsubPerformance = onSnapshot(query(collection(db, 'performance_scores'), limit(500)), (snapshot) => {
+      unsubPerformance = trackedOnSnapshot(query(collection(db, 'performance_scores'), limit(500)), (snapshot) => {
         const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
         console.log('performanceScores updated:', scores);
         setPerformanceScores(scores);
-      }, (error) => handleFirestoreError(error, OperationType.LIST, 'performance_scores'));
+      });
     } else if (currentUser.role === 'Member' && firebaseUser) {
       // Members only see their own scores
       const myScoresQuery = query(collection(db, 'performance_scores'), where('memberId', '==', firebaseUser.uid), limit(100));
-      unsubPerformance = onSnapshot(myScoresQuery, (snapshot) => {
+      unsubPerformance = trackedOnSnapshot(myScoresQuery, (snapshot) => {
         const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
         setPerformanceScores(scores);
-      }, (error) => handleFirestoreError(error, OperationType.LIST, 'performance_scores/my_scores'));
+      });
     }
 
-    const unsubAttendees = onSnapshot(doc(db, 'site_data', 'active_session'), async (snapshot) => {
+    const unsubAttendees = trackedOnSnapshot(doc(db, 'site_data', 'active_session'), async (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data() as any;
         setAttendeeIds(data.attendees || []);
@@ -509,15 +576,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } else {
           setActiveSessionDate(data.date || getNextSessionDate(siteConfigRef.current?.weeklySessions));
         }
+        setConnectionError(null);
       }
       setIsLoading(false);
-    }, (error) => handleFirestoreError(error, OperationType.GET, 'site_data/active_session'));
+    }, (err) => {
+      setConnectionError(err.code);
+      setIsLoading(false);
+    });
 
     let unsubRequests: (() => void) | null = null;
     if (currentUser.role === 'Admin') {
-      unsubRequests = onSnapshot(query(collection(db, 'joinRequests'), limit(200)), (snapshot) => {
+      unsubRequests = trackedOnSnapshot(query(collection(db, 'joinRequests'), limit(200)), (snapshot) => {
         setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
-      }, (error) => handleFirestoreError(error, OperationType.LIST, 'joinRequests'));
+      });
       initializeStorageStats();
     }
 
@@ -535,7 +606,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       unsubAttendees();
       if (unsubRequests) unsubRequests();
     };
-  }, [dbStatus, currentUser?.id, currentUser?.role, firebaseUser?.uid, handleFirestoreError]);
+  }, [dbStatus, currentUser?.id, currentUser?.role, firebaseUser?.uid, handleFirestoreError, retryCount]);
 
   const updateMember = useCallback(async (member: Member) => {
     const { id, ...data } = member;
@@ -1239,24 +1310,37 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const uiPath = 'assets%2Fui';
     const getStorageUrl = (filename: string) => `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/${uiPath}%2F${filename}?alt=media`;
 
-    const initialAssets = {
+    const initialAssets: SiteAssets = {
       starfish: '',
       penguin: '',
       mantaRay: '',
       shark: '',
       orca: '',
       cork: '',
-      staticHeroImage: '',
-      loginBg: '',
+      staticHeroImage: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?q=80&w=1920&auto=format&fit=crop',
+      loginBg: 'https://images.unsplash.com/photo-1505972186483-70ff335e0d78?q=80&w=1920&auto=format&fit=crop',
       wetsuit43: getStorageUrl('wetsuit43.png'),
       wetsuit32: getStorageUrl('wetsuit32.png'),
       wetsuit22: getStorageUrl('wetsuit22.png'),
       wetsuit22ss: getStorageUrl('wetsuit22ss.png'),
-      sunShirt: getStorageUrl('sunShirt.png')
+      sunShirt: getStorageUrl('sunShirt.png'),
+      headers: [],
+      uiImages: [],
+      fonts: {
+        yehudaLight: [],
+        yehudaBold: [],
+        miriwin: [],
+        danaYad: []
+      },
+      surfboardModels: {},
+      atalefLogo: '',
+      reefLogo: '',
+      habalZugLogo: '',
+      defaultEventImage: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?q=80&w=1920&auto=format&fit=crop'
     };
     try {
-      await setDoc(doc(db, 'site_data', 'assets'), initialAssets);
-      setSiteAssets(initialAssets);
+      await setDoc(doc(db, 'site_data', 'assets'), initialAssets, { merge: true });
+      setSiteAssets((prev: SiteAssets) => ({ ...initialAssets, ...prev }));
     } catch (e) {
       console.error('Error seeding initial assets:', e);
     }
@@ -1284,7 +1368,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isTemporary: true
       };
       
-      await addDoc(collection(db, 'members'), adminData);
+      await setDoc(doc(db, 'members', 'initial-admin'), adminData);
       setIsDbEmpty(false);
       return true;
     } catch (err) {
@@ -1296,14 +1380,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const contextValue = React.useMemo(() => ({ 
-      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
+      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, connectionError, retryConnection: () => {
+        setRetryCount(prev => prev + 1);
+        setIsLoading(true);
+        setConnectionError(null);
+      }, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, approveRequest, rejectRequest,
       addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
       isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets
     }), [
-      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, dbStatus, toggleDbStatus,
+      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, connectionError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, approveRequest, rejectRequest,
       addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,

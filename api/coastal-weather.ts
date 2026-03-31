@@ -24,31 +24,57 @@ export default async function handler(
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m,uv_index,surface_pressure,relative_humidity_2m&timezone=auto`;
     const imsUrl = `https://api.ims.gov.il/v1/envista/stations/${stationId}/data/latest`;
     
-    const fetchMarine = fetch(marineUrl).then(res => {
-      if (!res.ok) throw new Error(`Marine API error: ${res.status}`);
-      return res.json();
-    });
-
-    const fetchWeather = fetch(weatherUrl).then(res => {
-      if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
-      return res.json();
-    });
-
-    const fetchIms = process.env.IMS_API_TOKEN ? fetch(imsUrl, {
-      headers: { "Authorization": `ApiToken ${process.env.IMS_API_TOKEN}` }
-    }).then(async res => {
-      if (!res.ok) throw new Error(`IMS API error: ${res.status}`);
-      const text = await res.text();
+    const fetchWithRetry = async (url: string, options: any, retries = 2): Promise<any> => {
       try {
-        return JSON.parse(text);
-      } catch (e) {
-        console.warn("IMS API returned non-JSON response (likely invalid token or API down). Skipping IMS data.");
+        const res = await fetch(url, { 
+          ...options, 
+          headers: { 
+            ...options.headers,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          }
+        });
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
+        return await res.json();
+      } catch (err: any) {
+        if (retries > 0) {
+          console.warn(`Retrying fetch for ${url}. Retries left: ${retries}`);
+          return fetchWithRetry(url, options, retries - 1);
+        }
+        throw err;
+      }
+    };
+
+    const fetchMarine = fetchWithRetry(marineUrl, {}).then(data => data).catch(err => {
+      console.error("Marine fetch error:", err);
+      return { current: {}, hourly: { time: [], sea_surface_temperature: [] } };
+    });
+
+    const fetchWeather = fetchWithRetry(weatherUrl, {}).then(data => data).catch(err => {
+      console.error("Weather fetch error:", err);
+      return { current: {} };
+    });
+
+    const fetchIms = process.env.IMS_API_TOKEN ? (async () => {
+      try {
+        const res = await fetch(imsUrl, {
+          headers: { 
+            "Authorization": `ApiToken ${process.env.IMS_API_TOKEN}`,
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          }
+        });
+        if (!res.ok) throw new Error(`IMS API error: ${res.status}`);
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          console.warn("IMS API returned non-JSON response (likely invalid token or API down). Skipping IMS data.");
+          return null;
+        }
+      } catch (err) {
+        console.error("IMS Wind fetch error:", err);
         return null;
       }
-    }).catch(err => {
-      console.error("IMS Wind fetch error:", err);
-      return null;
-    }) : Promise.resolve(null);
+    })() : Promise.resolve(null);
 
     // Fetch all data concurrently
     const [marineData, weatherData, imsData] = await Promise.all([

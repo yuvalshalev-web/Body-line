@@ -14,6 +14,7 @@ interface GlassNavigationBarProps {
 const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId, onChange, theme }) => {
   const { logout, currentUser } = useAuth();
   const location = useLocation();
+  const [hoveredTab, setHoveredTab] = React.useState<string | null>(null);
 
   // Mode 1: Tab Bar (used in Admin pages)
   if (items && onChange) {
@@ -26,6 +27,8 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
               <button
                 key={item.id}
                 onClick={() => item.id && onChange(item.id)}
+                onMouseEnter={() => setHoveredTab(item.id!)}
+                onMouseLeave={() => setHoveredTab(null)}
                 className="relative group px-1 py-1 flex-shrink-0 outline-none"
               >
                 {isActive && (
@@ -45,6 +48,18 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
                   >
                     {/* Extra glass shine layer */}
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/30 to-transparent pointer-events-none" />
+                  </motion.div>
+                )}
+                {hoveredTab === item.id && !isActive && (
+                  <motion.div
+                    layoutId="hover-wave-tab"
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2 text-cyan-500/60 pointer-events-none"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
                   </motion.div>
                 )}
                 <div className={`relative flex items-center gap-2 px-4 py-2 rounded-2xl transition-all duration-300 z-10 ${

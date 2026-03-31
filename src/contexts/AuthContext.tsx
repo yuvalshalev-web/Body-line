@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { doc, onSnapshot, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
-import { getDb, auth } from '../services/firebase';
+import { getDb, auth, trackedGetDoc, trackedOnSnapshot } from '../services/firebase';
 import { Member } from '../types';
 
 interface AuthContextType {
@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
           const db = getDb();
           console.log("AuthContext: Fetching member doc for", user.uid);
-          const memberDoc = await getDoc(doc(db, 'members', user.uid));
+          const memberDoc = await trackedGetDoc(doc(db, 'members', user.uid));
           if (memberDoc.exists()) {
             const memberData = { id: memberDoc.id, ...memberDoc.data() } as Member;
             if (memberData.isActive === false) {
@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!currentUser?.id) return;
 
     const db = getDb();
-    const unsub = onSnapshot(doc(db, 'members', currentUser.id), (snapshot) => {
+    const unsub = trackedOnSnapshot(doc(db, 'members', currentUser.id), (snapshot) => {
       if (snapshot.exists()) {
         const updatedData = { id: snapshot.id, ...snapshot.data() } as Member;
         if (updatedData.isActive === false) {
@@ -132,8 +132,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           logout();
         }
       }
-    }, (error) => {
-      console.error("Error listening to user doc:", error);
     });
 
     return () => unsub();

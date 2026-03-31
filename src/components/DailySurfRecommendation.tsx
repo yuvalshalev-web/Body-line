@@ -166,7 +166,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
       <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#007085]/10 rounded-full blur-[80px] pointer-events-none" />
       <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-[#002b44]/10 rounded-full blur-[80px] pointer-events-none" />
 
-      <div className="flex items-center gap-4 mb-8 relative z-10">
+      <div className="flex items-center gap-4 mb-4 relative z-10">
         <div className="p-3 bg-[#007085]/10 rounded-2xl border border-[#007085]/20 shadow-[0_0_15px_rgba(0,112,133,0.1)]">
           <Sparkles className="text-[#007085]" size={24} />
         </div>
@@ -174,6 +174,32 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
           <h3 className="text-2xl font-black text-[#002b44] tracking-tight">התאמה אישית לפי מדדי גוף, רמת גלישה ומצב הים</h3>
           <p className="text-[#007085] text-sm font-bold tracking-widest uppercase">המלצת ציוד יומית</p>
         </div>
+      </div>
+
+      {/* Personalization Context Badges */}
+      <div className="flex flex-wrap gap-3 mb-8 relative z-10">
+        <div className="px-3 py-1.5 bg-[#007085]/5 border border-[#007085]/10 rounded-xl flex items-center gap-2 shadow-sm">
+          <span className="text-[9px] font-black text-[#007085]/60 uppercase tracking-wider">משקל</span>
+          <span className="text-xs font-black text-[#002b44]">{weight} ק"ג</span>
+        </div>
+        <div className="px-3 py-1.5 bg-[#007085]/5 border border-[#007085]/10 rounded-xl flex items-center gap-2 shadow-sm">
+          <span className="text-[9px] font-black text-[#007085]/60 uppercase tracking-wider">גובה</span>
+          <span className="text-xs font-black text-[#002b44]">{height} ס"מ</span>
+        </div>
+        <div className="px-3 py-1.5 bg-[#007085]/5 border border-[#007085]/10 rounded-xl flex items-center gap-2 shadow-sm">
+          <span className="text-[9px] font-black text-[#007085]/60 uppercase tracking-wider">רמה</span>
+          <span className="text-xs font-black text-[#002b44]">{surfingLevel}</span>
+        </div>
+        <div className="px-3 py-1.5 bg-orange-500/5 border border-orange-500/10 rounded-xl flex items-center gap-2 shadow-sm">
+          <span className="text-[9px] font-black text-orange-600/60 uppercase tracking-wider">גובה גל</span>
+          <span className="text-xs font-black text-[#002b44]">{currentWaveHeight} מ'</span>
+        </div>
+        {waterTemp && (
+          <div className="px-3 py-1.5 bg-blue-500/5 border border-blue-500/10 rounded-xl flex items-center gap-2 shadow-sm">
+            <span className="text-[9px] font-black text-blue-600/60 uppercase tracking-wider">טמפ' מים</span>
+            <span className="text-xs font-black text-[#002b44]">{waterTemp}°C</span>
+          </div>
+        )}
       </div>
 
       <AnimatePresence mode="wait">
@@ -198,7 +224,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                       <div className="h-1.5 w-24 bg-[#007085] rounded-full mx-auto lg:mx-0 mb-8" />
                     </div>
                     
-                    <div className="flex justify-center lg:justify-start gap-8">
+                    <div className="flex flex-wrap justify-center lg:justify-start gap-6">
                       <div className="bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-sm min-w-[140px] transition-transform hover:scale-105">
                         <p className="text-[10px] text-[#007085] uppercase tracking-[0.2em] mb-2 font-black">נפח מומלץ</p>
                         <p className="text-4xl font-black text-[#002b44]">{Math.ceil(recVol)}<span className="text-sm text-[#007085] ml-1">L</span></p>
@@ -207,6 +233,17 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                         <p className="text-[10px] text-[#007085] uppercase tracking-[0.2em] mb-2 font-black">אורך מומלץ</p>
                         <p className="text-4xl font-black text-[#002b44]" dir="ltr">{getBoardSize(recLenInches * 2.54)}</p>
                       </div>
+                      {wetsuit && (
+                        <div className="bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-sm min-w-[140px] transition-transform hover:scale-105 flex flex-col items-center justify-center">
+                          <p className="text-[10px] text-[#007085] uppercase tracking-[0.2em] mb-2 font-black">ביגוד מומלץ</p>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10">
+                              <WetsuitSVG thickness={wetsuit.thickness} />
+                            </div>
+                            <p className="text-xl font-black text-[#002b44] leading-tight">{wetsuit.label}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-6">
@@ -232,19 +269,6 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                   </div>
                   
                   <div className="flex flex-col sm:flex-row justify-center items-end gap-16 lg:gap-12 shrink-0 w-full lg:w-auto py-12 relative z-10">
-                    {wetsuit && (
-                      <div className="flex flex-col items-center gap-8 w-full sm:w-[220px] group">
-                        <div className="relative h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
-                          <div className="absolute inset-0 bg-blue-500/10 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                          <WetsuitSVG thickness={wetsuit.thickness} alignBottom />
-                        </div>
-                        <div className="text-center space-y-2">
-                          <p className="text-[11px] font-black text-[#007085] uppercase tracking-[0.3em] opacity-60">ביגוד מומלץ</p>
-                          <p className="text-2xl font-black text-[#002b44] tracking-tighter font-yehuda">{wetsuit.label}</p>
-                        </div>
-                      </div>
-                    )}
-                    
                     <div className="flex flex-col items-center gap-8 w-full sm:w-[220px] group">
                       <div className="relative h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
                         <div className="absolute inset-0 bg-orange-500/10 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />

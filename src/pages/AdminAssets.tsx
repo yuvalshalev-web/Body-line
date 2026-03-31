@@ -7,93 +7,124 @@ import { Upload, Trash2, Image as ImageIcon, Type, Loader2, CheckCircle, AlertTr
 import { SURFBOARD_CATALOG } from '../data/surfboardCatalog';
 
 export const AdminAssets: React.FC = () => {
-  const { siteAssets, updateSiteAssets } = useData();
+  const { siteAssets, updateSiteAssets, seedInitialAssets } = useData();
   const [uploading, setUploading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
+  const [assetToDelete, setAssetToDelete] = useState<{ type: string, url: string, fontName?: string } | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const handleResetAssetsClick = () => {
+    setShowResetConfirm(true);
+  };
+
+  const confirmResetAssets = async () => {
+    setShowResetConfirm(false);
+    setIsResetting(true);
+    try {
+      await seedInitialAssets();
+      setSuccess('נכסי ברירת המחדל שוחזרו בהצלחה!');
+    } catch (err: any) {
+      setError('שגיאה בשחזור נכסים: ' + err.message);
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'staticHero' | 'headers' | 'fonts' | 'loginBg' | 'uiImages' | 'atalefLogo' | 'reefLogo' | 'habalZugLogo' | 'starfish' | 'penguin' | 'mantaRay' | 'shark' | 'orca' | 'cork' | 'wetsuit43' | 'wetsuit32' | 'wetsuit22' | 'wetsuit22ss' | 'sunShirt' | 'surfboardModels' | 'defaultEventImage', fontName?: string) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setError(null);
     setSuccess(null);
     setUploading(type + (fontName || ''));
 
     try {
-      let path = '';
-      if (type === 'staticHero') {
-        path = `assets/headers/static_hero_${Date.now()}_${file.name}`;
-      } else if (type === 'loginBg') {
-        path = `assets/headers/login_bg_${Date.now()}_${file.name}`;
-      } else if (type === 'headers') {
-        path = `assets/headers/${Date.now()}_${file.name}`;
-      } else if (type === 'uiImages') {
-        path = `assets/ui/${Date.now()}_${file.name}`;
-      } else if (type === 'fonts') {
-        path = `assets/fonts/${fontName}_${Date.now()}_${file.name}`;
-      } else if (['atalefLogo', 'reefLogo', 'habalZugLogo'].includes(type)) {
-        path = `assets/logo/${type}_${Date.now()}_${file.name}`;
-      } else {
-        path = `assets/ui/${type}_${Date.now()}_${file.name}`;
-      }
-
-      const storageRef = ref(firebaseStorage, path);
-      await uploadBytes(storageRef, file, {
-        contentType: file.type,
-        customMetadata: {
-          uploadedBy: 'admin',
-          timestamp: new Date().toISOString()
-        }
-      });
-      const url = await getDownloadURL(storageRef);
-
       let newAssets = { ...siteAssets };
-      if (type === 'staticHero') {
-        newAssets.staticHeroImage = url;
-      } else if (type === 'loginBg') {
-        newAssets.loginBg = url;
-      } else if (type === 'headers') {
-        newAssets.headers = [...(newAssets.headers || []), url];
-      } else if (type === 'uiImages') {
-        newAssets.uiImages = [...(newAssets.uiImages || []), url];
-      } else if (type === 'fonts' && fontName) {
-        const extension = file.name.split('.').pop()?.toLowerCase();
-        const format = extension === 'ttf' ? 'truetype' : extension === 'otf' ? 'opentype' : extension;
-        const fontData = { url, name: file.name, format };
-        const currentFonts = siteAssets?.fonts?.[fontName] || [];
-        const updatedFonts = Array.isArray(currentFonts) ? [...currentFonts, fontData] : [{ url: currentFonts, name: 'קובץ קודם', format: 'woff' }, fontData];
-        newAssets.fonts = { ...(newAssets.fonts || {}), [fontName]: updatedFonts };
-      } else if (type === 'surfboardModels' && fontName) {
-        newAssets.surfboardModels = { ...(newAssets.surfboardModels || {}), [fontName]: url };
-      } else {
-        // Handle specific UI assets
-        newAssets[type] = url;
+      let uploadedCount = 0;
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        let path = '';
+        if (type === 'staticHero') {
+          path = `assets/headers/static_hero_${Date.now()}_${file.name}`;
+        } else if (type === 'loginBg') {
+          path = `assets/headers/login_bg_${Date.now()}_${file.name}`;
+        } else if (type === 'headers') {
+          path = `assets/headers/${Date.now()}_${file.name}`;
+        } else if (type === 'uiImages') {
+          path = `assets/ui/${Date.now()}_${file.name}`;
+        } else if (type === 'fonts') {
+          path = `assets/fonts/${fontName}_${Date.now()}_${file.name}`;
+        } else if (['atalefLogo', 'reefLogo', 'habalZugLogo'].includes(type)) {
+          path = `assets/logo/${type}_${Date.now()}_${file.name}`;
+        } else {
+          path = `assets/ui/${type}_${Date.now()}_${file.name}`;
+        }
+
+        const storageRef = ref(firebaseStorage, path);
+        await uploadBytes(storageRef, file, {
+          contentType: file.type,
+          customMetadata: {
+            uploadedBy: 'admin',
+            timestamp: new Date().toISOString()
+          }
+        });
+        const url = await getDownloadURL(storageRef);
+
+        if (type === 'staticHero') {
+          newAssets.staticHeroImage = url;
+        } else if (type === 'loginBg') {
+          newAssets.loginBg = url;
+        } else if (type === 'headers') {
+          newAssets.headers = [...(newAssets.headers || []), url];
+        } else if (type === 'uiImages') {
+          newAssets.uiImages = [...(newAssets.uiImages || []), url];
+        } else if (type === 'fonts' && fontName) {
+          const extension = file.name.split('.').pop()?.toLowerCase();
+          const format = extension === 'ttf' ? 'truetype' : extension === 'otf' ? 'opentype' : extension;
+          const fontData = { url, name: file.name, format };
+          const currentFonts = newAssets.fonts?.[fontName] || [];
+          const updatedFonts = Array.isArray(currentFonts) ? [...currentFonts, fontData] : [{ url: currentFonts, name: 'קובץ קודם', format: 'woff' }, fontData];
+          newAssets.fonts = { ...(newAssets.fonts || {}), [fontName]: updatedFonts };
+        } else if (type === 'surfboardModels' && fontName) {
+          newAssets.surfboardModels = { ...(newAssets.surfboardModels || {}), [fontName]: url };
+        } else {
+          // Handle specific UI assets
+          newAssets[type] = url;
+        }
+        uploadedCount++;
       }
 
       await updateSiteAssets(newAssets);
-      setSuccess('הקובץ הועלה בהצלחה!');
+      setSuccess(uploadedCount > 1 ? `הועלו ${uploadedCount} קבצים בהצלחה!` : 'הקובץ הועלה בהצלחה!');
     } catch (err: any) {
-      setError('שגיאה בהעלאת הקובץ: ' + err.message);
+      setError('שגיאה בהעלאת הקבצים: ' + err.message);
     } finally {
       setUploading(null);
       if (e.target) e.target.value = '';
     }
   };
 
-  const handleDelete = async (type: 'staticHero' | 'headers' | 'fonts' | 'loginBg' | 'uiImages' | 'atalefLogo' | 'reefLogo' | 'habalZugLogo' | 'starfish' | 'penguin' | 'mantaRay' | 'shark' | 'orca' | 'cork' | 'wetsuit43' | 'wetsuit32' | 'wetsuit22' | 'wetsuit22ss' | 'sunShirt' | 'surfboardModels' | 'defaultEventImage', urlToDelete: string, fontName?: string) => {
-    if (!window.confirm('האם אתה בטוח שברצונך למחוק קובץ זה?')) return;
+  const handleDeleteClick = (type: any, urlToDelete: string, fontName?: string) => {
+    setAssetToDelete({ type, url: urlToDelete, fontName });
+  };
+
+  const confirmDelete = async () => {
+    if (!assetToDelete) return;
+    const { type, url: urlToDelete, fontName } = assetToDelete;
+    setAssetToDelete(null);
 
     setError(null);
     setSuccess(null);
 
     try {
-      const storageRef = ref(firebaseStorage, urlToDelete);
-      
       try {
+        const storageRef = ref(firebaseStorage, urlToDelete);
         await deleteObject(storageRef);
       } catch (e) {
-        console.warn('File might not exist in storage, removing from DB anyway', e);
+        console.warn('File might not exist in storage or invalid URL, removing from DB anyway', e);
       }
 
       let newAssets = { ...siteAssets };
@@ -107,20 +138,15 @@ export const AdminAssets: React.FC = () => {
         newAssets.uiImages = (newAssets.uiImages || []).filter((url: string) => url !== urlToDelete);
       } else if (type === 'fonts' && fontName) {
         const currentFonts = siteAssets?.fonts?.[fontName] || [];
+        newAssets.fonts = { ...newAssets.fonts }; // Prevent direct mutation
         if (Array.isArray(currentFonts)) {
           newAssets.fonts[fontName] = currentFonts.filter((f: any) => f.url !== urlToDelete);
-          if (newAssets.fonts[fontName].length === 0) {
-            delete newAssets.fonts[fontName];
-          }
         } else {
-          const newFonts = { ...newAssets.fonts };
-          delete newFonts[fontName];
-          newAssets.fonts = newFonts;
+          newAssets.fonts[fontName] = [];
         }
       } else if (type === 'surfboardModels' && fontName) {
-        const newModels = { ...newAssets.surfboardModels };
-        delete newModels[fontName];
-        newAssets.surfboardModels = newModels;
+        newAssets.surfboardModels = { ...newAssets.surfboardModels }; // Prevent direct mutation
+        newAssets.surfboardModels[fontName] = null;
       } else {
         // Handle specific UI assets
         newAssets[type] = null;
@@ -135,8 +161,23 @@ export const AdminAssets: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-black text-slate-800">ניהול נכסים ופונטים</h2>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+            <Sparkles className="text-amber-400 animate-pulse" size={32} />
+            ניהול נכסים ועיצוב
+          </h2>
+          <p className="text-slate-500 mt-1 font-medium">נהל את התמונות, הפונטים והאלמנטים הגרפיים של האתר</p>
+        </div>
+        
+        <button
+          onClick={handleResetAssetsClick}
+          disabled={isResetting}
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 font-bold text-sm shadow-sm active:scale-95 disabled:opacity-50"
+        >
+          {isResetting ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} className="text-amber-400" />}
+          שחזר נכסי ברירת מחדל
+        </button>
       </div>
 
       {error && (
@@ -166,17 +207,17 @@ export const AdminAssets: React.FC = () => {
             <h4 className="font-bold text-slate-700">תמונת רקע ראשית (דף הבית)</h4>
             <p className="text-sm text-slate-500">תמונה זו תוצג בראש דף הבית (header_1.jpeg).</p>
             
-            {siteAssets?.staticHeroImage ? (
-              <div className="relative rounded-xl overflow-hidden border border-slate-200 group">
-                <img src={siteAssets.staticHeroImage} alt="Static Hero" className="w-full h-48 object-cover" />
-                <button
-                  onClick={() => handleDelete('staticHero', siteAssets.staticHeroImage)}
-                  className="absolute top-2 left-2 p-2 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg hover:shadow-rose-500/30 hover:-translate-y-1 active:scale-95"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ) : (
+                  {siteAssets?.staticHeroImage ? (
+                    <div className="relative rounded-xl overflow-hidden border border-slate-200 group">
+                      <img src={siteAssets.staticHeroImage} alt="Static Hero" className="w-full h-48 object-cover" />
+                      <button
+                        onClick={() => handleDeleteClick('staticHero', siteAssets.staticHeroImage)}
+                        className="absolute top-2 left-2 p-2 bg-white border border-slate-200 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-xl transition-all duration-300 shadow-lg hover:shadow-rose-500/30 hover:-translate-y-1 active:scale-95 z-10"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  ) : (
               <div className="p-8 border-2 border-dashed border-slate-200 rounded-xl text-center">
                 <p className="text-slate-500 mb-4">לא הוגדרה תמונה ראשית</p>
               </div>
@@ -208,17 +249,17 @@ export const AdminAssets: React.FC = () => {
             <h4 className="font-bold text-slate-700">תמונת רקע למסך כניסה (Login)</h4>
             <p className="text-sm text-slate-500">תמונה זו תוצג ברקע של מסך ההתחברות.</p>
             
-            {siteAssets?.loginBg ? (
-              <div className="relative rounded-xl overflow-hidden border border-slate-200 group">
-                <img src={siteAssets.loginBg} alt="Login Background" className="w-full h-48 object-cover" />
-                <button
-                  onClick={() => handleDelete('loginBg', siteAssets.loginBg)}
-                  className="absolute top-2 left-2 p-2 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg hover:shadow-rose-500/30 hover:-translate-y-1 active:scale-95"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ) : (
+                  {siteAssets?.loginBg ? (
+                    <div className="relative rounded-xl overflow-hidden border border-slate-200 group">
+                      <img src={siteAssets.loginBg} alt="Login Background" className="w-full h-48 object-cover" />
+                      <button
+                        onClick={() => handleDeleteClick('loginBg', siteAssets.loginBg)}
+                        className="absolute top-2 left-2 p-2 bg-white border border-slate-200 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-xl transition-all duration-300 shadow-lg hover:shadow-rose-500/30 hover:-translate-y-1 active:scale-95 z-10"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  ) : (
               <div className="p-8 border-2 border-dashed border-slate-200 rounded-xl text-center">
                 <p className="text-slate-500 mb-4">לא הוגדרה תמונת כניסה (יוצג רקע אקראי)</p>
               </div>
@@ -250,19 +291,19 @@ export const AdminAssets: React.FC = () => {
             <h4 className="font-bold text-slate-700">תמונות רקע מתחלפות (דפים פנימיים)</h4>
             <p className="text-sm text-slate-500">תמונות אלו יוצגו באופן אקראי בדפים הפנימיים.</p>
             
-            <div className="grid grid-cols-2 gap-4">
-              {siteAssets?.headers?.map((url: string, index: number) => (
-                <div key={index} className="relative rounded-xl overflow-hidden border border-slate-200 group">
-                  <img src={url} alt={`Header ${index + 1}`} className="w-full h-24 object-cover" />
-                  <button
-                    onClick={() => handleDelete('headers', url)}
-                    className="absolute top-2 left-2 p-1.5 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-md hover:shadow-rose-500/30 hover:-translate-y-0.5 active:scale-95"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {siteAssets?.headers?.map((url: string, index: number) => (
+                      <div key={index} className="relative rounded-xl overflow-hidden border border-slate-200 group">
+                        <img src={url} alt={`Header ${index + 1}`} className="w-full h-24 object-cover" />
+                        <button
+                          onClick={() => handleDeleteClick('headers', url)}
+                          className="absolute top-2 left-2 p-1.5 bg-white border border-slate-200 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-lg transition-all duration-300 shadow-md hover:shadow-rose-500/30 hover:-translate-y-0.5 active:scale-95 z-10"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
             
             <div>
               <input
@@ -272,6 +313,7 @@ export const AdminAssets: React.FC = () => {
                 accept="image/*"
                 onChange={(e) => handleUpload(e, 'headers')}
                 disabled={uploading !== null}
+                multiple
               />
               <label
                 htmlFor="upload-header"
@@ -290,19 +332,19 @@ export const AdminAssets: React.FC = () => {
             <h4 className="font-bold text-slate-700">תמונות UI כלליות</h4>
             <p className="text-sm text-slate-500">תמונות עבור רכיבי ממשק (בעלי חיים, ציוד וכו').</p>
             
-            <div className="grid grid-cols-3 gap-4">
-              {siteAssets?.uiImages?.map((url: string, index: number) => (
-                <div key={index} className="relative rounded-xl overflow-hidden border border-slate-200 group">
-                  <img src={url} alt={`UI Image ${index + 1}`} className="w-full h-20 object-cover" />
-                  <button
-                    onClick={() => handleDelete('uiImages', url)}
-                    className="absolute top-1 left-1 p-1 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95"
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    {siteAssets?.uiImages?.map((url: string, index: number) => (
+                      <div key={index} className="relative rounded-xl overflow-hidden border border-slate-200 group">
+                        <img src={url} alt={`UI Image ${index + 1}`} className="w-full h-20 object-cover" />
+                        <button
+                          onClick={() => handleDeleteClick('uiImages', url)}
+                          className="absolute top-1 left-1 p-1 bg-white border border-slate-200 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95 z-10"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
             
             <div>
               <input
@@ -312,6 +354,7 @@ export const AdminAssets: React.FC = () => {
                 accept="image/*"
                 onChange={(e) => handleUpload(e, 'uiImages')}
                 disabled={uploading !== null}
+                multiple
               />
               <label
                 htmlFor="upload-ui-image"
@@ -343,10 +386,10 @@ export const AdminAssets: React.FC = () => {
                     <div className="relative rounded-xl overflow-hidden border border-slate-200 group h-24">
                       <img src={siteAssets[asset.id]} alt={asset.label} className="w-full h-full object-contain p-2" />
                       <button
-                        onClick={() => handleDelete(asset.id as any, siteAssets[asset.id])}
-                        className="absolute top-1 left-1 p-1 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95"
+                        onClick={() => handleDeleteClick(asset.id as any, siteAssets[asset.id])}
+                        className="absolute top-1 left-1 p-1 bg-white border border-slate-200 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95 z-10"
                       >
-                        <Trash2 size={12} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   ) : (
@@ -361,6 +404,7 @@ export const AdminAssets: React.FC = () => {
                     accept="image/*"
                     onChange={(e) => handleUpload(e, asset.id as any)}
                     disabled={uploading !== null}
+                    multiple
                   />
                   <label
                     htmlFor={`upload-${asset.id}`}
@@ -392,10 +436,10 @@ export const AdminAssets: React.FC = () => {
                     <div className="relative rounded-xl overflow-hidden border border-slate-200 group h-20">
                       <img src={siteAssets[asset.id]} alt={asset.label} className="w-full h-full object-contain p-1" />
                       <button
-                        onClick={() => handleDelete(asset.id as any, siteAssets[asset.id])}
-                        className="absolute top-1 left-1 p-1 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95"
+                        onClick={() => handleDeleteClick(asset.id as any, siteAssets[asset.id])}
+                        className="absolute top-1 left-1 p-1 bg-white border border-slate-200 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95 z-10"
                       >
-                        <Trash2 size={10} />
+                        <Trash2 size={12} />
                       </button>
                     </div>
                   ) : (
@@ -410,6 +454,7 @@ export const AdminAssets: React.FC = () => {
                     accept="image/*"
                     onChange={(e) => handleUpload(e, asset.id as any)}
                     disabled={uploading !== null}
+                    multiple
                   />
                   <label
                     htmlFor={`upload-${asset.id}`}
@@ -440,10 +485,10 @@ export const AdminAssets: React.FC = () => {
                     <div className="relative rounded-xl overflow-hidden border border-slate-200 group h-24">
                       <img src={siteAssets[asset.id]} alt={asset.label} className="w-full h-full object-contain p-1" />
                       <button
-                        onClick={() => handleDelete(asset.id as any, siteAssets[asset.id])}
-                        className="absolute top-1 left-1 p-1 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95"
+                        onClick={() => handleDeleteClick(asset.id as any, siteAssets[asset.id])}
+                        className="absolute top-1 left-1 p-1 bg-white border border-slate-200 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95 z-10"
                       >
-                        <Trash2 size={10} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   ) : (
@@ -458,6 +503,7 @@ export const AdminAssets: React.FC = () => {
                     accept="image/*"
                     onChange={(e) => handleUpload(e, asset.id as any)}
                     disabled={uploading !== null}
+                    multiple
                   />
                   <label
                     htmlFor={`upload-${asset.id}`}
@@ -482,10 +528,10 @@ export const AdminAssets: React.FC = () => {
                     <div className="relative rounded-xl overflow-hidden border border-slate-200 group h-24">
                       <img src={siteAssets.surfboardModels[board.type]} alt={board.name} className="w-full h-full object-contain p-1" />
                       <button
-                        onClick={() => handleDelete('surfboardModels', siteAssets.surfboardModels[board.type], board.type)}
-                        className="absolute top-1 left-1 p-1 bg-white/10 backdrop-blur-md border border-white/30 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95"
+                        onClick={() => handleDeleteClick('surfboardModels', siteAssets.surfboardModels[board.type], board.type)}
+                        className="absolute top-1 left-1 p-1 bg-white border border-slate-200 text-rose-500 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-md transition-all duration-300 shadow-sm hover:shadow-rose-500/30 hover:-translate-y-px active:scale-95 z-10"
                       >
-                        <Trash2 size={10} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   ) : (
@@ -500,6 +546,7 @@ export const AdminAssets: React.FC = () => {
                     accept="image/*"
                     onChange={(e) => handleUpload(e, 'surfboardModels', board.type)}
                     disabled={uploading !== null}
+                    multiple
                   />
                   <label
                     htmlFor={`upload-board-${board.type}`}
@@ -554,13 +601,14 @@ export const AdminAssets: React.FC = () => {
                         accept=".woff,.woff2,.ttf,.eot,.otf"
                         onChange={(e) => handleUpload(e, 'fonts', font.id)}
                         disabled={uploading !== null}
+                        multiple
                       />
                       <label
                         htmlFor={`upload-font-${font.id}`}
                         className="cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-xl hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-sm shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20"
                       >
                         {uploading === 'fonts' + font.id ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                        הוסף קובץ
+                        הוסף קבצים
                       </label>
                     </div>
                   </div>
@@ -573,7 +621,7 @@ export const AdminAssets: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded uppercase">{file.format}</span>
                             <button
-                              onClick={() => handleDelete('fonts', file.url, font.id)}
+                              onClick={() => handleDeleteClick('fonts', file.url, font.id)}
                               className="p-1.5 text-rose-400 hover:text-white hover:bg-rose-500 rounded-lg transition-all duration-300 hover:shadow-md hover:shadow-rose-500/30 active:scale-95"
                             >
                               <Trash2 size={14} />
@@ -589,6 +637,68 @@ export const AdminAssets: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {assetToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-4 text-rose-500">
+              <div className="p-3 bg-rose-100 rounded-full">
+                <AlertTriangle size={24} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800">מחיקת קובץ</h3>
+            </div>
+            <p className="text-slate-600">
+              האם אתה בטוח שברצונך למחוק קובץ זה? פעולה זו אינה הפיכה.
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setAssetToDelete(null)}
+                className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition-colors"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-5 py-2.5 bg-rose-500 text-white hover:bg-rose-600 rounded-xl font-bold shadow-sm shadow-rose-500/20 transition-colors"
+              >
+                מחק קובץ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Confirmation Modal */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-4 text-amber-500">
+              <div className="p-3 bg-amber-100 rounded-full">
+                <AlertTriangle size={24} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800">שחזור נכסי ברירת מחדל</h3>
+            </div>
+            <p className="text-slate-600">
+              האם אתה בטוח שברצונך לשחזר את נכסי ברירת המחדל? פעולה זו תמזג את נכסי ברירת המחדל עם הנכסים הקיימים.
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition-colors"
+              >
+                ביטול
+              </button>
+              <button
+                onClick={confirmResetAssets}
+                className="px-5 py-2.5 bg-amber-500 text-white hover:bg-amber-600 rounded-xl font-bold shadow-sm shadow-amber-500/20 transition-colors"
+              >
+                שחזר נכסים
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

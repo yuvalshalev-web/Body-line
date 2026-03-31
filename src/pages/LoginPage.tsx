@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, increment, addDoc, limit, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
-import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, ChevronDown, MapPin, CheckCircle2, UserPlus, Mail, RotateCcw, X, UserCheck, Sparkles, Waves, User } from 'lucide-react';
+import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, ChevronDown, MapPin, CheckCircle2, UserPlus, Mail, RotateCcw, X, UserCheck, Sparkles, Waves, User, Terminal } from 'lucide-react';
 import { getDb, trackedGetDocs, auth, handleFirestoreError, OperationType } from '../services/firebase';
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword, getAuth } from 'firebase/auth';
 import { Member } from '../types';
@@ -607,13 +607,17 @@ const LoginPage: React.FC = () => {
                  {isDataLoading ? (
                    <Loader2 className="animate-spin text-white/20" size={32} />
                  ) : (siteAssets?.habalZugLogo) ? (
-                   <img 
-                     src={siteAssets.habalZugLogo} 
-                     className="h-28 w-auto mx-auto object-contain animate-in fade-in duration-500" 
-                     alt="Logo" 
-                     onError={() => setLogoError(true)}
-                     referrerPolicy="no-referrer"
-                   />
+                   <div className="flex items-center justify-center gap-6 animate-in fade-in duration-500">
+                     {siteAssets?.habalZugLogo && (
+                       <img 
+                         src={siteAssets.habalZugLogo} 
+                         className="h-28 w-auto object-contain" 
+                         alt="Habal Zug Logo" 
+                         onError={() => setLogoError(true)}
+                         referrerPolicy="no-referrer"
+                       />
+                     )}
+                   </div>
                  ) : (
                    <div className="flex flex-col items-center gap-2 animate-in fade-in zoom-in-95">
                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-slate-950 shadow-lg">
@@ -730,6 +734,20 @@ const LoginPage: React.FC = () => {
               </div>
               
               <div className="pt-4 flex flex-col items-center gap-4">
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    console.log("--- FIREBASE DIAGNOSTICS (LOGIN PAGE) ---");
+                    console.log("Config:", (window as any)._firebase_config);
+                    console.log("Connected:", (window as any)._db_connected);
+                    console.log("Last Error:", (window as any)._db_error);
+                    alert("Diagnostics logged to console (F12)");
+                  }}
+                  className="flex items-center gap-2 text-white/20 hover:text-white/40 transition-colors text-xs font-bold"
+                >
+                  <Terminal size={12} />
+                  בדיקת מערכת (Diagnostics)
+                </button>
                 <button 
                   type="button" 
                   onClick={() => setMode('JOIN')} 
@@ -906,7 +924,7 @@ const LoginPage: React.FC = () => {
               <img 
                 src={siteAssets.atalefLogo} 
                 alt="עמותת העטלף" 
-                className="h-14 w-auto opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0 group-hover:brightness-125 transition-all duration-500 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]" 
+                className="h-20 w-auto opacity-90 group-hover:opacity-100 group-hover:brightness-110 transition-all duration-500 drop-shadow-[0_0_12px_rgba(255,255,255,0.4)] group-hover:drop-shadow-[0_0_24px_rgba(255,255,255,0.8)]" 
                 referrerPolicy="no-referrer"
               />
             )}
@@ -921,7 +939,7 @@ const LoginPage: React.FC = () => {
               <img 
                 src={siteAssets.reefLogo} 
                 alt="מועדון ריף" 
-                className="h-14 w-auto opacity-40 grayscale group-hover:opacity-100 group-hover:grayscale-0 group-hover:brightness-125 transition-all duration-500 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]" 
+                className="h-20 w-20 rounded-full object-cover bg-white opacity-90 group-hover:opacity-100 group-hover:brightness-110 transition-all duration-500 shadow-[0_0_12px_rgba(255,255,255,0.4)] group-hover:shadow-[0_0_24px_rgba(255,255,255,0.8)]" 
                 referrerPolicy="no-referrer"
               />
             )}

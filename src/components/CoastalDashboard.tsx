@@ -10,7 +10,6 @@ import {
   Video,
   TrendingUp,
   TrendingDown,
-  Snowflake,
   Crown,
   Feather,
   Wind,
@@ -39,8 +38,6 @@ import {
 
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
-
-import WetsuitSVG from './WetsuitSVG';
 
 export const CoastalDashboard: React.FC = () => {
   const { 
@@ -613,42 +610,6 @@ export const CoastalDashboard: React.FC = () => {
                   <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">אין אזהרות פעילות כרגע</p>
                 </div>
               )}
-            </div>
-          </motion.div>
-
-          {/* Wetsuit Recommendation */}
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 group overflow-hidden relative"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3 tracking-tight relative z-10">
-              <Snowflake className="w-6 h-6 text-cyan-400" />
-              המלצת חליפה
-            </h3>
-            <div className="flex items-center gap-8 relative z-10">
-              <div className="w-28 h-36 bg-slate-50 rounded-3xl flex items-center justify-center border border-slate-100 group-hover:scale-105 transition-transform duration-700 shadow-inner">
-                <WetsuitSVG 
-                  thickness={
-                    data.waterTemp < 19 ? '4/3' : 
-                    data.waterTemp < 22 ? '3/2' : 
-                    data.waterTemp < 24 ? '2/2' : 
-                    data.waterTemp < 26 ? '2/2-ss' : 'sun-shirt'
-                  } 
-                />
-              </div>
-              <div>
-                <h4 className="text-2xl font-black text-slate-900 tracking-tighter">
-                  {data.waterTemp < 19 ? 'חליפה 4/3' : 
-                   data.waterTemp < 23 ? 'חליפה 3/2' : 
-                   data.waterTemp < 26 ? 'חליפה קצרה' : 'לייקרה / בגד ים'}
-                </h4>
-                <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest leading-relaxed">
-                  מבוסס על טמפרטורת מים של {data.waterTemp.toFixed(1)}°C
-                </p>
-              </div>
             </div>
           </motion.div>
         </div>
