@@ -35,13 +35,15 @@ import { MarkdownViewer } from '../components/admin/MarkdownViewer';
 import MemberGradingPage from './MemberGradingPage';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { calculateUserStats } from '../utils/analytics';
-import { calculateAge } from '../utils/dateUtils';
+import { calculateAge, parseDate } from '../utils/dateUtils';
 
 
 
 const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) => {
-  const startDate = yearConfig?.startDate ? new Date(yearConfig.startDate) : new Date(0);
-  const endDate = yearConfig?.endDate ? new Date(yearConfig.endDate) : new Date();
+  const startDate = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date(0) : new Date(0);
+  startDate.setHours(0, 0, 0, 0);
+  const endDate = yearConfig?.endDate ? parseDate(yearConfig.endDate) || new Date() : new Date();
+  endDate.setHours(23, 59, 59, 999);
 
   // From events collection (past events not yet archived, or archived ones still in events collection)
   const pastEvents = events.filter((e: any) => {
@@ -52,8 +54,9 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
   // From weeklyHistory collection (archived events)
   const historyEvents = weeklyHistory.filter((h: any) => {
     if (!h.isEvent) return false;
-    const d = new Date(h.date);
-    return d >= startDate && d <= endDate;
+    const d = parseDate(h.date);
+    if (d) d.setHours(0, 0, 0, 0);
+    return d && d >= startDate && d <= endDate;
   });
 
   // Combine unique events by ID

@@ -287,7 +287,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log(`Starting coastal weather fetch (Attempt ${retryCount + 1}) for station ${selectedStationId}...`);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.warn("Coastal weather fetch timed out");
+        // Silent timeout
         controller.abort();
       }, 15000); // 15s timeout
 
@@ -361,20 +361,31 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         }
 
-        // Log to history if Admin
+        // Log to history if Admin - only once per hour to prevent spam
         if (currentUser?.role === 'Admin') {
-          addDoc(collection(db, 'seaConditions'), {
-            timestamp: new Date().toISOString(),
-            waveHeight: data.waveHeight,
-            waterTemp: data.waterTemp,
-            windSpeed: data.windSpeed,
-            uvIndex: data.uvIndex
-          }).catch(console.error);
+          const now = new Date();
+          const hourKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}T${now.getHours()}:00:00`;
+          const lastLogKey = 'last_sea_condition_log_hour';
+          const lastLogHour = localStorage.getItem(lastLogKey);
+
+          if (lastLogHour !== hourKey) {
+            trackedAddDoc(collection(db, 'seaConditions'), {
+              timestamp: now.toISOString(),
+              waveHeight: data.waveHeight,
+              waterTemp: data.waterTemp,
+              windSpeed: data.windSpeed,
+              uvIndex: data.uvIndex
+            }).then(() => {
+              localStorage.setItem(lastLogKey, hourKey);
+            }).catch(err => {
+              console.error("Failed to log sea conditions:", err);
+            });
+          }
         }
       } catch (e: any) {
         clearTimeout(timeoutId);
         if (e.name === 'AbortError') {
-          console.error("Coastal weather fetch timed out");
+          // Silent timeout
         } else if (e.message === 'SERVER_STARTING') {
           // Silent retry, server is just starting
         } else {
@@ -394,7 +405,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchCoastalWeather();
     const weatherInterval = setInterval(fetchCoastalWeather, 1000 * 60 * 15);
     return () => clearInterval(weatherInterval);
-  }, [dbStatus, currentUser, selectedStationId]);
+  }, [dbStatus, currentUser?.id, currentUser?.role, selectedStationId]);
 
   // 3. Public Site Data Listeners
   useEffect(() => {

@@ -6,6 +6,8 @@ if (typeof window !== 'undefined') {
   Chart.register(...registerables);
 }
 
+import { parseDate } from './dateUtils';
+
 /**
  * 1. Operational X-Axis Helper
  * Implements "Operational Relative Timeline" (Shnat Hevel Zug)
@@ -44,7 +46,8 @@ export const getOperationalXAxisProps = (dataLength?: number, yearConfig?: { sta
         
         // Show label roughly once per month (around the 15th or if it's the first tick)
         if (day <= 15 || index === 0) {
-          const start = new Date(yearConfig.startDate);
+          const start = parseDate(yearConfig.startDate) || new Date(0);
+          start.setHours(0, 0, 0, 0);
           // Approximate month calculation
           const current = new Date(start.getFullYear(), month - 1, day);
           if (current < start) current.setFullYear(start.getFullYear() + 1);

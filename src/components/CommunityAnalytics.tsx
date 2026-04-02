@@ -11,7 +11,8 @@ import {
   Heart,
   Sparkles,
   Waves,
-  X
+  X,
+  Info
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useData } from '../contexts/DataContext';
@@ -338,12 +339,16 @@ const CommunityAnalytics: React.FC = () => {
 
     // 1. Demographics
     const now = new Date();
+    now.setHours(23, 59, 59, 999);
     const currentDate = now;
     const seasonStart = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date('2026-01-01') : new Date('2026-01-01');
+    seasonStart.setHours(0, 0, 0, 0);
     const seasonEnd = yearConfig?.endDate ? parseDate(yearConfig.endDate) || new Date('2026-12-31') : new Date('2026-12-31');
+    seasonEnd.setHours(23, 59, 59, 999);
 
     const rawValidSessions = weeklyHistory.filter(session => {
       const sessionDate = parseDate(session.date);
+      if (sessionDate) sessionDate.setHours(0, 0, 0, 0);
       if (!sessionDate || isNaN(sessionDate.getTime())) return false;
       const hasParticipants = (session.participantsCount || 0) > 0 || (session.participantIds?.length || 0) > 0;
       return sessionDate >= seasonStart && sessionDate <= seasonEnd && sessionDate <= currentDate && hasParticipants;
@@ -888,7 +893,15 @@ const CommunityAnalytics: React.FC = () => {
                   <Sparkles size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-[#7A1555] tracking-tight">הרכב הקהילה</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-black text-[#7A1555] tracking-tight">הרכב הקהילה</h3>
+                    <div className="relative group flex items-center">
+                      <Info size={16} className="text-gray-400 hover:text-gray-600 cursor-help transition-colors" />
+                      <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-white/90 backdrop-blur-md text-gray-800 text-xs font-medium rounded-xl shadow-xl border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed">
+                        סיווג התנהגותי של חברי הקהילה המבוסס על רצף, תדירות ומועד ההגעה האחרון שלהם לאורך כל זמן הפעילות.
+                      </div>
+                    </div>
+                  </div>
                   <p className="text-[#000000] text-[8px] font-bold uppercase tracking-[0.3em] opacity-80">Community Aura • Ocean Analytics</p>
                 </div>
               </div>

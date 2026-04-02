@@ -668,9 +668,12 @@ const TrendsDashboard: React.FC = () => {
     if (!yearConfig) return [];
     
     const data = [];
-    const startDate = new Date(yearConfig.startDate);
-    const endDate = new Date(yearConfig.endDate);
+    const startDate = parseDate(yearConfig.startDate) || new Date(0);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = parseDate(yearConfig.endDate) || new Date();
+    endDate.setHours(23, 59, 59, 999);
     const today = new Date();
+    today.setHours(23, 59, 59, 999);
     
     // Generate weeks from startDate to endDate
     let iter = new Date(startDate);
@@ -694,8 +697,8 @@ const TrendsDashboard: React.FC = () => {
         
         // Find actual history for this week if available
         const historyEntry = weeklyHistory.find(h => {
-          const hDate = h.date?.toDate ? h.date.toDate() : new Date(h.date);
-          return hDate.toDateString() === iter.toDateString();
+          const hDate = parseDate(h.date);
+          return hDate && hDate.toDateString() === iter.toDateString();
         });
 
         groups.forEach(group => {
@@ -737,8 +740,10 @@ const TrendsDashboard: React.FC = () => {
   const currentStats = useMemo(() => {
     if (!yearConfig) return null;
     const today = new Date();
-    const startDate = new Date(yearConfig.startDate);
-    const endDate = new Date(yearConfig.endDate);
+    const startDate = parseDate(yearConfig.startDate) || new Date(0);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = parseDate(yearConfig.endDate) || new Date();
+    endDate.setHours(23, 59, 59, 999);
     
     if (today < startDate || today > endDate) return null;
     
@@ -806,11 +811,11 @@ const TrendsDashboard: React.FC = () => {
 
         {yearConfig && (
           <OperationalChartHeader 
-            startDate={new Date(yearConfig.startDate).toLocaleDateString('he-IL')}
-            endDate={new Date(yearConfig.endDate).toLocaleDateString('he-IL')}
+            startDate={(parseDate(yearConfig.startDate) || new Date(0)).toLocaleDateString('he-IL')}
+            endDate={(parseDate(yearConfig.endDate) || new Date()).toLocaleDateString('he-IL')}
             currentMonth={currentStats?.currentMonth}
             currentWeek={currentStats?.currentWeek}
-            isActive={new Date() <= new Date(yearConfig.endDate)}
+            isActive={new Date() <= (parseDate(yearConfig.endDate) || new Date())}
           />
         )}
       </div>
@@ -870,7 +875,7 @@ const TrendsDashboard: React.FC = () => {
                   </div>
 
                   {/* Gauge Container */}
-                  <div className="relative w-full max-w-[280px] mx-auto flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-4 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                  <div className="relative w-full max-w-[280px] mx-auto flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-4 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)] aspect-square">
                     <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
                       <defs>
                         {/* Frosted Glass Background Filter */}
@@ -986,11 +991,12 @@ const TrendsDashboard: React.FC = () => {
                       {/* Thin Sharp Needle */}
                       <motion.g
                         initial={{ rotate: -135 }}
-                        animate={{ rotate: -135 + (group.retention / 100) * 270 }}
+                        animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
                         style={{ transformOrigin: "100px 100px" }}
                         transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
                       >
-                        <circle cx="100" cy="100" r="100" fill="none" />
+                        {/* Invisible rect to force bounding box to 200x200 for correct rotation center */}
+                        <rect x="0" y="0" width="200" height="200" fill="transparent" pointerEvents="none" />
                         <polygon 
                           points="98.5,100 101.5,100 100,18" 
                           fill={`url(#brushed-metal-age-${idx})`}
@@ -1032,10 +1038,12 @@ const TrendsDashboard: React.FC = () => {
                         tabIndex={0}
                         onTouchStart={() => {}}
                         initial={{ rotate: -135 }}
-                        animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
+                        animate={{ rotate: -135 + (group.retention / 100) * 270 }}
                         style={{ transformOrigin: "100px 100px" }}
                         transition={{ duration: 1.5, ease: "easeOut" }}
                       >
+                        {/* Invisible rect to force bounding box to 200x200 for correct rotation center */}
+                        <rect x="0" y="0" width="200" height="200" fill="transparent" pointerEvents="none" />
                         {/* Invisible hit area for easier hover */}
                         <circle cx="100" cy="-5" r="32" fill="transparent" />
                         
@@ -1058,7 +1066,7 @@ const TrendsDashboard: React.FC = () => {
                         {/* Tooltip (Counter-rotated to stay upright) */}
                         <g 
                           className="opacity-0 group-hover/marker:opacity-100 group-focus/marker:opacity-100 transition-opacity duration-300 pointer-events-none"
-                          style={{ transform: `rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}deg)`, transformOrigin: '100px -44px' }}
+                          transform={`rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}, 100, -44)`}
                         >
                           <rect x="40" y="-70" width="120" height="52" rx="10" fill="rgba(15, 23, 42, 0.95)" stroke="#FFDE45" strokeWidth="1.5" style={{ filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.6))' }} />
                           <text x="100" y="-52" textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize="14" fontWeight="bold" fontFamily="Inter, sans-serif">
@@ -1162,7 +1170,7 @@ const TrendsDashboard: React.FC = () => {
                   </div>
 
                   {/* Gauge Container */}
-                  <div className="relative w-full flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-4 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                  <div className="relative w-full flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-4 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)] aspect-square">
                     <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
                       <defs>
                         {/* Frosted Glass Background Filter */}
@@ -1276,11 +1284,12 @@ const TrendsDashboard: React.FC = () => {
                       {/* Thin Sharp Needle */}
                       <motion.g
                         initial={{ rotate: -135 }}
-                        animate={{ rotate: -135 + (group.value / 100) * 270 }}
+                        animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
                         style={{ transformOrigin: "100px 100px" }}
                         transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
                       >
-                        <circle cx="100" cy="100" r="100" fill="none" />
+                        {/* Invisible rect to force bounding box to 200x200 for correct rotation center */}
+                        <rect x="0" y="0" width="200" height="200" fill="transparent" pointerEvents="none" />
                         <polygon 
                           points="98.5,100 101.5,100 100,18" 
                           fill={`url(#brushed-metal-gender-${idx})`}
@@ -1322,10 +1331,12 @@ const TrendsDashboard: React.FC = () => {
                         tabIndex={0}
                         onTouchStart={() => {}}
                         initial={{ rotate: -135 }}
-                        animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
+                        animate={{ rotate: -135 + (group.value / 100) * 270 }}
                         style={{ transformOrigin: "100px 100px" }}
                         transition={{ duration: 1.5, ease: "easeOut" }}
                       >
+                        {/* Invisible rect to force bounding box to 200x200 for correct rotation center */}
+                        <rect x="0" y="0" width="200" height="200" fill="transparent" pointerEvents="none" />
                         {/* Invisible hit area for easier hover */}
                         <circle cx="100" cy="-5" r="32" fill="transparent" />
                         
@@ -1348,7 +1359,7 @@ const TrendsDashboard: React.FC = () => {
                         {/* Tooltip (Counter-rotated to stay upright) */}
                         <g 
                           className="opacity-0 group-hover/marker:opacity-100 group-focus/marker:opacity-100 transition-opacity duration-300 pointer-events-none"
-                          style={{ transform: `rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}deg)`, transformOrigin: '100px -44px' }}
+                          transform={`rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}, 100, -44)`}
                         >
                           <rect x="40" y="-70" width="120" height="52" rx="10" fill="rgba(15, 23, 42, 0.95)" stroke="#FFDE45" strokeWidth="1.5" style={{ filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.6))' }} />
                           <text x="100" y="-52" textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize="14" fontWeight="bold" fontFamily="Inter, sans-serif">
@@ -1440,7 +1451,9 @@ const TrendsDashboard: React.FC = () => {
                 {(() => {
                   if (!yearConfig) return null;
                   const today = new Date();
-                  if (today >= new Date(yearConfig.startDate) && today <= new Date(yearConfig.endDate)) {
+                  const sd = parseDate(yearConfig.startDate) || new Date(0);
+                  const ed = parseDate(yearConfig.endDate) || new Date();
+                  if (today >= sd && today <= ed) {
                     const closest = chartData.reduce((prev: any, curr: any) => {
                       const [pDay, pMonth] = prev.name.split('/');
                       const [cDay, cMonth] = curr.name.split('/');
@@ -1542,7 +1555,9 @@ const TrendsDashboard: React.FC = () => {
                       {(() => {
                         if (!yearConfig) return null;
                         const today = new Date();
-                        if (today >= new Date(yearConfig.startDate) && today <= new Date(yearConfig.endDate)) {
+                        const sd = parseDate(yearConfig.startDate) || new Date(0);
+                        const ed = parseDate(yearConfig.endDate) || new Date();
+                        if (today >= sd && today <= ed) {
                           const closest = chartData.reduce((prev: any, curr: any) => {
                             const [pDay, pMonth] = prev.name.split('/');
                             const [cDay, cMonth] = curr.name.split('/');

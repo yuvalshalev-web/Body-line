@@ -46,13 +46,18 @@ export const calculateUserStats = (
   if (!member) return null;
 
   const seasonStart = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date('2026-01-01') : new Date('2026-01-01');
+  seasonStart.setHours(0, 0, 0, 0);
   const seasonEnd = yearConfig?.endDate ? parseDate(yearConfig.endDate) || new Date('2026-12-31') : new Date('2026-12-31');
+  seasonEnd.setHours(23, 59, 59, 999);
   const startDate = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date(0) : new Date(0);
+  startDate.setHours(0, 0, 0, 0);
   const now = new Date();
+  now.setHours(23, 59, 59, 999);
   
   // Filter history for sessions within the season, ignoring cancelled sessions
   const validSessions = weeklyHistory.filter(session => {
     const sessionDate = parseDate(session.date);
+    if (sessionDate) sessionDate.setHours(0, 0, 0, 0);
     if (!sessionDate || isNaN(sessionDate.getTime())) return false;
     
     const hasParticipants = (session.participantsCount || 0) > 0 || (session.participantIds?.length || 0) > 0;

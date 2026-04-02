@@ -18,7 +18,8 @@ import {
   PieChart as PieChartIcon,
   Activity,
   ArrowUpDown,
-  Info
+  Info,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
@@ -87,14 +88,22 @@ const SessionStatsPage: React.FC = () => {
 
     const activeMembers = getBodyLineStats(members).activeMembers;
     const now = new Date();
+    now.setHours(23, 59, 59, 999);
     // 1. Filter sessions by Shnat Hevel Zug start date
-    const startDate = parseDate(yearConfig.startDate) || new Date();
+    const currentYear = new Date().getFullYear();
+    const currentMonthIndex = new Date().getMonth();
+    const defaultStartYear = currentMonthIndex < 8 ? currentYear - 1 : currentYear;
+    const defaultStartDate = new Date(defaultStartYear, 8, 1); // Sept 1st
+    const startDate = parseDate(yearConfig.startDate) || defaultStartDate;
+    startDate.setHours(0, 0, 0, 0);
     const cancelledDates = new Set<string>();
     
     // Filter history for sessions after startDate
     const validSessions = weeklyHistory.filter(session => {
       const sessionDate = parseDate(session.date);
-      return sessionDate && sessionDate >= startDate && sessionDate <= now;
+      if (sessionDate) sessionDate.setHours(0, 0, 0, 0);
+      const hasParticipants = (session.participantsCount || 0) > 0 || (session.participantIds?.length || 0) > 0;
+      return sessionDate && sessionDate >= startDate && sessionDate <= now && hasParticipants;
     });
 
     // Group by week (Thursday) to merge participantIds
@@ -238,9 +247,9 @@ const SessionStatsPage: React.FC = () => {
 
     // 4. Segmentation
     const segmentation = [
-      { name: 'Regulars (5+)', value: finalMembers.filter(m => m.totalAttendance >= 5).length, color: '#006994' },
-      { name: 'Steady (2-4)', value: finalMembers.filter(m => m.totalAttendance >= 2 && m.totalAttendance <= 4).length, color: '#40E0D0' },
-      { name: 'One-timers (1)', value: finalMembers.filter(m => m.totalAttendance === 1).length, color: '#94a3b8' },
+      { name: 'קבועים (5+)', value: finalMembers.filter(m => m.totalAttendance >= 5).length, color: '#006994' },
+      { name: 'יציבים (2-4)', value: finalMembers.filter(m => m.totalAttendance >= 2 && m.totalAttendance <= 4).length, color: '#40E0D0' },
+      { name: 'חד-פעמיים (1)', value: finalMembers.filter(m => m.totalAttendance === 1).length, color: '#94a3b8' },
     ].filter(s => s.value > 0);
 
     // 5. Age-based Statistics
@@ -270,12 +279,7 @@ const SessionStatsPage: React.FC = () => {
       }
     });
 
-    const ageStackedData = [
-      { name: 'חודש אחרון' },
-      { name: 'מתחילת שנה' }
-    ] as any[];
-
-    ageGroupsBase.forEach(group => {
+    const ageStackedData = ageGroupsBase.map(group => {
       // Monthly
       const monthlyCount = lastMonthSessions.reduce((acc, session) => {
         const count = (session.participantIds || []).filter((uid: string) => ageMap.get(uid) === group.label).length;
@@ -288,8 +292,11 @@ const SessionStatsPage: React.FC = () => {
         return acc + count;
       }, 0);
 
-      ageStackedData[0][group.label] = monthlyCount;
-      ageStackedData[1][group.label] = yearlyCount;
+      return {
+        name: group.label,
+        'חודש אחרון': monthlyCount,
+        'מתחילת שנה': yearlyCount
+      };
     });
 
     // 6. Radial Bar Data (Age Attendance Rate)
@@ -737,46 +744,120 @@ const SessionStatsPage: React.FC = () => {
             {/* Gender Impact Card (Right Side) */}
             <div className="lg:col-span-5 space-y-10">
               {/* Community Composition Card */}
-              <div className="relative admin-info-card p-10 overflow-hidden">
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <h3 className="text-[#00426a] font-black text-2xl tracking-tighter">הרכב הקהילה</h3>
-                    <p className="text-[#00426a] text-[12px] uppercase tracking-widest mt-1 font-bold">פילוח לפי רמת פעילות</p>
-                  </div>
-                  <div className="p-3 bg-[rgba(240,248,255,0.1)] backdrop-blur-md rounded-2xl text-[#0071a1] shadow-sm border-t border-l border-white/80">
-                    <Users size={24} />
+              <div className="admin-info-card p-8 relative group min-h-[550px] flex flex-col items-center justify-center rounded-[3rem] overflow-hidden">
+                {/* Background elements that need clipping */}
+                <div className="absolute inset-0 overflow-hidden rounded-[3rem] pointer-events-none">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+                </div>
+                
+                <div className="w-full flex items-center justify-between mb-8 relative z-10 px-2">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[#004D40] shadow-inner border border-white/20">
+                      <Sparkles size={24} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xl font-black text-[#7A1555] tracking-tight">תדירות השתתפות</h3>
+                        <div className="relative group flex items-center">
+                          <Info size={16} className="text-gray-400 hover:text-gray-600 cursor-help transition-colors" />
+                          <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-white/90 backdrop-blur-md text-gray-800 text-xs font-medium rounded-xl shadow-xl border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed">
+                            פילוח כמותי של חברי הקהילה לפי מספר ההגעות שלהם בטווח הזמן הנבחר.
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[#000000] text-[8px] font-bold uppercase tracking-[0.3em] opacity-80">Attendance Frequency • Ocean Analytics</p>
+                    </div>
                   </div>
                 </div>
-                <div className="h-[200px] w-full">
+
+                {/* Classification Summary */}
+                <div className="w-full mb-6 grid grid-cols-3 gap-2 relative z-10">
+                  {(stats?.segmentation || []).map((group: any) => {
+                    const totalCount = (stats?.segmentation || []).reduce((acc: number, curr: any) => acc + curr.value, 0);
+                    const percentage = totalCount > 0 ? Math.round((group.value / totalCount) * 100) : 0;
+                    return (
+                      <div key={group.name} className="flex flex-col items-center p-2 rounded-xl glass-effect border border-white/20 shadow-sm">
+                        <span className="text-xs font-bold mb-1" style={{ color: group.color }}>{group.name}</span>
+                        <span className="text-lg font-black text-gray-900">{percentage}%</span>
+                        <span className="text-[10px] text-gray-500">{group.value} חברים</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Member Classification Pie Chart */}
+                <div className="w-full relative h-[350px] z-10 mt-4" style={{ filter: 'drop-shadow(0px 15px 20px rgba(0,0,0,0.2))' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={stats?.segmentation || []}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
+                        innerRadius={72}
+                        outerRadius={120}
                         paddingAngle={5}
                         dataKey="value"
+                        stroke="rgba(255,255,255,0.2)"
+                        strokeWidth={2}
+                        labelLine={false}
+                        label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, value, fill, payload }) => {
+                          if (midAngle === undefined || percent === undefined) return null;
+                          const RADIAN = Math.PI / 180;
+                          const sin = Math.sin(-RADIAN * midAngle);
+                          const cos = Math.cos(-RADIAN * midAngle);
+                          const sx = cx + (outerRadius) * cos;
+                          const sy = cy + (outerRadius) * sin;
+                          const mx = cx + (outerRadius + 25) * cos;
+                          const my = cy + (outerRadius + 25) * sin;
+                          const ex = mx + (cos >= 0 ? 1 : -1) * 20;
+                          const ey = my;
+                          const textAnchor = cos >= 0 ? 'start' : 'end';
+                          const safeFill = fill || payload?.color || '#00426a';
+
+                          return (
+                            <g style={{ pointerEvents: 'none' }}>
+                              <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={safeFill} fill="none" strokeWidth={2} />
+                              <circle cx={ex} cy={ey} r={4} fill={safeFill} stroke="none" />
+                              <text x={ex + (cos >= 0 ? 1 : -1) * 10} y={ey - 8} textAnchor={textAnchor} fill={safeFill} className="text-sm font-black" dominantBaseline="central">
+                                {name}
+                              </text>
+                              <text x={ex + (cos >= 0 ? 1 : -1) * 10} y={ey + 10} textAnchor={textAnchor} fill="#333" className="text-[12px] font-bold" dominantBaseline="central">
+                                {`${value} חברים (${(percent * 100).toFixed(0)}%)`}
+                              </text>
+                            </g>
+                          );
+                        }}
                       >
                         {(stats?.segmentation || []).map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={entry.color} 
+                          />
                         ))}
                       </Pie>
                       <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(240, 248, 255, 0.1)', 
-                          backdropFilter: 'blur(24px)',
-                          borderRadius: '16px', 
-                          border: 'none',
-                          boxShadow: '0 8px 32px rgba(49, 170, 193, 0.2)',
-                          fontFamily: 'Yehuda_CLM',
-                          direction: 'rtl'
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="glass-effect p-3 rounded-xl border border-white/20 shadow-xl backdrop-blur-md">
+                                <p className="text-xs font-black mb-1" style={{ color: payload[0].payload.color }}>{payload[0].name}</p>
+                                <p className="text-lg font-black text-gray-900">{payload[0].value} <span className="text-[12px] text-gray-700 opacity-80">חברים</span></p>
+                              </div>
+                            );
+                          }
+                          return null;
                         }}
                       />
-                      <Legend verticalAlign="bottom" height={36}/>
                     </PieChart>
                   </ResponsiveContainer>
+                  
+                  {/* Center Label */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-4xl font-black text-[#004D40] tracking-tighter">
+                      {(stats?.segmentation || []).reduce((acc: number, curr: any) => acc + curr.value, 0)}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#000000] opacity-50">סה״כ חברים</span>
+                  </div>
                 </div>
               </div>
 
@@ -981,9 +1062,8 @@ const SessionStatsPage: React.FC = () => {
                         }}
                       />
                       <Legend />
-                      {(stats?.ageGroupsBase || []).map((group, idx) => (
-                        <Bar key={idx} dataKey={group.label} fill={group.color} stackId="a" radius={[4, 4, 0, 0]} />
-                      ))}
+                      <Bar dataKey="חודש אחרון" fill="#0071a1" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="מתחילת שנה" fill="#00426a" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

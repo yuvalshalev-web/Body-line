@@ -27,8 +27,10 @@ export const OceanPulse: React.FC = () => {
         try {
           const data = await fetchJson('/api/ocean-data');
           setCurrentOceanData(data);
-        } catch (err) {
-          console.error('Error fetching current ocean data:', err);
+        } catch (err: any) {
+          if (err.message !== 'SERVER_STARTING') {
+            console.error('Error fetching current ocean data:', err);
+          }
         }
 
         // 2. Fetch historical data for correlation
@@ -37,10 +39,15 @@ export const OceanPulse: React.FC = () => {
           const now = new Date();
           const validHistory = weeklyHistory.filter(session => {
             const d = parseDate(session.date);
-            return d instanceof Date && !isNaN(d.getTime()) && d <= now && (session.participantsCount || 0) > 0;
+            const isValid = d instanceof Date && !isNaN(d.getTime()) && d <= now;
+            return isValid;
           });
 
+          console.log('OceanPulse: Total history:', weeklyHistory.length);
+          console.log('OceanPulse: Valid history:', validHistory.length);
+
           if (validHistory.length === 0) {
+            console.warn('OceanPulse: No valid history found for correlation chart');
             setLoading(false);
             return;
           }
@@ -48,48 +55,74 @@ export const OceanPulse: React.FC = () => {
           // Sort by date ascending for the chart
           const sortedHistory = [...validHistory]
             .sort((a, b) => {
-              const dateA = parseDate(a.date);
-              const dateB = parseDate(b.date);
+              const dateA = parseDate(a.date) || new Date(0);
+              const dateB = parseDate(b.date) || new Date(0);
               return dateA.getTime() - dateB.getTime();
             });
 
           const firstDate = parseDate(sortedHistory[0].date);
           const lastDate = parseDate(sortedHistory[sortedHistory.length - 1].date);
 
-          if (isNaN(firstDate.getTime()) || isNaN(lastDate.getTime())) {
+          if (!firstDate || !lastDate || isNaN(firstDate.getTime()) || isNaN(lastDate.getTime())) {
             setLoading(false);
             return;
           }
 
-          const startDate = firstDate.toISOString().split('T')[0];
-          const endDate = lastDate.toISOString().split('T')[0];
+          // Format dates for API (YYYY-MM-DD)
+          const formatDateForApi = (d: Date) => {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          };
+
+          const startDate = formatDateForApi(firstDate);
+          const endDate = formatDateForApi(lastDate);
+
+          console.log(`OceanPulse: Fetching historical data from ${startDate} to ${endDate}`);
 
           try {
             const hData = await fetchJson(`/api/ocean-data/historical?start=${startDate}&end=${endDate}`);
-            const hourlyTemps = hData.hourly;
+            
+            if (hData && hData.hourly) {
+              const hourlyTemps = hData.hourly;
 
-            const combined = sortedHistory.map(session => {
-              const sDate = parseDate(session.date);
-              const dateStr = sDate.toISOString().split('T')[0];
-              
-              // Find temp for this date (at 07:00 as per session time)
-              const timeIndex = hourlyTemps.time.findIndex((t: string) => t.startsWith(`${dateStr}T07:00`));
-              const temp = timeIndex !== -1 ? hourlyTemps.sea_surface_temperature[timeIndex] : null;
+              const combined = sortedHistory.map(session => {
+                const sDate = parseDate(session.date);
+                if (!sDate) return null;
 
-              return {
-                date: sDate.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }),
-                temp: temp,
-                tempCold: temp !== null && temp < 20 ? temp : null,
-                tempModerate: temp !== null && temp >= 20 && temp <= 26 ? temp : null,
-                tempHot: temp !== null && temp > 26 ? temp : null,
-                attendance: session.participantsCount || 0
-              };
-            });
+                const dateStr = formatDateForApi(sDate);
+                
+                // Find temp for this date (try 07:00 first, then any time on that day)
+                let timeIndex = hourlyTemps.time.findIndex((t: string) => t.startsWith(`${dateStr}T07:00`));
+                
+                // Fallback to first available hour for that day if 07:00 is missing
+                if (timeIndex === -1) {
+                  timeIndex = hourlyTemps.time.findIndex((t: string) => t.startsWith(dateStr));
+                }
 
-            setCorrelationData(combined);
-          } catch (err) {
-            console.error('Error fetching historical ocean data:', err);
+                const temp = timeIndex !== -1 ? hourlyTemps.sea_surface_temperature[timeIndex] : null;
+
+                return {
+                  date: sDate.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }),
+                  temp: temp,
+                  tempCold: temp !== null && temp < 20 ? temp : null,
+                  tempModerate: temp !== null && temp >= 20 && temp <= 26 ? temp : null,
+                  tempHot: temp !== null && temp > 26 ? temp : null,
+                  attendance: session.participantsCount || 0
+                };
+              }).filter(item => item !== null);
+
+              console.log('OceanPulse: Combined correlation data points:', combined.length);
+              setCorrelationData(combined as any[]);
+            }
+          } catch (err: any) {
+            if (err.message !== 'SERVER_STARTING') {
+              console.error('Error fetching historical ocean data:', err);
+            }
           }
+        } else {
+          console.log('OceanPulse: weeklyHistory is empty or null');
         }
       } catch (err) {
         console.error('Error fetching ocean data:', err);

@@ -15,7 +15,7 @@ import { SurfNewsTracker } from './components/SurfNewsTracker';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 
 // Lazy loaded components
-const LoginPage = lazy(() => import('./pages/LoginPage'));
+import LoginPage from './pages/LoginPage';
 const HomePage = lazy(() => import('./pages/HomePage'));
 const DirectoryPage = lazy(() => import('./pages/DirectoryPage'));
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
@@ -232,14 +232,12 @@ const App: React.FC = () => {
 
   if (!currentUser) {
     return (
-      <Suspense fallback={<PageLoader />}>
-        <div className="min-h-screen relative" dir="rtl">
-          <Routes>
-            <Route path="*" element={<LoginPage />} />
-          </Routes>
-          <DatabaseStatus />
-        </div>
-      </Suspense>
+      <div className="min-h-screen relative" dir="rtl">
+        <Routes>
+          <Route path="*" element={<LoginPage />} />
+        </Routes>
+        <DatabaseStatus />
+      </div>
     );
   }
 

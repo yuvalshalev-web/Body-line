@@ -257,31 +257,31 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row justify-center items-end gap-16 lg:gap-12 shrink-0 w-full lg:w-auto py-12 relative z-10">
+                  <div className="flex flex-row justify-center items-end gap-4 sm:gap-16 lg:gap-12 shrink-0 w-full lg:w-auto py-12 relative z-10">
                     {wetsuit && (
-                      <div className="flex flex-col items-center gap-8 w-full sm:w-[220px] group">
-                        <div className="relative h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
+                      <div className="flex flex-col items-center gap-4 sm:gap-8 w-1/2 sm:w-[220px] group">
+                        <div className="relative h-[250px] sm:h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
                           <div className="absolute inset-0 bg-blue-500/10 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                           <div className="w-full h-full flex items-end justify-center pb-4">
                             <WetsuitSVG thickness={wetsuit.thickness} alignBottom={true} />
                           </div>
                         </div>
-                        <div className="text-center space-y-2">
-                          <p className="text-[11px] font-black text-[#007085] uppercase tracking-[0.3em] opacity-60">ביגוד מומלץ</p>
-                          <p className="text-2xl font-black text-[#002b44] tracking-tighter font-yehuda">{wetsuit.label}</p>
+                        <div className="text-center space-y-1 sm:space-y-2">
+                          <p className="text-[9px] sm:text-[11px] font-black text-[#007085] uppercase tracking-[0.2em] sm:tracking-[0.3em] opacity-60">ביגוד מומלץ</p>
+                          <p className="text-sm sm:text-2xl font-black text-[#002b44] tracking-tighter font-yehuda leading-tight">{wetsuit.label}</p>
                         </div>
                       </div>
                     )}
-                    <div className="flex flex-col items-center gap-8 w-full sm:w-[220px] group">
-                      <div className="relative h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
+                    <div className="flex flex-col items-center gap-4 sm:gap-8 w-1/2 sm:w-[220px] group">
+                      <div className="relative h-[250px] sm:h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
                         <div className="absolute inset-0 bg-orange-500/10 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                         <div className="w-full h-full scale-[1.25] origin-bottom -translate-y-10">
                           <ExactSurfboard type={boardKey} isSelected={true} />
                         </div>
                       </div>
-                      <div className="text-center space-y-2">
-                        <p className="text-[11px] font-black text-[#007085] uppercase tracking-[0.3em] opacity-60">גלשן מומלץ</p>
-                        <p className="text-2xl font-black text-[#002b44] tracking-tighter font-yehuda">{boardType}</p>
+                      <div className="text-center space-y-1 sm:space-y-2">
+                        <p className="text-[9px] sm:text-[11px] font-black text-[#007085] uppercase tracking-[0.2em] sm:tracking-[0.3em] opacity-60">גלשן מומלץ</p>
+                        <p className="text-sm sm:text-2xl font-black text-[#002b44] tracking-tighter font-yehuda leading-tight">{boardType}</p>
                       </div>
                     </div>
                   </div>

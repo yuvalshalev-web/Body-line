@@ -4,7 +4,7 @@ import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, Ch
 import { getDb, trackedGetDocs, auth, handleFirestoreError, OperationType } from '../services/firebase';
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword, getAuth } from 'firebase/auth';
 import { Member } from '../types';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { hashPassword, verifyPassword } from '../utils/crypto';
 import { SUPER_ADMIN_EMAIL } from '../constants';
@@ -19,11 +19,12 @@ import emailjs from '@emailjs/browser';
 const groups = ["הרצליה", "אשדוד", "אשקלון", "כינרת", "קריות", "תל אביב"];
 
 const LoginPage: React.FC = () => {
+  console.log("LoginPage rendering");
+  const [mode, setMode] = useState<'LOGIN' | 'JOIN' | 'RESET_TEMP_PASSWORD'>('LOGIN');
   const { login, currentUser } = useAuth();
   const { siteAssets, isLoading: isDataLoading, isDbEmpty, seedInitialAdmin } = useData();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-  const [mode, setMode] = useState<'LOGIN' | 'JOIN' | 'RESET_TEMP_PASSWORD'>('LOGIN');
   const [isLoading, setIsLoading] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   const [error, setError] = useState('');
