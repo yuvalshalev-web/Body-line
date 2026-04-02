@@ -894,13 +894,13 @@ const TrendsDashboard: React.FC = () => {
                           <stop offset="100%" stopColor="#cbd5e1" />
                         </linearGradient>
 
-                        {/* Liquid Light Gradient (Vitality) */}
-                        <linearGradient id={`liquid-light-age-${idx}`} x1="35" y1="165" x2="165" y2="165" gradientUnits="userSpaceOnUse">
-                          <stop offset="0%" stopColor="#ef4444" />
-                          <stop offset="30%" stopColor="#f59e0b" />
-                          <stop offset="60%" stopColor="#eab308" />
-                          <stop offset="90%" stopColor="#84cc16" />
-                          <stop offset="100%" stopColor="#39FF14" />
+                        {/* 5-Color Scale Gradient */}
+                        <linearGradient id={`scale-gradient-age-${idx}`} x1="35" y1="165" x2="165" y2="165" gradientUnits="userSpaceOnUse">
+                          <stop offset="0%" stopColor="hsl(3, 80%, 50%)" />
+                          <stop offset="25%" stopColor="hsl(26, 90%, 53%)" />
+                          <stop offset="50%" stopColor="hsl(44, 91%, 52%)" />
+                          <stop offset="75%" stopColor="hsl(74, 71%, 46%)" />
+                          <stop offset="100%" stopColor="hsl(95, 56%, 44%)" />
                         </linearGradient>
 
                         {/* Glossy Highlight */}
@@ -925,9 +925,10 @@ const TrendsDashboard: React.FC = () => {
                       <path 
                         d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
                         fill="none" 
-                        stroke="rgba(255, 255, 255, 0.03)" 
+                        stroke={`url(#scale-gradient-age-${idx})`} 
                         strokeWidth="12" 
                         strokeLinecap="round" 
+                        opacity="0.25"
                       />
                       <path 
                         d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
@@ -943,15 +944,15 @@ const TrendsDashboard: React.FC = () => {
                       <motion.path 
                         d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
                         fill="none" 
-                        stroke={`url(#liquid-light-age-${idx})`} 
+                        stroke={`url(#scale-gradient-age-${idx})`} 
                         strokeWidth="8" 
                         strokeLinecap="round" 
                         pathLength="100"
                         strokeDasharray="100"
                         initial={{ strokeDashoffset: 100 }}
-                        animate={{ strokeDashoffset: 100 - group.retention }}
+                        animate={{ strokeDashoffset: 100 - group.yearlyRetention }}
                         transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
-                        style={{ filter: 'drop-shadow(0px 0px 8px rgba(57,255,20,0.4))' }}
+                        style={{ filter: 'drop-shadow(0px 0px 8px rgba(255,255,255,0.4))' }}
                       />
 
                       {/* Tick Marks and Numbers */}
@@ -1189,11 +1190,13 @@ const TrendsDashboard: React.FC = () => {
                           <stop offset="100%" stopColor="#cbd5e1" />
                         </linearGradient>
 
-                        {/* Liquid Light Gradient (Ocean) */}
-                        <linearGradient id={`liquid-light-gender-${idx}`} x1="0" y1="200" x2="200" y2="0" gradientUnits="userSpaceOnUse">
-                          <stop offset="0%" stopColor="#1A365D" />
-                          <stop offset="50%" stopColor="#2C5282" />
-                          <stop offset="100%" stopColor="#63B3ED" />
+                        {/* 5-Color Scale Gradient */}
+                        <linearGradient id={`scale-gradient-gender-${idx}`} x1="35" y1="165" x2="165" y2="165" gradientUnits="userSpaceOnUse">
+                          <stop offset="0%" stopColor="hsl(3, 80%, 50%)" />
+                          <stop offset="25%" stopColor="hsl(26, 90%, 53%)" />
+                          <stop offset="50%" stopColor="hsl(44, 91%, 52%)" />
+                          <stop offset="75%" stopColor="hsl(74, 71%, 46%)" />
+                          <stop offset="100%" stopColor="hsl(95, 56%, 44%)" />
                         </linearGradient>
 
                         {/* Glossy Highlight */}
@@ -1218,9 +1221,10 @@ const TrendsDashboard: React.FC = () => {
                       <path 
                         d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
                         fill="none" 
-                        stroke="rgba(255, 255, 255, 0.03)" 
+                        stroke={`url(#scale-gradient-gender-${idx})`} 
                         strokeWidth="12" 
                         strokeLinecap="round" 
+                        opacity="0.25"
                       />
                       <path 
                         d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
@@ -1236,15 +1240,15 @@ const TrendsDashboard: React.FC = () => {
                       <motion.path 
                         d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
                         fill="none" 
-                        stroke={`url(#liquid-light-gender-${idx})`} 
+                        stroke={`url(#scale-gradient-gender-${idx})`} 
                         strokeWidth="8" 
                         strokeLinecap="round" 
                         pathLength="100"
                         strokeDasharray="100"
                         initial={{ strokeDashoffset: 100 }}
-                        animate={{ strokeDashoffset: 100 - group.value }}
+                        animate={{ strokeDashoffset: 100 - group.yearlyRetention }}
                         transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
-                        style={{ filter: 'drop-shadow(0px 0px 8px rgba(99,179,237,0.4))' }}
+                        style={{ filter: 'drop-shadow(0px 0px 8px rgba(255,255,255,0.4))' }}
                       />
 
                       {/* Tick Marks and Numbers */}
