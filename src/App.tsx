@@ -53,28 +53,52 @@ const App: React.FC = () => {
 
   // Ensure both auth and initial data are loaded before showing the app
   React.useEffect(() => {
+    if (isReady) return;
+    
     if (!loading && !dataLoading) {
+      let isMounted = true;
+      
+      // Safety timeout to ensure app loads even if fonts hang
+      const fallbackTimer = setTimeout(() => {
+        if (isMounted && !isReady) {
+          console.warn("App: Font loading timed out, forcing ready state");
+          setIsReady(true);
+        }
+      }, 1500);
+
       // Wait for fonts to be ready to prevent layout shift and distorted look
       if ('fonts' in document) {
         document.fonts.ready.then(() => {
-          const timer = setTimeout(() => {
-            setIsReady(true);
-            console.log("App: Ready to render (fonts ready). Auth loading:", loading, "Data loading:", dataLoading);
-          }, 150);
-          return () => clearTimeout(timer);
+          if (isMounted) {
+            clearTimeout(fallbackTimer);
+            setTimeout(() => {
+              if (isMounted) {
+                setIsReady(true);
+                console.log("App: Ready to render (fonts ready). Auth loading:", loading, "Data loading:", dataLoading);
+              }
+            }, 150);
+          }
         }).catch(err => {
-          console.warn("App: Font loading error, proceeding anyway:", err);
-          setIsReady(true);
+          if (isMounted) {
+            clearTimeout(fallbackTimer);
+            console.warn("App: Font loading error, proceeding anyway:", err);
+            setIsReady(true);
+          }
         });
       } else {
         // Fallback for browsers that don't support document.fonts
+        clearTimeout(fallbackTimer);
         const timer = setTimeout(() => {
-          setIsReady(true);
+          if (isMounted) setIsReady(true);
         }, 300);
-        return () => clearTimeout(timer);
       }
+      
+      return () => {
+        isMounted = false;
+        clearTimeout(fallbackTimer);
+      };
     }
-  }, [loading, dataLoading]);
+  }, [loading, dataLoading, isReady]);
 
   React.useEffect(() => {
     const handleResize = () => {

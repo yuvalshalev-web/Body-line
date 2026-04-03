@@ -478,40 +478,51 @@ async function startServer() {
       const decoder = new TextDecoder('iso-8859-8');
       const xml = decoder.decode(buffer);
       
-      // Parse Central Coast data
-      const centralCoastMatch = xml.match(/<LocationNameEng>Central Coast<\/LocationNameEng>.*?<LocationData>(.*?)<\/LocationData>/);
-      if (!centralCoastMatch) {
+      // DEBUG: Return raw XML to see what it contains
+      if (req.query.debug === 'true') {
+        return res.send(xml);
+      }
+      
+      const locations = ['Southern Coast', 'Central Coast', 'Northern Coast', 'Sea of Galilee', 'Gulf of Elat'];
+      const parsedData: any = {};
+      
+      for (const loc of locations) {
+        const regex = new RegExp(`<LocationNameEng>${loc}</LocationNameEng>.*?<LocationData>(.*?)</LocationData>`, 's');
+        const match = xml.match(regex);
+        if (match) {
+          const data = match[1];
+          const timeUnitMatch = data.match(/<TimeUnitData>(.*?)<\/TimeUnitData>/s);
+          if (timeUnitMatch) {
+            const timeUnit = timeUnitMatch[1];
+            const waveMatch = timeUnit.match(/<ElementName>Sea status and waves height<\/ElementName>.*?<ElementValue>.*?\/ (.*?)<\/ElementValue>/s);
+            const tempMatch = timeUnit.match(/<ElementName>Sea temperature<\/ElementName>.*?<ElementValue>(.*?)<\/ElementValue>/s);
+            const windMatch = timeUnit.match(/<ElementName>Wind direction and speed<\/ElementName>.*?<ElementValue>(.*?)<\/ElementValue>/s);
+            
+            const waveHeight = waveMatch ? waveMatch[1].trim() : '';
+            const waterTemp = tempMatch ? tempMatch[1].trim() : '';
+            const wind = windMatch ? windMatch[1].trim() : '';
+            
+            let windSpeed = '';
+            if (wind && wind.includes('/')) {
+              windSpeed = wind.split('/')[1].trim();
+            }
+            
+            parsedData[loc] = { waveHeight, waterTemp, wind, windSpeed };
+          }
+        }
+      }
+      
+      const central = parsedData['Central Coast'];
+      let forecastText = null;
+      
+      if (central) {
+        forecastText = `תחזית ימית רשמית (החוף המרכזי): גלים ${central.waveHeight} ס״מ, טמפ׳ מים ${central.waterTemp}°C, רוח ${central.windSpeed} קשר.`;
+        console.log("IMS Marine Forecast parsed successfully");
+      } else {
         console.warn("Central Coast data not found in IMS XML");
-        return res.json({ forecast: null });
       }
       
-      const data = centralCoastMatch[1];
-      const timeUnitMatch = data.match(/<TimeUnitData>(.*?)<\/TimeUnitData>/);
-      if (!timeUnitMatch) {
-        console.warn("TimeUnitData not found in IMS XML");
-        return res.json({ forecast: null });
-      }
-      
-      const timeUnit = timeUnitMatch[1];
-      
-      // Extract values
-      const waveMatch = timeUnit.match(/<ElementName>Sea status and waves height<\/ElementName><ElementValue>.*?\/ (.*?)<\/ElementValue>/);
-      const tempMatch = timeUnit.match(/<ElementName>Sea temperature<\/ElementName><ElementValue>(.*?)<\/ElementValue>/);
-      const windMatch = timeUnit.match(/<ElementName>Wind direction and speed<\/ElementName><ElementValue>(.*?)<\/ElementValue>/);
-      
-      const waveHeight = waveMatch ? waveMatch[1].trim() : '';
-      const waterTemp = tempMatch ? tempMatch[1].trim() : '';
-      const wind = windMatch ? windMatch[1].trim() : '';
-      
-      let windSpeed = '';
-      if (wind && wind.includes('/')) {
-        windSpeed = wind.split('/')[1].trim();
-      }
-      
-      const forecastText = `תחזית ימית רשמית (החוף המרכזי): גלים ${waveHeight} ס״מ, טמפ׳ מים ${waterTemp}°C, רוח ${windSpeed} קשר.`;
-      console.log("IMS Marine Forecast parsed successfully");
-      
-      res.json({ forecast: forecastText, raw: { waveHeight, waterTemp, wind } });
+      res.json({ forecast: forecastText, locations: parsedData });
     } catch (error) {
       console.error("IMS Marine Forecast error:", error);
       res.status(500).json({ error: "Failed to fetch marine forecast" });

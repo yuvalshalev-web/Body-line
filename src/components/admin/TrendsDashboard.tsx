@@ -35,6 +35,38 @@ import { calculateDistance } from '../../utils/distanceCalculator';
 import { getCoordinates } from '../../utils/geocoding';
 import { calculateAge, parseDate, formatDate } from '../../utils/dateUtils';
 
+const getTachometerColor = (percentage: number) => {
+  const stops = [
+    { p: 0, h: 3, s: 80, l: 50 },
+    { p: 25, h: 26, s: 90, l: 53 },
+    { p: 50, h: 44, s: 91, l: 52 },
+    { p: 75, h: 74, s: 71, l: 46 },
+    { p: 100, h: 95, s: 56, l: 44 }
+  ];
+
+  if (percentage <= 0) return `hsl(${stops[0].h}, ${stops[0].s}%, ${stops[0].l}%)`;
+  if (percentage >= 100) return `hsl(${stops[4].h}, ${stops[4].s}%, ${stops[4].l}%)`;
+
+  let lower = stops[0];
+  let upper = stops[1];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (percentage >= stops[i].p && percentage <= stops[i+1].p) {
+      lower = stops[i];
+      upper = stops[i+1];
+      break;
+    }
+  }
+
+  const range = upper.p - lower.p;
+  const factor = (percentage - lower.p) / range;
+
+  const h = Math.round(lower.h + (upper.h - lower.h) * factor);
+  const s = Math.round(lower.s + (upper.s - lower.s) * factor);
+  const l = Math.round(lower.l + (upper.l - lower.l) * factor);
+
+  return `hsl(${h}, ${s}%, ${l}%)`;
+};
+
 const TrendsDashboard: React.FC = () => {
   const { members, weeklyHistory, yearConfig, siteAssets, siteConfig } = useData();
 
@@ -925,7 +957,7 @@ const TrendsDashboard: React.FC = () => {
                       <path 
                         d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
                         fill="none" 
-                        stroke={`url(#scale-gradient-age-${idx})`} 
+                        stroke={getTachometerColor(group.yearlyRetention)} 
                         strokeWidth="12" 
                         strokeLinecap="round" 
                         opacity="0.25"
@@ -944,7 +976,7 @@ const TrendsDashboard: React.FC = () => {
                       <motion.path 
                         d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
                         fill="none" 
-                        stroke={`url(#scale-gradient-age-${idx})`} 
+                        stroke={getTachometerColor(group.yearlyRetention)} 
                         strokeWidth="8" 
                         strokeLinecap="round" 
                         pathLength="100"
@@ -952,7 +984,7 @@ const TrendsDashboard: React.FC = () => {
                         initial={{ strokeDashoffset: 100 }}
                         animate={{ strokeDashoffset: 100 - group.yearlyRetention }}
                         transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
-                        style={{ filter: 'drop-shadow(0px 0px 8px rgba(255,255,255,0.4))' }}
+                        style={{ filter: `drop-shadow(0px 0px 8px ${getTachometerColor(group.yearlyRetention)})` }}
                       />
 
                       {/* Tick Marks and Numbers */}
@@ -1221,7 +1253,7 @@ const TrendsDashboard: React.FC = () => {
                       <path 
                         d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
                         fill="none" 
-                        stroke={`url(#scale-gradient-gender-${idx})`} 
+                        stroke={getTachometerColor(group.yearlyRetention)} 
                         strokeWidth="12" 
                         strokeLinecap="round" 
                         opacity="0.25"
@@ -1240,7 +1272,7 @@ const TrendsDashboard: React.FC = () => {
                       <motion.path 
                         d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
                         fill="none" 
-                        stroke={`url(#scale-gradient-gender-${idx})`} 
+                        stroke={getTachometerColor(group.yearlyRetention)} 
                         strokeWidth="8" 
                         strokeLinecap="round" 
                         pathLength="100"
@@ -1248,7 +1280,7 @@ const TrendsDashboard: React.FC = () => {
                         initial={{ strokeDashoffset: 100 }}
                         animate={{ strokeDashoffset: 100 - group.yearlyRetention }}
                         transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
-                        style={{ filter: 'drop-shadow(0px 0px 8px rgba(255,255,255,0.4))' }}
+                        style={{ filter: `drop-shadow(0px 0px 8px ${getTachometerColor(group.yearlyRetention)})` }}
                       />
 
                       {/* Tick Marks and Numbers */}

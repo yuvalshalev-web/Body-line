@@ -48,6 +48,85 @@ const CommunityAnalytics: React.FC = () => {
     const logoImg = new Image();
     logoImg.src = 'https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/site_assets%2FextraLogo_1771271649909?alt=media';
 
+    // Pre-calculate member positions and distances
+    const membersWithCanvasPos = members.map((member, index) => {
+        let distance = 0;
+        const coords = getCoordinates(member.city, member.lat, member.lng);
+        
+        if (homeLat && homeLng && coords) {
+          distance = calculateDistance(homeLat, homeLng, coords[0], coords[1]);
+        } else {
+          distance = member.distance || 0;
+        }
+        
+        const distanceLimit = 30;
+        let relativeRadius = (distance / distanceLimit) * maxRadius;
+        
+        const minRadius = 35; 
+        if (relativeRadius < minRadius) relativeRadius = minRadius;
+        if (relativeRadius > maxRadius) relativeRadius = maxRadius - 10;
+
+        const angle = (index * 137.5) * (Math.PI / 180); 
+
+        const x = centerX + relativeRadius * Math.cos(angle);
+        const y = centerY + relativeRadius * Math.sin(angle);
+        
+        return { ...member, canvasX: x, canvasY: y, calculatedDistance: distance };
+    });
+
+    // 3. הוספת אינטראקציה (נגיעה/עכבר)
+    const handleMouseMove = (e: MouseEvent) => {
+        const mouseX = e.offsetX;
+        const mouseY = e.offsetY;
+        const tooltip = tooltipRef.current;
+        
+        if (!tooltip) return;
+
+        // Get visual coordinates relative to the container for the tooltip
+        const containerRect = canvas.parentElement?.getBoundingClientRect();
+        const visualX = containerRect ? e.clientX - containerRect.left : e.offsetX;
+        const visualY = containerRect ? e.clientY - containerRect.top : e.offsetY;
+
+        let found = false;
+        membersWithCanvasPos.forEach(m => {
+            const dist = Math.sqrt((mouseX - m.canvasX)**2 + (mouseY - m.canvasY)**2);
+            if (dist < 7) {
+                tooltip.style.display = 'block';
+                tooltip.style.left = visualX + 15 + 'px';
+                tooltip.style.top = visualY + 15 + 'px';
+                tooltip.style.padding = '10px 14px';
+                tooltip.style.background = 'rgba(255, 255, 255, 0.98)';
+                tooltip.style.backdropFilter = 'blur(12px)';
+                tooltip.style.borderRadius = '16px';
+                tooltip.style.border = '1.5px solid #00E5FF';
+                tooltip.style.boxShadow = '0 12px 30px rgba(0,0,0,0.12)';
+                tooltip.style.minWidth = '150px';
+                
+                tooltip.innerHTML = `
+                  <div style="display: flex; flex-direction: column; gap: 2px; text-align: right;">
+                    <div style="font-weight: 900; color: #000; font-size: 14px; margin-bottom: 0px; line-height: 1.2;">${m.firstName} ${m.lastName}</div>
+                    
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin: 2px 0;">
+                      <div style="font-size: 12px; font-weight: 700; color: #444;">${m.calculatedDistance.toFixed(2)} ק"מ</div>
+                      ${m.avatar ? 
+                        `<img src="${m.avatar}" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;" />` :
+                        `<div style="width: 26px; height: 26px; border-radius: 50%; background: #00426a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 1px solid #eee;">${m.firstName[0]}</div>`
+                      }
+                    </div>
+                    
+                    <div style="font-size: 10px; color: #777; font-weight: 700; margin-top: 2px; border-top: 1px solid #f5f5f5; padding-top: 4px; line-height: 1.1;">
+                      ${m.full_address || m.city || 'לא צוינה'}
+                    </div>
+                  </div>
+                `;
+                found = true;
+            }
+        });
+        if (!found) tooltip.style.display = 'none';
+    };
+
+    canvas.onmousemove = handleMouseMove as any;
+
     let animationFrameId: number;
     const startTime = Date.now();
 
@@ -158,40 +237,19 @@ const CommunityAnalytics: React.FC = () => {
       }
 
       // 2. ציור חברי הקהילה כטיפות מים
-      const membersWithCanvasPos = members.map((member, index) => {
-          let distance = 0;
-          const coords = getCoordinates(member.city, member.lat, member.lng);
-          
-          if (homeLat && homeLng && coords) {
-            distance = calculateDistance(homeLat, homeLng, coords[0], coords[1]);
-          } else {
-            distance = member.distance || 0;
-          }
-          
-          const distanceLimit = 30;
-          let relativeRadius = (distance / distanceLimit) * maxRadius;
-          
-          const minRadius = 35; 
-          if (relativeRadius < minRadius) relativeRadius = minRadius;
-          if (relativeRadius > maxRadius) relativeRadius = maxRadius - 10;
-
-          const angle = (index * 137.5) * (Math.PI / 180); 
-
-          const x = centerX + relativeRadius * Math.cos(angle);
-          const y = centerY + relativeRadius * Math.sin(angle);
-
+      membersWithCanvasPos.forEach((m) => {
           // Water Droplet (Circle)
           const dropRadius = 6;
           
           // Color mapping: Green for close, Red for far
-          const ratio = Math.min(distance / 25, 1);
+          const ratio = Math.min(m.calculatedDistance / 25, 1);
           const r = Math.round(34 + ratio * (239 - 34));
           const g = Math.round(197 + ratio * (68 - 197));
           const b = Math.round(94 + ratio * (68 - 94));
           const dropColor = `rgb(${r}, ${g}, ${b})`;
 
           ctx.save();
-          ctx.translate(x, y);
+          ctx.translate(m.canvasX, m.canvasY);
           
           // Circle shape
           ctx.beginPath();
@@ -214,70 +272,16 @@ const CommunityAnalytics: React.FC = () => {
           ctx.fill();
           
           ctx.restore();
-
-          return { ...member, canvasX: x, canvasY: y, calculatedDistance: distance };
       });
 
-      // 3. הוספת אינטראקציה (נגיעה/עכבר)
-      const handleMouseMove = (e: MouseEvent) => {
-          const mouseX = e.offsetX;
-          const mouseY = e.offsetY;
-          const tooltip = tooltipRef.current;
-          
-          if (!tooltip) return;
-
-          // Get visual coordinates relative to the container for the tooltip
-          const containerRect = canvas.parentElement?.getBoundingClientRect();
-          const visualX = containerRect ? e.clientX - containerRect.left : e.offsetX;
-          const visualY = containerRect ? e.clientY - containerRect.top : e.offsetY;
-
-          let found = false;
-          membersWithCanvasPos.forEach(m => {
-              const dist = Math.sqrt((mouseX - m.canvasX)**2 + (mouseY - m.canvasY)**2);
-              if (dist < 7) {
-                  tooltip.style.display = 'block';
-                  tooltip.style.left = visualX + 15 + 'px';
-                  tooltip.style.top = visualY + 15 + 'px';
-                  tooltip.style.padding = '10px 14px';
-                  tooltip.style.background = 'rgba(255, 255, 255, 0.98)';
-                  tooltip.style.backdropFilter = 'blur(12px)';
-                  tooltip.style.borderRadius = '16px';
-                  tooltip.style.border = '1.5px solid #00E5FF';
-                  tooltip.style.boxShadow = '0 12px 30px rgba(0,0,0,0.12)';
-                  tooltip.style.minWidth = '150px';
-                  
-                  tooltip.innerHTML = `
-                    <div style="display: flex; flex-direction: column; gap: 2px; text-align: right;">
-                      <div style="font-weight: 900; color: #000; font-size: 14px; margin-bottom: 0px; line-height: 1.2;">${m.firstName} ${m.lastName}</div>
-                      
-                      <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin: 2px 0;">
-                        <div style="font-size: 12px; font-weight: 700; color: #444;">${m.calculatedDistance.toFixed(2)} ק"מ</div>
-                        ${m.avatar ? 
-                          `<img src="${m.avatar}" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;" />` :
-                          `<div style="width: 26px; height: 26px; border-radius: 50%; background: #00426a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 1px solid #eee;">${m.firstName[0]}</div>`
-                        }
-                      </div>
-                      
-                      <div style="font-size: 10px; color: #777; font-weight: 700; margin-top: 2px; border-top: 1px solid #f5f5f5; padding-top: 4px; line-height: 1.1;">
-                        ${m.full_address || m.city || 'לא צוינה'}
-                      </div>
-                    </div>
-                  `;
-                  found = true;
-              }
-          });
-          if (!found) tooltip.style.display = 'none';
-      };
-
-      canvas.onmousemove = handleMouseMove as any;
       animationFrameId = requestAnimationFrame(render);
     };
 
     logoImg.onload = () => {
-      animationFrameId = requestAnimationFrame(render);
+      // The render loop is already running, no need to start another one
     };
     
-    // Start even if logo takes time
+    // Start the render loop
     animationFrameId = requestAnimationFrame(render);
 
     return () => {

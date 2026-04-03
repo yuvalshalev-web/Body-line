@@ -49,7 +49,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Listen to Firebase Auth state changes
   useEffect(() => {
     console.log("AuthContext: Initializing onAuthStateChanged...");
+    
+    // Safety timeout in case onAuthStateChanged hangs
+    const authTimeout = setTimeout(() => {
+      console.warn("AuthContext: onAuthStateChanged timed out, forcing loading to false");
+      setLoading(false);
+    }, 5000);
+
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      clearTimeout(authTimeout);
       console.log("AuthContext: onAuthStateChanged fired. User:", user?.email || 'null');
       setFirebaseUser(user);
       
@@ -57,7 +65,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
           const db = getDb();
           console.log("AuthContext: Fetching member doc for", user.uid);
-          const memberDoc = await trackedGetDoc(doc(db, 'members', user.uid));
+          
+          // Add a timeout to prevent hanging on flaky connections
+          const fetchPromise = trackedGetDoc(doc(db, 'members', user.uid));
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Timeout fetching member doc")), 5000)
+          );
+          
+          const memberDoc = await Promise.race([fetchPromise, timeoutPromise]) as any;
+          
           if (memberDoc.exists()) {
             const memberData = { id: memberDoc.id, ...memberDoc.data() } as Member;
             if (memberData.isActive === false) {

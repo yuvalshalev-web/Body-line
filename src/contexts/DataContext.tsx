@@ -283,7 +283,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     console.log("Coastal weather useEffect running, dbStatus:", dbStatus, "currentUser:", currentUser);
     // Removed the dbStatus check to ensure it runs
     
+    let isMounted = true;
+    let retryTimeoutId: NodeJS.Timeout;
+
     const fetchCoastalWeather = async (retryCount = 0) => {
+      if (!isMounted) return;
       console.log(`Starting coastal weather fetch (Attempt ${retryCount + 1}) for station ${selectedStationId}...`);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
@@ -295,6 +299,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const apiUrl = `/api/coastal-weather?stationId=${selectedStationId}`;
         const response = await fetch(apiUrl, { signal: controller.signal });
         clearTimeout(timeoutId);
+
+        if (!isMounted) return;
 
         if (!response.ok) {
           console.error(`API Error: ${response.status}`);
@@ -315,6 +321,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
 
         const data = await response.json();
+        if (!isMounted) return;
         console.log("DataContext - Coastal weather data received:", data);
         setCoastalWeather(data);
         setIsLoading(false);
@@ -324,6 +331,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const statsRef = doc(db, 'seaConditionsStats', 'current');
         const statsDoc = await getDoc(statsRef);
         
+        if (!isMounted) return;
+
         if (!statsDoc.exists()) {
           await setDoc(statsRef, {
             maxWaveHeight: data.waveHeight,
@@ -384,6 +393,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       } catch (e: any) {
         clearTimeout(timeoutId);
+        if (!isMounted) return;
         if (e.name === 'AbortError') {
           // Silent timeout
         } else if (e.message === 'SERVER_STARTING') {
@@ -395,7 +405,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Retry logic for transient errors
         if (retryCount < 3) {
           console.log(`Retrying coastal weather fetch in 5 seconds...`);
-          setTimeout(() => fetchCoastalWeather(retryCount + 1), 5000);
+          retryTimeoutId = setTimeout(() => fetchCoastalWeather(retryCount + 1), 5000);
         } else {
           setIsLoading(false); // Ensure loading stops on final error
         }
@@ -403,8 +413,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     fetchCoastalWeather();
-    const weatherInterval = setInterval(fetchCoastalWeather, 1000 * 60 * 15);
-    return () => clearInterval(weatherInterval);
+    const weatherInterval = setInterval(() => fetchCoastalWeather(0), 1000 * 60 * 15);
+    return () => {
+      isMounted = false;
+      clearInterval(weatherInterval);
+      if (retryTimeoutId) clearTimeout(retryTimeoutId);
+    };
   }, [dbStatus, currentUser?.id, currentUser?.role, selectedStationId]);
 
   // 3. Public Site Data Listeners
@@ -482,7 +496,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // 4. Auth-dependent Data Listeners
   useEffect(() => {
     if (dbStatus === 'OFFLINE' || !currentUser) {
-      if (!currentUser) setIsLoading(false);
+      setIsLoading(false);
       return;
     }
 
@@ -617,7 +631,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       unsubAttendees();
       if (unsubRequests) unsubRequests();
     };
-  }, [dbStatus, currentUser?.id, currentUser?.role, firebaseUser?.uid, handleFirestoreError, retryCount]);
+  }, [dbStatus, currentUser?.id, currentUser?.role, firebaseUser?.uid, handleFirestoreError]);
 
   const updateMember = useCallback(async (member: Member) => {
     const { id, ...data } = member;
