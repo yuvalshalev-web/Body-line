@@ -30,7 +30,7 @@ const GitHubCommandCenter: React.FC = () => {
 
   const fetchAction = async () => {
     try {
-      const res = await fetch(`${window.location.origin}/api/github/actions`);
+      const res = await fetch('/api/github/actions');
       if (!res.ok) throw new Error('Failed');
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {

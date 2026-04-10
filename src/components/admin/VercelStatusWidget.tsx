@@ -56,7 +56,7 @@ const VercelStatusWidget: React.FC<VercelStatusWidgetProps> = ({ systemStats }) 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${window.location.origin}/api/vercel/status`);
+      const response = await fetch('/api/vercel/status');
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text();

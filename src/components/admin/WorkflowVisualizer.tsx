@@ -12,11 +12,10 @@ const WorkflowVisualizer: React.FC = () => {
     let interval: NodeJS.Timeout;
 
     const fetchStatuses = async () => {
-      console.log("DEBUG: window.location.origin:", window.location.origin);
       try {
         // Fetch GitHub Status
         try {
-          const ghData = await fetchJson(`${window.location.origin}/api/github/actions`);
+          const ghData = await fetchJson('/api/github/actions');
           const action = ghData.action;
           if (action) {
             if (action.status === 'in_progress' || action.status === 'queued') {
@@ -32,16 +31,12 @@ const WorkflowVisualizer: React.FC = () => {
             // Silent retry
           } else {
             console.error('Error fetching GitHub status:', err);
-            if (err instanceof Error) {
-              console.error('Error message:', err.message);
-              console.error('Error stack:', err.stack);
-            }
           }
         }
 
         // Fetch Vercel Status
         try {
-          const vercelData = await fetchJson(`${window.location.origin}/api/vercel/status`);
+          const vercelData = await fetchJson('/api/vercel/status');
           const deployment = vercelData.latestDeployment;
           if (deployment) {
             if (deployment.readyState === 'READY') {
@@ -57,10 +52,6 @@ const WorkflowVisualizer: React.FC = () => {
             // Silent retry
           } else {
             console.error('Error fetching Vercel status:', err);
-            if (err instanceof Error) {
-              console.error('Error message:', err.message);
-              console.error('Error stack:', err.stack);
-            }
           }
         }
       } catch (error) {
