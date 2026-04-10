@@ -53,6 +53,7 @@ export const CoastalDashboard: React.FC = () => {
   const [imsLoading, setImsLoading] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   const stations = [
     { id: "178", name: "תל אביב" },
@@ -66,6 +67,7 @@ export const CoastalDashboard: React.FC = () => {
   useEffect(() => {
     const fetchHistory = async () => {
       setHistoryLoading(true);
+      setHistoryError(null);
       try {
         const res = await fetch(`/api/ims/history/${selectedStationId}`);
         if (res.ok) {
@@ -79,10 +81,21 @@ export const CoastalDashboard: React.FC = () => {
             setHistory(data);
           } catch (e) {
             console.warn("IMS history API returned non-JSON response");
+            setHistoryError("תגובה לא תקינה מהשרת");
+          }
+        } else {
+          const errText = await res.text();
+          console.warn(`Failed to fetch history: ${res.status} ${errText}`);
+          try {
+            const errJson = JSON.parse(errText);
+            setHistoryError(errJson.error || `שגיאה ${res.status}`);
+          } catch {
+            setHistoryError(`שגיאה ${res.status}`);
           }
         }
       } catch (err) {
         console.warn("Failed to fetch history", err);
+        setHistoryError("שגיאת תקשורת");
       } finally {
         setHistoryLoading(false);
       }
@@ -467,6 +480,14 @@ export const CoastalDashboard: React.FC = () => {
                 <div className="h-full flex flex-col items-center justify-center gap-3">
                   <Loader2 className="w-10 h-10 text-cyan-500 animate-spin" />
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">טוען היסטוריה...</span>
+                </div>
+              ) : historyError ? (
+                <div className="h-full flex flex-col items-center justify-center gap-3">
+                  <AlertTriangle className="w-10 h-10 text-red-400" />
+                  <span className="text-sm font-bold text-slate-500">{historyError}</span>
+                  <span className="text-xs text-slate-400 text-center max-w-xs">
+                    {historyError.includes('Token missing') ? 'יש להגדיר IMS_API_TOKEN בהגדרות הסביבה (Environment Variables) של שרת הפרודקשן.' : 'לא ניתן לטעון נתוני היסטוריה כרגע.'}
+                  </span>
                 </div>
               ) : history.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
