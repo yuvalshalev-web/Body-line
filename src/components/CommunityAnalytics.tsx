@@ -922,7 +922,11 @@ const CommunityAnalytics: React.FC = () => {
               ].map(group => {
                 const percentage = stats.totalCount > 0 ? Math.round((group.count / stats.totalCount) * 100) : 0;
                 return (
-                  <div key={group.label} className="flex flex-col items-center p-2 rounded-xl glass-effect border border-white/20 shadow-sm">
+                  <div 
+                    key={group.label} 
+                    className="flex flex-col items-center p-2 rounded-xl glass-effect border border-white/20 shadow-sm cursor-pointer hover:bg-white/40 transition-colors"
+                    onClick={() => setSelectedGroup(group.label)}
+                  >
                     <span className="text-xs font-bold mb-1" style={{ color: group.color }}>{group.label}</span>
                     <span className="text-lg font-black text-gray-900">{percentage}%</span>
                     <span className="text-[10px] text-gray-500">{group.count} חברים</span>
