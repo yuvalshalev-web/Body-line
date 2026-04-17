@@ -246,16 +246,16 @@ export const CoastalDashboard: React.FC = () => {
   };
 
   const getWaveHeightGrade = (height: number) => {
-    if (height >= 2.5) return { score: 10, name: 'הירושימה (קירות)', hand: '🙌', symbol: '🌪️', color: 'text-purple-600', bg: 'bg-purple-100/50', border: 'border-purple-200' };
-    if (height >= 1.8) return { score: 9, name: 'גובה ראש פלוס', hand: '🤙', symbol: '💨', color: 'text-emerald-600', bg: 'bg-emerald-100/50', border: 'border-emerald-200' };
-    if (height >= 1.2) return { score: 8, name: 'גובה ראש', hand: '👍', symbol: '🌊', color: 'text-cyan-600', bg: 'bg-cyan-100/50', border: 'border-cyan-200' };
-    if (height >= 0.9) return { score: 7, name: 'גובה כתף', hand: '👌', symbol: '🎯', color: 'text-blue-600', bg: 'bg-blue-100/50', border: 'border-blue-200' };
-    if (height >= 0.7) return { score: 6, name: 'גובה חזה', hand: '🤘', symbol: '✨', color: 'text-indigo-600', bg: 'bg-indigo-100/50', border: 'border-indigo-200' };
-    if (height >= 0.5) return { score: 5, name: 'גובה מותן', hand: '🖐️', symbol: '🪵', color: 'text-amber-600', bg: 'bg-amber-100/50', border: 'border-amber-200' };
-    if (height >= 0.3) return { score: 4, name: 'גובה ברך', hand: '🤏', symbol: '🦵', color: 'text-orange-600', bg: 'bg-orange-100/50', border: 'border-orange-200' };
-    if (height >= 0.2) return { score: 3, name: 'קרסול / קצף', hand: '🫳', symbol: '🦶', color: 'text-red-500', bg: 'bg-red-100/50', border: 'border-red-200' };
+    if (height >= 2.0) return { score: 10, name: 'הירושימה / דאבל', hand: '🙌', symbol: '🌪️', color: 'text-purple-600', bg: 'bg-purple-100/50', border: 'border-purple-200' };
+    if (height >= 1.6) return { score: 9, name: 'מעל הראש', hand: '🤙', symbol: '💨', color: 'text-emerald-600', bg: 'bg-emerald-100/50', border: 'border-emerald-200' };
+    if (height >= 1.3) return { score: 8, name: 'גובה ראש', hand: '👍', symbol: '🌊', color: 'text-cyan-600', bg: 'bg-cyan-100/50', border: 'border-cyan-200' };
+    if (height >= 1.1) return { score: 7, name: 'גובה כתף', hand: '👌', symbol: '🎯', color: 'text-blue-600', bg: 'bg-blue-100/50', border: 'border-blue-200' };
+    if (height >= 0.9) return { score: 6, name: 'גובה חזה', hand: '🤘', symbol: '✨', color: 'text-indigo-600', bg: 'bg-indigo-100/50', border: 'border-indigo-200' };
+    if (height >= 0.7) return { score: 5, name: 'גובה מותן (Waist)', hand: '🖐️', symbol: '🪵', color: 'text-amber-600', bg: 'bg-amber-100/50', border: 'border-amber-200' };
+    if (height >= 0.4) return { score: 4, name: 'גובה ברך (Knee)', hand: '🤏', symbol: '🦵', color: 'text-orange-600', bg: 'bg-orange-100/50', border: 'border-orange-200' };
+    if (height >= 0.2) return { score: 3, name: 'קרסול / קצף (Ankle)', hand: '🫳', symbol: '🦶', color: 'text-red-500', bg: 'bg-red-100/50', border: 'border-red-200' };
     if (height >= 0.1) return { score: 2, name: 'פלטה עם קפלים', hand: '🤏', symbol: '〰️', color: 'text-slate-500', bg: 'bg-slate-100/50', border: 'border-slate-200' };
-    if (height >= 0.05) return { score: 1, name: 'זכוכית (Glassy)', hand: '🤲', symbol: '🪟', color: 'text-slate-400', bg: 'bg-slate-100/50', border: 'border-slate-200' };
+    if (height > 0) return { score: 1, name: 'זכוכית (Glassy)', hand: '🤲', symbol: '🪟', color: 'text-slate-400', bg: 'bg-slate-100/50', border: 'border-slate-200' };
     return { score: 0, name: 'בריכה (Flat)', hand: '👎', symbol: '🏊‍♀️', color: 'text-slate-400', bg: 'bg-slate-100/50', border: 'border-slate-200' };
   };
 
@@ -352,8 +352,8 @@ export const CoastalDashboard: React.FC = () => {
                     גובה גלים
                   </span>
                   <div className="flex items-baseline gap-1.5 text-[#00426a] group-hover:scale-105 transition-transform duration-500">
-                    <span className="text-7xl md:text-8xl font-black tracking-tighter leading-none drop-shadow-sm">{data.waveHeight.toFixed(1)}</span>
-                    <span className="text-2xl font-bold opacity-60">מ׳</span>
+                    <span className="text-7xl md:text-8xl font-black tracking-tighter leading-none drop-shadow-sm">{data.waveHeight === 0 ? '0' : Math.round(data.waveHeight * 100)}</span>
+                    <span className="text-2xl font-bold opacity-60">ס״מ</span>
                   </div>
                   
                   {/* Height Grade UI */}

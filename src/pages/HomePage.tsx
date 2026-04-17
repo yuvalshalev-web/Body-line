@@ -23,6 +23,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { CoastalDashboard } from '../components/CoastalDashboard';
+import { WeeklyForecast } from '../components/WeeklyForecast';
 import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -459,6 +460,7 @@ const HomePage: React.FC = () => {
         </AnimatePresence>
 
         <CoastalDashboard />
+        <WeeklyForecast />
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">

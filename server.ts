@@ -194,6 +194,27 @@ async function startServer() {
     }
   });
 
+  app.get("/api/forecast/weekly", async (req, res) => {
+    try {
+      const { lat, lon } = req.query;
+      // Fetch offshore wave forecast using Open-Meteo Marine API
+      const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&daily=wave_height_max,wave_direction_dominant&timezone=Asia%2FJerusalem`;
+      
+      const response = await fetch(url, {
+        headers: { 
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+      });
+      
+      if (!response.ok) throw new Error(`Open-Meteo API error: ${response.status}`);
+      const data = await response.json();
+      res.json(data);
+    } catch (err) {
+      console.error("Weekly forecast fetch proxy error:", err);
+      res.status(500).json({ error: "Failed to fetch weekly forecast" });
+    }
+  });
+
   // In-memory cache for coastal weather
   let coastalWeatherCache: any = null;
   let coastalWeatherCacheTime: number = 0;
@@ -351,11 +372,23 @@ async function startServer() {
         }
       }
 
+      // Mediterranean nearshore breaking logic (User-centric view)
+      const rawMeters = marineData.current?.wave_height || 0;
+      let heightCm = Math.max(0, Math.round((rawMeters * 100) * 0.65 - 10));
+      
+      if (heightCm < 25) {
+         heightCm = 0;
+      } else {
+         heightCm = Math.round(heightCm / 10) * 10;
+      }
+      
+      const processedWaveHeightMeters = heightCm / 100;
+
       const result = {
         location: coords.name,
         stationId: stationId,
         timestamp: new Date().toISOString(),
-        waveHeight: marineData.current?.wave_height || 0,
+        waveHeight: processedWaveHeightMeters,
         wavePeriod: marineData.current?.wave_period || 0,
         windSpeed: windSpeed,
         windGusts: windGusts,

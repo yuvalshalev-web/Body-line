@@ -12,7 +12,8 @@ import {
   ReferenceArea,
   ReferenceLine,
   ComposedChart,
-  Bar
+  Bar,
+  Cell
 } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../../contexts/DataContext';
@@ -320,7 +321,71 @@ const TrendsDashboard: React.FC = () => {
     const totalWomen = members.filter(m => m.gender === 'נקבה').length;
     const activeWomen = activeMembers.filter(m => m.gender === 'נקבה').length;
     const femaleRetention = totalWomen > 0 ? Math.round((activeWomen / totalWomen) * 100) : 100;
-    const overallRetention = totalMembers > 0 ? Math.round((activeMembers.length / totalMembers) * 100) : 0;
+    
+    // Calculate overall 8-week retention
+    const overallPotentialAttendance = last8Sessions.reduce((sum, session) => {
+      const activeGroupMembers = activeMembers.filter(m => {
+        const joinedDate = parseDate(m.joinedAt);
+        const sessionDate = parseDate(session.date);
+        if (session.participantIds?.includes(m.id)) return true;
+        if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
+        if (m.deactivatedAt) {
+          const deactivatedDate = parseDate(m.deactivatedAt);
+          if (deactivatedDate && sessionDate && deactivatedDate < sessionDate) return false;
+        }
+        return true;
+      });
+      return sum + activeGroupMembers.length;
+    }, 0);
+
+    const overallActualAttendance = last8Sessions.reduce((sum, session) => {
+      const attendees = session.participantIds || [];
+      const groupAttendees = attendees.filter((id: string) => 
+        activeMembers.some(m => m.id === id)
+      ).length;
+      return sum + groupAttendees;
+    }, 0);
+
+    const overallRetention = overallPotentialAttendance > 0 
+      ? Math.round((overallActualAttendance / overallPotentialAttendance) * 100) 
+      : 0;
+
+    // Calculate overall yearly retention
+    const opStartDate = parseDate(yearConfig?.startDate) || new Date(new Date().setFullYear(new Date().getFullYear() - 1));
+    const opEndDate = parseDate(yearConfig?.endDate) || new Date();
+    
+    const yearlySessions = weeklyHistory.filter(session => {
+      const sessionDate = parseDate(session.date);
+      return sessionDate && sessionDate >= opStartDate && sessionDate <= opEndDate;
+    });
+
+    const overallYearlyPotentialAttendance = yearlySessions.reduce((sum, session) => {
+      const activeGroupMembers = activeMembers.filter(m => {
+        const joinedDate = parseDate(m.joinedAt);
+        const sessionDate = parseDate(session.date);
+        if (session.participantIds?.includes(m.id)) return true;
+        if (joinedDate && sessionDate && joinedDate > sessionDate) return false;
+        if (m.deactivatedAt) {
+          const deactivatedDate = parseDate(m.deactivatedAt);
+          if (deactivatedDate && sessionDate && deactivatedDate < sessionDate) return false;
+        }
+        return true;
+      });
+      return sum + activeGroupMembers.length;
+    }, 0);
+
+    const overallYearlyActualAttendance = yearlySessions.reduce((sum, session) => {
+      const attendees = session.participantIds || [];
+      const groupAttendees = attendees.filter((id: string) => 
+        activeMembers.some(m => m.id === id)
+      ).length;
+      return sum + groupAttendees;
+    }, 0);
+
+    const overallYearlyRetention = overallYearlyPotentialAttendance > 0 
+      ? Math.round((overallYearlyActualAttendance / overallYearlyPotentialAttendance) * 100) 
+      : 0;
+
     const churnedCount = members.filter(m => m.isActive === false).length;
 
     // 3. Churn & Low Pulse
@@ -490,6 +555,7 @@ const TrendsDashboard: React.FC = () => {
       genderCounts,
       femaleRetention,
       overallRetention,
+      overallYearlyRetention,
       lowPulseMembers,
       cohorts,
       genderCohorts,
@@ -512,6 +578,7 @@ const TrendsDashboard: React.FC = () => {
     const saved = localStorage.getItem('trendsViewMode');
     return (saved as any) || 'unified';
   });
+  const [ageGroupViewMode, setAgeGroupViewMode] = useState<'cards' | 'unified'>('cards');
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -868,323 +935,228 @@ const TrendsDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Vitality Retention Card - Tachometer Gauges */}
+      {/* Age Group Retention Card */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="lg:col-span-2 admin-info-card p-10 transition-all duration-500 relative group"
+        className="lg:col-span-2 bg-zinc-950/80 backdrop-blur-xl rounded-3xl border border-zinc-800/50 shadow-2xl p-8 md:p-10 transition-all duration-500 relative group"
       >
-          {/* Background elements that need clipping */}
-          <div className="absolute inset-0 overflow-hidden rounded-[4rem] pointer-events-none">
-            {/* Glossy Shimmer Effect */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-          </div>
+          {/* Subtle top highlight */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent pointer-events-none" />
 
-          <div className="flex items-center justify-between mb-12 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between mb-12 relative z-10 gap-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl admin-info-card flex items-center justify-center text-[var(--surfer-cyan)]">
+              <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
                 <Activity size={24} />
               </div>
               <div>
-                <h3 className="home-title font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי קבוצות גיל</h3>
-                <p className="home-data-text text-[12px] tracking-[0.3em] mt-1 font-black uppercase">SESSION VITALITY METRICS-8</p>
+                <h3 className="text-2xl md:text-3xl font-bold text-zinc-100 tracking-tight">שיעור התמדה לפי קבוצות גיל</h3>
+                <p className="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">SESSION VITALITY METRICS-8</p>
               </div>
             </div>
+
+            {/* Toggle View Button */}
+            <div dir="ltr" className="relative flex bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 p-1 rounded-full">
+              <div className="absolute inset-1 flex pointer-events-none">
+                <motion.div
+                  className="w-1/2 h-full rounded-full bg-zinc-800 border border-zinc-700 shadow-sm"
+                  animate={{ x: ageGroupViewMode === 'unified' ? '0%' : '100%' }}
+                  transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                />
+              </div>
+              <button
+                onClick={() => setAgeGroupViewMode('unified')}
+                className={`relative z-10 px-6 py-2 rounded-full text-xs font-semibold tracking-wide transition-colors duration-300 ${
+                  ageGroupViewMode === 'unified' ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                גרף מאוחד
+              </button>
+              <button
+                onClick={() => setAgeGroupViewMode('cards')}
+                className={`relative z-10 px-6 py-2 rounded-full text-xs font-semibold tracking-wide transition-colors duration-300 ${
+                  ageGroupViewMode === 'cards' ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                כרטיסיות
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 relative z-10">
-            {stats.cohorts.map((group: any, idx: number) => {
-              const retention = group.retention;
-              
-              let categoryLabel = "";
-              let categoryColor = "";
-              if (retention < RETENTION_THRESHOLDS.TOURIST) {
-                categoryLabel = "תיירים";
-                categoryColor = "text-red-400 bg-red-500/10 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]";
-              } else if (retention < RETENTION_THRESHOLDS.ECONOMY) {
-                categoryLabel = "אקונומי פלוס";
-                categoryColor = "text-amber-400 bg-amber-500/10 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]";
-              } else if (retention < RETENTION_THRESHOLDS.BUSINESS) {
-                categoryLabel = "ביזנס קלאס";
-                categoryColor = "text-blue-400 bg-blue-500/10 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]";
-              } else {
-                categoryLabel = "פירסט קלאס";
-                categoryColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]";
-              }
-              
-              return (
-                <div key={idx} className="flex flex-col items-center relative group/gauge hover:z-50 z-10">
-                  {/* Category Sign (Clock Style) */}
-                  <div className="mb-4 bg-[#fdfdfd] border border-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.3)] px-4 py-0.5 min-w-[100px] flex justify-center items-center relative z-20">
-                    <span className="text-black font-black text-[11px] uppercase tracking-[0.15em] antialiased">
-                      {group.label} {group.count}
-                    </span>
-                  </div>
-
-                  {/* Gauge Container */}
-                  <div className="relative w-full max-w-[280px] mx-auto flex justify-center items-center bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-4 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)] aspect-square">
-                    <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
-                      <defs>
-                        {/* Frosted Glass Background Filter */}
-                        <filter id={`frosted-glass-age-${idx}`} x="-20%" y="-20%" width="140%" height="140%">
-                          <feGaussianBlur stdDeviation="8" result="blur" />
-                          <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" in="blur" result="goo" />
-                          <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-                        </filter>
-
-                        {/* Brushed Metal for Needle */}
-                        <linearGradient id={`brushed-metal-age-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#f8fafc" />
-                          <stop offset="25%" stopColor="#94a3b8" />
-                          <stop offset="50%" stopColor="#e2e8f0" />
-                          <stop offset="75%" stopColor="#475569" />
-                          <stop offset="100%" stopColor="#cbd5e1" />
-                        </linearGradient>
-
-                        {/* 5-Color Scale Gradient */}
-                        <linearGradient id={`scale-gradient-age-${idx}`} x1="35" y1="165" x2="165" y2="165" gradientUnits="userSpaceOnUse">
-                          <stop offset="0%" stopColor="hsl(3, 80%, 50%)" />
-                          <stop offset="25%" stopColor="hsl(26, 90%, 53%)" />
-                          <stop offset="50%" stopColor="hsl(44, 91%, 52%)" />
-                          <stop offset="75%" stopColor="hsl(74, 71%, 46%)" />
-                          <stop offset="100%" stopColor="hsl(95, 56%, 44%)" />
-                        </linearGradient>
-
-                        {/* Glossy Highlight */}
-                        <radialGradient id={`glass-lens-age-${idx}`} cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
-                          <stop offset="0%" stopColor="white" stopOpacity="0.3" />
-                          <stop offset="50%" stopColor="white" stopOpacity="0.05" />
-                          <stop offset="100%" stopColor="white" stopOpacity="0.0" />
-                        </radialGradient>
-
-                        <linearGradient id={`glass-shine-age-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="white" stopOpacity="0.2" />
-                          <stop offset="50%" stopColor="white" stopOpacity="0.02" />
-                          <stop offset="100%" stopColor="white" stopOpacity="0.0" />
-                        </linearGradient>
-                      </defs>
-
-                      {/* Frosted Glass Background */}
-                      <circle cx="100" cy="100" r="92" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
-                      <circle cx="100" cy="100" r="92" fill="none" stroke="rgba(0, 0, 0, 0.5)" strokeWidth="2" />
-
-                      {/* Empty Glass Tube */}
-                      <path 
-                        d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
-                        fill="none" 
-                        stroke={getTachometerColor(group.yearlyRetention)} 
-                        strokeWidth="12" 
-                        strokeLinecap="round" 
-                        opacity="0.25"
-                      />
-                      <path 
-                        d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
-                        fill="none" 
-                        stroke="rgba(0, 0, 0, 0.4)" 
-                        strokeWidth="12" 
-                        strokeLinecap="round" 
-                        style={{ filter: 'blur(1px)' }}
-                        opacity="0.6"
-                      />
-
-                      {/* Liquid Light (Filled) */}
-                      <motion.path 
-                        d="M 34.95 165.05 A 92 92 0 1 1 165.05 165.05" 
-                        fill="none" 
-                        stroke={getTachometerColor(group.yearlyRetention)} 
-                        strokeWidth="8" 
-                        strokeLinecap="round" 
-                        pathLength="100"
-                        strokeDasharray="100"
-                        initial={{ strokeDashoffset: 100 }}
-                        animate={{ strokeDashoffset: 100 - group.yearlyRetention }}
-                        transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
-                        style={{ filter: `drop-shadow(0px 0px 8px ${getTachometerColor(group.yearlyRetention)})` }}
-                      />
-
-                      {/* Tick Marks and Numbers */}
-                      {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((val) => {
-                        const angle = -45 + (val / 100) * 270;
-                        const rad = (angle * Math.PI) / 180;
-                        const isMajor = val % 20 === 0;
-                        
-                        // Tick marks
-                        const outerR = 82;
-                        const innerR = isMajor ? 72 : 77;
-                        const x1 = 100 - Math.cos(rad) * outerR;
-                        const y1 = 100 - Math.sin(rad) * outerR;
-                        const x2 = 100 - Math.cos(rad) * innerR;
-                        const y2 = 100 - Math.sin(rad) * innerR;
-
-                        // Numbers
-                        const textR = 58;
-                        const tx = 100 - Math.cos(rad) * textR;
-                        const ty = 100 - Math.sin(rad) * textR;
-
-                        return (
-                          <g key={val}>
-                            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.3)" strokeWidth={isMajor ? 1.5 : 0.5} style={{ filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.8))' }} />
-                            {isMajor && (
-                              <g>
-                                <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="rgba(255,255,255,0.9)" fontSize="10" fontFamily="'Helvetica Neue', Helvetica, Arial, sans-serif" fontWeight="200" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.8), -1px -1px 1px rgba(255,255,255,0.2)' }}>
-                                  {val}
-                                </text>
-                              </g>
-                            )}
-                          </g>
-                        );
+          <AnimatePresence mode="wait">
+            {ageGroupViewMode === 'unified' ? (
+              <motion.div 
+                key="unified"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="w-full h-[400px] mt-8 relative z-10 bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/50" 
+                dir="ltr"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={stats.cohorts} margin={{ top: 30, right: 30, left: 20, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                    <XAxis dataKey="label" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 14, fontWeight: 'bold' }} tickLine={false} axisLine={false} dy={10} />
+                    <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} tickLine={false} axisLine={false} domain={[0, 100]} tickFormatter={(val) => `${val}%`} dx={-10} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(8px)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
+                      itemStyle={{ fontWeight: 'black' }}
+                      formatter={(value: any, name: any) => [`${value}%`, name === 'retention' ? 'אוקטו (8 שבועות)' : 'ממוצע שנתי']}
+                      labelStyle={{ color: '#94a3b8', marginBottom: '8px', fontWeight: 'bold' }}
+                    />
+                    <Legend verticalAlign="top" height={36} wrapperStyle={{ fontWeight: 'bold', color: '#cbd5e1' }} />
+                    <ReferenceLine y={stats.overallYearlyRetention} stroke="#52525b" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: `ממוצע שנתי (${stats.overallYearlyRetention}%)`, fill: '#a1a1aa', fontSize: 11, fontWeight: 500 }} />
+                    <ReferenceLine y={stats.overallRetention} stroke="#3f3f46" strokeDasharray="3 3" label={{ position: 'insideTopRight', value: `ממוצע 8 שבועות (${stats.overallRetention}%)`, fill: '#71717a', fontSize: 11, fontWeight: 500 }} />
+                    <Bar dataKey="yearlyRetention" name="ממוצע שנתי" fill="#52525b" radius={[4, 4, 0, 0]} maxBarSize={40} animationDuration={1000} />
+                    <Bar dataKey="retention" name="אוקטו (8 שבועות)" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} animationDuration={1000}>
+                      {stats.cohorts.map((entry: any, index: number) => {
+                        let color = "#10b981"; // emerald-500
+                        if (entry.retention < RETENTION_THRESHOLDS.TOURIST) color = "#f43f5e"; // rose-500
+                        else if (entry.retention < RETENTION_THRESHOLDS.ECONOMY) color = "#f59e0b"; // amber-500
+                        else if (entry.retention < RETENTION_THRESHOLDS.BUSINESS) color = "#3b82f6"; // blue-500
+                        return <Cell key={`cell-${index}`} fill={color} />;
                       })}
-
-                      {/* Yearly Retention Marker moved to end of SVG for top z-index */}
-                      {/* Thin Sharp Needle */}
-                      <motion.g
-                        initial={{ rotate: -135 }}
-                        animate={{ rotate: -135 + (group.yearlyRetention / 100) * 270 }}
-                        style={{ transformOrigin: "100px 100px" }}
-                        transition={{ duration: 2.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.1 }}
-                      >
-                        {/* Invisible rect to force bounding box to 200x200 for correct rotation center */}
-                        <rect x="0" y="0" width="200" height="200" fill="transparent" pointerEvents="none" />
-                        <polygon 
-                          points="98.5,100 101.5,100 100,18" 
-                          fill={`url(#brushed-metal-age-${idx})`}
-                          style={{ filter: `drop-shadow(0px 4px 6px rgba(0,0,0,0.5))` }}
-                        />
-                        {/* Illuminated Tip */}
-                        <circle cx="100" cy="18" r="2.5" fill="#ffffff" style={{ filter: 'drop-shadow(0px 0px 4px #ffffff)' }} />
-                      </motion.g>
-
-                      {/* Center Pivot */}
-                      <circle cx="100" cy="100" r="8" fill={`url(#brushed-metal-age-${idx})`} style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))' }} />
-                      <circle cx="100" cy="100" r="3" fill="#0F172A" />
-
-                      {/* Glassmorphism Overlay - Lens Effect & Shine */}
-                      <circle cx="100" cy="100" r="92" fill={`url(#glass-lens-age-${idx})`} className="pointer-events-none" opacity="0.8" />
-                      <circle cx="100" cy="100" r="92" fill={`url(#glass-shine-age-${idx})`} className="pointer-events-none" opacity="0.6" />
-                      <circle cx="100" cy="100" r="92" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" className="pointer-events-none" />
-
-                      {/* Digital Percentage Boxes - Side by Side */}
-                      <g transform="translate(48, 110)">
-                        {/* Yearly Box */}
-                        <rect width="50" height="32" rx="4" fill="rgba(255, 255, 255, 0.05)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
-                        <text x="25" y="12" textAnchor="middle" dominantBaseline="middle" fill="#4A5568" fontSize="8" fontFamily="Inter, sans-serif" fontWeight="bold">שנתי</text>
-                        <text x="25" y="24" textAnchor="middle" dominantBaseline="middle" fill="#D69E2E" fontSize="13" fontWeight="black" fontFamily="monospace" style={{ filter: 'drop-shadow(0px 0px 2px rgba(214,158,46,0.4))', letterSpacing: '-0.5px' }}>{group.yearlyRetention}%</text>
-                      </g>
-                      <g transform="translate(102, 110)">
-                        {/* Octo Box */}
-                        <rect width="50" height="32" rx="4" fill="rgba(255, 255, 255, 0.05)" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="1" />
-                        <text x="25" y="12" textAnchor="middle" dominantBaseline="middle" fill="#4A5568" fontSize="8" fontFamily="Inter, sans-serif" fontWeight="bold">אוקטו (8)</text>
-                        <text x="25" y="24" textAnchor="middle" dominantBaseline="middle" fill="#2D3748" fontSize="13" fontWeight="black" fontFamily="monospace" style={{ filter: 'drop-shadow(0px 0px 2px rgba(0,0,0,0.1))', letterSpacing: '-0.5px' }}>{group.retention}%</text>
-                      </g>
-
-                      {/* Text Elements */}
-                      <text x="100" y="178" textAnchor="middle" dominantBaseline="middle" fill="#4A0033" fontFamily="Inter, sans-serif" fontWeight="black" fontSize="14" className="antialiased">{group.label}</text>
-
-                      {/* Yearly Retention Marker (Rendered last to be on top) */}
-                      <motion.g
-                        className="group/marker cursor-pointer outline-none"
-                        tabIndex={0}
-                        onTouchStart={() => {}}
-                        initial={{ rotate: -135 }}
-                        animate={{ rotate: -135 + (group.retention / 100) * 270 }}
-                        style={{ transformOrigin: "100px 100px" }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
-                      >
-                        {/* Invisible rect to force bounding box to 200x200 for correct rotation center */}
-                        <rect x="0" y="0" width="200" height="200" fill="transparent" pointerEvents="none" />
-                        {/* Invisible hit area for easier hover */}
-                        <circle cx="100" cy="-5" r="32" fill="transparent" />
-                        
-                        {/* Pulsing Glow */}
-                        <motion.circle 
-                          cx="100" cy="-5" r="8" 
-                          fill="rgba(255,222,69,0.3)" 
-                          animate={{ scale: [1, 1.8, 1], opacity: [0.8, 0, 0.8] }} 
-                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} 
-                        />
-                        {/* Isosceles Triangle Pointer */}
-                        <polygon 
-                          points="94,-12 106,-12 100,2" 
-                          fill="#FFDE45"
-                          stroke="#FFFFFF"
-                          strokeWidth="1"
-                          style={{ filter: 'drop-shadow(0px 2px 6px rgba(255,222,69,0.8))' }}
-                        />
-                        
-                        {/* Tooltip (Counter-rotated to stay upright) */}
-                        <g 
-                          className="opacity-0 group-hover/marker:opacity-100 group-focus/marker:opacity-100 transition-opacity duration-300 pointer-events-none"
-                          transform={`rotate(${-(-135 + (group.yearlyRetention / 100) * 270)}, 100, -44)`}
-                        >
-                          <rect x="40" y="-70" width="120" height="52" rx="10" fill="rgba(15, 23, 42, 0.95)" stroke="#FFDE45" strokeWidth="1.5" style={{ filter: 'drop-shadow(0px 8px 16px rgba(0,0,0,0.6))' }} />
-                          <text x="100" y="-52" textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontSize="14" fontWeight="bold" fontFamily="Inter, sans-serif">
-                            שנתי
-                          </text>
-                          <text x="100" y="-30" textAnchor="middle" dominantBaseline="middle" fill="#FFDE45" fontSize="22" fontWeight="black" fontFamily="monospace" style={{ letterSpacing: '0.5px' }}>
-                            {group.yearlyRetention}%
-                          </text>
-                        </g>
-                      </motion.g>
-                    </svg>
-                  </div>
+                    </Bar>
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="cards"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-8 relative z-10"
+              >
+                {stats.cohorts.map((group: any, idx: number) => {
+                  const retention = group.retention;
+                  let categoryLabel = "";
+                  let categoryColor = "";
+                  let barColorClass = "";
                   
-                  {/* Status Labels */}
-                  <div className="mt-6 flex flex-col items-center gap-2 h-12">
-                    <div className={`px-4 py-1 rounded-full border ${categoryColor}`}>
-                      <span className="text-[12px] font-black uppercase tracking-widest antialiased">
-                        {categoryLabel}
-                      </span>
+                  if (retention < RETENTION_THRESHOLDS.TOURIST) {
+                    categoryLabel = "תיירים";
+                    categoryColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+                    barColorClass = "bg-rose-500";
+                  } else if (retention < RETENTION_THRESHOLDS.ECONOMY) {
+                    categoryLabel = "אקונומי פלוס";
+                    categoryColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+                    barColorClass = "bg-amber-500";
+                  } else if (retention < RETENTION_THRESHOLDS.BUSINESS) {
+                    categoryLabel = "ביזנס קלאס";
+                    categoryColor = "text-blue-400 bg-blue-500/10 border-blue-500/20";
+                    barColorClass = "bg-blue-500";
+                  } else {
+                    categoryLabel = "פירסט קלאס";
+                    categoryColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+                    barColorClass = "bg-emerald-500";
+                  }
+
+                  return (
+                    <div key={idx} className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/50 flex flex-col relative overflow-hidden group hover:bg-zinc-800/50 transition-colors duration-300">
+                      <div className="flex justify-between items-start mb-8 relative z-10" dir="rtl">
+                        <div>
+                          <h4 className="text-lg font-semibold text-zinc-100 tracking-tight">{group.label}</h4>
+                          <p className="text-xs text-zinc-500 mt-1">{group.count} חברים</p>
+                        </div>
+                        <div className={`px-2.5 py-1 rounded-md border text-[10px] font-medium tracking-wide ${categoryColor}`}>
+                          {categoryLabel}
+                        </div>
+                      </div>
+
+                      <div className="space-y-5 relative z-10" dir="rtl">
+                        {/* Yearly Progress */}
+                        <div>
+                          <div className="flex justify-between text-xs font-medium mb-2">
+                            <span className="text-zinc-500">ממוצע שנתי</span>
+                            <span className="text-zinc-300">{group.yearlyRetention}%</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden relative">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${group.yearlyRetention}%` }}
+                              transition={{ duration: 1, ease: "easeOut" }}
+                              className="h-full bg-zinc-400 rounded-full"
+                            />
+                            {/* Reference Marker */}
+                            <div 
+                              className="absolute top-0 bottom-0 w-px bg-zinc-600 z-10"
+                              style={{ right: `${stats.overallYearlyRetention}%` }}
+                              title={`ממוצע קהילתי: ${stats.overallYearlyRetention}%`}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Octo Progress */}
+                        <div>
+                          <div className="flex justify-between text-xs font-medium mb-2">
+                            <span className="text-zinc-500">אוקטו (8 שבועות)</span>
+                            <span className={categoryColor.split(' ')[0]}>{group.retention}%</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden relative">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${group.retention}%` }}
+                              transition={{ duration: 1, ease: "easeOut", delay: 0.1 }}
+                              className={`h-full ${barColorClass} rounded-full`}
+                            />
+                            {/* Reference Marker */}
+                            <div 
+                              className="absolute top-0 bottom-0 w-px bg-zinc-600 z-10"
+                              style={{ right: `${stats.overallRetention}%` }}
+                              title={`ממוצע קהילתי: ${stats.overallRetention}%`}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Footer Indicators */}
-          <div className="mt-16 pt-8 border-t border-white/5 flex flex-wrap justify-center gap-6 md:justify-between items-center w-full relative z-10">
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">תיירים (&lt;{RETENTION_THRESHOLDS.TOURIST}%)</span>
-              <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]" />
+          <div className="mt-12 pt-6 border-t border-zinc-800/50 flex flex-wrap justify-center gap-6 md:justify-between items-center w-full relative z-10">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-rose-500" />
+              <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">תיירים (&lt;{RETENTION_THRESHOLDS.TOURIST}%)</span>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">אקונומי פלוס ({RETENTION_THRESHOLDS.TOURIST}-{RETENTION_THRESHOLDS.ECONOMY - 1}%)</span>
-              <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">אקונומי פלוס ({RETENTION_THRESHOLDS.TOURIST}-{RETENTION_THRESHOLDS.ECONOMY - 1}%)</span>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">ביזנס קלאס ({RETENTION_THRESHOLDS.ECONOMY}-{RETENTION_THRESHOLDS.BUSINESS - 1}%)</span>
-              <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">ביזנס קלאס ({RETENTION_THRESHOLDS.ECONOMY}-{RETENTION_THRESHOLDS.BUSINESS - 1}%)</span>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] text-[#007085] font-black uppercase tracking-[0.2em]">פירסט קלאס ({RETENTION_THRESHOLDS.BUSINESS}%+)</span>
-              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]" />
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">פירסט קלאס ({RETENTION_THRESHOLDS.BUSINESS}%+)</span>
             </div>
           </div>
         </motion.div>
 
 
-      {/* Vitality Retention Card - Tachometer Gauges */}
+      {/* Gender Retention Card */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="lg:col-span-2 admin-info-card p-10 transition-all duration-500 relative group"
+        className="lg:col-span-2 bg-zinc-950/80 backdrop-blur-xl rounded-3xl border border-zinc-800/50 shadow-2xl p-8 md:p-10 transition-all duration-500 relative group"
       >
-          {/* Background elements that need clipping */}
-          <div className="absolute inset-0 overflow-hidden rounded-[4rem] pointer-events-none">
-            {/* Glossy Shimmer Effect */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-          </div>
+          {/* Subtle top highlight */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent pointer-events-none" />
 
           <div className="flex items-center justify-between mb-12 relative z-10">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl admin-info-card flex items-center justify-center text-[var(--surfer-pink)]">
+              <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
                 <Heart size={24} />
               </div>
               <div>
-                <h3 className="home-title font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעור התמדה לפי מגדר</h3>
-                <p className="home-data-text text-[12px] tracking-[0.3em] mt-1 font-black uppercase">COMMUNITY INSIGHTS • GENDER DYNAMICS</p>
+                <h3 className="text-2xl md:text-3xl font-bold text-zinc-100 tracking-tight">שיעור התמדה לפי מגדר</h3>
+                <p className="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">COMMUNITY INSIGHTS • GENDER DYNAMICS</p>
               </div>
             </div>
           </div>
@@ -1196,27 +1168,23 @@ const TrendsDashboard: React.FC = () => {
               
               let categoryLabel = "";
               let categoryColor = "";
-              let barGradient = "from-emerald-400 to-emerald-600";
-              let shadowColor = "rgba(16,185,129,0.5)";
+              let barColorClass = "bg-emerald-500";
               
               if (retention < RETENTION_THRESHOLDS.TOURIST) {
                 categoryLabel = "תיירים";
-                categoryColor = "text-red-600 bg-red-500/10 border-red-500/20";
-                barGradient = "from-red-400 to-red-600";
-                shadowColor = "rgba(239,68,68,0.5)";
+                categoryColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+                barColorClass = "bg-rose-500";
               } else if (retention < RETENTION_THRESHOLDS.ECONOMY) {
                 categoryLabel = "אקונומי פלוס";
-                categoryColor = "text-amber-600 bg-amber-500/10 border-amber-500/20";
-                barGradient = "from-amber-400 to-amber-600";
-                shadowColor = "rgba(245,158,11,0.5)";
+                categoryColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+                barColorClass = "bg-amber-500";
               } else if (retention < RETENTION_THRESHOLDS.BUSINESS) {
                 categoryLabel = "ביזנס קלאס";
-                categoryColor = "text-blue-600 bg-blue-500/10 border-blue-500/20";
-                barGradient = "from-blue-400 to-blue-600";
-                shadowColor = "rgba(59,130,246,0.5)";
+                categoryColor = "text-blue-400 bg-blue-500/10 border-blue-500/20";
+                barColorClass = "bg-blue-500";
               } else {
                 categoryLabel = "פירסט קלאס";
-                categoryColor = "text-emerald-600 bg-emerald-500/10 border-emerald-500/20";
+                categoryColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
               }
 
               return (
@@ -1226,10 +1194,10 @@ const TrendsDashboard: React.FC = () => {
                     {/* Top Row: Title, Count, Badge (RTL) */}
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-3">
-                        <span className="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-tight" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>{group.label}</span>
-                        <span className="text-[10px] md:text-xs font-bold text-slate-600 bg-white/60 backdrop-blur-sm px-2 py-1 rounded-lg border border-white/80 shadow-sm whitespace-nowrap">{group.count} חברים</span>
+                        <span className="text-lg md:text-xl font-semibold text-zinc-100 tracking-tight">{group.label}</span>
+                        <span className="text-[10px] md:text-xs font-medium text-zinc-500 bg-zinc-900 px-2 py-1 rounded-md border border-zinc-800 whitespace-nowrap">{group.count} חברים</span>
                       </div>
-                      <span className={`text-[10px] md:text-xs px-3 py-1 rounded-xl font-black border antialiased shadow-sm whitespace-nowrap ${categoryColor}`}>
+                      <span className={`text-[10px] md:text-xs px-2.5 py-1 rounded-md font-medium border whitespace-nowrap ${categoryColor}`}>
                         {categoryLabel}
                       </span>
                     </div>
@@ -1237,76 +1205,60 @@ const TrendsDashboard: React.FC = () => {
                     {/* Bottom Row: Stats (LTR to match graph) */}
                     <div dir="ltr" className="flex items-center justify-start gap-4 md:gap-6">
                       <div className="flex flex-col items-start">
-                        <span className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 whitespace-nowrap">אוקטו (8 שבועות)</span>
+                        <span className="text-[9px] md:text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-1 whitespace-nowrap">אוקטו (8 שבועות)</span>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-xl md:text-2xl font-black text-slate-800 leading-none">{retention}</span>
-                          <span className="text-xs md:text-sm font-bold text-slate-500">%</span>
+                          <span className="text-xl md:text-2xl font-bold text-zinc-100 leading-none">{retention}</span>
+                          <span className="text-xs md:text-sm font-medium text-zinc-500">%</span>
                         </div>
                       </div>
-                      <div className="w-px h-8 md:h-10 bg-gradient-to-b from-transparent via-slate-300 to-transparent" />
+                      <div className="w-px h-8 md:h-10 bg-zinc-800" />
                       <div className="flex flex-col items-start">
-                        <span className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 whitespace-nowrap">ממוצע שנתי</span>
+                        <span className="text-[9px] md:text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-1 whitespace-nowrap">ממוצע שנתי</span>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-xl md:text-2xl font-black text-amber-500 leading-none" style={{ textShadow: '0 2px 10px rgba(245,158,11,0.3)' }}>{yearly}</span>
-                          <span className="text-xs md:text-sm font-bold text-amber-500/70">%</span>
+                          <span className="text-xl md:text-2xl font-bold text-zinc-400 leading-none">{yearly}</span>
+                          <span className="text-xs md:text-sm font-medium text-zinc-600">%</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Bullet Graph Container (Glassmorphism 3D Tube) */}
-                  <div dir="ltr" className="relative w-full h-14 rounded-2xl bg-white/30 backdrop-blur-2xl border border-white/60 shadow-[inset_0_4px_12px_rgba(0,0,0,0.05),0_8px_32px_rgba(0,0,0,0.08)] overflow-visible flex items-center px-1.5">
+                  {/* Bullet Graph Container (Linear Style) */}
+                  <div dir="ltr" className="relative w-full h-8 rounded-lg bg-zinc-900/50 border border-zinc-800/50 overflow-visible flex items-center px-1">
                     
-                    {/* Background Ranges (Subtle Glassy Sections) */}
-                    <div className="absolute inset-0 flex rounded-2xl overflow-hidden pointer-events-none">
-                      <div className="h-full w-[50%] bg-gradient-to-r from-red-500/5 to-red-500/10 border-r border-white/30" />
-                      <div className="h-full w-[30%] bg-gradient-to-r from-amber-500/5 to-amber-500/10 border-r border-white/30" />
-                      <div className="h-full w-[20%] bg-gradient-to-r from-emerald-500/5 to-emerald-500/10" />
+                    {/* Background Ranges (Subtle) */}
+                    <div className="absolute inset-0 flex rounded-lg overflow-hidden pointer-events-none opacity-20">
+                      <div className="h-full w-[50%] bg-rose-500 border-r border-zinc-800" />
+                      <div className="h-full w-[20%] bg-amber-500 border-r border-zinc-800" />
+                      <div className="h-full w-[20%] bg-blue-500 border-r border-zinc-800" />
+                      <div className="h-full w-[10%] bg-emerald-500" />
                     </div>
 
                     {/* Scale Marks */}
-                    <div className="absolute inset-0 flex justify-between px-1.5 pointer-events-none">
+                    <div className="absolute inset-0 flex justify-between px-1 pointer-events-none">
                       {[0, 25, 50, 75, 100].map(mark => (
-                        <div key={mark} className="h-full flex flex-col justify-between py-1">
-                          <div className="w-px h-2 bg-slate-300/50" />
-                          <div className="w-px h-2 bg-slate-300/50" />
+                        <div key={mark} className="h-full flex flex-col justify-between py-0.5">
+                          <div className="w-px h-1.5 bg-zinc-700" />
+                          <div className="w-px h-1.5 bg-zinc-700" />
                         </div>
                       ))}
                     </div>
 
-                    {/* Main Bar (8 Weeks) - 3D Liquid/Neon Effect */}
+                    {/* Main Bar (8 Weeks) */}
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${retention}%` }}
-                      transition={{ duration: 1.5, ease: [0.34, 1.56, 0.64, 1], delay: idx * 0.15 }}
-                      className={`relative h-11 rounded-xl bg-gradient-to-r ${barGradient} z-10`}
-                      style={{ 
-                        boxShadow: `inset 0 4px 6px rgba(255,255,255,0.5), inset 0 -4px 6px rgba(0,0,0,0.2), 0 4px 16px ${shadowColor}` 
-                      }}
-                    >
-                      {/* Glossy overlay on the bar */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-transparent to-black/10 rounded-xl pointer-events-none" />
-                      {/* Diagonal shine */}
-                      <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_20%,rgba(255,255,255,0.4)_40%,transparent_60%)] rounded-xl pointer-events-none" />
-                    </motion.div>
+                      transition={{ duration: 1, ease: "easeOut", delay: idx * 0.1 }}
+                      className={`h-4 rounded-md relative z-10 overflow-hidden ${barColorClass.replace('from-', 'bg-').split(' ')[0]}`}
+                    />
 
-                    {/* Secondary Marker (Annual Average) - 3D Floating Indicator */}
+                    {/* Secondary Marker (Annual Average) */}
                     <motion.div
                       initial={{ left: 0, opacity: 0 }}
                       animate={{ left: `${yearly}%`, opacity: 1 }}
-                      transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 + idx * 0.1 }}
-                      className="absolute top-[-8px] bottom-[-8px] w-2 bg-gradient-to-b from-amber-300 to-amber-500 z-20 rounded-full"
-                      style={{ 
-                        boxShadow: '0 0 16px rgba(251,191,36,0.8), inset 0 2px 4px rgba(255,255,255,0.8), inset 0 -2px 4px rgba(0,0,0,0.4)',
-                        transform: 'translateX(-50%)'
-                      }}
-                    >
-                      {/* Top Diamond */}
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-amber-200 to-amber-500 rotate-45 rounded-sm shadow-[0_2px_8px_rgba(251,191,36,0.6)] border border-amber-100" />
-                      {/* Bottom Diamond */}
-                      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-amber-200 to-amber-500 rotate-45 rounded-sm shadow-[0_2px_8px_rgba(251,191,36,0.6)] border border-amber-100" />
-                    </motion.div>
-
+                      transition={{ duration: 1, ease: "easeOut", delay: 0.5 + idx * 0.1 }}
+                      className="absolute top-[-4px] bottom-[-4px] w-0.5 bg-zinc-300 z-20"
+                      style={{ transform: 'translateX(-50%)' }}
+                    />
                   </div>
                 </div>
               );
@@ -1317,32 +1269,32 @@ const TrendsDashboard: React.FC = () => {
       {/* View Mode Switcher - Repositioned above graphs */}
       <div className="flex flex-col items-center gap-4 mb-8 mt-4">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-8 h-px bg-slate-200" />
-          <span className="text-[11px] font-black text-[#000000] uppercase tracking-[0.3em]">ניתוח מגמות והתמדה</span>
-          <div className="w-8 h-px bg-slate-200" />
+          <div className="w-8 h-px bg-zinc-800" />
+          <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-[0.3em]">ניתוח מגמות והתמדה</span>
+          <div className="w-8 h-px bg-zinc-800" />
         </div>
-        <div dir="ltr" className="relative flex admin-info-card p-1.5 rounded-full">
-          {/* Animated Colorful Bubble */}
-          <div className="absolute inset-1.5 flex pointer-events-none">
+        <div dir="ltr" className="relative flex bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 p-1 rounded-full">
+          {/* Animated Bubble */}
+          <div className="absolute inset-1 flex pointer-events-none">
             <motion.div
-              className="w-1/2 h-full rounded-full bg-gradient-to-r from-[var(--surfer-cyan)] via-[var(--surfer-pink)] to-[var(--surfer-orange)] shadow-lg shadow-pink-500/40"
+              className="w-1/2 h-full rounded-full bg-zinc-800 border border-zinc-700 shadow-sm"
               animate={{ x: viewMode === 'unified' ? '0%' : '100%' }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              transition={{ type: "spring", stiffness: 400, damping: 35 }}
             />
           </div>
 
           <button
             onClick={() => setViewMode('unified')}
-            className={`relative z-10 px-10 py-3 rounded-full text-[14px] font-black uppercase tracking-widest transition-colors duration-300 ${
-              viewMode === 'unified' ? 'text-white' : 'text-[#004D40] hover:text-[#000000]'
+            className={`relative z-10 px-8 py-2 rounded-full text-xs font-semibold tracking-wide transition-colors duration-300 ${
+              viewMode === 'unified' ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             גרף מאוחד
           </button>
           <button
             onClick={() => setViewMode('split')}
-            className={`relative z-10 px-10 py-3 rounded-full text-[14px] font-black uppercase tracking-widest transition-colors duration-300 ${
-              viewMode === 'split' ? 'text-white' : 'text-[#004D40] hover:text-[#000000]'
+            className={`relative z-10 px-8 py-2 rounded-full text-xs font-semibold tracking-wide transition-colors duration-300 ${
+              viewMode === 'split' ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             גרף מפוצל

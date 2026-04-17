@@ -127,71 +127,179 @@ export const AdminRolloverReport: React.FC = () => {
       )}
 
       {/* Last Rollover Summary */}
-      {recentLogs.find(l => l.action === 'complete') && (
-        <div className="mb-8 p-6 bg-slate-800 rounded-xl text-white">
-          <h3 className="text-lg font-black mb-4">סיכום סגירת סשן אחרונה</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-slate-400 font-bold">מתוכנן (Expected)</p>
-              <p className="text-xl font-black">{recentLogs.find(l => l.action === 'complete')?.metrics?.expectedFields || 'N/A'}</p>
+      {recentLogs.length > 0 && (
+        <div className="mb-8 p-6 bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden relative">
+          {/* Subtle Background Glow based on status */}
+          <div className={`absolute top-0 left-0 w-full h-1 ${recentLogs.find(l => l.action === 'complete')?.status === 'success' ? 'bg-emerald-500' : recentLogs.some(l => l.status === 'failed') ? 'bg-rose-500' : 'bg-amber-500 animate-pulse'}`} />
+          
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+             <div>
+               <h3 className="text-2xl font-black text-white">יומן מערכת לגלגול סשן (Rollover Trace)</h3>
+               <p className="text-sm text-slate-400 mt-1">אובייקט אחוד למעקב טכני, שלבי יצירה וניהול שגיאות.</p>
+             </div>
+             {recentLogs.find(l => l.action === 'complete')?.status === 'success' ? 
+               <span className="px-5 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold rounded-lg flex items-center gap-2 w-fit"><CheckCircle size={18}/> ריצה הסתיימה בהצלחה</span> : 
+               recentLogs.some(l => l.status === 'failed') ? 
+               <span className="px-5 py-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-bold rounded-lg flex items-center gap-2 w-fit"><AlertTriangle size={18}/> הריצה נכשלה</span> :
+               <span className="px-5 py-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm font-bold rounded-lg flex items-center gap-2 w-fit"><Loader2 size={18} className="animate-spin"/> הריצה מתבצעת כעת...</span>
+             }
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* 1. What was planned - The blueprint */}
+            <div className="bg-slate-900/50 p-5 rounded-xl border border-slate-700/50 h-full flex flex-col">
+              <h4 className="text-sm font-bold text-slate-300 mb-5 flex items-center gap-2 border-b border-slate-700 pb-3">
+                <Circle size={16} className="text-slate-500"/> מה תוכנן (Blueprint)
+              </h4>
+              <ul className="space-y-4 mt-2">
+                {rolloverSteps.map((step, idx) => (
+                  <li key={`plan-${step.id}`} className="text-sm text-slate-400 flex items-start gap-3">
+                    <span className="text-slate-600 font-mono text-xs mt-0.5">{idx + 1}.</span>
+                    <span>{step.label}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div>
-              <p className="text-xs text-slate-400 font-bold">בוצע בפועל (Actual)</p>
-              <p className="text-xl font-black">{recentLogs.find(l => l.action === 'complete')?.metrics?.updatedFields || 'N/A'}</p>
+
+            {/* 2. What was executed / is executing */}
+            <div className="bg-emerald-950/10 p-5 rounded-xl border border-emerald-900/30 h-full relative overflow-hidden flex flex-col">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full pointer-events-none" />
+              <h4 className="text-sm font-bold text-emerald-400 mb-5 flex items-center gap-2 border-b border-emerald-900/50 pb-3 relative z-10">
+                <Activity size={16} /> מה בוצע / בביצוע
+              </h4>
+              <ul className="space-y-5 mt-2 relative z-10">
+                {rolloverSteps.map((step) => {
+                  const log = recentLogs.find(l => l.action === step.id);
+                  if (log?.status === 'success' || log?.status === 'pending') {
+                    const isPending = log.status === 'pending';
+                    const metrics = log.metrics;
+                    return (
+                      <li key={`exec-${step.id}`} className="flex flex-col gap-2">
+                        <div className={`text-sm flex items-start gap-3 ${isPending ? 'text-amber-300' : 'text-emerald-300/90'}`}>
+                          {isPending ? <Loader2 size={16} className="animate-spin text-amber-500 mt-0.5 shrink-0" /> : <CheckCircle size={16} className="text-emerald-500 mt-0.5 shrink-0" />}
+                          <div className="flex flex-col">
+                            <span className="font-bold">{step.label}</span>
+                            {log.details && <span className="text-xs text-slate-500 font-normal mt-0.5">{log.details}</span>}
+                          </div>
+                        </div>
+                        {metrics && (
+                          <div className="mr-7 p-2.5 bg-slate-900/80 rounded border border-slate-700/50 text-[11px] text-slate-400 flex flex-wrap gap-x-4 gap-y-2">
+                            {metrics.durationMs !== undefined && <span className="flex items-center gap-1 font-mono"><span className="text-slate-600">TIME:</span> {metrics.durationMs}ms</span>}
+                            {metrics.updatedFields !== undefined && <span className="flex items-center gap-1 font-mono"><span className="text-slate-600">RECORDS:</span> {metrics.updatedFields}/{metrics.expectedFields}</span>}
+                            {metrics.saveStatus && <span className="flex items-center gap-1 font-mono"><span className="text-slate-600">SAVE:</span> <span className={metrics.saveStatus === 'success' ? 'text-emerald-500' : 'text-amber-500'}>{metrics.saveStatus}</span></span>}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  }
+                  return null;
+                })}
+                {!recentLogs.some(l => l.status === 'success' || l.status === 'pending') && (
+                  <li className="text-sm text-slate-500 italic p-4 text-center border border-dashed border-slate-700 rounded-lg">טרם בוצעו שלבים בריצה זו</li>
+                )}
+              </ul>
+            </div>
+
+            {/* 3. What was NOT executed and why */}
+            <div className={`bg-rose-950/10 p-5 rounded-xl border border-rose-900/30 h-full relative overflow-hidden flex flex-col ${recentLogs.find(l => l.action === 'complete')?.status === 'success' ? 'opacity-80' : ''}`}>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 blur-3xl rounded-full pointer-events-none" />
+              <h4 className="text-sm font-bold text-rose-400 mb-5 flex items-center gap-2 border-b border-rose-900/50 pb-3 relative z-10">
+                <AlertTriangle size={16} /> לא בוצע ומדוע
+              </h4>
+              
+              <ul className="space-y-5 mt-2 relative z-10">
+                {rolloverSteps.map((step) => {
+                  const log = recentLogs.find(l => l.action === step.id);
+                  const hasFailedEarlier = recentLogs.some(l => l.status === 'failed');
+                  const checkIdx = rolloverSteps.findIndex(s => s.id === step.id);
+                  const failedLog = recentLogs.find(l => l.status === 'failed');
+                  const failedStepIdx = failedLog ? rolloverSteps.findIndex(s => s.id === failedLog.action) : -1;
+
+                  if (log?.status === 'failed') {
+                    const metrics = log.metrics;
+                    return (
+                      <li key={`fail-${step.id}`} className="flex flex-col gap-2">
+                        <div className="text-sm text-rose-300 font-bold flex items-start gap-3">
+                          <AlertTriangle size={16} className="shrink-0 text-rose-500 mt-0.5" /> 
+                          <div className="flex flex-col">
+                            <span>{step.label}</span>
+                            {metrics && metrics.durationMs !== undefined && <span className="text-[10px] text-rose-400/50 font-mono mt-0.5">Failed after {metrics.durationMs}ms</span>}
+                          </div>
+                        </div>
+                        <div className="mr-7 text-xs text-rose-200/90 bg-rose-950/80 p-3 rounded-lg leading-relaxed border border-rose-900/50 shadow-inner">
+                          <span className="font-bold block mb-1 text-rose-400/80 text-[10px] uppercase tracking-wider">ERROR REASON:</span>
+                          {log.details || 'שגיאה לא ידועה בתריליך הריצה.'}
+                        </div>
+                      </li>
+                    );
+                  }
+                  
+                  if (!log && hasFailedEarlier && failedStepIdx !== -1 && checkIdx > failedStepIdx) {
+                    return (
+                      <li key={`skip-${step.id}`} className="flex flex-col gap-1.5 opacity-60">
+                        <div className="text-sm text-slate-400 font-bold flex items-center gap-3">
+                          <Circle size={14} className="shrink-0 text-slate-500" /> 
+                          <span className="line-through decoration-slate-600/50">{step.label}</span>
+                        </div>
+                        <div className="mr-6 text-[10px] text-amber-500/80 font-mono px-2">
+                          &gt; SKIPPED: Preceding process failed.
+                        </div>
+                      </li>
+                    );
+                  }
+                  return null;
+                })}
+
+                {/* Complete Success Case */}
+                {recentLogs.find(l => l.action === 'complete')?.status === 'success' && !recentLogs.some(l => l.status === 'failed') && (
+                  <div className="flex flex-col items-center justify-center p-8 mt-4 h-[150px] border border-dashed border-emerald-900/30 rounded-xl bg-emerald-950/5">
+                    <CheckCircle size={32} className="text-emerald-500/50 mb-3" />
+                    <p className="text-lg font-black text-emerald-400 text-center tracking-tight">אין חריגות לחיווי</p>
+                    <p className="text-xs text-slate-400 text-center mt-2 max-w-[200px] leading-relaxed">כל השלבים מהתוכנית המקורית בוצעו בהצלחה מלאה וללא דילוגים או שגיאות.</p>
+                  </div>
+                )}
+              </ul>
             </div>
           </div>
+
+          {/* Metrics summary */}
+          {recentLogs.find(l => l.action === 'complete') && (
+            <div className="mt-8 pt-6 border-t border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div>
+                <h4 className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-4">מדדי קצה (Global Metrics)</h4>
+                <div className="flex items-center gap-8">
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">רשומות מתוכננות (Expected)</p>
+                    <p className="text-2xl font-black text-white">{recentLogs.find(l => l.action === 'complete')?.metrics?.expectedFields || '0'}</p>
+                  </div>
+                  <div className="w-px h-10 bg-slate-700"></div>
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">רשומות שעודכנו בפועל (Actual)</p>
+                    <p className="text-2xl font-black text-emerald-400">{recentLogs.find(l => l.action === 'complete')?.metrics?.updatedFields || '0'}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="text-left bg-slate-900 px-4 py-3 rounded-lg border border-slate-700/50">
+                  <p className="text-xs text-slate-400 font-mono tracking-wider flex items-center gap-2"><Activity size={12} className="text-emerald-500"/> SYSTEM TRACE VERIFIED</p>
+                  <p className="text-[10px] text-slate-600 font-mono mt-1 blur-[0.3px]">ROLLOVER.ENGINE // {new Date().getFullYear()}</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {error && (
-        <div className="mb-8 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-3 text-rose-700">
+        <div className="mb-8 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-3 text-rose-700 shadow-sm">
           <AlertTriangle size={20} />
           <span className="font-bold">{error}</span>
         </div>
       )}
 
-      <div className="mb-8 p-6 bg-slate-50 rounded-xl border border-slate-200">
-        <h3 className="text-lg font-black text-slate-800 mb-4">תהליך סגירת סשן</h3>
-        <div className="space-y-3">
-          {rolloverSteps.map((step) => {
-            const log = recentLogs.find(l => l.action === step.id);
-            const status = log ? log.status : 'idle';
-            const metrics = log?.metrics;
-            
-            return (
-              <div key={step.id} className="flex flex-col gap-2">
-                <div className="flex items-center gap-3">
-                  {status === 'success' && <CheckCircle className="text-emerald-500" size={20} />}
-                  {status === 'failed' && <AlertTriangle className="text-rose-500" size={20} />}
-                  {status === 'pending' && <Loader2 className="text-sky-500 animate-spin" size={20} />}
-                  {status === 'idle' && <Circle className="text-slate-300" size={20} />}
-                  <span className={`font-bold ${status === 'idle' ? 'text-slate-400' : 'text-slate-800'}`}>
-                    {step.label}
-                  </span>
-                  {log?.details && status !== 'idle' && (
-                    <span className="text-xs text-slate-500 font-normal mr-auto">
-                      {log.details}
-                    </span>
-                  )}
-                </div>
-                {metrics && (
-                  <div className="mr-8 p-2 bg-slate-100 rounded text-xs text-slate-600">
-                    <p>שדות עודכנו: {metrics.updatedFields} / {metrics.expectedFields}</p>
-                    <p>סטטוס שמירה: {metrics.saveStatus}</p>
-                    {metrics.durationMs !== undefined && <p>זמן ריצה: {metrics.durationMs}ms</p>}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 shadow-sm">
           <div className="flex items-center gap-2 text-slate-500 mb-2">
             <Calendar size={18} />
-            <span className="text-sm font-bold">תקופת פעילות</span>
+            <span className="text-sm font-bold">תקופת פעילות נוכחית</span>
           </div>
           <p className="text-lg font-black text-slate-800">
             {yearConfig?.startDate ? new Date(yearConfig.startDate).toLocaleDateString('he-IL') : 'לא מוגדר'} - 
