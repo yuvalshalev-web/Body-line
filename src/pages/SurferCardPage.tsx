@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
-import PlayerCard from '../components/PlayerCard';
+import { AthletePassport } from '../components/AthletePassport';
 import UserAnalytics from '../components/UserAnalytics';
 import { OceanJourney } from '../components/OceanJourney';
 import UserCategories from '../components/UserCategories';
@@ -49,6 +49,8 @@ const SurferCardPage: React.FC = () => {
     </div>
   );
 
+  console.log("SurferCardPage: Rendering successfully for user:", userData?.firstName);
+
   return (
     <div className="max-w-7xl mx-auto px-[var(--spacing-md)] md:px-[var(--spacing-lg)] py-[var(--spacing-lg)] font-yehuda" dir="rtl">
       {/* Body-line Standard Header Stack */}
@@ -67,9 +69,9 @@ const SurferCardPage: React.FC = () => {
 
       {/* Diagnostic Info for Admin */}
 
-      {/* The Professional Player Card */}
-      <div className="mb-8">
-        <PlayerCard userId={currentUser?.id || 'guest'} />
+      {/* The Digital Athlete Wallet / Passport */}
+      <div className="mb-12">
+        <AthletePassport />
       </div>
 
       {/* Motivation Card & Rank Roadmap */}

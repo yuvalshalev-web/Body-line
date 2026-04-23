@@ -1034,14 +1034,22 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // 3. Archive to weekly_history
       console.log("finalizeSession: Archiving to weekly_history...");
-      await addDoc(collection(db, 'weekly_history'), {
-        date: currentDate || new Date().toISOString(),
+      // Generate a deterministic ID based on the session date to prevent duplicate sessions 
+      // in case of Race Conditions from multiple clients triggering rollover simultaneously.
+      const sessionDateStr = currentDate || new Date().toISOString();
+      const deterministicId = new Date(sessionDateStr).toISOString().split('T')[0]; // e.g., "2026-03-19"
+      
+      const historyDocRef = doc(db, 'weekly_history', deterministicId);
+      
+      await setDoc(historyDocRef, {
+        date: sessionDateStr,
         participantIds: currentAttendees,
         participantsCount: currentAttendees.length,
         status: 'finalized',
         finalizedAt: new Date().toISOString(),
         ...(saveWeather ? { seaState: coastalWeather || null } : {})
-      });
+      }, { merge: true });
+      
       await addRolloverLog('archive', 'success', 'הסשן נשמר בהיסטוריה');
       if (saveWeather) {
         await addRolloverLog('save_sea_state', 'success', 'נתוני הים נשמרו');

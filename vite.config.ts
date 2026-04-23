@@ -47,7 +47,7 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/__/]
       },
       devOptions: {
-        enabled: true
+        enabled: false
       }
     })
   ],

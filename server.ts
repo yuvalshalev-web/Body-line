@@ -239,7 +239,7 @@ async function startServer() {
       const { lat, lon } = coords;
       
       const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period&hourly=sea_surface_temperature&timezone=auto`;
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m,uv_index,surface_pressure,relative_humidity_2m&timezone=auto`;
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m,uv_index,surface_pressure,relative_humidity_2m&hourly=uv_index&forecast_days=2&timezone=auto`;
       const imsUrl = `https://api.ims.gov.il/v1/envista/stations/${stationId}/data/latest`;
       
       const controller = new AbortController();
@@ -384,12 +384,32 @@ async function startServer() {
       
       const processedWaveHeightMeters = heightCm / 100;
 
+      // Extract hourly UV (07:00 to 20:00)
+      let hourlyUv: { hour: string; uv: number }[] = [];
+      if (weatherData.hourly && weatherData.hourly.time && weatherData.hourly.uv_index) {
+        // get today's date prefix
+        const nowLocal = new Date();
+        const todayPrefix = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, '0')}-${String(nowLocal.getDate()).padStart(2, '0')}T`;
+        
+        for (let i = 0; i < weatherData.hourly.time.length; i++) {
+          const tKey = weatherData.hourly.time[i];
+          if (tKey.startsWith(todayPrefix)) {
+            const hStr = tKey.split('T')[1].split(':')[0];
+            const hNum = parseInt(hStr, 10);
+            if (hNum >= 7 && hNum <= 20) {
+              hourlyUv.push({ hour: hStr, uv: Math.round(weatherData.hourly.uv_index[i] || 0) });
+            }
+          }
+        }
+      }
+
       const result = {
         location: coords.name,
         stationId: stationId,
         timestamp: new Date().toISOString(),
         waveHeight: processedWaveHeightMeters,
         wavePeriod: marineData.current?.wave_period || 0,
+        waveDirection: marineData.current?.wave_direction || 0,
         windSpeed: windSpeed,
         windGusts: windGusts,
         windDirection: windDirection,
@@ -397,6 +417,7 @@ async function startServer() {
         airTemp: airTemp,
         rain: rain,
         uvIndex: weatherData.current?.uv_index || 0,
+        hourlyUv: hourlyUv,
         pressure: pressure,
         humidity: humidity,
         dataSource: dataSource,
