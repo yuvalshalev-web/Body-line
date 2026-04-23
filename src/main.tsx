@@ -26,16 +26,7 @@ window.addEventListener('unhandledrejection', function(event) {
   document.body.appendChild(errorDiv);
 });
 
-// Create a visual console for critical logs just in case
-const originalConsoleError = console.error;
-console.error = function(...args) {
-  originalConsoleError.apply(console, args);
-  if (args[0] && typeof args[0] === 'string' && args[0].includes('Warning:')) return;
-  const errorDiv = document.createElement('div');
-  errorDiv.style.cssText = "color:darkred; background:#ffcccc; padding:10px; z-index:99998; position:fixed; bottom:0; left:0; right:0; max-height: 200px; overflow:auto; border-top: 2px solid red;";
-  errorDiv.innerHTML = `<strong>console.error:</strong> ${args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ')}`;
-  document.body.appendChild(errorDiv);
-};
+// Create a visual console for critical logs just in case removed.
 
 console.log("index.tsx running");
 

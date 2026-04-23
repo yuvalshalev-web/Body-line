@@ -98,7 +98,8 @@ export const SurfDashboard: React.FC = () => {
         setForecastLoaded(true);
       } catch (err) {
         if (!active) return;
-        console.error("Forecast error:", err);
+        // Quietly handle forecast error without triggering console.error which brings up the red screen
+        console.warn("Forecast api failed to load");
         setForecastError("שגיאה בטעינת תחזית");
       }
     };
