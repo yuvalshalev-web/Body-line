@@ -11,7 +11,12 @@ import {
   Clock,
   MapPin,
   QrCode,
-  User
+  User,
+  Flag,
+  Wind,
+  Compass,
+  Ship,
+  Map as MapIcon
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -23,7 +28,12 @@ const DISCIPLINES = [
   { id: 'sailing', name: 'סקיפר / שייט', icon: Anchor, color: 'from-blue-600 to-indigo-800', shadow: 'shadow-indigo-500/30' },
   { id: 'diving', name: 'צלילה', icon: Waves, color: 'from-emerald-400 to-teal-600', shadow: 'shadow-teal-500/30' },
   { id: 'climbing', name: 'טיפוס הרים', icon: Mountain, color: 'from-orange-500 to-red-600', shadow: 'shadow-orange-500/30' },
-  { id: 'ski', name: 'סקי / סנובורד', icon: Snowflake, color: 'from-slate-200 to-slate-400', shadow: 'shadow-slate-400/30', textColor: 'text-slate-800' }
+  { id: 'rock-climbing', name: 'טיפוס צוקים', icon: Mountain, color: 'from-stone-500 to-stone-700', shadow: 'shadow-stone-500/30' },
+  { id: 'ski', name: 'סקי / סנובורד', icon: Snowflake, color: 'from-slate-200 to-slate-400', shadow: 'shadow-slate-400/30', textColor: 'text-slate-800' },
+  { id: 'golf', name: 'גולף', icon: Flag, color: 'from-green-400 to-green-700', shadow: 'shadow-green-500/30' },
+  { id: 'paragliding', name: 'מצנח רחיפה', icon: Wind, color: 'from-sky-300 to-indigo-500', shadow: 'shadow-sky-500/30' },
+  { id: 'canyoning', name: 'קניונינג', icon: MapIcon, color: 'from-amber-600 to-orange-800', shadow: 'shadow-amber-500/30' },
+  { id: 'rafting', name: 'רפטינג', icon: Ship, color: 'from-teal-400 to-blue-700', shadow: 'shadow-teal-500/30' }
 ];
 
 export const AthletePassport: React.FC = () => {

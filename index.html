@@ -1,21 +1,6 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <script>
-      window.onerror = function(msg, src, lineno, colno, err) {
-        var d = document.createElement('div');
-        d.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:red;color:white;z-index:999999;padding:20px;overflow:auto;';
-        d.innerHTML = '<h1 style="font-size:24px">FATAL ERROR</h1><p>' + msg + '</p><p>Line: ' + lineno + '</p><pre>' + (err && err.stack ? err.stack : '') + '</pre>';
-        document.body.appendChild(d);
-      };
-      window.addEventListener('unhandledrejection', function(event) {
-        var d = document.createElement('div');
-        d.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:red;color:white;z-index:999999;padding:20px;overflow:auto;';
-        var msg = event.reason ? (event.reason.message || event.reason) : 'Unknown rejection';
-        d.innerHTML = '<h1 style="font-size:24px">PROMISE REJECTION</h1><p>' + msg + '</p>';
-        document.body.appendChild(d);
-      });
-    </script>
     <meta charset="UTF-8" />
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
