@@ -217,11 +217,11 @@ export const AthletePassport: React.FC = () => {
             {/* Certifications / Badges Bar */}
             <div className="mt-8 pt-6 border-t border-white/20">
               <span className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-3 block">הסמכות מאומתות</span>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {Array.isArray(member.certifications) && member.certifications.length > 0 ? (
                   member.certifications.map((cert: string, i: number) => (
-                    <div key={i} className="px-3 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-xs font-bold shadow-inner">
-                      {cert.split(' ')[0]} {/* Show short version */}
+                    <div key={i} className="px-3 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-xs font-bold shadow-inner flex shrink-0 items-center">
+                      {cert}
                     </div>
                   ))
                 ) : (
@@ -230,9 +230,31 @@ export const AthletePassport: React.FC = () => {
                   </div>
                 )}
                 {activeDiscipline === 'sailing' && (
-                  <div className="px-3 py-1.5 bg-yellow-400/20 text-yellow-100 backdrop-blur-md border border-yellow-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center gap-1">
+                  <div className="px-3 py-1.5 bg-yellow-400/20 text-yellow-100 backdrop-blur-md border border-yellow-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
                     <Anchor size={12} /> סקיפר משיט 30
                   </div>
+                )}
+                {activeDiscipline === 'diving' && (
+                  <>
+                    <div className="px-3 py-1.5 bg-teal-400/20 text-teal-100 backdrop-blur-md border border-teal-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
+                      <Waves size={12} /> צולל כוכב 1
+                    </div>
+                    <div className="px-3 py-1.5 bg-teal-400/20 text-teal-100 backdrop-blur-md border border-teal-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
+                      <Waves size={12} /> צולל שני כוכבים
+                    </div>
+                    <div className="px-3 py-1.5 bg-teal-400/20 text-teal-100 backdrop-blur-md border border-teal-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
+                      <Waves size={12} /> צולל שלושה כוכבים
+                    </div>
+                    <div className="px-3 py-1.5 bg-teal-400/20 text-teal-100 backdrop-blur-md border border-teal-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
+                      <Waves size={12} /> צולל נייטרוקס
+                    </div>
+                    <div className="px-3 py-1.5 bg-teal-400/20 text-teal-100 backdrop-blur-md border border-teal-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
+                      <Waves size={12} /> עזרה ראשונה והחייאה
+                    </div>
+                    <div className="px-3 py-1.5 bg-teal-400/20 text-teal-100 backdrop-blur-md border border-teal-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
+                      <Waves size={12} /> צולל הצלה
+                    </div>
+                  </>
                 )}
               </div>
             </div>
