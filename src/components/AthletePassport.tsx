@@ -270,6 +270,32 @@ export const AthletePassport: React.FC = () => {
                 )}
               </div>
             </div>
+            {/* Additional Athlete Attributes (Insurance) */}
+            {['diving', 'sailing', 'paragliding', 'ski'].includes(activeDiscipline) && (
+              <div className="mt-4 pt-4 border-t border-white/20">
+                 <span className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-3 flex items-center gap-1"><ShieldCheck size={12}/> כיסוי ביטוחי רשמי</span>
+                 <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between px-3 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 text-xs">
+                      <div className="flex items-center gap-2">
+                         <div className={`w-2 h-2 rounded-full ${activeDiscipline === 'diving' ? 'bg-emerald-400' : 'bg-red-400'}`}></div>
+                         <span className="font-bold opacity-90">ביטוח ספורט אתגרי</span>
+                      </div>
+                      <span className="font-mono text-[10px] opacity-70">
+                         {activeDiscipline === 'diving' ? 'בתוקף עד: 12/2026' : 'נדרש חידוש'}
+                      </span>
+                    </div>
+                    {activeDiscipline === 'diving' && (
+                      <div className="flex items-center justify-between px-3 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 text-xs">
+                        <div className="flex items-center gap-2">
+                           <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                           <span className="font-bold opacity-90">הצהרת בריאות / רופא צלילה</span>
+                        </div>
+                        <span className="font-mono text-[10px] opacity-70">אושר ב-01/2025</span>
+                      </div>
+                    )}
+                 </div>
+              </div>
+            )}
             
           </motion.div>
         </motion.div>
