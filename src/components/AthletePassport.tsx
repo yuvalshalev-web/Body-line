@@ -16,7 +16,8 @@ import {
   Wind,
   Compass,
   Ship,
-  Map as MapIcon
+  Map as MapIcon,
+  Info
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -35,6 +36,24 @@ const DISCIPLINES = [
   { id: 'canyoning', name: 'קניונינג', icon: MapIcon, color: 'from-amber-600 to-orange-800', shadow: 'shadow-amber-500/30' },
   { id: 'rafting', name: 'רפטינג', icon: Ship, color: 'from-teal-400 to-blue-700', shadow: 'shadow-teal-500/30' }
 ];
+
+const BadgeWithTooltip = ({ icon: Icon, text, tooltip, colorTheme }: { icon: any, text: string, tooltip: string, colorTheme: 'yellow' | 'teal' }) => {
+  const cn = colorTheme === 'yellow' 
+    ? 'bg-yellow-400/20 text-yellow-100 border-yellow-400/30'
+    : 'bg-teal-400/20 text-teal-100 border-teal-400/30';
+    
+  return (
+    <div className={`relative group px-3 py-1.5 backdrop-blur-md border rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1.5 cursor-help ${cn}`}>
+      <Icon size={12} />
+      <span>{text}</span>
+      <Info size={12} className="opacity-60" />
+      
+      <div className="absolute bottom-full right-1/2 translate-x-1/2 mb-2 min-w-[140px] max-w-[180px] p-2 bg-slate-900/90 backdrop-blur-xl border border-white/10 text-white font-normal text-[11px] leading-tight rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 text-center shadow-2xl pointer-events-none">
+        {tooltip}
+      </div>
+    </div>
+  );
+};
 
 export const AthletePassport: React.FC = () => {
   const { currentUser } = useAuth();
@@ -230,30 +249,23 @@ export const AthletePassport: React.FC = () => {
                   </div>
                 )}
                 {activeDiscipline === 'sailing' && (
-                  <div className="px-3 py-1.5 bg-yellow-400/20 text-yellow-100 backdrop-blur-md border border-yellow-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
-                    <Anchor size={12} /> סקיפר משיט 30
-                  </div>
+                  <>
+                    <BadgeWithTooltip icon={Anchor} text="משיט 11 (אופנוע ים)" tooltip="רישיון להשטת אופנוע ים" colorTheme="yellow" />
+                    <BadgeWithTooltip icon={Anchor} text="משיט 12 (עוצמה א')" tooltip="סירת מנוע עד 8.5 מטר ועד 150 כ''ס" colorTheme="yellow" />
+                    <BadgeWithTooltip icon={Anchor} text="משיט 13 (עוצמה ב')" tooltip="סירת מנוע ללא הגבלת כ''ס" colorTheme="yellow" />
+                    <BadgeWithTooltip icon={Anchor} text="משיט 30 (סקיפר חופי)" tooltip="משיט יאכטה, מסע חופי עד 24 מטר" colorTheme="yellow" />
+                    <BadgeWithTooltip icon={Anchor} text="משיט 40 (מסחרי)" tooltip="משיט בשכר להסעת נוסעים" colorTheme="yellow" />
+                    <BadgeWithTooltip icon={Anchor} text="משיט 60 (סקיפר בינלאומי)" tooltip="סקיפר במסע בינלאומי" colorTheme="yellow" />
+                  </>
                 )}
                 {activeDiscipline === 'diving' && (
                   <>
-                    <div className="px-3 py-1.5 bg-teal-400/20 text-teal-100 backdrop-blur-md border border-teal-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
-                      <Waves size={12} /> צולל כוכב 1
-                    </div>
-                    <div className="px-3 py-1.5 bg-teal-400/20 text-teal-100 backdrop-blur-md border border-teal-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
-                      <Waves size={12} /> צולל שני כוכבים
-                    </div>
-                    <div className="px-3 py-1.5 bg-teal-400/20 text-teal-100 backdrop-blur-md border border-teal-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
-                      <Waves size={12} /> צולל שלושה כוכבים
-                    </div>
-                    <div className="px-3 py-1.5 bg-teal-400/20 text-teal-100 backdrop-blur-md border border-teal-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
-                      <Waves size={12} /> צולל נייטרוקס
-                    </div>
-                    <div className="px-3 py-1.5 bg-teal-400/20 text-teal-100 backdrop-blur-md border border-teal-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
-                      <Waves size={12} /> עזרה ראשונה והחייאה
-                    </div>
-                    <div className="px-3 py-1.5 bg-teal-400/20 text-teal-100 backdrop-blur-md border border-teal-400/30 rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1">
-                      <Waves size={12} /> צולל הצלה
-                    </div>
+                    <BadgeWithTooltip icon={Waves} text="צולל כוכב 1" tooltip="הסמכה בסיסית - צלילה עד 12 מטר בליווי" colorTheme="teal" />
+                    <BadgeWithTooltip icon={Waves} text="צולל שני כוכבים" tooltip="הסמכה מתקדמת - צלילה עצמאית עד 30 מטר" colorTheme="teal" />
+                    <BadgeWithTooltip icon={Waves} text="צולל שלושה כוכבים" tooltip="Divemaster - מוביל קבוצות וצולל בכיר" colorTheme="teal" />
+                    <BadgeWithTooltip icon={Waves} text="צולל נייטרוקס" tooltip="העשרת אוויר בחמצן להארכת זמן התחתית" colorTheme="teal" />
+                    <BadgeWithTooltip icon={Waves} text="עזרה ראשונה והחייאה" tooltip="הסמכת עזרה ראשונה דחופה לסביבה ימית" colorTheme="teal" />
+                    <BadgeWithTooltip icon={Waves} text="צולל הצלה" tooltip="Rescue Diver - חילוץ והצלת צוללנים במצבי חירום" colorTheme="teal" />
                   </>
                 )}
               </div>
