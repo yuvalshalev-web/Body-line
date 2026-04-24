@@ -12,20 +12,29 @@
     <title>Body-Line | MemberHub</title>
     
     <script>
+      // Display errors directly on screen for debugging
+      window.onerror = function(msg, src, lineno, colno, err) {
+        var d = document.createElement('div');
+        d.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:red;color:white;z-index:999999;padding:20px;overflow:auto;word-wrap:break-word;';
+        d.innerHTML = '<h2>CRITICAL ERROR</h2><p>' + msg + '</p><p>' + src + ':' + lineno + ':' + colno + '</p><pre>' + (err ? err.stack : '') + '</pre>';
+        document.body.appendChild(d);
+      };
+      window.addEventListener('unhandledrejection', function(evt) {
+        var d = document.createElement('div');
+        d.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:red;color:white;z-index:999999;padding:20px;overflow:auto;word-wrap:break-word;';
+        d.innerHTML = '<h2>UNHANDLED PROMISE REJECTION</h2><p>' + (evt.reason ? (evt.reason.message || evt.reason) : 'Unknown') + '</p><pre>' + (evt.reason ? evt.reason.stack : '') + '</pre>';
+        document.body.appendChild(d);
+      });
       // Catch the PWA install event as early as possible
       window.deferredPWAEvent = null;
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         window.deferredPWAEvent = e;
-        console.log("PWA: beforeinstallprompt event captured globally");
       });
       // Force unregister service workers to clear broken cache
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for(let registration of registrations) {
-            registration.unregister();
-            console.log("Service Worker unregistered to clear cache.");
-          }
+          for(let registration of registrations) { registration.unregister(); }
         });
       }
     </script>

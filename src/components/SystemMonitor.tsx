@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { safeLocalStorage } from '../utils/storage';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
@@ -169,8 +170,8 @@ const DataHealthScore: React.FC<{ dbSize: number, storageSize: number }> = ({ db
     setLastScan(new Date());
     setIsScanning(false);
 
-    // Cache result in localStorage
-    localStorage.setItem('data_health_cache', JSON.stringify({
+    // Cache result in safeLocalStorage
+    safeLocalStorage.setItem('data_health_cache', JSON.stringify({
       score: calculatedScore,
       timestamp: new Date().toISOString(),
       anomalyCount: issues.length
@@ -178,7 +179,7 @@ const DataHealthScore: React.FC<{ dbSize: number, storageSize: number }> = ({ db
   };
 
   useEffect(() => {
-    const cached = localStorage.getItem('data_health_cache');
+    const cached = safeLocalStorage.getItem('data_health_cache');
     if (cached) {
       const { score, timestamp } = JSON.parse(cached);
       setHealthScore(score);
@@ -559,13 +560,19 @@ const RepairRecovery: React.FC = () => {
 
   const handleClearCache = async () => {
     if (window.confirm('האם אתה בטוח שברצונך לנקות את המטמון המקומי? המערכת תבצע טעינה מחדש.')) {
-      localStorage.clear();
-      sessionStorage.clear();
+      try { window.localStorage.clear(); } catch(e){}
+      try { window.sessionStorage.clear(); } catch(e){}
       // Clear IndexedDB (Firebase persistence)
-      const dbs = await window.indexedDB.databases();
-      dbs.forEach(db => {
-        if (db.name) window.indexedDB.deleteDatabase(db.name);
-      });
+      try {
+        if (window.indexedDB && window.indexedDB.databases) {
+          const dbs = await window.indexedDB.databases();
+          dbs.forEach(db => {
+            if (db.name) window.indexedDB.deleteDatabase(db.name);
+          });
+        }
+      } catch(e) {
+        console.warn("Could not clear indexedDB", e);
+      }
       window.location.reload();
     }
   };
@@ -925,8 +932,8 @@ const SystemMonitor: React.FC = () => {
               whileHover={{ scale: 1.05, rotate: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => {
-                localStorage.clear();
-                sessionStorage.clear();
+                try { window.localStorage.clear(); } catch(e){}
+                try { window.sessionStorage.clear(); } catch(e){}
                 window.location.reload();
               }}
               className="w-28 h-28 rounded-[2.5rem] bg-amber-400 border-4 border-amber-500 text-white flex flex-col items-center justify-center gap-2 shadow-xl shadow-amber-50"

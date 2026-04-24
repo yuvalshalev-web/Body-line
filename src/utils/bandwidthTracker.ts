@@ -1,8 +1,10 @@
 
+import { safeLocalStorage } from './storage';
+
 /**
  * Bandwidth Tracker Utility
  * Tracks incoming and outgoing data in hourly buckets for the last 24 hours.
- * Persists to localStorage.
+ * Persists to safeLocalStorage.
  */
 
 interface BandwidthBucket {
@@ -20,7 +22,7 @@ export const trackBandwidth = (bytes: number, direction: 'in' | 'out') => {
   const currentHour = now.getHours();
   const today = now.toDateString();
   
-  const savedData = localStorage.getItem(STORAGE_KEY);
+  const savedData = safeLocalStorage.getItem(STORAGE_KEY);
   let buckets: Record<string, BandwidthBucket> = {};
   
   if (savedData) {
@@ -47,7 +49,7 @@ export const trackBandwidth = (bytes: number, direction: 'in' | 'out') => {
 
   buckets[hourKey][direction] += bytes;
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+  safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify({
     date: today,
     buckets
   }));
@@ -61,7 +63,7 @@ export const trackBandwidth = (bytes: number, direction: 'in' | 'out') => {
 export const get24hBandwidth = () => {
   if (typeof window === 'undefined') return [];
 
-  const savedData = localStorage.getItem(STORAGE_KEY);
+  const savedData = safeLocalStorage.getItem(STORAGE_KEY);
   if (!savedData) return generateEmptyBuckets();
 
   try {

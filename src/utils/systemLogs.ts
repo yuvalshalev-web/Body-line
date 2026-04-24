@@ -18,6 +18,33 @@ export interface SystemLog {
 
 const STORAGE_KEY = 'system_technical_logs';
 
+const safeLocalStorage = {
+  getItem: (key: string) => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return window.localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string) => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (e) {
+      // Ignored
+    }
+  },
+  removeItem: (key: string) => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.removeItem(key);
+    } catch (e) {
+      // Ignored
+    }
+  }
+};
+
 export const addLog = (message: string, severity: LogSeverity = 'Info', source: SystemLog['source'] = 'Frontend', details?: string) => {
   if (typeof window === 'undefined') return;
 
@@ -30,7 +57,7 @@ export const addLog = (message: string, severity: LogSeverity = 'Info', source: 
     details
   };
 
-  const savedLogs = localStorage.getItem(STORAGE_KEY);
+  const savedLogs = safeLocalStorage.getItem(STORAGE_KEY);
   let logs: SystemLog[] = [];
 
   if (savedLogs) {
@@ -47,7 +74,7 @@ export const addLog = (message: string, severity: LogSeverity = 'Info', source: 
   // Keep only last 100 logs
   logs = logs.slice(0, 100);
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+  safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
 
   // Dispatch event for UI updates
   window.dispatchEvent(new CustomEvent('system-log-added', { detail: newLog }));
@@ -56,7 +83,7 @@ export const addLog = (message: string, severity: LogSeverity = 'Info', source: 
 export const getLogs = (): SystemLog[] => {
   if (typeof window === 'undefined') return [];
 
-  const savedLogs = localStorage.getItem(STORAGE_KEY);
+  const savedLogs = safeLocalStorage.getItem(STORAGE_KEY);
   if (!savedLogs) return [];
 
   try {
@@ -69,7 +96,7 @@ export const getLogs = (): SystemLog[] => {
 
 export const clearLogs = () => {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(STORAGE_KEY);
+  safeLocalStorage.removeItem(STORAGE_KEY);
   window.dispatchEvent(new CustomEvent('system-log-added'));
 };
 

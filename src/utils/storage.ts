@@ -1,5 +1,44 @@
 
 /**
+ * Helper for safe localStorage access in iframes (like AI Studio)
+ * where localStorage might throw DOMException
+ */
+export const safeLocalStorage = {
+  getItem: (key: string) => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return window.localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string) => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (e) {
+      // ignore
+    }
+  },
+  removeItem: (key: string) => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.removeItem(key);
+    } catch (e) {
+      // ignore
+    }
+  },
+  clear: () => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.clear();
+    } catch (e) {
+      // ignore
+    }
+  }
+};
+
+/**
  * Helper for localStorage with expiration
  */
 export const storage = {
@@ -10,11 +49,11 @@ export const storage = {
       timestamp: now,
       expiresAt: now + expirationHours * 60 * 60 * 1000,
     };
-    localStorage.setItem(key, JSON.stringify(item));
+    safeLocalStorage.setItem(key, JSON.stringify(item));
   },
 
   get: (key: string) => {
-    const itemStr = localStorage.getItem(key);
+    const itemStr = safeLocalStorage.getItem(key);
     if (!itemStr) return null;
 
     try {
@@ -23,7 +62,7 @@ export const storage = {
 
       // Check if expired
       if (now > item.expiresAt) {
-        localStorage.removeItem(key);
+        safeLocalStorage.removeItem(key);
         return null;
       }
 
@@ -35,10 +74,10 @@ export const storage = {
   },
 
   remove: (key: string) => {
-    localStorage.removeItem(key);
+    safeLocalStorage.removeItem(key);
   },
 
   clear: () => {
-    localStorage.clear();
+    safeLocalStorage.clear();
   }
 };

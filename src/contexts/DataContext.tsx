@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
+import { safeLocalStorage } from '../utils/storage';
 import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp, runTransaction, serverTimestamp, where } from 'firebase/firestore';
 import { ref, deleteObject, getMetadata } from 'firebase/storage';
 import { 
@@ -217,7 +218,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [dbStatus, setDbStatusState] = useState<'ONLINE' | 'OFFLINE'>(() => {
-    const saved = localStorage.getItem('kill_switch_active');
+    const saved = safeLocalStorage.getItem('kill_switch_active');
     return saved === 'true' ? 'OFFLINE' : 'ONLINE';
   });
 
@@ -375,7 +376,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const now = new Date();
           const hourKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}T${now.getHours()}:00:00`;
           const lastLogKey = 'last_sea_condition_log_hour';
-          const lastLogHour = localStorage.getItem(lastLogKey);
+          const lastLogHour = safeLocalStorage.getItem(lastLogKey);
 
           if (lastLogHour !== hourKey) {
             trackedAddDoc(collection(db, 'seaConditions'), {
@@ -385,7 +386,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               windSpeed: data.windSpeed,
               uvIndex: data.uvIndex
             }).then(() => {
-              localStorage.setItem(lastLogKey, hourKey);
+              safeLocalStorage.setItem(lastLogKey, hourKey);
             }).catch(err => {
               console.error("Failed to log sea conditions:", err);
             });

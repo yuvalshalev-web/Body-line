@@ -26,7 +26,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCurrentUser(user);
     // We don't strictly need localStorage anymore as Firebase Auth handles persistence,
     // but it can be useful for immediate UI rendering before onAuthStateChanged fires.
-    localStorage.setItem('habal_zug_user', JSON.stringify(user));
+    try {
+      window.localStorage.setItem('habal_zug_user', JSON.stringify(user));
+    } catch (e) {
+      console.warn('localStorage blocked during login');
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -34,7 +38,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await signOut(auth);
       setCurrentUser(null);
       setFirebaseUser(null);
-      localStorage.removeItem('habal_zug_user');
+      try {
+        window.localStorage.removeItem('habal_zug_user');
+      } catch (e) {}
     } catch (error) {
       console.error("Error signing out:", error);
     }
@@ -42,7 +48,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateUser = useCallback((user: Member) => {
     setCurrentUser(user);
-    localStorage.setItem('habal_zug_user', JSON.stringify(user));
+    try {
+      window.localStorage.setItem('habal_zug_user', JSON.stringify(user));
+    } catch (e) {}
   }, []);
 
   // @ai-preserve: Firebase Auth State Listener
@@ -79,20 +87,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (memberData.isActive === false) {
               console.warn("AuthContext: User is suspended. Not setting currentUser.");
               setCurrentUser(null);
-              localStorage.removeItem('habal_zug_user');
+              try { window.localStorage.removeItem('habal_zug_user'); } catch(e){}
             } else {
               console.log("AuthContext: Member doc found:", memberData.email);
               setCurrentUser(memberData);
-              localStorage.setItem('habal_zug_user', JSON.stringify(memberData));
+              try { window.localStorage.setItem('habal_zug_user', JSON.stringify(memberData)); } catch(e){}
             }
           } else {
             console.warn("AuthContext: Member doc NOT found for", user.uid);
-            const savedUser = localStorage.getItem('habal_zug_user');
+            let savedUser = null;
+            try { savedUser = window.localStorage.getItem('habal_zug_user'); } catch(e){}
             if (savedUser) {
               const parsedUser = JSON.parse(savedUser);
               if (parsedUser.isActive === false) {
                 setCurrentUser(null);
-                localStorage.removeItem('habal_zug_user');
+                try { window.localStorage.removeItem('habal_zug_user'); } catch(e){}
               } else {
                 setCurrentUser(parsedUser);
               }
@@ -100,12 +109,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         } catch (error) {
           console.error("AuthContext: Error fetching user doc in AuthContext:", error);
-          const savedUser = localStorage.getItem('habal_zug_user');
+          let savedUser = null;
+          try { savedUser = window.localStorage.getItem('habal_zug_user'); } catch(e){}
           if (savedUser) {
             const parsedUser = JSON.parse(savedUser);
             if (parsedUser.isActive === false) {
               setCurrentUser(null);
-              localStorage.removeItem('habal_zug_user');
+              try { window.localStorage.removeItem('habal_zug_user'); } catch(e){}
             } else {
               setCurrentUser(parsedUser);
             }
@@ -113,7 +123,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       } else {
         setCurrentUser(null);
-        localStorage.removeItem('habal_zug_user');
+        try { window.localStorage.removeItem('habal_zug_user'); } catch(e){}
       }
       console.log("AuthContext: Setting loading to false");
       setLoading(false);
@@ -136,7 +146,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } else {
           setCurrentUser(prev => {
             if (JSON.stringify(updatedData) !== JSON.stringify(prev)) {
-              localStorage.setItem('habal_zug_user', JSON.stringify(updatedData));
+              try { window.localStorage.setItem('habal_zug_user', JSON.stringify(updatedData)); } catch(e){}
               return updatedData;
             }
             return prev;

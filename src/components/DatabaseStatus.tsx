@@ -1,4 +1,5 @@
 import React from 'react';
+import { safeLocalStorage } from '../utils/storage';
 import { useData } from '../contexts/DataContext';
 import { AlertTriangle, Wifi, WifiOff, RefreshCw, X, Terminal } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -73,8 +74,8 @@ export const DatabaseStatus: React.FC = () => {
                       console.log("Quota Error:", hasQuotaError);
                       console.log("Connection Error:", connectionError);
                       console.log("LocalStorage:", {
-                        kill_switch: localStorage.getItem('kill_switch_active'),
-                        read_stats: localStorage.getItem('db_read_stats')
+                        kill_switch: safeLocalStorage.getItem('kill_switch_active'),
+                        read_stats: safeLocalStorage.getItem('db_read_stats')
                       });
                       alert("Diagnostics logged to console (F12)");
                     }}

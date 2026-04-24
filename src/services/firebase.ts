@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, initializeAuth, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence } from 'firebase/auth';
 import { 
   getFirestore, initializeFirestore, getDocs, getDoc, Query, QuerySnapshot, collection, addDoc, query, orderBy, 
   limit, deleteDoc, writeBatch, doc, getDocFromServer, setDoc, updateDoc, onSnapshot,
@@ -37,6 +37,9 @@ try {
   throw error;
 }
 
+// Check if we are inside an iframe (like AI Studio Preview)
+const isIframe = typeof window !== 'undefined' && window !== window.top;
+
 // Handle "(default)" database ID correctly
 // Force long polling and disable persistence to bypass network blocks and stale cache
 // Also explicitly set host to ensure it's not trying to use a blocked regional endpoint
@@ -53,22 +56,47 @@ export const db: Firestore = firebaseConfig.firestoreDatabaseId && firebaseConfi
     });
 
 // Clear persistence on startup to ensure fresh data
-if (typeof window !== 'undefined') {
-  clearIndexedDbPersistence(db).catch(err => console.error("Could not clear persistence:", err));
+if (typeof window !== 'undefined' && !isIframe) {
+  clearIndexedDbPersistence(db).catch(err => console.warn("Could not clear persistence:", err.message));
 }
 
 console.log("Firestore initialized successfully.");
 
-export const auth = getAuth(app);
+// Initialize Auth specifically to avoid IndexedDB crash in iframes
+export const auth = isIframe 
+  ? initializeAuth(app, { persistence: inMemoryPersistence }) 
+  : getAuth(app);
+  
 export const storage = getStorage(app);
 console.log("Auth and Storage initialized.");
+
+// Helper to safely access localStorage, preventing crashes in iframes with tight security
+const safeLocalStorage = {
+  getItem: (key: string) => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return window.localStorage.getItem(key);
+    } catch (e) {
+      console.warn(`localStorage.getItem blocked for key ${key}:`, e);
+      return null;
+    }
+  },
+  setItem: (key: string, value: string) => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (e) {
+      console.warn(`localStorage.setItem blocked for key ${key}:`, e);
+    }
+  }
+};
 
 export let sessionReadCount = 0;
 export let sessionWriteCount = 0;
 
 // Initialize stats from localStorage if it's from the same day
 if (typeof window !== 'undefined') {
-  const savedData = localStorage.getItem('db_read_stats');
+  const savedData = safeLocalStorage.getItem('db_read_stats');
   if (savedData) {
     try {
       const { count, writeCount, date } = JSON.parse(savedData);
@@ -78,7 +106,7 @@ if (typeof window !== 'undefined') {
         sessionWriteCount = writeCount || 0;
       }
     } catch (e) {
-      console.error("Failed to parse db_read_stats from localStorage", e);
+      console.error("Failed to parse db_read_stats from safeLocalStorage", e);
     }
   }
 }
@@ -88,7 +116,7 @@ export let db_status: 'ONLINE' | 'OFFLINE' = 'ONLINE';
 export const setDbStatus = (status: 'ONLINE' | 'OFFLINE') => {
   db_status = status;
   if (typeof window !== 'undefined') {
-    localStorage.setItem('kill_switch_active', String(status === 'OFFLINE'));
+    safeLocalStorage.setItem('kill_switch_active', String(status === 'OFFLINE'));
     window.dispatchEvent(new CustomEvent('db-status-changed', { detail: status }));
   }
 };
@@ -371,7 +399,7 @@ export const trackedDeleteDoc = async (reference: DocumentReference) => {
 export const incrementReadCount = (amount: number = 1) => {
   sessionReadCount += amount;
   if (typeof window !== 'undefined') {
-    localStorage.setItem('db_read_stats', JSON.stringify({
+    safeLocalStorage.setItem('db_read_stats', JSON.stringify({
       count: sessionReadCount,
       writeCount: sessionWriteCount,
       date: new Date().toDateString()
@@ -383,7 +411,7 @@ export const incrementReadCount = (amount: number = 1) => {
 export const incrementWriteCount = (amount: number = 1) => {
   sessionWriteCount += amount;
   if (typeof window !== 'undefined') {
-    localStorage.setItem('db_read_stats', JSON.stringify({
+    safeLocalStorage.setItem('db_read_stats', JSON.stringify({
       count: sessionReadCount,
       writeCount: sessionWriteCount,
       date: new Date().toDateString()

@@ -1,5 +1,6 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { safeLocalStorage } from '../../utils/storage';
 import { 
   LineChart, 
   Line, 
@@ -575,7 +576,7 @@ const TrendsDashboard: React.FC = () => {
   if (!stats) return null;
 
   const [viewMode, setViewMode] = useState<'unified' | 'split'>(() => {
-    const saved = localStorage.getItem('trendsViewMode');
+    const saved = safeLocalStorage.getItem('trendsViewMode');
     return (saved as any) || 'unified';
   });
   const [ageGroupViewMode, setAgeGroupViewMode] = useState<'cards' | 'unified'>('cards');
@@ -766,7 +767,7 @@ const TrendsDashboard: React.FC = () => {
   const handleViewToggle = () => {
     const next = viewMode === 'unified' ? 'split' : 'unified';
     setViewMode(next);
-    localStorage.setItem('trendsViewMode', next);
+    safeLocalStorage.setItem('trendsViewMode', next);
   };
 
   const groups = [
