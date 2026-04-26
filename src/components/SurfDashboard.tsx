@@ -499,6 +499,9 @@ export const SurfDashboard: React.FC = () => {
                 const cond = getWaveHeightGrade(day.heightCm / 100);
                 const theme = getTimelineCardStyle(day.heightCm);
 
+                // Calculate aquarium fill percentage (assuming 300cm is 100% full)
+                const fillPercent = Math.min(100, Math.max(12, (day.heightCm / 300) * 100));
+
                 return (
                   <motion.div 
                     initial={{ y: 20, opacity: 0 }}
@@ -507,22 +510,30 @@ export const SurfDashboard: React.FC = () => {
                     key={day.id} 
                     className="w-36 rounded-[2.5rem] p-6 flex flex-col items-center text-center transition-all duration-500 shadow-lg border border-slate-100 bg-white hover:-translate-y-3 hover:shadow-2xl relative overflow-hidden group"
                   >
-                    <div className="absolute inset-0 bg-sky-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    {/* Aquarium Fill Effect */}
+                    <div 
+                      className={`absolute bottom-0 left-0 w-full transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] z-0 ${theme.bg.replace('/40', '/20').replace('/30', '/20').replace('/50', '/30')}`}
+                      style={{ height: `${fillPercent}%` }}
+                    >
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-white/60 shadow-[0_-4px_12px_rgba(255,255,255,0.8)] backdrop-blur-sm" />
+                    </div>
+                    
+                    <div className="absolute inset-0 bg-sky-50 opacity-0 group-hover:opacity-20 transition-opacity duration-500 z-0" />
                     
                     <span className="relative z-10 text-xs font-black mb-1 text-slate-800 uppercase tracking-widest">{day.dayName}</span>
                     <span className="relative z-10 text-[10px] font-bold mb-4 text-slate-400">{day.dateStr}</span>
                     
                     <div className="relative z-10 flex flex-col items-center gap-1 my-3">
-                      <span className="text-4xl font-black text-slate-800 tracking-tighter group-hover:scale-110 transition-transform duration-500">{day.heightCm === 0 ? '0' : day.heightCm}</span>
-                      <span className="text-xs font-bold text-slate-400 uppercase">ס״מ</span>
+                      <span className="text-4xl font-black text-slate-800 tracking-tighter group-hover:scale-110 transition-transform duration-500 drop-shadow-sm">{day.heightCm === 0 ? '0' : day.heightCm}</span>
+                      <span className="text-xs font-bold text-slate-500 uppercase">ס״מ</span>
                     </div>
 
-                    <div className="relative z-10 mt-auto pt-4 flex flex-col items-center gap-3 w-full border-t border-slate-50">
-                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${cond.bg} ${cond.color} border ${cond.border} shadow-sm`}>{cond.name}</span>
+                    <div className="relative z-10 mt-auto pt-4 flex flex-col items-center gap-3 w-full border-t border-slate-100/50">
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${cond.bg} ${cond.color} border ${cond.border} shadow-sm backdrop-blur-md`}>{cond.name}</span>
                       
-                      <div className="flex items-center gap-1.5 text-[10px] bg-slate-50 px-3 py-2 rounded-xl shadow-inner border border-slate-100 w-full justify-center group-hover:bg-white transition-colors duration-300">
+                      <div className="flex items-center gap-1.5 text-[10px] bg-white/70 backdrop-blur-md px-3 py-2 rounded-xl shadow-sm border border-slate-100/50 w-full justify-center group-hover:bg-white transition-colors duration-300">
                         <Navigation size={12} style={{ transform: `rotate(${day.windDir}deg)` }} className="text-slate-400 fill-current" />
-                        <span className="font-black text-slate-600 italic">{getWindDirText(day.windDir)}</span>
+                        <span className="font-black text-slate-600 italic tracking-wide">{getWindDirText(day.windDir)}</span>
                       </div>
                     </div>
                   </motion.div>
