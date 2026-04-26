@@ -48,8 +48,9 @@ const DirectoryPage: React.FC = () => {
         exit={{ opacity: 0, scale: 0.9 }}
         transition={{ delay: index * 0.02 }}
         onClick={() => setSelectedMemberId(member.id)}
-        className="group bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center relative overflow-hidden cursor-pointer h-64"
+        className="group luxury-card flex flex-col items-center text-center relative overflow-hidden cursor-pointer h-64 !scale-100 hover:!scale-105 transition-transform duration-500"
       >
+        <div className="grain-overlay opacity-[0.05]" />
         {/* Avatar - Top Half */}
         <div className="absolute top-0 left-0 w-full h-1/2 overflow-hidden">
             {member.avatar ? (
@@ -171,70 +172,76 @@ const DirectoryPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto animate-in fade-in duration-700 pb-20" dir="rtl">
+    <div className="max-w-7xl mx-auto animate-in fade-in duration-700 pb-20 luxury-bg min-h-screen" dir="rtl">
       {/* Body-line Standard Header Stack */}
-      <div className="surfboard-hero-container mb-0 space-y-2 header-wallpaper !py-12 pb-24" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
-        <div className="header-content-wrapper relative z-20">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
-            <Users size={40} />
+      <div className="luxury-card mb-0 relative overflow-hidden !rounded-none md:!rounded-3xl">
+        <div className="grain-overlay" />
+        <div className="surfboard-hero-container header-wallpaper !py-12 pb-24 relative z-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+          <div className="header-content-wrapper relative z-20">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
+              <Users size={40} />
+            </div>
+            <h1 className="main-page-title">
+              <span className="surfer-title text-[#121212]">נבחרת הכוכבים</span>
+            </h1>
+            <p className="header-subtitle max-w-2xl mx-auto text-[#121212]">
+              הכירו את הקהילה שלנו • {members.length} חברים רשומים 🏄‍♂️
+            </p>
           </div>
-          <h1 className="main-page-title">
-            <span className="surfer-title">נבחרת הכוכבים</span>
-          </h1>
-          <p className="header-subtitle max-w-2xl mx-auto">
-            הכירו את הקהילה שלנו • {members.length} חברים רשומים 🏄‍♂️
-          </p>
         </div>
       </div>
 
       <div className="px-4 md:px-8 mt-8">
         {/* Search, Filter and View Toggle Bar */}
-        <div className="flex flex-col gap-6 bg-white/70 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] border border-white shadow-2xl shadow-slate-200/60 relative z-30 mx-0">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-              <input
-                type="text"
-                placeholder="חיפוש לפי שם, אימייל או טלפון..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pr-12 pl-4 py-4 bg-white border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all font-bold text-slate-700"
-              />
+        <div className="luxury-card p-6 md:p-8 relative z-30 mx-0 overflow-hidden">
+          <div className="grain-overlay opacity-[0.03]" />
+          <div className="relative z-10 space-y-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="חיפוש לפי שם, אימייל או טלפון..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pr-12 pl-4 py-4 bg-white/50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all font-bold text-slate-700 shadow-inner"
+                />
+              </div>
+              
+              {/* View Toggle */}
+              <div className="flex bg-slate-100/50 p-1 rounded-2xl self-center md:self-auto shadow-inner">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-3 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white text-sky-500 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  title="תצוגת גריד"
+                >
+                  <LayoutGrid size={20} />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white text-sky-500 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  title="תצוגת רשימה"
+                >
+                  <List size={20} />
+                </button>
+              </div>
             </div>
-            
-            {/* View Toggle */}
-            <div className="flex bg-slate-100 p-1 rounded-2xl self-center md:self-auto">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-3 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white text-sky-500 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                title="תצוגת גריד"
-              >
-                <LayoutGrid size={20} />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white text-sky-500 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                title="תצוגת רשימה"
-              >
-                <List size={20} />
-              </button>
-            </div>
-          </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-            {identities.map(identity => (
-              <button
-                key={identity}
-                onClick={() => setSelectedIdentity(identity)}
-                className={`px-6 py-3 rounded-2xl font-black text-sm whitespace-nowrap transition-all ${
-                  selectedIdentity === identity
-                    ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30'
-                    : 'bg-white text-slate-500 border border-slate-100 hover:bg-slate-50'
-                }`}
-              >
-                {identity}
-              </button>
-            ))}
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              {identities.map(identity => (
+                <button
+                  key={identity}
+                  onClick={() => setSelectedIdentity(identity)}
+                  className={`px-6 py-3 rounded-2xl font-black text-sm whitespace-nowrap transition-all ${
+                    selectedIdentity === identity
+                      ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30'
+                      : 'bg-white/50 text-slate-500 border border-slate-100 hover:bg-white shadow-sm'
+                  }`}
+                >
+                  {identity}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

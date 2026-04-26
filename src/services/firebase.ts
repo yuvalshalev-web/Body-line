@@ -38,7 +38,15 @@ try {
 }
 
 // Check if we are inside an iframe (like AI Studio Preview)
-const isIframe = typeof window !== 'undefined' && window !== window.top;
+let isIframe = false;
+if (typeof window !== 'undefined') {
+  try {
+    isIframe = window.self !== window.top;
+  } catch (e) {
+    // If we can't access window.top due to cross-origin policies, we are definitely in an iframe
+    isIframe = true;
+  }
+}
 
 // Handle "(default)" database ID correctly
 // Force long polling and disable persistence to bypass network blocks and stale cache

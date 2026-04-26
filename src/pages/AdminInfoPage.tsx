@@ -56,18 +56,19 @@ const AdminInfoPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 font-yehuda" dir="rtl">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 font-yehuda luxury-bg" dir="rtl">
       {/* Combined Header Unit with Integrated Nav - Boxed Inset */}
-      <div className="bg-white/50 backdrop-blur-sm rounded-[2.5rem] p-6 mb-12 shadow-sm border border-white/20">
-        <div className="surfboard-hero-container mb-6 header-wallpaper !py-10 rounded-[2rem]" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+      <div className="luxury-card p-6 mb-12 relative overflow-hidden">
+        <div className="grain-overlay" />
+        <div className="surfboard-hero-container mb-6 header-wallpaper !py-10 rounded-[2rem] relative z-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
           <div className="header-content-wrapper relative z-20">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
               <TrendingUp size={40} />
             </div>
             <h1 className="main-page-title">
-              <span className="surfer-title">דופק הקהילה</span>
+              <span className="surfer-title text-[#121212]">דופק הקהילה</span>
             </h1>
-            <p className="header-subtitle max-w-2xl mx-auto">
+            <p className="header-subtitle max-w-2xl mx-auto text-[#121212]">
               ניטור בזמן אמת של פעילות הקהילה והמערכת 📈
             </p>
           </div>

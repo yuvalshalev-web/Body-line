@@ -19,9 +19,9 @@ const NewsPage: React.FC = () => {
             <Newspaper size={40} />
           </div>
           <h1 className="main-page-title">
-            <span className="surfer-title">לוח פוסטים</span>
+            <span className="surfer-title text-[#121212]">לוח פוסטים</span>
           </h1>
-          <p className="header-subtitle max-w-2xl mx-auto">
+          <p className="header-subtitle max-w-2xl mx-auto text-[#121212]">
             עדכונים, חדשות ופוסטים מהקהילה.
           </p>
         </div>
@@ -29,8 +29,11 @@ const NewsPage: React.FC = () => {
 
       <div className="relative z-30 -mt-16 mx-4 md:mx-0 space-y-8">
         {sortedNews.map(item => (
-          <div key={item.id} className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4 mb-6">
+          <div key={item.id} className="luxury-card p-6 md:p-8 relative overflow-hidden transition-all group">
+            <div className="grain-overlay opacity-[0.03]" />
+            <div className="premium-sweep-fx opacity-10" />
+            
+            <div className="flex items-center gap-4 mb-6 relative z-10">
               {item.authorAvatar ? (
                 <img src={item.authorAvatar} alt={item.authorName} className="w-12 h-12 rounded-full object-cover" />
               ) : (

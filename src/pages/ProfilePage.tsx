@@ -119,9 +119,9 @@ const ProfileHeader = React.memo(({ headerImage, isDirty }: { headerImage: strin
         <User size={32} className="md:w-10 md:h-10" />
       </div>
       <h1 className="main-page-title">
-        <span className="surfer-title text-3xl md:text-5xl">הפרופיל שלי</span>
+        <span className="surfer-title text-[#121212] text-3xl md:text-5xl">הפרופיל שלי</span>
       </h1>
-      <p className="header-subtitle max-w-2xl mx-auto text-sm md:text-base opacity-80">
+      <p className="header-subtitle max-w-2xl mx-auto text-sm md:text-base text-[#121212] opacity-80">
         עדכן את הפרטים האישיים והנוכחות הדיגיטלית שלך בקהילה 👤
       </p>
       
@@ -524,12 +524,10 @@ const ProfilePage: React.FC = () => {
       {/* Body-line Standard Header Stack */}
       <ProfileHeader headerImage={headerImage} isDirty={isDirty} />
 
-      <div className="relative z-30 -mt-16 mx-4 md:mx-0 rounded-[3.5rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)]">
-        <form onSubmit={handleSubmit} className="px-6 md:px-16 pb-20 md:pb-24 tangible-surfer-card !bg-white/60 border-none relative z-20 overflow-hidden">
-          {/* Decorative background elements - reduced blur and opacity */}
-          <div className="absolute top-0 right-0 w-[25rem] md:w-[30rem] h-[25rem] md:h-[30rem] bg-sky-200/5 blur-[50px] md:blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-[25rem] md:w-[30rem] h-[25rem] md:h-[30rem] bg-rose-200/5 blur-[50px] md:blur-[60px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+      <div className="relative z-30 -mt-16 mx-4 md:mx-0 rounded-[3.5rem] overflow-hidden">
+        <form onSubmit={handleSubmit} className="px-6 md:px-16 pb-20 md:pb-24 luxury-card !bg-white/60 border-none relative z-20 overflow-hidden">
+          <div className="grain-overlay" />
+          <div className="premium-sweep-fx opacity-20" />
 
           <ProfileAvatar 
             avatar={formData.avatar}

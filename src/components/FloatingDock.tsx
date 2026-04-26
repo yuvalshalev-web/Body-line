@@ -195,7 +195,7 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={onClose}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90] pointer-events-auto"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10000] pointer-events-auto"
             />
 
             <motion.nav
@@ -204,14 +204,14 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="fixed right-0 md:right-6 top-0 md:top-6 bottom-0 md:bottom-6 w-full md:w-[320px] bg-[#00526E]/95 backdrop-blur-lg p-6 flex flex-col gap-6 shadow-[0_0_80px_rgba(0,0,0,0.6)] border border-white/10 pointer-events-auto z-[100] rounded-none md:rounded-[50px] overflow-hidden"
+              className="fixed right-0 md:right-6 top-0 md:top-6 bottom-0 md:bottom-6 w-full md:w-[320px] luxury-card !bg-slate-900/95 !backdrop-blur-2xl p-6 flex flex-col gap-6 !rounded-none md:!rounded-[50px] overflow-hidden !border-white/10 z-[10001]"
               style={{ 
-                boxShadow: '0 0 30px rgba(56, 189, 248, 0.1)'
+                boxShadow: '0 0 80px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.1)'
               }}
               dir="rtl"
             >
-              {/* Noise Texture Overlay */}
-            <div className="absolute inset-0 bg-white/[0.02] pointer-events-none rounded-[50px]" />
+              <div className="grain-overlay opacity-10" />
+              <div className="premium-sweep-fx opacity-20" />
             
             {/* Header / Profile Section */}
             <motion.div 

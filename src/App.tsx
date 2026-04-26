@@ -275,17 +275,9 @@ const App: React.FC = () => {
       {/* Surf News Ticker */}
       <SurfNewsTracker />
 
-      {/* Modern Minimalist Floating Navigation */}
-      <FloatingDrawer 
-        isOpen={isDrawerOpen} 
-        onClose={() => setIsDrawerOpen(false)} 
-        activeRoute={location.pathname}
-      />
-
       {/* Edge Trigger for Mobile Swipe */}
 
       {/* Main Content Area */}
-      <FloatingMenu onLogout={handleLogout} scrollRef={mainRef} onOpenDrawer={() => setIsDrawerOpen(true)} />
       <motion.main 
         ref={mainRef}
         animate={{
@@ -295,7 +287,7 @@ const App: React.FC = () => {
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={`flex-1 overflow-y-auto pb-20 relative z-10 origin-right shadow-[0_50px_100px_rgba(0,0,0,0.3)] ${
-          ['/', '/events', '/gallery', '/directory', '/posts', '/admin'].includes(location.pathname) ? 'luxury-bg' : ''
+          ['/', '/events', '/gallery', '/directory', '/posts', '/admin', '/shaper', '/surfer-card', '/profile', '/world-news', '/admin-info', '/grading', '/attendance'].includes(location.pathname) ? 'luxury-bg' : 'luxury-bg'
         }`}
       >
         <ErrorBoundary>
@@ -328,6 +320,11 @@ const App: React.FC = () => {
         </ErrorBoundary>
       </motion.main>
       
+      <FloatingMenu onLogout={handleLogout} scrollRef={mainRef} onOpenDrawer={() => {
+        console.log("Opening Drawer...");
+        setIsDrawerOpen(true);
+      }} />
+      
       {/* PWA Install Banner */}
       <PWAInstallBanner />
       
@@ -348,6 +345,13 @@ const App: React.FC = () => {
       >
         Diag
       </button>
+
+      {/* Modern Minimalist Floating Navigation - Moved to end for proper layering */}
+      <FloatingDrawer 
+        isOpen={isDrawerOpen} 
+        onClose={() => setIsDrawerOpen(false)} 
+        activeRoute={location.pathname}
+      />
     </div>
   );
 };

@@ -10,50 +10,11 @@ export default defineConfig({
   plugins: [
     react(), 
     tailwindcss(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['apple-touch-icon.png', 'app-logo.svg'],
-      manifest: {
-        name: 'Body-Line',
-        short_name: 'Body-Line',
-        description: 'Body-Line - Community platform for surfers',
-        theme_color: '#0f172a',
-        background_color: '#ffffff',
-        display: 'standalone',
-        start_url: '/',
-        id: '/',
-        icons: [
-          {
-            src: '/app-logo.svg',
-            sizes: '192x192',
-            type: 'image/svg+xml',
-            purpose: 'any'
-          },
-          {
-            src: '/app-logo.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'any'
-          },
-          {
-            src: '/app-logo.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'maskable'
-          }
-        ]
-      },
-      workbox: {
-        navigateFallbackDenylist: [/^\/__/]
-      },
-      devOptions: {
-        enabled: false
-      }
-    })
   ],
   server: {
     port: 3000,
     host: '0.0.0.0',
+    hmr: false,
   },
   define: {
     'process.env.GOOGLE_MAPS_PLATFORM_KEY': JSON.stringify(process.env.GOOGLE_MAPS_PLATFORM_KEY || '')

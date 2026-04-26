@@ -52,17 +52,20 @@ const SurferCardPage: React.FC = () => {
   console.log("SurferCardPage: Rendering successfully for user:", userData?.firstName);
 
   return (
-    <div className="max-w-7xl mx-auto px-[var(--spacing-md)] md:px-[var(--spacing-lg)] py-[var(--spacing-lg)] font-yehuda" dir="rtl">
+    <div className="max-w-7xl mx-auto px-[var(--spacing-md)] md:px-[var(--spacing-lg)] py-[var(--spacing-lg)] font-yehuda luxury-bg" dir="rtl">
       {/* Body-line Standard Header Stack */}
-      <div className="surfboard-hero-container mb-12 header-wallpaper !py-8 md:!py-12 rounded-3xl overflow-hidden" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
-        <div className="relative z-20 flex flex-col lg:flex-row items-center justify-between px-4 lg:px-12 gap-8">
-          <div className="header-content-wrapper text-center lg:text-right flex-1">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-4 shadow-sm border border-sky-500/20 relative z-10">
-              <Trophy size={40} />
-            </div>
+      <div className="luxury-card mb-12 relative overflow-hidden !rounded-3xl">
+        <div className="grain-overlay" />
+        <div className="surfboard-hero-container header-wallpaper !py-8 md:!py-12 relative z-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+          <div className="header-content-wrapper relative z-20 flex flex-col lg:flex-row items-center justify-between px-4 lg:px-12 gap-8">
+            <div className="text-center lg:text-right flex-1">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-4 shadow-sm border border-sky-500/20 relative z-10">
+                <Trophy size={40} />
+              </div>
             <h1 className="main-page-title">
-              <span className="surfer-title">הדשבורד שלי</span>
+              <span className="surfer-title text-[#121212]">הדשבורד שלי</span>
             </h1>
+            </div>
           </div>
         </div>
       </div>

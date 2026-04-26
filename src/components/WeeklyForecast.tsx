@@ -170,7 +170,8 @@ export const WeeklyForecast: React.FC = () => {
   const maxWave = Math.max(...forecastData.map(d => d.heightCm), 150);
 
   return (
-    <div className="mt-8 md:mt-12 bg-white/40 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-5 lg:p-8 shadow-[0_20px_60px_-15px_rgba(0,43,68,0.08)] relative overflow-hidden" dir="rtl">
+    <div className="mt-8 md:mt-12 luxury-card p-5 lg:p-8 relative" dir="rtl">
+      <div className="grain-overlay" />
       {/* Subtle light bleeds */}
       <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-[#38bdf8] opacity-20 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute top-[60%] -right-[10%] w-[40%] h-[60%] bg-[#0ea5e9] opacity-10 blur-[100px] rounded-full pointer-events-none" />

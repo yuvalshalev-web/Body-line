@@ -20,7 +20,8 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
   if (items && onChange) {
     return (
       <div className="w-full flex justify-center">
-        <div className={`flex items-center overflow-x-auto no-scrollbar gap-2 p-2 rounded-[2rem] ${theme === 'sunset' ? 'bg-orange-200/30' : 'bg-white/40'} backdrop-blur-2xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.12)] ring-1 ring-black/5 relative max-w-full touch-pan-x`}>
+        <div className={`flex items-center overflow-x-auto no-scrollbar gap-2 p-2 rounded-[2rem] ${theme === 'sunset' ? 'bg-orange-100/50' : 'luxury-card !shadow-sm !p-2'} relative max-w-full touch-pan-x overflow-hidden`}>
+          <div className="grain-overlay opacity-[0.02]" />
           {items.map((item) => {
             const isActive = activeId === item.id;
             return (
@@ -101,8 +102,9 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-t border-slate-200 pb-safe">
-      <div className="flex justify-around items-center p-2 max-w-md mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 !bg-white/40 backdrop-blur-3xl border-t border-white/20 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+      <div className="grain-overlay opacity-[0.05]" />
+      <div className="flex justify-around items-center p-2 max-w-md mx-auto relative z-10">
         {navItems.map((item) => (
           <Link
             key={item.path}

@@ -9,16 +9,60 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+process.on('uncaughtException', (err) => {
+  console.error('[UNCAUGHT EXCEPTION]', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[UNHANDLED REJECTION] at:', promise, 'reason:', reason);
+});
+
 async function startServer() {
   console.log("Starting server...");
   console.log("NODE_ENV:", process.env.NODE_ENV);
+  const isProd = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+  console.log(`Server mode: ${isProd ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+  
   const app = express();
   const PORT = 3000;
 
   // Basic middleware
-  app.use(compression()); // Enable gzip/brotli compression for faster load times
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Disable caching for dev and ensure framing is allowed
+  app.use((req, res, next) => {
+    if (!isProd) {
+      res.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    }
+    
+    // Allow framing - CRITICAL for AI Studio Preview
+    res.header('Content-Security-Policy', "frame-ancestors *");
+    res.header('X-Frame-Options', 'ALLOWALL');
+    res.header('Access-Control-Allow-Private-Network', 'true');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    next();
+  });
+
+  // Consolidated Request Logging
+  app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      const isError = res.statusCode >= 400;
+      
+      // Update global stats
+      totalRequests++;
+      if (isError) errorRequests++;
+      requestHistory.push({ timestamp: Date.now(), isError });
+      if (requestHistory.length > 1000) requestHistory.shift();
+
+      // Log to console
+      const type = req.path.startsWith('/api') ? '[API]' : '[APP]';
+      console.log(`${type} ${req.method} ${req.url} - ${res.statusCode} (${duration}ms)`);
+    });
+    next();
+  });
 
   // CORS middleware
   app.use((req, res, next) => {
@@ -131,28 +175,6 @@ async function startServer() {
   let totalRequests = 0;
   let errorRequests = 0;
   const requestHistory: { timestamp: number; isError: boolean }[] = [];
-
-  // Request tracking middleware (moved to top for all requests)
-  app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-      const duration = Date.now() - start;
-      totalRequests++;
-      const isError = res.statusCode >= 400;
-      if (isError) errorRequests++;
-      
-      requestHistory.push({ timestamp: Date.now(), isError });
-      if (requestHistory.length > 1000) requestHistory.shift();
-
-      if (req.path.startsWith('/api')) {
-        console.log(`[API] ${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
-      }
-    });
-    next();
-  });
-
-  const isProd = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
-  console.log(`Server mode: ${isProd ? 'PRODUCTION' : 'DEVELOPMENT'}`);
 
   // API routes FIRST - explicitly defined before any static/vite middleware
   app.get("/api/health", (req, res) => {
@@ -930,22 +952,30 @@ async function startServer() {
   // Vite middleware for development
   if (!isProd) {
     console.log("Initializing Vite server in DEVELOPMENT mode...");
-    const vite = await createViteServer({
-      server: { 
-        middlewareMode: true,
-        hmr: false 
-      },
-      appType: "spa",
-      root: process.cwd(),
-    });
+    try {
+      const vite = await createViteServer({
+        server: { 
+          middlewareMode: true,
+          hmr: false,
+          watch: {
+            usePolling: true,
+            interval: 1000
+          }
+        },
+        appType: "spa",
+        root: process.cwd(),
+      });
 
-    // 404 handler for API routes BEFORE Vite middleware
-    app.use('/api', (req, res) => {
-      res.status(404).json({ error: `API route not found: ${req.method} ${req.path}` });
-    });
+      // 404 handler for API routes BEFORE Vite middleware
+      app.use('/api', (req, res) => {
+        res.status(404).json({ error: `API route not found: ${req.method} ${req.path}` });
+      });
 
-    app.use(vite.middlewares);
-    console.log("Vite server initialized.");
+      app.use(vite.middlewares);
+      console.log("Vite server initialized successfully.");
+    } catch (viteError) {
+      console.error("CRITICAL: Failed to initialize Vite server:", viteError);
+    }
   } else {
     // Serve static files in PRODUCTION mode
     console.log("Serving static files in PRODUCTION mode...");

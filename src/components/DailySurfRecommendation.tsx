@@ -161,7 +161,8 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
   const boardKey = getBoardKey(boardType);
 
   return (
-    <div className="bg-white/40 backdrop-blur-[30px] border border-white/40 rounded-[2rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] relative overflow-hidden" dir="rtl">
+    <div className="luxury-card p-8 relative overflow-hidden" dir="rtl">
+      <div className="grain-overlay" />
       {/* Background elements */}
       <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#007085]/10 rounded-full blur-[80px] pointer-events-none" />
       <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-[#002b44]/10 rounded-full blur-[80px] pointer-events-none" />

@@ -101,9 +101,9 @@ const MemberGradingPage: React.FC = () => {
                 <UserCheck size={40} />
               </div>
               <h1 className="main-page-title">
-                <span className="surfer-title">הערכות וביצועים</span>
+                <span className="surfer-title text-[#121212]">הערכות וביצועים</span>
               </h1>
-              <p className="header-subtitle max-w-2xl mx-auto">
+              <p className="header-subtitle max-w-2xl mx-auto text-[#121212]">
                 ניתוח נתונים קבוצתי והערכות אישיות לחברי הקהילה 🌊
               </p>
             </div>

@@ -322,8 +322,9 @@ export const CoastalDashboard: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 relative overflow-hidden"
+            className="luxury-card p-8 lg:col-span-2 space-y-8 relative overflow-hidden"
           >
+            <div className="grain-overlay" />
             {/* Background Decoration */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-50 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50 blur-3xl" />
             
@@ -469,8 +470,9 @@ export const CoastalDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-slate-100"
+            className="luxury-card p-8 relative overflow-hidden"
           >
+            <div className="grain-overlay" />
             <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3 tracking-tight">
               <TrendingUp className="w-6 h-6 text-cyan-600" />
               מגמת רוח (24 שעות אחרונות)
@@ -596,8 +598,9 @@ export const CoastalDashboard: React.FC = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-slate-100"
+            className="luxury-card p-8 relative overflow-hidden"
           >
+            <div className="grain-overlay" />
             <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3 tracking-tight">
               <ShieldAlert className="w-6 h-6 text-red-600" />
               אזהרות מטאורולוגיות

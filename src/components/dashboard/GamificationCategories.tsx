@@ -30,7 +30,7 @@ const GamificationCategories: React.FC = () => {
 
   return (
     <div className="p-6 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 shadow-xl">
-      <h3 className="text-2xl font-black text-white mb-6 text-center">המסע שלך באוקיינוס</h3>
+      <h3 className="text-2xl font-black text-[#121212] mb-6 text-center">המסע שלך באוקיינוס</h3>
       <div className="flex justify-between items-center gap-4">
         {categories.map((cat) => {
           const isActive = true; 
@@ -46,7 +46,7 @@ const GamificationCategories: React.FC = () => {
                 className={`${cat.id === 'manta_ray' ? 'w-32 h-32' : cat.id === 'orca' ? 'w-[70px] h-[70px]' : 'w-16 h-16'} object-cover rounded-full`}
                 referrerPolicy="no-referrer"
               />
-              <span className="text-xs font-bold text-white">{cat.name}</span>
+              <span className="text-xs font-bold text-[#121212]">{cat.name}</span>
             </motion.div>
           );
         })}

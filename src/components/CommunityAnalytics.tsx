@@ -1248,8 +1248,8 @@ const CommunityAnalytics: React.FC = () => {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6 sticky top-0 z-10 pb-2 border-b border-white/10">
-              <h3 className="text-2xl font-black text-white drop-shadow-md">{selectedGroup}</h3>
-              <button onClick={() => setSelectedGroup(null)} className="p-2 rounded-full hover:bg-white/10 transition-colors text-white">
+              <h3 className="text-2xl font-black text-[#121212] drop-shadow-md">{selectedGroup}</h3>
+              <button onClick={() => setSelectedGroup(null)} className="p-2 rounded-full hover:bg-white/10 transition-colors text-[#121212]">
                 <X size={24} />
               </button>
             </div>
@@ -1262,16 +1262,16 @@ const CommunityAnalytics: React.FC = () => {
                       {member.avatar ? (
                         <img src={member.avatar} alt={member.firstName} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-white font-bold text-lg">
+                        <span className="text-[#121212] font-bold text-lg">
                           {member.firstName[0]}
                         </span>
                       )}
                     </div>
                     <div>
-                      <p className="font-bold text-white drop-shadow-sm">{member.firstName} {member.lastName}</p>
+                      <p className="font-bold text-[#121212] drop-shadow-sm">{member.firstName} {member.lastName}</p>
                       <div className="flex flex-col">
-                        <p className="text-xs text-white/70">נוכחות: {member.rate.toFixed(0)}%</p>
-                        <p className="text-[10px] text-white/50 italic">פעם אחרונה: {member.lastSessionDate}</p>
+                        <p className="text-xs text-[#121212]/70">נוכחות: {member.rate.toFixed(0)}%</p>
+                        <p className="text-[10px] text-[#121212]/50 italic">פעם אחרונה: {member.lastSessionDate}</p>
                       </div>
                     </div>
                   </div>

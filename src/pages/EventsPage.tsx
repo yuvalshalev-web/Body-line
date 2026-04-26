@@ -84,129 +84,111 @@ const EventsPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 pb-20" dir="rtl">
-      {/* Body-line Standard Header Stack */}
-      <div className="surfboard-hero-container mb-0 space-y-2 header-wallpaper !py-12 pb-24" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
-        <div className="header-content-wrapper relative z-20">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
-            <Calendar size={40} />
+    <div className="min-h-screen luxury-bg pb-20 overflow-hidden" dir="rtl">
+      <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 relative z-10 px-4 md:px-0">
+        {/* Body-line Standard Header Stack */}
+        <div className="surfboard-hero-container mb-0 space-y-2 header-wallpaper !py-12 pb-24" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+          <div className="header-content-wrapper relative z-20">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
+              <Calendar size={40} />
+            </div>
+            <h1 className="main-page-title">
+              <span className="surfer-title text-[#121212]">לוח אירועים</span>
+            </h1>
+            <p className="header-subtitle max-w-2xl mx-auto text-[#121212]">
+              כל האירועים, המפגשים והפעילויות של הקהילה שלנו במקום אחד.
+            </p>
           </div>
-          <h1 className="main-page-title">
-            <span className="surfer-title">לוח אירועים</span>
-          </h1>
-          <p className="header-subtitle max-w-2xl mx-auto">
-            כל האירועים, המפגשים והפעילויות של הקהילה שלנו במקום אחד.
-          </p>
         </div>
-      </div>
 
-      <div className="relative z-40 -mt-24 mx-4 md:mx-0 space-y-12">
-        {currentUser && (
-          <div className="flex justify-center gap-4 mb-8">
-            <button 
-              onClick={handleCreateEvent}
-              className="inline-flex items-center gap-3 px-12 py-5 bg-gradient-to-r from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-turquoise-teal)] text-white rounded-[2rem] font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-[0_20px_40px_-10px_rgba(212,163,115,0.4)] border-4 border-white/80 backdrop-blur-md relative z-50"
-            >
-              <Plus size={28} strokeWidth={3} />
-              יצירת אירוע חדש
-            </button>
-          </div>
-        )}
-        {upcomingEvents.length > 0 && (
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <Calendar className="text-indigo-500" />
-            אירועים קרובים
-          </h2>
-          <div className="grid gap-6">
-            {upcomingEvents.map(event => (
-              <div key={event.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow cursor-pointer" onClick={() => openModal(event)}>
-                <div className="flex-shrink-0 w-full md:w-48 h-48 md:h-auto rounded-xl overflow-hidden bg-slate-100">
-                  {event.imageUrl || siteAssets?.defaultEventImage ? (
-                    <img src={event.imageUrl || siteAssets?.defaultEventImage} alt={event.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300">
-                      <Calendar size={48} />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 flex flex-col">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex flex-col">
-                      <h3 className="text-xl font-bold text-slate-900">{event.title}</h3>
-                      {getCreatorName(event.creatorId) && (
-                        <span className="text-sm text-indigo-600 font-medium flex items-center gap-1 mt-0.5">
-                          <User size={14} />
-                          מארגן האירוע: {getCreatorName(event.creatorId)}
-                        </span>
-                      )}
-                    </div>
-                    <span className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-bold whitespace-nowrap">
-                      {new Date(event.date).toLocaleDateString('he-IL')}
-                    </span>
-                  </div>
-                  <p className="text-slate-600 mb-4 flex-1">{event.description}</p>
+        <div className="relative z-40 -mt-24 mx-4 md:mx-0 space-y-12">
+          {currentUser && (
+            <div className="flex justify-center gap-4 mb-8">
+              <button 
+                onClick={handleCreateEvent}
+                className="inline-flex items-center gap-3 px-12 py-5 bg-gradient-to-r from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-turquoise-teal)] text-white rounded-[2rem] font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-[0_20px_40px_-10px_rgba(212,163,115,0.4)] border-4 border-white/80 backdrop-blur-md relative z-50"
+              >
+                <Plus size={28} strokeWidth={3} />
+                יצירת אירוע חדש
+              </button>
+            </div>
+          )}
+          {upcomingEvents.length > 0 && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2 pr-4">
+              <Calendar className="text-sky-500" />
+              אירועים קרובים
+            </h2>
+            <div className="grid gap-6">
+              {upcomingEvents.map(event => (
+                <div key={event.id} className="luxury-card p-6 flex flex-col md:flex-row gap-6 hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group" onClick={() => openModal(event)}>
+                  <div className="grain-overlay" />
+                  <div className="premium-sweep-fx opacity-10" />
                   
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
-                    <div className="flex flex-wrap gap-4 text-sm text-slate-500">
-                      {event.time && (
-                        <div className="flex items-center gap-1">
-                          <Clock size={16} className="text-slate-400" />
-                          {event.time}
-                        </div>
-                      )}
-                      {event.location && (
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1">
-                            <MapPin size={16} className="text-slate-400" />
-                            <span className="truncate max-w-[100px] md:max-w-[200px]">{event.location}</span>
-                          </div>
-                          <div className="flex items-center gap-1 mr-1 border-r border-slate-100 pr-2">
-                            <a 
-                              href={`https://waze.com/ul?q=${encodeURIComponent(event.location)}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="p-1 bg-sky-50 text-sky-500 rounded-md hover:bg-sky-100 transition-colors"
-                              title="נווט עם Waze"
-                              onClick={e => e.stopPropagation()}
-                            >
-                              <Navigation size={14} />
-                            </a>
-                            <a 
-                              href={`https://maps.google.com/?q=${encodeURIComponent(event.location)}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="p-1 bg-indigo-50 text-indigo-500 rounded-md hover:bg-indigo-100 transition-colors"
-                              title="נווט עם Google Maps"
-                              onClick={e => e.stopPropagation()}
-                            >
-                              <MapPin size={14} />
-                            </a>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    {currentUser && (
-                      <button 
-                        onClick={(e) => handleRSVP(e, event.id)}
-                        disabled={event.creatorId === currentUser.id}
-                        className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${
-                          (event.attendees || []).includes(currentUser.id) 
-                            ? (event.creatorId === currentUser.id ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-red-100 text-red-700 hover:bg-red-200')
-                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                        }`}
-                        title={event.creatorId === currentUser.id ? 'מארגן האירוע אינו יכול לבטל הגעה' : ''}
-                      >
-                        {(event.attendees || []).includes(currentUser.id) ? 'ביטול הגעה' : 'אישור הגעה'}
-                      </button>
+                  <div className="flex-shrink-0 w-full md:w-48 h-48 md:h-auto rounded-2xl overflow-hidden bg-slate-100 shadow-inner relative z-10">
+                    {event.imageUrl || siteAssets?.defaultEventImage ? (
+                      <img src={event.imageUrl || siteAssets?.defaultEventImage} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-300">
+                        <Calendar size={48} />
+                      </div>
                     )}
                   </div>
+                  <div className="flex-1 flex flex-col relative z-10">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex flex-col">
+                        <h3 className="text-xl font-bold text-slate-900 group-hover:text-sky-600 transition-colors">{event.title}</h3>
+                        {getCreatorName(event.creatorId) && (
+                          <span className="text-sm text-sky-600 font-medium flex items-center gap-1 mt-0.5">
+                            <User size={14} />
+                            מארגן האירוע: {getCreatorName(event.creatorId)}
+                          </span>
+                        )}
+                      </div>
+                      <span className="px-3 py-1 bg-sky-100/50 text-sky-700 border border-sky-200/50 rounded-full text-sm font-bold whitespace-nowrap shadow-sm">
+                        {new Date(event.date).toLocaleDateString('he-IL')}
+                      </span>
+                    </div>
+                    <p className="text-slate-600 mb-6 flex-1 text-sm leading-relaxed">{event.description}</p>
+                    
+                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100/50">
+                      <div className="flex flex-wrap gap-4 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                        {event.time && (
+                          <div className="flex items-center gap-1">
+                            <Clock size={16} className="text-sky-400" />
+                            {event.time}
+                          </div>
+                        )}
+                        {event.location && (
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 max-w-[200px]">
+                              <MapPin size={16} className="text-emerald-400" />
+                              <span className="truncate">{event.location}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      {currentUser && (
+                        <button 
+                          onClick={(e) => handleRSVP(e, event.id)}
+                          disabled={event.creatorId === currentUser.id}
+                          className={`px-5 py-2 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-95 ${
+                            (event.attendees || []).includes(currentUser.id) 
+                              ? (event.creatorId === currentUser.id ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white')
+                              : 'bg-sky-600 text-white hover:bg-sky-700 hover:shadow-sky-200'
+                          }`}
+                          title={event.creatorId === currentUser.id ? 'מארגן האירוע אינו יכול לבטל הגעה' : ''}
+                        >
+                          {(event.attendees || []).includes(currentUser.id) ? 'ביטול הגעה' : 'אישור הגעה'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+          )}
 
       {/* Event Details Modal */}
       {isModalOpen && selectedEvent && (
@@ -338,12 +320,13 @@ const EventsPage: React.FC = () => {
       )}
 
       {events.length === 0 && (
-        <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-slate-100">
+        <div className="luxury-card p-20 text-center">
           <Calendar className="mx-auto text-slate-300 mb-4" size={64} />
           <h3 className="text-2xl font-bold text-slate-400">אין אירועים קרובים</h3>
           <p className="text-slate-500 mt-2">ברגע שיתווספו אירועים חדשים הם יופיעו כאן</p>
         </div>
       )}
+        </div>
       </div>
     </div>
   );

@@ -121,27 +121,30 @@ export const AthletePassport: React.FC = () => {
         </div>
         
         {/* Apple Wallet Style Tabs */}
-        <div className="flex bg-white/50 backdrop-blur-md p-1.5 rounded-full shadow-inner border border-slate-200/50 overflow-x-auto max-w-full">
-          {DISCIPLINES.map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeDiscipline === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveDiscipline(tab.id)}
-                className={`relative px-4 py-2 rounded-full flex items-center gap-2 text-sm font-bold transition-all whitespace-nowrap ${isActive ? 'text-white' : 'text-slate-500 hover:text-slate-800'}`}
-              >
-                {isActive && (
-                  <motion.div 
-                    layoutId="active-tab"
-                    className={`absolute inset-0 bg-gradient-to-r ${tab.color} rounded-full -z-10 shadow-lg`}
-                  />
-                )}
-                <Icon size={16} className={isActive ? 'text-white' : ''} />
-                <span>{tab.name}</span>
-              </button>
-            )
-          })}
+        <div className="flex luxury-card !bg-white/40 !backdrop-blur-3xl p-1.5 !rounded-full !shadow-inner relative overflow-hidden max-w-full">
+          <div className="grain-overlay opacity-[0.02]" />
+          <div className="flex items-center gap-1 relative z-10 overflow-x-auto no-scrollbar">
+            {DISCIPLINES.map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeDiscipline === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveDiscipline(tab.id)}
+                  className={`relative px-4 py-2 rounded-full flex items-center gap-2 text-sm font-black transition-all whitespace-nowrap ${isActive ? 'text-white' : 'text-slate-500 hover:text-slate-800'}`}
+                >
+                  {isActive && (
+                    <motion.div 
+                      layoutId="active-tab"
+                      className={`absolute inset-0 bg-gradient-to-r ${tab.color} rounded-full -z-10 shadow-lg`}
+                    />
+                  )}
+                  <Icon size={16} className={isActive ? 'text-white' : ''} />
+                  <span>{tab.name}</span>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 

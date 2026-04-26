@@ -8,7 +8,7 @@ interface FloatingMenuProps {
   onOpenDrawer: () => void;
 }
 
-const FloatingMenu: React.FC<FloatingMenuProps> = ({ scrollRef, onOpenDrawer }) => {
+const FloatingMenu: React.FC<FloatingMenuProps> = ({ scrollRef, onOpenDrawer, onLogout }) => {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {

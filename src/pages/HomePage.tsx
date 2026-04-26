@@ -243,7 +243,7 @@ const HomePage: React.FC = () => {
   }, [heroBg]);
 
   return (
-    <div className="space-y-16 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0" dir="rtl">
+    <div className="space-y-16 max-w-6xl mx-auto pb-20 px-[var(--spacing-md)] md:px-0 luxury-bg min-h-screen" dir="rtl">
       {/* Connection Status Banner */}
       <AnimatePresence>
         {connectionError && (
@@ -298,7 +298,7 @@ const HomePage: React.FC = () => {
           <div className="relative z-10 min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] flex flex-col items-center justify-between p-6 md:p-12 text-center">
              {/* Top Section: Quote */}
              <div className="w-full pt-4 md:pt-8 flex flex-col items-center">
-               <p className="text-white font-semibold italic text-sm md:text-2xl max-w-2xl mx-auto tracking-[0.08em] leading-relaxed mb-6 md:mb-10 drop-shadow-lg">
+               <p className="text-[#121212] font-semibold italic text-sm md:text-2xl max-w-2xl mx-auto tracking-[0.08em] leading-relaxed mb-6 md:mb-10 drop-shadow-lg">
                  "A day will come that is like no other... and nothing that happens after will ever be the same."
                </p>
              </div>
@@ -308,8 +308,8 @@ const HomePage: React.FC = () => {
                <h1 className="text-[var(--surfer-yellow)] big-thursday-title" data-text="יום חמישי הגדול">יום חמישי הגדול</h1>
                
                <div className="mt-8 md:mt-12 space-y-4 flex flex-col items-center">
-                 <p className="text-base md:text-xl font-bold text-white drop-shadow-md">נכנסים למים בעוד...</p>
-                 <div className="flex gap-2 md:gap-4 text-white font-black" dir="ltr">
+                 <p className="text-base md:text-xl font-bold text-[#121212] drop-shadow-md">נכנסים למים בעוד...</p>
+                 <div className="flex gap-2 md:gap-4 text-[#121212] font-black" dir="ltr">
                    {[
                      { label: 'ימים', value: countdown.days },
                      { label: 'שעות', value: countdown.hours },
@@ -318,7 +318,7 @@ const HomePage: React.FC = () => {
                    ].map((item, i) => (
                      <div key={i} className="flex flex-col items-center bg-white/10 backdrop-blur-[15px] border border-white/20 px-3 py-2 md:px-5 md:py-3 rounded-2xl shadow-lg min-w-[60px] md:min-w-[80px]">
                        <span className="text-2xl md:text-4xl font-black text-[var(--surfer-yellow)] font-heebo">{item.value}</span>
-                       <span className="text-[9px] md:text-[12px] uppercase font-bold tracking-tighter opacity-80 text-white">{item.label}</span>
+                       <span className="text-[9px] md:text-[12px] uppercase font-bold tracking-tighter opacity-80 text-[#121212]">{item.label}</span>
                      </div>
                    ))}
                  </div>
@@ -354,7 +354,7 @@ const HomePage: React.FC = () => {
 
         {/* Confirmed Members Bar - Positioned below Hero, above AstroDecks */}
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-          <div className="luxury-card p-10 flex flex-col items-center justify-center gap-8 overflow-hidden relative shadow-2xl">
+          <div className="luxury-card p-10 flex flex-col items-center justify-center gap-8 overflow-hidden relative">
             <div className="grain-overlay" />
             <div className="premium-sweep-fx" />
 
@@ -492,67 +492,73 @@ const HomePage: React.FC = () => {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <section className="home-glass-card p-12 relative min-h-[400px] flex flex-col">
-           <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-[var(--surfer-yellow)]/20 rounded-xl border border-white/20 shadow-sm">
-                <Quote className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
-              </div>
-              <h3 className="text-2xl font-black text-[#000000] font-yehuda">חוכמת הליין-אפ</h3>
-           </div>
-           <div className="flex-1 relative">
-             <AnimatePresence mode="wait">
-               {randomQuotes.map((item) => {
-                 const text = typeof item === 'string' ? item : (item.text || '');
-                 const author = typeof item === 'string' ? 'אנונימי' : (item.author || 'אנונימי');
-                 const key = typeof item === 'string' ? item : (item.id || item.text || Math.random().toString());
-                 
-                 return (
-                   <motion.div 
-                     key={key}
-                     initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                     exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                     transition={{ duration: 0.5, ease: "easeOut" }}
-                     className="p-10 bg-white/10 backdrop-blur-[15px] border border-white/20 rounded-2xl shadow-lg shadow-black/5 h-full flex flex-col justify-center"
-                   >
-                     <p className="text-2xl font-black text-[#000000] leading-tight italic font-yehuda">"{text}"</p>
-                     <p className="text-lg font-bold text-[#000000]/60 italic mt-6 font-yehuda">— {author}</p>
-                   </motion.div>
-                 );
-               })}
-             </AnimatePresence>
+        <section className="luxury-card p-12 relative min-h-[400px] flex flex-col overflow-hidden">
+           <div className="grain-overlay opacity-[0.03]" />
+           <div className="relative z-10">
+             <div className="flex items-center gap-4 mb-10">
+                <div className="p-4 bg-[var(--surfer-yellow)]/20 rounded-xl border border-white/20 shadow-sm">
+                  <Quote className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
+                </div>
+                <h3 className="text-2xl font-black text-[#000000] font-yehuda">חוכמת הליין-אפ</h3>
+             </div>
+             <div className="flex-1 relative">
+               <AnimatePresence mode="wait">
+                 {randomQuotes.map((item) => {
+                   const text = typeof item === 'string' ? item : (item.text || '');
+                   const author = typeof item === 'string' ? 'אנונימי' : (item.author || 'אנונימי');
+                   const key = typeof item === 'string' ? item : (item.id || item.text || Math.random().toString());
+                   
+                   return (
+                     <motion.div 
+                       key={key}
+                       initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                       animate={{ opacity: 1, y: 0, scale: 1 }}
+                       exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                       transition={{ duration: 0.5, ease: "easeOut" }}
+                       className="p-10 bg-white/10 backdrop-blur-[15px] border border-white/20 rounded-2xl shadow-lg shadow-black/5 h-full flex flex-col justify-center"
+                     >
+                       <p className="text-2xl font-black text-[#000000] leading-tight italic font-yehuda">"{text}"</p>
+                       <p className="text-lg font-bold text-[#000000]/60 italic mt-6 font-yehuda">— {author}</p>
+                     </motion.div>
+                   );
+                 })}
+               </AnimatePresence>
+             </div>
            </div>
         </section>
 
-        <section className="home-glass-card p-12 relative min-h-[400px] flex flex-col">
-           <div className="flex items-center gap-4 mb-10">
-              <div className="p-4 bg-[var(--surfer-cyan)]/20 rounded-xl border border-white/20 shadow-sm">
-                <BookOpen className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
-              </div>
-              <h3 className="text-2xl font-black text-[#000000] font-yehuda">מילון מונחים</h3>
-           </div>
-           <div className="flex-1 relative">
-             <AnimatePresence mode="wait">
-               {randomGlossary.map((item) => {
-                 const term = item.term || '';
-                 const definition = item.definition || '';
-                 const key = item.id || item.term || Math.random().toString();
-                 
-                 return (
-                   <motion.div 
-                     key={key}
-                     initial={{ opacity: 0, x: 20 }}
-                     animate={{ opacity: 1, x: 0 }}
-                     exit={{ opacity: 0, x: -20 }}
-                     transition={{ duration: 0.5, ease: "easeOut" }}
-                     className="p-10 bg-white/10 backdrop-blur-[15px] border border-white/20 rounded-2xl shadow-lg shadow-black/5 h-full flex flex-col justify-center"
-                   >
-                     <h4 className="text-4xl font-black text-[#000000] mb-4 font-yehuda" dir="ltr">{term}</h4>
-                     <p className="text-xl font-bold text-[#000000]/70 italic border-r-4 border-white/30 pr-6 font-yehuda">{definition}</p>
-                   </motion.div>
-                 );
-               })}
-             </AnimatePresence>
+        <section className="luxury-card p-12 relative min-h-[400px] flex flex-col overflow-hidden">
+           <div className="grain-overlay opacity-[0.03]" />
+           <div className="relative z-10">
+             <div className="flex items-center gap-4 mb-10">
+                <div className="p-4 bg-[var(--surfer-cyan)]/20 rounded-xl border border-white/20 shadow-sm">
+                  <BookOpen className="text-[#000000] filter drop-shadow-[0.5px_0.5px_0.5px_rgba(255,255,255,0.5)] drop-shadow-[-0.5px_-0.5px_0.5px_rgba(0,0,0,0.3)]" size={24} />
+                </div>
+                <h3 className="text-2xl font-black text-[#000000] font-yehuda">מילון מונחים</h3>
+             </div>
+             <div className="flex-1 relative">
+               <AnimatePresence mode="wait">
+                 {randomGlossary.map((item) => {
+                   const term = item.term || '';
+                   const definition = item.definition || '';
+                   const key = item.id || item.term || Math.random().toString();
+                   
+                   return (
+                     <motion.div 
+                       key={key}
+                       initial={{ opacity: 0, x: 20 }}
+                       animate={{ opacity: 1, x: 0 }}
+                       exit={{ opacity: 0, x: -20 }}
+                       transition={{ duration: 0.5, ease: "easeOut" }}
+                       className="p-10 bg-white/10 backdrop-blur-[15px] border border-white/20 rounded-2xl shadow-lg shadow-black/5 h-full flex flex-col justify-center"
+                     >
+                       <h4 className="text-4xl font-black text-[#000000] mb-4 font-yehuda" dir="ltr">{term}</h4>
+                       <p className="text-xl font-bold text-[#000000]/70 italic border-r-4 border-white/30 pr-6 font-yehuda">{definition}</p>
+                     </motion.div>
+                   );
+                 })}
+               </AnimatePresence>
+             </div>
            </div>
         </section>
       </div>

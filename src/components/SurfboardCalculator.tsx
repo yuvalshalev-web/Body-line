@@ -117,7 +117,7 @@ export const SurfboardCalculator: React.FC<SurfboardCalculatorProps> = ({ formDa
           </div>
 
           <div className="space-y-2">
-            <label className="text-[12px] font-black text-white/80 uppercase tracking-widest pr-3">רמת גלישה</label>
+            <label className="text-[12px] font-black text-[#121212] uppercase tracking-widest pr-3">רמת גלישה</label>
             <div className="grid grid-cols-4 gap-2">
               {(['Learner', 'Beginner', 'Intermediate', 'Advanced'] as const).map((level) => {
                 const labels = {
@@ -169,7 +169,7 @@ export const SurfboardCalculator: React.FC<SurfboardCalculatorProps> = ({ formDa
 
           <div className="relative z-10 w-full space-y-6">
             <div>
-              <h4 className="text-sm font-black text-white/60 mb-2 uppercase tracking-widest">נפח מומלץ</h4>
+              <h4 className="text-sm font-black text-[#121212] mb-2 uppercase tracking-widest">נפח מומלץ</h4>
               {recommendedVolume ? (
                 <motion.div 
                   initial={{ scale: 0.9, opacity: 0 }}
@@ -188,7 +188,7 @@ export const SurfboardCalculator: React.FC<SurfboardCalculatorProps> = ({ formDa
             <div className="h-px w-full bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
             <div>
-              <h4 className="text-sm font-black text-white/60 mb-2 uppercase tracking-widest">אורך מומלץ</h4>
+              <h4 className="text-sm font-black text-[#121212] mb-2 uppercase tracking-widest">אורך מומלץ</h4>
               {recommendedLengthCm ? (
                 <motion.div 
                   initial={{ scale: 0.9, opacity: 0 }}

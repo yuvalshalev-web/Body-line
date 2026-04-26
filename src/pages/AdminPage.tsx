@@ -563,25 +563,20 @@ const AdminPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen luxury-bg text-right space-y-12 pb-20 pt-8" dir="rtl">
-      {/* Background Glows to make glassmorphism pop */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-sky-200/20 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-rose-200/20 blur-[120px] rounded-full" />
-      </div>
-
+    <div className="relative space-y-12 pb-20 pt-8" dir="rtl">
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Combined Header Unit with Integrated Nav - Boxed Inset */}
-        <div className="luxury-card p-6 mb-12 border border-white/40">
-          <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10 rounded-[2rem]" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
+        <div className="luxury-card p-6 mb-12 relative overflow-hidden">
+          <div className="grain-overlay" />
+          <div className="surfboard-hero-container mb-6 space-y-2 header-wallpaper !py-10 rounded-[2rem] relative z-10" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
             <div className="header-content-wrapper relative z-20">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
                 <Settings size={40} />
               </div>
               <h1 className="main-page-title">
-                <span className="surfer-title">פאנל ניהול</span>
+                <span className="surfer-title text-[#121212]">פאנל ניהול</span>
               </h1>
-              <p className="header-subtitle max-w-2xl mx-auto">
+              <p className="header-subtitle max-w-2xl mx-auto text-[#121212]">
                 ניהול חברים, בקשות הצטרפות והגדרות מערכת מתקדמות 🛡️
               </p>
             </div>

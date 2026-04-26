@@ -12,30 +12,21 @@
     <title>Body-Line | MemberHub</title>
     
     <script>
-      // Display errors directly on screen for debugging
-      window.onerror = function(msg, src, lineno, colno, err) {
-        var d = document.createElement('div');
-        d.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:red;color:white;z-index:999999;padding:20px;overflow:auto;word-wrap:break-word;';
-        d.innerHTML = '<h2>CRITICAL ERROR</h2><p>' + msg + '</p><p>' + src + ':' + lineno + ':' + colno + '</p><pre>' + (err ? err.stack : '') + '</pre>';
-        document.body.appendChild(d);
-      };
-      window.addEventListener('unhandledrejection', function(evt) {
-        var d = document.createElement('div');
-        d.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:red;color:white;z-index:999999;padding:20px;overflow:auto;word-wrap:break-word;';
-        d.innerHTML = '<h2>UNHANDLED PROMISE REJECTION</h2><p>' + (evt.reason ? (evt.reason.message || evt.reason) : 'Unknown') + '</p><pre>' + (evt.reason ? evt.reason.stack : '') + '</pre>';
-        document.body.appendChild(d);
-      });
       // Catch the PWA install event as early as possible
       window.deferredPWAEvent = null;
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         window.deferredPWAEvent = e;
       });
-      // Force unregister service workers to clear broken cache
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for(let registration of registrations) { registration.unregister(); }
-        });
+      // Force unregister service workers to clear broken cache safely
+      try {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) { registration.unregister(); }
+          }).catch(function(e) { console.warn("SW unreg failed", e); });
+        }
+      } catch (e) {
+        console.warn("SW access blocked", e);
       }
     </script>
 
@@ -51,9 +42,151 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js" crossorigin></script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <style>
+    body {
+      background-color: #0f172a !important; /* Dark Blue so we know it loaded */
+      color: white !important;
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+    .boot-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 9999;
+      background-color: #0f172a;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #1e293b;
+      border-top: 5px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    #repair-container {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 20px;
+      background: rgba(30, 41, 59, 1);
+      border-radius: 20px;
+      border: 3px solid #ef4444;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      z-index: 10001;
+      width: 90%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #repair-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 18px 36px;
+      border-radius: 14px;
+      font-weight: bold;
+      font-size: 20px;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+      -webkit-tap-highlight-color: transparent;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <!-- This is the EMERGENCY repair UI -->
+  <div id="repair-container" style="display: none; position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); padding: 20px; background: rgba(30, 41, 59, 1); border-radius: 20px; border: 3px solid #ef4444; box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 10001; width: 90%; max-width: 400px; flex-direction: column; align-items: center;">
+    <p style="margin-bottom: 8px; font-size: 16px; color: white; font-weight: bold;">האפליקציה נתקעה בטעינה?</p>
+    <button id="repair-btn" onclick="repairApp()" style="background: #ef4444; color: white; border: none; padding: 18px 36px; border-radius: 14px; font-weight: bold; font-size: 20px; cursor: pointer; width: 100%; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);">לחץ כאן לתיקון כפוי</button>
+    <p id="env-status" style="font-size: 11px; color: #94a3b8; margin-top: 8px;">סביבה: מזהה...</p>
+  </div>
+
+  <div id="root">
+    <div class="boot-screen">
+      <div class="spinner"></div>
+      <h2 style="margin: 0 0 10px 0;">טוען את המערכת...</h2>
+      <p id="boot-subtext" style="color: #94a3b8; font-size: 14px;">אנא המתן לסיום הטעינה</p>
+      <div id="boot-error-display" style="color: #ef4444; font-size: 12px; margin-top: 20px; display: none;"></div>
+    </div>
+  </div>
+  
+  <script>
+    // Global Error Monitoring
+    window.onerror = function(msg, url, line, col, error) {
+      const errorMsg = "BOOT ERROR: " + msg + " at " + url + ":" + line;
+      console.error(errorMsg);
+      const display = document.getElementById('boot-error-display');
+      if (display) {
+        display.innerText = errorMsg;
+        display.style.display = 'block';
+      }
+      // Show repair UI immediately on boot error
+      const repairContainer = document.getElementById('repair-container');
+      if (repairContainer) {
+        repairContainer.style.display = 'flex';
+        repairContainer.style.border = "3px solid #ef4444";
+      }
+      return false;
+    };
+
+    console.log("HTML Start - " + new Date().toISOString());
+    const isInIframe = window.self !== window.top;
+    const envStatus = document.getElementById('env-status');
+    if (envStatus) envStatus.innerText = "סביבה: " + (isInIframe ? "Iframe (Preview)" : "Full Window");
+    
+    // Self-repair logic
+    function repairApp() {
+      console.warn("Manual repair triggered");
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            if (regs.length === 0) {
+              window.location.reload(true);
+              return;
+            }
+            for(let r of regs) {
+              console.log("Unregistering SW:", r);
+              r.unregister();
+            }
+            setTimeout(() => { window.location.reload(true); }, 500);
+          }).catch(() => { window.location.reload(true); });
+        } else {
+          window.location.reload(true);
+        }
+      } catch(e) {
+        console.error("Repair failed:", e);
+        window.location.reload(true);
+      }
+    }
+
+    // Auto-show repair if stuck for 10 seconds
+    setTimeout(() => {
+      const status = document.documentElement.getAttribute('data-app-status');
+      if (status !== 'ready') {
+        const repairContainer = document.getElementById('repair-container');
+        if (repairContainer) {
+          repairContainer.style.display = 'flex';
+          repairContainer.style.backgroundColor = '#1e293b';
+          repairContainer.style.borderColor = '#3b82f6'; // Blue border for "Stuck" vs Red for "Error"
+        }
+        console.error("App stuck in boot screen - showing repair UI. Status: " + status);
+        const subtext = document.getElementById('boot-subtext');
+        if (subtext) subtext.innerText = "נראה שהמערכת מתעכבת בטעינה...";
+      }
+    }, 10000);
+  </script>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
 </html>
