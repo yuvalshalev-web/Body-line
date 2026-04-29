@@ -601,5 +601,3 @@ const HomePage: React.FC = () => {
 };
 
 export default HomePage;
-// --- APPENDED CODE: V2 ---
-export const HomePageV2 = HomePage;

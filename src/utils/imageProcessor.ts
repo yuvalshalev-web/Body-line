@@ -67,3 +67,37 @@ export const processImage = async (
     reader.onerror = () => reject(new Error('קריאת הקובץ נכשלה.'));
   });
 };
+
+/**
+ * כיווץ תמונת Base64 (שימושי לצילומי מצלמה)
+ */
+export const compressBase64Image = async (
+  base64: string,
+  maxWidth = 1024,
+  quality = 0.7
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = base64;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = (maxWidth / width) * height;
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas context failed'));
+
+      ctx.drawImage(img, 0, 0, width, height);
+      // We use jpeg as it's universally compatible with Gemini and has better compression usually
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => reject(new Error('Image load failed'));
+  });
+};

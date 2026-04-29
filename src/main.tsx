@@ -1,58 +1,47 @@
-
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
-import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
 import { ModalProvider } from './contexts/ModalContext';
 import ErrorBoundary from './components/ErrorBoundary';
-import './utils/chartHelpers';
-import './utils/systemLogs';
+import App from './App';
 import './index.css';
+import './utils/systemLogs';
+import './utils/chartHelpers';
 
-console.log("index.tsx running - " + new Date().toISOString());
+console.log("main.tsx: Execution started - " + new Date().toISOString());
 if (typeof window !== 'undefined') {
-  (window as any)._boot_time = new Date().toISOString();
-  console.log("Setting app-loaded signal");
-  document.documentElement.setAttribute('data-app-status', 'loading-react');
+  document.documentElement.setAttribute('data-exec-start', 'true');
 }
-
-// Register PWA service worker removed temporarily to fix cache
-// If we re-enable, we should wrap it like this:
-/*
-try {
-  registerSW({
-    onNeedRefresh() { console.log("PWA: Refresh needed"); },
-    onOfflineReady() { console.log("PWA: Offline ready"); },
-  });
-} catch(e) {
-  console.warn("SW register failed during boot", e);
-}
-*/
 
 const rootElement = document.getElementById('root');
+console.log("main.tsx: Got rootElement", rootElement);
 if (!rootElement) throw new Error('Failed to find the root element');
 
-console.log("Creating React root...");
-const root = ReactDOM.createRoot(rootElement);
+console.log("main.tsx: Creating root...");
+const root = createRoot(rootElement);
+
+if (typeof window !== 'undefined') {
+  document.documentElement.setAttribute('data-exec-before-render', 'true');
+}
+
+console.log("main.tsx: Calling root.render()...");
 root.render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <HashRouter>
-        <AuthProvider>
-          <ModalProvider>
-            <DataProvider>
-              <App />
-            </DataProvider>
-          </ModalProvider>
-        </AuthProvider>
-      </HashRouter>
-    </ErrorBoundary>
-  </React.StrictMode>
+  <ErrorBoundary>
+    <HashRouter>
+      <AuthProvider>
+        <ModalProvider>
+          <DataProvider>
+            <App />
+          </DataProvider>
+        </ModalProvider>
+      </AuthProvider>
+    </HashRouter>
+  </ErrorBoundary>
 );
-console.log("React render called.");
+
 if (typeof window !== 'undefined') {
   document.documentElement.setAttribute('data-app-status', 'ready');
-  console.log("App success signal set.");
+  (window as any)._boot_progress = "Ready";
 }

@@ -1,0 +1,42 @@
+src/components/CommunityAnalytics.tsx:      for (let i = 0; i < rippleCount; i++) {
+src/components/CommunityAnalytics.tsx:      for (const m of stats.memberClassifications) {
+src/components/admin/SeasonalPersistence.tsx:        for (const s of sorted) {
+src/components/admin/ImportMembersModal.tsx:        for (const row of results.data as any[]) {
+src/components/admin/ImportSessionsModal.tsx:    for (const row of data) {
+src/components/admin/ImportSessionsModal.tsx:    for (const [key, session] of sessionsMap.entries()) {
+src/components/admin/ImportSessionsModal.tsx:        for (const attendee of session.attendeesList) {
+src/components/admin/TrendsDashboard.tsx:  for (let i = 0; i < stops.length - 1; i++) {
+src/components/WeeklyForecast.tsx:  for (let i = 0; i < locationId.length; i++) {
+src/components/OceanJourney.tsx:        for (const s of sorted) {
+src/components/UserCategories.tsx:        for (const s of sorted) {
+src/components/CommunityHeatMap.tsx:      for (let i = 1; i <= 10; i++) {
+src/utils/googlePlaces.ts:  for (const component of place.address_components) {
+src/utils/quotaStats.ts:  for (let i = 1; i <= today; i++) {
+src/utils/analytics.ts:  for (const session of sortedHistory) {
+src/utils/analytics.ts:  for (let i = rankThresholds.length - 1; i >= 0; i--) {
+src/utils/analytics.ts:    for (const session of sortedHistory) {
+src/utils/storageStats.ts:    for (const item of res.items) {
+src/utils/storageStats.ts:    for (const prefix of res.prefixes) {
+src/utils/storageStats.ts:    for (const colName of collections) {
+src/utils/archive_logic.ts:  for (const item of items) {
+src/utils/archive_logic.ts:  for (const member of members) {
+src/utils/archive_logic.ts:    for (const month of months) {
+src/utils/archive_logic.ts:    for (const [email, userDocs] of emailMap.entries()) {
+src/utils/archive_logic.ts:          for (const legacy of legacyDocs) {
+src/utils/archive_logic.ts:    for (const session of historyDocs) {
+src/utils/archive_logic.ts:      for (let i = 0; i < participantIds.length; i++) {
+src/utils/archive_logic.ts:    for (const migration of migrations) {
+src/contexts/DataContext.tsx:    for (const id of ids) {
+src/contexts/DataContext.tsx:    for (const uid of addedParticipants) {
+src/contexts/DataContext.tsx:    for (const uid of removedParticipants) {
+src/contexts/DataContext.tsx:      for (const key in sanitizedMetrics) {
+src/contexts/DataContext.tsx:      for (const uid of currentAttendees) {
+src/contexts/DataContext.tsx:      for (const event of activeEvents) {
+src/pages/AdminPage.tsx:          for (const [email, group] of Object.entries(emailGroups)) {
+src/pages/AdminPage.tsx:              for (const dup of duplicates) {
+src/pages/AdminPage.tsx:      for (let i = 0; i < files.length; i++) {
+src/pages/GalleryPage.tsx:    for (let i = 0; i < files.length; i++) {
+src/pages/AdminAssets.tsx:      for (let i = 0; i < files.length; i++) {
+src/pages/SessionStatsPage.tsx:      for (const session of sortedSessionsDesc) {
+src/pages/SessionStatsPage.tsx:    for (const member of activeMembers) {
+src/pages/SurfingNewsPage.tsx:        for (const feed of RSS_FEEDS) {

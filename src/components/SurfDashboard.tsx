@@ -37,7 +37,9 @@ const surfSpots = [
   { id: 'palmachim', name: 'פלמחים', lat: 31.92, lon: 34.69, imsId: "124" },
   { id: 'ashdod-gil', name: 'אשדוד - גיל / קשתות', lat: 31.79, lon: 34.63, imsId: "124" },
   { id: 'ashkelon-delila', name: 'אשקלון - דלילה', lat: 31.68, lon: 34.55, imsId: "208" },
-  { id: 'ziksit', name: 'זיקים', lat: 31.60, lon: 34.51, imsId: "208" }
+  { id: 'ziksit', name: 'זיקים', lat: 31.60, lon: 34.51, imsId: "208" },
+  { id: 'maagan-michael', name: 'מעגן מיכאל', lat: 32.55, lon: 34.91, imsId: "46", cameraUrl: "https://beachcam.co.il/maagan.html" },
+  { id: 'sdot-yam', name: 'שדות ים', lat: 32.49, lon: 34.89, imsId: "46", cameraUrl: "https://wind.co.il/%D7%9E%D7%96%D7%92-%D7%90%D7%95%D7%99%D7%A8/%D7%A9%D7%99%D7%93%D7%95%D7%A8-%D7%97%D7%99/" }
 ];
 
 export const SurfDashboard: React.FC = () => {
@@ -242,6 +244,51 @@ export const SurfDashboard: React.FC = () => {
   
   const windDirText = coastalWeather ? getWindDirText(coastalWeather.windDirection) : '';
   const windStats = coastalWeather ? getWindCondition(windDirText, coastalWeather.windSpeed) : null;
+
+  const getAquariumPalette = (heightCm: number) => {
+    // 1. יום שקט (Calm Sea) < 60cm
+    if (heightCm < 60) {
+      return {
+        gradUrl: '%230077BE', // primary wave foreground
+        gradStart: '#48AAAD',
+        gradEnd: '#0077BE',
+        waveOpacity: 0.6,
+        surfaceHighlight: 'rgba(135, 206, 235, 0.4)', // #87CEEB (Sky Blue)
+        bubbleColor: 'rgba(242, 210, 169, 0.5)', // #F2D2A9 (Sand)
+      };
+    }
+    // 2. ים בינוני (Moderate Sea) < 150cm (up to Chest)
+    if (heightCm < 150) {
+      return {
+        gradUrl: '%23005678',
+        gradStart: '#71A69E',
+        gradEnd: '#005678',
+        waveOpacity: 0.7,
+        surfaceHighlight: 'rgba(169, 169, 169, 0.3)', // #A9A9A9
+        bubbleColor: 'rgba(255, 255, 255, 0.6)', // #FFFFFF
+      };
+    }
+    // 3. ים סוער (Rough Sea) < 250cm
+    if (heightCm < 250) {
+      return {
+        gradUrl: '%232F4F4F',
+        gradStart: '#778899',
+        gradEnd: '#2F4F4F',
+        waveOpacity: 0.8,
+        surfaceHighlight: 'rgba(105, 105, 105, 0.4)', // #696969
+        bubbleColor: 'rgba(224, 224, 224, 0.5)', // #E0E0E0
+      };
+    }
+    // 4. ים סוער מאוד (Violent Sea) >= 250cm
+    return {
+      gradUrl: '%23191970',
+      gradStart: '#4F5D65',
+      gradEnd: '#191970',
+      waveOpacity: 0.9,
+      surfaceHighlight: 'rgba(46, 139, 87, 0.3)', // #2E8B57
+      bubbleColor: 'rgba(192, 192, 192, 0.5)', // #C0C0C0
+    };
+  };
 
   return (
     <div className="relative space-y-6 pb-12 p-2 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto text-slate-800" dir="rtl">
@@ -501,6 +548,8 @@ export const SurfDashboard: React.FC = () => {
 
                 // Calculate aquarium fill percentage (assuming 300cm is 100% full)
                 const fillPercent = Math.min(100, Math.max(12, (day.heightCm / 300) * 100));
+                
+                const pal = getAquariumPalette(day.heightCm);
 
                 return (
                   <motion.div 
@@ -508,17 +557,60 @@ export const SurfDashboard: React.FC = () => {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: idx * 0.05 }}
                     key={day.id} 
-                    className="w-36 rounded-[2.5rem] p-6 flex flex-col items-center text-center transition-all duration-500 shadow-lg border border-slate-100 bg-white hover:-translate-y-3 hover:shadow-2xl relative overflow-hidden group"
+                    className={`w-36 rounded-[2.5rem] p-6 flex flex-col items-center text-center transition-all duration-700 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 backdrop-blur-xl relative overflow-hidden group ${day.heightCm >= 250 ? 'bg-black/10' : 'bg-white/40'} hover:-translate-y-3 hover:shadow-[0_20px_40px_rgb(14,165,233,0.15)] hover:border-white/80`}
                   >
+                    {/* Glass Surface Reflection */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/0 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-20 pointer-events-none rounded-[2.5rem]" />
+
                     {/* Aquarium Fill Effect */}
                     <div 
-                      className={`absolute bottom-0 left-0 w-full transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] z-0 ${theme.bg.replace('/40', '/20').replace('/30', '/20').replace('/50', '/30')}`}
-                      style={{ height: `${fillPercent}%` }}
+                      className="absolute bottom-0 left-0 w-full transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] z-0 overflow-hidden group-hover:filter group-hover:brightness-110"
+                      style={{ 
+                        height: `${fillPercent}%`,
+                        background: `linear-gradient(to top, ${pal.gradStart}, ${pal.gradEnd})`
+                      }}
                     >
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-white/60 shadow-[0_-4px_12px_rgba(255,255,255,0.8)] backdrop-blur-sm" />
+                      {/* Deep Water Highlight */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent z-10 pointer-events-none mix-blend-overlay" />
+
+                      {/* Animated Wave on Top - Background */}
+                      <div className="absolute top-0 left-0 w-[200%] h-12 opacity-30 animate-wave-slow pointer-events-none mix-blend-overlay" style={{ 
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%23ffffff'/%3E%3C/svg%3E")`,
+                        backgroundSize: '800px 48px',
+                        transform: 'translateY(-50%) rotate(180deg)'
+                      }} />
+
+                      {/* Animated Wave on Top - Foreground */}
+                      <div className="absolute top-0 left-0 w-[200%] h-8 animate-wave pointer-events-none filter drop-shadow-[0_-2px_4px_rgba(255,255,255,0.3)]" style={{ 
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='${pal.gradUrl}'/%3E%3C/svg%3E")`,
+                        backgroundSize: '600px 32px',
+                        transform: 'translateY(-50%)',
+                        opacity: pal.waveOpacity
+                      }} />
+                      
+                      {/* Bubbles */}
+                      <div className="absolute inset-0 pointer-events-none">
+                        {[1, 2, 3, 4, 5].map(i => (
+                          <div key={i} className={`absolute rounded-full animate-bubble-${(i % 3) + 1} mix-blend-overlay`} style={{
+                            backgroundColor: pal.bubbleColor,
+                            width: `${3+i}px`,
+                            height: `${3+i}px`,
+                            left: `${15*i + Math.sin(i)*15}%`,
+                            bottom: `-${5*i}%`,
+                            animationDuration: `${2+i*0.8}s`,
+                            animationDelay: `${i*0.4}s`
+                          }} />
+                        ))}
+                      </div>
                     </div>
                     
-                    <div className="absolute inset-0 bg-sky-50 opacity-0 group-hover:opacity-20 transition-opacity duration-500 z-0" />
+                    {/* Ripple Rings on Hover */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none overflow-hidden z-10">
+                      <div className="w-[150%] h-[150%] rounded-full border absolute animate-ping" style={{ animationDuration: '3s', borderColor: pal.surfaceHighlight }} />
+                      <div className="w-[100%] h-[100%] rounded-full border absolute animate-ping" style={{ animationDuration: '3s', animationDelay: '0.5s', borderColor: pal.surfaceHighlight }} />
+                    </div>
+
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 z-0" style={{ backgroundColor: pal.surfaceHighlight }} />
                     
                     <span className="relative z-10 text-xs font-black mb-1 text-slate-800 uppercase tracking-widest">{day.dayName}</span>
                     <span className="relative z-10 text-[10px] font-bold mb-4 text-slate-400">{day.dateStr}</span>

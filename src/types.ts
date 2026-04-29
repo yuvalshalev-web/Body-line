@@ -53,6 +53,7 @@ export interface Member {
   emergencyContactPhone?: string;
   medicalInfo?: string;
   certifications?: string[];
+  digitalWallet?: DigitalLicense[];
   otherCertification?: string;
   status?: 'אלוף' | 'מתמיד' | 'לא יציב' | 'בנסיגה' | 'מזדמן';
 }
@@ -162,6 +163,25 @@ export interface QuoteItem {
   id: string;
   text: string;
   author: string;
+}
+
+export interface DigitalLicense {
+  id: string;
+  full_name: string;
+  license_id: string;
+  organization: string;
+  expiration_date: string;
+  level: string;
+  rank?: string;
+  issue_date?: string;
+  school_number?: string;
+  instructor?: string;
+  confidence_score: number;
+  is_valid: boolean;
+  type: 'Diving' | 'Surfing' | 'Sailing' | 'Skydiving' | 'Climbing' | 'Other';
+  verifiedAt: string;
+  image_data?: string | null;
+  metadata?: Record<string, string | number | boolean>;
 }
 
 export interface AuthState {

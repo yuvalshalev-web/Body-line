@@ -1,5 +1,5 @@
 {
-  "name": "memberhub-&-shared-gallery",
+  "name": "memberhub-shared-gallery",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -32,6 +32,7 @@
     "fetch-blob": "4.0.0",
     "firebase": "^12.9.0",
     "flatpickr": "^4.6.13",
+    "framer-motion": "^12.38.0",
     "gl-matrix": "^3.4.4",
     "jquery": "^4.0.0",
     "jquery-clock-timepicker": "^2.6.6",

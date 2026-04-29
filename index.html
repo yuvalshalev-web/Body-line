@@ -139,6 +139,21 @@
       return false;
     };
 
+    window.onunhandledrejection = function(event) {
+      const errorMsg = "BOOT PROMISE REJECTION: " + (event.reason ? (event.reason.message || event.reason) : "Unknown reason");
+      console.error(errorMsg);
+      const display = document.getElementById('boot-error-display');
+      if (display) {
+        display.innerText = display.innerText ? display.innerText + "\n" + errorMsg : errorMsg;
+        display.style.display = 'block';
+      }
+      const repairContainer = document.getElementById('repair-container');
+      if (repairContainer) {
+        repairContainer.style.display = 'flex';
+        repairContainer.style.border = "3px solid #ef4444";
+      }
+    };
+
     console.log("HTML Start - " + new Date().toISOString());
     const isInIframe = window.self !== window.top;
     const envStatus = document.getElementById('env-status');
@@ -175,15 +190,19 @@
     setTimeout(() => {
       const status = document.documentElement.getAttribute('data-app-status');
       if (status !== 'ready') {
+        const hasStart = document.documentElement.getAttribute('data-exec-start');
+        const hasBeforeRender = document.documentElement.getAttribute('data-exec-before-render');
+        
         const repairContainer = document.getElementById('repair-container');
         if (repairContainer) {
           repairContainer.style.display = 'flex';
           repairContainer.style.backgroundColor = '#1e293b';
           repairContainer.style.borderColor = '#3b82f6'; // Blue border for "Stuck" vs Red for "Error"
         }
-        console.error("App stuck in boot screen - showing repair UI. Status: " + status);
+        const infoMsg = `App stuck. start=${hasStart}, beforeRender=${hasBeforeRender}, status=${status}`;
+        console.error(infoMsg);
         const subtext = document.getElementById('boot-subtext');
-        if (subtext) subtext.innerText = "נראה שהמערכת מתעכבת בטעינה...";
+        if (subtext) subtext.innerText = infoMsg;
       }
     }, 10000);
   </script>

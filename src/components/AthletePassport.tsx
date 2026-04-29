@@ -17,7 +17,9 @@ import {
   Compass,
   Ship,
   Map as MapIcon,
-  Info
+  Info,
+  CheckCircle2 as VerifiedIcon,
+  RotateCcw
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -34,13 +36,17 @@ const DISCIPLINES = [
   { id: 'golf', name: 'גולף', icon: Flag, color: 'from-green-400 to-green-700', shadow: 'shadow-green-500/30' },
   { id: 'paragliding', name: 'מצנח רחיפה', icon: Wind, color: 'from-sky-300 to-indigo-500', shadow: 'shadow-sky-500/30' },
   { id: 'canyoning', name: 'קניונינג', icon: MapIcon, color: 'from-amber-600 to-orange-800', shadow: 'shadow-amber-500/30' },
-  { id: 'rafting', name: 'רפטינג', icon: Ship, color: 'from-teal-400 to-blue-700', shadow: 'shadow-teal-500/30' }
+  { id: 'rafting', name: 'רפטינג', icon: Ship, color: 'from-teal-400 to-blue-700', shadow: 'shadow-teal-500/30' },
+  { id: 'skydiving', name: 'צניחה חופשית', icon: Wind, color: 'from-blue-400 to-sky-600', shadow: 'shadow-blue-400/30' },
+  { id: 'all', name: 'הכל', icon: Award, color: 'from-slate-700 to-slate-900', shadow: 'shadow-black/30' }
 ];
 
-const BadgeWithTooltip = ({ icon: Icon, text, tooltip, colorTheme }: { icon: any, text: string, tooltip: string, colorTheme: 'yellow' | 'teal' }) => {
+const BadgeWithTooltip = ({ icon: Icon, text, tooltip, colorTheme }: { icon: any, text: string, tooltip: string, colorTheme: 'yellow' | 'teal' | 'blue' }) => {
   const cn = colorTheme === 'yellow' 
     ? 'bg-yellow-400/20 text-yellow-100 border-yellow-400/30'
-    : 'bg-teal-400/20 text-teal-100 border-teal-400/30';
+    : colorTheme === 'teal'
+    ? 'bg-teal-400/20 text-teal-100 border-teal-400/30'
+    : 'bg-blue-400/20 text-blue-100 border-blue-400/30';
     
   return (
     <div className={`relative group px-3 py-1.5 backdrop-blur-md border rounded-lg text-xs font-bold shadow-inner flex items-center shrink-0 gap-1.5 cursor-help ${cn}`}>
@@ -59,13 +65,42 @@ export const AthletePassport: React.FC = () => {
   const { currentUser } = useAuth();
   const { members, weeklyHistory, yearConfig, events } = useData();
   const [activeDiscipline, setActiveDiscipline] = useState('surfing');
-  
+  const [showImageModal, setShowImageModal] = useState<string | null>(null);
+
   const member = useMemo(() => members.find(m => m.id === currentUser?.id), [currentUser, members]);
   
   const stats = useMemo(() => {
     if (!currentUser || members.length === 0) return null;
-    return calculateUserStats(currentUser.id, members, weeklyHistory, yearConfig, events);
+    try {
+      return calculateUserStats(currentUser.id, members, weeklyHistory, yearConfig, events);
+    } catch (e) {
+      console.error("AthletePassport: Failed to calculate stats", e);
+      return null;
+    }
   }, [currentUser, members, weeklyHistory, yearConfig, events]);
+
+  // Auto-switch to newly added discipline if applicable
+  React.useEffect(() => {
+    if (member?.digitalWallet && (member as any).digitalWallet.length > 0) {
+      const wallet = (member as any).digitalWallet;
+      const latest = [...wallet].sort((a: any, b: any) => 
+        new Date(b.verifiedAt || 0).getTime() - new Date(a.verifiedAt || 0).getTime()
+      )[0];
+      
+      const type = (latest.type || '').toLowerCase();
+      if (type === 'diving' && activeDiscipline !== 'diving') {
+        setActiveDiscipline('diving');
+      } else if (type === 'surfing' && activeDiscipline !== 'surfing') {
+        setActiveDiscipline('surfing');
+      } else if (type === 'skydiving' && activeDiscipline !== 'skydiving') {
+        setActiveDiscipline('skydiving');
+      } else if (type === 'sailing' && activeDiscipline !== 'sailing') {
+        setActiveDiscipline('sailing');
+      } else if (type === 'climbing' && activeDiscipline !== 'climbing') {
+        setActiveDiscipline('climbing');
+      }
+    }
+  }, [member?.digitalWallet?.length]);
 
   // 3D Tilt Effect Setup
   const cardRef = useRef<HTMLDivElement>(null);
@@ -106,7 +141,10 @@ export const AthletePassport: React.FC = () => {
     );
   }
 
-  const activeProfile = DISCIPLINES.find(d => d.id === activeDiscipline)!;
+  const activeProfile = useMemo(() => 
+    DISCIPLINES.find(d => d.id === activeDiscipline) || DISCIPLINES[0],
+    [activeDiscipline]
+  );
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4 md:p-8" dir="rtl">
@@ -220,10 +258,11 @@ export const AthletePassport: React.FC = () => {
             <div className="grid grid-cols-2 gap-4 mb-auto">
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-inner flex flex-col">
                 <span className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1 flex items-center gap-1">
-                  <Clock size={12} /> שעות מעשיות
+                  <Clock size={12} /> {activeDiscipline === 'skydiving' ? 'צניחות' : 'שעות מעשיות'}
                 </span>
                 <span className="text-3xl font-black drop-shadow-md">
-                  {activeDiscipline === 'surfing' ? stats.totalSessions * 2 : '--'}
+                  {activeDiscipline === 'surfing' ? stats.totalSessions * 2 : 
+                   activeDiscipline === 'skydiving' ? '25+' : '0'}
                 </span>
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-inner flex flex-col">
@@ -231,7 +270,8 @@ export const AthletePassport: React.FC = () => {
                   <Award size={12} /> רמת מיומנות
                 </span>
                 <span className="text-lg leading-tight font-black drop-shadow-md mt-auto">
-                  {activeDiscipline === 'surfing' ? (stats.overallProgressPercent > 80 ? 'מתקדם' : 'בינוני') : 'טרם הוזן'}
+                  {activeDiscipline === 'surfing' ? (stats.overallProgressPercent > 80 ? 'מתקדם' : 'בינוני') : 
+                   activeDiscipline === 'skydiving' ? 'רישיון A' : 'טרם הוזן'}
                 </span>
               </div>
             </div>
@@ -240,17 +280,150 @@ export const AthletePassport: React.FC = () => {
             <div className="mt-8 pt-6 border-t border-white/20">
               <span className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-3 block">הסמכות מאומתות</span>
               <div className="flex flex-wrap gap-2">
-                {Array.isArray(member.certifications) && member.certifications.length > 0 ? (
-                  member.certifications.map((cert: string, i: number) => (
-                    <div key={i} className="px-3 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-xs font-bold shadow-inner flex shrink-0 items-center">
-                      {cert}
+                {/* Dynamically show licenses from the digital wallet for this discipline */}
+                {(() => {
+                  const filteredWallet = (member as any).digitalWallet?.filter((l: any) => {
+                    const org = (l.organization || '').toLowerCase();
+                    const level = (l.level || '').toLowerCase();
+                    const type = (l.type || '').toLowerCase();
+                    
+                    // 1. Direct type match
+                    if (activeDiscipline === 'all') return true;
+                    if (type === activeDiscipline.toLowerCase()) return true;
+                    
+                    // 2. Discipline specific heuristics
+                    if (activeDiscipline === 'diving') {
+                      return type === 'diving' || org.includes('scuba') || org.includes('padi') || org.includes('ssi') || org.includes('iantd') || org.includes('naui') || level.includes('צלילה');
+                    }
+                    if (activeDiscipline === 'surfing') {
+                      return type === 'surfing' || org.includes('surf') || org.includes('isa') || level.includes('גלישה');
+                    }
+                    if (activeDiscipline === 'sailing') {
+                      return type === 'sailing' || org.includes('sail') || org.includes('skipper') || org.includes('yacht') || org.includes('משיט') || level.includes('משיט');
+                    }
+                    if (activeDiscipline === 'skydiving') {
+                       return type === 'skydiving' || org.includes('skydive') || org.includes('uspa') || org.includes('cip') || level.includes('צניחה');
+                    }
+                    if (activeDiscipline === 'climbing' || activeDiscipline === 'rock-climbing') {
+                       return type === 'climbing' || org.includes('climb') || org.includes('טיפוס') || level.includes('טיפוס');
+                    }
+                    
+                    // 3. Metadata search
+                    if (l.metadata) {
+                        const metaStr = JSON.stringify(l.metadata).toLowerCase();
+                        if (activeDiscipline === 'diving' && (metaStr.includes('dive') || metaStr.includes('tank'))) return true;
+                        if (activeDiscipline === 'skydiving' && (metaStr.includes('jump') || metaStr.includes('parachute'))) return true;
+                    }
+
+                    // 4. If it's a general/other discipline, maybe show everything that doesn't match a main one?
+                    // Or if we can't find a match, just return false for now to avoid cluttering.
+                    
+                    return false;
+                  }) || [];
+
+                  if (filteredWallet.length > 0) {
+                    return filteredWallet.map((license: any) => (
+                      <div key={license.id} className="relative group px-3 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-xs font-bold shadow-inner flex shrink-0 items-center gap-1.5 cursor-help transition-transform hover:scale-105">
+                        {license.type === 'Diving' ? <Waves size={12} /> : license.type === 'Surfing' ? <Wind size={12} /> : <ShieldCheck size={12} />}
+                        <span>{license.level}</span>
+                        
+                        {/* Tooltip with full metadata rendering - Removed pointer-events-none to allow modal interaction */}
+                        <div className="absolute bottom-full right-1/2 translate-x-1/2 mb-4 w-[280px] p-0 bg-[#0f172a] backdrop-blur-2xl border border-white/10 text-white font-normal text-[11px] leading-tight rounded-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100] shadow-2xl overflow-hidden scale-95 group-hover:scale-100">
+                          {/* Passport Header in Tooltip */}
+                          <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                            <span className="font-black uppercase tracking-tighter text-xs">{license.organization}</span>
+                            <VerifiedIcon size={14} className="text-sky-400" />
+                          </div>
+
+                          <div className="p-4">
+                            {license.image_data && (
+                                <div 
+                                    className="w-full h-32 mb-4 rounded-xl overflow-hidden border border-white/10 shadow-lg relative bg-black/20 cursor-zoom-in group/img"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setShowImageModal(license.image_data);
+                                    }}
+                                >
+                                  <img src={license.image_data} alt="Verified Document" className="w-full h-full object-contain" />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-center p-2 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                     <span className="text-[10px] font-black uppercase text-white tracking-widest bg-sky-500/80 px-2 py-1 rounded-lg backdrop-blur-sm">הגדל תמונה</span>
+                                  </div>
+                                </div>
+                            )}
+
+                            <div className="space-y-2.5">
+                              {license.rank && (
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="text-[10px] uppercase font-black opacity-40">Classification</span>
+                                  <span className="text-sky-300 font-black text-sm tracking-tight">{license.rank}</span>
+                                </div>
+                              )}
+                              
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="text-[10px] uppercase font-black opacity-40">Document ID</span>
+                                  <span className="font-mono font-bold tracking-tight">{license.license_id}</span>
+                                </div>
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="text-[10px] uppercase font-black opacity-40">Expiration</span>
+                                  <span className="font-bold text-rose-400">{license.expiration_date || 'Lifetime'}</span>
+                                </div>
+                                {license.issue_date && (
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="text-[10px] uppercase font-black opacity-40">Issue Date</span>
+                                    <span className="font-bold">{license.issue_date}</span>
+                                  </div>
+                                )}
+                                {license.instructor && (
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="text-[10px] uppercase font-black opacity-40">Instructor</span>
+                                    <span className="font-bold break-words">{license.instructor}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Dynamic Metadata Section */}
+                              {license.metadata && Object.keys(license.metadata).length > 0 && (
+                                <div className="mt-4 pt-3 border-t border-white/5 space-y-2">
+                                  <span className="text-[10px] uppercase font-black opacity-40 block mb-2">Extended Credentials</span>
+                                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                                    {Object.entries(license.metadata).map(([key, value]) => (
+                                      <div key={key} className="flex flex-col gap-0.5">
+                                        <span className="text-[9px] font-bold opacity-30 truncate">{key.replace(/_/g, ' ')}</span>
+                                        <span className="font-medium text-white/90 truncate">{String(value)}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between opacity-40 italic text-[9px]">
+                              <span>Verified: {new Date(license.verifiedAt).toLocaleDateString()}</span>
+                              <span>Score: {Math.round(license.confidence_score * 100)}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ));
+                  }
+                  
+                  // Fallback to text certifications if no dynamic ones found
+                  if (Array.isArray(member.certifications) && member.certifications.length > 0) {
+                    return member.certifications.map((cert: string, i: number) => (
+                      <div key={i} className="px-3 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-xs font-bold shadow-inner flex shrink-0 items-center">
+                        {cert}
+                      </div>
+                    ));
+                  }
+                  
+                  return (
+                    <div className="px-3 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-xs font-medium opacity-60">
+                      אין הסמכות רשומות
                     </div>
-                  ))
-                ) : (
-                  <div className="px-3 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-xs font-medium opacity-60">
-                    אין הסמכות רשומות
-                  </div>
-                )}
+                  );
+                })()}
                 {activeDiscipline === 'sailing' && (
                   <>
                     <BadgeWithTooltip icon={Anchor} text="משיט 11 (אופנוע ים)" tooltip="רישיון להשטת אופנוע ים" colorTheme="yellow" />
@@ -271,10 +444,21 @@ export const AthletePassport: React.FC = () => {
                     <BadgeWithTooltip icon={Waves} text="צולל הצלה" tooltip="Rescue Diver - חילוץ והצלת צוללנים במצבי חירום" colorTheme="teal" />
                   </>
                 )}
+                {activeDiscipline === 'skydiving' && (
+                  <>
+                    <BadgeWithTooltip icon={Wind} text="רישיון A" tooltip="רישיון צניחה בסיסי (25 צניחות לפחות)" colorTheme="blue" />
+                    <BadgeWithTooltip icon={Wind} text="רישיון B" tooltip="רישיון בינוני (50 צניחות + דרישות מיומנות)" colorTheme="blue" />
+                    <BadgeWithTooltip icon={Wind} text="רישיון C" tooltip="רישיון מתקדם (200 צניחות)" colorTheme="blue" />
+                    <BadgeWithTooltip icon={Wind} text="רישיון D" tooltip="רישיון מאסטר (500 צניחות)" colorTheme="blue" />
+                    <BadgeWithTooltip icon={Award} text="מדריך AFF" tooltip="מדריך צניחה חופשית בשיטת AFF" colorTheme="blue" />
+                    <BadgeWithTooltip icon={Award} text="מדריך טנדם" tooltip="מדריך מוסמך לצניחות טנדם" colorTheme="blue" />
+                    <BadgeWithTooltip icon={Award} text="Coach" tooltip="מאמן צניחה מוסמך" colorTheme="blue" />
+                  </>
+                )}
               </div>
             </div>
             {/* Additional Athlete Attributes (Insurance) */}
-            {['diving', 'sailing', 'paragliding', 'ski'].includes(activeDiscipline) && (
+            {['diving', 'sailing', 'paragliding', 'ski', 'skydiving'].includes(activeDiscipline) && (
               <div className="mt-4 pt-4 border-t border-white/20">
                  <span className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-3 flex items-center gap-1"><ShieldCheck size={12}/> כיסוי ביטוחי רשמי</span>
                  <div className="flex flex-col gap-2">
@@ -302,8 +486,54 @@ export const AthletePassport: React.FC = () => {
             
           </motion.div>
         </motion.div>
-      </div>
+        
+        {/* Full Image Modal Overlay */}
+        <AnimatePresence>
+          {showImageModal && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[1000] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-4 md:p-8"
+              onClick={() => setShowImageModal(null)}
+            >
+               <motion.button
+                 initial={{ scale: 0 }}
+                 animate={{ scale: 1 }}
+                 className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+               >
+                 <RotateCcw className="rotate-45" size={24} />
+               </motion.button>
 
+               <motion.div
+                 initial={{ scale: 0.9, opacity: 0 }}
+                 animate={{ scale: 1, opacity: 1 }}
+                 exit={{ scale: 0.9, opacity: 0 }}
+                 className="relative max-w-4xl w-full h-full flex flex-col items-center justify-center"
+                 onClick={e => e.stopPropagation()}
+               >
+                 <img 
+                   src={showImageModal} 
+                   alt="License Full View" 
+                   className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/10" 
+                 />
+                 <div className="mt-6 flex items-center justify-between w-full px-4">
+                    <div className="flex flex-col">
+                       <span className="text-white font-black text-lg tracking-tight">תצוגת מסמך מאומת</span>
+                       <span className="text-white/40 text-xs font-bold uppercase tracking-widest">AI Secured Verification Image</span>
+                    </div>
+                    <button 
+                       onClick={() => setShowImageModal(null)}
+                       className="px-6 py-3 bg-white text-slate-900 rounded-xl font-black text-sm active:scale-95 transition-transform"
+                    >
+                       סגור
+                    </button>
+                 </div>
+               </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

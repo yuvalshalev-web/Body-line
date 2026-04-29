@@ -55,7 +55,8 @@ export const calculateUserStats = (
   now.setHours(23, 59, 59, 999);
   
   // Filter history for sessions within the season, ignoring cancelled sessions
-  const validSessions = weeklyHistory.filter(session => {
+  const validSessions = (weeklyHistory || []).filter(session => {
+    if (!session) return false;
     const sessionDate = parseDate(session.date);
     if (sessionDate) sessionDate.setHours(0, 0, 0, 0);
     if (!sessionDate || isNaN(sessionDate.getTime())) return false;

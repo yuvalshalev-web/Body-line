@@ -28,14 +28,24 @@ import {
   AlertTriangle,
   HelpCircle,
   Award,
-  Search
+  Search,
+  Upload,
+  CheckCircle2,
+  XCircle,
+  FileDigit,
+  CheckCircle,
+  CheckCircle2 as VerifiedIcon,
+  Video,
+  Waves,
+  Wind,
+  Maximize2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { Member } from '../types';
-import { generateBio } from '../services/geminiService';
-import { processImage } from '../utils/imageProcessor';
+import { generateBio, verifyLicense } from '../services/geminiService';
+import { processImage, compressBase64Image } from '../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { hashPassword } from '../utils/crypto';
 import { loadGoogleMaps } from '../utils/googlePlaces';
@@ -233,6 +243,17 @@ const ProfilePage: React.FC = () => {
   const [certSearch, setCertSearch] = useState('');
   const [isGeneratingBio, setIsGeneratingBio] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
+  
+  // Verification State
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [lastVerifiedImage, setLastVerifiedImage] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
   const [toast, setToast] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -381,8 +402,6 @@ const ProfilePage: React.FC = () => {
 
   const completionPercentage = completionDetails.percentage;
 
-  if (!formData) return null;
-
   const handleFieldChange = useCallback((field: keyof Member, value: any) => {
     setFormData(prev => prev ? ({ ...prev, [field]: value }) : null);
     setIsDirty(true);
@@ -466,6 +485,87 @@ const ProfilePage: React.FC = () => {
     } finally { setIsGeneratingBio(false); }
   };
 
+  const startCamera = async () => {
+    try {
+      setIsCameraOpen(true);
+      setUploadError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error("Camera error:", err);
+      setUploadError('לא ניתן לגשת למצלמה. וודא שנתת הרשאות.');
+      setIsCameraOpen(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      tracks.forEach(track => track.stop());
+    }
+    setIsCameraOpen(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const base64 = canvas.toDataURL('image/jpeg');
+        stopCamera();
+        handleVerification(base64);
+      }
+    }
+  };
+
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('אנא בחר קובץ תמונה תקין');
+      return;
+    }
+
+    setUploadError(null);
+    setIsVerifying(true);
+
+    try {
+      // Use processImage to resize and compress the file
+      const { dataUrl } = await processImage(file, 1024, 0.7);
+      handleVerification(dataUrl);
+    } catch (error) {
+      console.error("Image processing error:", error);
+      setUploadError('שגיאה בעיבוד התמונה');
+      setIsVerifying(false);
+    }
+  };
+
+  const handleVerification = async (base64: string) => {
+    setIsVerifying(true);
+    setVerificationResult(null);
+    try {
+      // Compress if it might be too large (e.g. from camera capture)
+      const compressedBase64 = await compressBase64Image(base64, 1024, 0.7);
+      const result = await verifyLicense(compressedBase64);
+      setVerificationResult(result);
+      setLastVerifiedImage(compressedBase64);
+    } catch (error) {
+      console.error("Verification specialist error:", error);
+      setUploadError('שגיאה בתהליך האימות האוטומטי');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData) return;
@@ -507,13 +607,14 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  // Background optimization: use fewer and less intense blurs
   const bgElements = useMemo(() => (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       <div className="absolute top-[-10%] right-[-10%] w-[25rem] h-[25rem] bg-sky-200/5 blur-[50px] rounded-full" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[25rem] h-[25rem] bg-rose-200/5 blur-[50px] rounded-full" />
     </div>
   ), []);
+
+  if (!formData) return null;
 
   return (
     <div className="min-h-screen w-full luxury-bg relative overflow-hidden">
@@ -795,6 +896,391 @@ const ProfilePage: React.FC = () => {
                         className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-indigo-200 transition-all text-[#0f172a] min-h-[100px] resize-none" 
                       />
                     </motion.div>
+                  )}
+                </div>
+              </section>
+
+              {/* Digital Document Verification Section */}
+              <section className="space-y-6 md:space-y-8">
+                <SectionHeader 
+                  icon={ShieldCheck} 
+                  title="אימות מסמכים דיגיטלי" 
+                  subtitle="Digital Document Verification"
+                  colorClass="text-blue-600" 
+                  bgColorClass="bg-blue-100" 
+                />
+                
+                <div className="luxury-card !p-8 bg-white/40 border border-white/60 rounded-[2.5rem] shadow-sm relative overflow-hidden group">
+                  <div className="grain-overlay opacity-[0.02]" />
+                  
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleDocumentUpload} 
+                    className="hidden" 
+                    accept="image/*"
+                  />
+
+                  {!verificationResult && !isVerifying && !isCameraOpen && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex flex-col items-center justify-center gap-4 py-10 border-2 border-dashed border-slate-200/60 rounded-[2rem] cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all group"
+                      >
+                        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-400 group-hover:text-blue-500 transition-colors">
+                          <Upload size={32} />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-base font-black text-slate-700">העלה קובץ קיים</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">PNG, JPG up to 10MB</p>
+                        </div>
+                      </div>
+
+                      <div 
+                        onClick={startCamera}
+                        className="flex flex-col items-center justify-center gap-4 py-10 border-2 border-dashed border-slate-200/60 rounded-[2rem] cursor-pointer hover:border-sky-400 hover:bg-sky-50/30 transition-all group"
+                      >
+                        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-400 group-hover:text-sky-500 transition-colors">
+                          <Video size={32} />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-base font-black text-slate-700">סרוק עם המצלמה</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Live Capture and Scan</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {isCameraOpen && (
+                    <div className="flex flex-col items-center gap-6 py-6">
+                      <div className="relative w-full max-w-sm aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20">
+                        <video 
+                          ref={videoRef} 
+                          autoPlay 
+                          playsInline 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 border-2 border-sky-500/30 border-dashed pointer-events-none rounded-2xl m-4" />
+                        <div className="absolute top-4 right-4 animate-pulse">
+                           <div className="w-2 h-2 bg-rose-500 rounded-full" />
+                        </div>
+                      </div>
+                      <canvas ref={canvasRef} className="hidden" />
+                      <div className="flex gap-4 w-full max-w-xs">
+                        <button 
+                          onClick={stopCamera}
+                          className="flex-1 py-3 bg-white text-slate-600 rounded-xl font-black text-xs shadow-sm hover:bg-slate-50"
+                        >
+                          ביטול
+                        </button>
+                        <button 
+                          onClick={capturePhoto}
+                          className="flex-1 py-3 bg-sky-500 text-white rounded-xl font-black text-xs shadow-lg shadow-sky-500/20 hover:bg-sky-600"
+                        >
+                          צלם ואמת
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isVerifying && (
+                    <div className="flex flex-col items-center justify-center gap-6 py-12">
+                      <div className="relative">
+                        <Loader2 size={48} className="text-blue-500 animate-spin" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <ShieldCheck size={20} className="text-blue-600 animate-pulse" />
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-base font-black text-slate-800 animate-pulse">מנתח מסמך ומאמת נתונים...</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Gemini 1.5 Flash AI Specialist</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {verificationResult && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex flex-col gap-6"
+                    >
+                      {verificationResult.error ? (
+                        <div className="bg-rose-50 border border-rose-100/50 rounded-2xl p-8 text-center">
+                          <XCircle size={40} className="text-rose-500 mx-auto mb-3" />
+                          <p className="text-sm font-black text-rose-800">{verificationResult.error === "Invalid or unclear image" ? "התמונה לא ברורה או אינה רישיון תקין" : verificationResult.error}</p>
+                          <button 
+                            type="button"
+                            onClick={() => setVerificationResult(null)}
+                            className="mt-4 text-xs font-bold text-rose-600 underline underline-offset-4"
+                          >
+                            נסה שוב
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between bg-white/50 p-6 rounded-2xl border border-white/60">
+                            <div className="flex items-center gap-4">
+                              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${verificationResult.is_valid ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
+                                {verificationResult.is_valid ? <CheckCircle size={28} /> : <XCircle size={28} />}
+                              </div>
+                              <div className="text-right">
+                                <div className="flex items-center gap-2 mb-1">
+                                   <h5 className="text-lg font-black text-slate-900 tracking-tight">{verificationResult.full_name}</h5>
+                                   {verificationResult.confidence_score > 0.9 && <ShieldCheck size={16} className="text-sky-500" />}
+                                </div>
+                                <p className="text-xs font-bold text-slate-500 leading-none">{verificationResult.organization} • {verificationResult.level}</p>
+                              </div>
+                            </div>
+                            <div className="text-left">
+                              <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-tighter ${verificationResult.is_valid ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                {verificationResult.is_valid ? 'Verified Document' : 'Invalid / Expired'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 text-right">
+                            <div className="bg-white/60 p-5 rounded-2xl border border-white/80 shadow-sm">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">מספר רישיון</span>
+                              <span className="font-mono text-sm font-black text-slate-800">{verificationResult.license_id}</span>
+                            </div>
+                            <div className="bg-white/60 p-5 rounded-2xl border border-white/80 shadow-sm">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">תאריך תפוגה</span>
+                              <span className={`text-sm font-black ${verificationResult.is_valid ? 'text-slate-800' : 'text-rose-600'}`}>
+                                {verificationResult.expiration_date}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 py-2 text-[10px] font-bold text-slate-400 justify-center bg-slate-50/50 rounded-xl">
+                            <Camera size={12} />
+                            <span className="uppercase tracking-widest">Conf Score: {Math.round(verificationResult.confidence_score * 100)}% • AI Verified</span>
+                          </div>
+
+                          <div className="flex gap-4">
+                            <button 
+                              type="button"
+                              onClick={() => setVerificationResult(null)}
+                              className="flex-1 py-4 bg-white/70 border border-white/80 rounded-2xl text-xs font-black text-slate-500 hover:bg-white transition-all shadow-sm active:scale-95"
+                            >
+                              ביטול
+                            </button>
+                            {verificationResult.is_valid && (
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  if (!formData) return;
+                                  
+                                  const currentCerts = formData.certifications || [];
+                                  const certText = `${verificationResult.organization}: ${verificationResult.level}`;
+                                  
+                                  // Add to certifications if not present (legacy support)
+                                  let newCerts = [...currentCerts];
+                                  if (!currentCerts.includes(certText)) {
+                                    newCerts.push(certText);
+                                  }
+
+                                  // Add to digital wallet
+                                  const rawType = (verificationResult.type || '').toLowerCase();
+                                  const org = (verificationResult.organization || '').toLowerCase();
+                                  
+                                  const walletType = 
+                                          ['diving', 'surfing', 'sailing', 'skydiving', 'climbing'].includes(rawType) ? (rawType.charAt(0).toUpperCase() + rawType.slice(1)) :
+                                          (org.includes('scuba') || org.includes('padi') || org.includes('ssi') ? 'Diving' : 
+                                           org.includes('surf') ? 'Surfing' : 
+                                           org.includes('sail') || org.includes('skipper') ? 'Sailing' :
+                                           org.includes('skydive') ? 'Skydiving' :
+                                           org.includes('climb') ? 'Climbing' : 'Other');
+
+                                  const walletEntity = {
+                                    id: crypto.randomUUID(),
+                                    full_name: verificationResult.full_name,
+                                    license_id: verificationResult.license_id,
+                                    organization: verificationResult.organization,
+                                    expiration_date: verificationResult.expiration_date,
+                                    level: verificationResult.level,
+                                    rank: verificationResult.rank,
+                                    issue_date: verificationResult.issue_date,
+                                    school_number: verificationResult.school_number,
+                                    instructor: verificationResult.instructor,
+                                    metadata: verificationResult.metadata || {},
+                                    image_data: lastVerifiedImage, // Save the base64 image
+                                    confidence_score: verificationResult.confidence_score,
+                                    is_valid: verificationResult.is_valid,
+                                    type: walletType,
+                                    verifiedAt: new Date().toISOString()
+                                  };
+
+                                  const currentWallet = formData.digitalWallet || [];
+                                  
+                                  setFormData({
+                                    ...formData,
+                                    certifications: newCerts,
+                                    digitalWallet: [...currentWallet, walletEntity]
+                                  });
+
+                                  setToast({ msg: 'המסמך אומת ונשמר זמנית. אל תשכח ללחוץ על "שמור שינויים" בתחתית העמוד כדי לעדכן את הפרופיל והדרכון האתלט שלך!', type: 'success' });
+                                  setVerificationResult(null);
+                                  setIsDirty(true);
+                                  setTimeout(() => setToast(null), 5000);
+                                }}
+                                className="flex-1 py-4 bg-slate-900 text-white rounded-2xl text-xs font-black hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                              >
+                                הוסף לארנק הדיגיטלי
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </div>
+                
+                {uploadError && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="bg-rose-50 text-rose-600 text-xs font-bold p-4 rounded-xl border border-rose-100 flex items-center gap-3"
+                  >
+                    <AlertTriangle size={16} />
+                    {uploadError}
+                  </motion.div>
+                )}
+              </section>
+              
+              {/* Digital Wallet Section */}
+              <section className="space-y-6 md:space-y-8">
+                <SectionHeader 
+                  icon={Award} 
+                  title="ארנק מסמכים דיגיטלי" 
+                  subtitle="Your Digital Sport Wallet"
+                  colorClass="text-emerald-600" 
+                  bgColorClass="bg-emerald-100" 
+                />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {formData.digitalWallet && formData.digitalWallet.length > 0 ? (
+                    formData.digitalWallet.map((license: any) => (
+                      <motion.div 
+                        key={license.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="luxury-card !p-6 bg-white/40 border border-white/80 rounded-3xl shadow-sm space-y-4 relative overflow-hidden group"
+                      >
+                         <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-100/20 blur-2xl rounded-full translate-x-1/2 -translate-y-1/2" />
+                         <div className="flex items-center justify-between relative z-10">
+                            <div className="flex items-center gap-3">
+                               <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-md">
+                                  {license.type === 'Diving' ? <Waves size={20} /> : license.type === 'Surfing' ? <Wind size={20} /> : <ShieldCheck size={20} />}
+                               </div>
+                               <div>
+                                  <h5 className="font-black text-slate-900 leading-tight">{license.organization}</h5>
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{license.level}</p>
+                               </div>
+                            </div>
+                            <div className="text-left">
+                               <button 
+                                 type="button"
+                                 onClick={() => {
+                                   const newWallet = formData.digitalWallet?.filter((item: any) => item.id !== license.id);
+                                   handleFieldChange('digitalWallet', newWallet);
+                                 }}
+                                 className="text-slate-300 hover:text-rose-500 transition-colors p-1"
+                               >
+                                  <Trash2 size={16} />
+                               </button>
+                            </div>
+                         </div>
+                         
+                          {license.image_data && (
+                            <div className="relative group/scan h-44 w-full rounded-2xl overflow-hidden border border-white/60 shadow-inner my-4">
+                              <img src={license.image_data} alt="Scan" className="w-full h-full object-cover transition-transform group-hover/scan:scale-105 duration-700" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-3 opacity-0 group-hover/scan:opacity-100 transition-opacity">
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const win = window.open();
+                                    win?.document.write(`<html><body style="margin:0;display:flex;justify-content:center;align-items:center;background:#000;"><img src="${license.image_data}" style="max-width:100%;max-height:100vh;"></body></html>`);
+                                  }}
+                                  className="text-[9px] font-black text-white uppercase tracking-widest bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-2 ml-auto hover:bg-white/40 transition-all border border-white/20 shadow-xl"
+                                >
+                                  <Maximize2 size={12} /> הצג סריקה מקורית
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-3 relative z-10">
+                            <div className="bg-white/50 p-3 rounded-xl border border-white/60">
+                               <span className="text-[9px] font-bold text-slate-400 uppercase block">ID</span>
+                               <span className="font-mono text-xs font-black text-slate-700">{license.license_id}</span>
+                            </div>
+                            <div className="bg-white/50 p-3 rounded-xl border border-white/60">
+                               <span className="text-[9px] font-bold text-slate-400 uppercase block">Expires</span>
+                               <span className="text-xs font-black text-slate-700">{license.expiration_date || 'N/A'}</span>
+                            </div>
+                            {license.rank && (
+                              <div className="bg-white/50 p-3 rounded-xl border border-white/60">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase block">Rank</span>
+                                <span className="text-xs font-black text-slate-700">{license.rank}</span>
+                              </div>
+                            )}
+                            {license.issue_date && (
+                              <div className="bg-white/50 p-3 rounded-xl border border-white/60">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase block">Issued</span>
+                                <span className="text-xs font-black text-slate-700">{license.issue_date}</span>
+                              </div>
+                            )}
+                            {license.school_number && (
+                              <div className="bg-white/50 p-3 rounded-xl border border-white/60">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase block">School</span>
+                                <span className="text-xs font-black text-slate-700">{license.school_number}</span>
+                              </div>
+                            )}
+                            {license.instructor && (
+                              <div className="bg-white/50 p-3 rounded-xl border border-white/60 col-span-2">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase block">Instructor</span>
+                                <span className="text-xs font-black text-slate-700">{license.instructor}</span>
+                              </div>
+                            )}
+                            
+                            {/* Dynamic Metadata Fields */}
+                            {license.metadata && Object.entries(license.metadata).map(([key, value]) => (
+                              <div key={key} className="bg-white/50 p-3 rounded-xl border border-white/60">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase block leading-none mb-1">{key.replace(/_/g, ' ')}</span>
+                                <span className="text-xs font-black text-slate-700 leading-tight">{String(value)}</span>
+                              </div>
+                            ))}
+                         </div>
+                         
+                         <div className="flex items-center justify-between pt-2 border-t border-slate-100 relative z-10">
+                            <div className="flex items-center gap-1">
+                               <VerifiedIcon size={12} className="text-emerald-500" />
+                               <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">Verified License</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                               <span className="text-[9px] font-bold text-slate-300 italic">Added: {new Date(license.verifiedAt).toLocaleDateString('he-IL')}</span>
+                               <button 
+                                 onClick={() => {
+                                   if (!formData.digitalWallet) return;
+                                   const newWallet = formData.digitalWallet.filter((item: any) => item.id !== license.id);
+                                   handleFieldChange('digitalWallet', newWallet);
+                                   setIsDirty(true);
+                                   setToast({ msg: 'המסמך הוסר מהארנק', type: 'success' });
+                                   setTimeout(() => setToast(null), 3000);
+                                 }}
+                                 className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                               >
+                                 <Trash2 size={12} />
+                               </button>
+                            </div>
+                         </div>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="md:col-span-2 py-12 text-center bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200">
+                       <FileDigit size={40} className="text-slate-300 mx-auto mb-4" />
+                       <p className="text-slate-400 font-bold">הארנק הדיגיטלי ריק. השתמש במאמת המסמכים למעלה כדי להוסיף רישיונות.</p>
+                    </div>
                   )}
                 </div>
               </section>

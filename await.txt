@@ -1,0 +1,294 @@
+src/components/CommunityAnalytics.tsx:            await updateMember({ ...originalMember, status: m.status as any });
+src/components/OceanPulse.tsx:          const data = await fetchJson('/api/ocean-data');
+src/components/OceanPulse.tsx:            const hData = await fetchJson(`/api/ocean-data/historical?start=${startDate}&end=${endDate}`);
+src/components/admin/EventEditor.tsx:        await loadGoogleMaps();
+src/components/admin/EventEditor.tsx:      const { dataUrl } = await processImage(file, 1200, 0.7, 150);
+src/components/admin/EventEditor.tsx:      await onSave({
+src/components/admin/WorkflowVisualizer.tsx:          const ghData = await fetchJson('/api/github/actions');
+src/components/admin/WorkflowVisualizer.tsx:          const vercelData = await fetchJson('/api/vercel/status');
+src/components/admin/ImportMembersModal.tsx:            await addMember(newMember);
+src/components/admin/ImportSessionsModal.tsx:        await addEvent(newEvent);
+src/components/admin/ImportSessionsModal.tsx:          await processData(json);
+src/components/admin/MemberGradingModal.tsx:      const scoreDoc = await getDoc(doc(db, 'performance_scores', scoreId));
+src/components/admin/MemberGradingModal.tsx:    await setDoc(doc(db, 'performance_scores', scoreId), scoreData);
+src/components/admin/GitHubCommandCenter.tsx:      const res = await fetch('/api/github/actions');
+src/components/admin/GitHubCommandCenter.tsx:        const text = await res.text();
+src/components/admin/GitHubCommandCenter.tsx:      const data = await res.json();
+src/components/admin/EditMemberForm.tsx:      await onSave(normalizedMember);
+src/components/admin/EditMemberForm.tsx:        await sendPasswordResetEmail(auth, editingMember.email.toLowerCase().trim());
+src/components/admin/EditMemberForm.tsx:      const hashed = await hashPassword(newPassword);
+src/components/admin/EditMemberForm.tsx:      await onSave(updatedMember);
+src/components/admin/EditMemberForm.tsx:                          const processed = await processImage(file);
+src/components/admin/EditMemberForm.tsx:                        await onArchive(editingMember.id);
+src/components/admin/EditMemberForm.tsx:                        await onSave({ ...editingMember, isActive: true });
+src/components/admin/AddMemberModal.tsx:      const hashed = await hashPassword(finalPass);
+src/components/admin/AddMemberModal.tsx:      await addMember({
+src/components/admin/AddMemberModal.tsx:                                  const { dataUrl } = await processImage(file, 600, 0.8);
+src/components/admin/AddMemberModal.tsx:                              const bio = await generateBio(`${newMemberData.firstName} ${newMemberData.lastName}`, newMemberData.role || 'Member', newMemberData.bio || '');
+src/components/admin/VercelStatusWidget.tsx:      const response = await fetch('/api/vercel/status');
+src/components/admin/VercelStatusWidget.tsx:        const text = await response.text();
+src/components/admin/VercelStatusWidget.tsx:        const data = await response.json();
+src/components/admin/VercelStatusWidget.tsx:      const data = await response.json();
+src/components/SurfNewsTracker.tsx:        const response = await fetch('/api/ims/marine-forecast');
+src/components/SurfNewsTracker.tsx:          const text = await response.text();
+src/components/CoastalDashboard.tsx:        const res = await fetch(`/api/ims/history/${selectedStationId}`);
+src/components/CoastalDashboard.tsx:          const text = await res.text();
+src/components/CoastalDashboard.tsx:          const errText = await res.text();
+src/components/CoastalDashboard.tsx:        const res = await fetch('/api/ims/warnings');
+src/components/CoastalDashboard.tsx:          const text = await res.text();
+src/components/WeeklyForecast.tsx:        await new Promise(resolve => setTimeout(resolve, 600));
+src/components/WeeklyForecast.tsx:        const response = await fetch(`/api/forecast/weekly?lat=${loc.lat}&lon=${loc.lon}`);
+src/components/WeeklyForecast.tsx:        const data = await response.json();
+src/components/SurfDashboard.tsx:        await new Promise(resolve => setTimeout(resolve, 400)); // smooth ui
+src/components/SurfDashboard.tsx:        const response = await fetch(`/api/forecast/weekly?lat=${activeSpot.lat}&lon=${activeSpot.lon}`);
+src/components/SurfDashboard.tsx:        const data = await response.json();
+src/components/DailySurfRecommendation.tsx:                          await onSaveRecommendation(recVol, getBoardSize(recLenInches * 2.54));
+src/components/PerformanceInput.tsx:      await addPerformanceScore({
+src/components/SystemMonitor.tsx:    await new Promise(resolve => setTimeout(resolve, 1500));
+src/components/SystemMonitor.tsx:                await saveLogsToDatabase(logs);
+src/components/SystemMonitor.tsx:                const loadedLogs = await loadLogsFromDatabase();
+src/components/SystemMonitor.tsx:          const dbs = await window.indexedDB.databases();
+src/components/SystemMonitor.tsx:        await seedInitialAssets();
+src/components/SystemMonitor.tsx:        await seedInitialAdmin();
+src/components/SystemMonitor.tsx:        const statsRes = await fetch('/api/stats/system');
+src/components/SystemMonitor.tsx:          const text = await statsRes.text();
+src/components/SystemMonitor.tsx:        const statsJson = await statsRes.json();
+src/components/SystemMonitor.tsx:                    const statsRes = await fetch('/api/stats/system');
+src/components/SystemMonitor.tsx:                      const text = await statsRes.text();
+src/components/SystemMonitor.tsx:                    const statsJson = await statsRes.json();
+src/components/SystemMonitor.tsx:                  await Promise.all([
+src/utils/crypto.ts:  const baseKey = await crypto.subtle.importKey(
+src/utils/crypto.ts:  const derivedBits = await crypto.subtle.deriveBits(
+src/utils/crypto.ts:    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+src/utils/crypto.ts:  const newHashWithSalt = await hashPassword(password, salt);
+src/utils/googlePlaces.ts:    await trackedUpdateDoc(userRef, {
+src/utils/storageStats.ts:    const statsDoc = await trackedGetDoc(statsRef);
+src/utils/storageStats.ts:      await trackedSetDoc(statsRef, {
+src/utils/storageStats.ts:      await trackedUpdateDoc(statsRef, {
+src/utils/storageStats.ts:    const statsDoc = await trackedGetDoc(statsRef);
+src/utils/storageStats.ts:    const statsDoc = await trackedGetDoc(statsRef);
+src/utils/storageStats.ts:      await trackedSetDoc(statsRef, {
+src/utils/storageStats.ts:      await trackedUpdateDoc(statsRef, {
+src/utils/storageStats.ts:    const statsDoc = await trackedGetDoc(statsRef);
+src/utils/storageStats.ts:      await trackedSetDoc(statsRef, {
+src/utils/storageStats.ts:      await trackedUpdateDoc(statsRef, {
+src/utils/storageStats.ts:    const res = await listAll(folderRef);
+src/utils/storageStats.ts:      const meta = await getMetadata(item);
+src/utils/storageStats.ts:      totalBytes += await listAllRecursive(prefix);
+src/utils/storageStats.ts:    const totalBytes = await listAllRecursive(rootRef);
+src/utils/storageStats.ts:    await trackedSetDoc(statsRef, {
+src/utils/storageStats.ts:        const snap = await trackedGetDocs(collection(db, colName));
+src/utils/storageStats.ts:    await trackedSetDoc(statsRef, {
+src/utils/storageStats.ts:    const [storageSnap, dbSnap] = await Promise.all([
+src/utils/storageStats.ts:      await trackedSetDoc(storageStatsRef, {
+src/utils/storageStats.ts:      await trackedSetDoc(dbStatsRef, {
+src/utils/archive_logic.ts:  const snapshot = await trackedGetDocs(collection(db, 'seaConditions'));
+src/utils/archive_logic.ts:    await batch.commit();
+src/utils/archive_logic.ts:  await batch.commit();
+src/utils/archive_logic.ts:  await batch.commit();
+src/utils/archive_logic.ts:  await batch.commit();
+src/utils/archive_logic.ts:    const hashedPassword = await hashPassword(item.password || '123456');
+src/utils/archive_logic.ts:  await batch.commit();
+src/utils/archive_logic.ts:  await batch.commit();
+src/utils/archive_logic.ts:  const snapshot = await trackedGetDocs(collection(db, collectionName));
+src/utils/archive_logic.ts:  await batch.commit();
+src/utils/archive_logic.ts:  await batch.commit();
+src/utils/archive_logic.ts:  const membersSnap = await trackedGetDocs(collection(db, 'members'));
+src/utils/archive_logic.ts:    const hashedPassword = await hashPassword(tempPass);
+src/utils/archive_logic.ts:    await trackedSetDoc(doc(collection(db, 'members')), {
+src/utils/archive_logic.ts:    const membersSnapshot = await trackedGetDocs(collection(db, 'members'));
+src/utils/archive_logic.ts:    const historySnapshot = await trackedGetDocs(collection(db, 'weekly_history'));
+src/utils/archive_logic.ts:      await batch.commit();
+src/utils/archive_logic.ts:    const finalHistorySnapshot = await trackedGetDocs(collection(db, 'weekly_history'));
+src/utils/archive_logic.ts:    const finalMembersSnapshot = await trackedGetDocs(collection(db, 'members'));
+src/utils/archive_logic.ts:      await finalBatch.commit();
+src/utils/apiUtils.ts:  const response = await fetch(url, {
+src/utils/apiUtils.ts:    const text = await response.text();
+src/utils/apiUtils.ts:  return await response.json();
+src/contexts/DataContext.tsx:        const response = await fetch(apiUrl, { signal: controller.signal });
+src/contexts/DataContext.tsx:          const text = await response.text();
+src/contexts/DataContext.tsx:        const data = await response.json();
+src/contexts/DataContext.tsx:        const statsDoc = await getDoc(statsRef);
+src/contexts/DataContext.tsx:          await setDoc(statsRef, {
+src/contexts/DataContext.tsx:            await updateDoc(statsRef, {
+src/contexts/DataContext.tsx:          const glSnap = await trackedGetDocs(collection(db, 'glossary'));
+src/contexts/DataContext.tsx:          const exSnap = await trackedGetDocs(collection(db, 'exercises'));
+src/contexts/DataContext.tsx:        const qSnap = await trackedGetDocs(collection(db, 'quotes'));
+src/contexts/DataContext.tsx:      const snapshot = await trackedGetDocs(q);
+src/contexts/DataContext.tsx:      await trackedUpdateDoc(doc(db, 'members', id), data);
+src/contexts/DataContext.tsx:    await trackedDeleteDoc(doc(getDb(), 'members', id));
+src/contexts/DataContext.tsx:    await batch.commit();
+src/contexts/DataContext.tsx:      await updateDoc(doc(getDb(), 'members', id), { role: nextRole });
+src/contexts/DataContext.tsx:      const requestSnap = await getDoc(requestRef);
+src/contexts/DataContext.tsx:        const emailSnapshot = await getDocs(emailQuery);
+src/contexts/DataContext.tsx:      const result = await runTransaction(db, async (transaction) => {
+src/contexts/DataContext.tsx:        const txRequestSnap = await transaction.get(requestRef);
+src/contexts/DataContext.tsx:        const txMemberSnap = await transaction.get(memberRef);
+src/contexts/DataContext.tsx:        const hashedPassword = await hashPassword(tempPassword);
+src/contexts/DataContext.tsx:      await deleteDoc(doc(getDb(), 'joinRequests', id));
+src/contexts/DataContext.tsx:    await trackedAddDoc(collection(getDb(), 'events'), details);
+src/contexts/DataContext.tsx:    await trackedDeleteDoc(doc(getDb(), 'events', id));
+src/contexts/DataContext.tsx:    await trackedUpdateDoc(doc(getDb(), 'events', id), { isArchived: true });
+src/contexts/DataContext.tsx:    await trackedUpdateDoc(doc(getDb(), 'events', id), data);
+src/contexts/DataContext.tsx:    await trackedUpdateDoc(doc(getDb(), 'events', eventId), {
+src/contexts/DataContext.tsx:    await setDoc(doc(collection(getDb(), 'news')), details);
+src/contexts/DataContext.tsx:    await updateDoc(doc(getDb(), 'news', id), data);
+src/contexts/DataContext.tsx:    await deleteDoc(doc(getDb(), 'news', id));
+src/contexts/DataContext.tsx:    await setDoc(doc(collection(getDb(), 'podcasts')), details);
+src/contexts/DataContext.tsx:    await updateDoc(doc(getDb(), 'podcasts', id), data);
+src/contexts/DataContext.tsx:    await deleteDoc(doc(getDb(), 'podcasts', id));
+src/contexts/DataContext.tsx:          const metadata = await getMetadata(fileRef);
+src/contexts/DataContext.tsx:          await deleteObject(fileRef);
+src/contexts/DataContext.tsx:    await batch.commit();
+src/contexts/DataContext.tsx:      await syncStorageOnDelete(totalSizeDeleted);
+src/contexts/DataContext.tsx:    await addDoc(collection(db, 'gallery'), {
+src/contexts/DataContext.tsx:      await setDoc(activeSessionRef, { attendees: arrayRemove(userId) }, { merge: true });
+src/contexts/DataContext.tsx:      await setDoc(activeSessionRef, { attendees: arrayUnion(userId) }, { merge: true });
+src/contexts/DataContext.tsx:    await batch.commit();
+src/contexts/DataContext.tsx:      await addDoc(collection(db, 'rollover_logs'), logData);
+src/contexts/DataContext.tsx:      await addRolloverLog('start', 'success', 'תהליך הסגירה החל');
+src/contexts/DataContext.tsx:      const activeSnap = await getDoc(activeSessionRef);
+src/contexts/DataContext.tsx:      await setDoc(historyDocRef, {
+src/contexts/DataContext.tsx:      await addRolloverLog('archive', 'success', 'הסשן נשמר בהיסטוריה');
+src/contexts/DataContext.tsx:        await addRolloverLog('save_sea_state', 'success', 'נתוני הים נשמרו');
+src/contexts/DataContext.tsx:        await addRolloverLog('save_sea_state', 'success', 'נבחר שלא לשמור נתוני ים');
+src/contexts/DataContext.tsx:          await updateDoc(doc(db, 'site_data', 'config'), { weeklySessions: updatedWeeklySessions });
+src/contexts/DataContext.tsx:      await addRolloverLog('create_new', 'success', 'סשן חדש הוקם');
+src/contexts/DataContext.tsx:      await addRolloverLog('reset_timer', 'success', 'טיימר אופס');
+src/contexts/DataContext.tsx:      await setDoc(activeSessionRef, {
+src/contexts/DataContext.tsx:      await addRolloverLog('reset_attendance', 'success', 'רשימת משתתפים אופסה');
+src/contexts/DataContext.tsx:      await addRolloverLog('update_stats', 'success', 'סטטיסטיקות עודכנו');
+src/contexts/DataContext.tsx:      await batch.commit();
+src/contexts/DataContext.tsx:      await addRolloverLog('save_db', 'success', 'עדכונים נשמרו במסד הנתונים');
+src/contexts/DataContext.tsx:      await addRolloverLog('complete', 'success', 'תהליך הסגירה הושלם בהצלחה', metrics);
+src/contexts/DataContext.tsx:      await addRolloverLog('complete', 'failed', err.message || 'שגיאה לא ידועה');
+src/contexts/DataContext.tsx:            await runTransaction(db, async (transaction) => {
+src/contexts/DataContext.tsx:              const eventDoc = await transaction.get(eventRef);
+src/contexts/DataContext.tsx:                memberDocs = await Promise.all(memberRefs.map((ref: any) => transaction.get(ref)));
+src/contexts/DataContext.tsx:    await setDoc(doc(getDb(), 'site_data', 'assets'), assets, { merge: true });
+src/contexts/DataContext.tsx:    await batch.commit();
+src/contexts/DataContext.tsx:    await setDoc(doc(getDb(), 'site_data', 'year_config'), config);
+src/contexts/DataContext.tsx:    await batch.commit();
+src/contexts/DataContext.tsx:      const snapshot = await trackedGetDocs(q);
+src/contexts/DataContext.tsx:      await addDoc(membersRef, {
+src/contexts/DataContext.tsx:      await addDoc(collection(db, path), {
+src/contexts/DataContext.tsx:      await updateDoc(doc(db, 'performance_scores', id), {
+src/contexts/DataContext.tsx:      await setDoc(doc(db, 'site_data', 'assets'), initialAssets, { merge: true });
+src/contexts/DataContext.tsx:      const hashedPassword = await hashPassword('admin123');
+src/contexts/DataContext.tsx:      await setDoc(doc(db, 'members', 'initial-admin'), adminData);
+src/contexts/AuthContext.tsx:      await signOut(auth);
+src/contexts/AuthContext.tsx:          const memberDoc = await Promise.race([fetchPromise, timeoutPromise]) as any;
+src/pages/AdminPage.tsx:                await deleteMember(dup.id);
+src/pages/AdminPage.tsx:        const processed = await processImage(file, 1920, 0.8, 1000);
+src/pages/AdminPage.tsx:        await uploadBytes(storageRef, processed.blob);
+src/pages/AdminPage.tsx:        const imageUrl = await getDownloadURL(storageRef);
+src/pages/AdminPage.tsx:        await addGalleryItem({
+src/pages/AdminPage.tsx:        await syncStorageOnUpload(processed.blob.size);
+src/pages/AdminPage.tsx:      const result = await approveRequest(id);
+src/pages/AdminPage.tsx:          await rejectRequest(id);
+src/pages/AdminPage.tsx:                    await updateMember(updatedMember);
+src/pages/AdminPage.tsx:                  await archiveMember(memberId);
+src/pages/AdminPage.tsx:                                        await updateMember({ ...admin, email: conflictNewEmail.trim().toLowerCase() });
+src/pages/AdminPage.tsx:                                await deleteNews(item.id);
+src/pages/AdminPage.tsx:                await updateNews(updatedPost);
+src/pages/AdminPage.tsx:                await addNews(updatedPost);
+src/pages/AdminPage.tsx:                              await deleteGalleryItems(selectedGalleryItems);
+src/pages/AdminPage.tsx:                              await updateSiteConfig({ home_break: null });
+src/pages/AdminPage.tsx:                              await updateSiteConfig({ home_break: addressData });
+src/pages/AdminPage.tsx:                                    await updateSiteConfig({ home_break: addressData });
+src/pages/AdminPage.tsx:                      await updateSiteConfig({ weeklySessions });
+src/pages/AdminPage.tsx:              await updateEvent(updatedEvent);
+src/pages/AdminPage.tsx:              await addEvent(updatedEvent);
+src/pages/AdminPage.tsx:                      await updateYearConfig(yearForm);
+src/pages/HomePage.tsx:      const result = await getForecastAnalysis({
+src/pages/HomePage.tsx:    try { await toggleSessionAttendance(currentUser.id); } finally { setIsProcessing(false); }
+src/pages/HomePage.tsx:                await updateMember({ ...currentUser, currentBoardVolume: vol, currentBoardLength: len });
+src/pages/GalleryPage.tsx:        const { blob, dataUrl } = await processImage(file, 1600, 0.9, 800);
+src/pages/GalleryPage.tsx:        const aiCaption = await analyzeImage(dataUrl);
+src/pages/GalleryPage.tsx:        const snapshot = await uploadBytes(storageRef, blob);
+src/pages/GalleryPage.tsx:        await syncStorageOnUpload(blob.size);
+src/pages/GalleryPage.tsx:        const downloadUrl = await getDownloadURL(snapshot.ref);
+src/pages/GalleryPage.tsx:        await addDoc(collection(getDb(), 'gallery'), {
+src/pages/GalleryPage.tsx:          await deleteDoc(doc(db, 'gallery', item.id));
+src/pages/GalleryPage.tsx:                const metadata = await getMetadata(imageRef);
+src/pages/GalleryPage.tsx:                  await syncStorageOnDelete(metadata.size);
+src/pages/GalleryPage.tsx:              await deleteObject(imageRef);
+src/pages/LoginPage.tsx:        const userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+src/pages/LoginPage.tsx:        const memberDoc = await getDoc(doc(db, 'members', user.uid));
+src/pages/LoginPage.tsx:            await auth.signOut();
+src/pages/LoginPage.tsx:            await updateDoc(doc(db, 'members', user.uid), {
+src/pages/LoginPage.tsx:          const emailSnapshot = await trackedGetDocs(qEmail);
+src/pages/LoginPage.tsx:              await auth.signOut();
+src/pages/LoginPage.tsx:                await deleteDoc(doc(db, 'members', legacyDoc.id));
+src/pages/LoginPage.tsx:              await setDoc(doc(db, 'members', user.uid), memberData);
+src/pages/LoginPage.tsx:              await setDoc(doc(db, 'members', user.uid), adminData);
+src/pages/LoginPage.tsx:            await auth.signOut();
+src/pages/LoginPage.tsx:               const newUserCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+src/pages/LoginPage.tsx:                 await setDoc(doc(db, 'members', newUser.uid), adminData);
+src/pages/LoginPage.tsx:          const emailSnapshot = await trackedGetDocs(qEmail);
+src/pages/LoginPage.tsx:            const requestSnapshot = await trackedGetDocs(qRequest);
+src/pages/LoginPage.tsx:          const isPasswordValid = await verifyPassword(password, legacyData.password || '');
+src/pages/LoginPage.tsx:              const newUserCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+src/pages/LoginPage.tsx:                await auth.signOut();
+src/pages/LoginPage.tsx:                  await deleteDoc(doc(db, 'members', legacyDoc.id));
+src/pages/LoginPage.tsx:                await setDoc(doc(db, 'members', newUser.uid), memberData);
+src/pages/LoginPage.tsx:                await auth.signOut();
+src/pages/LoginPage.tsx:      await sendPasswordResetEmail(auth, normalizedEmail);
+src/pages/LoginPage.tsx:      await updatePassword(auth.currentUser, newPassword);
+src/pages/LoginPage.tsx:        await updateDoc(doc(db, 'members', auth.currentUser.uid), {
+src/pages/LoginPage.tsx:        const { dataUrl } = await processImage(file, 500, 0.75);
+src/pages/LoginPage.tsx:      const snapshot = await trackedGetDocs(q);
+src/pages/LoginPage.tsx:      await addDoc(collection(db, 'joinRequests'), {
+src/pages/LoginPage.tsx:      const result = await signInWithPopup(auth, provider);
+src/pages/LoginPage.tsx:      const snapshot = await trackedGetDocs(q);
+src/pages/LoginPage.tsx:          await auth.signOut();
+src/pages/LoginPage.tsx:          await setDoc(doc(db, 'members', user.uid), memberData);
+src/pages/LoginPage.tsx:            await deleteDoc(doc(db, 'members', legacyDoc.id));
+src/pages/LoginPage.tsx:          await setDoc(doc(db, 'members', user.uid), adminData);
+src/pages/LoginPage.tsx:        await auth.signOut();
+src/pages/LoginPage.tsx:                      const success = await seedInitialAdmin();
+src/pages/ProfilePage.tsx:        const { dataUrl } = await processImage(file, 600, 0.8);
+src/pages/ProfilePage.tsx:      await updateMember(formData);
+src/pages/ProfilePage.tsx:      const newBio = await generateBio(`${formData.firstName} ${formData.lastName}`, formData.role, formData.bio);
+src/pages/ProfilePage.tsx:      const stream = await navigator.mediaDevices.getUserMedia({ 
+src/pages/ProfilePage.tsx:      const { dataUrl } = await processImage(file, 1024, 0.7);
+src/pages/ProfilePage.tsx:      const compressedBase64 = await compressBase64Image(base64, 1024, 0.7);
+src/pages/ProfilePage.tsx:      const result = await verifyLicense(compressedBase64);
+src/pages/ProfilePage.tsx:      const hashed = await hashPassword(newPassword);
+src/pages/ProfilePage.tsx:      await updateMember({ ...formData, password: hashed });
+src/pages/ProfilePage.tsx:                        await updateMember({ ...formData, isActive: false, deactivatedAt: new Date().toISOString() });
+src/pages/SurfingSessionAttendance.tsx:      await toggleSessionAttendance(userId);
+src/pages/SurfingSessionAttendance.tsx:      await updateHistory(selectedSession.id, newParticipants);
+src/pages/SurfingSessionAttendance.tsx:                      await addDoc(collection(db, 'weekly_history'), {
+src/pages/AdminAssets.tsx:      await seedInitialAssets();
+src/pages/AdminAssets.tsx:        await uploadBytes(storageRef, file, {
+src/pages/AdminAssets.tsx:        const url = await getDownloadURL(storageRef);
+src/pages/AdminAssets.tsx:      await updateSiteAssets(newAssets);
+src/pages/AdminAssets.tsx:        await deleteObject(storageRef);
+src/pages/AdminAssets.tsx:      await updateSiteAssets(newAssets);
+src/pages/AdminRolloverReport.tsx:      await finalizeSession(saveWeather);
+src/pages/EventsPage.tsx:    await toggleEventAttendance(eventId, currentUser.id);
+src/pages/EventsPage.tsx:      await deleteEvent(eventId);
+src/pages/EventsPage.tsx:              await updateEvent(data);
+src/pages/EventsPage.tsx:              await addEvent(details);
+src/pages/SurfingNewsPage.tsx:            const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`);
+src/pages/SurfingNewsPage.tsx:            const data = await response.json();
+src/pages/ShaperPage.tsx:      await updateMember({
+src/pages/ShaperPage.tsx:      const result = await getShaperConsultation({
+src/hooks/usePWAInstall.ts:      const { outcome } = await promptEvent.userChoice;
+src/services/geminiService.ts:    const response = await ai.models.generateContent({
+src/services/geminiService.ts:    const response = await ai.models.generateContent({
+src/services/geminiService.ts:    const response = await ai.models.generateContent({
+src/services/geminiService.ts:    const response = await ai.models.generateContent({
+src/services/geminiService.ts:    const response = await ai.models.generateContent({
+src/services/geminiService.ts:    const response = await ai.models.generateContent({
+src/services/firebase.ts:  await batch.commit();
+src/services/firebase.ts:  const snapshot = await trackedGetDocs(q);
+src/services/firebase.ts:      const snapshot = await getDocs(query);
+src/services/firebase.ts:    const result = await addDoc(reference, data);
+src/services/firebase.ts:    const result = await setDoc(reference, data, options);
+src/services/firebase.ts:    const result = await getDoc(reference);
+src/services/firebase.ts:    const result = await updateDoc(reference, data);
+src/services/firebase.ts:    const result = await deleteDoc(reference);
+src/services/firebase.ts:    const { getDocFromServer } = await import('firebase/firestore');
+src/services/firebase.ts:    await getDocFromServer(testDocRef);

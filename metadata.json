@@ -1,5 +1,5 @@
 {
-  "name": "Body-line",
+  "name": "BodyLine",
   "description": "A sophisticated community platform for surfers featuring member profiles, detailed directories, and an AI-enhanced shared image gallery.",
   "requestFramePermissions": [
     "camera"

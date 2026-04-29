@@ -1,6 +1,14 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, RotateCcw, Home, Terminal } from 'lucide-react';
+import { addLog } from '../utils/systemLogs';
+
+/**
+ * Bootstrap ErrorBoundary for maximum stability.
+ * Avoids complex dependencies like framer-motion to ensure it can actually render
+ * even if the main library bundle has issues.
+ */
+
+console.log('ErrorBoundary.tsx: Module evaluating (Bootstrap Version)');
 
 interface Props {
   children: React.ReactNode;
@@ -24,22 +32,28 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.group('🛑 React Error Boundary Caught Error');
+    console.group('🛑 ErrorBoundary caught an error');
     console.error('Error:', error);
     console.error('Info:', errorInfo);
     console.groupEnd();
+    
+    // Attempt to notify system logs
+    try {
+      addLog(`App Crash: ${error.message}`, 'Critical', 'Frontend', error.stack);
+    } catch (e) {
+      console.warn('ErrorBoundary: Failed to log error to systemLogs', e);
+    }
+
     this.setState({ errorInfo });
   }
 
   private handleReset = () => {
-    // Clear potentially corrupt local storage if it's a known boot issue
+    // Attempt cleanup
     try {
+      localStorage.removeItem('habal_zug_user');
       const keys = Object.keys(localStorage);
-      const criticalKeys = keys.filter(k => k.includes('firebase') || k.includes('cache'));
-      criticalKeys.forEach(k => localStorage.removeItem(k));
-    } catch (e) {
-      console.warn('Failed to clear storage during reset', e);
-    }
+      keys.filter(k => k.includes('cache')).forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
     
     window.location.reload();
   };
@@ -51,65 +65,101 @@ class ErrorBoundary extends React.Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-6 font-yehuda" dir="rtl">
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ 
-            backgroundImage: 'radial-gradient(circle at 2px 2px, #00426a 1px, transparent 0)',
-            backgroundSize: '32px 32px'
-          }} />
-
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="max-w-2xl w-full bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-white p-10 relative overflow-hidden"
+        <div 
+          style={{ 
+            minHeight: '100vh', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            backgroundColor: '#f8fafc',
+            padding: '24px',
+            fontFamily: 'sans-serif',
+            direction: 'rtl'
+          }}
+        >
+          <div 
+            style={{ 
+              maxWidth: '600px', 
+              width: '100%', 
+              backgroundColor: 'white', 
+              borderRadius: '32px', 
+              boxShadow: '0 20px 50px -12px rgba(0,0,0,0.1)', 
+              border: '1px solid #e2e8f0',
+              padding: '40px',
+              textAlign: 'center'
+            }}
           >
-            {/* Header with Icon */}
-            <div className="flex flex-col items-center text-center mb-10">
-              <div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center text-rose-500 mb-6 shadow-inner">
-                <AlertCircle size={40} />
-              </div>
-              <h1 className="text-3xl font-black text-[#00426a] mb-3">אופס! נראה שיש גל גבוה מדי...</h1>
-              <p className="text-slate-500 font-bold max-w-sm">
-                נתקלנו בשגיאה לא צפויה בזמן טעינת הרכיב. אל דאגה, השייפרים שלנו כבר בדרך.
-              </p>
+            {/* Header Icon */}
+            <div style={{ backgroundColor: '#fff1f2', width: '80px', height: '80px', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f43f5e', margin: '0 auto 24px' }}>
+              <AlertCircle size={40} />
             </div>
 
-            {/* Error Detail (Collapsible Explorer Style) */}
-            <div className="bg-slate-50 rounded-3xl border border-slate-100 p-6 mb-8">
-              <div className="flex items-center gap-2 mb-3 text-slate-400">
+            <h1 style={{ fontSize: '24px', fontWeight: '900', color: '#1e293b', marginBottom: '12px' }}>אופס! משהו השתבש</h1>
+            <p style={{ color: '#64748b', fontWeight: '600', marginBottom: '32px' }}>
+              המערכת נתקלה בשגיאה לא צפויה. נסה לטעון מחדש או לחזור לדף הבית.
+            </p>
+
+            {/* Error Detail */}
+            <div style={{ backgroundColor: '#f1f5f9', borderRadius: '16px', padding: '16px', marginBottom: '32px', textAlign: 'left' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', marginBottom: '8px', fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold' }}>
                 <Terminal size={14} />
-                <span className="text-[10px] font-black uppercase tracking-widest">Error Diagnostics</span>
+                <span>Diagnostic Logs</span>
               </div>
-              <div className="bg-slate-900 rounded-2xl p-5 overflow-x-auto max-h-40 custom-scrollbar">
-                <pre className="text-rose-400 text-xs font-mono leading-relaxed">
-                  {this.state.error?.stack || this.state.error?.toString()}
+              <div style={{ backgroundColor: '#0f172a', borderRadius: '12px', padding: '16px', overflow: 'auto', maxHeight: '150px' }}>
+                <pre style={{ color: '#fca5a5', fontSize: '12px', margin: 0, whiteSpace: 'pre-wrap' }}>
+                  {this.state.error && this.state.error.toString()}
+                  {"\n"}
+                  {this.state.errorInfo && this.state.errorInfo.componentStack}
                 </pre>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Actions */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
               <button
                 onClick={this.handleReset}
-                className="flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-sky-500/20 hover:scale-[1.02] active:scale-98 transition-all"
+                style={{ 
+                  padding: '16px', 
+                  backgroundColor: '#0284c7', 
+                  color: 'white', 
+                  borderRadius: '16px', 
+                  border: 'none', 
+                  fontWeight: '900', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
               >
                 <RotateCcw size={20} />
-                <span>ניסיון טעינה מחדש</span>
+                טעינה מחדש
               </button>
-              
               <button
                 onClick={this.handleGoHome}
-                className="flex items-center justify-center gap-3 px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black hover:bg-slate-200 active:scale-98 transition-all"
+                style={{ 
+                  padding: '16px', 
+                  backgroundColor: '#f1f5f9', 
+                  color: '#475569', 
+                  borderRadius: '16px', 
+                  border: 'none', 
+                  fontWeight: '900', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
               >
                 <Home size={20} />
-                <span>חזרה לדף הבית</span>
+                דף הבית
               </button>
             </div>
-
-            {/* Bottom help text */}
-            <p className="mt-8 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-              ID: {Math.random().toString(36).substr(2, 9).toUpperCase()} | Timestamp: {new Date().toLocaleTimeString()}
+            
+            <p style={{ marginTop: '24px', fontSize: '10px', color: '#cbd5e1', fontWeight: 'bold' }}>
+              TIMESTAMP: {new Date().toLocaleTimeString()}
             </p>
-          </motion.div>
+          </div>
         </div>
       );
     }

@@ -3,23 +3,19 @@ import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-
 import { motion } from 'motion/react';
 import { useAuth } from './contexts/AuthContext';
 import { useData } from './contexts/DataContext';
-import { 
-  Loader2
-} from 'lucide-react';
-
+import { Loader2 } from 'lucide-react';
 
 import ErrorBoundary from './components/ErrorBoundary';
 import FloatingMenu from './components/FloatingMenu';
 import { FloatingDrawer } from './components/FloatingDock';
 import { SurfNewsTracker } from './components/SurfNewsTracker';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
-
-// Lazy loaded components
+import { DatabaseStatus } from './components/DatabaseStatus';
 import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
 const HomePage = lazy(() => import('./pages/HomePage'));
 const DirectoryPage = lazy(() => import('./pages/DirectoryPage'));
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const EventsPage = lazy(() => import('./pages/EventsPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
@@ -39,8 +35,6 @@ const PageLoader = () => (
     </div>
   </div>
 );
-
-import { DatabaseStatus } from './components/DatabaseStatus';
 
 const App: React.FC = () => {
   const { currentUser, logout, loading } = useAuth();

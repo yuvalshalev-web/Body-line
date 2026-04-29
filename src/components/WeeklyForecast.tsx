@@ -275,17 +275,46 @@ export const WeeklyForecast: React.FC = () => {
                          transition={{ duration: 0.4, delay: idx * 0.05 }}
                          className="group relative w-[130px] md:w-[145px] h-[250px] md:h-[260px] rounded-[1.5rem] overflow-hidden bg-white/60 border border-white shadow-md hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.1)] transition-all duration-500 hover:-translate-y-1.5 flex flex-col justify-between p-4 snap-center shrink-0 cursor-default">
                    
+                   {/* Glass Reflective Highlight */}
+                   <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent z-20 pointer-events-none" />
+                   
                    {/* Liquid Fill Element representing the Bar Chart organically */}
-                   <div className="absolute bottom-0 left-0 right-0 transition-all duration-1000 ease-out z-0 opacity-80 group-hover:opacity-100"
+                   <motion.div 
+                        initial={{ height: 0 }}
+                        animate={{ height: `${fillPercent}%` }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        className="absolute bottom-0 left-0 right-0 z-0 opacity-95"
                         style={{
-                          height: `${fillPercent}%`,
-                          background: `linear-gradient(to top, ${day.condition.color}40, ${day.condition.color}05)`,
-                          borderTop: `2px solid ${day.condition.color}50`,
+                          background: `linear-gradient(to top, ${day.condition.color}80, ${day.condition.color}30)`,
+                          borderTop: `2px solid ${day.condition.color}`,
+                          boxShadow: `0 -10px 20px -5px ${day.condition.color}40`,
                         }}
                    >
-                      {/* Inner soft top glow */}
-                      <div className="absolute top-0 left-0 right-0 h-4" style={{ background: `linear-gradient(to bottom, ${day.condition.color}30, transparent)`}}></div>
-                   </div>
+                      {/* Animated Surface Wave */}
+                      <div className="absolute -top-4 left-0 w-[200%] h-12 opacity-60 animate-wave-slow pointer-events-none" style={{ 
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%23ffffff'/%3E%3C/svg%3E")`,
+                        backgroundSize: '1200px 48px',
+                        transform: 'rotate(180deg)',
+                        filter: `drop-shadow(0 -5px 10px ${day.condition.color}60)`
+                      }} />
+                      
+                      {/* Bubbles */}
+                      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                          <div key={i} className={`absolute bg-white/40 rounded-full animate-bubble-${(i % 3) + 1}`} style={{
+                            width: `${2+i}px`,
+                            height: `${2+i}px`,
+                            left: `${10 + (Math.sin(i) * 30 + 50)}%`,
+                            bottom: `-${15 + i * 12}%`,
+                            animationDelay: `${i * 0.8}s`,
+                            animationDuration: `${3 + i}s`
+                          }} />
+                        ))}
+                      </div>
+
+                      {/* Inner soft top glow for depth */}
+                      <div className="absolute top-0 left-0 right-0 h-10" style={{ background: `linear-gradient(to bottom, rgba(255,255,255,0.3), transparent)`}}></div>
+                   </motion.div>
 
                    {/* Inner global glow on hover based on condition color */}
                    <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 mix-blend-multiply blur-2xl" style={{ backgroundColor: day.condition.color }} />
