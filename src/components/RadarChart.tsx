@@ -109,7 +109,7 @@ const CustomLegend = ({ payload, hiddenKeys, onClick }: any) => {
           onClick={() => onClick(entry)}
         >
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="text-sm font-medium">{entry.value}</span>
+          <span className="text-sm font-medium text-slate-800">{entry.value}</span>
         </li>
       ))}
     </ul>
@@ -232,8 +232,11 @@ export const RadarChart: React.FC<RadarChartProps> = ({ userId }) => {
               border: '1px solid #e2e8f0',
               boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
               fontSize: '12px',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              color: '#1e293b'
             }}
+            itemStyle={{ color: '#1e293b' }}
+            labelStyle={{ color: '#1e293b' }}
           />
           {isHistorical ? (
             sortedScores.map((score, index) => {

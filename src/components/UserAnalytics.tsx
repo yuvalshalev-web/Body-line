@@ -10,307 +10,183 @@ import { calculateUserStats } from '../utils/analytics';
 import { RadarChart } from './RadarChart';
 import SessionDetails from './SessionDetails';
 
-const OCEAN_PALETTE = [
-  '#0284c7', // 0 (12 o'clock)
-  '#0369a1', // 1
-  '#075985', // 2
-  '#0c4a6e', // 3
-  '#1e40af', // 4
-  '#172554', // 5 (5 o'clock) - Darkest
-  '#f0f9ff', // 6 (6 o'clock) - Lightest
-  '#e0f2fe', // 7
-  '#bae6fd', // 8
-  '#7dd3fc', // 9
-  '#38bdf8', // 10
-  '#0ea5e9', // 11
-];
+const AnimatedNumber: React.FC<{ value: number }> = ({ value }) => {
+  const [displayValue, setDisplayValue] = React.useState(0);
 
-const getOceanWaterGradient = (percent: number) => {
-  if (percent >= 90) return 'from-blue-900/60 via-blue-800/40 to-blue-700/20';
-  if (percent >= 75) return 'from-blue-700/60 via-blue-600/40 to-blue-500/20';
-  if (percent >= 50) return 'from-blue-500/60 via-blue-400/40 to-blue-300/20';
-  if (percent >= 25) return 'from-blue-400/60 via-blue-300/40 to-blue-200/20';
-  return 'from-blue-200/60 via-blue-100/40 to-blue-50/20';
+  React.useEffect(() => {
+    let startTime: number;
+    const duration = 2000; // ms
+    const safeValue = isNaN(value) ? 0 : value;
+    let animationFrameId: number;
+
+    const step = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      // Custom easeOutExpo
+      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      setDisplayValue(Math.floor(easeProgress * safeValue));
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(step);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [value]);
+
+  return <>{displayValue}</>;
 };
 
-export const AstrodeckGauge: React.FC<{
+export const EliteStatCard: React.FC<{
   value: number;
   label: string;
   icon: React.ReactNode;
   tooltip: string;
   footer?: React.ReactNode;
-  isGrit?: boolean;
-}> = ({ value, label, icon, tooltip, footer, isGrit }) => {
-  const padPath = "M 135 38 Q 80 45 40 60 C 30 150 60 250 100 320 C 120 360 160 380 185 380 L 185 330 C 185 300 135 300 135 250 Z M 145 35 Q 200 20 255 35 L 245 250 C 245 290 155 290 155 250 Z M 265 38 Q 320 45 360 60 C 370 150 340 250 300 320 C 280 360 240 380 215 380 L 215 330 C 215 300 265 300 265 250 Z";
+  trend?: { direction: 'up' | 'down'; value: number };
+  colorStart?: string;
+  colorEnd?: string;
+  delay?: number;
+  highlight?: boolean;
+}> = ({ value, label, icon, tooltip, footer, trend, colorStart = '#06b6d4', colorEnd = '#3b82f6', delay = 0, highlight = false }) => {
+  const radius = highlight ? 48 : 36;
+  const size = highlight ? 120 : 96;
+  const center = size / 2;
+  const strokeWidth = highlight ? 10 : 8;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (value / 100) * circumference;
 
   return (
-    <div className={`flex-1 w-full flex flex-col items-center text-center group/pad ${isGrit ? 'relative' : ''}`}>
-      
-      <div className="flex items-center gap-2 mb-4">
-        <div className={`${isGrit ? 'text-[var(--surfer-cyan)]' : 'text-[var(--surfer-teal)]'} group-hover/pad:text-sunshine-yellow transition-colors`}>
-          {icon}
-        </div>
-        <h3 className={`text-[11px] font-black uppercase tracking-[0.15em] name-title-text`}>{label}</h3>
-        <div className="gt-info-wrapper">
-          <Info size={14} className="text-sunshine-yellow hover:opacity-80 transition-colors" />
-          <span className="gt-tooltip" style={{ bottom: '160%', width: '200px' }}>{tooltip}</span>
-        </div>
-      </div>
-
-      <div className="relative w-full max-w-[170px] aspect-square flex items-center justify-center">
-        {isGrit && (
-          <div className="absolute inset-0 bg-blue-400/10 blur-[40px] rounded-full animate-pulse pointer-events-none" />
-        )}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{ y: -5, scale: 1.02 }}
+      transition={{ duration: 0.5, delay, ease: "easeOut" }}
+      className={`relative p-6 md:p-8 rounded-[24px] group transform-gpu flex flex-row items-center justify-between ${highlight ? 'md:col-span-2 lg:col-span-1' : ''}`}
+      dir="rtl"
+      style={{
+        background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.98) 100%)',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1), inset 0 -1px 1px rgba(255,255,255,0.02), 0 0 0 1px rgba(255,255,255,0.05)',
+      }}
+    >
+      {/* Decorative Backgrounds - Contained Layer */}
+      <div className="absolute inset-0 rounded-[24px] overflow-hidden pointer-events-none transition-all duration-500">
+        {/* Dynamic Animated Glows */}
+        <motion.div 
+          className="absolute w-[150%] h-[150%] top-[-25%] left-[-25%] opacity-[0.15] group-hover:opacity-40 transition-opacity duration-1000 blur-[80px] pointer-events-none"
+          style={{ background: `radial-gradient(circle at center, ${colorStart} 0%, transparent 60%)` }}
+          animate={{
+            rotate: [0, 90, 180, 270, 360],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        />
         
-        <svg viewBox="0 0 400 400" className="w-full h-full drop-shadow-[0_10px_20px_rgba(0,0,0,0.2)] relative z-10">
-          <defs>
-            <pattern id="diamond-pad-gauge" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
-              <rect width="16" height="16" fill="rgba(0,0,0,0.05)" />
-              <path d="M8 2 L14 8 L8 14 L2 8 Z" fill="rgba(0,0,0,0.1)" />
-              <circle cx="8" cy="8" r="2" fill="rgba(0,0,0,0.1)" />
-            </pattern>
-            
-            <clipPath id="pad-clip-gauge">
-              <path d={padPath} />
-            </clipPath>
+        <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-white/[0.08] to-transparent rounded-bl-full pointer-events-none mix-blend-overlay" />
+        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+      </div>
 
-            <linearGradient id={isGrit ? "grit-liquid-grad" : "ocean-liquid-grad-gauge"} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={isGrit ? "var(--surfer-orange)" : "var(--surfer-cyan)"} />
-              <stop offset="100%" stopColor={isGrit ? "var(--surfer-pink)" : "var(--surfer-teal)"} />
-            </linearGradient>
+      <div className="flex flex-col h-full justify-between gap-4 md:gap-6 relative z-10 w-full pl-4 border-l border-white/[0.08]">
+        
+        {/* Top Header */}
+        <div className="flex items-start gap-4">
+          <div className={`rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center relative z-10 group-hover:bg-white/10 transition-colors duration-500 shrink-0 ${highlight ? 'w-14 h-14' : 'w-12 h-12'}`}>
+            <motion.div whileHover={{ scale: 1.1, rotate: 10 }}>
+              {icon}
+            </motion.div>
+          </div>
+          <div className="flex flex-col mt-1">
+            <div className="flex items-center gap-2">
+              <h3 className={`${highlight ? 'text-lg font-black' : 'text-md font-bold'} text-slate-100 tracking-wide`}>{label}</h3>
+              <div className="relative flex items-center">
+                <Info size={14} className="text-slate-500 hover:text-slate-300 transition-colors cursor-help peer" />
+                <div className="opacity-0 peer-hover:opacity-100 transition-opacity absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-800 text-slate-100 text-xs px-3 py-2 rounded-lg border border-slate-700 shadow-2xl w-[200px] pointer-events-none z-50">
+                  {tooltip}
+                </div>
+              </div>
+            </div>
+            {footer && (
+              <div className="text-[11px] font-medium text-slate-400 leading-relaxed max-w-[200px] mt-1 line-clamp-2">
+                {footer}
+              </div>
+            )}
+          </div>
+        </div>
 
-            <radialGradient id="glass-lens-gauge" cx="50%" cy="50%" r="60%" fx="30%" fy="30%">
-              <stop offset="0%" stopColor="white" stopOpacity="0.4" />
-              <stop offset="70%" stopColor="white" stopOpacity="0.05" />
-              <stop offset="100%" stopColor="white" stopOpacity="0.0" />
-            </radialGradient>
-
-            <linearGradient id="glass-shine-gauge" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="white" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="white" stopOpacity="0.05" />
-              <stop offset="100%" stopColor="white" stopOpacity="0.0" />
-            </linearGradient>
-
-            <linearGradient id="surface-shimmer-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="white" stopOpacity="0" />
-              <stop offset="50%" stopColor="white" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="white" stopOpacity="0" />
-            </linearGradient>
-
-            <filter id="pad-shadow-gauge">
-              <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.2" />
-            </filter>
-
-            <filter id="rough-texture-gauge">
-              <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
-              <feDiffuseLighting in="noise" lightingColor="#ffffff" surfaceScale="2.5">
-                <feDistantLight azimuth="45" elevation="45" />
-              </feDiffuseLighting>
-              <feComposite operator="in" in2="SourceGraphic" />
-            </filter>
-          </defs>
-
-          {/* Background Pad */}
-          <path 
-            d={padPath} 
-            fill="url(#diamond-pad-gauge)" 
-            stroke="rgba(255,255,255,0.2)" 
-            strokeWidth={isGrit ? "1.5" : "1"}
-            filter="url(#pad-shadow-gauge)"
-          />
-
-          {/* Water Filling Effect */}
-          <g clipPath="url(#pad-clip-gauge)">
-            <motion.rect
-              initial={{ y: 400 }}
-              animate={{ y: 400 - (value * 4) }}
-              transition={{ duration: 2, ease: "circOut" }}
-              x="0"
-              y="0"
-              width="400"
-              height="400"
-              fill={`url(#${isGrit ? 'grit-liquid-grad' : 'ocean-liquid-grad-gauge'})`}
-              className="opacity-70"
-            />
-            
-            {/* Animated Wave Top */}
-            <motion.g
-              initial={{ y: 400 }}
-              animate={{ y: 400 - (value * 4) }}
-              transition={{ duration: 2, ease: "circOut" }}
+        {/* Bottom Trend & Pill */}
+        <div className="mt-auto">
+          {trend && (
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: delay + 0.6, duration: 0.4 }}
+              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold border backdrop-blur-md shadow-[0_2px_8px_rgba(0,0,0,0.2)] ${
+                trend.direction === 'up' 
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                  : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+              }`}
+              dir="rtl"
             >
-              <svg x="-200" y="-15" width="800" height="30" viewBox="0 0 200 30" preserveAspectRatio="none" className="animate-[ripple_2s_infinite_linear]">
-                <path 
-                  d="M0 15 Q 25 0 50 15 T 100 15 T 150 15 T 200 15 V 30 H 0 Z" 
-                  fill={isGrit ? "var(--surfer-orange)" : "var(--surfer-cyan)"} 
-                  opacity="0.6" 
-                />
-              </svg>
-              
-              {/* Sparkles / Glimmer Effect */}
-              {[...Array(12)].map((_, i) => (
-                <g key={i}>
-                  <motion.circle
-                    cx={30 + (i * 30) + (Math.random() * 20)}
-                    cy={-5 + (Math.random() * 10)}
-                    r={1 + Math.random() * 2}
-                    fill="white"
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ 
-                      opacity: [0, 1, 0],
-                      scale: [0, 1.5, 0],
-                    }}
-                    transition={{
-                      duration: 1 + Math.random() * 1.5,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                      ease: "easeInOut"
-                    }}
-                  />
-                  {/* Glint Cross */}
-                  {i % 3 === 0 && (
-                    <motion.g
-                      initial={{ opacity: 0, rotate: 0 }}
-                      animate={{ 
-                        opacity: [0, 0.8, 0],
-                        rotate: [0, 90],
-                        scale: [0.5, 1.2, 0.5]
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        delay: i * 0.2,
-                      }}
-                      style={{ originX: `${30 + (i * 30) + 10}px`, originY: '0px' }}
-                    >
-                      <line x1={30 + (i * 30) + 5} y1="0" x2={30 + (i * 30) + 15} y2="0" stroke="white" strokeWidth="0.5" />
-                      <line x1={30 + (i * 30) + 10} y1="-5" x2={30 + (i * 30) + 10} y2="5" stroke="white" strokeWidth="0.5" />
-                    </motion.g>
-                  )}
-                </g>
-              ))}
-              
-              {/* Surface Sweep Shimmer */}
-              <motion.rect
-                x="-400"
-                y="-10"
-                width="400"
-                height="20"
-                fill="url(#surface-shimmer-grad)"
-                animate={{ x: [ -400, 800 ] }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "linear",
-                  delay: 1
-                }}
-              />
-
-              {/* Horizontal Shimmer Lines on Surface */}
-              {[...Array(3)].map((_, i) => (
-                <motion.rect
-                  key={`shimmer-${i}`}
-                  x={100 + (i * 80)}
-                  y={-2}
-                  width={40}
-                  height={1.5}
-                  rx={0.75}
-                  fill="white"
-                  initial={{ opacity: 0, x: 0 }}
-                  animate={{ 
-                    opacity: [0, 0.4, 0],
-                    x: [0, 60]
-                  }}
-                  transition={{
-                    duration: 3 + i,
-                    repeat: Infinity,
-                    delay: i * 1,
-                    ease: "linear"
-                  }}
-                />
-              ))}
-            </motion.g>
-          </g>
-
-          {/* Glassmorphism Overlay - Lens Effect & Shine */}
-          <path 
-            d={padPath} 
-            fill="url(#glass-lens-gauge)" 
-            className="pointer-events-none"
-            opacity="0.8"
-          />
-          <path 
-            d={padPath} 
-            fill="url(#glass-shine-gauge)" 
-            className="pointer-events-none"
-            opacity="0.6"
-          />
-          
-          <path 
-            d={padPath} 
-            fill="none" 
-            stroke="white" 
-            strokeWidth="2" 
-            strokeOpacity="0.4"
-            className="pointer-events-none"
-          />
-
-          {/* Grip Bars Overlay */}
-          <g fill="rgba(255,255,255,0.4)" opacity="0.2" pointerEvents="none">
-            <rect x="170" y="80" width="60" height="6" rx="3" />
-            <rect x="170" y="100" width="60" height="6" rx="3" />
-            <rect x="170" y="120" width="60" height="6" rx="3" />
-            <rect x="170" y="140" width="60" height="6" rx="3" />
-            <rect x="170" y="160" width="60" height="6" rx="3" />
-            <rect x="170" y="180" width="60" height="6" rx="3" />
-            <rect x="170" y="200" width="60" height="6" rx="3" />
-            <rect x="170" y="220" width="60" height="6" rx="3" />
-            <rect x="170" y="240" width="60" height="6" rx="3" />
-          </g>
-
-          {/* Rough Texture Overlay */}
-          <path 
-            d={padPath} 
-            fill="#121212" 
-            filter="url(#rough-texture-gauge)"
-            opacity="0.25"
-            className="pointer-events-none"
-          />
-          
-          {/* Pad Outline for definition */}
-          <path 
-            d={padPath} 
-            fill="none" 
-            stroke="rgba(255,255,255,0.3)" 
-            strokeWidth="1" 
-            opacity="0.5"
-          />
-
-          {/* Charcoal Outline */}
-          <path 
-            d={padPath} 
-            fill="none" 
-            stroke="#121212" 
-            strokeWidth="1.2" 
-            className="pointer-events-none"
-          />
-        </svg>
-
-        {/* Central Text Overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none">
-          <motion.span 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-3xl font-black metric-value-text tabular-nums tracking-tighter"
-          >
-            {value}%
-          </motion.span>
+              {trend.direction === 'up' ? <ArrowUpRight size={14} strokeWidth={3} className="text-emerald-400 ml-0.5" /> : <ArrowDownRight size={14} strokeWidth={3} className="text-rose-400 ml-0.5" />}
+              <span className="tracking-wide">עלייה של {Math.abs(trend.value)}%</span>
+            </motion.div>
+          )}
         </div>
       </div>
-      {footer}
-    </div>
+
+      {/* Left Circular Gauge */}
+      <div className="relative z-10 shrink-0 pr-4">
+        <div className={`relative flex items-center justify-center`} style={{ width: size, height: size }}>
+          
+          {/* Inner Glow under the circle */}
+          <div className="absolute inset-0 rounded-full blur-[20px] opacity-20 group-hover:opacity-50 transition-opacity duration-700" style={{ background: colorStart }} />
+          
+          <svg className="w-full h-full transform -rotate-90 filter drop-shadow-lg relative z-10">
+            <circle
+              cx={center}
+              cy={center}
+              r={radius}
+              stroke="rgba(255, 255, 255, 0.05)"
+              strokeWidth={strokeWidth}
+              fill="none"
+              strokeLinecap="round"
+            />
+            <defs>
+              <linearGradient id={`grad-${label.replace(/\s+/g, '')}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={colorStart} />
+                <stop offset="100%" stopColor={colorEnd} />
+              </linearGradient>
+            </defs>
+            <motion.circle
+              cx={center}
+              cy={center}
+              r={radius}
+              stroke={`url(#grad-${label.replace(/\s+/g, '')})`}
+              strokeWidth={strokeWidth}
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              initial={{ strokeDashoffset: circumference }}
+              animate={{ strokeDashoffset }}
+              transition={{ duration: 1.5, delay: delay + 0.2, ease: [0.23, 1, 0.32, 1] }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center flex-col pt-1 z-20">
+            <div className="flex items-baseline gap-0.5" dir="ltr">
+              <span className={`${highlight ? 'text-4xl' : 'text-3xl'} font-black text-white tabular-nums tracking-tighter leading-none`} style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                <AnimatedNumber value={value} />
+              </span>
+              <span className="text-sm font-bold text-slate-400 opacity-80">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 };
+
 
 const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
   const { members, weeklyHistory, yearConfig, events, isLoading } = useData();
@@ -337,7 +213,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
   const userSessions = useMemo(() => {
     if (!weeklyHistory || !userId) return [];
     return weeklyHistory
-      .filter(s => s.participantIds?.includes(userId))
+      .filter(s => s.participantIds?.includes(userId) && !s.isEvent)
       .sort((a, b) => {
         const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
         const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
@@ -355,7 +231,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
     <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700 min-h-[400px]" dir="rtl">
       {/* Unified Modern Dashboard - Dynamic Premium Style matching Surfer Card */}
       <motion.div 
-        className="p-4 md:p-6 bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_8px_32px_rgba(49,170,193,0.15),0_4px_16px_rgba(49,170,193,0.1)] rounded-[2rem] relative transition-all duration-1000 overflow-hidden"
+        className="p-4 md:p-6 relative z-10 backdrop-blur-[40px] bg-white/40 border border-white/80 shadow-[0_40px_80px_rgba(15,23,42,0.12),inset_0_1px_1px_rgba(255,255,255,1),inset_0_-1px_1px_rgba(0,0,0,0.02)] rounded-[2rem] transition-all duration-1000 overflow-hidden"
       >
         {/* Grit Overlay */}
         <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
@@ -363,71 +239,78 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
         <div className="absolute -right-20 -top-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 items-center justify-center gap-6 md:gap-4 relative z-10">
-          
-          {/* Left Column */}
-          <div className="flex flex-col gap-8 md:gap-12">
-            <AstrodeckGauge 
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10 w-full mb-6">
+            
+            <EliteStatCard 
               value={data.attendancePercent}
               label="מד התמדה אישי"
-              icon={<Waves size={18} className="text-[#00FFFF]" />}
+              icon={<Waves size={20} className="text-cyan-500" />}
               tooltip="כמה פעמים הגעת מתוך כל האימונים שהיו מתחילת השנה."
+              trend={{ direction: 'up', value: 12 }}
+              colorStart="#06b6d4" // cyan-500
+              colorEnd="#3b82f6" // blue-500
+              delay={0.1}
             />
 
-            <AstrodeckGauge 
-              value={data.yearlyStability.percent}
-              label={`יציבות שנתית ${yearConfig?.startDate ? new Date(yearConfig.startDate).getFullYear().toString() : '2026'}`}
-              icon={<Calendar size={18} className="text-[#FF007F]" />}
-              tooltip="מדד הבודק כמה שבועות היית פעיל ברצף מתחילת העונה."
+            <EliteStatCard 
+              value={Math.round(data.gritScore)}
+              label="מד נחישות Grit"
+              icon={<Trophy size={20} className="text-amber-500" />}
+              tooltip="זהו מדד ה'נחישות' שלך. הוא בודק כמה אתה מתמיד. הוא משלב את כמות הסשנים שעשית עם העקביות שלך (הרצף). העקביות חשובה יותר מהכמות."
+              trend={{ direction: 'up', value: 15 }}
+              colorStart="#f59e0b" // amber-500
+              colorEnd="#ef4444" // red-500
+              delay={0.2}
+              highlight={true}
               footer={
-                <p className="mt-4 text-[12px] font-bold secondary-detail-text">
-                  היית פעיל ב-{data.yearlyStability.activeWeeks} מתוך {data.yearlyStability.totalWeeks} שבועות השנה.
-                </p>
+                <span className="inline-block mt-0.5">ממוצע הקהילה: <strong className="text-slate-700">{Math.round(data.averageGrit)}</strong></span>
               }
             />
-          </div>
 
-          {/* Center Column - Grit */}
-          <div className="flex justify-center py-8 md:py-0">
-            <div className="scale-110 md:scale-125 transform transition-transform duration-500">
-              <AstrodeckGauge 
-                value={Math.round(data.gritScore)}
-                label="מד נחישות Grit"
-                icon={<Trophy size={18} className="text-[#FFD700]" />}
-                tooltip="זהו מדד ה'נחישות' שלך. הוא בודק כמה אתה מתמיד. הוא משלב את כמות הסשנים שעשית עם העקביות שלך (הרצף). העקביות חשובה יותר מהכמות."
-                isGrit={true}
-                footer={
-                  <p className="mt-4 text-[12px] font-bold secondary-detail-text">
-                    ממוצע הקהילה: {Math.round(data.averageGrit)}
-                  </p>
-                }
+            <EliteStatCard 
+              value={data.yearlyStability.percent}
+              label={`יציבות שנתית ${yearConfig?.startDate ? new Date(yearConfig.startDate).getFullYear().toString() : '2026'}`}
+              icon={<Calendar size={20} className="text-fuchsia-500" />}
+              tooltip="מדד הבודק כמה שבועות היית פעיל ברצף מתחילת העונה."
+              trend={{ direction: 'up', value: 8 }}
+              colorStart="#d946ef" // fuchsia-500
+              colorEnd="#8b5cf6" // violet-500
+              delay={0.3}
+              footer={
+                <span className="inline-block mt-0.5">פעיל ב-<strong className="text-slate-700">{data.yearlyStability.activeWeeks}</strong> מתוך {data.yearlyStability.totalWeeks} שבועות השנה</span>
+              }
+            />
+
+            <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+              <EliteStatCard 
+                value={data.percentile}
+                label="מד התמדה יחסי"
+                icon={<Target size={20} className="text-rose-500" />}
+                tooltip="איפה אתה עומד ביחס לכל שאר המתאמנים בנבחרת."
+                trend={{ direction: 'up', value: 4 }}
+                colorStart="#e11d48" // rose-600
+                colorEnd="#f43f5e" // rose-500
+                delay={0.4}
+              />
+
+              <EliteStatCard 
+                value={data.progress[1].value}
+                label="מעורבות חברתית"
+                icon={<Users size={20} className="text-indigo-500" />}
+                tooltip="השתתפות באירועים ופעילויות קהילתיות מעבר לים."
+                trend={{ direction: 'down', value: 2 }}
+                colorStart="#6366f1" // indigo-500
+                colorEnd="#4f46e5" // indigo-600
+                delay={0.5}
               />
             </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="flex flex-col gap-8 md:gap-12">
-            <AstrodeckGauge 
-              value={data.percentile}
-              label="מד התמדה יחסי"
-              icon={<Target size={18} className="text-[#FF007F]" />}
-              tooltip="איפה אתה עומד ביחס לכל שאר המתאמנים בנבחרת."
-            />
-
-            <AstrodeckGauge 
-              value={data.progress[1].value}
-              label="מעורבות חברתית"
-              icon={<Users size={18} className="text-[#00FFFF]" />}
-              tooltip="השתתפות באירועים ופעילויות קהילתיות מעבר לים."
-            />
-          </div>
 
         </div>
       </motion.div>
 
       {/* Surf Compass (Radar Chart) - Future Use - Dynamic Premium Style */}
       <motion.div 
-        className="p-4 md:p-6 bg-[#f5e6d3]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#432818]/10 border-r-[#432818]/10 shadow-[0_8px_32px_rgba(212,163,115,0.15),0_4px_16px_rgba(212,163,115,0.1)] rounded-[2rem] relative transition-all duration-1000"
+        className="p-4 md:p-6 relative z-10 backdrop-blur-[40px] bg-white/40 border border-white/80 shadow-[0_40px_80px_rgba(15,23,42,0.12),inset_0_1px_1px_rgba(255,255,255,1),inset_0_-1px_1px_rgba(0,0,0,0.02)] rounded-[2rem] transition-all duration-1000"
       >
         {/* Grit Overlay */}
         <div className="absolute inset-0 opacity-[0.02] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
@@ -438,8 +321,8 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                   <Compass size={18} className="text-[#D4A373]" />
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="text-3xl font-black name-title-text">רדאר השיפור שלך</h3>
-                  <p className="text-sm text-gray-500 font-medium mt-1">לא פעיל - לשימוש עתידי</p>
+                  <h3 className="text-3xl font-black text-slate-800">רדאר השיפור שלך</h3>
+                  <p className="text-sm text-slate-500 font-medium mt-1">לא פעיל - לשימוש עתידי</p>
                 </div>
               </div>
             </div>
@@ -449,7 +332,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
           </div>
 
           <div className="mt-12 p-4 bg-white/5 backdrop-blur-md rounded-xl border border-white/20 shadow-md shadow-black/5">
-            <p className="text-[12px] secondary-detail-text font-bold text-center leading-relaxed">
+            <p className="text-[12px] text-slate-600 font-bold text-center leading-relaxed">
               המצפן מנתח את היכולות המקצועיות שלך בים. נתונים אלו יוזנו על ידי המדריכים לאחר הערכות תקופתיות.
             </p>
           </div>
@@ -458,7 +341,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
       {/* Session History - Collapsible Dropbox Style - Dynamic Premium Style */}
       <motion.div 
-        className="bg-[#f0f8ff]/10 backdrop-blur-[20px] border-t border-l border-t-[#ffffff]/80 border-l-[#ffffff]/80 border-b border-r border-b-[#00426a]/10 border-r-[#00426a]/10 shadow-[0_8px_32px_rgba(49,170,193,0.15),0_4px_16px_rgba(49,170,193,0.1)] rounded-[2rem] relative overflow-hidden transition-all duration-1000"
+        className="relative z-10 backdrop-blur-[40px] bg-white/40 border border-white/80 shadow-[0_40px_80px_rgba(15,23,42,0.12),inset_0_1px_1px_rgba(255,255,255,1),inset_0_-1px_1px_rgba(0,0,0,0.02)] rounded-[2rem] overflow-hidden transition-all duration-1000"
         onMouseLeave={() => setIsHistoryOpen(false)}
       >
         {/* Grit Overlay */}
@@ -473,8 +356,8 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               <Calendar size={16} />
             </div>
             <div className="text-right">
-              <h3 className="text-sm font-black name-title-text">היסטוריית סשנים</h3>
-              <p className="text-[12px] font-bold secondary-detail-text uppercase tracking-wider">
+              <h3 className="text-sm font-black text-slate-800">היסטוריית סשנים</h3>
+              <p className="text-[12px] font-bold text-slate-600 uppercase tracking-wider">
                 {isHistoryOpen ? 'לחץ לסגירה' : `צפה ב-${userSessions.length} סשנים אחרונים`}
               </p>
             </div>
@@ -509,8 +392,8 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                       <div className="flex items-center gap-4">
                         <Waves size={14} className="text-sunshine-yellow transition-colors" />
                         <div className="flex flex-col">
-                          <span className="font-bold secondary-detail-text text-xs">{formattedDate}</span>
-                          <div className="flex flex-col gap-0.5 text-[12px] secondary-detail-text font-medium">
+                          <span className="font-bold text-slate-600 text-xs">{formattedDate}</span>
+                          <div className="flex flex-col gap-0.5 text-[12px] text-slate-600 font-medium">
                             <div>
                               מדריכים: {(() => {
                                 const instructors = (session.participantIds || [])
@@ -538,28 +421,28 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                               {(session.waveHeight !== undefined || session.seaState?.waveHeight !== undefined) && (
                                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#0071a1]/5 border border-[#0071a1]/10 transition-all hover:bg-[#0071a1]/10" title="גובה גלים">
                                   <Waves size={12} className="text-[#0071a1]" />
-                                  <span className="text-[10px] font-black text-[#00426a]/70">גובה גלים:</span>
+                                  <span className="text-[10px] font-black text-slate-700">גובה גלים:</span>
                                   <span className="text-[10px] font-black text-[#0071a1]" dir="ltr">{session.waveHeight ?? session.seaState?.waveHeight}m</span>
                                 </div>
                               )}
                               {(session.windSpeed !== undefined || session.seaState?.windSpeed !== undefined) && (
                                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#0891b2]/5 border border-[#0891b2]/10 transition-all hover:bg-[#0891b2]/10" title="מהירות רוח">
                                   <Wind size={12} className="text-[#0891b2]" />
-                                  <span className="text-[10px] font-black text-[#00426a]/70">מהירות רוח:</span>
+                                  <span className="text-[10px] font-black text-slate-700">מהירות רוח:</span>
                                   <span className="text-[10px] font-black text-[#0891b2]" dir="ltr">{session.windSpeed ?? session.seaState?.windSpeed}kts</span>
                                 </div>
                               )}
                               {(session.waterTemp !== undefined || session.seaState?.waterTemp !== undefined) && (
                                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#4338ca]/5 border border-[#4338ca]/10 transition-all hover:bg-[#4338ca]/10" title="טמפ׳ מים">
                                   <Thermometer size={12} className="text-[#4338ca]" />
-                                  <span className="text-[10px] font-black text-[#00426a]/70">טמפ׳ מים:</span>
+                                  <span className="text-[10px] font-black text-slate-700">טמפ׳ מים:</span>
                                   <span className="text-[10px] font-black text-[#4338ca]" dir="ltr">{session.waterTemp ?? session.seaState?.waterTemp}°C</span>
                                 </div>
                               )}
                               {(session.uvIndex !== undefined || session.seaState?.uvIndex !== undefined) && (
                                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#b45309]/5 border border-[#b45309]/10 transition-all hover:bg-[#b45309]/10" title="אינדקס קרינה">
                                   <Sun size={12} className="text-[#b45309]" />
-                                  <span className="text-[10px] font-black text-[#00426a]/70">אינדקס קרינה:</span>
+                                  <span className="text-[10px] font-black text-slate-700">אינדקס קרינה:</span>
                                   <span className="text-[10px] font-black text-[#b45309]" dir="ltr">{session.uvIndex ?? session.seaState?.uvIndex} UV</span>
                                 </div>
                               )}
@@ -568,7 +451,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 text-[12px] secondary-detail-text font-black">
+                        <div className="flex items-center gap-1 text-[12px] text-slate-600 font-black">
                           <Users size={10} />
                           <span>{session.participantIds?.length || 0}</span>
                         </div>
@@ -580,14 +463,14 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
                 {userSessions.length === 0 && (
                   <div className="py-10 text-center">
-                    <p className="secondary-detail-text font-bold italic text-xs">אין סשנים לתצוגה</p>
+                    <p className="text-slate-600 font-bold italic text-xs">אין סשנים לתצוגה</p>
                   </div>
                 )}
               </div>
               
               {userSessions.length > 15 && (
                 <div className="p-3 bg-black/20 text-center border-t border-white/20">
-                  <span className="text-[12px] font-black secondary-detail-text uppercase tracking-widest">
+                  <span className="text-[12px] font-black text-slate-600 uppercase tracking-widest">
                     מציג 15 סשנים אחרונים
                   </span>
                 </div>

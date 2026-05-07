@@ -99,7 +99,9 @@ const SessionStatsPage: React.FC = () => {
     const cancelledDates = new Set<string>();
     
     // Filter history for sessions after startDate
-    const validSessions = weeklyHistory.filter(session => {
+    const surfHistory = weeklyHistory.filter(s => !s.isEvent);
+
+    const validSessions = surfHistory.filter(session => {
       const sessionDate = parseDate(session.date);
       if (sessionDate) sessionDate.setHours(0, 0, 0, 0);
       const hasParticipants = (session.participantsCount || 0) > 0 || (session.participantIds?.length || 0) > 0;
@@ -136,7 +138,7 @@ const SessionStatsPage: React.FC = () => {
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    const cancelledSessionsCount = weeklyHistory.filter(session => {
+    const cancelledSessionsCount = surfHistory.filter(session => {
       const sessionDate = parseDate(session.date);
       if (!sessionDate) return false;
       

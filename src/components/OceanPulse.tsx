@@ -38,6 +38,7 @@ export const OceanPulse: React.FC = () => {
           // Filter out sessions with missing or invalid dates, and future dates
           const now = new Date();
           const validHistory = weeklyHistory.filter(session => {
+            if (session.isEvent) return false;
             const d = parseDate(session.date);
             const isValid = d instanceof Date && !isNaN(d.getTime()) && d <= now;
             return isValid;

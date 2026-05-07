@@ -133,7 +133,7 @@ const SurferCardPage: React.FC = () => {
           <div className="w-10 h-10 bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-xl flex items-center justify-center text-sunshine-yellow shadow-md shadow-black/5">
             <Waves size={20} />
           </div>
-          <h2 className="text-2xl font-black name-title-text tracking-tight">ניתוח ביצועים מעמיק</h2>
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight">נתוני התמדה והשתתפות</h2>
         </div>
         <UserCategories userId={currentUser?.id || 'guest'} />
         <div className="mt-8">

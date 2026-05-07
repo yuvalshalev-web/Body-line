@@ -94,8 +94,8 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
   const coordinatorsStats = getParticipationStats(activeMembers.filter((m: any) => m.role === 'Admin' || m.role === 'Coordinator'));
 
   // By Gender
-  const maleStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'male'));
-  const femaleStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'female'));
+  const maleStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'זכר'));
+  const femaleStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'נקבה'));
 
   // By Age
   const ageUnder18 = getParticipationStats(activeMembers.filter((m: any) => { const age = calculateAge(m.birthday || m.birthDate); return age !== null && age >= 0 && age < 18; }));
@@ -107,10 +107,10 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
   const StatBar = ({ label, stats, color }: { label: string, stats: any, color: string }) => (
     <div>
       <div className="flex justify-between text-xs font-bold mb-1">
-        <span className="text-[var(--deep-teal-sea)]/70">{label}</span>
-        <span className="text-[var(--deep-teal-sea)]" dir="ltr">{stats.rate}% ({stats.count}/{stats.total})</span>
+        <span className="text-slate-600">{label}</span>
+        <span className="text-slate-800" dir="ltr">{stats.rate}% ({stats.count}/{stats.total})</span>
       </div>
-      <div className="h-2 bg-[var(--deep-teal-sea)]/5 rounded-full overflow-hidden" dir="ltr">
+      <div className="h-2 bg-slate-100 rounded-full overflow-hidden" dir="ltr">
         <div className={`h-full ${color} rounded-full transition-all duration-1000`} style={{ width: `${stats.rate}%` }} />
       </div>
     </div>
@@ -118,55 +118,55 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
 
   return (
     <div className="admin-info-card p-6 mb-8 relative overflow-hidden group">
-      <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-electric-pink)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-electric-pink)]/10 transition-colors" />
+      <div className="absolute -right-12 -top-12 w-40 h-40 bg-slate-100 rounded-full blur-3xl transition-colors" />
       
-      <h3 className="text-xl font-black text-[var(--surfer-electric-pink)] mb-6 flex items-center gap-2 relative z-10">
-        <BarChart2 size={24} />
+      <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 relative z-10">
+        <BarChart2 size={24} className="text-slate-800" />
         סטטיסטיקת אירועים (שנת הפעילות)
       </h3>
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 relative z-10">
-        <div className="bg-[var(--surfer-aqua-mist)]/10 rounded-2xl p-4 text-center border border-[var(--surfer-aqua-mist)]/20">
-          <div className="text-3xl font-black text-[var(--deep-teal-sea)] mb-1">{totalEvents}</div>
-          <div className="text-xs font-bold text-[var(--deep-teal-sea)]/60 uppercase tracking-wider">אירועים שהתקיימו</div>
+        <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+          <div className="text-3xl font-black text-slate-800 mb-1">{totalEvents}</div>
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">אירועים שהתקיימו</div>
         </div>
-        <div className="bg-[var(--surfer-vibrant-cyan)]/10 rounded-2xl p-4 text-center border border-[var(--surfer-vibrant-cyan)]/20">
-          <div className="text-3xl font-black text-[var(--surfer-vibrant-cyan)] mb-1">{overallStats.rate}%</div>
-          <div className="text-xs font-bold text-[var(--surfer-vibrant-cyan)]/60 uppercase tracking-wider">השתתפות כללית</div>
-          <div className="text-[10px] text-[var(--surfer-vibrant-cyan)]/40 mt-1">{overallStats.count} מתוך {overallStats.total} חברים פעילים</div>
+        <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+          <div className="text-3xl font-black text-slate-800 mb-1">{overallStats.rate}%</div>
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">השתתפות כללית</div>
+          <div className="text-[10px] text-slate-400 mt-1">{overallStats.count} מתוך {overallStats.total} חברים פעילים</div>
         </div>
-        <div className="bg-[var(--surfer-sunshine-yellow)]/10 rounded-2xl p-4 text-center border border-[var(--surfer-sunshine-yellow)]/20">
-          <div className="text-3xl font-black text-[var(--surfer-sunshine-yellow)] mb-1">{femaleStats.rate}%</div>
-          <div className="text-xs font-bold text-[var(--surfer-sunshine-yellow)]/60 uppercase tracking-wider">השתתפות נשים</div>
-          <div className="text-[10px] text-[var(--surfer-sunshine-yellow)]/40 mt-1">{femaleStats.count} מתוך {femaleStats.total}</div>
+        <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+          <div className="text-3xl font-black text-slate-800 mb-1">{femaleStats.rate}%</div>
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">השתתפות נשים</div>
+          <div className="text-[10px] text-slate-400 mt-1">{femaleStats.count} מתוך {femaleStats.total}</div>
         </div>
-        <div className="bg-indigo-500/10 rounded-2xl p-4 text-center border border-indigo-500/20">
-          <div className="text-3xl font-black text-indigo-500 mb-1">{maleStats.rate}%</div>
-          <div className="text-xs font-bold text-indigo-500/60 uppercase tracking-wider">השתתפות גברים</div>
-          <div className="text-[10px] text-indigo-500/40 mt-1">{maleStats.count} מתוך {maleStats.total}</div>
+        <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+          <div className="text-3xl font-black text-slate-800 mb-1">{maleStats.rate}%</div>
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">השתתפות גברים</div>
+          <div className="text-[10px] text-slate-400 mt-1">{maleStats.count} מתוך {maleStats.total}</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
         {/* By Role */}
         <div>
-          <h4 className="text-sm font-black text-[var(--deep-teal-sea)] mb-4 border-b border-[var(--deep-teal-sea)]/10 pb-2">השתתפות לפי תפקיד</h4>
+          <h4 className="text-sm font-black text-slate-800 mb-4 border-b border-slate-100 pb-2">השתתפות לפי תפקיד</h4>
           <div className="space-y-3">
-            <StatBar label="חברים" stats={membersStats} color="bg-[var(--surfer-vibrant-cyan)]" />
-            <StatBar label="מדריכים" stats={instructorsStats} color="bg-[var(--surfer-sunshine-yellow)]" />
-            <StatBar label="רכזים" stats={coordinatorsStats} color="bg-[var(--surfer-electric-pink)]" />
+           <StatBar label="חברים" stats={membersStats} color="bg-slate-800" />
+            <StatBar label="מדריכים" stats={instructorsStats} color="bg-slate-800" />
+            <StatBar label="רכזים" stats={coordinatorsStats} color="bg-slate-800" />
           </div>
         </div>
 
         {/* By Age */}
         <div>
-          <h4 className="text-sm font-black text-[var(--deep-teal-sea)] mb-4 border-b border-[var(--deep-teal-sea)]/10 pb-2">השתתפות לפי קבוצת גיל</h4>
+          <h4 className="text-sm font-black text-slate-800 mb-4 border-b border-slate-100 pb-2">השתתפות לפי קבוצת גיל</h4>
           <div className="space-y-3">
-            <StatBar label="עד 18" stats={ageUnder18} color="bg-green-400" />
-            <StatBar label="18-25" stats={age18_25} color="bg-emerald-400" />
-            <StatBar label="26-35" stats={age26_35} color="bg-teal-400" />
-            <StatBar label="36-45" stats={age36_45} color="bg-cyan-400" />
-            <StatBar label="46+" stats={age46plus} color="bg-blue-400" />
+            <StatBar label="עד 18" stats={ageUnder18} color="bg-slate-800" />
+            <StatBar label="18-25" stats={age18_25} color="bg-slate-800" />
+            <StatBar label="26-35" stats={age26_35} color="bg-slate-800" />
+            <StatBar label="36-45" stats={age36_45} color="bg-slate-800" />
+            <StatBar label="46+" stats={age46plus} color="bg-slate-800" />
           </div>
         </div>
       </div>
@@ -1342,8 +1342,8 @@ const AdminPage: React.FC = () => {
                   <Calendar size={32} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">לוח אירועים</h3>
-                  <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול לוח הזמנים הקהילתי</p>
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tight">לוח אירועים</h3>
+                  <p className="text-[12px] font-black text-slate-800 uppercase tracking-widest mt-1">ניהול לוח הזמנים הקהילתי</p>
                 </div>
               </div>
 

@@ -54,9 +54,9 @@ export const calculateUserStats = (
   const now = new Date();
   now.setHours(23, 59, 59, 999);
   
-  // Filter history for sessions within the season, ignoring cancelled sessions
+  // Filter history for sessions within the season, ignoring cancelled sessions and events
   const validSessions = (weeklyHistory || []).filter(session => {
-    if (!session) return false;
+    if (!session || session.isEvent) return false;
     const sessionDate = parseDate(session.date);
     if (sessionDate) sessionDate.setHours(0, 0, 0, 0);
     if (!sessionDate || isNaN(sessionDate.getTime())) return false;
@@ -107,8 +107,27 @@ export const calculateUserStats = (
     const eventDate = parseDate(e.date);
     return (e.type === 'COMMUNITY' || e.type === 'MEMBER') && eventDate && eventDate < now;
   });
-  const userSocialAttendance = pastSocialEvents.filter(e => e.attendees?.includes(userId)).length;
-  const totalSocialEvents = pastSocialEvents.length;
+  
+  // Also include archived events from weeklyHistory
+  const historyEvents = (weeklyHistory || []).filter(h => {
+    if (!h.isEvent || !h.date) return false;
+    const eventDate = parseDate(h.date);
+    return eventDate && eventDate < now;
+  });
+
+  // Combine unique events by ID or Date to prevent duplicates
+  const allPastEventsMap = new Map();
+  pastSocialEvents.forEach(e => allPastEventsMap.set(e.id, e));
+  historyEvents.forEach(h => allPastEventsMap.set(h.id || h.date, h));
+  
+  const uniquePastSocialEvents = Array.from(allPastEventsMap.values());
+
+  const userSocialAttendance = uniquePastSocialEvents.filter(e => 
+    (e.attendees && e.attendees.includes(userId)) || 
+    (e.participantIds && e.participantIds.includes(userId))
+  ).length;
+  
+  const totalSocialEvents = uniquePastSocialEvents.length;
   const socialPercent = totalSocialEvents > 0 ? Math.round((userSocialAttendance / totalSocialEvents) * 100) : 0;
   
   // Calculate Streak (consecutive weeks)
@@ -134,6 +153,7 @@ export const calculateUserStats = (
   
   const plannedSessionsSet = new Set<string>();
   weeklyHistory.forEach(session => {
+    if (session.isEvent) return;
     const sessionDate = parseDate(session.date);
     if (sessionDate && !isNaN(sessionDate.getTime()) && sessionDate >= seasonStart && sessionDate <= seasonEnd) {
       plannedSessionsSet.add(sessionDate.toDateString());
@@ -259,6 +279,9 @@ export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) =
   // Filter and normalize sessions
   const sessionsByDate = new Map<string, { date: Date, count: number, participantIds: string[] }>();
   weeklyHistory.forEach(session => {
+    // IGNORE EVENTS completely for surf statistics
+    if (session.isEvent) return;
+    
     const sessionDate = parseDate(session.date);
     if (!sessionDate || isNaN(sessionDate.getTime())) return;
     

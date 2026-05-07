@@ -19,7 +19,8 @@ import {
   Map as MapIcon,
   Info,
   CheckCircle2 as VerifiedIcon,
-  RotateCcw
+  RotateCcw,
+  Cloud
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -40,6 +41,58 @@ const DISCIPLINES = [
   { id: 'skydiving', name: 'צניחה חופשית', icon: Wind, color: 'from-blue-400 to-sky-600', shadow: 'shadow-blue-400/30' },
   { id: 'all', name: 'הכל', icon: Award, color: 'from-slate-700 to-slate-900', shadow: 'shadow-black/30' }
 ];
+
+const PassportStamp = ({ club, location, date, colorClass, rotateClass, icon: Icon }: any) => {
+  return (
+    <div className={`relative w-[85px] h-[85px] rounded-full border-[3px] border-dashed ${colorClass} ${rotateClass} flex flex-col items-center justify-center p-1 opacity-[0.85] hover:opacity-100 transition-all duration-300 hover:scale-[1.15] cursor-help shadow-sm group/stamp`}>
+       <div className={`absolute inset-[3px] rounded-full border-2 border-solid ${colorClass} opacity-60`}></div>
+       <div className={`absolute inset-[9px] rounded-full border border-solid ${colorClass} opacity-40`}></div>
+       
+       <Icon size={14} className="mb-0.5 opacity-80" />
+       
+       <span className="font-black text-[9px] leading-[1] text-center uppercase tracking-tighter w-[85%] whitespace-nowrap overflow-hidden text-ellipsis">
+          {club}
+       </span>
+       <span className="font-bold text-[7px] uppercase tracking-widest mt-0.5 opacity-80">{location}</span>
+       <span className="font-mono text-[8px] font-black mt-1 opacity-90">{date}</span>
+       
+       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMTUiLz4KPC9zdmc+')] rounded-full pointer-events-none opacity-30 mix-blend-overlay"></div>
+       
+       {/* Tooltip */}
+       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover/stamp:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap z-[200] shadow-xl border border-white/10 pointer-events-none">
+          {club} - {location} ({date})
+       </div>
+    </div>
+  )
+}
+
+const getClubStamps = (discipline: string, memberId: string) => {
+  switch (discipline) {
+    case 'surfing':
+      return [
+        { id: 1, club: "ריף הרצליה", location: "IL", date: "12 AUG 2023", colorClass: "text-[#1e3a8a] border-[#1e3a8a]", rotateClass: "-rotate-[14deg]", icon: Waves },
+        { id: 2, club: "Hanalei Bay", location: "North Shore, HI", date: "04 NOV 2024", colorClass: "text-rose-800 border-rose-800", rotateClass: "rotate-[9deg]", icon: Wind }
+      ];
+    case 'diving':
+      return [
+        { id: 3, club: "Manta Ray Bay", location: "Palau", date: "22 JAN 2024", colorClass: "text-slate-800 border-slate-800", rotateClass: "rotate-[15deg]", icon: Waves },
+        { id: 4, club: "מרינה דייוורס", location: "אילת", date: "15 MAR 2025", colorClass: "text-teal-900 border-teal-900", rotateClass: "-rotate-[7deg]", icon: Waves }
+      ];
+    case 'sailing':
+      return [
+        { id: 5, club: "Yacht Club", location: "Monaco", date: "05 SEP 2023", colorClass: "text-[#0f172a] border-[#0f172a]", rotateClass: "-rotate-[22deg]", icon: Anchor }
+      ];
+     case 'skydiving':
+      return [
+        { id: 6, club: "Skydive Dubai", location: "UAE", date: "10 FEB 2024", colorClass: "text-rose-900 border-rose-900", rotateClass: "rotate-[12deg]", icon: Wind },
+        { id: 7, club: "פרדייב", location: "הבונים", date: "01 MAY 2025", colorClass: "text-blue-900 border-blue-900", rotateClass: "-rotate-[12deg]", icon: Wind }
+      ];
+    default:
+      return [
+        { id: 8, club: "מועדון הבית", location: "ישראל", date: "01 JAN 2026", colorClass: "text-slate-800 border-slate-800", rotateClass: "-rotate-[5deg]", icon: ShieldCheck }
+      ];
+  }
+}
 
 const BadgeWithTooltip = ({ icon: Icon, text, tooltip, colorTheme }: { icon: any, text: string, tooltip: string, colorTheme: 'yellow' | 'teal' | 'blue' }) => {
   const cn = colorTheme === 'yellow' 
@@ -135,7 +188,7 @@ export const AthletePassport: React.FC = () => {
       <div className="w-full max-w-4xl mx-auto p-4 md:p-8 animate-pulse" dir="rtl">
         <div className="h-10 w-48 bg-slate-200 rounded-lg mb-8" />
         <div className="flex justify-center">
-          <div className="w-full max-w-[420px] aspect-[1/1.6] rounded-[2.5rem] bg-slate-100 border border-slate-200" />
+          <div className="w-full max-w-[420px] min-h-[600px] flex flex-col rounded-[2.5rem] bg-slate-100 border border-slate-200" />
         </div>
       </div>
     );
@@ -193,7 +246,7 @@ export const AthletePassport: React.FC = () => {
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-          className={`w-full max-w-[420px] aspect-[1/1.6] rounded-[2.5rem] relative cursor-pointer border ${activeProfile.textColor === 'text-slate-800' ? 'border-white/60' : 'border-white/20'}`}
+          className={`w-full max-w-[420px] min-h-[680px] flex flex-col rounded-[2.5rem] relative cursor-pointer border ${activeProfile.textColor === 'text-slate-800' ? 'border-white/60' : 'border-white/20'}`}
         >
           {/* Animated Background Gradient */}
           <AnimatePresence mode="wait">
@@ -216,7 +269,7 @@ export const AthletePassport: React.FC = () => {
           {/* Card Content (Elevated in 3D) */}
           <motion.div 
             style={{ transform: "translateZ(40px)" }}
-            className={`absolute inset-0 p-8 flex flex-col ${activeProfile.textColor || 'text-white'}`}
+            className={`relative flex-1 p-8 flex flex-col ${activeProfile.textColor || 'text-white'}`}
           >
             {/* Header: Verified & QR */}
             <div className="flex justify-between items-start mb-8">
@@ -483,6 +536,19 @@ export const AthletePassport: React.FC = () => {
                  </div>
               </div>
             )}
+            
+            {/* International Club Stamps */}
+            <div className="mt-6 pt-5 border-t border-white/20">
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-4 flex items-center gap-1 justify-center"><VerifiedIcon size={12}/> זיהוי מועדונים בינלאומיים</span>
+              <div className="flex flex-wrap items-center justify-center gap-4 px-2">
+                 {getClubStamps(activeDiscipline, member?.id).map((stamp: any) => (
+                    <PassportStamp key={stamp.id} {...stamp} />
+                 ))}
+                 {activeDiscipline === 'all' && (
+                    <div className="text-[10px] text-white/50 font-medium text-center w-full">בחר ענף ספורט ספציפי לצפייה בחותמות מועדונים</div>
+                 )}
+              </div>
+            </div>
             
           </motion.div>
         </motion.div>

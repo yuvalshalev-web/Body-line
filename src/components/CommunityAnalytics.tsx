@@ -17,7 +17,7 @@ import {
 import { motion } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { parseDate } from '../utils/dateUtils';
-import { AstrodeckGauge } from './UserAnalytics';
+import { EliteStatCard } from './UserAnalytics';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { calculateDistance } from '../utils/distanceCalculator';
 import { getCoordinates } from '../utils/geocoding';
@@ -350,7 +350,9 @@ const CommunityAnalytics: React.FC = () => {
     const seasonEnd = yearConfig?.endDate ? parseDate(yearConfig.endDate) || new Date('2026-12-31') : new Date('2026-12-31');
     seasonEnd.setHours(23, 59, 59, 999);
 
-    const rawValidSessions = weeklyHistory.filter(session => {
+    const surfHistory = weeklyHistory.filter(s => !s.isEvent);
+
+    const rawValidSessions = surfHistory.filter(session => {
       const sessionDate = parseDate(session.date);
       if (sessionDate) sessionDate.setHours(0, 0, 0, 0);
       if (!sessionDate || isNaN(sessionDate.getTime())) return false;
@@ -426,7 +428,7 @@ const CommunityAnalytics: React.FC = () => {
     });
 
     // 4. Vitality Orbit (8-session logic)
-    const last8Sessions = weeklyHistory.slice(0, 8);
+    const last8Sessions = surfHistory.slice(0, 8);
     const sessionCount = last8Sessions.length;
 
     const cohorts = [
@@ -472,7 +474,7 @@ const CommunityAnalytics: React.FC = () => {
         : 0;
 
       // Calculate Yearly Retention
-      const yearlyPotentialAttendance = weeklyHistory.reduce((sum, session) => {
+      const yearlyPotentialAttendance = surfHistory.reduce((sum, session) => {
         const activeGroupMembers = groupMembers.filter(m => {
           const joinedDate = parseDate(m.joinedAt);
           const sessionDate = parseDate(session.date);
@@ -486,7 +488,7 @@ const CommunityAnalytics: React.FC = () => {
         });
         return sum + activeGroupMembers.length;
       }, 0);
-      const yearlyActualAttendance = weeklyHistory.reduce((sum, session) => {
+      const yearlyActualAttendance = surfHistory.reduce((sum, session) => {
         const attendees = session.participantIds || [];
         const groupAttendees = attendees.filter((id: string) => 
           groupMembers.some(m => m.id === id)
@@ -639,7 +641,7 @@ const CommunityAnalytics: React.FC = () => {
 
     // Global Retention Algorithm (3+ sessions in 30 days)
     const userAttendanceCount = new Map<string, number>();
-    weeklyHistory.forEach(session => {
+    surfHistory.forEach(session => {
       const sessionDate = parseDate(session.date);
       if (sessionDate && sessionDate >= thirtyDaysAgo) {
         (session.participantIds || []).forEach((id: string) => {
@@ -691,7 +693,7 @@ const CommunityAnalytics: React.FC = () => {
         : 0;
       
       // Calculate Yearly Retention
-      const yearlyPotentialAttendance = weeklyHistory.reduce((sum, session) => {
+      const yearlyPotentialAttendance = surfHistory.reduce((sum, session) => {
         const activeGroupMembers = groupMembers.filter(m => {
           const joinedDate = parseDate(m.joinedAt);
           const sessionDate = parseDate(session.date);
@@ -705,7 +707,7 @@ const CommunityAnalytics: React.FC = () => {
         });
         return sum + activeGroupMembers.length;
       }, 0);
-      const yearlyActualAttendance = weeklyHistory.reduce((sum, session) => {
+      const yearlyActualAttendance = surfHistory.reduce((sum, session) => {
         const attendees = session.participantIds || [];
         const groupAttendees = attendees.filter((id: string) => 
           groupMembers.some(m => m.id === id)
@@ -1209,13 +1211,13 @@ const CommunityAnalytics: React.FC = () => {
           </div>
 
           <div className="flex flex-row justify-center gap-16">
-            <AstrodeckGauge 
+            <EliteStatCard 
               value={stats.churnRate}
               label="שיעור עזיבה חודשי"
               icon={<UserMinus size={18} />}
               tooltip="אחוז המתאמנים שעזבו את הנבחרת בחודש האחרון."
             />
-            <AstrodeckGauge 
+            <EliteStatCard 
               value={stats.annualChurnRate}
               label="שיעור עזיבה שנתי"
               icon={<UserMinus size={18} />}

@@ -874,10 +874,10 @@ const TrendsDashboard: React.FC = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="admin-info-card p-4 rounded-2xl shadow-xl text-[#121212] text-right" dir="rtl">
-          <p className="text-xs font-black mb-1 border-b border-white/10 pb-2">{data.fullDate}</p>
-          <p className="text-[12px] font-bold text-blue-300 mb-2">חודש {data.activityMonth} לשנת חבל זוג</p>
-          <div className="space-y-1.5">
+        <div className="p-4 rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.1),inset_0_1px_1px_rgba(255,255,255,1),inset_0_-1px_1px_rgba(0,0,0,0.02)] text-slate-900 text-right backdrop-blur-[24px] bg-white/50 border border-white/80" dir="rtl">
+          <p className="text-xs font-black mb-1 border-b border-slate-200/60 pb-2 text-slate-800">{data.fullDate}</p>
+          <p className="text-[12px] font-bold text-teal-600 mb-2">חודש {data.activityMonth} לשנת חבל זוג</p>
+          <div className="space-y-1.5 mt-2">
             {payload.map((entry: any, index: number) => {
               // Only show the group data, skip the count bars in unified view if they are too many
               if (entry.dataKey.toString().endsWith('_count')) return null;
@@ -886,20 +886,20 @@ const TrendsDashboard: React.FC = () => {
                 <div key={index} className="flex flex-col gap-0.5">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                      <span className="text-xs font-bold text-[#004D40]">{entry.name}</span>
+                      <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: entry.color }} />
+                      <span className="text-xs font-bold text-slate-700">{entry.name}</span>
                     </div>
-                    <span className="text-xs font-black text-white">{Math.round(entry.value as number)}%</span>
+                    <span className="text-xs font-black text-slate-900">{Math.round(entry.value as number)}%</span>
                   </div>
                   {entry.payload[`${entry.dataKey}_count`] !== undefined && (
-                    <p className="text-[12px] font-bold text-[#000000] mr-4">
-                      מספר משתתפים בפועל: {entry.payload[`${entry.dataKey}_count`]}
+                    <p className="text-[10px] font-semibold text-slate-500 mr-4">
+                      משתתפים בפועל: {entry.payload[`${entry.dataKey}_count`]}
                     </p>
                   )}
                 </div>
               );
             })}
-            <p className="text-[12px] font-bold text-[#000000] mt-2 pt-2 border-t border-white/5">
+            <p className="text-[11px] font-bold text-slate-500 mt-3 pt-2 border-t border-slate-200/60">
               שבוע {data.weekNumber} מתחילת הפעילות
             </p>
           </div>
@@ -910,17 +910,28 @@ const TrendsDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="relative space-y-8 p-6 md:p-8 rounded-[2rem] overflow-hidden -mx-4 md:mx-0">
+      {/* Abstract Elegant 3D Orbs / Glassmorphism */}
+      <div className="absolute inset-0 bg-[#f8fafc] pointer-events-none -z-30 rounded-[2rem]" />
+      
+      {/* Moving organic shapes */}
+      <div className="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] bg-teal-300/20 rounded-[50%] mix-blend-multiply filter blur-[80px] animate-blob pointer-events-none -z-20" />
+      <div className="absolute top-[20%] -left-[10%] w-[40%] h-[40%] bg-cyan-300/20 rounded-[50%] mix-blend-multiply filter blur-[100px] animate-blob animation-delay-2000 pointer-events-none -z-20" />
+      <div className="absolute -bottom-[10%] left-[20%] w-[60%] h-[60%] bg-indigo-300/10 rounded-[50%] mix-blend-multiply filter blur-[120px] animate-blob animation-delay-4000 pointer-events-none -z-20" />
+
+      {/* Grain overlay */}
+      <div className="absolute inset-0 opacity-[0.04] mix-blend-overlay pointer-events-none -z-10" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+
       {/* Header & Switcher */}
-      <div className="admin-info-card p-10">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
+      <div className="relative z-10 backdrop-blur-[40px] bg-white/40 border border-white/80 shadow-[0_40px_80px_rgba(15,23,42,0.12),inset_0_1px_1px_rgba(255,255,255,1),inset_0_-1px_1px_rgba(0,0,0,0.02)] rounded-[2rem] p-10 transform-gpu perspective-[1000px]">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10 transform translate-z-[10px]">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600">
               <Activity size={24} />
             </div>
             <div>
-              <h3 className="text-xl font-black text-[#2B2B2E] tracking-tight">דשבורד טרנדים והתמדה</h3>
-              <p className="text-[12px] font-bold text-[#000000] uppercase tracking-widest">ניתוח שנת חבל זוג • 7 קבוצות מיקוד</p>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">דשבורד טרנדים והתמדה</h3>
+              <p className="text-[12px] font-bold text-slate-500 uppercase tracking-widest">ניתוח שנת חבל זוג • 7 קבוצות מיקוד</p>
             </div>
           </div>
         </div>
@@ -941,27 +952,27 @@ const TrendsDashboard: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="lg:col-span-2 bg-zinc-950/80 backdrop-blur-xl rounded-3xl border border-zinc-800/50 shadow-2xl p-8 md:p-10 transition-all duration-500 relative group"
+        className="lg:col-span-2 relative z-10 backdrop-blur-[40px] bg-white/40 border border-white/80 shadow-[0_40px_80px_rgba(15,23,42,0.12),inset_0_1px_1px_rgba(255,255,255,1),inset_0_-1px_1px_rgba(0,0,0,0.02)] rounded-[2rem] p-8 md:p-10 transition-all duration-500 group transform-gpu perspective-[1000px]"
       >
-          {/* Subtle top highlight */}
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent pointer-events-none" />
+          {/* Subtle 3D highlight */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none" />
 
           <div className="flex flex-col md:flex-row items-center justify-between mb-12 relative z-10 gap-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600">
                 <Activity size={24} />
               </div>
               <div>
-                <h3 className="text-2xl md:text-3xl font-bold text-[#121212] tracking-tight">שיעור התמדה לפי קבוצות גיל</h3>
-                <p className="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">SESSION VITALITY METRICS-8</p>
+                <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">שיעור התמדה לפי קבוצות גיל</h3>
+                <p className="text-xs text-slate-500 mt-1 font-medium uppercase tracking-wider">SESSION VITALITY METRICS-8</p>
               </div>
             </div>
 
             {/* Toggle View Button */}
-            <div dir="ltr" className="relative flex bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 p-1 rounded-full">
+            <div dir="ltr" className="relative flex bg-white/50 backdrop-blur-xl border border-slate-200/50 p-1 rounded-full shadow-sm">
               <div className="absolute inset-1 flex pointer-events-none">
                 <motion.div
-                  className="w-1/2 h-full rounded-full bg-zinc-800 border border-zinc-700 shadow-sm"
+                  className="w-1/2 h-full rounded-full bg-white border border-slate-200 shadow-sm"
                   animate={{ x: ageGroupViewMode === 'unified' ? '0%' : '100%' }}
                   transition={{ type: "spring", stiffness: 400, damping: 35 }}
                 />
@@ -969,7 +980,7 @@ const TrendsDashboard: React.FC = () => {
               <button
                 onClick={() => setAgeGroupViewMode('unified')}
                 className={`relative z-10 px-6 py-2 rounded-full text-xs font-semibold tracking-wide transition-colors duration-300 ${
-                  ageGroupViewMode === 'unified' ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                  ageGroupViewMode === 'unified' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 גרף מאוחד
@@ -977,7 +988,7 @@ const TrendsDashboard: React.FC = () => {
               <button
                 onClick={() => setAgeGroupViewMode('cards')}
                 className={`relative z-10 px-6 py-2 rounded-full text-xs font-semibold tracking-wide transition-colors duration-300 ${
-                  ageGroupViewMode === 'cards' ? 'text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                  ageGroupViewMode === 'cards' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 כרטיסיות
@@ -992,7 +1003,7 @@ const TrendsDashboard: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="w-full h-[400px] mt-8 relative z-10 bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/50" 
+                className="w-full h-[400px] mt-8 relative z-10 bg-white/60 backdrop-blur-[20px] rounded-2xl p-6 border border-white/70 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),0_10px_30px_rgba(15,23,42,0.05)]" 
                 dir="ltr"
               >
                 <ResponsiveContainer width="100%" height="100%">
@@ -1055,11 +1066,11 @@ const TrendsDashboard: React.FC = () => {
                   }
 
                   return (
-                    <div key={idx} className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/50 flex flex-col relative overflow-hidden group hover:bg-zinc-800/50 transition-colors duration-300">
+                    <div key={idx} className="bg-white/40 backdrop-blur-[24px] shadow-[0_10px_40px_rgba(15,23,42,0.04),inset_0_1px_2px_rgba(255,255,255,0.9)] rounded-[1.5rem] p-6 border border-white/60 flex flex-col relative overflow-hidden group hover:shadow-[0_20px_50px_rgba(15,23,42,0.08)] hover:-translate-y-2 transition-all duration-500 transform-gpu">
                       <div className="flex justify-between items-start mb-8 relative z-10" dir="rtl">
                         <div>
-                          <h4 className="text-lg font-semibold text-[#121212] tracking-tight">{group.label}</h4>
-                          <p className="text-xs text-zinc-500 mt-1">{group.count} חברים</p>
+                          <h4 className="text-lg font-black text-slate-900 tracking-tight">{group.label}</h4>
+                          <p className="text-xs text-slate-500 mt-1">{group.count} חברים</p>
                         </div>
                         <div className={`px-2.5 py-1 rounded-md border text-[10px] font-medium tracking-wide ${categoryColor}`}>
                           {categoryLabel}
@@ -1070,19 +1081,19 @@ const TrendsDashboard: React.FC = () => {
                         {/* Yearly Progress */}
                         <div>
                           <div className="flex justify-between text-xs font-medium mb-2">
-                            <span className="text-zinc-500">ממוצע שנתי</span>
-                            <span className="text-zinc-300">{group.yearlyRetention}%</span>
+                            <span className="text-slate-500">ממוצע שנתי</span>
+                            <span className="text-slate-700 font-bold">{group.yearlyRetention}%</span>
                           </div>
-                          <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden relative">
+                          <div className="h-1.5 w-full bg-slate-200/60 rounded-full overflow-hidden relative">
                             <motion.div 
                               initial={{ width: 0 }}
                               animate={{ width: `${group.yearlyRetention}%` }}
                               transition={{ duration: 1, ease: "easeOut" }}
-                              className="h-full bg-zinc-400 rounded-full"
+                              className="h-full bg-slate-400 rounded-full"
                             />
                             {/* Reference Marker */}
                             <div 
-                              className="absolute top-0 bottom-0 w-px bg-zinc-600 z-10"
+                              className="absolute top-0 bottom-0 w-px bg-slate-400 z-10"
                               style={{ right: `${stats.overallYearlyRetention}%` }}
                               title={`ממוצע קהילתי: ${stats.overallYearlyRetention}%`}
                             />
@@ -1092,10 +1103,10 @@ const TrendsDashboard: React.FC = () => {
                         {/* Octo Progress */}
                         <div>
                           <div className="flex justify-between text-xs font-medium mb-2">
-                            <span className="text-zinc-500">אוקטו (8 שבועות)</span>
-                            <span className={categoryColor.split(' ')[0]}>{group.retention}%</span>
+                            <span className="text-slate-500">אוקטו (8 שבועות)</span>
+                            <span className={`font-bold ${categoryColor.split(' ')[0]}`}>{group.retention}%</span>
                           </div>
-                          <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden relative">
+                          <div className="h-1.5 w-full bg-slate-200/60 rounded-full overflow-hidden relative">
                             <motion.div 
                               initial={{ width: 0 }}
                               animate={{ width: `${group.retention}%` }}
@@ -1104,7 +1115,7 @@ const TrendsDashboard: React.FC = () => {
                             />
                             {/* Reference Marker */}
                             <div 
-                              className="absolute top-0 bottom-0 w-px bg-zinc-600 z-10"
+                              className="absolute top-0 bottom-0 w-px bg-slate-400 z-10"
                               style={{ right: `${stats.overallRetention}%` }}
                               title={`ממוצע קהילתי: ${stats.overallRetention}%`}
                             />
@@ -1119,22 +1130,22 @@ const TrendsDashboard: React.FC = () => {
           </AnimatePresence>
 
           {/* Footer Indicators */}
-          <div className="mt-12 pt-6 border-t border-zinc-800/50 flex flex-wrap justify-center gap-6 md:justify-between items-center w-full relative z-10">
+          <div className="mt-12 pt-6 border-t border-slate-200/60 flex flex-wrap justify-center gap-6 md:justify-between items-center w-full relative z-10">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-rose-500" />
-              <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">תיירים (&lt;{RETENTION_THRESHOLDS.TOURIST}%)</span>
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">תיירים (&lt;{RETENTION_THRESHOLDS.TOURIST}%)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-amber-500" />
-              <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">אקונומי פלוס ({RETENTION_THRESHOLDS.TOURIST}-{RETENTION_THRESHOLDS.ECONOMY - 1}%)</span>
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">אקונומי פלוס ({RETENTION_THRESHOLDS.TOURIST}-{RETENTION_THRESHOLDS.ECONOMY - 1}%)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">ביזנס קלאס ({RETENTION_THRESHOLDS.ECONOMY}-{RETENTION_THRESHOLDS.BUSINESS - 1}%)</span>
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">ביזנס קלאס ({RETENTION_THRESHOLDS.ECONOMY}-{RETENTION_THRESHOLDS.BUSINESS - 1}%)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">פירסט קלאס ({RETENTION_THRESHOLDS.BUSINESS}%+)</span>
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">פירסט קלאס ({RETENTION_THRESHOLDS.BUSINESS}%+)</span>
             </div>
           </div>
         </motion.div>
@@ -1145,19 +1156,19 @@ const TrendsDashboard: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="lg:col-span-2 bg-zinc-950/80 backdrop-blur-xl rounded-3xl border border-zinc-800/50 shadow-2xl p-8 md:p-10 transition-all duration-500 relative group"
+        className="lg:col-span-2 relative z-10 backdrop-blur-[40px] bg-white/40 border border-white/80 shadow-[0_40px_80px_rgba(15,23,42,0.12),inset_0_1px_1px_rgba(255,255,255,1),inset_0_-1px_1px_rgba(0,0,0,0.02)] rounded-[2rem] p-8 md:p-10 transition-all duration-500 group transform-gpu perspective-[1000px]"
       >
-          {/* Subtle top highlight */}
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent pointer-events-none" />
+          {/* Subtle 3D highlight */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none" />
 
           <div className="flex items-center justify-between mb-12 relative z-10">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600">
                 <Heart size={24} />
               </div>
               <div>
-                <h3 className="text-2xl md:text-3xl font-bold text-[#121212] tracking-tight">שיעור התמדה לפי מגדר</h3>
-                <p className="text-xs text-zinc-500 mt-1 font-medium uppercase tracking-wider">COMMUNITY INSIGHTS • GENDER DYNAMICS</p>
+                <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">שיעור התמדה לפי מגדר</h3>
+                <p className="text-xs text-slate-500 mt-1 font-medium uppercase tracking-wider">COMMUNITY INSIGHTS • GENDER DYNAMICS</p>
               </div>
             </div>
           </div>
@@ -1173,19 +1184,19 @@ const TrendsDashboard: React.FC = () => {
               
               if (retention < RETENTION_THRESHOLDS.TOURIST) {
                 categoryLabel = "תיירים";
-                categoryColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+                categoryColor = "text-rose-600 bg-rose-50 border-rose-200";
                 barColorClass = "bg-rose-500";
               } else if (retention < RETENTION_THRESHOLDS.ECONOMY) {
                 categoryLabel = "אקונומי פלוס";
-                categoryColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+                categoryColor = "text-amber-600 bg-amber-50 border-amber-200";
                 barColorClass = "bg-amber-500";
               } else if (retention < RETENTION_THRESHOLDS.BUSINESS) {
                 categoryLabel = "ביזנס קלאס";
-                categoryColor = "text-blue-400 bg-blue-500/10 border-blue-500/20";
+                categoryColor = "text-blue-600 bg-blue-50 border-blue-200";
                 barColorClass = "bg-blue-500";
               } else {
                 categoryLabel = "פירסט קלאס";
-                categoryColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+                categoryColor = "text-emerald-600 bg-emerald-50 border-emerald-200";
               }
 
               return (
@@ -1195,10 +1206,10 @@ const TrendsDashboard: React.FC = () => {
                     {/* Top Row: Title, Count, Badge (RTL) */}
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-3">
-                        <span className="text-lg md:text-xl font-semibold text-zinc-100 tracking-tight">{group.label}</span>
-                        <span className="text-[10px] md:text-xs font-medium text-zinc-500 bg-zinc-900 px-2 py-1 rounded-md border border-zinc-800 whitespace-nowrap">{group.count} חברים</span>
+                        <span className="text-lg md:text-xl font-bold text-slate-900 tracking-tight">{group.label}</span>
+                        <span className="text-[10px] md:text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md border border-slate-200 whitespace-nowrap">{group.count} חברים</span>
                       </div>
-                      <span className={`text-[10px] md:text-xs px-2.5 py-1 rounded-md font-medium border whitespace-nowrap ${categoryColor}`}>
+                      <span className={`text-[10px] md:text-xs px-2.5 py-1 rounded-md font-bold border whitespace-nowrap ${categoryColor}`}>
                         {categoryLabel}
                       </span>
                     </div>
@@ -1206,31 +1217,31 @@ const TrendsDashboard: React.FC = () => {
                     {/* Bottom Row: Stats (LTR to match graph) */}
                     <div dir="ltr" className="flex items-center justify-start gap-4 md:gap-6">
                       <div className="flex flex-col items-start">
-                        <span className="text-[9px] md:text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-1 whitespace-nowrap">אוקטו (8 שבועות)</span>
+                        <span className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 whitespace-nowrap">אוקטו (8 שבועות)</span>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-xl md:text-2xl font-bold text-zinc-100 leading-none">{retention}</span>
-                          <span className="text-xs md:text-sm font-medium text-zinc-500">%</span>
+                          <span className="text-xl md:text-2xl font-black text-slate-900 leading-none">{retention}</span>
+                          <span className="text-xs md:text-sm font-medium text-slate-500">%</span>
                         </div>
                       </div>
-                      <div className="w-px h-8 md:h-10 bg-zinc-800" />
+                      <div className="w-px h-8 md:h-10 bg-slate-200" />
                       <div className="flex flex-col items-start">
-                        <span className="text-[9px] md:text-[10px] font-medium text-zinc-500 uppercase tracking-widest mb-1 whitespace-nowrap">ממוצע שנתי</span>
+                        <span className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 whitespace-nowrap">ממוצע שנתי</span>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-xl md:text-2xl font-bold text-zinc-400 leading-none">{yearly}</span>
-                          <span className="text-xs md:text-sm font-medium text-zinc-600">%</span>
+                          <span className="text-xl md:text-2xl font-bold text-slate-600 leading-none">{yearly}</span>
+                          <span className="text-xs md:text-sm font-medium text-slate-500">%</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Bullet Graph Container (Linear Style) */}
-                  <div dir="ltr" className="relative w-full h-8 rounded-lg bg-zinc-900/50 border border-zinc-800/50 overflow-visible flex items-center px-1">
+                  <div dir="ltr" className="relative w-full h-8 rounded-lg bg-slate-100/50 border border-slate-200/50 overflow-visible flex items-center px-1 shadow-sm">
                     
                     {/* Background Ranges (Subtle) */}
                     <div className="absolute inset-0 flex rounded-lg overflow-hidden pointer-events-none opacity-20">
-                      <div className="h-full w-[50%] bg-rose-500 border-r border-zinc-800" />
-                      <div className="h-full w-[20%] bg-amber-500 border-r border-zinc-800" />
-                      <div className="h-full w-[20%] bg-blue-500 border-r border-zinc-800" />
+                      <div className="h-full w-[50%] bg-rose-500 border-r border-slate-200" />
+                      <div className="h-full w-[20%] bg-amber-500 border-r border-slate-200" />
+                      <div className="h-full w-[20%] bg-blue-500 border-r border-slate-200" />
                       <div className="h-full w-[10%] bg-emerald-500" />
                     </div>
 
@@ -1238,8 +1249,8 @@ const TrendsDashboard: React.FC = () => {
                     <div className="absolute inset-0 flex justify-between px-1 pointer-events-none">
                       {[0, 25, 50, 75, 100].map(mark => (
                         <div key={mark} className="h-full flex flex-col justify-between py-0.5">
-                          <div className="w-px h-1.5 bg-zinc-700" />
-                          <div className="w-px h-1.5 bg-zinc-700" />
+                          <div className="w-px h-1.5 bg-slate-300" />
+                          <div className="w-px h-1.5 bg-slate-300" />
                         </div>
                       ))}
                     </div>
@@ -1257,7 +1268,7 @@ const TrendsDashboard: React.FC = () => {
                       initial={{ left: 0, opacity: 0 }}
                       animate={{ left: `${yearly}%`, opacity: 1 }}
                       transition={{ duration: 1, ease: "easeOut", delay: 0.5 + idx * 0.1 }}
-                      className="absolute top-[-4px] bottom-[-4px] w-0.5 bg-zinc-300 z-20"
+                      className="absolute top-[-4px] bottom-[-4px] w-0.5 bg-slate-800 z-20"
                       style={{ transform: 'translateX(-50%)' }}
                     />
                   </div>
@@ -1270,15 +1281,15 @@ const TrendsDashboard: React.FC = () => {
       {/* View Mode Switcher - Repositioned above graphs */}
       <div className="flex flex-col items-center gap-4 mb-8 mt-4">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-8 h-px bg-zinc-800" />
-          <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-[0.3em]">ניתוח מגמות והתמדה</span>
-          <div className="w-8 h-px bg-zinc-800" />
+          <div className="w-8 h-px bg-slate-300" />
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.3em]">ניתוח מגמות והתמדה</span>
+          <div className="w-8 h-px bg-slate-300" />
         </div>
-        <div dir="ltr" className="relative flex bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50 p-1 rounded-full">
+        <div dir="ltr" className="relative flex bg-white/50 backdrop-blur-xl border border-slate-200/50 p-1 rounded-full shadow-sm">
           {/* Animated Bubble */}
           <div className="absolute inset-1 flex pointer-events-none">
             <motion.div
-              className="w-1/2 h-full rounded-full bg-zinc-800 border border-zinc-700 shadow-sm"
+              className="w-1/2 h-full rounded-full bg-white border border-slate-200 shadow-sm"
               animate={{ x: viewMode === 'unified' ? '0%' : '100%' }}
               transition={{ type: "spring", stiffness: 400, damping: 35 }}
             />
@@ -1287,7 +1298,7 @@ const TrendsDashboard: React.FC = () => {
           <button
             onClick={() => setViewMode('unified')}
             className={`relative z-10 px-8 py-2 rounded-full text-xs font-semibold tracking-wide transition-colors duration-300 ${
-              viewMode === 'unified' ? 'text-[#121212]' : 'text-zinc-500 hover:text-zinc-300'
+              viewMode === 'unified' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             גרף מאוחד
@@ -1295,7 +1306,7 @@ const TrendsDashboard: React.FC = () => {
           <button
             onClick={() => setViewMode('split')}
             className={`relative z-10 px-8 py-2 rounded-full text-xs font-semibold tracking-wide transition-colors duration-300 ${
-              viewMode === 'split' ? 'text-[#121212]' : 'text-zinc-500 hover:text-zinc-300'
+              viewMode === 'split' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             גרף מפוצל
@@ -1310,18 +1321,18 @@ const TrendsDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="admin-info-card p-10 h-[500px]"
+            className="relative z-10 backdrop-blur-[40px] bg-white/40 border border-white/80 shadow-[0_40px_80px_rgba(15,23,42,0.12),inset_0_1px_1px_rgba(255,255,255,1),inset_0_-1px_1px_rgba(0,0,0,0.02)] rounded-[2rem] p-10 h-[500px]"
           >
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 40, bottom: 80 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 
                 {/* Area Highlighting */}
                 {chartData.length > 0 && (
                   <ReferenceArea 
                     x1={chartData[0]?.name} 
                     x2={chartData[chartData.length - 1]?.name} 
-                    fill="#F5F5F5" 
+                    fill="#F1F5F9" 
                     fillOpacity={0.5} 
                   />
                 )}
@@ -1344,9 +1355,9 @@ const TrendsDashboard: React.FC = () => {
                     return (
                       <ReferenceLine 
                         x={closest?.name} 
-                        stroke="#FF0000" 
+                        stroke="#ef4444" 
                         strokeDasharray="5 5" 
-                        label={{ position: 'top', value: 'היום', fill: '#FF0000', fontSize: 10, fontWeight: 900 }} 
+                        label={{ position: 'top', value: 'היום', fill: '#ef4444', fontSize: 10, fontWeight: 900 }} 
                       />
                     );
                   }
@@ -1356,12 +1367,13 @@ const TrendsDashboard: React.FC = () => {
                 <XAxis 
                   dataKey="name" 
                   {...getOperationalXAxisProps(chartData.length, yearConfig)}
+                  tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }}
                 />
                 <YAxis 
                   yAxisId="left"
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
+                  tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }}
                   dx={-10}
                   domain={[0, 100]}
                   ticks={[0, 20, 40, 60, 80, 100]}
@@ -1372,7 +1384,7 @@ const TrendsDashboard: React.FC = () => {
                   orientation="right"
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
+                  tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }}
                   dx={10}
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -1380,7 +1392,7 @@ const TrendsDashboard: React.FC = () => {
                   verticalAlign="top" 
                   align="right" 
                   iconType="circle"
-                  wrapperStyle={{ paddingBottom: 20, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+                  wrapperStyle={{ paddingBottom: 20, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#475569' }}
                   onMouseEnter={(o) => setHoveredGroup(o.dataKey as string)}
                   onMouseLeave={() => setHoveredGroup(null)}
                 />
@@ -1407,25 +1419,25 @@ const TrendsDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="grid grid-cols-1 gap-8"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
           >
             {groups.map(group => (
-              <div key={group.id} className="admin-info-card p-10 h-[350px] flex flex-col">
+              <div key={group.id} className="relative z-10 backdrop-blur-[40px] bg-white/40 border border-white/80 shadow-[0_40px_80px_rgba(15,23,42,0.12),inset_0_1px_1px_rgba(255,255,255,1),inset_0_-1px_1px_rgba(0,0,0,0.02)] rounded-[2rem] p-8 h-[350px] flex flex-col">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-xs font-black text-[#2B2B2E] uppercase tracking-widest">{group.label}</h4>
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: group.color }} />
+                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">{group.label}</h4>
+                  <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: group.color }} />
                 </div>
                 <div className="flex-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       
                       {/* Area Highlighting */}
                       {chartData.length > 0 && (
                         <ReferenceArea 
                           x1={chartData[0]?.name} 
                           x2={chartData[chartData.length - 1]?.name} 
-                          fill="#F5F5F5" 
+                          fill="#F1F5F9" 
                           fillOpacity={0.5} 
                         />
                       )}
@@ -1448,7 +1460,7 @@ const TrendsDashboard: React.FC = () => {
                           return (
                             <ReferenceLine 
                               x={closest?.name} 
-                              stroke="#FF0000" 
+                              stroke="#ef4444" 
                               strokeDasharray="5 5" 
                             />
                           );
@@ -1460,14 +1472,14 @@ const TrendsDashboard: React.FC = () => {
                         dataKey="name" 
                         {...getOperationalXAxisProps(chartData.length, yearConfig)}
                         height={20}
-                        tick={{ fontSize: 8, fontWeight: 700, fill: '#94a3b8' }}
+                        tick={{ fontSize: 8, fontWeight: 700, fill: '#64748b' }}
                       />
                       <YAxis 
                         yAxisId="left"
                         domain={[0, 100]} 
                         ticks={[0, 50, 100]}
                         tickFormatter={(val) => `${val}%`}
-                        tick={{ fontSize: 8, fontWeight: 700, fill: '#94a3b8' }}
+                        tick={{ fontSize: 8, fontWeight: 700, fill: '#64748b' }}
                         axisLine={false}
                         tickLine={false}
                         width={30}
@@ -1475,7 +1487,7 @@ const TrendsDashboard: React.FC = () => {
                       <YAxis 
                         yAxisId="right"
                         orientation="right"
-                        tick={{ fontSize: 8, fontWeight: 700, fill: '#94a3b8' }}
+                        tick={{ fontSize: 8, fontWeight: 700, fill: '#64748b' }}
                         axisLine={false}
                         tickLine={false}
                         width={30}
@@ -1484,7 +1496,7 @@ const TrendsDashboard: React.FC = () => {
                       <Bar
                         yAxisId="right"
                         dataKey={`${group.id}_count`}
-                        fill="#E2E8F0"
+                        fill="#cbd5e1"
                         radius={[2, 2, 0, 0]}
                         barSize={10}
                       />

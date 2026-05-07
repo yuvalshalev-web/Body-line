@@ -29,8 +29,9 @@ const UserCategories: React.FC<UserCategoriesProps> = ({ userId }) => {
       return 3;
     };
 
-    const penguinSessions = weeklyHistory.filter(s => getTemp(s) < 20);
-    const jellyfishSessions = weeklyHistory.filter(s => getTemp(s) > 27);
+    const surfHistory = weeklyHistory.filter(s => !s.isEvent);
+    const penguinSessions = surfHistory.filter(s => getTemp(s) < 20);
+    const jellyfishSessions = surfHistory.filter(s => getTemp(s) > 27);
 
     const memberStats = members.map(member => {
       const winterSessions = penguinSessions.filter(s => s.participantIds?.includes(member.id));
@@ -85,9 +86,9 @@ const UserCategories: React.FC<UserCategoriesProps> = ({ userId }) => {
     if (!userStats) return [];
 
     const categories = [];
-    if (jellyfish.some(j => j.id === userId)) categories.push({ name: 'מנטה ריי', icon: Sun, color: 'text-[#00426a]', iconColor: 'text-[#0071a1]', bg: 'bg-[#f0f8ff]/50 border border-[#00426a]/10 shadow-sm' });
-    if (sharks.some(s => s.id === userId)) categories.push({ name: 'כריש', icon: Zap, color: 'text-[#00426a]', iconColor: 'text-[#0071a1]', bg: 'bg-[#f0f8ff]/50 border border-[#00426a]/10 shadow-sm' });
-    if (orcas.some(o => o.id === userId)) categories.push({ name: 'אורקה', icon: Trophy, color: 'text-[#00426a]', iconColor: 'text-[#0071a1]', bg: 'bg-[#f0f8ff]/50 border border-[#00426a]/10 shadow-sm' });
+    if (jellyfish.some(j => j.id === userId)) categories.push({ name: 'מנטה ריי', icon: Sun, color: 'text-slate-800', iconColor: 'text-slate-600', bg: 'bg-[#f0f8ff]/50 border border-slate-800/10 shadow-sm' });
+    if (sharks.some(s => s.id === userId)) categories.push({ name: 'כריש', icon: Zap, color: 'text-slate-800', iconColor: 'text-slate-600', bg: 'bg-[#f0f8ff]/50 border border-slate-800/10 shadow-sm' });
+    if (orcas.some(o => o.id === userId)) categories.push({ name: 'אורקה', icon: Trophy, color: 'text-slate-800', iconColor: 'text-slate-600', bg: 'bg-[#f0f8ff]/50 border border-slate-800/10 shadow-sm' });
 
     return categories;
   }, [members, weeklyHistory, userId]);

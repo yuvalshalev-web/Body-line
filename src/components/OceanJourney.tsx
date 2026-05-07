@@ -321,8 +321,9 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
       return averages[month];
     };
 
-    const penguinSessions = weeklyHistory.filter(s => getTemp(s) < 20);
-    const jellyfishSessions = weeklyHistory.filter(s => getTemp(s) > 27);
+    const surfHistory = weeklyHistory.filter(s => !s.isEvent);
+    const penguinSessions = surfHistory.filter(s => getTemp(s) < 20);
+    const jellyfishSessions = surfHistory.filter(s => getTemp(s) > 27);
 
     const memberStats = members.map(member => {
       const winterSessions = penguinSessions.filter(s => s.participantIds?.includes(member.id));
