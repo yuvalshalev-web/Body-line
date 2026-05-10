@@ -94,8 +94,9 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
   const coordinatorsStats = getParticipationStats(activeMembers.filter((m: any) => m.role === 'Admin' || m.role === 'Coordinator'));
 
   // By Gender
-  const maleStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'זכר'));
-  const femaleStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'נקבה'));
+  const maleStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'זכר' || m.gender === 'Male' || m.gender === 'male'));
+  const femaleStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'נקבה' || m.gender === 'Female' || m.gender === 'female'));
+  const unspecifiedStats = getParticipationStats(activeMembers.filter((m: any) => !['זכר', 'Male', 'male', 'נקבה', 'Female', 'female'].includes(m.gender)));
 
   // By Age
   const ageUnder18 = getParticipationStats(activeMembers.filter((m: any) => { const age = calculateAge(m.birthday || m.birthDate); return age !== null && age >= 0 && age < 18; }));

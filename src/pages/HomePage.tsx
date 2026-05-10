@@ -22,8 +22,6 @@ import {
   WifiOff,
   AlertCircle
 } from 'lucide-react';
-import { CoastalDashboard } from '../components/CoastalDashboard';
-import { WeeklyForecast } from '../components/WeeklyForecast';
 import { SurfDashboard } from '../components/SurfDashboard';
 import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
 import { useAuth } from '../contexts/AuthContext';
@@ -54,7 +52,6 @@ const HomePage: React.FC = () => {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAttendees, setShowAttendees] = useState(false);
-  const [useBentoDashboard, setUseBentoDashboard] = useState(true);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [randomGlossary, setRandomGlossary] = useState<any[]>([]);
   const [randomQuotes, setRandomQuotes] = useState<any[]>([]);
@@ -99,7 +96,8 @@ const HomePage: React.FC = () => {
         windSpeed: coastalWeather?.windSpeed,
         windDir: coastalWeather?.windDir,
         swellDir: seaStats?.swellDir,
-        period: seaStats?.period
+        period: seaStats?.period,
+        user: currentUser
       });
       setForecastAnalysis(result);
     } catch (error) {
@@ -432,19 +430,11 @@ const HomePage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setUseBentoDashboard(!useBentoDashboard)}
-              className="flex items-center gap-2 px-4 py-2 bg-white/50 backdrop-blur-md rounded-xl text-xs font-bold text-slate-600 hover:bg-white/80 transition-colors border border-white/40 shadow-sm"
-              title="החלף לעיצוב הקלאסי"
-            >
-              <RefreshCw size={14} className={useBentoDashboard ? "" : "animate-spin-once"} />
-              <span>{useBentoDashboard ? "חזור לתצוגה קלאסית" : "עבור ל-Bento UI"}</span>
-            </button>
-            <button
               onClick={handleForecastAnalysis}
               disabled={isAnalyzingForecast}
-              className="flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl font-black text-sm text-[var(--surfer-deep-teal)] hover:bg-white/20 transition-all shadow-lg active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-3 px-6 py-3 bg-white/50 backdrop-blur-xl border border-white/40 rounded-2xl font-black text-sm text-[#36454f] hover:bg-white/80 hover:text-[#222b33] transition-all shadow-lg active:scale-95 disabled:opacity-50"
             >
-              {isAnalyzingForecast ? <Loader2 className="animate-spin" size={18} /> : <MessageSquareQuote size={18} />}
+              {isAnalyzingForecast ? <Loader2 className="animate-spin text-[#36454f]" size={18} /> : <MessageSquareQuote className="text-[#36454f]" size={18} />}
               <span>ניתוח מומחה AI (Gemini)</span>
             </button>
           </div>
@@ -473,20 +463,13 @@ const HomePage: React.FC = () => {
 
         <AnimatePresence mode="wait">
           <motion.div
-            key={useBentoDashboard ? 'bento' : 'classic'}
+            key="bento"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
           >
-            {useBentoDashboard ? (
-              <SurfDashboard />
-            ) : (
-              <>
-                <CoastalDashboard />
-                <WeeklyForecast />
-              </>
-            )}
+            <SurfDashboard />
           </motion.div>
         </AnimatePresence>
       </section>

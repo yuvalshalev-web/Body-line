@@ -59,6 +59,17 @@ const LoginPage: React.FC = () => {
   const currentBg = siteAssets?.loginBg || headerImage;
   const logoUrl = siteAssets?.habalZugLogo;
 
+  const handleWrongPassword = () => {
+    setError('הסיסמה שהזנת אינה נכונה');
+    setFailedAttempts(prev => {
+      const next = prev + 1;
+      if (next >= 3) {
+        setShowSeaWaterAlert(true);
+      }
+      return next;
+    });
+  };
+
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -225,7 +236,7 @@ const LoginPage: React.FC = () => {
              } catch (createErr: any) {
                if (createErr.code === 'auth/email-already-in-use') {
                  // Email exists but password was wrong in the first try
-                 setError('הסיסמה שהזנת אינה נכונה');
+                 handleWrongPassword();
                  setIsLoading(false);
                  return;
                }
@@ -305,16 +316,16 @@ const LoginPage: React.FC = () => {
               navigate('/');
             } catch (migrateErr: any) {
               if (migrateErr.code === 'auth/email-already-in-use') {
-                setError('הסיסמה שהזנת אינה נכונה');
+                handleWrongPassword();
               } else {
                 setError('שגיאה בתהליך המעבר למערכת החדשה: ' + migrateErr.message);
               }
             }
           } else {
-            setError('הסיסמה שהזנת אינה נכונה');
+            handleWrongPassword();
           }
         } else if (authErr.code === 'auth/wrong-password') {
-          setError('הסיסמה שהזנת אינה נכונה');
+          handleWrongPassword();
         } else if (authErr.code === 'auth/too-many-requests') {
           setError('יותר מדי ניסיונות כושלים. אנא נסה שוב מאוחר יותר.');
         } else {
@@ -594,282 +605,356 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden font-yehuda" dir="rtl">
-      <div className="absolute inset-0 z-0">
-        <img src={currentBg} className="w-full h-full object-cover animate-in fade-in duration-1000" alt="Background" />
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div className="min-h-screen bg-[#09090b] flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden font-sans tracking-tight" dir="rtl">
+      {/* Background System */}
+      <div className="fixed inset-0 z-0">
+        <motion.img 
+          initial={{ scale: 1.05, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          src={currentBg} 
+          className="w-full h-full object-cover opacity-30 pointer-events-none" 
+          alt="Background" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#09090b]/80 via-[#09090b]/40 to-[#09090b]/90 backdrop-blur-[1px]"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-lg animate-in fade-in zoom-in-95 duration-700">
-        <div className="bg-white/10 backdrop-blur-xl rounded-[3rem] border border-white/20 p-8 md:p-14 shadow-2xl">
+      <div className="relative z-10 w-full max-w-sm sm:max-w-md animate-in fade-in slide-in-from-bottom-8 duration-700">
+        
+        {/* Modern Minimal Form Container */}
+        <div className="bg-[#121214]/90 backdrop-blur-3xl border border-white/[0.08] p-8 sm:p-10 rounded-2xl shadow-2xl relative overflow-hidden">
+
           {mode === 'LOGIN' ? (
-            <form onSubmit={handleLoginSubmit} className="space-y-6">
-               <div className="text-center mb-8 drop-shadow-2xl flex flex-col items-center min-h-[120px] justify-center">
+            <form onSubmit={handleLoginSubmit} className="space-y-6 relative z-10">
+               {/* Header / Logo */}
+               <div className="text-center mb-8 flex flex-col justify-center items-center">
                  {isDataLoading ? (
-                   <Loader2 className="animate-spin text-white/20" size={32} />
-                 ) : (siteAssets?.habalZugLogo) ? (
-                   <div className="flex items-center justify-center gap-6 animate-in fade-in duration-500">
-                     {siteAssets?.habalZugLogo && (
-                       <img 
-                         src={siteAssets.habalZugLogo} 
-                         className="h-28 w-auto object-contain" 
-                         alt="Habal Zug Logo" 
-                         onError={() => setLogoError(true)}
-                         referrerPolicy="no-referrer"
-                       />
-                     )}
+                   <div className="h-24 flex items-center justify-center">
+                     <Loader2 className="animate-spin text-white/50" size={32} />
                    </div>
                  ) : (
-                   <div className="flex flex-col items-center gap-2 animate-in fade-in zoom-in-95">
-                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-slate-950 shadow-lg">
-                       <Waves size={32} />
+                   <motion.div 
+                     initial={{ y: 10, opacity: 0 }}
+                     animate={{ y: 0, opacity: 1 }}
+                     transition={{ duration: 0.5, delay: 0.1 }}
+                     className="flex flex-col gap-4 items-center w-full"
+                   >
+                     {logoUrl ? (
+                       <img 
+                         src={logoUrl} 
+                         className="h-20 sm:h-24 w-auto object-contain" 
+                         alt="Habal Zug Logo" 
+                         referrerPolicy="no-referrer"
+                       />
+                     ) : (
+                       <div className="w-16 h-16 bg-white flex items-center justify-center text-black rounded-2xl shrink-0 shadow-lg mb-2">
+                         <Waves size={32} />
+                       </div>
+                     )}
+                     <div className="space-y-1 mt-2">
+                       <h1 className="text-white text-2xl sm:text-3xl font-semibold tracking-tight">
+                         ברוכים הבאים
+                       </h1>
+                       <p className="text-white/50 text-sm font-medium">
+                         התחברו לחשבון שלכם כדי להמשיך
+                       </p>
                      </div>
-                     <div className="text-white text-4xl font-black italic tracking-tighter">חבל זוג</div>
-                   </div>
+                   </motion.div>
                  )}
                </div>
-              <div className="relative w-full">
-                <input 
-                  type="email" required value={email} onChange={e => setEmail(e.target.value)} 
-                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14 placeholder-white/50 text-right"
-                  placeholder="אימייל חבר"
-                />
-                <Mail size={20} className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 pointer-events-none ${email ? 'text-[#00FFFF]' : 'text-white/40'}`} />
-              </div>
-              <div className="relative w-full">
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  required value={password} onChange={e => setPassword(e.target.value)} 
-                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14 placeholder-white/50 text-right"
-                  placeholder="סיסמה"
-                />
-                <button 
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 hover:text-white ${password ? 'text-[#00FFFF]' : 'text-white/40'}`}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
 
-              {/* Location Selection Dropdown */}
-              <div className="relative w-full">
-                <button 
-                  type="button"
-                  onClick={() => setIsGroupMenuOpen(!isGroupMenuOpen)}
-                  className="w-full pr-6 pl-14 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none flex items-center justify-between group hover:bg-white/10 transition-all text-right"
-                >
-                  <span className="flex-1 text-right">{selectedGroup}</span>
-                  <ChevronDown size={20} className={`text-white/40 transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
-                </button>
-                <MapPin size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#00FFFF] pointer-events-none" />
-
-                {isGroupMenuOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                    {groups.map((group) => (
-                      <button
-                        key={group}
-                        type="button"
-                        onClick={() => {
-                          setSelectedGroup(group);
-                          setIsGroupMenuOpen(false);
-                          if (group !== "הרצליה") {
-                            setError('הגישה לקבוצת ' + group + ' טרם נפתחה במערכת.');
-                          } else {
-                            setError('');
-                          }
-                        }}
-                        className={`w-full px-6 py-4 text-right font-bold transition-all hover:bg-white/10 ${
-                          selectedGroup === group ? 'text-[#00FFFF] bg-white/5' : 'text-white/70'
-                        }`}
-                      >
-                        {group}
-                      </button>
-                    ))}
+              <div className="space-y-4">
+                <div className="relative group">
+                  <input 
+                    type="email" required value={email} onChange={e => setEmail(e.target.value)} 
+                    className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all duration-300"
+                    placeholder="דוא״ל"
+                  />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Mail size={18} className="text-white/40 group-focus-within:text-white/80 transition-colors" />
                   </div>
-                )}
-              </div>
+                </div>
 
-              {error && (
-                <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3">
-                  <AlertCircle size={16} />
-                  {error}
-                </div>
-              )}
-              
-              {resetSuccessMessage && (
-                <div className="p-4 bg-emerald-500/20 text-emerald-200 text-xs font-black flex items-center gap-3 rounded-xl border border-emerald-500/30">
-                  <CheckCircle2 size={16} />
-                  {resetSuccessMessage}
-                </div>
-              )}
-              
-              {isDbEmpty && (
-                <div className="p-4 bg-cyan-500/20 border border-cyan-500/30 rounded-2xl text-cyan-100 text-xs font-bold text-center space-y-3">
-                  <p>נראה שמסד הנתונים ריק. האם תרצה להקים מנהל מערכת ראשוני?</p>
-                  <button
+                <div className="relative group">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    required value={password} onChange={e => setPassword(e.target.value)} 
+                    className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all duration-300"
+                    placeholder="סיסמה"
+                  />
+                  <button 
                     type="button"
-                    disabled={isSeeding}
-                    onClick={async () => {
-                      setIsSeeding(true);
-                      const success = await seedInitialAdmin();
-                      if (success) {
-                        setEmail(SUPER_ADMIN_EMAIL);
-                        setPassword('admin123');
-                        setError('מנהל מערכת הוקם בהצלחה! התחבר עם admin123');
-                      }
-                      setIsSeeding(false);
-                    }}
-                    className="px-4 py-2 bg-cyan-500 text-white rounded-xl font-black hover:bg-cyan-400 transition-colors disabled:opacity-50"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors"
                   >
-                    {isSeeding ? 'מקים...' : 'לחץ כאן להקמת מנהל מערכת ראשוני'}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-              )}
 
-              <div className="flex justify-center">
-                <GlassButton type="submit" disabled={isLoading} className="!px-8 !py-4 bg-[#FFD700]/20 border-[#FFD700]/30 text-[#00FFFF] font-black w-fit">
-                  {isLoading ? <Loader2 className="animate-spin" /> : <LogIn size={24} className="text-[#FFD700]" />}
-                  <span className="text-lg">כניסה</span>
-                </GlassButton>
+                {/* Location Selection Dropdown */}
+                <div className="relative w-full">
+                  <button 
+                    type="button"
+                    onClick={() => setIsGroupMenuOpen(!isGroupMenuOpen)}
+                    className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none text-right flex items-center justify-between px-4 hover:border-white/30 transition-all duration-300"
+                  >
+                    <span className="flex-1 text-right">{selectedGroup}</span>
+                    <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isGroupMenuOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-[#1A1A1D] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden py-1"
+                      >
+                        {groups.map((group) => (
+                          <button
+                            key={group}
+                            type="button"
+                            onClick={() => {
+                              setSelectedGroup(group);
+                              setIsGroupMenuOpen(false);
+                              if (group !== "הרצליה") {
+                                setError('הגישה לקבוצת ' + group + ' טרם נפתחה במערכת.');
+                              } else {
+                                setError('');
+                              }
+                            }}
+                            className={`w-full px-4 py-3 text-right font-medium text-sm transition-all flex items-center justify-between hover:bg-white/5 ${
+                              selectedGroup === group ? 'text-white bg-white/5' : 'text-white/70'
+                            }`}
+                          >
+                            <span>{group}</span>
+                            {selectedGroup === group && <CheckCircle2 size={16} className="text-white" />}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              <AnimatePresence mode="popLayout">
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="p-4 bg-rose-500/10 border-l-2 border-rose-500 text-rose-400 text-sm font-bold flex items-start gap-3 backdrop-blur-md"
+                  >
+                    <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                    <span className="leading-tight">{error}</span>
+                  </motion.div>
+                )}
+                
+                {resetSuccessMessage && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="p-4 bg-cyan-500/10 border-l-2 border-cyan-400 text-cyan-400 text-sm font-bold flex items-center gap-3 backdrop-blur-md"
+                  >
+                    <CheckCircle2 size={20} className="shrink-0" />
+                    <span>{resetSuccessMessage}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="pt-2">
+                <button 
+                  type="submit" 
+                  disabled={isLoading} 
+                  className="w-full h-12 bg-white text-black hover:bg-white/90 rounded-xl flex items-center justify-center transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base"
+                >
+                  {isLoading ? (
+                    <Loader2 className="animate-spin text-black mx-auto" size={20} />
+                  ) : (
+                    <span>התחבר</span>
+                  )}
+                </button>
               </div>
               
-              <div className="pt-4 flex flex-col items-center gap-4">
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    console.log("--- FIREBASE DIAGNOSTICS (LOGIN PAGE) ---");
-                    console.log("Config:", (window as any)._firebase_config);
-                    console.log("Connected:", (window as any)._db_connected);
-                    console.log("Last Error:", (window as any)._db_error);
-                    alert("Diagnostics logged to console (F12)");
-                  }}
-                  className="flex items-center gap-2 text-white/20 hover:text-white/40 transition-colors text-xs font-bold"
-                >
-                  <Terminal size={12} />
-                  בדיקת מערכת (Diagnostics)
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => setMode('JOIN')} 
-                  className="group relative flex items-center gap-2 bg-transparent border border-white/5 text-white/40 px-6 py-3 rounded-2xl font-black overflow-hidden transition-all duration-300 hover:text-white hover:bg-white/5 hover:border-white/10 hover:scale-105 hover:shadow-[0_0_15px_rgba(0,255,255,0.2)]"
-                >
-                  {/* אפקט "נצנוץ" בציאן ברקע במעבר עכבר */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#00FFFF]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  
-                  {/* האייקון עם הנפשה קטנה */}
-                  <UserPlus 
-                    size={18} 
-                    className="text-[#00FFFF]/40 transition-all duration-300 group-hover:text-[#00FFFF] group-hover:rotate-12 group-hover:scale-110" 
-                  />
-                  
-                  <span className="relative z-10 text-base">בקש להצטרף</span>
-                </button>
-
+              <div className="pt-6 mt-6 border-t border-white/10 flex flex-col items-center gap-4">
                 <button 
                   type="button" 
                   onClick={handleGoogleLogin} 
-                  className="group relative flex items-center gap-3 bg-white/5 border border-white/10 text-white/70 px-6 py-3 rounded-2xl font-black overflow-hidden transition-all duration-300 hover:text-white hover:bg-white/10 hover:border-white/20 hover:scale-105"
+                  className="w-full h-12 flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all active:scale-[0.98] font-medium text-sm border border-white/5"
                 >
-                  <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-inner">
-                    <span className="text-blue-600 font-black text-sm">G</span>
-                  </div>
-                  <span className="text-base">התחברות עם Google</span>
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                  <span>המשך עם Google</span>
                 </button>
+
+                <div className="flex items-center gap-4 w-full justify-center mt-2">
+                  <span className="text-white/40 text-sm">אין לך חשבון?</span>
+                  <button 
+                    type="button" 
+                    onClick={() => setMode('JOIN')} 
+                    className="text-white hover:text-white/80 text-sm font-medium transition-colors"
+                  >
+                    בקשת הצטרפות
+                  </button>
+                </div>
               </div>
             </form>
           ) : mode === 'RESET_TEMP_PASSWORD' ? (
-            <form onSubmit={handleResetPasswordSubmit} className="space-y-6">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-[#00FFFF]/10 text-[#00FFFF] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <RotateCcw size={32} />
+            <motion.form 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onSubmit={handleResetPasswordSubmit} 
+              className="space-y-6 relative z-10"
+            >
+              <div className="text-center mb-8 flex flex-col items-center">
+                <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-4">
+                  <RotateCcw size={32} className="text-white" />
                 </div>
-                <h3 className="text-2xl font-black text-white">החלפת סיסמה זמנית</h3>
-                <p className="text-white/50 text-xs font-bold mt-2">הסיסמה שקיבלת היא זמנית. נא לבחור סיסמה אישית קבועה.</p>
+                <h3 className="text-white text-2xl sm:text-3xl font-semibold tracking-tight">החלפת סיסמה זמנית</h3>
+                <p className="text-white/50 text-sm font-medium mt-2">הסיסמה שקיבלת היא זמנית. נא לבחור סיסמה אישית קבועה.</p>
               </div>
 
               <div className="space-y-4">
-                <div className="relative">
+                <div className="relative group">
                   <input 
                     type={showPassword ? "text" : "password"} 
                     required 
                     value={newPassword} 
                     onChange={e => setNewPassword(e.target.value)} 
-                    className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14 placeholder-white/50"
+                    className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all duration-300"
                     placeholder="סיסמה חדשה"
                   />
                 </div>
-                <div className="relative">
+                <div className="relative group">
                   <input 
                     type={showPassword ? "text" : "password"} 
                     required 
                     value={confirmPassword} 
                     onChange={e => setConfirmPassword(e.target.value)} 
-                    className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none pr-6 pl-14 placeholder-white/50"
+                    className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all duration-300"
                     placeholder="אימות סיסמה"
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors"
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
 
-              {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
+              <AnimatePresence mode="popLayout">
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="p-4 bg-rose-500/10 border-l-2 border-rose-500 text-rose-400 text-sm font-bold flex items-start gap-3 backdrop-blur-md"
+                  >
+                    <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                    <span className="leading-tight">{error}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               
-              <GlassButton type="submit" disabled={isLoading} className="w-fit mx-auto">
-                {isLoading ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={24} className="text-[#00FFFF]" />}
-                עדכן סיסמה וכנס
-              </GlassButton>
+              <div className="pt-2">
+                <button 
+                  type="submit" 
+                  disabled={isLoading} 
+                  className="w-full h-12 bg-white text-black hover:bg-white/90 rounded-xl flex items-center justify-center transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base"
+                >
+                  {isLoading ? (
+                    <Loader2 className="animate-spin text-black mx-auto" size={20} />
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <CheckCircle2 size={18} />
+                      <span>עדכן סיסמה והתחבר</span>
+                    </div>
+                  )}
+                </button>
+              </div>
               
-              <button type="button" onClick={() => setMode('LOGIN')} className="w-full text-white/50 hover:text-white font-black text-xs transition-colors">חזרה להתחברות</button>
-            </form>
+              <button 
+                type="button" 
+                onClick={() => setMode('LOGIN')} 
+                className="w-full text-white/40 hover:text-white/80 font-medium text-sm transition-colors mt-4"
+              >
+                חזרה להתחברות
+              </button>
+            </motion.form>
           ) : (
-            <form onSubmit={handleJoinSubmit} className="space-y-6">
+            <motion.form 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onSubmit={handleJoinSubmit} 
+              className="space-y-6 relative z-10"
+            >
               {success ? (
-                <div className="py-12 text-center space-y-6">
-                  <CheckCircle2 size={64} className="text-emerald-500 mx-auto" />
-                  <h3 className="text-2xl font-black text-white">הבקשה נשלחה!</h3>
+                <div className="py-12 text-center space-y-4">
+                  <div className="w-20 h-20 bg-white/10 text-white rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 size={40} />
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">הבקשה נשלחה</h3>
+                  <p className="text-white/50 text-sm font-medium">צוות המועדון יחזור אליך בהקדם עם ערוצי הגישה למערכת.</p>
+                  <div className="pt-6">
+                    <button type="button" onClick={resetToLogin} className="w-full h-12 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all font-medium border border-white/5">
+                      חזור לדף ההתחברות
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-4 mb-4">
-                    <button type="button" onClick={resetToLogin} className="p-2 text-white/40"><ArrowRight size={24} /></button>
-                    <h3 className="text-2xl font-black text-white">בקשת הצטרפות</h3>
+                  <div className="flex items-center gap-4 mb-6">
+                    <button type="button" onClick={resetToLogin} className="w-10 h-10 border border-white/[0.08] hover:border-white/30 rounded-xl flex items-center justify-center text-white/50 hover:bg-white/[0.05] hover:text-white transition-all">
+                      <ArrowRight size={18} />
+                    </button>
+                    <h3 className="text-white text-xl font-semibold tracking-tight">בקשת הצטרפות</h3>
                   </div>
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="relative">
-                      <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-white/20 bg-white/5 flex items-center justify-center">
-                        {isProcessingImage ? (
-                          <Loader2 className="animate-spin text-white" />
-                        ) : joinAvatar ? (
-                          <img src={joinAvatar} className="w-full h-full object-cover" alt="" loading="lazy" />
-                        ) : (
-                          <User size={48} className="text-white/20" />
-                        )}
+                  
+                  <div className="flex flex-col items-center gap-4 mb-6">
+                    <div className="relative group/avatar cursor-pointer">
+                      <div className="w-20 h-20 overflow-hidden border border-white/10 bg-white/5 rounded-full flex items-center justify-center group-hover/avatar:border-white/30 transition-all duration-300">
+                        <div className="w-full h-full flex items-center justify-center">
+                          {isProcessingImage ? (
+                            <Loader2 className="animate-spin text-white/50" size={24} />
+                          ) : joinAvatar ? (
+                            <img src={joinAvatar} className="w-full h-full object-cover" alt="" loading="lazy" />
+                          ) : (
+                            <User size={32} className="text-white/20 group-hover/avatar:text-white/60 transition-colors" />
+                          )}
+                        </div>
                       </div>
-                      <label className="absolute -bottom-2 -left-2 p-2 bg-[#006994] text-white rounded-xl cursor-pointer shadow-lg hover:bg-[#4E8294] transition-all">
-                        <Camera size={16} className="text-[#00FFFF]" />
+                      <label className="absolute -bottom-1 -left-1 w-8 h-8 bg-white rounded-full text-black flex items-center justify-center cursor-pointer shadow-lg hover:scale-105 transition-all">
+                        <Camera size={16} />
                         <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} disabled={isProcessingImage} />
                       </label>
                     </div>
                   </div>
+
                   <div className="grid grid-cols-2 gap-4">
-                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none placeholder-white/50 text-right" />
-                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none placeholder-white/50 text-right" />
+                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none px-4 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all" />
+                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none px-4 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all" />
                   </div>
-                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="אימייל" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none placeholder-white/50 text-right" />
-                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none placeholder-white/50 text-right" />
+                  
+                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="דוא״ל" className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none px-4 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all" />
+                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none px-4 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all focus:text-left direction-ltr text-left" dir="ltr" />
+                  
                   <div className="relative w-full">
                     <button 
                       type="button"
                       onClick={() => setIsGenderMenuOpen(!isGenderMenuOpen)}
-                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold outline-none flex items-center justify-between group hover:bg-white/10 transition-all text-right"
+                      className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none text-right flex items-center justify-between px-4 hover:border-white/30 transition-all"
                     >
-                      <span className={`flex-1 text-right ${joinGender ? 'text-white' : 'text-white/40'}`}>{joinGender || 'מגדר'}</span>
+                      <span className={`flex-1 text-right ${joinGender ? 'text-white' : 'text-white/30'}`}>{joinGender || 'מגדר (בחירה)'}</span>
                       <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
@@ -878,10 +963,11 @@ const LoginPage: React.FC = () => {
                         <>
                           <div className="fixed inset-0 z-[60]" onClick={() => setIsGenderMenuOpen(false)} />
                           <motion.div 
-                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                            className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-[70] overflow-hidden"
+                            initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-[#1A1A1D] border border-white/10 rounded-xl shadow-2xl z-[70] overflow-hidden py-1"
                           >
                             {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
                               <button
@@ -891,11 +977,12 @@ const LoginPage: React.FC = () => {
                                   setJoinGender(g);
                                   setIsGenderMenuOpen(false);
                                 }}
-                                className={`w-full px-6 py-4 text-right font-bold transition-all hover:bg-white/10 ${
-                                  joinGender === g ? 'text-[#00FFFF] bg-white/5' : 'text-white/70'
+                                className={`w-full px-4 py-3 text-right font-medium text-sm transition-all flex items-center justify-between hover:bg-white/5 ${
+                                  joinGender === g ? 'text-white bg-white/5' : 'text-white/70'
                                 }`}
                               >
-                                {g}
+                                <span>{g}</span>
+                                {joinGender === g && <CheckCircle2 size={16} className="text-white" />}
                               </button>
                             ))}
                           </motion.div>
@@ -903,13 +990,40 @@ const LoginPage: React.FC = () => {
                       )}
                     </AnimatePresence>
                   </div>
-                  {error && <div className="p-4 bg-rose-500/20 text-rose-200 text-xs font-black flex items-center gap-3"><AlertCircle size={16} />{error}</div>}
-                  <GlassButton type="submit" disabled={isLoading || isProcessingImage} className="w-fit mx-auto">
-                    {isLoading ? <Loader2 className="animate-spin mx-auto" /> : 'שלח בקשה ב-WebP'}
-                  </GlassButton>
+                  
+                  <AnimatePresence mode="popLayout">
+                    {(error || mobileError) && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="p-4 bg-rose-500/10 border-l-2 border-rose-500 text-rose-400 text-sm font-bold flex items-start gap-3 backdrop-blur-md"
+                      >
+                        <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                        <span className="leading-tight">{error || mobileError}</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  <div className="pt-2">
+                    <button 
+                      type="submit" 
+                      disabled={isLoading || isProcessingImage} 
+                      className="w-full h-12 bg-white text-black hover:bg-white/90 rounded-xl flex items-center justify-center transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="animate-spin text-black mx-auto" size={20} />
+                      ) : (
+                        <div className="flex items-center justify-center gap-2">
+                          <span>שלח בקשה</span>
+                          <ArrowRight size={18} className="rotate-180" />
+                        </div>
+                      )}
+                    </button>
+                  </div>
                 </>
               )}
-            </form>
+            </motion.form>
           )}
         </div>
 
@@ -947,50 +1061,53 @@ const LoginPage: React.FC = () => {
           </a>
         </div>
       </div>
-      {/* Sea Water Alert Modal (Forgot Password) */}
+      {/* Forgot Password Modal */}
       <AnimatePresence>
         {showSeaWaterAlert && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
           >
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#1A1A24] border border-white/10 rounded-3xl p-6 max-w-sm w-full shadow-2xl"
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="bg-[#121214] border border-white/[0.08] p-8 max-w-sm w-full rounded-2xl relative overflow-hidden"
             >
-              <div className="w-16 h-16 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Waves size={32} />
+              <div className="w-16 h-16 bg-white/10 text-white flex items-center justify-center mx-auto mb-6 rounded-2xl">
+                <RotateCcw size={32} />
               </div>
-              <h3 className="text-2xl font-black text-white text-center mb-2">שתית מי ים?</h3>
-              <p className="text-white/70 text-center mb-6">
-                נראה שהתבלבלת בסיסמה 3 פעמים. האם תרצה שנשלח לך סיסמה זמנית לאימייל כדי שתוכל להתחבר?
-              </p>
-              
-              <div className="flex flex-col gap-3">
-                <button
-                  type="button"
-                  onClick={handleResetPassword}
-                  disabled={isLoading}
-                  className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-                >
-                  {isLoading ? <Loader2 className="animate-spin" size={20} /> : <Mail size={20} />}
-                  כן, שלח לי למייל
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowSeaWaterAlert(false);
-                    setFailedAttempts(0);
-                  }}
-                  disabled={isLoading}
-                  className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl transition-colors"
-                >
-                  לא, אני אנסה שוב
-                </button>
+
+              <div className="relative z-10 text-center">
+                <h3 className="text-xl font-semibold text-white mb-2 tracking-tight">שכחת סיסמה?</h3>
+                <p className="text-white/50 text-sm leading-relaxed mb-8">
+                  נראה שהתבלבלת בסיסמה 3 פעמים. האם תרצה שנשלח לך סיסמה זמנית לאימייל כדי שתוכל להתחבר?
+                </p>
+                
+                <div className="flex flex-col gap-3">
+                  <button
+                    type="button"
+                    onClick={handleResetPassword}
+                    disabled={isLoading}
+                    className="w-full h-12 bg-white text-black hover:bg-white/90 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                  >
+                    {isLoading ? <Loader2 className="animate-spin text-black" size={18} /> : <Mail size={18} />}
+                    <span>כן, שלחו לי למייל</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSeaWaterAlert(false);
+                      setFailedAttempts(0);
+                    }}
+                    disabled={isLoading}
+                    className="w-full h-12 bg-transparent hover:bg-white/5 text-white/60 hover:text-white rounded-xl font-medium text-sm transition-all"
+                  >
+                    לא, אני אנסה שוב
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>

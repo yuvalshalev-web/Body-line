@@ -137,7 +137,7 @@ async function startServer() {
     try {
       const { lat, lon } = req.query;
       // Fetch offshore wave forecast using Open-Meteo Marine API
-      const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&daily=wave_height_max,wave_direction_dominant&timezone=Asia%2FJerusalem`;
+      const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&daily=wave_height_max,wave_direction_dominant,wave_period_max&timezone=Asia%2FJerusalem`;
       
       const response = await fetch(url, {
         headers: { 

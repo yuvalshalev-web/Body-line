@@ -246,7 +246,7 @@ export const AthletePassport: React.FC = () => {
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-          className={`w-full max-w-[420px] min-h-[680px] flex flex-col rounded-[2.5rem] relative cursor-pointer border ${activeProfile.textColor === 'text-slate-800' ? 'border-white/60' : 'border-white/20'}`}
+          className={`w-full max-w-[420px] h-auto min-h-[680px] flex flex-col rounded-[2.5rem] relative cursor-pointer border ${activeProfile.textColor === 'text-slate-800' ? 'border-white/60' : 'border-white/20'}`}
         >
           {/* Animated Background Gradient */}
           <AnimatePresence mode="wait">
@@ -267,9 +267,9 @@ export const AthletePassport: React.FC = () => {
           </AnimatePresence>
 
           {/* Card Content (Elevated in 3D) */}
-          <motion.div 
+          <motion.div
             style={{ transform: "translateZ(40px)" }}
-            className={`relative flex-1 p-8 flex flex-col ${activeProfile.textColor || 'text-white'}`}
+            className={`relative flex-1 p-8 pb-12 flex flex-col ${activeProfile.textColor || 'text-white'}`}
           >
             {/* Header: Verified & QR */}
             <div className="flex justify-between items-start mb-8">
@@ -513,24 +513,24 @@ export const AthletePassport: React.FC = () => {
             {/* Additional Athlete Attributes (Insurance) */}
             {['diving', 'sailing', 'paragliding', 'ski', 'skydiving'].includes(activeDiscipline) && (
               <div className="mt-4 pt-4 border-t border-white/20">
-                 <span className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-3 flex items-center gap-1"><ShieldCheck size={12}/> כיסוי ביטוחי רשמי</span>
+                 <span className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-3 flex items-center gap-1"><ShieldCheck size={12}/> כיסוי ביטוחי & אישורים רשמיים</span>
                  <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between px-3 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 text-xs">
-                      <div className="flex items-center gap-2">
-                         <div className={`w-2 h-2 rounded-full ${activeDiscipline === 'diving' ? 'bg-emerald-400' : 'bg-red-400'}`}></div>
-                         <span className="font-bold opacity-90">ביטוח ספורט אתגרי</span>
-                      </div>
-                      <span className="font-mono text-[10px] opacity-70">
-                         {activeDiscipline === 'diving' ? 'בתוקף עד: 12/2026' : 'נדרש חידוש'}
-                      </span>
+                       <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${activeDiscipline === 'diving' ? 'bg-emerald-400' : 'bg-red-400'}`}></div>
+                          <span className="font-bold opacity-90">ביטוח ספורט אתגרי</span>
+                       </div>
+                       <span className="font-mono text-[10px] opacity-70">
+                          {activeDiscipline === 'diving' ? 'בתוקף עד: 12/2026' : 'נדרש חידוש'}
+                       </span>
                     </div>
                     {activeDiscipline === 'diving' && (
-                      <div className="flex items-center justify-between px-3 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 text-xs">
+                      <div className="flex items-center justify-between px-3 py-2 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 text-xs shadow-inner">
                         <div className="flex items-center gap-2">
                            <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                           <span className="font-bold opacity-90">הצהרת בריאות / רופא צלילה</span>
+                           <span className="font-bold text-white drop-shadow-sm">הצהרת בריאות / רופא צלילה</span>
                         </div>
-                        <span className="font-mono text-[10px] opacity-70">אושר ב-01/2025</span>
+                        <span className="font-mono text-[10px] text-white opacity-90 font-bold">אושר ב-01/2025</span>
                       </div>
                     )}
                  </div>

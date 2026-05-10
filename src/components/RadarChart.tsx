@@ -80,8 +80,8 @@ const CustomAngleTick = (props: any) => {
       >
         {payload.value}
       </text>
-      <circle cx={x} cy={y + 16} r={7} fill="#003366" opacity={0.8} />
-      <text x={x} y={y + 16} fill="white" fontSize="10" textAnchor="middle" dominantBaseline="central" fontWeight="bold" fontFamily="serif">i</text>
+      <circle cx={x} cy={y + 16} r={7} fill="#e2e8f0" opacity={0.8} />
+      <text x={x} y={y + 16} fill="#1e293b" fontSize="10" textAnchor="middle" dominantBaseline="central" fontWeight="bold" fontFamily="serif">i</text>
     </g>
   );
 };

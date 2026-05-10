@@ -257,7 +257,7 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
               הוספת / הסרת משתתפים
             </label>
             <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50 space-y-1">
-              {members.filter(m => m.status === 'active').sort((a,b) => a.name.localeCompare(b.name, 'he')).map(member => {
+              {members.filter(m => m.isActive !== false).sort((a,b) => (a.firstName + ' ' + a.lastName).localeCompare(b.firstName + ' ' + b.lastName, 'he')).map(member => {
                 const isSelected = formData.attendees?.includes(member.id);
                 return (
                   <label key={member.id} className="flex items-center gap-3 p-2 hover:bg-white rounded-lg cursor-pointer transition-colors border border-transparent hover:border-slate-200">
@@ -272,8 +272,8 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
                       }}
                       className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-slate-300"
                     />
-                    <img src={member.imageUrl || 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=200&auto=format&fit=crop'} alt={member.name} className="w-6 h-6 rounded-full object-cover" />
-                    <span className="text-sm text-slate-700 font-medium">{member.name}</span>
+                    <img src={member.avatar || 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=200&auto=format&fit=crop'} alt={`${member.firstName} ${member.lastName}`} className="w-6 h-6 rounded-full object-cover" />
+                    <span className="text-sm text-slate-700 font-medium">{member.firstName} {member.lastName}</span>
                   </label>
                 )
               })}

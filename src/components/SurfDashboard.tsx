@@ -80,6 +80,7 @@ export const SurfDashboard: React.FC = () => {
           const dateStrFormatted = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
           
           const rawMeters = data.daily.wave_height_max[idx] || 0;
+          const period = data.daily.wave_period_max ? data.daily.wave_period_max[idx] || 0 : 0;
           let heightCm = Math.max(0, Math.round((rawMeters * 100) * 0.65 - 10));
           if (heightCm < 25) {
              heightCm = 0;
@@ -92,6 +93,7 @@ export const SurfDashboard: React.FC = () => {
             dayName: idx === 0 ? 'היום' : dayName,
             dateStr: dateStrFormatted,
             heightCm,
+            period,
             windDir: Math.round(data.daily.wave_direction_dominant[idx] || 0),
           };
         });
@@ -111,22 +113,24 @@ export const SurfDashboard: React.FC = () => {
     return () => { active = false; };
   }, [activeSpot]);
 
-  const getWaveHeightGrade = (height: number) => {
+  const getWaveConditionGrade = (height: number, period: number = 0) => {
+    // Wave Power Calculation (kW/m) based on Oceanography Wave Physics: P ≈ 0.5 * H^2 * T
+    const power = period > 0 ? 0.5 * (height * height) * period : 0;
+
     // Extreme conditions as specified:
-    if (height >= 4.0) return { score: 12, name: 'ים מסוכן / קשה', color: 'text-red-700', bg: 'bg-red-100/40', border: 'border-red-200' };
-    if (height >= 2.5) return { score: 11, name: 'ים סוער', color: 'text-slate-800', bg: 'bg-slate-200/50', border: 'border-slate-300' };
-    if (height >= 1.5) return { score: 10, name: 'ים גבוה', color: 'text-indigo-800', bg: 'bg-indigo-100/50', border: 'border-indigo-200' };
+    if (power >= 20 || height >= 4.0) return { score: 10, name: 'הירושימה / דאבל', hand: '🙌', symbol: '🌪️', color: 'text-purple-600', bg: 'bg-purple-100/50', border: 'border-purple-200' };
+    if (power >= 10 || height >= 2.5) return { score: 9, name: 'ים סוער / עוצמתי', hand: '🤙', symbol: '💨', color: 'text-emerald-600', bg: 'bg-emerald-100/50', border: 'border-emerald-200' };
+    if (power >= 5 || height >= 1.5) return { score: 8, name: 'גבוה וחזק', hand: '👍', symbol: '🌊', color: 'text-cyan-600', bg: 'bg-cyan-100/50', border: 'border-cyan-200' };
     
-    // Surfable conditions
-    if (height >= 1.3) return { score: 8, name: 'גובה ראש + / קירות', color: 'text-cyan-600', bg: 'bg-cyan-100/50', border: 'border-cyan-200' };
-    if (height >= 1.1) return { score: 7, name: 'גובה ראש / כתף', color: 'text-blue-600', bg: 'bg-blue-100/50', border: 'border-blue-200' };
-    if (height >= 0.9) return { score: 6, name: 'גובה חזה', color: 'text-indigo-600', bg: 'bg-indigo-100/50', border: 'border-indigo-200' };
-    if (height >= 0.7) return { score: 5, name: 'גובה מותן (Waist)', color: 'text-amber-600', bg: 'bg-amber-100/50', border: 'border-amber-200' };
-    if (height >= 0.4) return { score: 4, name: 'גובה ברך (Knee)', color: 'text-orange-600', bg: 'bg-orange-100/50', border: 'border-orange-200' };
-    if (height >= 0.2) return { score: 3, name: 'קרסול / קצף (Ankle)', color: 'text-red-500', bg: 'bg-red-100/50', border: 'border-red-200' };
-    if (height >= 0.1) return { score: 2, name: 'פלטה עם קפלים', color: 'text-slate-500', bg: 'bg-slate-100/50', border: 'border-slate-200' };
-    if (height > 0) return { score: 1, name: 'זכוכית (Glassy)', color: 'text-slate-400', bg: 'bg-slate-100/50', border: 'border-slate-200' };
-    return { score: 0, name: 'בריכה (Flat)', color: 'text-slate-400', bg: 'bg-slate-100/50', border: 'border-slate-200' };
+    // Surfable conditions - incorporating power as the true engine of waves
+    if (power >= 2.5 || height >= 1.3) return { score: 7, name: 'גובה ראש + / קירות', hand: '👌', symbol: '🎯', color: 'text-blue-600', bg: 'bg-blue-100/50', border: 'border-blue-200' };
+    if (power >= 1.5 || height >= 1.1) return { score: 6, name: 'גובה ראש / מנוע ארוך', hand: '🤘', symbol: '✨', color: 'text-indigo-600', bg: 'bg-indigo-100/50', border: 'border-indigo-200' };
+    if (power >= 0.8 || height >= 0.9) return { score: 5, name: 'גובה חזה', hand: '🖐️', symbol: '🪵', color: 'text-amber-600', bg: 'bg-amber-100/50', border: 'border-amber-200' };
+    if (power >= 0.4 || height >= 0.7) return { score: 4, name: 'גובה מותן (Waist)', hand: '🤏', symbol: '🦵', color: 'text-orange-600', bg: 'bg-orange-100/50', border: 'border-orange-200' };
+    if (power >= 0.1 || height >= 0.4) return { score: 3, name: 'גובה ברך (Knee)', hand: '🫳', symbol: '🦶', color: 'text-red-500', bg: 'bg-red-100/50', border: 'border-red-200' };
+    if (height >= 0.2) return { score: 2, name: 'קרסול / קצף (Ankle)', hand: '🤏', symbol: '〰️', color: 'text-slate-500', bg: 'bg-slate-100/50', border: 'border-slate-200' };
+    if (height > 0) return { score: 1, name: 'זכוכית (Glassy)', hand: '🤲', symbol: '🪟', color: 'text-slate-400', bg: 'bg-slate-100/50', border: 'border-slate-200' };
+    return { score: 0, name: 'בריכה (Flat)', hand: '👎', symbol: '🏊‍♀️', color: 'text-slate-400', bg: 'bg-slate-100/50', border: 'border-slate-200' };
   };
 
   const getUvColor = (uv: number) => {
@@ -239,7 +243,7 @@ export const SurfDashboard: React.FC = () => {
     }
   };
 
-  const currentCondition = coastalWeather ? getWaveHeightGrade(coastalWeather.waveHeight) : getWaveHeightGrade(0);
+  const currentCondition = coastalWeather ? getWaveConditionGrade(coastalWeather.waveHeight, coastalWeather.wavePeriod) : getWaveConditionGrade(0);
   const currentWaveCm = coastalWeather ? (coastalWeather.waveHeight === 0 ? 0 : Math.round(coastalWeather.waveHeight * 100)) : 0;
   
   const windDirText = coastalWeather ? getWindDirText(coastalWeather.windDirection) : '';
@@ -375,19 +379,68 @@ export const SurfDashboard: React.FC = () => {
                   )}
                 </div>
 
-                <div className="flex flex-col items-start gap-2">
-                  <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em]">גובה הגלים (Swell Height)</p>
-                  <div className="flex flex-wrap items-baseline gap-4 md:gap-6">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-7xl md:text-9xl font-black tracking-tighter leading-none text-slate-800">{currentWaveCm}</span>
-                      <span className="text-3xl text-slate-400 font-bold -translate-y-2">ס״מ</span>
-                    </div>
-                    
-                    <div className={`px-4 py-2 flex flex-col justify-center rounded-2xl ${currentCondition.bg} border ${currentCondition.border.replace('/40','').replace('/50','')} shadow-sm transition-all hover:scale-105`}>
-                      <span className={`font-black text-xl md:text-2xl ${currentCondition.color}`}>{currentCondition.name}</span>
-                      <span className="text-slate-500 text-[10px] md:text-xs font-bold mt-1">ציון גלישה מומחה: {currentCondition.score}/12</span>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 w-full">
+                  
+                  {/* Swell Height Box */}
+                  <div className="flex flex-col justify-center items-center xl:items-start p-6 bg-slate-50/50 rounded-[2rem] border border-slate-100 shadow-inner w-full relative overflow-hidden group hover:bg-white hover:shadow-md transition-all">
+                    <p className="text-slate-400 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] mb-2 relative z-10">גובה הגלים (Swell)</p>
+                    <div className="flex items-baseline gap-2 relative z-10">
+                      <span className="text-7xl md:text-8xl font-black tracking-tighter leading-none text-slate-800">{currentWaveCm}</span>
+                      <span className="text-3xl md:text-4xl text-slate-400 font-bold -translate-y-2">ס״מ</span>
                     </div>
                   </div>
+                  
+                  {/* Formula Score Box */}
+                  <div className={`flex flex-col justify-center items-center xl:items-start p-6 rounded-[2rem] border-2 shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl w-full relative overflow-hidden group flex-1 ${currentCondition.bg} ${currentCondition.border.replace('/40','').replace('/50','')}`}>
+                    <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/30 rounded-full blur-3xl pointer-events-none group-hover:scale-150 transition-transform duration-700" />
+                    
+                    <p className={`text-[10px] md:text-xs font-black uppercase tracking-wider opacity-80 mb-2 relative z-10 ${currentCondition.color}`}>דירוג מצב הים (Douglas / AI)</p>
+                    
+                    <div className="flex items-center gap-4 md:gap-6 relative z-10 w-full">
+                      {/* Score Value Component */}
+                      <div className="flex items-baseline gap-1" dir="ltr">
+                        <span className={`text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-none drop-shadow-sm ${currentCondition.color}`}>{currentCondition.score}</span>
+                        <span className="text-xl md:text-2xl font-bold text-slate-400/80">/10</span>
+                      </div>
+                      
+                      <div className="w-px h-16 bg-black/10 mx-1"></div>
+                      
+                      {/* Name and Icon */}
+                      <div className="flex flex-col items-center xl:items-start flex-1 w-full relative z-10 overflow-hidden">
+                        <span className="text-3xl md:text-4xl drop-shadow-sm mb-1">{currentCondition.hand}</span>
+                        <span className={`font-black text-lg md:text-xl leading-tight text-center xl:text-right ${currentCondition.color}`}>{currentCondition.name}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Visual Scale Indicator (UV Style) */}
+                    <div className="w-full rounded-2xl overflow-hidden shadow-inner border border-slate-200/50 flex mt-6 relative z-10">
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(s => {
+                        const isActive = s === currentCondition.score;
+                        const isPast = s < currentCondition.score;
+                        
+                        let bgClass = 'bg-white/40 text-slate-400';
+                        if (isActive || isPast) {
+                          if (s <= 2) bgClass = 'bg-blue-300 text-blue-900';
+                          else if (s <= 4) bgClass = 'bg-cyan-400 text-cyan-950';
+                          else if (s <= 6) bgClass = 'bg-emerald-400 text-emerald-950';
+                          else if (s <= 7) bgClass = 'bg-yellow-400 text-yellow-950';
+                          else if (s <= 8) bgClass = 'bg-orange-500 text-white';
+                          else if (s <= 9) bgClass = 'bg-red-500 text-white';
+                          else bgClass = 'bg-purple-600 text-white';
+                        }
+                        
+                        return (
+                          <div 
+                            key={s} 
+                            className={`flex-1 flex items-center justify-center py-2 text-xs md:text-sm font-black transition-all duration-500 ${bgClass} ${isActive ? 'scale-110 shadow-lg z-20 rounded-lg transform' : 'opacity-80'}`} 
+                          >
+                            {s}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
@@ -543,7 +596,7 @@ export const SurfDashboard: React.FC = () => {
           <div className="overflow-x-auto pb-4 custom-scrollbar relative z-10">
             <div className="flex gap-4 min-w-max px-2">
               {forecastData.map((day, idx) => {
-                const cond = getWaveHeightGrade(day.heightCm / 100);
+                const cond = getWaveConditionGrade(day.heightCm / 100, day.period);
                 const theme = getTimelineCardStyle(day.heightCm);
 
                 // Calculate aquarium fill percentage (assuming 300cm is 100% full)
@@ -615,9 +668,16 @@ export const SurfDashboard: React.FC = () => {
                     <span className="relative z-10 text-xs font-black mb-1 text-slate-800 uppercase tracking-widest">{day.dayName}</span>
                     <span className="relative z-10 text-[10px] font-bold mb-4 text-slate-400">{day.dateStr}</span>
                     
-                    <div className="relative z-10 flex flex-col items-center gap-1 my-3">
+                    <div className="relative z-10 flex flex-col items-center gap-1 mt-1 mb-3">
                       <span className="text-4xl font-black text-slate-800 tracking-tighter group-hover:scale-110 transition-transform duration-500 drop-shadow-sm">{day.heightCm === 0 ? '0' : day.heightCm}</span>
                       <span className="text-xs font-bold text-slate-500 uppercase">ס״מ</span>
+                      
+                      {day.period > 0 && (
+                        <div className="flex items-center gap-1 mt-1 bg-white/50 px-2 py-0.5 rounded border border-slate-100/50 tooltip-trigger">
+                          <span className="text-[10px] font-black text-indigo-700">{Math.round(day.period * 10) / 10}</span>
+                          <span className="text-[9px] font-bold text-indigo-600/80">שניות</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="relative z-10 mt-auto pt-4 flex flex-col items-center gap-3 w-full border-t border-slate-100/50">

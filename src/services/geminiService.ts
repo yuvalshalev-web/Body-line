@@ -141,20 +141,33 @@ export const getForecastAnalysis = async (data: {
   windDir?: string;
   swellDir?: string;
   period?: number;
+  user?: any;
 }): Promise<string> => {
   try {
     const ai = getAI();
-    const prompt = `You are a local surf guru who knows every sandbar and reef.
+    let prompt = `You are a local surf guru who knows every sandbar and reef.
     Analyze the following surf forecast and provide a short, expert advice for today:
     - Wave Height: ${data.waveHeight}m
     ${data.waterTemp ? `- Water Temp: ${data.waterTemp}°C` : ''}
     ${data.windSpeed ? `- Wind: ${data.windSpeed}kts ${data.windDir || ''}` : ''}
     ${data.swellDir ? `- Swell Direction: ${data.swellDir}` : ''}
-    ${data.period ? `- Period: ${data.period}s` : ''}
-    
-    Keep the tone like a salty local who's seen it all.
+    ${data.period ? `- Period: ${data.period}s` : ''}`;
+
+    if (data.user) {
+      prompt += `
+      - User Profile: Weight: ${data.user.weight || '?'}kg, Height: ${data.user.height || '?'}cm, Level: ${data.user.surfingLevel || 'Beginner'}.
+      IMPORTANT: Our system's daily dashboard calculates exact boards based on ${data.waveHeight}m height and their level.
+      If User is Beginner in small waves: UI recommends Softboard 8'0+ (approx 80-100L).
+      If User is Intermediate in small waves: UI recommends Longboard / Mini-mal.
+      If User is Advanced in small waves: UI recommends Fish / Groveler.
+      When you suggest a board, DO NOT contradict this logic. Match the board recommendation identically to their Level and Wave Height. Use the exact Hebrew terms: סופטבורד מתחילים, פאן בורד, שורטבורד, פיש, או לונגבורד קלאסי.
+      `;
+    }
+
+    prompt += `
+    Keep the tone like a salty local surfer who's seen it all but is friendly.
     Return the response in Hebrew, formatted with markdown (bold text).
-    Maximum 3-4 sentences.`;
+    Maximum 4 sentences.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
