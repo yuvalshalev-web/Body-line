@@ -1028,18 +1028,18 @@ const LoginPage: React.FC = () => {
         </div>
 
         {/* Logos at the bottom */}
-        <div className="mt-12 flex items-center justify-center gap-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-700">
+        <div className="mt-8 flex items-center justify-center gap-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-700">
           <a 
             href="https://www.atalef.com" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="group transition-all duration-500 hover:scale-110"
+            className="group transition-all duration-500 hover:scale-105 opacity-60 hover:opacity-100"
           >
             {siteAssets?.atalefLogo && (
               <img 
                 src={siteAssets.atalefLogo} 
                 alt="עמותת העטלף" 
-                className="h-20 w-auto opacity-90 group-hover:opacity-100 group-hover:brightness-110 transition-all duration-500 drop-shadow-[0_0_12px_rgba(255,255,255,0.4)] group-hover:drop-shadow-[0_0_24px_rgba(255,255,255,0.8)]" 
+                className="h-14 sm:h-16 w-auto transition-all duration-500" 
                 referrerPolicy="no-referrer"
               />
             )}
@@ -1048,13 +1048,13 @@ const LoginPage: React.FC = () => {
             href="https://www.reefseacenter.com" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="group transition-all duration-500 hover:scale-110"
+            className="group transition-all duration-500 hover:scale-105 opacity-60 hover:opacity-100"
           >
             {siteAssets?.reefLogo && (
               <img 
                 src={siteAssets.reefLogo} 
                 alt="מועדון ריף" 
-                className="h-20 w-20 rounded-full object-cover bg-white opacity-90 group-hover:opacity-100 group-hover:brightness-110 transition-all duration-500 shadow-[0_0_12px_rgba(255,255,255,0.4)] group-hover:shadow-[0_0_24px_rgba(255,255,255,0.8)]" 
+                className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover bg-white transition-all duration-500 shadow-sm" 
                 referrerPolicy="no-referrer"
               />
             )}

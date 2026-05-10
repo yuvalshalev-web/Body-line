@@ -55,8 +55,8 @@ export const SurfNewsTracker: React.FC = () => {
     }
 
     const analysisInput = {
-      waveHeight: Number(coastalWeather?.waveHeight || 0) * 100,
-      windSpeed: Number(coastalWeather?.windSpeed || 0),
+      waveHeight: Number(coastalWeather?.waveHeight ?? 0) * 100,
+      windSpeed: Number(coastalWeather?.windSpeed ?? 0),
       windDir: coastalWeather?.windDirection !== undefined ? getWindDirCode(coastalWeather.windDirection) : 'W',
       period: Number(coastalWeather?.wavePeriod || seaStats?.period || 6),
       lastRain: false

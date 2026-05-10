@@ -172,10 +172,61 @@ export const ExactSurfboard = ({ type, isSelected }: { type: string; isSelected?
       </svg>
     );
   }
+  if (type === 'sup') {
+    return (
+      <svg viewBox="-20 0 140 340" className="w-full h-full drop-shadow-2xl">
+        <defs>
+          <GlossGradient />
+          <linearGradient id={`supGrad-${type}-${idPrefix}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#4DD0E1" />
+            <stop offset="100%" stopColor="#00BCD4" />
+          </linearGradient>
+        </defs>
+        
+        {/* Paddle (only if selected) */}
+        {isSelected && (
+          <g className="drop-shadow-lg">
+            {/* Shaft */}
+            <rect x="95" y="80" width="4" height="180" rx="2" fill="#212121" />
+            {/* Blade */}
+            <path d="M 97 260 C 110 280, 105 315, 97 325 C 89 315, 84 280, 97 260 Z" fill="#B2FF59" />
+            {/* Handle */}
+            <rect x="91" y="76" width="12" height="6" rx="2" fill="#B2FF59" />
+          </g>
+        )}
+
+        {/* Board */}
+        <path d="M 25 310 Q 50 325, 75 310 C 95 240, 95 80, 75 40 C 60 15, 40 15, 25 40 C 5 80, 5 240, 25 310 Z" fill={isSelected ? `url(#supGrad-${type}-${idPrefix})` : "#D1D5DB"} stroke={isSelected ? "#00ACC1" : "#9CA3AF"} strokeWidth="0.5" />
+        
+        {isSelected && (
+          <>
+            {/* Grip Pad */}
+            <path d="M 20 160 L 80 160 L 68 290 Q 50 300 32 290 Z" fill="#00838F" opacity="0.15" />
+            
+            {/* Front Bungee Cords */}
+            <line x1="30" y1="90" x2="70" y2="90" stroke="#B2FF59" strokeWidth="1.5" />
+            <line x1="30" y1="110" x2="70" y2="110" stroke="#B2FF59" strokeWidth="1.5" />
+            <line x1="30" y1="90" x2="70" y2="110" stroke="#B2FF59" strokeWidth="1.5" />
+            <line x1="70" y1="90" x2="30" y2="110" stroke="#B2FF59" strokeWidth="1.5" />
+            
+            {/* Center Handle */}
+            <rect x="47" y="190" width="6" height="25" rx="3" fill="#212121" />
+            <rect x="48" y="192" width="4" height="21" rx="2" fill="#B2FF59" />
+            
+            {/* Brand overlay */}
+            <text x="50" y="130" fontSize="11" fill="#B2FF59" textAnchor="middle" transform="rotate(-90 50 130)" fontWeight="900" letterSpacing="2">SUP</text>
+          </>
+        )}
+        
+        <path d="M 25 310 Q 50 325, 75 310 C 95 240, 95 80, 75 40 C 60 15, 40 15, 25 40 C 5 80, 5 240, 25 310 Z" fill={`url(#gloss-${type}-${idPrefix})`} />
+      </svg>
+    );
+  }
   return null;
 };
 
 const surfboardData = {
+  sup: { name: 'סאפ (SUP)' },
   shortboard: { name: 'שורטבורד' },
   fish: { name: 'פיש' },
   funboard: { name: 'פאנבורד' },

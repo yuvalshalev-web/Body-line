@@ -91,7 +91,7 @@ const HomePage: React.FC = () => {
     setForecastAnalysis(null);
     try {
       const result = await getForecastAnalysis({
-        waveHeight: coastalWeather?.waveHeight || 0.5,
+        waveHeight: coastalWeather?.waveHeight ?? 0.5,
         waterTemp: coastalWeather?.waterTemp,
         windSpeed: coastalWeather?.windSpeed,
         windDir: coastalWeather?.windDir,
@@ -408,7 +408,7 @@ const HomePage: React.FC = () => {
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
           <DailySurfRecommendation 
             member={currentUser}
-            currentWaveHeight={coastalWeather?.waveHeight || 0.5}
+            currentWaveHeight={coastalWeather?.waveHeight ?? 0.5}
             waterTemp={coastalWeather?.waterTemp}
             onSaveRecommendation={async (vol, len) => {
               if (currentUser) {

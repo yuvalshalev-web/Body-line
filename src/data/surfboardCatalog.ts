@@ -58,5 +58,17 @@ export const SURFBOARD_CATALOG = [
     volumeRange: "30L - 45L",
     description: "גלשן קצר ורחב עם זנב סנונית, מהיר מאוד בגלים קטנים וחלשים.",
     bottomLine: "מעולה לימי קיץ ולגלים שאין בהם הרבה כוח."
+  },
+  { 
+    id: '6', 
+    name: 'SUP (סאפ)', 
+    nameEn: 'SUP',
+    type: 'sup', 
+    minVolume: 120, 
+    maxVolume: 250,
+    lengthRange: "9'0\" - 12'0\"",
+    volumeRange: "120L - 250L",
+    description: "גלשן חתירה בעמידה, גדול ויציב מאוד. זמין בגרסה קשיחה או מתנפחת (iSUP).",
+    bottomLine: "מושלם לימים ללא גלים, לאימון כושר ולטיולים ימיים."
   }
 ];

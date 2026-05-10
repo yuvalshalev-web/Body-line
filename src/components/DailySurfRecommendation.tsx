@@ -59,7 +59,13 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
   let explanation = '';
   let isWarning = false;
 
-  if (surfingLevel === 'Beginner') {
+  if (currentWaveHeight < 0.2) {
+    boardType = 'סאפ (SUP)';
+    recVol = 0;
+    recLenInches = 0;
+    explanation = 'הים פלטה (גלים נמוכים). הים נמוך ורגוע, מושלם אימון חתירה על סאפ, שחייה, או פשוט ליהנות מהחוף!';
+    isWarning = false;
+  } else if (surfingLevel === 'Beginner') {
     if (currentWaveHeight >= 1.5) {
       boardType = 'סופטבורד (Softboard)';
       explanation = 'ים גבוה מדי למתחילים - מומלץ להישאר בחוף או לגלוש רק בקצף הקרוב לחוף. בטיחות קודמת לכל!';
@@ -151,6 +157,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
 
   const getBoardKey = (type: string) => {
     const lower = type.toLowerCase();
+    if (lower.includes('sup') || lower.includes('סאפ')) return 'sup';
     if (lower.includes('softboard') || lower.includes('סופטבורד')) return 'softboard';
     if (lower.includes('longboard') || lower.includes('לונגבורד')) return 'longboard';
     if (lower.includes('funboard') || lower.includes('פאן-בורד') || lower.includes('פאנבורד')) return 'funboard';
@@ -225,16 +232,18 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                       <div className="h-1.5 w-24 bg-[#007085] rounded-full mx-auto lg:mx-0 mb-8" />
                     </div>
                     
-                    <div className="flex flex-wrap justify-center lg:justify-start gap-6">
-                      <div className="bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-sm min-w-[140px] transition-transform hover:scale-105">
-                        <p className="text-[10px] text-[#007085] uppercase tracking-[0.2em] mb-2 font-black">נפח מומלץ</p>
-                        <p className="text-4xl font-black text-[#002b44]">{Math.ceil(recVol)}<span className="text-sm text-[#007085] ml-1">L</span></p>
+                    {recVol > 0 && recLenInches > 0 && (
+                      <div className="flex flex-wrap justify-center lg:justify-start gap-6">
+                        <div className="bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-sm min-w-[140px] transition-transform hover:scale-105">
+                          <p className="text-[10px] text-[#007085] uppercase tracking-[0.2em] mb-2 font-black">נפח מומלץ</p>
+                          <p className="text-4xl font-black text-[#002b44]">{Math.ceil(recVol)}<span className="text-sm text-[#007085] ml-1">L</span></p>
+                        </div>
+                        <div className="bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-sm min-w-[140px] transition-transform hover:scale-105">
+                          <p className="text-[10px] text-[#007085] uppercase tracking-[0.2em] mb-2 font-black">אורך מומלץ</p>
+                          <p className="text-4xl font-black text-[#002b44]" dir="ltr">{getBoardSize(recLenInches * 2.54)}</p>
+                        </div>
                       </div>
-                      <div className="bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/40 shadow-sm min-w-[140px] transition-transform hover:scale-105">
-                        <p className="text-[10px] text-[#007085] uppercase tracking-[0.2em] mb-2 font-black">אורך מומלץ</p>
-                        <p className="text-4xl font-black text-[#002b44]" dir="ltr">{getBoardSize(recLenInches * 2.54)}</p>
-                      </div>
-                    </div>
+                    )}
 
                     <div className="space-y-6">
                       <p className="text-[#002b44]/90 text-xl leading-relaxed font-bold font-yehuda">{explanation}</p>
@@ -273,22 +282,24 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                         </div>
                       </div>
                     )}
-                    <div className="flex flex-col items-center gap-4 sm:gap-8 w-1/2 sm:w-[220px] group">
-                      <div className="relative h-[250px] sm:h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
-                        <div className="absolute inset-0 bg-orange-500/10 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                        <div className="w-full h-full scale-[1.25] origin-bottom -translate-y-10">
-                          <ExactSurfboard type={boardKey} isSelected={true} />
+                    {boardType !== 'ללא גלשן' && (
+                      <div className="flex flex-col items-center gap-4 sm:gap-8 w-1/2 sm:w-[220px] group">
+                        <div className="relative h-[250px] sm:h-[380px] w-full flex items-end justify-center transition-all duration-700 group-hover:scale-110 group-hover:-translate-y-4">
+                          <div className="absolute inset-0 bg-orange-500/10 blur-[100px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                          <div className="w-full h-full scale-[1.25] origin-bottom -translate-y-10">
+                            <ExactSurfboard type={boardKey} isSelected={true} />
+                          </div>
+                        </div>
+                        <div className="text-center space-y-1 sm:space-y-2">
+                          <p className="text-[9px] sm:text-[11px] font-black text-[#007085] uppercase tracking-[0.2em] sm:tracking-[0.3em] opacity-60">גלשן מומלץ</p>
+                          <p className="text-sm sm:text-2xl font-black text-[#002b44] tracking-tighter font-yehuda leading-tight">{boardType}</p>
                         </div>
                       </div>
-                      <div className="text-center space-y-1 sm:space-y-2">
-                        <p className="text-[9px] sm:text-[11px] font-black text-[#007085] uppercase tracking-[0.2em] sm:tracking-[0.3em] opacity-60">גלשן מומלץ</p>
-                        <p className="text-sm sm:text-2xl font-black text-[#002b44] tracking-tighter font-yehuda leading-tight">{boardType}</p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
-                {currentBoardVolume && currentBoardLength && (
+                {recVol > 0 && recLenInches > 0 && currentBoardVolume && currentBoardLength && (
                   <div className="bg-white/50 border border-white/40 rounded-2xl p-6 shadow-sm">
                     <div className="flex justify-between items-end mb-4">
                       <div>
