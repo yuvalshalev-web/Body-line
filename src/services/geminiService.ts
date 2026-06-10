@@ -157,10 +157,11 @@ export const getForecastAnalysis = async (data: {
       prompt += `
       - User Profile: Weight: ${data.user.weight || '?'}kg, Height: ${data.user.height || '?'}cm, Level: ${data.user.surfingLevel || 'Beginner'}.
       IMPORTANT: Our system's daily dashboard calculates exact boards based on ${data.waveHeight}m height and their level.
-      If User is Beginner in small waves: UI recommends Softboard 8'0+ (approx 80-100L).
-      If User is Intermediate in small waves: UI recommends Longboard / Mini-mal.
-      If User is Advanced in small waves: UI recommends Fish / Groveler.
-      When you suggest a board, DO NOT contradict this logic. Match the board recommendation identically to their Level and Wave Height. Use the exact Hebrew terms: סופטבורד מתחילים, פאן בורד, שורטבורד, פיש, או לונגבורד קלאסי.
+      If Wave Height is less than 0.2m: UI recommends SUP (סאפ) - Stand Up Paddleboard for ALL levels, because it's flat.
+      If User is Beginner in small waves (>=0.2m): UI recommends Softboard 8'0+ (approx 80-100L).
+      If User is Intermediate in small waves (>=0.2m): UI recommends Longboard / Mini-mal.
+      If User is Advanced in small waves (>=0.2m): UI recommends Fish / Groveler.
+      When you suggest a board, DO NOT contradict this logic. Match the board recommendation identically to their Level and Wave Height. Use the exact Hebrew terms: סופטבורד מתחילים, פאן בורד, שורטבורד, פיש, לונגבורד קלאסי, או סאפ (SUP).
       `;
     }
 

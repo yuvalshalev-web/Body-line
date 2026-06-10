@@ -141,10 +141,9 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
 
   // Wetsuit logic
   const getWetsuit = (temp: number) => {
-    if (temp < 16) return { label: 'חליפה ארוכה (4/3)', thickness: '4/3' as const };
-    if (temp <= 19) return { label: 'חליפה ארוכה (4/3)', thickness: '4/3' as const };
-    if (temp <= 23) return { label: 'מעבר (3/2)', thickness: '3/2' as const };
-    if (temp <= 25) return { label: 'קיץ ארוך (2/2)', thickness: '2/2' as const };
+    if (temp < 18) return { label: 'חליפה ארוכה (4/3)', thickness: '4/3' as const };
+    if (temp <= 21) return { label: 'מעבר (3/2)', thickness: '3/2' as const };
+    if (temp <= 24) return { label: 'קיץ ארוך (2/2)', thickness: '2/2' as const };
     if (temp <= 27) return { label: 'קיץ קצר (2/2)', thickness: '2/2-ss' as const };
     return { label: 'חולצת לייקרה', thickness: 'sun-shirt' as const };
   };

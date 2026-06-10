@@ -14,7 +14,8 @@ import {
   Calendar,
   MapPin,
   Clock,
-  Video
+  Video,
+  ExternalLink
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 
@@ -26,7 +27,7 @@ const surfSpots = [
   { id: 'michmoret', name: 'מכמורת / מכון ימי', lat: 32.40, lon: 34.86, imsId: "46" },
   { id: 'netanya-kontiki', name: 'נתניה - קונטיקי', lat: 32.33, lon: 34.84, imsId: "46", cameraUrl: "https://beachcam.co.il/kontiki.html" },
   { id: 'herzliya-zvulun', name: 'הרצליה - זבולון', lat: 32.17, lon: 34.79, imsId: "178", cameraUrl: "https://beachcam.co.il/zvulun.html" },
-  { id: 'herzliya-marina', name: 'מרינה הרצליה', lat: 32.16, lon: 34.79, imsId: "178", cameraUrl: "https://beachcam.co.il/marina.html" },
+  { id: 'herzliya-marina', name: 'מרינה הרצליה', lat: 32.16, lon: 34.79, imsId: "178", cameraUrl: "https://beachcam.co.il/marina.html", cameraUrlAlt: "https://www.surfline.com/surf-report/marina-dan-acadia/5ff89a13956aa8cbc947c5aa?view=table" },
   { id: 'tel-aviv-tel-baruch', name: 'ת"א - תל ברוך', lat: 32.12, lon: 34.78, imsId: "178" },
   { id: 'tel-aviv-hilton', name: 'ת"א - הילטון', lat: 32.08, lon: 34.76, imsId: "178", cameraUrl: "https://beachcam.co.il/yamit.html" },
   { id: 'tel-aviv-gordon', name: 'ת"א - גורדון', lat: 32.08, lon: 34.76, imsId: "178" },
@@ -360,23 +361,9 @@ export const SurfDashboard: React.FC = () => {
                     <span className="text-slate-500 text-sm font-bold uppercase tracking-wider font-yehuda">מצב הגלים</span>
                   </div>
                   
-                  {/* Camera Link Button (If Available) */}
-                  {(activeSpot as any).cameraUrl && (
-                    <a 
-                      href={(activeSpot as any).cameraUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl text-xs font-black border border-emerald-100 hover:bg-emerald-100 transition-all shadow-sm group"
-                      title="צפה במצלמת החוף"
-                    >
-                      <Video className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">מצלמת חוף</span>
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                      </span>
-                    </a>
-                  )}
+                  <div className="flex gap-2">
+                    {/* Cameras moved to the main dashboard area below for better visibility */}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 w-full">
@@ -443,6 +430,63 @@ export const SurfDashboard: React.FC = () => {
 
                 </div>
               </div>
+
+              {/* LIVE Beach Cameras Section */}
+              {((activeSpot as any).cameraUrl || (activeSpot as any).cameraUrlAlt) && (
+                <div className="flex gap-3 w-full mb-4">
+                  {(activeSpot as any).cameraUrl && (
+                    <a
+                      href={(activeSpot as any).cameraUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 bg-white/60 backdrop-blur-md rounded-[1.5rem] border border-white shadow-sm hover:shadow-md hover:-translate-y-1 hover:bg-white transition-all duration-300 p-4 flex flex-col items-center justify-center gap-3 group relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full blur-2xl -translate-y-16 translate-x-16 group-hover:scale-110 transition-transform duration-500" />
+                      
+                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] bg-sky-50 text-sky-500 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-sky-500 group-hover:text-white transition-all duration-300 shadow-sm border border-sky-100 relative z-10">
+                        <Video strokeWidth={1.5} className="w-6 h-6 md:w-8 md:h-8" />
+                      </div>
+                      
+                      <div className="flex flex-col items-center relative z-10 text-center">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500"></span>
+                          </span>
+                          <p className="text-xs md:text-sm font-black text-slate-700 tracking-tight">{(activeSpot as any).cameraUrlAlt ? 'מצלמה 1' : 'מצלמת חוף'}</p>
+                        </div>
+                        <p className="text-[9px] md:text-[10px] text-slate-500 font-bold tracking-widest uppercase">{(activeSpot as any).cameraUrlAlt ? 'החוף המרכזי' : 'שידור חי'}</p>
+                      </div>
+                    </a>
+                  )}
+
+                  {(activeSpot as any).cameraUrlAlt && (
+                    <a
+                      href={(activeSpot as any).cameraUrlAlt}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 bg-white/60 backdrop-blur-md rounded-[1.5rem] border border-white shadow-sm hover:shadow-md hover:-translate-y-1 hover:bg-white transition-all duration-300 p-4 flex flex-col items-center justify-center gap-3 group relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -translate-y-16 translate-x-16 group-hover:scale-110 transition-transform duration-500" />
+                      
+                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] bg-emerald-50 text-emerald-500 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 shadow-sm border border-emerald-100 relative z-10">
+                        <Video strokeWidth={1.5} className="w-6 h-6 md:w-8 md:h-8" />
+                      </div>
+                      
+                      <div className="flex flex-col items-center relative z-10 text-center">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                          </span>
+                          <p className="text-xs md:text-sm font-black text-slate-700 tracking-tight">מצלמה 2 (Surfline)</p>
+                        </div>
+                        <p className="text-[9px] md:text-[10px] text-slate-500 font-bold tracking-widest uppercase">החוף הימני</p>
+                      </div>
+                    </a>
+                  )}
+                </div>
+              )}
 
               {/* Bottom Section: The 3 Sub-Parameters in Glass UI */}
               <div className="grid grid-cols-3 gap-2 md:gap-4 mt-auto">
