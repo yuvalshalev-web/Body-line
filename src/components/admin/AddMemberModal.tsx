@@ -82,7 +82,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
         joinedAt: new Date().toISOString()
       });
       
-      alert(`חבר נוסף בהצלחה! סיסמה: ${finalPass}`);
+      alert(`משתמש נוסף בהצלחה! סיסמה: ${finalPass}`);
       onClose();
       setNewMemberData({
         firstName: '',
@@ -116,7 +116,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
         // Not a JSON string, use as is
       }
       
-      setError(`שגיאה בהוספת חבר: ${errorMessage}`);
+      setError(`שגיאה בהוספת משתמש: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }
@@ -186,7 +186,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
             <div className="w-full h-full overflow-y-auto custom-scrollbar flex flex-col">
               {/* Header */}
               <div className="p-6 flex items-center justify-between shrink-0">
-                <h3 className="text-2xl font-black text-[#7A1555] tracking-tighter">הוספת חבר חדש</h3>
+                <h3 className="text-2xl font-black text-[#7A1555] tracking-tighter">הוספת משתמש חדש</h3>
                 <button onClick={onClose} className="p-2 tangible-bevel-inset hover:bg-white/20 !rounded-full text-[#00426a] hover:text-[#7A1555] transition-all">
                   <X size={24} />
                 </button>
@@ -336,7 +336,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
                             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                             className="w-full p-5 luxury-card font-black text-sm outline-none transition-all flex items-center justify-between group hover:bg-white/80"
                           >
-                            <span className="text-[#000000] text-right flex-1">{newMemberData.role === 'Admin' ? 'רכז' : newMemberData.role === 'Instructor' ? 'מדריך' : 'חבר'}</span>
+                            <span className="text-[#000000] text-right flex-1">{newMemberData.role === 'Admin' ? 'רכז' : newMemberData.role === 'Instructor' ? 'מדריך' : newMemberData.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}</span>
                             <ChevronDown size={18} className={`text-[#00426a] transition-transform duration-300 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} />
                           </button>
 
@@ -350,7 +350,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
                                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
                                   className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/30 !rounded-3xl shadow-2xl z-[170] overflow-hidden"
                                 >
-                                  {(['Member', 'Instructor', 'Admin'] as const).map((r) => (
+                                  {(['Member', 'Volunteer', 'Instructor', 'Admin'] as const).map((r) => (
                                     <button
                                       key={r}
                                       type="button"
@@ -362,7 +362,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
                                         newMemberData.role === r ? 'text-[#00426a] bg-white/50' : 'text-[#000000]'
                                       }`}
                                     >
-                                      {r === 'Admin' ? 'רכז' : r === 'Instructor' ? 'מדריך' : 'חבר'}
+                                      {r === 'Admin' ? 'רכז' : r === 'Instructor' ? 'מדריך' : r === 'Volunteer' ? 'מתנדב' : 'משתתף'}
                                     </button>
                                   ))}
                                 </motion.div>
@@ -605,7 +605,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
                     className="w-full md:w-auto px-12 py-4 bg-[#FF9F1C] text-white !rounded-full font-black text-lg flex items-center justify-center gap-3 shadow-xl shadow-[#FF9F1C]/20 disabled:opacity-50"
                   >
                     {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                    שמור חבר חדש
+                    שמור משתמש חדש
                   </button>
                   <button 
                     onClick={onClose}

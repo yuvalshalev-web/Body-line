@@ -5,35 +5,90 @@
       "description": "A member of the community",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "uid": { "type": "string" },
-        "firstName": { "type": "string" },
-        "lastName": { "type": "string" },
-        "email": { "type": "string" },
-        "mobile": { "type": "string" },
-        "avatar": { "type": "string" },
-        "bio": { "type": "string" },
-        "role": { "type": "string", "enum": ["Member", "Instructor", "Admin"] },
-        "joinedAt": { "type": "string" },
-        "isActive": { "type": "boolean" },
-        "birthday": { "type": "string" },
-        "gender": { "type": "string" },
-        "full_address": { "type": "string" },
-        "certifications": { "type": "array", "items": { "type": "string" } },
-        "otherCertification": { "type": "string" }
+        "id": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "mobile": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string"
+        },
+        "bio": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "Member",
+            "Instructor",
+            "Admin"
+          ]
+        },
+        "joinedAt": {
+          "type": "string"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "birthday": {
+          "type": "string"
+        },
+        "gender": {
+          "type": "string"
+        },
+        "full_address": {
+          "type": "string"
+        },
+        "certifications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "otherCertification": {
+          "type": "string"
+        }
       },
-      "required": ["firstName", "lastName", "email", "role"]
+      "required": [
+        "firstName",
+        "lastName",
+        "email",
+        "role"
+      ]
     },
     "JoinRequest": {
       "title": "JoinRequest",
       "description": "A request to join the community",
       "type": "object",
       "properties": {
-        "firstName": { "type": "string" },
-        "lastName": { "type": "string" },
-        "email": { "type": "string" },
-        "mobile": { "type": "string" },
-        "requestedAt": { "type": "string" }
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "mobile": {
+          "type": "string"
+        },
+        "requestedAt": {
+          "type": "string"
+        }
       }
     },
     "GalleryItem": {
@@ -41,11 +96,21 @@
       "description": "An item in the shared gallery",
       "type": "object",
       "properties": {
-        "imageUrl": { "type": "string" },
-        "uploaderId": { "type": "string" },
-        "uploaderName": { "type": "string" },
-        "caption": { "type": "string" },
-        "timestamp": { "type": "string" }
+        "imageUrl": {
+          "type": "string"
+        },
+        "uploaderId": {
+          "type": "string"
+        },
+        "uploaderName": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        }
       }
     },
     "Event": {
@@ -53,12 +118,29 @@
       "description": "A community event",
       "type": "object",
       "properties": {
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "date": { "type": "string" },
-        "time": { "type": "string" },
-        "location": { "type": "string" },
-        "type": { "type": "string", "enum": ["COMMUNITY", "MEMBER", "INSTRUCTOR"] }
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "time": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "COMMUNITY",
+            "MEMBER",
+            "INSTRUCTOR"
+          ]
+        }
       }
     },
     "SeaConditions": {
@@ -66,11 +148,22 @@
       "description": "Historical sea conditions data",
       "type": "object",
       "properties": {
-        "timestamp": { "type": "string", "format": "date-time" },
-        "waveHeight": { "type": "number" },
-        "waterTemp": { "type": "number" },
-        "windSpeed": { "type": "number" },
-        "uvIndex": { "type": "number" }
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "waveHeight": {
+          "type": "number"
+        },
+        "waterTemp": {
+          "type": "number"
+        },
+        "windSpeed": {
+          "type": "number"
+        },
+        "uvIndex": {
+          "type": "number"
+        }
       }
     },
     "SeaConditionsStats": {
@@ -78,14 +171,30 @@
       "description": "Historical peaks for sea conditions",
       "type": "object",
       "properties": {
-        "maxWaveHeight": { "type": "number" },
-        "minWaveHeight": { "type": "number" },
-        "maxWaterTemp": { "type": "number" },
-        "minWaterTemp": { "type": "number" },
-        "maxWindSpeed": { "type": "number" },
-        "minWindSpeed": { "type": "number" },
-        "maxUvIndex": { "type": "number" },
-        "minUvIndex": { "type": "number" }
+        "maxWaveHeight": {
+          "type": "number"
+        },
+        "minWaveHeight": {
+          "type": "number"
+        },
+        "maxWaterTemp": {
+          "type": "number"
+        },
+        "minWaterTemp": {
+          "type": "number"
+        },
+        "maxWindSpeed": {
+          "type": "number"
+        },
+        "minWindSpeed": {
+          "type": "number"
+        },
+        "maxUvIndex": {
+          "type": "number"
+        },
+        "minUvIndex": {
+          "type": "number"
+        }
       }
     },
     "PerformanceScore": {
@@ -93,20 +202,91 @@
       "description": "A monthly performance score for a member",
       "type": "object",
       "properties": {
-        "memberId": { "type": "string" },
-        "month": { "type": "number" },
-        "year": { "type": "number" },
-        "paddle": { "type": "number" },
-        "takeOff": { "type": "number" },
-        "turns": { "type": "number" },
-        "positioning": { "type": "number" },
-        "stamina": { "type": "number" },
-        "style": { "type": "number" },
-        "instructorId": { "type": "string" },
-        "instructorName": { "type": "string" },
-        "updatedAt": { "type": "string" }
+        "memberId": {
+          "type": "string"
+        },
+        "month": {
+          "type": "number"
+        },
+        "year": {
+          "type": "number"
+        },
+        "paddle": {
+          "type": "number"
+        },
+        "takeOff": {
+          "type": "number"
+        },
+        "turns": {
+          "type": "number"
+        },
+        "positioning": {
+          "type": "number"
+        },
+        "stamina": {
+          "type": "number"
+        },
+        "style": {
+          "type": "number"
+        },
+        "instructorId": {
+          "type": "string"
+        },
+        "instructorName": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
       },
-      "required": ["memberId", "month", "year", "paddle", "takeOff", "turns", "positioning", "stamina", "style"]
+      "required": [
+        "memberId",
+        "month",
+        "year",
+        "paddle",
+        "takeOff",
+        "turns",
+        "positioning",
+        "stamina",
+        "style"
+      ]
+    },
+    "SurfCall": {
+      "title": "SurfCall",
+      "description": "User-generated impromptu surf calls",
+      "type": "object",
+      "properties": {
+        "creatorId": {
+          "type": "string"
+        },
+        "creatorName": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "targetBeach": {
+          "type": "string"
+        },
+        "targetDate": {
+          "type": "string"
+        },
+        "targetTime": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "participantsJoined": {
+          "type": "array"
+        },
+        "participantsCancelled": {
+          "type": "array"
+        },
+        "isArchived": {
+          "type": "boolean"
+        }
+      }
     }
   },
   "firestore": {
@@ -181,6 +361,10 @@
     "performance_scores": {
       "schema": "PerformanceScore",
       "description": "Monthly performance scores for members"
+    },
+    "surf_calls": {
+      "schema": "SurfCall",
+      "description": "User-generated impromptu surf calls"
     }
   }
 }

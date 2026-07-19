@@ -104,7 +104,7 @@ const MemberGradingPage: React.FC = () => {
                 <span className="surfer-title text-[#121212]">הערכות וביצועים</span>
               </h1>
               <p className="header-subtitle max-w-2xl mx-auto text-[#121212]">
-                ניתוח נתונים קבוצתי והערכות אישיות לחברי הקהילה 🌊
+                ניתוח נתונים קבוצתי והערכות אישיות למשתתפי הקהילה 🌊
               </p>
             </div>
           </div>
@@ -188,7 +188,7 @@ const MemberGradingPage: React.FC = () => {
               <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-sky-500/40" />
               <input 
                 type="text" 
-                placeholder="חיפוש חבר להערכה..." 
+                placeholder="חיפוש להערכה..." 
                 className="w-full pr-12 pl-6 py-4 luxury-card font-bold focus:ring-2 ring-sky-500/30 text-slate-900 placeholder:text-slate-400 transition-all"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

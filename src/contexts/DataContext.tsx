@@ -18,7 +18,7 @@ import {
   FirestoreErrorInfo
 } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../utils/dateUtils';
-import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore } from '../types';
+import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore, SurfCall } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../constants';
 import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageStats';
@@ -45,6 +45,7 @@ interface DataContextType {
   members: Member[];
   joinRequests: JoinRequest[];
   events: Event[];
+  surfCalls: SurfCall[];
   news: NewsItem[];
   podcasts: Podcast[];
   galleryItems: GalleryItem[];
@@ -142,6 +143,10 @@ interface DataContextType {
   conflictingAdmins: Member[];
   seedInitialAdmin: () => Promise<boolean>;
   seedInitialAssets: () => Promise<void>;
+  addSurfCall: (call: Omit<SurfCall, 'id'>) => Promise<string>;
+  toggleSurfCallAttendance: (callId: string, userId: string, userName: string, avatar?: string) => Promise<void>;
+  archiveSurfCall: (callId: string) => Promise<void>;
+  addSurfCallComment: (callId: string, userId: string, userName: string, avatar: string | undefined, text: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -152,6 +157,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [members, setMembers] = useState<Member[]>([]);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [surfCalls, setSurfCalls] = useState<SurfCall[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
@@ -560,6 +566,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       storage.set('cached_history_v3', hData, 2 / 60);
     });
 
+    
+    const unsubSurfCalls = trackedOnSnapshot(query(collection(db, 'surf_calls')), (snapshot) => {
+      setSurfCalls(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as SurfCall)));
+    });
+
     const unsubEvents = trackedOnSnapshot(query(collection(db, 'events'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
       setEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Event)));
     });
@@ -625,6 +636,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       unsubMembers();
       unsubHistory();
       unsubEvents();
+      unsubSurfCalls();
       unsubNews();
       unsubPodcasts();
       unsubGallery();
@@ -704,15 +716,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (isSuperAdmin) {
         // Super Admin: Cycle through all roles
-        if (member.role === 'Member') nextRole = 'Instructor';
+        if (member.role === 'Member') nextRole = 'Volunteer';
+        else if (member.role === 'Volunteer') nextRole = 'Instructor';
         else if (member.role === 'Instructor') nextRole = 'Admin';
         else nextRole = 'Member';
       } else {
-        // Regular Admin: Only toggle between Member and Instructor
+        // Regular Admin: Only toggle between Member, Volunteer and Instructor
         if (member.role === 'Admin') {
           throw new Error('Unauthorized: Only Super Admin can change Admin roles');
         }
-        nextRole = member.role === 'Member' ? 'Instructor' : 'Member';
+        if (member.role === 'Member') nextRole = 'Volunteer';
+        else if (member.role === 'Volunteer') nextRole = 'Instructor';
+        else nextRole = 'Member';
       }
       
       await updateDoc(doc(getDb(), 'members', id), { role: nextRole });
@@ -813,7 +828,90 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
+  
+  const addSurfCall = useCallback(async (call: Omit<SurfCall, 'id'>) => {
+    try {
+      const docRef = await addDoc(collection(getDb(), 'surf_calls'), call);
+      return docRef.id;
+    } catch (err: any) {
+      console.error('Error adding surf call:', err);
+      throw err;
+    }
+  }, []);
+
+  const toggleSurfCallAttendance = useCallback(async (callId: string, memberId: string, memberName: string, avatar?: string) => {
+    try {
+      const callRef = doc(getDb(), 'surf_calls', callId);
+      const callDoc = await getDoc(callRef);
+      if (!callDoc.exists()) return;
+      
+      const call = callDoc.data() as SurfCall;
+      const joined = call.participantsJoined || [];
+      const cancelled = call.participantsCancelled || [];
+      
+      const isAttending = joined.some((p: any) => p.id === memberId);
+      
+      let newJoined = [...joined];
+      let newCancelled = [...cancelled];
+      
+      if (isAttending) {
+        newJoined = newJoined.filter((p: any) => p.id !== memberId);
+        if (!newCancelled.includes(memberId)) {
+          newCancelled.push(memberId);
+        }
+      } else {
+        newJoined.push({ id: memberId, name: memberName, avatar });
+        newCancelled = newCancelled.filter(id => id !== memberId);
+      }
+      
+      await updateDoc(callRef, {
+        participantsJoined: newJoined,
+        participantsCancelled: newCancelled
+      });
+    } catch (err) {
+      console.error('Error toggling surf call attendance:', err);
+      throw err;
+    }
+  }, []);
+
+  
+  const addSurfCallComment = useCallback(async (callId: string, userId: string, userName: string, avatar: string | undefined, text: string) => {
+    try {
+      const callRef = doc(getDb(), 'surf_calls', callId);
+      const callDoc = await getDoc(callRef);
+      if (!callDoc.exists()) return;
+      
+      const call = callDoc.data() as SurfCall;
+      const comments = call.comments || [];
+      const newComment = {
+        id: Math.random().toString(36).substring(2, 9),
+        userId,
+        userName,
+        avatar,
+        text,
+        timestamp: new Date().toISOString()
+      };
+      
+      await updateDoc(callRef, {
+        comments: [...comments, newComment]
+      });
+    } catch (err) {
+      console.error('Error adding comment:', err);
+      throw err;
+    }
+  }, []);
+
+  const archiveSurfCall = useCallback(async (callId: string) => {
+    try {
+      const callRef = doc(getDb(), 'surf_calls', callId);
+      await updateDoc(callRef, { isArchived: true });
+    } catch (err) {
+      console.error('Error archiving surf call:', err);
+      throw err;
+    }
+  }, []);
+
+const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
     await trackedAddDoc(collection(getDb(), 'events'), details);
   }, []);
 
@@ -1424,7 +1522,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setConnectionError(null);
       }, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, approveRequest, rejectRequest,
-      addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
+      addEvent,
+    surfCalls,
+    addSurfCall,
+    toggleSurfCallAttendance,
+    archiveSurfCall,
+    addSurfCallComment, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
       isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets

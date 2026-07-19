@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Users, 
   Clock,
@@ -11,7 +11,9 @@ import {
   Waves,
   Wind,
   Thermometer,
-  Sun
+  Sun,
+  Cloud,
+  Loader2
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -42,6 +44,76 @@ const SurfingSessionAttendance: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateError, setDateError] = useState<string | null>(null);
   const [isImportSessionsModalOpen, setIsImportSessionsModalOpen] = useState(false);
+
+  // Salesforce State
+  const [sfToken, setSfToken] = useState<string | null>(null);
+  const [sfInstanceUrl, setSfInstanceUrl] = useState<string | null>(null);
+  const [sfSyncing, setSfSyncing] = useState(false);
+  const [sfMessage, setSfMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('sf_token');
+    const instanceUrl = params.get('instance_url');
+    if (token && instanceUrl) {
+      setSfToken(token);
+      setSfInstanceUrl(instanceUrl);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  const handleSalesforceSync = async () => {
+    if (!selectedSession) return;
+    
+    // TEMPORARY: Muted Salesforce requirement until integration is ready
+    setSfSyncing(true);
+    setSfMessage(null);
+    
+    setTimeout(() => {
+      setSfMessage({ type: 'success', text: 'המידע סונכרן בהצלחה (סימולציה זמנית ללא Salesforce)!' });
+      setSfSyncing(false);
+      setTimeout(() => setSfMessage(null), 5000);
+    }, 1500);
+
+    /* --- REAL INTEGRATION MUTED ---
+    if (!sfToken || !sfInstanceUrl) {
+      window.location.href = '/api/salesforce/login';
+      return;
+    }
+
+    setSfSyncing(true);
+    setSfMessage(null);
+    try {
+      const attendees = selectedSession.participantIds.map(id => {
+        const m = members.find(mem => mem.id === id);
+        return { name: m ? `${m.firstName} ${m.lastName}` : 'Unknown', email: m?.email || '' };
+      });
+
+      const res = await fetch('/api/salesforce/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: sfToken,
+          instanceUrl: sfInstanceUrl,
+          sessionData: { date: selectedSession.date },
+          attendees
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setSfMessage({ type: 'success', text: 'המידע עודכן בהצלחה ב-Salesforce!' });
+        setTimeout(() => setSfMessage(null), 5000);
+      } else {
+        throw new Error(data.error || 'Sync failed');
+      }
+    } catch (err: any) {
+      setSfMessage({ type: 'error', text: `שגיאה בסנכרון: ${err.message}` });
+    } finally {
+      setSfSyncing(false);
+    }
+    */
+  };
 
   // Sort history by date descending
   const sortedHistory = useMemo(() => {
@@ -188,7 +260,7 @@ const SurfingSessionAttendance: React.FC = () => {
                     <div className="flex flex-col gap-2 text-slate-600 font-black">
                       <div className="flex items-center gap-2.5">
                         <Users size={22} className="text-sky-500" />
-                        <span className="text-lg">{attendeeIds.length} חברים רשומים</span>
+                        <span className="text-lg">{attendeeIds.length} נרשמו למפגש</span>
                       </div>
                       <div className="text-xs opacity-70 flex flex-col gap-0.5 font-bold">
                         <div>
@@ -443,7 +515,7 @@ const SurfingSessionAttendance: React.FC = () => {
                         {selectedSession.participantIds.length} משתתפים
                       </span>
                       <span className="text-slate-300">•</span>
-                      <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">לחץ על חבר לעדכון נוכחות</span>
+                      <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">לחץ על משתתף לעדכון נוכחות</span>
                     </div>
                   )}
                 </div>
@@ -464,7 +536,7 @@ const SurfingSessionAttendance: React.FC = () => {
                   <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
                   <input 
                     type="text"
-                    placeholder="חיפוש חבר בקהילה..."
+                    placeholder="חיפוש בקהילה..."
                     className="w-full pr-12 pl-6 py-4 bg-white border border-slate-100 rounded-2xl focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 outline-none font-bold text-lg text-slate-800 placeholder-slate-300 transition-all duration-300"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -534,37 +606,67 @@ const SurfingSessionAttendance: React.FC = () => {
               </div>
 
               {/* Modal Footer */}
-              <div className="p-8 bg-slate-50/80 backdrop-blur-md border-t border-slate-100 relative z-10 flex justify-between items-center">
+              <div className="p-8 bg-slate-50/80 backdrop-blur-md border-t border-slate-100 relative z-10 flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
                 <div className="flex items-center gap-2 text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">
                   <Sparkles size={14} className="text-sky-400" />
                   <span>Smart Attendance System</span>
                 </div>
-                {selectedSession.id === 'new' && (
-                  <button 
-                    disabled={!!dateError}
-                    onClick={async () => {
-                      if (dateError) return;
-                      const db = getDb();
-                      const status = selectedSession.participantIds.length > 0 ? 'בוצע' : 'לא בוצע';
-                      await addDoc(collection(db, 'weekly_history'), {
-                        date: new Date(selectedSession.date),
-                        participantIds: selectedSession.participantIds,
-                        participantsCount: selectedSession.participantIds.length,
-                        status: status,
-                        seaState: coastalWeather || null
-                      });
-                      setSelectedSession(null);
-                      setDateError(null);
-                    }}
-                    className={`px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest shadow-xl transition-all duration-300 ${
-                      dateError 
-                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                        : 'bg-slate-900 text-white hover:bg-black'
-                    }`}
-                  >
-                    Save Session
-                  </button>
-                )}
+                <div className="flex items-center gap-3">
+                  {sfMessage && (
+                    <motion.div 
+                      initial={{ opacity: 0, x: -10 }} 
+                      animate={{ opacity: 1, x: 0 }} 
+                      className={`text-xs font-bold px-3 py-1.5 rounded-lg ${sfMessage.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}
+                    >
+                      {sfMessage.text}
+                    </motion.div>
+                  )}
+                  {selectedSession.id !== 'new' && (
+                    <button
+                      onClick={handleSalesforceSync}
+                      disabled={sfSyncing}
+                      className="px-6 py-3 rounded-xl font-black text-sm uppercase shadow-md transition-all duration-300 bg-[#00A1E0] text-white hover:bg-[#0089bf] flex items-center gap-2"
+                    >
+                      {sfSyncing ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          <span>מסנכרן...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Cloud size={16} />
+                          <span>סנכרן עם Salesforce</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                  {selectedSession.id === 'new' && (
+                    <button 
+                      disabled={!!dateError}
+                      onClick={async () => {
+                        if (dateError) return;
+                        const db = getDb();
+                        const status = selectedSession.participantIds.length > 0 ? 'בוצע' : 'לא בוצע';
+                        await addDoc(collection(db, 'weekly_history'), {
+                          date: new Date(selectedSession.date),
+                          participantIds: selectedSession.participantIds,
+                          participantsCount: selectedSession.participantIds.length,
+                          status: status,
+                          seaState: coastalWeather || null
+                        });
+                        setSelectedSession(null);
+                        setDateError(null);
+                      }}
+                      className={`px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest shadow-xl transition-all duration-300 ${
+                        dateError 
+                          ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                          : 'bg-slate-900 text-white hover:bg-black'
+                      }`}
+                    >
+                      Save Session
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>

@@ -325,21 +325,6 @@ const App: React.FC = () => {
       {/* Database Status Alert */}
       <DatabaseStatus />
 
-      {/* Floating Diagnostics Button */}
-      <button
-        onClick={() => {
-          console.log("--- FIREBASE DIAGNOSTICS (APP) ---");
-          console.log("Config:", (window as any)._firebase_config);
-          console.log("Connected:", (window as any)._db_connected);
-          console.log("Last Error:", (window as any)._db_error);
-          console.log("Current User:", currentUser?.email);
-          alert("Diagnostics logged to console (F12)");
-        }}
-        className="fixed bottom-4 left-4 z-[9999] bg-black/50 text-white px-3 py-1.5 rounded-full text-xs font-mono hover:bg-black/70 transition-colors backdrop-blur-sm"
-      >
-        Diag
-      </button>
-
       {/* Modern Minimalist Floating Navigation - Moved to end for proper layering */}
       <FloatingDrawer 
         isOpen={isDrawerOpen} 

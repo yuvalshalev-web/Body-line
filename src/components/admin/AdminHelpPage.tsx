@@ -12,19 +12,19 @@ const AdminHelpPage = () => {
         <p className="text-[#121212] font-bold text-lg">כאן תוכלו להבין איך פעולות הניהול והנתונים מעצבים את חוויית המשתמש באתר.</p>
       </header>
 
-      {/* לוגיקת ניהול חברים */}
+      {/* לוגיקת ניהול משתמשים */}
       <section>
-        <h2 className="text-2xl font-black text-[#121212] mb-6 border-b-2 border-[#121212]/10 pb-2">👥 לוגיקת ניהול חברים</h2>
+        <h2 className="text-2xl font-black text-[#121212] mb-6 border-b-2 border-[#121212]/10 pb-2">👥 לוגיקת ניהול משתמשים</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* כרטיסייה 1: השעיה */}
           <div className="admin-info-card p-8 rounded-3xl transition-transform hover:-translate-y-1 border border-white/20">
             <div className="text-4xl mb-4">🚫</div>
-            <h3 className="text-xl font-black text-[#121212] mb-4">השעיית חבר</h3>
-            <p className="text-[#121212] mb-4 font-medium">כאשר חבר מושעה, הוא הופך ל"שקוף" עבור המערכת הסטטיסטית.</p>
+            <h3 className="text-xl font-black text-[#121212] mb-4">השעיית משתמש</h3>
+            <p className="text-[#121212] mb-4 font-medium">כאשר משתמש מושעה, הוא הופך ל"שקוף" עבור המערכת הסטטיסטית.</p>
             <ul className="list-disc pr-5 text-sm leading-relaxed text-[#121212]/80 font-bold">
               <li><strong>המכנה המשותף ($n$):</strong> קטן ב-1 באופן מיידי.</li>
-              <li><strong>ממוצעים:</strong> מתנקים מנתוני החבר המושעה (כדי למנוע "בורות" בגרפים).</li>
-              <li><strong>השפעה:</strong> החברים הפעילים רואים תמונה ריאליסטית של הקבוצה המתאמנת כרגע.</li>
+              <li><strong>ממוצעים:</strong> מתנקים מנתוני המשתמש המושעה (כדי למנוע "בורות" בגרפים).</li>
+              <li><strong>השפעה:</strong> המשתמשים הפעילים רואים תמונה ריאליסטית של הקבוצה המתאמנת כרגע.</li>
             </ul>
           </div>
 
@@ -32,18 +32,18 @@ const AdminHelpPage = () => {
           <div className="admin-info-card p-8 rounded-3xl transition-transform hover:-translate-y-1 border border-white/20">
             <div className="text-4xl mb-4">🔄</div>
             <h3 className="text-xl font-black text-[#121212] mb-4">החזרה לפעילות</h3>
-            <p className="text-[#121212] mb-4 font-medium">החזרת חבר לסטטוס Active מבצעת "כיול מחדש" לכל האתר.</p>
+            <p className="text-[#121212] mb-4 font-medium">החזרת משתמש לסטטוס Active מבצעת "כיול מחדש" לכל האתר.</p>
             <ul className="list-disc pr-5 text-sm leading-relaxed text-[#121212]/80 font-bold">
               <li><strong>אחוזונים:</strong> המערכת מחשבת מחדש את המיקום של כולם (גיל, מרחק, Grit).</li>
-              <li><strong>דירוג:</strong> חבר עשוי לראות שמיקומו השתנה כי חבר "חזק" יותר חזר לזהות שלו.</li>
+              <li><strong>דירוג:</strong> משתמש עשוי לראות שמיקומו השתנה כי משתמש "חזק" יותר חזר לזהות שלו.</li>
             </ul>
           </div>
 
-          {/* כרטיסייה 3: חבר חדש */}
+          {/* כרטיסייה 3: משתמש חדש */}
           <div className="admin-info-card p-8 rounded-3xl transition-transform hover:-translate-y-1 border border-white/20">
             <div className="text-4xl mb-4">➕</div>
-            <h3 className="text-xl font-black text-[#121212] mb-4">צירוף חבר חדש</h3>
-            <p className="text-[#121212] mb-4 font-medium">חבר חדש נכנס למערכת ללא היסטוריה, כחלק מהזהות העתידית.</p>
+            <h3 className="text-xl font-black text-[#121212] mb-4">צירוף משתמש חדש</h3>
+            <p className="text-[#121212] mb-4 font-medium">משתמש חדש נכנס למערכת ללא היסטוריה, כחלק מהזהות העתידית.</p>
             <ul className="list-disc pr-5 text-sm leading-relaxed text-[#121212]/80 font-bold">
               <li><strong>היסטוריה:</strong> הוא לא משפיע על ממוצעי העבר (כדי לא לעוות נתונים ישנים).</li>
               <li><strong>זמן אמת:</strong> הוא נספר מיד בחישובי ה-Real-time והאחוזונים הנוכחיים.</li>
@@ -131,7 +131,7 @@ const AdminHelpPage = () => {
             <p className="text-[#121212] mb-4 font-bold">הנוסחה: <span className="bg-white/30 px-2 py-1 rounded text-sm">(סך סשנים × 1.5) + (רצף שבועות × 4)</span></p>
             <p className="text-sm text-[#121212]/80 font-medium leading-relaxed">
               ה-Grit Score אינו רק כמות הגעה, אלא שקלול של התמדה לאורך זמן יחד עם רצף נוכחות נוכחי. 
-              הוא מעודד חברים לא רק להגיע, אלא לא לפספס שבועות רצופים. המדד מוגבל ל-100 נקודות.
+              הוא מעודד משתמשים לא רק להגיע, אלא לא לפספס שבועות רצופים. המדד מוגבל ל-100 נקודות.
             </p>
           </div>
           <div className="admin-info-card p-8 rounded-3xl border border-white/20">
@@ -157,11 +157,11 @@ const AdminHelpPage = () => {
               <h3 className="text-xl font-black text-[#121212]">מדד ה-Drift (מרחק מהבית)</h3>
             </div>
             <p className="text-sm text-[#121212]/80 font-medium leading-relaxed mb-4">
-              מדד זה מחשב את המרחק האווירי (ב-ק"מ) בין כתובת המגורים של החבר לבין ה-"Home Break" (חוף הבית) של הקהילה.
+              מדד זה מחשב את המרחק האווירי (ב-ק"מ) בין כתובת המגורים של המשתמש לבין ה-"Home Break" (חוף הבית) של הקהילה.
             </p>
             <ul className="list-disc pr-5 text-xs leading-relaxed text-[#121212]/70 font-bold space-y-2">
-              <li><strong>אחוזון קרבה:</strong> המערכת מדרגת את החבר ביחס לשאר הקהילה.</li>
-              <li><strong>משמעות:</strong> ככל שהאחוזון גבוה יותר, החבר נחשב ל"מקומי" יותר (קרוב יותר לחוף מ-X% מהחברים).</li>
+              <li><strong>אחוזון קרבה:</strong> המערכת מדרגת את המשתמש ביחס לשאר הקהילה.</li>
+              <li><strong>משמעות:</strong> ככל שהאחוזון גבוה יותר, המשתמש נחשב ל"מקומי" יותר (קרוב יותר לחוף מ-X% מהמשתמשים).</li>
               <li><strong>הערכה:</strong> המדד נותן כבוד לאלו שנוסעים מרחקים ארוכים כדי להגיע לסשן.</li>
             </ul>
           </div>
@@ -173,10 +173,10 @@ const AdminHelpPage = () => {
               <h3 className="text-xl font-black text-[#121212]">מדד ה-Vintage (אחוזון גיל)</h3>
             </div>
             <p className="text-sm text-[#121212]/80 font-medium leading-relaxed mb-4">
-              מדד ה-"וינטג'" משקף את המיקום היחסי של החבר בהתפלגות הגילאים של הקהילה.
+              מדד ה-"וינטג'" משקף את המיקום היחסי של המשתמש בהתפלגות הגילאים של הקהילה.
             </p>
             <ul className="list-disc pr-5 text-xs leading-relaxed text-[#121212]/70 font-bold space-y-2">
-              <li><strong>אחוזון גיל:</strong> חישוב סטטיסטי המראה כמה אחוזים מהקהילה צעירים/מבוגרים מהחבר.</li>
+              <li><strong>אחוזון גיל:</strong> חישוב סטטיסטי המראה כמה אחוזים מהקהילה צעירים/מבוגרים מהמשתמש.</li>
               <li><strong>תגים (Badges):</strong> המערכת מעניקה תארים כמו "Experienced Surfer" (לוותיקים) או "Young & Promising" (לצעירים).</li>
               <li><strong>מטרה:</strong> יצירת גאוות יחידה סביב הניסיון והאנרגיה הצעירה בתוך אותה קבוצה.</li>
             </ul>
@@ -199,7 +199,7 @@ const AdminHelpPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white/30 p-4 rounded-xl border border-[#121212]/10">
                   <h4 className="font-black text-[#121212] mb-1">הגעת = ניצחת</h4>
-                  <p className="text-xs text-[#121212]/70 font-bold">עצם ההגעה מעניקה את הניקוד הבסיסי והמשמעותי ביותר ב-Grit Score ובדירוג השבועי. זהו המדד הכי "טהור" של חבר בקהילה.</p>
+                  <p className="text-xs text-[#121212]/70 font-bold">עצם ההגעה מעניקה את הניקוד הבסיסי והמשמעותי ביותר ב-Grit Score ובדירוג השבועי. זהו המדד הכי "טהור" של משתמש בקהילה.</p>
                 </div>
                 <div className="bg-white/30 p-4 rounded-xl border border-[#121212]/10">
                   <h4 className="font-black text-[#121212] mb-1">כל השאר בונוס</h4>
@@ -236,7 +236,7 @@ const AdminHelpPage = () => {
             </div>
             <div className="bg-white/20 p-6 rounded-2xl border border-white/30">
               <h4 className="font-black text-[#121212] mb-2">מדד הציפה (Volume)</h4>
-              <p className="text-sm text-[#121212]/70 font-bold mb-4">המערכת משווה את הגלשן הנוכחי של החבר להמלצה האופטימלית:</p>
+              <p className="text-sm text-[#121212]/70 font-bold mb-4">המערכת משווה את הגלשן הנוכחי של המשתמש להמלצה האופטימלית:</p>
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-black text-emerald-700 bg-emerald-50/50 p-2 rounded">
                   <span>טווח של ±2 ליטר</span>
@@ -304,7 +304,7 @@ const AdminHelpPage = () => {
       </section>
 
       <div className="mt-10 p-6 admin-info-card border-r-8 border-[#121212] rounded-2xl text-center text-[#121212] font-black text-lg shadow-lg">
-        <strong>💡 טיפ למנהל:</strong> כל הנתונים שאתם רואים ב-Dashboards נגזרים מהלוגיקה הזו. הבנת התהליכים תעזור לכם להסביר לחברים למה הדירוג שלהם השתנה או איך להשתפר.
+        <strong>💡 טיפ למנהל:</strong> כל הנתונים שאתם רואים ב-Dashboards נגזרים מהלוגיקה הזו. הבנת התהליכים תעזור לכם להסביר למשתמשים למה הדירוג שלהם השתנה או איך להשתפר.
       </div>
     </div>
   );

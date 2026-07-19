@@ -15,7 +15,7 @@ const DirectoryPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
 
-  const identities = ['הכל', 'רכז', 'מדריך', 'חבר'];
+  const identities = ['הכל', 'רכז', 'מדריך', 'מתנדב', 'משתתף'];
 
   const headerImage = useRandomHeader();
 
@@ -25,16 +25,16 @@ const DirectoryPage: React.FC = () => {
       member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (member.mobile && member.mobile.includes(searchTerm));
     
-    const memberIdentity = member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר';
+    const memberIdentity = member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף';
     const matchesIdentity = selectedIdentity === 'הכל' || memberIdentity === selectedIdentity;
     
     return matchesSearch && matchesIdentity && member.isActive !== false;
   });
 
-  const roleOrder: Record<string, number> = { 'רכז': 1, 'מדריך': 2, 'חבר': 3 };
+  const roleOrder: Record<string, number> = { 'רכז': 1, 'מדריך': 2, 'מתנדב': 3, 'משתתף': 4 };
   const sortedMembers = [...filteredMembers].sort((a, b) => {
-    const roleA = a.role === 'Admin' ? 'רכז' : a.role === 'Instructor' ? 'מדריך' : 'חבר';
-    const roleB = b.role === 'Admin' ? 'רכז' : b.role === 'Instructor' ? 'מדריך' : 'חבר';
+    const roleA = a.role === 'Admin' ? 'רכז' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף';
+    const roleB = b.role === 'Admin' ? 'רכז' : b.role === 'Instructor' ? 'מדריך' : b.role === 'Volunteer' ? 'מתנדב' : 'משתתף';
     return roleOrder[roleA] - roleOrder[roleB];
   });
 
@@ -73,7 +73,7 @@ const DirectoryPage: React.FC = () => {
             {member.firstName} {member.lastName}
           </h3>
           <p className="text-[10px] sm:text-xs font-bold text-slate-400 truncate w-full">
-            {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
+            {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
           </p>
 
           {/* Quick Actions */}
@@ -112,7 +112,7 @@ const DirectoryPage: React.FC = () => {
               {member.firstName} {member.lastName}
             </h3>
             <p className="text-xs font-bold text-slate-400">
-              {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'} • {member.email}
+              {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף'} • {member.email}
             </p>
           </div>
         </div>
@@ -128,14 +128,14 @@ const DirectoryPage: React.FC = () => {
     let lastRole: string | null = null;
 
     sortedMembers.forEach((member, index) => {
-      const currentRole = member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר';
+      const currentRole = member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף';
       
       if (!lastRole || lastRole !== currentRole) {
         rendered.push(
           <div key={`sep-${index}`} className="col-span-full flex items-center gap-4 my-6">
             <div className="flex-grow border-t border-slate-200" />
             <span className="text-sm font-black text-slate-400 px-2">
-              {currentRole === 'רכז' ? 'רכזים' : currentRole === 'מדריך' ? 'מדריכים' : 'חברים'}
+              {currentRole === 'רכז' ? 'רכזים' : currentRole === 'מדריך' ? 'מדריכים' : currentRole === 'מתנדב' ? 'מתנדבים' : 'משתתפים'}
             </span>
             <div className="flex-grow border-t border-slate-200" />
           </div>
@@ -185,7 +185,7 @@ const DirectoryPage: React.FC = () => {
               <span className="surfer-title text-[#121212]">נבחרת הכוכבים</span>
             </h1>
             <p className="header-subtitle max-w-2xl mx-auto text-[#121212]">
-              הכירו את הקהילה שלנו • {members.length} חברים רשומים 🏄‍♂️
+              הכירו את הקהילה שלנו • {members.length} משתתפים רשומים 🏄‍♂️
             </p>
           </div>
         </div>
@@ -303,7 +303,7 @@ const DirectoryPage: React.FC = () => {
           <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto text-slate-400">
             <Search size={32} />
           </div>
-          <h3 className="text-xl font-black text-slate-800">לא נמצאו חברים התואמים לחיפוש</h3>
+          <h3 className="text-xl font-black text-slate-800">לא נמצאו משתמשים התואמים לחיפוש</h3>
           <p className="text-slate-500 font-bold">נסו לשנות את מילות החיפוש או את הסינון לפי זהות</p>
           <button 
             onClick={() => { setSearchTerm(''); setSelectedIdentity('הכל'); }}

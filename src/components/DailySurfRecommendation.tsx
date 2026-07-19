@@ -60,45 +60,45 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
   let isWarning = false;
 
   if (currentWaveHeight < 0.2) {
-    boardType = 'סאפ (SUP)';
+    boardType = 'SUP';
     recVol = 0;
     recLenInches = 0;
     explanation = 'הים פלטה (גלים נמוכים). הים נמוך ורגוע, מושלם אימון חתירה על סאפ, שחייה, או פשוט ליהנות מהחוף!';
     isWarning = false;
   } else if (surfingLevel === 'Beginner') {
     if (currentWaveHeight >= 1.5) {
-      boardType = 'סופטבורד (Softboard)';
+      boardType = 'Softboard';
       explanation = 'ים גבוה מדי למתחילים - מומלץ להישאר בחוף או לגלוש רק בקצף הקרוב לחוף. בטיחות קודמת לכל!';
       isWarning = true;
     } else if (currentWaveHeight >= 0.8) {
-      boardType = 'סופטבורד / פאן-בורד';
+      boardType = 'Softboard / Funboard';
       recVol = baseRec.volume * 1.05; // Slightly more volume for medium waves
       recLenInches = Math.round(baseRec.lengthInches + 2);
       explanation = 'ים בינוני, מעולה לתרגול. קח גלשן עם קצת יותר נפח מהרגיל שיעזור לך לתפוס גלים ולשמור על יציבות.';
     } else {
-      boardType = 'סופטבורד (Softboard)';
+      boardType = 'Softboard';
       recVol = baseRec.volume * 1.15; // Much more volume for small waves
       recLenInches = Math.round(baseRec.lengthInches + 6);
       explanation = 'ים נמוך ורגוע, מושלם למתחילים! סופטבורד גדול במיוחד ייתן לך מקסימום גלים והנאה.';
     }
   } else if (surfingLevel === 'Advanced') {
     if (currentWaveHeight > 2.0) {
-      boardType = 'סטפ-אפ (Step-up)';
+      boardType = 'Step-up';
       recVol = baseRec.volume * 1.05; // Extra volume for big waves
       recLenInches = Math.round(baseRec.lengthInches + 4); // Longer for big waves
       explanation = 'ים גבוה ועוצמתי. קח גלשן ארוך יותר (Step-up) כדי להיכנס מוקדם לגל ולשמור על שליטה במהירויות גבוהות.';
     } else if (currentWaveHeight >= 1.2) {
-      boardType = 'שורטבורד (Shortboard)';
+      boardType = 'Shortboard';
       // Base volume is perfect here
       recLenInches = Math.round(baseRec.lengthInches);
       explanation = 'תנאים מצוינים לביצועים. שורטבורד קלאסי במידות הרגילות שלך ייתן לך את הרדיקליות שאתה מחפש.';
     } else if (currentWaveHeight >= 0.7) {
-      boardType = 'שורטבורד קטן / הייבריד';
+      boardType = 'Groveler / Hybrid';
       recVol = baseRec.volume * 1.08;
       recLenInches = Math.round(baseRec.lengthInches - 2);
       explanation = 'ים בינוני-נמוך. גלשן מעט קצר ורחב יותר יעזור לך לייצר מהירות בחלקים החלשים של הגל.';
     } else {
-      boardType = 'פיש (Fish) / גרובבלר';
+      boardType = 'Fish / Groveler';
       recVol = baseRec.volume * 1.15; // Extra volume for weak waves
       recLenInches = Math.round(baseRec.lengthInches - 4); // Shorter
       explanation = 'ים חלש. קח גלשן קצר, רחב ושטוח (פיש או גרובבלר) כדי לייצר מהירות גם כשאין כוח בגל.';
@@ -106,46 +106,69 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
   } else {
     // Intermediate
     if (currentWaveHeight > 1.8) {
-      boardType = 'שורטבורד / סטפ-אפ';
+      boardType = 'Shortboard / Step-up';
       recVol = baseRec.volume * 1.08;
       recLenInches = Math.round(baseRec.lengthInches + 4);
       explanation = 'ים גבוה ומאתגר. קח גלשן ארוך יותר עם אקסטרה נפח כדי להבטיח כניסה בטוחה לגלים.';
     } else if (currentWaveHeight >= 1.0) {
-      boardType = 'שורטבורד / הייבריד';
+      boardType = 'Shortboard / Hybrid';
       // Base volume is perfect here
       recLenInches = Math.round(baseRec.lengthInches);
       explanation = 'תנאים קלאסיים! הגלשן היומיומי שלך (All-rounder) במידות הרגילות יעבוד כאן בצורה מושלמת.';
     } else if (currentWaveHeight >= 0.6) {
-      boardType = 'פאן-בורד / פיש';
+      boardType = 'Funboard / Fish';
       recVol = baseRec.volume * 1.15;
       recLenInches = Math.round(baseRec.lengthInches - 2);
       explanation = 'ים חלש יחסית. גלשן עם יותר נפח (כמו פאן-בורד או פיש) יעזור לך לא לפספס גלים ולשמור על מהירות.';
     } else {
-      boardType = 'לונגבורד / מיני-מאל';
-      recVol = baseRec.volume * 1.35;
       recLenInches = Math.round(baseRec.lengthInches + 12);
-      explanation = 'ים נמוך מאוד. תהנה מהציפה עם לונגבורד או מיני-מאל כדי לתפוס כל אדווה בים.';
+      recVol = baseRec.volume * 1.35;
+      if (recLenInches >= 108) {
+        boardType = 'Longboard';
+        explanation = 'ים נמוך מאוד. תהנה מהציפה עם לונגבורד קלאסי שיתפוס כל אדווה בים.';
+      } else {
+        boardType = 'Mini Mal / Midlength';
+        explanation = 'ים נמוך מאוד. גלשן מיני-מאל או מידלנגת\' יעניק לך שפע של ציפה ויעזור לתפוס כל אדווה בים.';
+      }
     }
   }
 
   // Calculate Match Score for current board
   let matchScore = 0;
   let matchText = '';
+  let idealBoardRecommendation = '';
   if (currentBoardVolume && currentBoardLength) {
     matchScore = calculateMatchScore(currentBoardVolume, currentBoardLength, recVol, recLenInches);
     
-    if (matchScore >= 85) matchText = 'הגלשן שלך מושלם להיום!';
-    else if (matchScore >= 60) matchText = 'הגלשן שלך סביר להיום, אבל לא אידיאלי.';
-    else matchText = 'הגלשן שלך פחות מתאים לתנאים היום.';
+    if (matchScore >= 85) {
+      matchText = 'הגלשן שלך מתאים בדיוק לתנאי הים היום!';
+    } else {
+      let reason = '';
+      let currentBoardLengthInches = 0;
+      if (currentBoardLength) {
+        const parsed = parseLength(currentBoardLength);
+        currentBoardLengthInches = parsed.feet * 12 + parsed.inches;
+      }
+      if (currentBoardVolume < recVol * 0.85) reason = 'הגלשן בעל נפח נמוך מדי לתנאים (חסרה ציפה)';
+      else if (currentBoardVolume > recVol * 1.25) reason = 'הגלשן בעל נפח גדול מדי לתנאים';
+      else if (currentBoardLengthInches > 0 && currentBoardLengthInches < recLenInches * 0.9) reason = 'הגלשן קצר מדי לתנאים (חסרה מהירות כניסה)';
+      else if (currentBoardLengthInches > 0 && currentBoardLengthInches > recLenInches * 1.15) reason = 'הגלשן ארוך מדי לתנאים';
+      else reason = 'המידות שלו פחות אידיאליות למצב הים';
+
+      if (matchScore >= 60) matchText = `הגלשן שלך סביר להיום, אך ${reason}.`;
+      else matchText = `הגלשן שלך פחות מתאים לתנאים היום - ${reason}.`;
+
+      idealBoardRecommendation = `במקום זאת, כדאי לגלוש על ${boardType} סביב נפח ${Math.ceil(recVol)}L. ${explanation}`;
+    }
   }
 
   // Wetsuit logic
   const getWetsuit = (temp: number) => {
-    if (temp < 18) return { label: 'חליפה ארוכה (4/3)', thickness: '4/3' as const };
-    if (temp <= 21) return { label: 'מעבר (3/2)', thickness: '3/2' as const };
-    if (temp <= 24) return { label: 'קיץ ארוך (2/2)', thickness: '2/2' as const };
-    if (temp <= 27) return { label: 'קיץ קצר (2/2)', thickness: '2/2-ss' as const };
-    return { label: 'חולצת לייקרה', thickness: 'sun-shirt' as const };
+    if (temp < 18) return { label: 'חליפת חורף (4/3)', thickness: '4/3' as const };
+    if (temp <= 20.5) return { label: 'חליפת מעבר (3/2)', thickness: '3/2' as const };
+    if (temp <= 22.5) return { label: 'חליפת קיץ ארוכה (2/2)', thickness: '2/2' as const };
+    if (temp < 24.5) return { label: 'חליפת קיץ קצרה (2/2)', thickness: '2/2-ss' as const };
+    return { label: 'חולצת לייקרה / בגד ים', thickness: 'sun-shirt' as const };
   };
   const wetsuit = waterTemp ? getWetsuit(waterTemp) : null;
 
@@ -159,7 +182,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
     if (lower.includes('sup') || lower.includes('סאפ')) return 'sup';
     if (lower.includes('softboard') || lower.includes('סופטבורד')) return 'softboard';
     if (lower.includes('longboard') || lower.includes('לונגבורד')) return 'longboard';
-    if (lower.includes('funboard') || lower.includes('פאן-בורד') || lower.includes('פאנבורד')) return 'funboard';
+    if (lower.includes('funboard') || lower.includes('פאן-בורד') || lower.includes('פאנבורד') || lower.includes('מיני-מאל') || lower.includes('מידלנגת')) return 'funboard';
     if (lower.includes('shortboard') || lower.includes('שורטבורד')) return 'shortboard';
     if (lower.includes('fish') || lower.includes('פיש')) return 'fish';
     return 'funboard';
@@ -300,26 +323,37 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
 
                 {recVol > 0 && recLenInches > 0 && currentBoardVolume && currentBoardLength && (
                   <div className="bg-white/50 border border-white/40 rounded-2xl p-6 shadow-sm">
-                    <div className="flex justify-between items-end mb-4">
-                      <div>
-                        <p className="text-xs text-[#007085] uppercase tracking-widest mb-1">התאמת הגלשן שלך להיום</p>
-                        <p className="text-sm font-bold text-[#002b44]">{matchText}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className={`text-3xl font-black ${matchScore >= 85 ? 'text-emerald-500' : matchScore >= 60 ? 'text-amber-500' : 'text-rose-500'}`}>
-                          {matchScore}%
-                        </span>
-                      </div>
+                    <div className="mb-6">
+                      <p className="text-xs text-[#007085] uppercase tracking-widest mb-1">התאמת הגלשן שלך להיום</p>
+                      <p className="text-sm font-bold text-[#002b44]">{matchText}</p>
+                      {idealBoardRecommendation && (
+                        <div className="mt-3 p-3 bg-white/60 border border-white/50 rounded-xl">
+                          <p className="text-[11px] font-black text-[#007085] mb-1">הגלשן האידאלי במקום:</p>
+                          <p className="text-sm text-[#002b44]/80 leading-relaxed font-medium">{idealBoardRecommendation}</p>
+                        </div>
+                      )}
                     </div>
                     
                     {/* Visual Gauge */}
-                    <div className="h-3 bg-black/5 rounded-full overflow-hidden relative">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${matchScore}%` }}
-                        transition={{ duration: 1, delay: 0.5, type: "spring" }}
-                        className={`absolute top-0 left-0 h-full rounded-full ${matchScore >= 85 ? 'bg-emerald-400' : matchScore >= 60 ? 'bg-amber-400' : 'bg-rose-400'}`}
-                      />
+                    <div className="flex items-center gap-4 mt-2">
+                      <span className={`text-3xl font-black shrink-0 leading-none drop-shadow-sm ${matchScore >= 85 ? 'text-emerald-500' : matchScore >= 60 ? 'text-amber-500' : 'text-rose-500'}`}>
+                        {matchScore}%
+                      </span>
+                      <div className="flex-1 h-5 bg-white/40 backdrop-blur-sm border border-white/50 rounded-full overflow-hidden relative shadow-[inset_0_2px_5px_rgba(0,0,0,0.05)]">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${matchScore}%` }}
+                          transition={{ duration: 1.2, delay: 0.1, type: "spring", bounce: 0.2 }}
+                          className={`absolute top-0 right-0 h-full rounded-full shadow-[inset_0_2px_4px_rgba(255,255,255,0.6),inset_0_-2px_4px_rgba(0,0,0,0.1)] bg-gradient-to-r ${
+                            matchScore >= 85 ? 'from-emerald-500 to-emerald-400' : 
+                            matchScore >= 60 ? 'from-amber-500 to-amber-400' : 
+                            'from-rose-500 to-rose-400'
+                          }`}
+                        >
+                          {/* Inner shine for 3D effect */}
+                          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/50 to-transparent rounded-t-full" />
+                        </motion.div>
+                      </div>
                     </div>
                   </div>
                 )}

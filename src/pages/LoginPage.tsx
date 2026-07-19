@@ -16,7 +16,14 @@ import { useRandomHeader } from '../hooks/useRandomHeader';
 import { processImage } from '../utils/imageProcessor';
 import emailjs from '@emailjs/browser';
 
-const groups = ["הרצליה", "אשדוד", "אשקלון", "כינרת", "קריות", "תל אביב"];
+const groups = [
+  "הרצליה", "הרצליה - ותיקים",
+  "אשדוד", "אשדוד - ותיקים",
+  "אשקלון", "אשקלון - ותיקים",
+  "כינרת", "כינרת - ותיקים",
+  "קריות", "קריות - ותיקים",
+  "תל אביב", "תל אביב - ותיקים"
+];
 
 const LoginPage: React.FC = () => {
   console.log("LoginPage rendering");
@@ -75,7 +82,7 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     setError('');
 
-    if (selectedGroup !== "הרצליה") {
+    if (!selectedGroup.startsWith("הרצליה")) {
       setError('הגישה לקבוצת ' + selectedGroup + ' טרם נפתחה במערכת.');
       setIsLoading(false);
       return;
@@ -198,7 +205,7 @@ const LoginPage: React.FC = () => {
             login(adminData);
             navigate('/');
           } else {
-            setError('משתמש זה אינו רשום במערכת כחבר.');
+            setError('משתמש זה אינו מאושר עדיין במערכת.');
             await auth.signOut();
           }
         }
@@ -462,7 +469,7 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     setError('');
     
-    if (selectedGroup !== "הרצליה") {
+    if (!selectedGroup.startsWith("הרצליה")) {
       setError('הגישה לקבוצת ' + selectedGroup + ' טרם נפתחה במערכת.');
       setIsLoading(false);
       return;
@@ -593,7 +600,7 @@ const LoginPage: React.FC = () => {
         login(adminData);
         navigate('/');
       } else {
-        setError('משתמש זה אינו רשום במערכת כחבר.');
+        setError('משתמש זה אינו מאושר עדיין במערכת.');
         await auth.signOut();
       }
     } catch (err: any) {
@@ -718,7 +725,7 @@ const LoginPage: React.FC = () => {
                             onClick={() => {
                               setSelectedGroup(group);
                               setIsGroupMenuOpen(false);
-                              if (group !== "הרצליה") {
+                              if (!group.startsWith("הרצליה")) {
                                 setError('הגישה לקבוצת ' + group + ' טרם נפתחה במערכת.');
                               } else {
                                 setError('');

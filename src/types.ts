@@ -16,7 +16,7 @@ export interface Member {
   mobile: string;
   avatar: string;
   bio: string;
-  role: 'Member' | 'Instructor' | 'Admin';
+  role: 'Member' | 'Volunteer' | 'Instructor' | 'Admin';
   joinedAt: string;
   deactivatedAt?: any;
   isActive?: boolean; // true = active, false = inactive
@@ -114,11 +114,12 @@ export interface Event {
   time: string;
   location: string;
   imageUrl: string;
-  type: 'COMMUNITY' | 'MEMBER' | 'INSTRUCTOR';
+  type: 'COMMUNITY' | 'MEMBER' | 'INSTRUCTOR' | 'VOLUNTEER';
   creatorId?: string;
   attendees: string[]; // Array of member IDs
   attendeeCount?: number; // Added for analysis
   isArchived?: boolean;
+  comments?: { id: string; userId: string; userName: string; avatar?: string; text: string; timestamp: string }[];
 }
 
 export interface Podcast {
@@ -188,4 +189,19 @@ export interface AuthState {
   user: Member | null;
   isAuthenticated: boolean;
   loading: boolean;
+}
+
+export interface SurfCall {
+  id: string;
+  creatorId: string;
+  creatorName: string;
+  createdAt: string;
+  targetBeach: string;
+  targetDate: string;
+  targetTime: string;
+  text?: string;
+  participantsJoined: { id: string; name: string; avatar?: string }[];
+  participantsCancelled: string[];
+  comments?: { id: string; userId: string; userName: string; avatar?: string; text: string; timestamp: string }[];
+  isArchived?: boolean;
 }

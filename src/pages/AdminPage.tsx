@@ -6,7 +6,8 @@ import {
   Trash2, UserPlus, Mail, Phone, MapPin, ExternalLink, Edit2, CheckCircle2, XCircle, 
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
-  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Globe, Activity, AlertTriangle, Terminal,
+  PanelTop, ArrowUpCircle, ArrowDownCircle, User, Globe, Activity,
+  Waves, AlertTriangle, Terminal,
   FileText, Map as MapIcon, Clock, Upload, BarChart2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -36,6 +37,7 @@ import MemberGradingPage from './MemberGradingPage';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { calculateUserStats } from '../utils/analytics';
 import { calculateAge, parseDate } from '../utils/dateUtils';
+import { SurfCallsAnalytics } from '../components/admin/SurfCallsAnalytics';
 
 
 
@@ -90,6 +92,7 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
 
   // By Role
   const membersStats = getParticipationStats(activeMembers.filter((m: any) => m.role === 'Member'));
+  const volunteersStats = getParticipationStats(activeMembers.filter((m: any) => m.role === 'Volunteer'));
   const instructorsStats = getParticipationStats(activeMembers.filter((m: any) => m.role === 'Instructor'));
   const coordinatorsStats = getParticipationStats(activeMembers.filter((m: any) => m.role === 'Admin' || m.role === 'Coordinator'));
 
@@ -134,7 +137,7 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
         <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
           <div className="text-3xl font-black text-slate-800 mb-1">{overallStats.rate}%</div>
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">השתתפות כללית</div>
-          <div className="text-[10px] text-slate-400 mt-1">{overallStats.count} מתוך {overallStats.total} חברים פעילים</div>
+          <div className="text-[10px] text-slate-400 mt-1">{overallStats.count} מתוך {overallStats.total} משתתפים ומתנדבים פעילים</div>
         </div>
         <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
           <div className="text-3xl font-black text-slate-800 mb-1">{femaleStats.rate}%</div>
@@ -153,7 +156,8 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
         <div>
           <h4 className="text-sm font-black text-slate-800 mb-4 border-b border-slate-100 pb-2">השתתפות לפי תפקיד</h4>
           <div className="space-y-3">
-           <StatBar label="חברים" stats={membersStats} color="bg-slate-800" />
+           <StatBar label="משתתפים" stats={membersStats} color="bg-slate-800" />
+           <StatBar label="מתנדבים" stats={volunteersStats} color="bg-green-600" />
             <StatBar label="מדריכים" stats={instructorsStats} color="bg-slate-800" />
             <StatBar label="רכזים" stats={coordinatorsStats} color="bg-slate-800" />
           </div>
@@ -185,16 +189,17 @@ const AdminPage: React.FC = () => {
     yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, weeklyHistory
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ROLLOVER' | 'ENGINE_ROOM' | 'ASSETS'>('USERS');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ROLLOVER' | 'ENGINE_ROOM' | 'ASSETS' | 'SURF_CALLS'>('USERS');
   const [newSessionDay, setNewSessionDay] = useState(0);
   const [newSessionTime, setNewSessionTime] = useState('07:00');
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
 
   const adminTabs = [
-    { id: 'USERS', label: 'חברים', icon: <Users size={20} /> },
+    { id: 'USERS', label: 'משתמשים', icon: <Users size={20} /> },
     { id: 'POSTS', label: 'פוסטים', icon: <Newspaper size={20} /> },
     { id: 'GALLERY', label: 'גלריה', icon: <ImageIcon size={20} /> },
     { id: 'EVENTS', label: 'אירועים', icon: <Calendar size={20} /> },
+    { id: 'SURF_CALLS', label: 'מי בא לגלוש?', icon: <Waves size={20} /> },
     { id: 'ROLLOVER', label: 'דו"ח יום חמישי', icon: <Activity size={20} /> },
     { id: 'REQUESTS', label: 'בקשות', icon: <UserCheck size={20} />, count: joinRequests.length },
     { id: 'ENGINE_ROOM', label: 'חדר מכונות', icon: <Terminal size={20} /> },
@@ -578,7 +583,7 @@ const AdminPage: React.FC = () => {
                 <span className="surfer-title text-[#121212]">פאנל ניהול</span>
               </h1>
               <p className="header-subtitle max-w-2xl mx-auto text-[#121212]">
-                ניהול חברים, בקשות הצטרפות והגדרות מערכת מתקדמות 🛡️
+                ניהול משתתפים ומתנדבים, בקשות הצטרפות והגדרות מערכת מתקדמות 🛡️
               </p>
             </div>
           </div>
@@ -603,7 +608,7 @@ const AdminPage: React.FC = () => {
             {activeTab === 'DASHBOARD' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
                 {[
-                  { id: 'USERS', label: 'ניהול חברים', desc: `${members.length} חברים רשומים`, icon: Users, color: 'bg-[#00FFFF]' },
+                  { id: 'USERS', label: 'ניהול משתתפים ומתנדבים', desc: `${members.length} משתתפים/מתנדבים`, icon: Users, color: 'bg-[#00FFFF]' },
                   { id: 'EVENTS', label: 'ניהול אירועים', desc: `${events.length} אירועים בלוח`, icon: Calendar, color: 'bg-[#FFD700]' },
                   { id: 'GALLERY', label: 'גלריית תמונות', desc: `${galleryItems.length} פריטים במדיה`, icon: ImageIcon, color: 'bg-[#FF007F]' },
                   { id: 'POSTS', label: 'פוסטים', desc: 'ניהול תכני האתר', icon: Newspaper, color: 'bg-[#00FFFF]' },
@@ -655,7 +660,7 @@ const AdminPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">בקשות להצטרף</h3>
-                  <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול ואישור חברים חדשים בקהילה</p>
+                  <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול ואישור חברים ומתנדבים חדשים בקהילה</p>
                 </div>
               </div>
 
@@ -770,8 +775,8 @@ const AdminPage: React.FC = () => {
                       <Users size={32} />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">חברים</h3>
-                      <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול וסינון חברי הקהילה</p>
+                      <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">משתתפים ומתנדבים</h3>
+                      <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול וסינון משתתפי ומתנדבי הקהילה</p>
                     </div>
                   </div>
 
@@ -806,13 +811,13 @@ const AdminPage: React.FC = () => {
                 onClick={() => setIsAddMemberModalOpen(true)}
                 className="flex items-center gap-2 px-8 py-4 bg-[#FF9F1C] text-white rounded-2xl font-black text-sm hover:bg-[#FF9F1C]/90 transition-all shadow-lg shadow-[#FF9F1C]/20"
               >
-                <Plus size={18} /> הוספת חבר
+                <Plus size={18} /> הוספת משתמש
               </button>
               <button 
                 onClick={() => setIsImportModalOpen(true)}
                 className="flex items-center gap-2 px-8 py-4 bg-blue-500 text-white rounded-2xl font-black text-sm hover:bg-blue-600 transition-all shadow-lg shadow-blue-500/20"
               >
-                <Upload size={18} /> ייבוא חברים
+                <Upload size={18} /> ייבוא משתמשים
               </button>
             </div>
 
@@ -847,7 +852,7 @@ const AdminPage: React.FC = () => {
                   <table className="w-full text-right">
                     <thead className="bg-[var(--surfer-aqua-mist)]/10 border-b border-[var(--surfer-vibrant-cyan)]/10">
                       <tr>
-                        <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">חבר</th>
+                        <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">משתמש</th>
                         <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">זהות</th>
                         <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">סטטוס</th>
                         <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest text-center">עריכה</th>
@@ -897,7 +902,7 @@ const AdminPage: React.FC = () => {
                                   ? 'bg-amber-50 text-amber-600'
                                   : 'bg-[var(--surfer-aqua-mist)]/10 text-[#000000]'
                             }`}>
-                              {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : 'חבר'}
+                              {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
                             </span>
                           </td>
                           <td className="px-8 py-6">
@@ -914,7 +919,7 @@ const AdminPage: React.FC = () => {
                               <button 
                                 onClick={() => setEditingMember(member)}
                                 className="w-10 h-10 bg-white/40 backdrop-blur-md border border-white/30 rounded-xl flex items-center justify-center text-[#000000]/40 hover:text-[var(--surfer-electric-pink)] hover:border-[var(--surfer-electric-pink)]/30 hover:shadow-lg transition-all"
-                                title="עריכת חבר"
+                                title="עריכת משתמש"
                               >
                                 <Pencil size={18} />
                               </button>
@@ -1411,10 +1416,10 @@ const AdminPage: React.FC = () => {
                           <p className="text-xs font-bold text-[var(--deep-teal-sea)]/60 truncate">{event.location}</p>
                           <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider whitespace-nowrap ${
                             event.type === 'COMMUNITY' ? 'bg-[var(--surfer-vibrant-cyan)] text-white' : 
-                            event.type === 'INSTRUCTOR' ? 'bg-[var(--surfer-sunshine-yellow)] text-white' : 
+                            event.type === 'VOLUNTEER' ? 'bg-[var(--surfer-sunshine-yellow)] text-[var(--deep-teal-sea)]' : 
                             'bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/60'
                           }`}>
-                            {event.type === 'COMMUNITY' ? 'קהילה' : event.type === 'INSTRUCTOR' ? 'מדריך' : 'חבר'}
+                            {event.type === 'COMMUNITY' ? 'כולם מוזמנים' : event.type === 'VOLUNTEER' ? 'מתנדבים' : 'משתתפים'}
                           </span>
                         </div>
                       </div>
@@ -1461,6 +1466,13 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'ROLLOVER' && (
           <AdminRolloverReport />
+        )}
+
+        
+        {activeTab === 'SURF_CALLS' && (
+          <div className="max-w-6xl mx-auto">
+            <SurfCallsAnalytics />
+          </div>
         )}
 
         {activeTab === 'ASSETS' && (
@@ -1921,7 +1933,11 @@ const AdminPage: React.FC = () => {
                     type="date" 
                     value={yearForm.startDate}
                     onChange={e => setYearForm(prev => ({ ...prev, startDate: e.target.value }))}
-                    onClick={(e) => (e.currentTarget as any).showPicker?.()}
+                    onClick={(e) => {
+                      try {
+                        (e.currentTarget as any).showPicker?.();
+                      } catch(err) {}
+                    }}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 ring-sky-500/20 focus:bg-white transition-all cursor-pointer text-slate-700"
                   />
                 </div>
@@ -1931,7 +1947,11 @@ const AdminPage: React.FC = () => {
                     type="date" 
                     value={yearForm.endDate}
                     onChange={e => setYearForm(prev => ({ ...prev, endDate: e.target.value }))}
-                    onClick={(e) => (e.currentTarget as any).showPicker?.()}
+                    onClick={(e) => {
+                      try {
+                        (e.currentTarget as any).showPicker?.();
+                      } catch(err) {}
+                    }}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 ring-sky-500/20 focus:bg-white transition-all cursor-pointer text-slate-700"
                   />
                 </div>
@@ -1977,7 +1997,7 @@ const AdminPage: React.FC = () => {
                  <CheckCircle2 size={32} />
               </div>
               
-              <h3 className="text-2xl font-bold text-slate-800 mb-2">חבר/ה חדש/ה בנבחרת!</h3>
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">משתתף/ת או מתנדב/ת חדש/ה בנבחרת!</h3>
               <p className="text-slate-500 font-medium mb-8 leading-relaxed">
                 הבקשה של <span className="text-sky-600 font-bold">{approvedUser.firstName} {approvedUser.lastName}</span> אושרה.
                 נא לשלוח לו/ה את פרטי הגישה:

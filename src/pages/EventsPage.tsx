@@ -15,8 +15,17 @@ const EventsPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
 
+  
   const sortedEvents = [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const activeEvents = sortedEvents.filter(e => !e.isArchived);
+  const roleFilteredEvents = sortedEvents.filter(e => {
+    if (currentUser?.role === 'Admin') return true;
+    if (e.type === 'COMMUNITY') return true;
+    if (e.type === 'MEMBER' && currentUser?.role === 'Member') return true;
+    if (e.type === 'VOLUNTEER' && currentUser?.role === 'Volunteer') return true;
+    return false;
+  });
+  const activeEvents = roleFilteredEvents.filter(e => !e.isArchived);
+
   const upcomingEvents = activeEvents.filter(e => new Date(e.date) >= new Date(new Date().setHours(0,0,0,0)));
   const pastEvents = sortedEvents.filter(e => new Date(e.date) < new Date(new Date().setHours(0,0,0,0))).reverse();
 

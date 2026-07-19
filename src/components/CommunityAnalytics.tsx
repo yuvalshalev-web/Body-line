@@ -236,7 +236,7 @@ const CommunityAnalytics: React.FC = () => {
         ctx.fill();
       }
 
-      // 2. ציור חברי הקהילה כטיפות מים
+      // 2. ציור משתתפי הקהילה כטיפות מים
       membersWithCanvasPos.forEach((m) => {
           // Water Droplet (Circle)
           const dropRadius = 6;
@@ -904,7 +904,7 @@ const CommunityAnalytics: React.FC = () => {
                     <div className="relative group flex items-center">
                       <Info size={16} className="text-gray-400 hover:text-gray-600 cursor-help transition-colors" />
                       <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-white/90 backdrop-blur-md text-gray-800 text-xs font-medium rounded-xl shadow-xl border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed">
-                        סיווג התנהגותי של חברי הקהילה המבוסס על רצף, תדירות ומועד ההגעה האחרון שלהם לאורך כל זמן הפעילות.
+                        סיווג התנהגותי של משתתפי הקהילה המבוסס על רצף, תדירות ומועד ההגעה האחרון שלהם לאורך כל זמן הפעילות.
                       </div>
                     </div>
                   </div>
@@ -931,7 +931,7 @@ const CommunityAnalytics: React.FC = () => {
                   >
                     <span className="text-xs font-bold mb-1" style={{ color: group.color }}>{group.label}</span>
                     <span className="text-lg font-black text-gray-900">{percentage}%</span>
-                    <span className="text-[10px] text-gray-500">{group.count} חברים</span>
+                    <span className="text-[10px] text-gray-500">{group.count} משתמשים</span>
                   </div>
                 );
               })}
@@ -989,7 +989,7 @@ const CommunityAnalytics: React.FC = () => {
                             {name}
                           </text>
                           <text x={ex + (cos >= 0 ? 1 : -1) * 10} y={ey + 10} textAnchor={textAnchor} fill="#333" className="text-[12px] font-bold" dominantBaseline="central">
-                            {`${value} חברים (${(percent * 100).toFixed(0)}%)`}
+                            {`${value} משתמשים (${(percent * 100).toFixed(0)}%)`}
                           </text>
                         </g>
                       );
@@ -1020,7 +1020,7 @@ const CommunityAnalytics: React.FC = () => {
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <p className="text-center text-xs text-gray-500 mt-2">לחץ על פלח כדי לראות את רשימת החברים</p>
+              <p className="text-center text-xs text-gray-500 mt-2">לחץ על פלח כדי לראות את רשימת המשתמשים</p>
             </div>
 
 
@@ -1044,7 +1044,7 @@ const CommunityAnalytics: React.FC = () => {
                 <Activity size={24} />
               </div>
               <div>
-                <h3 className="text-xl font-black home-title tracking-tight">פיזור גיאוגרפי של החברים</h3>
+                <h3 className="text-xl font-black home-title tracking-tight">פיזור גיאוגרפי של המשתמשים</h3>
                 <p className="home-data-text text-[8px] font-bold uppercase tracking-[0.3em] opacity-60">Distance Distribution • Ocean Analytics</p>
               </div>
             </div>
@@ -1176,7 +1176,7 @@ const CommunityAnalytics: React.FC = () => {
                     ))
                   ) : (
                     <div className="col-span-2 p-12 text-center border border-dashed border-white/20 rounded-3xl glass-effect">
-                      <p className="text-[#000000] font-black uppercase tracking-[0.3em] text-sm">כל החברים פעילים בדופק גבוה ✨</p>
+                      <p className="text-[#000000] font-black uppercase tracking-[0.3em] text-sm">כל המשתמשים פעילים בדופק גבוה ✨</p>
                     </div>
                   )}
                 </div>
@@ -1279,7 +1279,7 @@ const CommunityAnalytics: React.FC = () => {
                   </div>
                 ))}
               {stats.memberClassifications.filter(m => m.status === selectedGroup).length === 0 && (
-                <p className="text-center text-white/50 py-4">אין חברים בקבוצה זו</p>
+                <p className="text-center text-white/50 py-4">אין משתמשים בקבוצה זו</p>
               )}
             </div>
           </motion.div>

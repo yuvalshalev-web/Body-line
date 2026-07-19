@@ -277,13 +277,14 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               <div className="space-y-4 flex flex-col items-center">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] block">תפקיד במערכת</label>
                 <div 
-                  className="relative w-full max-w-[380px] p-1.5 bg-slate-100/40 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 grid grid-cols-3 shadow-[inset_0_2px_12px_rgba(0,0,0,0.08)]"
+                  className="relative w-full max-w-[460px] p-1.5 bg-slate-100/40 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 grid grid-cols-4 shadow-[inset_0_2px_12px_rgba(0,0,0,0.08)]"
                   dir="rtl"
                   onMouseEnter={() => setShowRoleWarning(true)}
                   onMouseLeave={() => setShowRoleWarning(false)}
                 >
                   {[
-                    { id: 'Member', label: 'חבר' },
+                    { id: 'Member', label: 'משתתף' },
+                    { id: 'Volunteer', label: 'מתנדב' },
                     { id: 'Instructor', label: 'מדריך' },
                     { id: 'Admin', label: 'רכז' }
                   ].map((r) => (
@@ -762,19 +763,19 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               type="button"
               onClick={() => {
                 showConfirm({
-                  title: editingMember.isActive !== false ? 'השעיית חבר' : 'שחרור חבר',
+                  title: editingMember.isActive !== false ? 'השעיית משתמש' : 'שחרור משתמש',
                   message: editingMember.isActive !== false ? `האם להשעות את ${editingMember.firstName} ${editingMember.lastName}?` : `האם לשחרר את ${editingMember.firstName} ${editingMember.lastName} ולהחזירו לפעילות?`,
-                  confirmText: editingMember.isActive !== false ? 'השעה חבר' : 'שחרר חבר',
+                  confirmText: editingMember.isActive !== false ? 'השעה משתמש' : 'שחרר משתמש',
                   cancelText: 'ביטול',
                   onConfirm: async () => {
                     setIsProcessing(true);
                     try {
                       if (editingMember.isActive !== false) {
                         await onArchive(editingMember.id);
-                        showSuccess('החבר הושעה בהצלחה');
+                        showSuccess('המשתמש הושעה בהצלחה');
                       } else {
                         await onSave({ ...editingMember, isActive: true });
-                        showSuccess('החבר הוחזר לפעילות');
+                        showSuccess('המשתמש הוחזר לפעילות');
                       }
                       onClose();
                     } catch (err: any) {
@@ -807,7 +808,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               className="flex items-center gap-3 text-slate-400 hover:text-[#00AFC2] font-black transition-all uppercase tracking-[0.2em] text-[11px] px-8 py-4 rounded-full border border-slate-200"
             >
               <Key size={16} />
-              <span>החלפת סיסמה לחבר</span>
+              <span>החלפת סיסמה למשתמש</span>
             </button>
           </div>
         </div>

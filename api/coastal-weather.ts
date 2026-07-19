@@ -70,7 +70,10 @@ export default async function handler(
           console.warn("IMS API returned non-JSON response (likely invalid token or API down). Skipping IMS data.");
           return null;
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+           return null;
+        }
         console.error("IMS Wind fetch error:", err);
         return null;
       }

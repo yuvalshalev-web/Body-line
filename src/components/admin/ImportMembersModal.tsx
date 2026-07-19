@@ -93,7 +93,7 @@ export default function ImportMembersModal({ isOpen, onClose }: ImportMembersMod
         setIsImporting(false);
         
         if (successCount > 0) {
-          showSuccess(`יובאו בהצלחה ${successCount} חברים חדשים`);
+          showSuccess(`יובאו בהצלחה ${successCount} משתמשים חדשים`);
         }
       },
       error: (error) => {
@@ -117,7 +117,7 @@ export default function ImportMembersModal({ isOpen, onClose }: ImportMembersMod
           <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50">
             <h2 className="text-2xl font-black text-gray-800 flex items-center gap-2">
               <Upload size={24} className="text-blue-500" />
-              ייבוא חברים מקובץ CSV
+              ייבוא משתמשים מקובץ CSV
             </h2>
             <button
               onClick={onClose}

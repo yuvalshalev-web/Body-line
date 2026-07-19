@@ -231,7 +231,11 @@ async function startServer() {
             console.warn("IMS API returned non-JSON response (likely invalid token or API down). Skipping IMS data.");
             return null;
           }
-        } catch (err) {
+        } catch (err: any) {
+          if (err.name === 'AbortError') {
+             // Silence or just warn for timeout
+             return null;
+          }
           console.error("IMS Wind fetch error:", err);
           return null;
         }
@@ -660,6 +664,95 @@ async function startServer() {
     }
   });
 
+  // --- Salesforce Integration ---
+  app.get("/api/salesforce/login", (req, res) => {
+    const clientId = process.env.SALESFORCE_CLIENT_ID;
+    const redirectUri = process.env.SALESFORCE_REDIRECT_URI || 'http://localhost:3000/api/salesforce/callback';
+    
+    if (!clientId) {
+      return res.status(500).json({ error: 'SALESFORCE_CLIENT_ID not configured in .env' });
+    }
+    
+    const url = `https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    res.redirect(url);
+  });
+
+  app.get("/api/salesforce/callback", async (req, res) => {
+    const { code } = req.query;
+    const clientId = process.env.SALESFORCE_CLIENT_ID;
+    const clientSecret = process.env.SALESFORCE_CLIENT_SECRET;
+    const redirectUri = process.env.SALESFORCE_REDIRECT_URI || 'http://localhost:3000/api/salesforce/callback';
+
+    if (!clientId || !clientSecret) {
+      return res.status(500).send("Salesforce credentials not fully configured.");
+    }
+
+    try {
+      const tokenRes = await fetch('https://login.salesforce.com/services/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: code as string,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri
+        })
+      });
+      const tokenData = await tokenRes.json();
+      
+      if (tokenData.access_token) {
+        // Redirect back to app with token in hash or query param (for preview purposes)
+        res.redirect(`/attendance?sf_token=${tokenData.access_token}&instance_url=${encodeURIComponent(tokenData.instance_url)}`);
+      } else {
+        res.status(400).json(tokenData);
+      }
+    } catch (err) {
+      console.error("Salesforce OAuth failed:", err);
+      res.status(500).send("OAuth failed");
+    }
+  });
+
+  app.post("/api/salesforce/sync", async (req, res) => {
+    const { token, instanceUrl, sessionData, attendees } = req.body;
+    
+    if (!token || !instanceUrl) {
+      return res.status(401).json({ error: 'Not authenticated with Salesforce' });
+    }
+
+    try {
+      const results = [];
+      // Example of syncing to a hypothetical "Session_Attendance__c" custom object
+      // Since the user said they don't know the fields yet, we make a generic/mock structure
+      // that will hit the real Salesforce API and return the response (which might be a 404 if object doesn't exist, which is fine and expected).
+      
+      for (const attendee of attendees) {
+        const sfRes = await fetch(`${instanceUrl}/services/data/v60.0/sobjects/Session_Attendance__c/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            Participant_Name__c: attendee.name,
+            Participant_Email__c: attendee.email,
+            Session_Date__c: sessionData.date.split('T')[0],
+            Status__c: 'Attended'
+          })
+        });
+        
+        const sfData = await sfRes.json();
+        results.push(sfData);
+      }
+      
+      res.json({ success: true, results });
+    } catch (err: any) {
+      console.error("Salesforce sync failed:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Vercel status endpoint
   app.get("/api/vercel/status", async (req, res) => {
     console.log(`[${new Date().toISOString()}] GET /api/vercel/status - Request received`);
     try {

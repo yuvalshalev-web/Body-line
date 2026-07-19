@@ -264,6 +264,13 @@ service cloud.firestore {
       allow write: if isAdmin() || isInstructor();
     }
     
+
+    match /surf_calls/{callId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || isAuthenticated();
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.creatorId == request.auth.uid);
+    }
     // Default deny
     match /{path=**} {
       allow read, write: if false;

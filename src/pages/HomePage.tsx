@@ -1,6 +1,7 @@
 
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { SurfCallsWidget } from '../components/SurfCallsWidget';
 import { 
   Users, 
   Image as ImageIcon, 
@@ -227,10 +228,20 @@ const HomePage: React.FC = () => {
   const activeEventsCount = useMemo(() => {
     const now = new Date();
     return events.filter(e => {
+      if (e.isArchived) return false;
+      const hasAccess = (() => {
+        if (currentUser?.role === 'Admin') return true;
+        if (e.type === 'COMMUNITY') return true;
+        if (e.type === 'MEMBER' && currentUser?.role === 'Member') return true;
+        if (e.type === 'VOLUNTEER' && currentUser?.role === 'Volunteer') return true;
+        return false;
+      })();
+      if (!hasAccess) return false;
+      
       const eventDate = new Date(`${e.date}T${e.time || '00:00'}`);
       return eventDate >= now;
     }).length;
-  }, [events]);
+  }, [events, currentUser]);
 
   const brandColor = '#F1D179';
 
@@ -569,7 +580,7 @@ const HomePage: React.FC = () => {
                       )}
                       <div>
                         <p className="font-black text-[#002b44] text-lg">{a.firstName} {a.lastName}</p>
-                        <p className="text-[10px] font-black text-[#007085] uppercase tracking-[0.2em] opacity-80">{a.role === 'Admin' ? 'רכז' : 'חבר'}</p>
+                        <p className="text-[10px] font-black text-[#007085] uppercase tracking-[0.2em] opacity-80">{a.role === 'Admin' ? 'רכז' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}</p>
                       </div>
                     </div>
                   ))}
@@ -579,6 +590,7 @@ const HomePage: React.FC = () => {
            </div>
         </div>
       )}
+      <SurfCallsWidget />
     </div>
   );
 };

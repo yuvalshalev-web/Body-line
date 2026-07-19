@@ -447,7 +447,9 @@ async function testConnection() {
     const errMsg = error?.message || String(error);
     const errCode = error?.code || 'unknown';
     
-    console.error("Firestore connection test: FAILED", { code: errCode, message: errMsg });
+    if (errCode !== 'permission-denied') {
+      console.error("Firestore connection test: FAILED", { code: errCode, message: errMsg });
+    }
     (window as any)._db_connected = false;
     (window as any)._db_error = { code: errCode, message: errMsg, timestamp: new Date().toISOString() };
     

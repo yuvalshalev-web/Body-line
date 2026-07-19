@@ -595,7 +595,7 @@ const SessionStatsPage: React.FC = () => {
                 <span className="surfer-title text-[#121212]">יומן סשנים</span>
               </h1>
               <p className="header-subtitle max-w-2xl mx-auto font-black text-[#121212]">
-                סטטיסטיקות, נוכחות ונתוני גלישה של חברי הקהילה 📊
+                סטטיסטיקות, נוכחות ונתוני גלישה של משתתפי הקהילה 📊
               </p>
             </div>
           </div>
@@ -728,7 +728,7 @@ const SessionStatsPage: React.FC = () => {
                 <div className="gt-info-wrapper">
                   <div className="gt-info-icon" style={{ width: '16px', height: '16px', fontSize: '10px', background: 'transparent', border: '1px solid currentColor', color: '#0ea5e9' }}>i</div>
                   <span className="gt-tooltip" style={{ bottom: '180%', width: '200px' }}>
-                    סך השתתפויות מצטבר של כל חברי הקהילה.
+                    סך השתתפויות מצטבר של כל משתתפי הקהילה.
                   </span>
                 </div>
               </div>
@@ -773,7 +773,7 @@ const SessionStatsPage: React.FC = () => {
                         <div className="relative group flex items-center">
                           <Info size={16} className="text-slate-400 hover:text-slate-600 cursor-help transition-colors" />
                           <div className="absolute right-0 top-full mt-2 w-64 p-4 luxury-card !bg-white/95 text-slate-700 text-xs font-black rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed border-white">
-                            פילוח כמותי של חברי הקהילה לפי מספר ההגעות שלהם בטווח הזמן הנבחר.
+                            פילוח כמותי של משתתפי הקהילה לפי מספר ההגעות שלהם בטווח הזמן הנבחר.
                           </div>
                         </div>
                       </div>
@@ -791,7 +791,7 @@ const SessionStatsPage: React.FC = () => {
                       <div key={group.name} className="flex flex-col items-center p-3 rounded-2xl bg-white/40 border border-white/60 shadow-sm">
                         <span className="text-[10px] font-black mb-1 uppercase tracking-tighter" style={{ color: group.color }}>{group.name}</span>
                         <span className="text-lg font-black text-slate-800">{percentage}%</span>
-                        <span className="text-[10px] text-slate-400 font-bold">{group.value} חברים</span>
+                        <span className="text-[10px] text-slate-400 font-bold">{group.value} משתתפים</span>
                       </div>
                     );
                   })}
@@ -853,7 +853,7 @@ const SessionStatsPage: React.FC = () => {
                             return (
                               <div className="luxury-card p-4 !bg-white/95 border-white shadow-2xl">
                                 <p className="text-xs font-black mb-1 uppercase tracking-widest" style={{ color: payload[0].payload.color }}>{payload[0].name}</p>
-                                <p className="text-2xl font-black text-slate-800">{payload[0].value} <span className="text-[12px] text-slate-400 font-bold uppercase tracking-tight">חברים</span></p>
+                                <p className="text-2xl font-black text-slate-800">{payload[0].value} <span className="text-[12px] text-slate-400 font-bold uppercase tracking-tight">משתתפים</span></p>
                               </div>
                             );
                           }
@@ -868,7 +868,7 @@ const SessionStatsPage: React.FC = () => {
                     <span className="text-4xl font-black text-slate-800 tracking-tighter">
                       {(stats?.segmentation || []).reduce((acc: number, curr: any) => acc + curr.value, 0)}
                     </span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">סה״כ חברים</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">סה״כ משתתפים</span>
                   </div>
                 </div>
               </div>
@@ -889,7 +889,7 @@ const SessionStatsPage: React.FC = () => {
                 <div className="mb-12 relative z-10">
                   <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
                     <span>תמהיל קהילתי</span>
-                    <span>{stats?.activeMembersCount} חברים פעילים</span>
+                    <span>{stats?.activeMembersCount} משתתפים פעילים</span>
                   </div>
                   <div className="flex h-4 w-full rounded-full overflow-hidden bg-slate-100 border border-slate-200/50">
                     {(stats?.genderImpact || []).map((item, idx) => {
@@ -916,7 +916,7 @@ const SessionStatsPage: React.FC = () => {
                         <div className={`w-3 h-3 rounded-full ${item.color} shadow-sm outline outline-2 outline-white`} />
                         <div>
                           <span className="text-slate-800 font-black text-lg block leading-none mb-1">{item.label}</span>
-                          <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{item.count} חברים</span>
+                          <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{item.count} משתתפים</span>
                         </div>
                       </div>
                       

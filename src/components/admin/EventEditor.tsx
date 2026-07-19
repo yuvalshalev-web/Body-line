@@ -143,7 +143,21 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
             />
           </div>
 
+          
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-700 block mr-1">קהל יעד / סוג אירוע</label>
+            <select
+              value={formData.type}
+              onChange={e => setFormData({ ...formData, type: e.target.value as any })}
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all !text-slate-800 bg-white"
+            >
+              <option value="COMMUNITY">כולם מוזמנים</option>
+              <option value="VOLUNTEER">מפגש מתנדבים</option>
+              <option value="MEMBER">מפגש משתתפים</option>
+            </select>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700 block mr-1">תאריך</label>
               <div className="relative">

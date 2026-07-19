@@ -344,7 +344,7 @@ const CommunityHeatMap: React.FC = () => {
                 <ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-4" />
                 <h4 className="text-lg font-black text-[#7A1555] mb-2">לא נמצאו נתוני מיקום</h4>
                 <p className="text-xs text-[#000000] leading-relaxed">
-                  כדי להציג את מפת החום, יש לוודא שלחברי הקהילה מוגדרת עיר מגורים תקינה בטבלת החברים.
+                  כדי להציג את מפת החום, יש לוודא שלמשתתפי הקהילה מוגדרת עיר מגורים תקינה בטבלת החברים.
                 </p>
               </div>
             </div>
@@ -370,7 +370,7 @@ const CommunityHeatMap: React.FC = () => {
           {/* Heatmap Color Legend */}
           <div className="absolute bottom-4 right-4 z-[1000]">
             <div className="glass-effect p-4 rounded-2xl border border-white/20 shadow-xl backdrop-blur-xl flex flex-col gap-3">
-              <span className="text-[12px] font-black text-[#7A1555] uppercase tracking-widest mb-1">צפיפות חברים</span>
+              <span className="text-[12px] font-black text-[#7A1555] uppercase tracking-widest mb-1">צפיפות משתמשים</span>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-[#ef4444] shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
