@@ -11,6 +11,7 @@ export const SurfCallsWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
+  const [loadingCalls, setLoadingCalls] = useState<Record<string, boolean>>({});
   const { addSurfCallComment } = useData();
   const [newCall, setNewCall] = useState({
     beach: '',
@@ -195,17 +196,41 @@ export const SurfCallsWidget: React.FC = () => {
                             </div>
 
                             <button
-                              onClick={() => toggleSurfCallAttendance(call.id, currentUser.id, `${currentUser.firstName} ${currentUser.lastName}`, currentUser.avatar)}
-                              disabled={isPastDeadline}
-                              className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${
-                                isPastDeadline
-                                  ? 'bg-slate-100 text-slate-400'
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (loadingCalls[call.id]) return;
+                                
+                                setLoadingCalls(prev => ({ ...prev, [call.id]: true }));
+                                try {
+                                  await toggleSurfCallAttendance(call.id, currentUser.id, `${currentUser.firstName} ${currentUser.lastName}`, currentUser.avatar);
+                                } catch (err) {
+                                  // Error is already alerted to the user in DataContext
+                                } finally {
+                                  setLoadingCalls(prev => ({ ...prev, [call.id]: false }));
+                                }
+                              }}
+                              disabled={(isPastDeadline && !isAttending) || loadingCalls[call.id]}
+                              className={`px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-1 ${
+                                ((isPastDeadline && !isAttending) || loadingCalls[call.id])
+                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                   : isAttending
                                   ? 'bg-red-50 text-red-600 hover:bg-red-100'
                                   : 'bg-sky-500 text-white hover:bg-sky-600'
                               }`}
                             >
-                              {isPastDeadline ? 'נסגר' : isAttending ? 'בטל הגעה' : 'גם אני בא! 🏄‍♂️'}
+                              {loadingCalls[call.id] ? (
+                                <span className="flex items-center gap-1">
+                                  <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></span>
+                                  מעדכן...
+                                </span>
+                              ) : isAttending ? (
+                                'בטל הגעה'
+                              ) : isPastDeadline ? (
+                                'נסגר'
+                              ) : (
+                                'גם אני בא! 🏄‍♂️'
+                              )}
                             </button>
                           
                           </div>

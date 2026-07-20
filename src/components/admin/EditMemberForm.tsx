@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
-  X, Camera, UserCircle, ChevronLeft, Save, Archive, Loader2, Cake, Phone, Mail, 
+  X, Camera, UserCircle, ChevronLeft, Save, Archive, Loader2, Cake, Phone, Mail, AlertCircle, 
   ChevronDown, Instagram, Facebook, Music2, Linkedin, Twitter, Globe, Key, Check, HeartPulse,
   Award, Search, Sparkles, User, RefreshCw
 } from 'lucide-react';
@@ -13,7 +13,8 @@ import { validateMobileNumber, formatMobileNumber } from '../../utils/validation
 import { useModal } from '../../contexts/ModalContext';
 import { SUPER_ADMIN_EMAIL } from '../../constants';
 import { hashPassword } from '../../utils/crypto';
-import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
+import { sendPasswordResetEmail, updatePassword } from 'firebase/auth';
+import { auth } from '../../services/firebase';
 import { updateMemberAddress, loadGoogleMaps } from '../../utils/googlePlaces';
 
 interface EditMemberFormProps {
@@ -150,45 +151,91 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (newPassword.length < 6) {
-      showError('הסיסמה חייבת להכיל לפחות 6 תווים');
-      return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-      showError('הסיסמאות אינן תואמות');
-      return;
-    }
-
     setIsChangingPassword(true);
     try {
-      const auth = getAuth();
-      try {
-        await sendPasswordResetEmail(auth, editingMember.email.toLowerCase().trim());
-        showSuccess('נשלח מייל לאיפוס סיסמה לחבר (המשתמש כבר מחובר למערכת החדשה)');
+      const isCurrentUser = editingMember.uid && auth.currentUser && editingMember.uid === auth.currentUser.uid;
+      
+      if (isCurrentUser && auth.currentUser) {
+        // Admin is changing their own password
+        if (newPassword.length < 6) {
+          showError('הסיסמה חייבת להכיל לפחות 6 תווים');
+          setIsChangingPassword(false);
+          return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+          showError('הסיסמאות אינן תואמות');
+          setIsChangingPassword(false);
+          return;
+        }
+
+        await updatePassword(auth.currentUser, newPassword);
+        const hashed = await hashPassword(newPassword);
+        const updatedMember = { ...editingMember, password: hashed };
+        setEditingMember(updatedMember);
+        await onSave(updatedMember);
+        showSuccess('הסיסמה שלך שונתה בהצלחה');
         setShowPasswordModal(false);
         setNewPassword('');
         setConfirmPassword('');
-        return;
-      } catch (emailErr: any) {
-        if (emailErr.code !== 'auth/user-not-found') {
-          throw emailErr;
+      } else {
+        // Resetting password for another user (migrated or legacy)
+        if (newPassword.length < 6) {
+          showError('הסיסמה חייבת להכיל לפחות 6 תווים');
+          setIsChangingPassword(false);
+          return;
         }
-        // User not found in Firebase Auth, so they are a legacy user.
-        // We can safely update their password in Firestore.
-      }
+        
+        if (newPassword !== confirmPassword) {
+          showError('הסיסמאות אינן תואמות');
+          setIsChangingPassword(false);
+          return;
+        }
 
-      const hashed = await hashPassword(newPassword);
-      const updatedMember = { ...editingMember, password: hashed, isTemporary: true };
-      setEditingMember(updatedMember);
-      await onSave(updatedMember);
-      showSuccess('הסיסמה שונתה בהצלחה (סיסמה זמנית)');
-      setShowPasswordModal(false);
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (err) {
+        console.log('EditMemberForm: Resetting password for user via API and Firestore', editingMember.email);
+        const response = await fetch('/api/admin/reset-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            uid: editingMember.uid || editingMember.id,
+            email: editingMember.email,
+            password: newPassword,
+          }),
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'שגיאה בעדכון הסיסמה בשרת האבטחה');
+        }
+
+        const resData = await response.json();
+
+        // Hash and save in Firestore so they stay in sync
+        const hashed = await hashPassword(newPassword);
+        const updatedMember = { 
+          ...editingMember, 
+          password: hashed, 
+          isTemporary: true,
+          ...(resData.uid ? { uid: resData.uid } : {})
+        };
+        
+        setEditingMember(updatedMember);
+        await onSave(updatedMember);
+        
+        showSuccess('הסיסמה עודכנה בהצלחה באופן מיידי!');
+        setShowPasswordModal(false);
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } catch (err: any) {
       console.error(err);
-      showError('שגיאה בשינוי הסיסמה');
+      if (err.code === 'auth/requires-recent-login' || (err.message && err.message.includes('requires-recent-login'))) {
+        showError('פעולה זו רגישה ודורשת התחברות מחדש למערכת לצורך אימות.');
+      } else {
+        showError('שגיאה בתהליך איפוס הסיסמה: ' + (err.message || err));
+      }
     } finally {
       setIsChangingPassword(false);
     }
@@ -846,31 +893,32 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
                   </div>
 
                   <form onSubmit={handlePasswordChange} className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest pr-3">סיסמה חדשה</label>
-                      <input 
-                        type="password"
-                        value={newPassword}
-                        onChange={e => setNewPassword(e.target.value)}
-                        className="w-full p-4 luxury-card rounded-2xl font-black outline-none focus:ring-2 ring-indigo-500/20 transition-all text-[#2B2B2E] placeholder:text-slate-400"
-                        placeholder="הזן סיסמה חדשה"
-                        required
-                        minLength={6}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest pr-3">אימות סיסמה</label>
-                      <input 
-                        type="password"
-                        value={confirmPassword}
-                        onChange={e => setConfirmPassword(e.target.value)}
-                        className="w-full p-4 luxury-card rounded-2xl font-black outline-none focus:ring-2 ring-indigo-500/20 transition-all text-[#2B2B2E] placeholder:text-slate-400"
-                        placeholder="הזן שוב את הסיסמה"
-                        required
-                        minLength={6}
-                      />
-                    </div>
-
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest pr-3">סיסמה חדשה</label>
+                        <input 
+                          type="password"
+                          value={newPassword}
+                          onChange={e => setNewPassword(e.target.value)}
+                          className="w-full p-4 luxury-card rounded-2xl font-black outline-none focus:ring-2 ring-indigo-500/20 transition-all text-[#2B2B2E] placeholder:text-slate-400"
+                          placeholder="הזן סיסמה חדשה"
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest pr-3">אימות סיסמה</label>
+                        <input 
+                          type="password"
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          className="w-full p-4 luxury-card rounded-2xl font-black outline-none focus:ring-2 ring-indigo-500/20 transition-all text-[#2B2B2E] placeholder:text-slate-400"
+                          placeholder="הזן שוב את הסיסמה"
+                          required
+                          minLength={6}
+                        />
+                      </div>
+                    </>
                     <button 
                       type="submit"
                       disabled={isChangingPassword || !newPassword || !confirmPassword}

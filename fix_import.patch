@@ -1,0 +1,8 @@
+--- src/components/admin/EditMemberForm.tsx
++++ src/components/admin/EditMemberForm.tsx
+@@ -4,7 +4,7 @@
+ import {
+-  X, Camera, UserCircle, ChevronLeft, Save, Archive, Loader2, Cake, Phone, Mail, 
++  X, Camera, UserCircle, ChevronLeft, Save, Archive, Loader2, Cake, Phone, Mail, AlertCircle,
+   MapPin, Droplet, UserPlus, Key, Info, UserCheck, Shield, ChevronDown
+ } from 'lucide-react';

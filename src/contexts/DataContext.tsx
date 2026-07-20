@@ -831,7 +831,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   const addSurfCall = useCallback(async (call: Omit<SurfCall, 'id'>) => {
     try {
-      const docRef = await addDoc(collection(getDb(), 'surf_calls'), call);
+      const cleanParticipants = call.participantsJoined.map(p => {
+        const cleanP = { ...p };
+        if (cleanP.avatar === undefined) delete cleanP.avatar;
+        return cleanP;
+      });
+      const cleanCall = { ...call, participantsJoined: cleanParticipants };
+      
+      const docRef = await addDoc(collection(getDb(), 'surf_calls'), cleanCall);
       return docRef.id;
     } catch (err: any) {
       console.error('Error adding surf call:', err);
@@ -860,19 +867,36 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           newCancelled.push(memberId);
         }
       } else {
-        newJoined.push({ id: memberId, name: memberName, avatar });
+        const newParticipant: any = { id: memberId, name: memberName };
+        if (avatar !== undefined) newParticipant.avatar = avatar;
+        newJoined.push(newParticipant);
         newCancelled = newCancelled.filter(id => id !== memberId);
       }
       
+      // Clean up any undefined values in the entire array before saving
+      const cleanJoined = newJoined.map(p => {
+        const cleanP: Record<string, any> = { ...p };
+        Object.keys(cleanP).forEach(key => cleanP[key] === undefined && delete cleanP[key]);
+        return cleanP;
+      });
+      
       await updateDoc(callRef, {
-        participantsJoined: newJoined,
+        participantsJoined: cleanJoined,
         participantsCancelled: newCancelled
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error toggling surf call attendance:', err);
+      let errMsg = err.message || String(err);
+      if (errMsg.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(errMsg);
+          errMsg = parsed.error || errMsg;
+        } catch (e) {}
+      }
+      showAlert('שגיאה ברישום לקריאת הגלישה: ' + errMsg);
       throw err;
     }
-  }, []);
+  }, [showAlert]);
 
   
   const addSurfCallComment = useCallback(async (callId: string, userId: string, userName: string, avatar: string | undefined, text: string) => {
@@ -895,11 +919,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await updateDoc(callRef, {
         comments: [...comments, newComment]
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error adding comment:', err);
+      let errMsg = err.message || String(err);
+      if (errMsg.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(errMsg);
+          errMsg = parsed.error || errMsg;
+        } catch (e) {}
+      }
+      showAlert('שגיאה בהוספת תגובה: ' + errMsg);
       throw err;
     }
-  }, []);
+  }, [showAlert]);
 
   const archiveSurfCall = useCallback(async (callId: string) => {
     try {
@@ -1537,7 +1569,8 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
       addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
-      isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets
+      isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets,
+      surfCalls, addSurfCall, toggleSurfCallAttendance, archiveSurfCall, addSurfCallComment
     ]);
 
   return (

@@ -31,6 +31,7 @@
     "express": "^5.2.1",
     "fetch-blob": "4.0.0",
     "firebase": "^12.9.0",
+    "firebase-admin": "^14.2.0",
     "flatpickr": "^4.6.13",
     "framer-motion": "^12.38.0",
     "gl-matrix": "^3.4.4",

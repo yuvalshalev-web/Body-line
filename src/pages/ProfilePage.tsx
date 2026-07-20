@@ -232,7 +232,7 @@ const ProfileCompletion = React.memo(({ percentage, onShowDetails }: { percentag
 
 const ProfilePage: React.FC = () => {
   const headerImage = useRandomHeader();
-  const { currentUser, updateUser } = useAuth();
+  const { currentUser, updateUser, firebaseUser } = useAuth();
   const { updateMember } = useData();
   
   const [formData, setFormData] = useState<Member | null>(currentUser ? { ...currentUser } : null);
@@ -253,6 +253,9 @@ const ProfilePage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const [boardFeet, setBoardFeet] = useState('');
+  const [boardInches, setBoardInches] = useState('');
 
   const [toast, setToast] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -406,6 +409,78 @@ const ProfilePage: React.FC = () => {
     setFormData(prev => prev ? ({ ...prev, [field]: value }) : null);
     setIsDirty(true);
   }, []);
+
+  const parseBoardLength = useCallback((lengthStr: string | undefined | null) => {
+    if (!lengthStr) return { feet: '', inches: '' };
+    const cleanStr = lengthStr.trim();
+    
+    // Check standard format X'Y"
+    const match = cleanStr.match(/^(\d+)'\s*(\d+)"?$/);
+    if (match) {
+      return { feet: match[1], inches: match[2] };
+    }
+    
+    // Check format X'
+    const matchFeetOnly = cleanStr.match(/^(\d+)'?$/);
+    if (matchFeetOnly) {
+      return { feet: matchFeetOnly[1], inches: '' };
+    }
+    
+    // Try to match any two numbers
+    const numbers = cleanStr.match(/\d+/g);
+    if (numbers && numbers.length >= 2) {
+      return { feet: numbers[0], inches: numbers[1] };
+    } else if (numbers && numbers.length === 1) {
+      if (cleanStr.includes('"') && !cleanStr.includes("'")) {
+        return { feet: '', inches: numbers[0] };
+      }
+      return { feet: numbers[0], inches: '' };
+    }
+    
+    return { feet: '', inches: '' };
+  }, []);
+
+  // Sync from formData to local inputs on component load/change profile
+  useEffect(() => {
+    if (formData?.currentBoardLength) {
+      const { feet, inches } = parseBoardLength(formData.currentBoardLength);
+      setBoardFeet(feet);
+      setBoardInches(inches);
+    } else {
+      setBoardFeet('');
+      setBoardInches('');
+    }
+  }, [formData?.id]);
+
+  const handleFeetChange = (val: string) => {
+    const digits = val.replace(/\D/g, '');
+    setBoardFeet(digits);
+    
+    let formatted = '';
+    if (digits) {
+      formatted += `${digits}'`;
+    }
+    if (boardInches) {
+      formatted += `${boardInches}"`;
+    }
+    handleFieldChange('currentBoardLength', formatted);
+  };
+
+  const handleInchesChange = (val: string) => {
+    const digits = val.replace(/\D/g, '');
+    setBoardInches(digits);
+    
+    let formatted = '';
+    if (boardFeet) {
+      formatted += `${boardFeet}'`;
+    } else if (digits) {
+      formatted += "0'";
+    }
+    if (digits) {
+      formatted += `${digits}"`;
+    }
+    handleFieldChange('currentBoardLength', formatted);
+  };
 
   const handleMobileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     handleFieldChange('mobile', formatMobileNumber(e.target.value));
@@ -584,6 +659,10 @@ const ProfilePage: React.FC = () => {
 
     setIsChangingPassword(true);
     try {
+      if (firebaseUser) {
+        const { updatePassword } = await import('firebase/auth');
+        await updatePassword(firebaseUser, newPassword);
+      }
       const hashed = await hashPassword(newPassword);
       await updateMember({ ...formData, password: hashed });
       setToast({ msg: 'הסיסמה שונתה בהצלחה', type: 'success' });
@@ -594,11 +673,15 @@ const ProfilePage: React.FC = () => {
     } catch (err: any) {
       console.error(err);
       let errorMessage = 'שגיאה בשינוי הסיסמה';
-      try {
-        const errObj = JSON.parse(err.message || err);
-        if (errObj.error) errorMessage = errObj.error;
-      } catch (e) {
-        if (err.message) errorMessage = err.message;
+      if (err.code === 'auth/requires-recent-login' || (err.message && err.message.includes('requires-recent-login'))) {
+        errorMessage = 'פעולה זו רגישה ודורשת התחברות מחדש למערכת לצורך אימות.';
+      } else {
+        try {
+          const errObj = JSON.parse(err.message || err);
+          if (errObj.error) errorMessage = errObj.error;
+        } catch (e) {
+          if (err.message) errorMessage = err.message;
+        }
       }
       setToast({ msg: errorMessage, type: 'error' });
       setTimeout(() => setToast(null), 3000);
@@ -1409,15 +1492,40 @@ const ProfilePage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">אורך גלשן נוכחי (למשל 6'2")</label>
-                    <input 
-                      type="text" 
-                      dir="ltr"
-                      value={formData.currentBoardLength || ''} 
-                      onChange={e => handleFieldChange('currentBoardLength', e.target.value)} 
-                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a] text-right" 
-                      placeholder='6&apos;2"'
-                    />
+                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">אורך גלשן נוכחי (פיט ואינצ'ים)</label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1 relative">
+                        <input 
+                          type="text" 
+                          pattern="\d*"
+                          inputMode="numeric"
+                          value={boardInches} 
+                          onChange={e => handleInchesChange(e.target.value)} 
+                          className="w-full p-4 md:p-5 pl-10 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a] text-center" 
+                          placeholder="10"
+                        />
+                        <span className="absolute left-4 top-[18px] md:top-[22px] text-xs font-bold text-slate-400 pointer-events-none">in</span>
+                        <div className="text-[10px] text-slate-400 pr-2">אינץ' (Inches)</div>
+                      </div>
+                      <div className="space-y-1 relative">
+                        <input 
+                          type="text" 
+                          pattern="\d*"
+                          inputMode="numeric"
+                          value={boardFeet} 
+                          onChange={e => handleFeetChange(e.target.value)} 
+                          className="w-full p-4 md:p-5 pl-10 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a] text-center" 
+                          placeholder="6"
+                        />
+                        <span className="absolute left-4 top-[18px] md:top-[22px] text-xs font-bold text-slate-400 pointer-events-none">ft</span>
+                        <div className="text-[10px] text-slate-400 pr-2">פיט (Feet)</div>
+                      </div>
+                    </div>
+                    {formData.currentBoardLength && (
+                      <div className="text-xs font-semibold text-slate-500 pr-3 mt-1">
+                        תצוגה מנורמלת: <span className="font-mono text-sky-600 font-bold" dir="ltr">{formData.currentBoardLength}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </section>

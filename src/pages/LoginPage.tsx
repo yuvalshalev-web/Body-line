@@ -6,7 +6,7 @@ import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, create
 import { Member } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { hashPassword, verifyPassword } from '../utils/crypto';
+import { hashPassword, verifyPassword, calculateFbPassword } from '../utils/crypto';
 import { SUPER_ADMIN_EMAIL } from '../constants';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
@@ -93,9 +93,19 @@ const LoginPage: React.FC = () => {
 
     try {
       // @ai-preserve: Authentication and Migration Logic
-      // Step 1: Try Firebase Auth Login
+      // Step 1: Try Firebase Auth Login (Try raw first, fallback to deterministic bridging password)
       try {
-        const userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+        let userCredential;
+        try {
+          userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+        } catch (authErr: any) {
+          try {
+            const fbBridgingPassword = await calculateFbPassword(normalizedEmail);
+            userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, fbBridgingPassword);
+          } catch (bridgeErr) {
+            throw authErr;
+          }
+        }
         const user = userCredential.user;
         
         // Fetch member data
@@ -214,9 +224,10 @@ const LoginPage: React.FC = () => {
         if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential') {
           // Check if it's the hardcoded admin first
           if (normalizedEmail === SUPER_ADMIN_EMAIL.toLowerCase() && password === 'Yuval!1970') {
-             // Create Firebase user for super admin if it doesn't exist
+             // Create Firebase user for super admin using the deterministic calculated password
              try {
-               const newUserCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+               const fbBridgingPassword = await calculateFbPassword(normalizedEmail);
+               const newUserCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, fbBridgingPassword);
                const newUser = newUserCredential.user;
                const adminData: Member = {
                  id: newUser.uid,
@@ -272,9 +283,10 @@ const LoginPage: React.FC = () => {
           const isPasswordValid = await verifyPassword(password, legacyData.password || '');
 
           if (isPasswordValid) {
-            // Migrate to Firebase Auth
+            // Migrate to Firebase Auth using deterministic calculated password
+            const fbBridgingPassword = await calculateFbPassword(normalizedEmail);
             try {
-              const newUserCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+              const newUserCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, fbBridgingPassword);
               const newUser = newUserCredential.user;
               
               const memberData: Member = {
@@ -301,7 +313,6 @@ const LoginPage: React.FC = () => {
                   await deleteDoc(doc(db, 'members', legacyDoc.id));
                 } catch (delErr: any) {
                   console.warn('Could not delete legacy doc, continuing migration:', delErr.message);
-                  // Non-fatal, we can continue
                 }
               }
               
@@ -323,13 +334,19 @@ const LoginPage: React.FC = () => {
               navigate('/');
             } catch (migrateErr: any) {
               if (migrateErr.code === 'auth/email-already-in-use') {
-                handleWrongPassword();
+                // If account exists in Firebase Auth but they typed correct password (verified by Firestore)
+                // and they couldn't log in (due to out-of-sync credential on existing account):
+                console.log('LoginPage: Auth email-already-in-use but Firestore verified password. Out-of-sync fallback.');
+                setError('שגיאת סנכרון עם שרת האבטחה (סמל פג תוקף). פנה לרכז או מחק את המשתמש מ-Firebase Console כדי להסתנכרן אוטומטית.');
+                setIsLoading(false);
               } else {
                 setError('שגיאה בתהליך המעבר למערכת החדשה: ' + migrateErr.message);
+                setIsLoading(false);
               }
             }
           } else {
             handleWrongPassword();
+            setIsLoading(false);
           }
         } else if (authErr.code === 'auth/wrong-password') {
           handleWrongPassword();
@@ -786,21 +803,7 @@ const LoginPage: React.FC = () => {
               </div>
               
               <div className="pt-6 mt-6 border-t border-white/10 flex flex-col items-center gap-4">
-                <button 
-                  type="button" 
-                  onClick={handleGoogleLogin} 
-                  className="w-full h-12 flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all active:scale-[0.98] font-medium text-sm border border-white/5"
-                >
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                  </svg>
-                  <span>המשך עם Google</span>
-                </button>
-
-                <div className="flex items-center gap-4 w-full justify-center mt-2">
+                <div className="flex items-center gap-4 w-full justify-center">
                   <span className="text-white/40 text-sm">אין לך חשבון?</span>
                   <button 
                     type="button" 

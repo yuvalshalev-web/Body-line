@@ -4,6 +4,9 @@ import compression from "compression";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
+import { initializeApp, getApps } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,6 +24,29 @@ async function startServer() {
   console.log("NODE_ENV:", process.env.NODE_ENV);
   const isProd = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
   console.log(`Server mode: ${isProd ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+
+  // Initialize Firebase Admin
+  let projectId = undefined;
+  const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+  if (fs.existsSync(configPath)) {
+    try {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      projectId = config.projectId;
+    } catch (err) {
+      console.error('Failed to parse firebase-applet-config.json', err);
+    }
+  }
+
+  if (getApps().length === 0) {
+    try {
+      initializeApp({
+        projectId: projectId
+      });
+      console.log("Firebase Admin SDK initialized successfully.");
+    } catch (adminErr) {
+      console.error("Failed to initialize Firebase Admin SDK:", adminErr);
+    }
+  }
   
   const app = express();
   const PORT = 3000;
@@ -96,6 +122,102 @@ async function startServer() {
   // API routes FIRST - explicitly defined before any static/vite middleware
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", mode: isProd ? 'production' : 'development' });
+  });
+
+  app.get("/api/debug/state", async (req, res) => {
+    try {
+      const { getFirestore } = await import("firebase-admin/firestore");
+      const firestoreInstance = getFirestore();
+
+      // List Firestore Members
+      const membersSnap = await firestoreInstance.collection("members").get();
+      const members: any[] = [];
+      membersSnap.forEach(doc => {
+        members.push({ id: doc.id, ...doc.data() });
+      });
+
+      // List Firestore Surf Calls
+      const surfCallsSnap = await firestoreInstance.collection("surf_calls").get();
+      const surfCalls: any[] = [];
+      surfCallsSnap.forEach(doc => {
+        surfCalls.push({ id: doc.id, ...doc.data() });
+      });
+
+      // List some system logs
+      const logsSnap = await firestoreInstance.collection("system_logs").orderBy("timestamp", "desc").limit(30).get();
+      const logs: any[] = [];
+      logsSnap.forEach(doc => {
+        logs.push({ id: doc.id, ...doc.data() });
+      });
+
+      res.json({
+        membersCount: members.length,
+        members,
+        surfCalls,
+        logs
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message, stack: err.stack });
+    }
+  });
+
+  app.post("/api/admin/reset-password", async (req, res) => {
+    const { uid, email, password } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({ error: "Missing password" });
+    }
+    
+    const authInstance = getAuth();
+    let targetUid = uid;
+    
+    try {
+      // 1. Try finding by email first if provided (most reliable to avoid UID mismatch)
+      if (email) {
+        try {
+          const userRecord = await authInstance.getUserByEmail(email.toLowerCase().trim());
+          targetUid = userRecord.uid;
+          console.log(`Server: Found user by email ${email}, targetUid is ${targetUid}`);
+        } catch (emailErr: any) {
+          if (emailErr.code !== 'auth/user-not-found') {
+            throw emailErr;
+          }
+          // Not found by email, will try by UID if provided
+        }
+      }
+      
+      // 2. Fallback to UID if targetUid not resolved yet
+      if (!targetUid && uid) {
+        targetUid = uid;
+      }
+      
+      // 3. Update password if UID exists
+      if (targetUid) {
+        try {
+          console.log(`Server: Resetting Firebase Auth password for UID: ${targetUid}`);
+          await authInstance.updateUser(targetUid, {
+            password: password
+          });
+          console.log(`Server: Successfully reset password for user ${targetUid}`);
+          return res.json({ success: true, uid: targetUid });
+        } catch (updateErr: any) {
+          if (updateErr.code === 'auth/user-not-found') {
+            console.log(`Server: UID ${targetUid} not found in Firebase Auth.`);
+            return res.json({ success: true, notInAuth: true });
+          }
+          console.warn("Server: Failed to update Firebase Auth user password via Admin SDK:", updateErr.message);
+          return res.json({ success: true, notInAuth: true, info: "Password saved to Firestore; synced on client-side login." });
+        }
+      }
+      
+      // 4. User is not in Firebase Auth at all (Legacy User)
+      console.log(`Server: User with email ${email || 'unknown'} not in Firebase Auth. Legacy user.`);
+      res.json({ success: true, notInAuth: true });
+    } catch (error: any) {
+      console.warn("Server: Failed to reset password for user in Firebase Auth:", uid || email, error.message);
+      // Fallback to success so they can at least update and sync using Firestore
+      res.json({ success: true, notInAuth: true, info: "Password saved to Firestore; synced on client-side login." });
+    }
   });
 
   app.get("/api/test-weather", (req, res) => {
