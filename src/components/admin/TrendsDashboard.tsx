@@ -313,9 +313,10 @@ const TrendsDashboard: React.FC = () => {
     });
 
     // 2. Gender Mix
-    const genderCounts = {
+  const genderCounts = {
       'זכר': activeMembers.filter(m => m.gender === 'זכר').length,
       'נקבה': activeMembers.filter(m => m.gender === 'נקבה').length,
+      'לא בינארי': activeMembers.filter(m => m.gender === 'לא בינארי').length,
       'אחר': activeMembers.filter(m => !m.gender || m.gender === 'מעדיף/ה לא לציין').length,
     };
 
@@ -469,6 +470,7 @@ const TrendsDashboard: React.FC = () => {
     const genderCohorts = [
       { label: 'גברים', key: 'זכר', color: 'from-blue-400 to-blue-600', hexColor: '#3182CE', glow: 'rgba(49, 130, 206, 0.5)' },
       { label: 'נשים', key: 'נקבה', color: 'from-pink-400 to-pink-600', hexColor: '#D53F8C', glow: 'rgba(213, 63, 140, 0.5)' },
+      { label: 'לא בינארי', key: 'לא בינארי', color: 'from-purple-400 to-purple-600', hexColor: '#a855f7', glow: 'rgba(168, 85, 247, 0.5)' },
       { label: 'אחר/לא צוין', key: 'אחר', color: 'from-slate-400 to-slate-600', hexColor: '#718096', glow: 'rgba(113, 128, 150, 0.5)' }
     ].map(c => {
       const groupMembers = activeMembers.filter(m => {
@@ -777,6 +779,7 @@ const TrendsDashboard: React.FC = () => {
     { id: 'age4', label: 'ותיקים (60+)', color: '#2B6CB0' },
     { id: 'male', label: 'גברים', color: '#3182CE' },
     { id: 'female', label: 'נשים', color: '#D53F8C' },
+    { id: 'nonBinary', label: 'לא בינארי', color: '#a855f7' },
     { id: 'other', label: 'אחר/לא צוין', color: '#718096' }
   ];
 
@@ -823,6 +826,7 @@ const TrendsDashboard: React.FC = () => {
             const groupMembers = members.filter(m => {
               if (group.id === 'male') return m.gender === 'זכר';
               if (group.id === 'female') return m.gender === 'נקבה';
+              if (group.id === 'nonBinary') return m.gender === 'לא בינארי';
               if (group.id === 'other') return !m.gender || m.gender === 'מעדיף/ה לא לציין';
               
               const age = calculateAge(m.birthday || (m as any).birthDate);

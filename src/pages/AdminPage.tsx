@@ -99,7 +99,8 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
   // By Gender
   const maleStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'זכר' || m.gender === 'Male' || m.gender === 'male'));
   const femaleStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'נקבה' || m.gender === 'Female' || m.gender === 'female'));
-  const unspecifiedStats = getParticipationStats(activeMembers.filter((m: any) => !['זכר', 'Male', 'male', 'נקבה', 'Female', 'female'].includes(m.gender)));
+  const nonBinaryStats = getParticipationStats(activeMembers.filter((m: any) => m.gender === 'לא בינארי'));
+  const unspecifiedStats = getParticipationStats(activeMembers.filter((m: any) => !['זכר', 'Male', 'male', 'נקבה', 'Female', 'female', 'לא בינארי'].includes(m.gender)));
 
   // By Age
   const ageUnder18 = getParticipationStats(activeMembers.filter((m: any) => { const age = calculateAge(m.birthday || m.birthDate); return age !== null && age >= 0 && age < 18; }));
@@ -148,6 +149,11 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
           <div className="text-3xl font-black text-slate-800 mb-1">{maleStats.rate}%</div>
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">השתתפות גברים</div>
           <div className="text-[10px] text-slate-400 mt-1">{maleStats.count} מתוך {maleStats.total}</div>
+        </div>
+        <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
+          <div className="text-3xl font-black text-slate-800 mb-1">{nonBinaryStats.rate}%</div>
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">השתתפות לא בינארי</div>
+          <div className="text-[10px] text-slate-400 mt-1">{nonBinaryStats.count} מתוך {nonBinaryStats.total}</div>
         </div>
       </div>
 

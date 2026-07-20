@@ -377,11 +377,12 @@ const SessionStatsPage: React.FC = () => {
     const genderStatsObj = {
       men: { label: 'גברים', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-blue-500', hex: '#3b82f6' },
       women: { label: 'נשים', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-red-500', hex: '#ef4444' },
-      unspecified: { label: 'לא צוין', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-yellow-400', hex: '#facc15' }
+      nonBinary: { label: 'לא בינארי', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-purple-500', hex: '#a855f7' },
+      unspecified: { label: 'מעדיפ/ה לא לציין', count: 0, totalAttendance: 0, sessionsPossible: 0, color: 'bg-yellow-400', hex: '#facc15' }
     };
 
     activeMembers.forEach(m => {
-      const g = m.gender === 'זכר' ? 'men' : m.gender === 'נקבה' ? 'women' : 'unspecified';
+      const g = m.gender === 'זכר' ? 'men' : m.gender === 'נקבה' ? 'women' : m.gender === 'לא בינארי' ? 'nonBinary' : 'unspecified';
       genderStatsObj[g].count++;
       genderStatsObj[g].totalAttendance += (memberStatsMap[m.id]?.total || 0);
       genderStatsObj[g].sessionsPossible += totalSessionsCount;

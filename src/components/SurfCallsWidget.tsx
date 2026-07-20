@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Waves, Plus, X, MapPin, Clock, Users, MessageCircle } from 'lucide-react';
 import { SurfCall } from '../types';
 import { motion } from 'motion/react';
+import { loadGoogleMaps } from '../utils/googlePlaces';
 
 export const SurfCallsWidget: React.FC = () => {
   const { surfCalls, addSurfCall, toggleSurfCallAttendance, archiveSurfCall, siteConfig } = useData();
@@ -13,6 +14,10 @@ export const SurfCallsWidget: React.FC = () => {
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
   const [loadingCalls, setLoadingCalls] = useState<Record<string, boolean>>({});
   const { addSurfCallComment } = useData();
+  const [googleReady, setGoogleReady] = useState(false);
+  const customBeachRef = React.useRef<HTMLInputElement>(null);
+  const autocompleteRef = React.useRef<any>(null);
+
   const [newCall, setNewCall] = useState({
     beach: '',
     customBeach: '',
@@ -51,6 +56,42 @@ export const SurfCallsWidget: React.FC = () => {
     const interval = setInterval(checkArchiving, 60000); // Check every minute
     return () => clearInterval(interval);
   }, [surfCalls, archiveSurfCall]);
+
+  useEffect(() => {
+    if (isCreating) {
+      loadGoogleMaps()
+        .then(() => setGoogleReady(true))
+        .catch(err => console.warn('Failed to load Google Maps:', err));
+    }
+  }, [isCreating]);
+
+  useEffect(() => {
+    if (!googleReady || !customBeachRef.current || autocompleteRef.current || newCall.beach !== 'אחר') return;
+
+    try {
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(customBeachRef.current, {
+        componentRestrictions: { country: 'il' },
+        fields: ['formatted_address', 'name', 'geometry'],
+        types: ['establishment', 'geocode']
+      });
+
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current.getPlace();
+        if (place.formatted_address || place.name) {
+          setNewCall(prev => ({ ...prev, customBeach: place.name || place.formatted_address }));
+        }
+      });
+    } catch (err) {
+      console.error('Error initializing autocomplete:', err);
+    }
+
+    return () => {
+      if (window.google && autocompleteRef.current) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        autocompleteRef.current = null;
+      }
+    };
+  }, [googleReady, newCall.beach === 'אחר']);
 
   const activeCalls = surfCalls.filter(c => {
     if (c.isArchived) return false;
@@ -311,6 +352,7 @@ export const SurfCallsWidget: React.FC = () => {
                     </select>
                     {newCall.beach === 'אחר' && (
                       <input
+                        ref={customBeachRef}
                         type="text"
                         placeholder="איזה חוף?"
                         value={newCall.customBeach}

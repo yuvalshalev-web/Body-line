@@ -220,6 +220,31 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [conflictingAdmins, setConflictingAdmins] = useState<Member[]>([]);
   const [activeSessionDate, setActiveSessionDate] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+
+  const seedActiveSession = useCallback(async () => {
+    if (currentUser?.role !== 'Admin') return;
+    try {
+      const db = getDb();
+      const activeSessionRef = doc(db, 'site_data', 'active_session');
+      const snap = await trackedGetDoc(activeSessionRef);
+      if (!snap.exists()) {
+        console.log("DataContext: Seeding missing active_session doc");
+        await trackedSetDoc(activeSessionRef, {
+          attendees: [],
+          date: getNextSessionDate(siteConfigRef.current?.weeklySessions),
+          lastUpdated: serverTimestamp()
+        });
+      }
+    } catch (err) {
+      console.error("DataContext: Failed to seed active_session", err);
+    }
+  }, [currentUser?.role]);
+
+  useEffect(() => {
+    if (currentUser?.role === 'Admin' && !isLoading) {
+      seedActiveSession();
+    }
+  }, [currentUser?.role, isLoading, seedActiveSession]);
   const [hasQuotaError, setHasQuotaError] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -548,19 +573,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchData();
 
     // Real-time listeners
-    const unsubMembers = trackedOnSnapshot(query(collection(db, 'members'), limit(200)), (snapshot) => {
+    const unsubMembers = trackedOnSnapshot(query(collection(db, 'members'), limit(1000)), (snapshot) => {
       const rawDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member));
-      const filteredDocs = rawDocs.filter(m => {
-        const isSuperAdmin = m.email?.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim();
-        const isGalGadot = (m.firstName === 'גל' && m.lastName === 'גדות') || m.email?.toLowerCase().trim() === 'gal@gmail.com';
-        return !(isSuperAdmin && !isGalGadot);
-      });
-      setMembers(filteredDocs);
+      setMembers(rawDocs);
       setIsDbEmpty(snapshot.empty);
-      storage.set('cached_members_v3', filteredDocs, 2 / 60);
+      storage.set('cached_members_v3', rawDocs, 2 / 60);
     });
 
-    const unsubHistory = trackedOnSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(200)), (snapshot) => {
+    const unsubHistory = trackedOnSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(1000)), (snapshot) => {
       const hData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setWeeklyHistory(hData);
       storage.set('cached_history_v3', hData, 2 / 60);
@@ -1046,17 +1066,36 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
   }, []);
 
   const toggleSessionAttendance = useCallback(async (userId: string) => {
+    console.log("toggleSessionAttendance: Triggered for user", userId);
     const member = members.find(m => m.id === userId);
     if (!member || member.isActive === false || (member as any).status === 'suspended' || (member as any).status === 'left') {
+      console.warn("toggleSessionAttendance: Member not eligible", member);
       showAlert("משתמש שאינו פעיל או שאינו קיים אינו יכול לאשר הגעה", "שגיאה");
       return;
     }
-    const isCurrentlyAttending = attendeeIds.includes(userId);
-    const activeSessionRef = doc(getDb(), 'site_data', 'active_session');
-    if (isCurrentlyAttending) {
-      await setDoc(activeSessionRef, { attendees: arrayRemove(userId) }, { merge: true });
-    } else {
-      await setDoc(activeSessionRef, { attendees: arrayUnion(userId) }, { merge: true });
+    
+    try {
+      const isCurrentlyAttending = attendeeIds.includes(userId);
+      console.log("toggleSessionAttendance: isCurrentlyAttending =", isCurrentlyAttending);
+      
+      const activeSessionRef = doc(getDb(), 'site_data', 'active_session');
+      
+      // We MUST ONLY update the 'attendees' field to comply with Firestore rules for non-admins
+      if (isCurrentlyAttending) {
+        console.log("toggleSessionAttendance: Removing user from attendees");
+        await trackedUpdateDoc(activeSessionRef, { 
+          attendees: arrayRemove(userId)
+        });
+      } else {
+        console.log("toggleSessionAttendance: Adding user to attendees");
+        await trackedUpdateDoc(activeSessionRef, { 
+          attendees: arrayUnion(userId)
+        });
+      }
+      console.log("toggleSessionAttendance: Success");
+    } catch (error: any) {
+      console.error("toggleSessionAttendance: Error", error);
+      showAlert(`שגיאה בעדכון הגעה: ${error.message || 'שגיאת הרשאה או חיבור'}`, "שגיאה");
     }
   }, [members, attendeeIds, showAlert]);
 

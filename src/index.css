@@ -2943,3 +2943,39 @@ body .neo-glass-button {
 input[type="text"]:not(.text-white), input[type="date"]:not(.text-white), input[type="time"]:not(.text-white), input[type="url"]:not(.text-white), input[type="email"]:not(.text-white), input[type="password"]:not(.text-white), input[type="number"]:not(.text-white), input[type="tel"]:not(.text-white), textarea:not(.text-white) {
     color: #1e293b !important;
 }
+/* Google Places Autocomplete Fix */
+.pac-container {
+  z-index: 10000 !important;
+  border-radius: 1rem;
+  margin-top: 4px;
+  border: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+  font-family: inherit;
+}
+
+.pac-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pac-item:first-child {
+  border-top: none;
+}
+
+.pac-item:hover {
+  background-color: #f8fafc;
+}
+
+.pac-item-query {
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.pac-matched {
+  color: #0284c7;
+}

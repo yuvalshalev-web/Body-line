@@ -561,7 +561,7 @@ const CommunityAnalytics: React.FC = () => {
     const genderCounts = {
       'זכר': activeMembers.filter(m => m.gender === 'זכר').length,
       'נקבה': activeMembers.filter(m => m.gender === 'נקבה').length,
-      'אחר': activeMembers.filter(m => !m.gender || m.gender === 'מעדיף/ה לא לציין').length,
+      'אחר': activeMembers.filter(m => !m.gender || m.gender === 'מעדיף/ה לא לציין' || m.gender === 'לא בינארי').length,
     };
 
     const totalWomen = members.filter(m => m.gender === 'נקבה').length;
@@ -662,7 +662,7 @@ const CommunityAnalytics: React.FC = () => {
       { label: 'אחר/לא צוין', key: 'אחר', color: 'from-slate-400 to-slate-600', hexColor: '#718096', glow: 'rgba(113, 128, 150, 0.5)' }
     ].map(c => {
       const groupMembers = activeMembers.filter(m => {
-        if (c.key === 'אחר') return !m.gender || m.gender === 'מעדיף/ה לא לציין';
+        if (c.key === 'אחר') return !m.gender || m.gender === 'מעדיף/ה לא לציין' || m.gender === 'לא בינארי';
         return m.gender === c.key;
       });
 

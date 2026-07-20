@@ -57,9 +57,11 @@ export const loadGoogleMaps = (): Promise<void> => {
 
   const apiKey = 
     process.env.GOOGLE_MAPS_PLATFORM_KEY || 
+    (process.env as any).VITE_GOOGLE_MAPS_API_KEY ||
     import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 
     '';
   if (!apiKey) {
+    console.warn("Google Maps API Key is missing. Autocomplete will not work.");
     return Promise.reject(new Error("Google Maps API Key is missing. Please set GOOGLE_MAPS_PLATFORM_KEY in Secrets."));
   }
 

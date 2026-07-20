@@ -64,7 +64,7 @@ export default function ImportMembersModal({ isOpen, onClose }: ImportMembersMod
               email: row.email.trim().toLowerCase(),
               role: row.role === 'Admin' || row.role === 'Instructor' ? row.role : 'Member',
               mobile: row.mobile ? row.mobile.trim() : '',
-              gender: row.gender === 'זכר' || row.gender === 'נקבה' ? row.gender : 'מעדיף/ה לא לציין',
+              gender: row.gender === 'זכר' || row.gender === 'נקבה' || row.gender === 'לא בינארי' ? row.gender : 'מעדיף/ה לא לציין',
               birthday: row.birthDate || '',
               full_address: row.address || '',
               city: row.city || '',
@@ -135,7 +135,7 @@ export default function ImportMembersModal({ isOpen, onClose }: ImportMembersMod
                   <ul className="list-disc list-inside space-y-1">
                     <li>הקובץ חייב לכלול שורת כותרות (Header row).</li>
                     <li>שדות חובה: <code className="bg-blue-100 px-1 rounded">firstName</code>, <code className="bg-blue-100 px-1 rounded">lastName</code>, <code className="bg-blue-100 px-1 rounded">email</code>.</li>
-                    <li>שדות אופציונליים: <code className="bg-blue-100 px-1 rounded">mobile</code>, <code className="bg-blue-100 px-1 rounded">role</code> (Admin/Instructor/User), <code className="bg-blue-100 px-1 rounded">gender</code> (Male/Female), <code className="bg-blue-100 px-1 rounded">birthDate</code>, <code className="bg-blue-100 px-1 rounded">address</code>, <code className="bg-blue-100 px-1 rounded">city</code>.</li>
+                    <li>שדות אופציונליים: <code className="bg-blue-100 px-1 rounded">mobile</code>, <code className="bg-blue-100 px-1 rounded">role</code> (Admin/Instructor/User), <code className="bg-blue-100 px-1 rounded">gender</code> (זכר/נקבה/לא בינארי/מעדיף/ה לא לציין), <code className="bg-blue-100 px-1 rounded">birthDate</code>, <code className="bg-blue-100 px-1 rounded">address</code>, <code className="bg-blue-100 px-1 rounded">city</code>.</li>
                   </ul>
                 </div>
 

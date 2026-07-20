@@ -61,16 +61,32 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ scrollRef, onOpenDrawer, on
         initial={{ opacity: 0, scale: 0.8, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         onClick={onOpenDrawer}
-        className="w-16 h-16 bg-gradient-to-br from-blue-500/40 to-cyan-500/40 backdrop-blur-2xl border border-white/40 rounded-[24px] flex items-center justify-center text-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] transition-all duration-500 relative group overflow-hidden"
+        className="w-16 h-16 bg-gradient-to-br from-slate-900/80 to-[#004266]/80 backdrop-blur-3xl border border-white/20 rounded-[24px] flex items-center justify-center text-white shadow-[0_25px_60px_rgba(0,0,0,0.5)] hover:shadow-[0_30px_70px_rgba(0,0,0,0.6)] transition-all duration-500 relative group overflow-hidden"
         whileHover={{ scale: 1.05, y: -5 }}
         whileTap={{ scale: 0.95 }}
       >
-        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-[24px] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
+        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/30 to-blue-500/30 rounded-[24px] blur-xl opacity-0 group-hover:opacity-100 transition duration-700" />
         
-        <div className="relative flex flex-col items-center gap-1">
-          <MenuIcon size={28} className="group-hover:rotate-90 transition-transform duration-500" />
-          <span className="text-xs font-black uppercase tracking-widest leading-none">תפריט</span>
+        <div className="relative flex flex-col items-center gap-1.5">
+          <div className="flex flex-col gap-1.5 items-center group-hover:scale-110 transition-transform duration-500">
+            <motion.div 
+              className="w-7 h-1 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+              animate={{ width: [28, 20, 28] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div 
+              className="w-5 h-1 bg-white/90 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.3)]"
+              animate={{ width: [20, 28, 20] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            />
+            <motion.div 
+              className="w-8 h-1 bg-white/80 rounded-full shadow-[0_0_6px_rgba(255,255,255,0.2)]"
+              animate={{ width: [32, 24, 32] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] leading-none mt-1 text-white/90 drop-shadow-md">תפריט</span>
         </div>
       </motion.button>
     </div>

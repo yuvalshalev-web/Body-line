@@ -2,8 +2,8 @@ import React, { useState, useRef } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, increment, addDoc, limit, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, ChevronDown, MapPin, CheckCircle2, UserPlus, Mail, RotateCcw, X, UserCheck, Sparkles, Waves, User, Terminal } from 'lucide-react';
 import { getDb, trackedGetDocs, auth, handleFirestoreError, OperationType } from '../services/firebase';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword, getAuth } from 'firebase/auth';
-import { Member } from '../types';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword, getAuth } from 'firebase/auth';
+import { Member, JoinRequest } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { hashPassword, verifyPassword, calculateFbPassword } from '../utils/crypto';
@@ -14,6 +14,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { processImage } from '../utils/imageProcessor';
+import { loadGoogleMaps } from '../utils/googlePlaces';
 import emailjs from '@emailjs/browser';
 
 const groups = [
@@ -59,8 +60,41 @@ const LoginPage: React.FC = () => {
   const [isGenderMenuOpen, setIsGenderMenuOpen] = useState(false);
   const [mobileError, setMobileError] = useState('');
   const [joinAvatar, setJoinAvatar] = useState('');
+  const [joinAddress, setJoinAddress] = useState('');
+  const [googleReady, setGoogleReady] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const joinAddressRef = useRef<HTMLInputElement>(null);
+  const joinAutocompleteRef = useRef<any>(null);
+
+  React.useEffect(() => {
+    if (mode === 'JOIN') {
+      loadGoogleMaps().then(() => setGoogleReady(true));
+    }
+  }, [mode]);
+
+  React.useEffect(() => {
+    if (googleReady && joinAddressRef.current && !joinAutocompleteRef.current) {
+      try {
+        joinAutocompleteRef.current = new window.google.maps.places.Autocomplete(joinAddressRef.current, {
+          componentRestrictions: { country: 'il' },
+          fields: ['formatted_address', 'geometry', 'name'],
+          types: ['geocode', 'establishment']
+        });
+
+        joinAutocompleteRef.current.addListener('place_changed', () => {
+          const place = joinAutocompleteRef.current.getPlace();
+          if (place.formatted_address) {
+            setJoinAddress(place.formatted_address);
+          } else if (place.name) {
+            setJoinAddress(place.name);
+          }
+        });
+      } catch (err) {
+        console.error('Error initializing join autocomplete:', err);
+      }
+    }
+  }, [googleReady]);
 
   const headerImage = useRandomHeader();
   const currentBg = siteAssets?.loginBg || headerImage;
@@ -515,6 +549,7 @@ const LoginPage: React.FC = () => {
         email: normalizedEmail,
         mobile: joinMobile,
         gender: joinGender || 'מעדיף/ה לא לציין',
+        full_address: joinAddress,
         bio: '',
         avatar: joinAvatar,
         requestedAt: new Date().toISOString(),
@@ -542,90 +577,6 @@ const LoginPage: React.FC = () => {
     setError('');
     setShowDuplicateModal(false);
     if (joinEmail) setEmail(joinEmail);
-  };
-
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      
-      // Check if user is in members collection
-      const db = getDb();
-      const q = query(collection(db, 'members'), where('email', '==', user.email?.toLowerCase().trim()), limit(1));
-      const snapshot = await trackedGetDocs(q);
-      
-      if (!snapshot.empty) {
-        const legacyDoc = snapshot.docs[0];
-        const legacyData = legacyDoc.data() as Member;
-        
-        if (legacyData.isActive === false) {
-          setError('החשבון שלך כרגע בחופשה קצרה ⛱️⛺🛫🍹🌴\nלא ניתן להתחבר כרגע בגלל השעיה זמנית');
-          await auth.signOut();
-          setIsLoading(false);
-          return;
-        }
-        
-        // Migrate ID to UID if needed, update login count, and clear isTemporary
-        const memberData: Member = {
-          ...legacyData,
-          firstName: legacyData.firstName || 'משתמש',
-          lastName: legacyData.lastName || 'חדש',
-          email: legacyData.email || user.email || '',
-          role: legacyData.role || 'Member',
-          id: user.uid,
-          uid: user.uid,
-          loginCount: (legacyData.loginCount || 0) + 1,
-          isTemporary: false
-        };
-        
-        try {
-          await setDoc(doc(db, 'members', user.uid), memberData);
-          if (legacyDoc.id !== user.uid) {
-            console.log('LoginPage: Google Login ID mismatch. Migrating', legacyDoc.id, 'to', user.uid);
-            await deleteDoc(doc(db, 'members', legacyDoc.id));
-          }
-        } catch (err: any) {
-          console.error('Failed to update Google user doc:', err);
-          handleFirestoreError(err, OperationType.WRITE, `members/${user.uid}`);
-        }
-        
-        login(memberData);
-        navigate('/');
-      } else if (user.email?.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim()) {
-        // Special case for super admin if not in members yet
-        const adminData: Member = {
-          id: user.uid,
-          uid: user.uid,
-          firstName: 'מנהל',
-          lastName: 'על',
-          email: user.email || '',
-          mobile: '',
-          avatar: user.photoURL || '',
-          bio: 'מנהל מערכת (Google Auth)',
-          role: 'Admin',
-          isActive: true,
-          joinedAt: new Date().toISOString()
-        };
-        try {
-          await setDoc(doc(db, 'members', user.uid), adminData);
-        } catch (setErr: any) {
-          handleFirestoreError(setErr, OperationType.WRITE, `members/${user.uid}`);
-        }
-        login(adminData);
-        navigate('/');
-      } else {
-        setError('משתמש זה אינו מאושר עדיין במערכת.');
-        await auth.signOut();
-      }
-    } catch (err: any) {
-      console.error(err);
-      setError('התחברות עם Google נכשלה');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -958,6 +909,19 @@ const LoginPage: React.FC = () => {
                   <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="דוא״ל" className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none px-4 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all" />
                   <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none px-4 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all focus:text-left direction-ltr text-left" dir="ltr" />
                   
+                  <div className="relative group">
+                    <input 
+                      ref={joinAddressRef}
+                      type="text" 
+                      required 
+                      value={joinAddress} 
+                      onChange={e => setJoinAddress(e.target.value)} 
+                      placeholder="כתובת מגורים" 
+                      className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none px-4 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all" 
+                    />
+                    <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-white/50 transition-colors" />
+                  </div>
+                  
                   <div className="relative w-full">
                     <button 
                       type="button"
@@ -979,7 +943,7 @@ const LoginPage: React.FC = () => {
                             transition={{ duration: 0.15 }}
                             className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-[#1A1A1D] border border-white/10 rounded-xl shadow-2xl z-[70] overflow-hidden py-1"
                           >
-                            {(['זכר', 'נקבה', 'מעדיף/ה לא לציין'] as const).map((g) => (
+                            {(['זכר', 'נקבה', 'לא בינארי', 'מעדיף/ה לא לציין'] as const).map((g) => (
                               <button
                                 key={g}
                                 type="button"

@@ -50,6 +50,7 @@ const SurfingSessionAttendance: React.FC = () => {
   const [sfInstanceUrl, setSfInstanceUrl] = useState<string | null>(null);
   const [sfSyncing, setSfSyncing] = useState(false);
   const [sfMessage, setSfMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
+  const [showSyncWarning, setShowSyncWarning] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -62,8 +63,19 @@ const SurfingSessionAttendance: React.FC = () => {
     }
   }, []);
 
+  const isFuture = useMemo(() => {
+    if (!selectedSession) return false;
+    const sessionDate = selectedSession.date?.toDate ? selectedSession.date.toDate() : new Date(selectedSession.date);
+    return sessionDate > new Date();
+  }, [selectedSession]);
+
   const handleSalesforceSync = async () => {
     if (!selectedSession) return;
+
+    if (isFuture) {
+      setShowSyncWarning(true);
+      return;
+    }
     
     // TEMPORARY: Muted Salesforce requirement until integration is ready
     setSfSyncing(true);
@@ -612,34 +624,38 @@ const SurfingSessionAttendance: React.FC = () => {
                   <span>Smart Attendance System</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  {sfMessage && (
-                    <motion.div 
-                      initial={{ opacity: 0, x: -10 }} 
-                      animate={{ opacity: 1, x: 0 }} 
-                      className={`text-xs font-bold px-3 py-1.5 rounded-lg ${sfMessage.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}
-                    >
-                      {sfMessage.text}
-                    </motion.div>
-                  )}
-                  {selectedSession.id !== 'new' && (
-                    <button
-                      onClick={handleSalesforceSync}
-                      disabled={sfSyncing}
-                      className="px-6 py-3 rounded-xl font-black text-sm uppercase shadow-md transition-all duration-300 bg-[#00A1E0] text-white hover:bg-[#0089bf] flex items-center gap-2"
-                    >
-                      {sfSyncing ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin" />
-                          <span>מסנכרן...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Cloud size={16} />
-                          <span>סנכרן עם Salesforce</span>
-                        </>
-                      )}
-                    </button>
-                  )}
+                    {sfMessage && (
+                      <motion.div 
+                        initial={{ opacity: 0, x: -10 }} 
+                        animate={{ opacity: 1, x: 0 }} 
+                        className={`text-xs font-bold px-3 py-1.5 rounded-lg ${sfMessage.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}
+                      >
+                        {sfMessage.text}
+                      </motion.div>
+                    )}
+                    {selectedSession.id !== 'new' && (
+                      <button
+                        onClick={handleSalesforceSync}
+                        disabled={sfSyncing}
+                        className={`px-6 py-3 rounded-xl font-black text-sm uppercase shadow-md transition-all duration-300 flex items-center gap-2 ${
+                          isFuture 
+                            ? 'bg-slate-200 text-slate-500 cursor-not-allowed opacity-70 grayscale' 
+                            : 'bg-[#00A1E0] text-white hover:bg-[#0089bf]'
+                        }`}
+                      >
+                        {sfSyncing ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            <span>מסנכרן...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Cloud size={16} />
+                            <span>סנכרן עם Salesforce</span>
+                          </>
+                        )}
+                      </button>
+                    )}
                   {selectedSession.id === 'new' && (
                     <button 
                       disabled={!!dateError}
@@ -672,6 +688,42 @@ const SurfingSessionAttendance: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+
+        {/* Sync Warning Modal */}
+        <AnimatePresence>
+          {showSyncWarning && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowSyncWarning(false)}
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+              />
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="relative w-full max-w-md luxury-card p-10 text-center !bg-white/95 !rounded-[2.5rem] border-white"
+              >
+                <div className="grain-overlay" />
+                <div className="w-20 h-20 rounded-3xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-6 shadow-inner border border-amber-500/20">
+                  <AlertCircle size={40} />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 mb-4">סנכרון עתידי חסום</h3>
+                <p className="text-slate-600 font-bold text-lg leading-relaxed mb-8">
+                  אין אפשרות לסנכרן סשן עתידי לדאטה-בייס חיצוני. הסנכרון יתאפשר רק לאחר שמועד הסשן עבר והנוכחות תועדה סופית.
+                </p>
+                <button 
+                  onClick={() => setShowSyncWarning(false)}
+                  className="w-full py-4 bg-slate-800 text-white rounded-2xl font-black text-lg shadow-xl hover:bg-black transition-all duration-300"
+                >
+                  הבנתי, תודה
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {

@@ -30,44 +30,48 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [googleReady, setGoogleReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
 
   useEffect(() => {
-    const initAutocomplete = async () => {
-      try {
-        await loadGoogleMaps();
-        if (!locationInputRef.current || !window.google) return;
+    loadGoogleMaps()
+      .then(() => {
+        setGoogleReady(true);
+      })
+      .catch(err => console.error('Failed to load Google Maps:', err));
+  }, []);
 
-        autocompleteRef.current = new window.google.maps.places.Autocomplete(locationInputRef.current, {
-          componentRestrictions: { country: 'il' },
-          fields: ['address_components', 'geometry', 'formatted_address', 'name'],
-          types: ['establishment', 'geocode']
-        });
+  useEffect(() => {
+    if (!googleReady || !locationInputRef.current || autocompleteRef.current) return;
 
-        autocompleteRef.current.addListener('place_changed', () => {
-          const place = autocompleteRef.current.getPlace();
-          if (place.formatted_address || place.name) {
-            setFormData(prev => ({ 
-              ...prev, 
-              location: place.formatted_address || place.name 
-            }));
-          }
-        });
-      } catch (err) {
-        console.error('Failed to load Google Maps Autocomplete:', err);
-      }
-    };
+    try {
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(locationInputRef.current, {
+        componentRestrictions: { country: 'il' },
+        fields: ['address_components', 'geometry', 'formatted_address', 'name'],
+        types: ['establishment', 'geocode']
+      });
 
-    initAutocomplete();
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current.getPlace();
+        if (place.formatted_address || place.name) {
+          setFormData(prev => ({ 
+            ...prev, 
+            location: place.formatted_address || place.name 
+          }));
+        }
+      });
+    } catch (err) {
+      console.error('Error initializing Autocomplete:', err);
+    }
 
     return () => {
       if (window.google && window.google.maps && window.google.maps.event && autocompleteRef.current) {
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
     };
-  }, []);
+  }, [googleReady]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

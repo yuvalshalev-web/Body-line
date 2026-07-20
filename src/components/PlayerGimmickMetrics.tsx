@@ -115,7 +115,7 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
             </div>
             
             <div className="text-center text-sm text-[#000000] relative z-10 font-bold">
-              {member.gender === 'נקבה' ? 'את גרה' : 'אתה גר'} במרחק {driftPercentile.distanceKm} ק"מ מחוף הבית – {member.gender === 'נקבה' ? 'קרובה' : 'קרוב'} יותר מ-{100 - driftPercentile.roundedPercentile}% מהקהילה
+              {member.gender === 'נקבה' ? 'את גרה' : member.gender === 'זכר' ? 'אתה גר' : 'נמצא/ת'} במרחק {driftPercentile.distanceKm} ק"מ מחוף הבית – {member.gender === 'נקבה' ? 'קרובה' : member.gender === 'זכר' ? 'קרוב' : 'קרוב/ה'} יותר מ-{100 - driftPercentile.roundedPercentile}% מהקהילה
             </div>
           </div>
         </div>
@@ -154,7 +154,7 @@ const PlayerGimmickMetrics: React.FC<PlayerGimmickMetricsProps> = ({ userId }) =
             </div>
             
             <div id="dynamicComment" className="text-center text-sm text-[#000000] relative z-10 font-bold">
-              {member.gender === 'נקבה' ? 'את' : 'אתה'} באחוזון הגיל ה-{agePercentile.roundedPercentile}% של הקבוצה
+              {member.gender === 'נקבה' ? 'את' : member.gender === 'זכר' ? 'אתה' : 'את/ה'} באחוזון הגיל ה-{agePercentile.roundedPercentile}% של הקבוצה
             </div>
           </div>
 
