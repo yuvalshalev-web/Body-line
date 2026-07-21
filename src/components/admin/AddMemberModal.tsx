@@ -92,7 +92,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
         avatar: '',
         bio: '',
         role: 'Member',
-        gender: 'מעדיף/ה לא לציין',
+        gender: 'מעדיפ/ה לא לציין',
         isActive: true,
         birthday: '',
         full_address: '',
@@ -393,7 +393,12 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
                                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
                                   className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-md border border-white/30 !rounded-3xl shadow-2xl z-[170] overflow-hidden"
                                 >
-                                  {(['זכר', 'נקבה', 'לא בינארי', 'מעדיף/ה לא לציין'] as Gender[]).map((g) => (
+                                  {([
+                                    'זכר', 
+                                    'נקבה', 
+                                    'לא בינארי', 
+                                    'מעדיפ/ה לא לציין'
+                                  ] as Gender[]).map((g) => (
                                     <button
                                       key={g}
                                       type="button"

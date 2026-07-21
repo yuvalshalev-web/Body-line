@@ -578,6 +578,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setMembers(rawDocs);
       setIsDbEmpty(snapshot.empty);
       storage.set('cached_members_v3', rawDocs, 2 / 60);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`DataContext: Loaded ${rawDocs.length} members.`);
+        const yuval = rawDocs.find(m => m.email === 'yuval.shalev@gmail.com');
+        if (yuval) console.log('DataContext: Found Yuval Luxembourg in members:', yuval);
+      }
     });
 
     const unsubHistory = trackedOnSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(1000)), (snapshot) => {
@@ -801,7 +806,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           mobile: reqData.mobile || '', 
           avatar: reqData.avatar || '', 
           bio: reqData.bio || '',
-          gender: reqData.gender || 'מעדיף/ה לא לציין',
+          gender: reqData.gender || 'מעדיפ/ה לא לציין',
           role: 'Member', 
           joinedAt: getCurrentDateFormatted(), 
           isActive: true,

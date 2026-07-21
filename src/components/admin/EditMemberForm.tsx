@@ -500,7 +500,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
                         exit={{ opacity: 0, y: -10 }}
                         className="absolute top-full left-0 right-0 mt-3 bg-white border border-slate-200 rounded-[2rem] shadow-2xl z-[70] overflow-hidden"
                       >
-                        {(['זכר', 'נקבה', 'לא בינארי', 'מעדיף/ה לא לציין'] as const).map((g) => (
+                        {(['זכר', 'נקבה', 'לא בינארי', 'מעדיפ/ה לא לציין'] as const).map((g) => (
                           <button
                             key={g}
                             type="button"

@@ -234,7 +234,7 @@ const AdminPage: React.FC = () => {
     avatar: '',
     bio: '',
     role: 'Member',
-    gender: 'מעדיף/ה לא לציין',
+    gender: 'מעדיפ/ה לא לציין',
     isActive: true,
     birthday: '',
     instagramUrl: '',

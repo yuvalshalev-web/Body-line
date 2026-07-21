@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useModal } from '../contexts/ModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Waves, Plus, X, MapPin, Clock, Users, MessageCircle } from 'lucide-react';
 import { SurfCall } from '../types';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { loadGoogleMaps } from '../utils/googlePlaces';
 
 export const SurfCallsWidget: React.FC = () => {
@@ -136,17 +137,60 @@ export const SurfCallsWidget: React.FC = () => {
   return (
     <>
       {/* Floating Action Button */}
-      <motion.div drag dragConstraints={{ left: 0, right: typeof window !== "undefined" ? window.innerWidth - 80 : 0, top: typeof window !== "undefined" ? -(window.innerHeight - 80) : 0, bottom: 0 }} dragMomentum={false} className="fixed bottom-24 left-6 z-50 cursor-grab active:cursor-grabbing">
+      <motion.div 
+        drag 
+        dragConstraints={{ left: 0, right: typeof window !== "undefined" ? window.innerWidth - 80 : 0, top: typeof window !== "undefined" ? -(window.innerHeight - 80) : 0, bottom: 0 }} 
+        dragMomentum={false} 
+        className="fixed bottom-24 left-6 z-50 cursor-grab active:cursor-grabbing"
+        animate={{ 
+          y: [0, -8, 0],
+        }}
+        transition={{ 
+          duration: 4,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      >
         <button
           onClick={() => setIsOpen(true)}
-          className="w-16 h-16 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-lg shadow-blue-500/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all relative group"
+          className="w-16 h-16 rounded-[24px] bg-gradient-to-br from-[#00AFC2]/80 to-[#004266]/80 backdrop-blur-3xl border border-white/30 text-white shadow-[0_25px_60px_rgba(0,0,0,0.5)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all relative group overflow-visible"
         >
-          <span className="text-2xl group-hover:animate-bounce" style={{ lineHeight: 1 }}>🏄‍♂️</span>
-          {activeCalls.length > 0 && (
-            <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
-              {activeCalls.length}
-            </span>
-          )}
+          {/* Clipped Background Layer for Effects */}
+          <div className="absolute inset-0 rounded-[24px] overflow-hidden pointer-events-none">
+            {/* Animated Wave Pulses */}
+            <motion.div 
+              className="absolute inset-0 bg-cyan-400/20 rounded-full"
+              animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <motion.div 
+              className="absolute inset-0 bg-emerald-400/10 rounded-full"
+              animate={{ scale: [1, 2.2], opacity: [0.3, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
+            />
+            
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400/30 to-cyan-400/30 blur-xl opacity-0 group-hover:opacity-100 transition duration-700" />
+          </div>
+
+          <div className="relative flex flex-col items-center">
+            <span className="text-2xl group-hover:animate-bounce transform transition-transform duration-500" style={{ lineHeight: 1 }}>🏄‍♂️</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.15em] mt-1 text-white/90 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">LIVE</span>
+          </div>
+
+          <AnimatePresence>
+            {activeCalls.length > 0 && (
+              <motion.span 
+                key="surf-calls-counter"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                className="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-rose-500 to-red-600 text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-[0_8px_20px_rgba(244,63,94,0.4)] z-[100] pointer-events-none"
+              >
+                {activeCalls.length}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </button>
       </motion.div>
 

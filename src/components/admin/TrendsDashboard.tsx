@@ -317,7 +317,7 @@ const TrendsDashboard: React.FC = () => {
       'זכר': activeMembers.filter(m => m.gender === 'זכר').length,
       'נקבה': activeMembers.filter(m => m.gender === 'נקבה').length,
       'לא בינארי': activeMembers.filter(m => m.gender === 'לא בינארי').length,
-      'אחר': activeMembers.filter(m => !m.gender || m.gender === 'מעדיף/ה לא לציין').length,
+      'אחר': activeMembers.filter(m => !m.gender || m.gender === 'מעדיפ/ה לא לציין').length,
     };
 
     const totalWomen = members.filter(m => m.gender === 'נקבה').length;
@@ -474,7 +474,7 @@ const TrendsDashboard: React.FC = () => {
       { label: 'אחר/לא צוין', key: 'אחר', color: 'from-slate-400 to-slate-600', hexColor: '#718096', glow: 'rgba(113, 128, 150, 0.5)' }
     ].map(c => {
       const groupMembers = activeMembers.filter(m => {
-        if (c.key === 'אחר') return !m.gender || m.gender === 'מעדיף/ה לא לציין';
+        if (c.key === 'אחר') return !m.gender || m.gender === 'מעדיפ/ה לא לציין';
         return m.gender === c.key;
       });
 
@@ -827,7 +827,7 @@ const TrendsDashboard: React.FC = () => {
               if (group.id === 'male') return m.gender === 'זכר';
               if (group.id === 'female') return m.gender === 'נקבה';
               if (group.id === 'nonBinary') return m.gender === 'לא בינארי';
-              if (group.id === 'other') return !m.gender || m.gender === 'מעדיף/ה לא לציין';
+              if (group.id === 'other') return !m.gender || m.gender === 'מעדיפ/ה לא לציין';
               
               const age = calculateAge(m.birthday || (m as any).birthDate);
               if (age === null) return false;

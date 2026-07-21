@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { useAuth } from './contexts/AuthContext';
 import { useData } from './contexts/DataContext';
 import { Loader2 } from 'lucide-react';
+import { SurfCallsWidget } from './components/SurfCallsWidget';
 
 import ErrorBoundary from './components/ErrorBoundary';
 import FloatingMenu from './components/FloatingMenu';
@@ -49,26 +50,35 @@ const App: React.FC = () => {
   React.useEffect(() => {
     if (isReady) return;
     
+    // Log state periodically while waiting
+    const logTimer = setInterval(() => {
+      if (!isReady) {
+        console.log(`App: Waiting for ready state... AuthLoading: ${loading}, DataLoading: ${dataLoading}, IsReady: ${isReady}`);
+      }
+    }, 5000);
+    
     if (!loading && !dataLoading) {
       let isMounted = true;
+      console.log("App: Auth and Data loaded. Starting font/boot sequence...");
       
       // Safety timeout to ensure app loads even if fonts hang
       const fallbackTimer = setTimeout(() => {
         if (isMounted && !isReady) {
-          console.warn("App: Font loading timed out, forcing ready state");
+          console.warn("App: Boot sequence safety timeout triggered, forcing ready state");
           setIsReady(true);
         }
-      }, 1500);
+      }, 3000);
 
       // Wait for fonts to be ready to prevent layout shift and distorted look
       if ('fonts' in document) {
         document.fonts.ready.then(() => {
           if (isMounted) {
+            console.log("App: Fonts ready.");
             clearTimeout(fallbackTimer);
             setTimeout(() => {
               if (isMounted) {
                 setIsReady(true);
-                console.log("App: Ready to render (fonts ready). Auth loading:", loading, "Data loading:", dataLoading);
+                console.log("App: Ready to render. Auth loading:", loading, "Data loading:", dataLoading);
               }
             }, 150);
           }
@@ -83,15 +93,21 @@ const App: React.FC = () => {
         // Fallback for browsers that don't support document.fonts
         clearTimeout(fallbackTimer);
         const timer = setTimeout(() => {
-          if (isMounted) setIsReady(true);
+          if (isMounted) {
+            console.log("App: Browser does not support fonts.ready, proceeding.");
+            setIsReady(true);
+          }
         }, 300);
       }
       
       return () => {
         isMounted = false;
         clearTimeout(fallbackTimer);
+        clearInterval(logTimer);
       };
     }
+    
+    return () => clearInterval(logTimer);
   }, [loading, dataLoading, isReady]);
 
   React.useEffect(() => {
@@ -331,6 +347,7 @@ const App: React.FC = () => {
         onClose={() => setIsDrawerOpen(false)} 
         activeRoute={location.pathname}
       />
+      <SurfCallsWidget />
     </div>
   );
 };

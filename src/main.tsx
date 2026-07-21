@@ -1,3 +1,8 @@
+console.log("main.tsx: Execution started - " + new Date().toISOString());
+if (typeof window !== 'undefined') {
+  document.documentElement.setAttribute('data-exec-start', 'true');
+}
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
@@ -9,11 +14,6 @@ import App from './App';
 import './index.css';
 import './utils/systemLogs';
 import './utils/chartHelpers';
-
-console.log("main.tsx: Execution started - " + new Date().toISOString());
-if (typeof window !== 'undefined') {
-  document.documentElement.setAttribute('data-exec-start', 'true');
-}
 
 const rootElement = document.getElementById('root');
 console.log("main.tsx: Got rootElement", rootElement);

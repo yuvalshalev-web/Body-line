@@ -68,25 +68,34 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ scrollRef, onOpenDrawer, on
         <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/30 to-blue-500/30 rounded-[24px] blur-xl opacity-0 group-hover:opacity-100 transition duration-700" />
         
-        <div className="relative flex flex-col items-center gap-1.5">
-          <div className="flex flex-col gap-1.5 items-center group-hover:scale-110 transition-transform duration-500">
+        <div className="relative flex flex-col items-center gap-1">
+          <div className="relative w-10 h-10 flex items-center justify-center group-hover:rotate-180 transition-transform duration-700">
+            {/* Outer Ring */}
             <motion.div 
-              className="w-7 h-1 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-              animate={{ width: [28, 20, 28] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-0 border-2 border-white/20 rounded-xl"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
             />
-            <motion.div 
-              className="w-5 h-1 bg-white/90 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.3)]"
-              animate={{ width: [20, 28, 20] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            />
-            <motion.div 
-              className="w-8 h-1 bg-white/80 rounded-full shadow-[0_0_6px_rgba(255,255,255,0.2)]"
-              animate={{ width: [32, 24, 32] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            />
+            {/* Inner "Menu" Bars with Surf Flare */}
+            <div className="flex flex-col gap-1.5 items-center">
+              <motion.div 
+                className="w-6 h-1 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full shadow-[0_0_8px_rgba(34,211,238,0.5)]"
+                animate={{ x: [-2, 2, -2] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.div 
+                className="w-8 h-1 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.4)]"
+                animate={{ x: [2, -2, 2] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+              />
+              <motion.div 
+                className="w-5 h-1 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full shadow-[0_0_8px_rgba(96,165,250,0.5)]"
+                animate={{ x: [-1, 1, -1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+              />
+            </div>
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] leading-none mt-1 text-white/90 drop-shadow-md">תפריט</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] leading-none text-white/90 drop-shadow-md">Menu</span>
         </div>
       </motion.button>
     </div>

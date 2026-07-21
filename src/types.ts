@@ -5,7 +5,7 @@ declare global {
   }
 }
 
-export type Gender = 'זכר' | 'נקבה' | 'לא בינארי' | 'מעדיף/ה לא לציין';
+export type Gender = 'זכר' | 'נקבה' | 'לא בינארי' | 'מעדיפ/ה לא לציין';
 
 export interface Member {
   id: string;

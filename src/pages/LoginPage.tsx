@@ -548,7 +548,7 @@ const LoginPage: React.FC = () => {
         lastName: joinLastName,
         email: normalizedEmail,
         mobile: joinMobile,
-        gender: joinGender || 'מעדיף/ה לא לציין',
+        gender: joinGender || 'מעדיפ/ה לא לציין',
         full_address: joinAddress,
         bio: '',
         avatar: joinAvatar,
@@ -580,58 +580,67 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden font-sans tracking-tight" dir="rtl">
-      {/* Background System */}
+    <div className="min-h-screen bg-[#051114] flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden font-sans tracking-tight" dir="rtl">
+      {/* Background System with Warm Sunset/Ocean Vibe */}
       <div className="fixed inset-0 z-0">
         <motion.img 
           initial={{ scale: 1.05, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
           src={currentBg} 
-          className="w-full h-full object-cover opacity-30 pointer-events-none" 
+          className="w-full h-full object-cover opacity-55 pointer-events-none saturate-[1.15] brightness-[0.9]" 
           alt="Background" 
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#09090b]/80 via-[#09090b]/40 to-[#09090b]/90 backdrop-blur-[1px]"></div>
+        {/* Gradient Sunset Golden Hour & Sea Teal Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#021822]/95 via-[#002e3b]/75 to-[#1f190d]/95 backdrop-blur-[2px]"></div>
+        
+        {/* Radiant Sunset Glow Orbs to emphasize warm, fun, inviting beach community */}
+        <div className="absolute top-[-15%] right-[-10%] w-[60vw] h-[50vh] rounded-full bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.18)_0%,transparent_70%)] blur-[80px] pointer-events-none animate-pulse duration-[8000ms]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[55vw] h-[50vh] rounded-full bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.16)_0%,transparent_70%)] blur-[70px] pointer-events-none" />
       </div>
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md animate-in fade-in slide-in-from-bottom-8 duration-700">
         
-        {/* Modern Minimal Form Container */}
-        <div className="bg-[#121214]/90 backdrop-blur-3xl border border-white/[0.08] p-8 sm:p-10 rounded-2xl shadow-2xl relative overflow-hidden">
+        {/* Glassmorphic Glowing Beach Container */}
+        <div className="bg-[#0b1d22]/80 backdrop-blur-2xl border border-white/10 p-8 sm:p-10 rounded-3xl shadow-[0_30px_80px_rgba(0,175,194,0.18)] relative overflow-hidden border-t-white/15 border-r-white/15">
 
           {mode === 'LOGIN' ? (
             <form onSubmit={handleLoginSubmit} className="space-y-6 relative z-10">
                {/* Header / Logo */}
-               <div className="text-center mb-8 flex flex-col justify-center items-center">
+               <div className="text-center mb-8 flex flex-col justify-center items-center relative">
                  {isDataLoading ? (
                    <div className="h-24 flex items-center justify-center">
-                     <Loader2 className="animate-spin text-white/50" size={32} />
+                     <Loader2 className="animate-spin text-[#00AFC2]" size={32} />
                    </div>
                  ) : (
                    <motion.div 
                      initial={{ y: 10, opacity: 0 }}
                      animate={{ y: 0, opacity: 1 }}
                      transition={{ duration: 0.5, delay: 0.1 }}
-                     className="flex flex-col gap-4 items-center w-full"
+                     className="flex flex-col gap-4 items-center w-full relative"
                    >
+                     {/* Soft background halo to make the logo pop with golden/teal light */}
+                     <div className="absolute -inset-12 bg-gradient-to-tr from-[#00AFC2]/20 via-amber-500/10 to-transparent rounded-full blur-[35px] pointer-events-none -z-10 animate-pulse duration-[6000ms]" />
+                     
                      {logoUrl ? (
                        <img 
                          src={logoUrl} 
-                         className="h-20 sm:h-24 w-auto object-contain" 
+                         className="h-20 sm:h-24 w-auto object-contain drop-shadow-[0_8px_20px_rgba(0,175,194,0.3)] hover:scale-105 transition-transform duration-500" 
                          alt="Habal Zug Logo" 
                          referrerPolicy="no-referrer"
                        />
                      ) : (
-                       <div className="w-16 h-16 bg-white flex items-center justify-center text-black rounded-2xl shrink-0 shadow-lg mb-2">
+                       <div className="w-16 h-16 bg-gradient-to-br from-[#00AFC2] to-[#004266] flex items-center justify-center text-white rounded-2xl shrink-0 shadow-[0_8px_20px_rgba(0,175,194,0.3)] mb-2">
                          <Waves size={32} />
                        </div>
                      )}
-                     <div className="space-y-1 mt-2">
-                       <h1 className="text-white text-2xl sm:text-3xl font-semibold tracking-tight">
-                         ברוכים הבאים
+                     
+                     <div className="space-y-2 mt-2">
+                       <h1 className="text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-cyan-100 text-2xl sm:text-3xl font-black tracking-tight drop-shadow-[0_2px_10px_rgba(0,175,194,0.15)]">
+                         🌊 כיף לראות אותך שוב איתנו
                        </h1>
-                       <p className="text-white/50 text-sm font-medium">
-                         התחברו לחשבון שלכם כדי להמשיך
+                       <p className="text-cyan-100/60 text-sm font-medium">
+                         הבית הדיגיטלי של קהילת חבל זוג
                        </p>
                      </div>
                    </motion.div>
@@ -642,11 +651,11 @@ const LoginPage: React.FC = () => {
                 <div className="relative group">
                   <input 
                     type="email" required value={email} onChange={e => setEmail(e.target.value)} 
-                    className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all duration-300"
+                    className="w-full h-12 bg-[#091519]/60 border border-white/10 rounded-2xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/35 text-right focus:border-[#00AFC2]/60 focus:bg-[#091519]/90 focus:ring-2 focus:ring-[#00AFC2]/10 transition-all duration-300 shadow-inner"
                     placeholder="דוא״ל"
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <Mail size={18} className="text-white/40 group-focus-within:text-white/80 transition-colors" />
+                    <Mail size={18} className="text-[#00AFC2]/55 group-focus-within:text-[#00AFC2] transition-colors" />
                   </div>
                 </div>
 
@@ -654,13 +663,13 @@ const LoginPage: React.FC = () => {
                   <input 
                     type={showPassword ? "text" : "password"} 
                     required value={password} onChange={e => setPassword(e.target.value)} 
-                    className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all duration-300"
+                    className="w-full h-12 bg-[#091519]/60 border border-white/10 rounded-2xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/35 text-right focus:border-[#00AFC2]/60 focus:bg-[#091519]/90 focus:ring-2 focus:ring-[#00AFC2]/10 transition-all duration-300 shadow-inner"
                     placeholder="סיסמה"
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#00AFC2]/55 hover:text-[#00AFC2] transition-colors"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -671,10 +680,10 @@ const LoginPage: React.FC = () => {
                   <button 
                     type="button"
                     onClick={() => setIsGroupMenuOpen(!isGroupMenuOpen)}
-                    className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none text-right flex items-center justify-between px-4 hover:border-white/30 transition-all duration-300"
+                    className="w-full h-12 bg-[#091519]/60 border border-white/10 rounded-2xl text-white font-medium text-base outline-none text-right flex items-center justify-between px-4 hover:border-[#00AFC2]/40 hover:bg-[#091519]/80 transition-all duration-300 shadow-inner"
                   >
                     <span className="flex-1 text-right">{selectedGroup}</span>
-                    <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={18} className={`text-[#00AFC2]/55 transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   <AnimatePresence>
@@ -684,7 +693,7 @@ const LoginPage: React.FC = () => {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 5 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-[#1A1A1D] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden py-1"
+                        className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-[#091519] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden py-1"
                       >
                         {groups.map((group) => (
                           <button
@@ -700,11 +709,11 @@ const LoginPage: React.FC = () => {
                               }
                             }}
                             className={`w-full px-4 py-3 text-right font-medium text-sm transition-all flex items-center justify-between hover:bg-white/5 ${
-                              selectedGroup === group ? 'text-white bg-white/5' : 'text-white/70'
+                              selectedGroup === group ? 'text-[#00AFC2] bg-white/5' : 'text-white/70'
                             }`}
                           >
                             <span>{group}</span>
-                            {selectedGroup === group && <CheckCircle2 size={16} className="text-white" />}
+                            {selectedGroup === group && <CheckCircle2 size={16} className="text-[#00AFC2]" />}
                           </button>
                         ))}
                       </motion.div>
@@ -719,7 +728,7 @@ const LoginPage: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="p-4 bg-rose-500/10 border-l-2 border-rose-500 text-rose-400 text-sm font-bold flex items-start gap-3 backdrop-blur-md"
+                    className="p-4 bg-rose-500/10 border-l-2 border-rose-500 text-rose-400 text-sm font-bold flex items-start gap-3 backdrop-blur-md rounded-xl"
                   >
                     <AlertCircle size={20} className="shrink-0 mt-0.5" />
                     <span className="leading-tight">{error}</span>
@@ -731,7 +740,7 @@ const LoginPage: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="p-4 bg-cyan-500/10 border-l-2 border-cyan-400 text-cyan-400 text-sm font-bold flex items-center gap-3 backdrop-blur-md"
+                    className="p-4 bg-[#00AFC2]/10 border-l-2 border-[#00AFC2] text-[#00AFC2] text-sm font-bold flex items-center gap-3 backdrop-blur-md rounded-xl"
                   >
                     <CheckCircle2 size={20} className="shrink-0" />
                     <span>{resetSuccessMessage}</span>
@@ -743,12 +752,14 @@ const LoginPage: React.FC = () => {
                 <button 
                   type="submit" 
                   disabled={isLoading} 
-                  className="w-full h-12 bg-white text-black hover:bg-white/90 rounded-xl flex items-center justify-center transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base"
+                  className="w-full h-12 bg-gradient-to-r from-[#00AFC2] via-[#00A1E0] to-[#005e82] hover:from-[#00c3d9] hover:to-[#00709b] text-white shadow-[0_4px_25px_rgba(0,175,194,0.3)] hover:shadow-[0_8px_35px_rgba(0,175,194,0.55)] rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-bold text-base tracking-wide"
                 >
                   {isLoading ? (
-                    <Loader2 className="animate-spin text-black mx-auto" size={20} />
+                    <Loader2 className="animate-spin text-white mx-auto" size={20} />
                   ) : (
-                    <span>התחבר</span>
+                    <span className="flex items-center gap-2">
+                      <span>התחבר</span>
+                    </span>
                   )}
                 </button>
               </div>
@@ -759,9 +770,10 @@ const LoginPage: React.FC = () => {
                   <button 
                     type="button" 
                     onClick={() => setMode('JOIN')} 
-                    className="text-white hover:text-white/80 text-sm font-medium transition-colors"
+                    className="text-[#00AFC2] hover:text-[#00c3d9] text-sm font-black transition-all flex items-center gap-1.5 hover:underline underline-offset-4"
                   >
-                    בקשת הצטרפות
+                    <Sparkles size={14} className="text-amber-400 animate-pulse" />
+                    <span>בקשת הצטרפות לקהילה</span>
                   </button>
                 </div>
               </div>
@@ -775,11 +787,11 @@ const LoginPage: React.FC = () => {
               className="space-y-6 relative z-10"
             >
               <div className="text-center mb-8 flex flex-col items-center">
-                <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-4">
-                  <RotateCcw size={32} className="text-white" />
+                <div className="w-16 h-16 bg-[#00AFC2]/10 text-[#00AFC2] rounded-2xl flex items-center justify-center mb-4 border border-[#00AFC2]/20 shadow-[0_4px_15px_rgba(0,175,194,0.15)]">
+                  <RotateCcw size={32} className="animate-spin-slow" />
                 </div>
-                <h3 className="text-white text-2xl sm:text-3xl font-semibold tracking-tight">החלפת סיסמה זמנית</h3>
-                <p className="text-white/50 text-sm font-medium mt-2">הסיסמה שקיבלת היא זמנית. נא לבחור סיסמה אישית קבועה.</p>
+                <h3 className="text-white text-2xl sm:text-3xl font-black tracking-tight">החלפת סיסמה זמנית</h3>
+                <p className="text-cyan-100/60 text-sm font-medium mt-2">הסיסמה שקיבלת היא זמנית. נא לבחור סיסמה אישית קבועה.</p>
               </div>
 
               <div className="space-y-4">
@@ -789,7 +801,7 @@ const LoginPage: React.FC = () => {
                     required 
                     value={newPassword} 
                     onChange={e => setNewPassword(e.target.value)} 
-                    className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all duration-300"
+                    className="w-full h-12 bg-[#091519]/60 border border-white/10 rounded-2xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/35 text-right focus:border-[#00AFC2]/60 focus:bg-[#091519]/90 focus:ring-2 focus:ring-[#00AFC2]/10 transition-all duration-300 shadow-inner"
                     placeholder="סיסמה חדשה"
                   />
                 </div>
@@ -799,13 +811,13 @@ const LoginPage: React.FC = () => {
                     required 
                     value={confirmPassword} 
                     onChange={e => setConfirmPassword(e.target.value)} 
-                    className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all duration-300"
+                    className="w-full h-12 bg-[#091519]/60 border border-white/10 rounded-2xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/35 text-right focus:border-[#00AFC2]/60 focus:bg-[#091519]/90 focus:ring-2 focus:ring-[#00AFC2]/10 transition-all duration-300 shadow-inner"
                     placeholder="אימות סיסמה"
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#00AFC2]/55 hover:text-[#00AFC2] transition-colors"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -818,7 +830,7 @@ const LoginPage: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="p-4 bg-rose-500/10 border-l-2 border-rose-500 text-rose-400 text-sm font-bold flex items-start gap-3 backdrop-blur-md"
+                    className="p-4 bg-rose-500/10 border-l-2 border-rose-500 text-rose-400 text-sm font-bold flex items-start gap-3 backdrop-blur-md rounded-xl"
                   >
                     <AlertCircle size={20} className="shrink-0 mt-0.5" />
                     <span className="leading-tight">{error}</span>
@@ -830,10 +842,10 @@ const LoginPage: React.FC = () => {
                 <button 
                   type="submit" 
                   disabled={isLoading} 
-                  className="w-full h-12 bg-white text-black hover:bg-white/90 rounded-xl flex items-center justify-center transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base"
+                  className="w-full h-12 bg-gradient-to-r from-[#00AFC2] via-[#00A1E0] to-[#005e82] hover:from-[#00c3d9] hover:to-[#00709b] text-white shadow-[0_4px_25px_rgba(0,175,194,0.3)] hover:shadow-[0_8px_35px_rgba(0,175,194,0.55)] rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-bold text-base tracking-wide"
                 >
                   {isLoading ? (
-                    <Loader2 className="animate-spin text-black mx-auto" size={20} />
+                    <Loader2 className="animate-spin text-white mx-auto" size={20} />
                   ) : (
                     <div className="flex items-center justify-center gap-2">
                       <CheckCircle2 size={18} />
@@ -846,7 +858,7 @@ const LoginPage: React.FC = () => {
               <button 
                 type="button" 
                 onClick={() => setMode('LOGIN')} 
-                className="w-full text-white/40 hover:text-white/80 font-medium text-sm transition-colors mt-4"
+                className="w-full text-white/50 hover:text-white font-medium text-sm transition-colors mt-4 hover:underline underline-offset-4"
               >
                 חזרה להתחברות
               </button>
@@ -861,13 +873,13 @@ const LoginPage: React.FC = () => {
             >
               {success ? (
                 <div className="py-12 text-center space-y-4">
-                  <div className="w-20 h-20 bg-white/10 text-white rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-20 h-20 bg-[#00AFC2]/10 text-[#00AFC2] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#00AFC2]/20 shadow-[0_4px_15px_rgba(0,175,194,0.15)] animate-bounce">
                     <CheckCircle2 size={40} />
                   </div>
-                  <h3 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">הבקשה נשלחה</h3>
-                  <p className="text-white/50 text-sm font-medium">צוות המועדון יחזור אליך בהקדם עם ערוצי הגישה למערכת.</p>
+                  <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">הבקשה נשלחה בהצלחה!</h3>
+                  <p className="text-cyan-100/60 text-sm font-medium leading-relaxed">צוות המועדון יחזור אליך בהקדם עם ערוצי הגישה למערכת.</p>
                   <div className="pt-6">
-                    <button type="button" onClick={resetToLogin} className="w-full h-12 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all font-medium border border-white/5">
+                    <button type="button" onClick={resetToLogin} className="w-full h-12 bg-white/5 hover:bg-white/10 text-white rounded-2xl transition-all font-semibold border border-white/10">
                       חזור לדף ההתחברות
                     </button>
                   </div>
@@ -875,39 +887,39 @@ const LoginPage: React.FC = () => {
               ) : (
                 <>
                   <div className="flex items-center gap-4 mb-6">
-                    <button type="button" onClick={resetToLogin} className="w-10 h-10 border border-white/[0.08] hover:border-white/30 rounded-xl flex items-center justify-center text-white/50 hover:bg-white/[0.05] hover:text-white transition-all">
+                    <button type="button" onClick={resetToLogin} className="w-10 h-10 border border-white/10 hover:border-[#00AFC2]/40 rounded-2xl flex items-center justify-center text-white/50 hover:bg-[#091519]/60 hover:text-white transition-all">
                       <ArrowRight size={18} />
                     </button>
-                    <h3 className="text-white text-xl font-semibold tracking-tight">בקשת הצטרפות</h3>
+                    <h3 className="text-white text-xl font-black tracking-tight">בקשת הצטרפות לקהילה</h3>
                   </div>
                   
                   <div className="flex flex-col items-center gap-4 mb-6">
                     <div className="relative group/avatar cursor-pointer">
-                      <div className="w-20 h-20 overflow-hidden border border-white/10 bg-white/5 rounded-full flex items-center justify-center group-hover/avatar:border-white/30 transition-all duration-300">
+                      <div className="w-20 h-20 overflow-hidden border border-white/15 bg-[#091519]/60 rounded-full flex items-center justify-center group-hover/avatar:border-[#00AFC2]/50 transition-all duration-300 shadow-inner">
                         <div className="w-full h-full flex items-center justify-center">
                           {isProcessingImage ? (
-                            <Loader2 className="animate-spin text-white/50" size={24} />
+                            <Loader2 className="animate-spin text-[#00AFC2]" size={24} />
                           ) : joinAvatar ? (
                             <img src={joinAvatar} className="w-full h-full object-cover" alt="" loading="lazy" />
                           ) : (
-                            <User size={32} className="text-white/20 group-hover/avatar:text-white/60 transition-colors" />
+                            <User size={32} className="text-white/20 group-hover/avatar:text-[#00AFC2]/60 transition-colors" />
                           )}
                         </div>
                       </div>
-                      <label className="absolute -bottom-1 -left-1 w-8 h-8 bg-white rounded-full text-black flex items-center justify-center cursor-pointer shadow-lg hover:scale-105 transition-all">
-                        <Camera size={16} />
+                      <label className="absolute -bottom-1 -left-1 w-8 h-8 bg-gradient-to-r from-[#00AFC2] to-[#00A1E0] text-white rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:scale-110 transition-all">
+                        <Camera size={14} />
                         <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} disabled={isProcessingImage} />
                       </label>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none px-4 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all" />
-                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none px-4 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all" />
+                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full h-12 bg-[#091519]/60 border border-white/10 rounded-2xl text-white font-medium text-base outline-none px-4 placeholder-white/35 text-right focus:border-[#00AFC2]/60 focus:bg-[#091519]/90 focus:ring-2 focus:ring-[#00AFC2]/10 transition-all duration-300 shadow-inner" />
+                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full h-12 bg-[#091519]/60 border border-white/10 rounded-2xl text-white font-medium text-base outline-none px-4 placeholder-white/35 text-right focus:border-[#00AFC2]/60 focus:bg-[#091519]/90 focus:ring-2 focus:ring-[#00AFC2]/10 transition-all duration-300 shadow-inner" />
                   </div>
                   
-                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="דוא״ל" className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none px-4 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all" />
-                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none px-4 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all focus:text-left direction-ltr text-left" dir="ltr" />
+                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="דוא״ל" className="w-full h-12 bg-[#091519]/60 border border-white/10 rounded-2xl text-white font-medium text-base outline-none px-4 placeholder-white/35 text-right focus:border-[#00AFC2]/60 focus:bg-[#091519]/90 focus:ring-2 focus:ring-[#00AFC2]/10 transition-all duration-300 shadow-inner" />
+                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full h-12 bg-[#091519]/60 border border-white/10 rounded-2xl text-white font-medium text-base outline-none px-4 placeholder-white/35 text-right focus:border-[#00AFC2]/60 focus:bg-[#091519]/90 focus:ring-2 focus:ring-[#00AFC2]/10 transition-all duration-300 shadow-inner focus:text-left direction-ltr text-left" dir="ltr" />
                   
                   <div className="relative group">
                     <input 
@@ -917,19 +929,19 @@ const LoginPage: React.FC = () => {
                       value={joinAddress} 
                       onChange={e => setJoinAddress(e.target.value)} 
                       placeholder="כתובת מגורים" 
-                      className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none px-4 placeholder-white/30 text-right focus:border-white/30 focus:bg-white/[0.05] transition-all" 
+                      className="w-full h-12 bg-[#091519]/60 border border-white/10 rounded-2xl text-white font-medium text-base outline-none px-4 placeholder-white/35 text-right focus:border-[#00AFC2]/60 focus:bg-[#091519]/90 focus:ring-2 focus:ring-[#00AFC2]/10 transition-all duration-300 shadow-inner" 
                     />
-                    <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-white/50 transition-colors" />
+                    <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#00AFC2]/55 group-focus-within:text-[#00AFC2] transition-colors" />
                   </div>
                   
                   <div className="relative w-full">
                     <button 
                       type="button"
                       onClick={() => setIsGenderMenuOpen(!isGenderMenuOpen)}
-                      className="w-full h-12 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white font-medium text-base outline-none text-right flex items-center justify-between px-4 hover:border-white/30 transition-all"
+                      className="w-full h-12 bg-[#091519]/60 border border-white/10 rounded-2xl text-white font-medium text-base outline-none text-right flex items-center justify-between px-4 hover:border-[#00AFC2]/40 hover:bg-[#091519]/80 transition-all duration-300 shadow-inner"
                     >
                       <span className={`flex-1 text-right ${joinGender ? 'text-white' : 'text-white/30'}`}>{joinGender || 'מגדר (בחירה)'}</span>
-                      <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown size={18} className={`text-[#00AFC2]/55 transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     <AnimatePresence>
@@ -941,9 +953,9 @@ const LoginPage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 5 }}
                             transition={{ duration: 0.15 }}
-                            className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-[#1A1A1D] border border-white/10 rounded-xl shadow-2xl z-[70] overflow-hidden py-1"
+                            className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-[#091519] border border-white/10 rounded-2xl shadow-2xl z-[70] overflow-hidden py-1"
                           >
-                            {(['זכר', 'נקבה', 'לא בינארי', 'מעדיף/ה לא לציין'] as const).map((g) => (
+                            {(['זכר', 'נקבה', 'לא בינארי', 'מעדיפ/ה לא לציין'] as const).map((g) => (
                               <button
                                 key={g}
                                 type="button"
@@ -952,11 +964,11 @@ const LoginPage: React.FC = () => {
                                   setIsGenderMenuOpen(false);
                                 }}
                                 className={`w-full px-4 py-3 text-right font-medium text-sm transition-all flex items-center justify-between hover:bg-white/5 ${
-                                  joinGender === g ? 'text-white bg-white/5' : 'text-white/70'
+                                  joinGender === g ? 'text-[#00AFC2] bg-white/5' : 'text-white/70'
                                 }`}
                               >
                                 <span>{g}</span>
-                                {joinGender === g && <CheckCircle2 size={16} className="text-white" />}
+                                {joinGender === g && <CheckCircle2 size={16} className="text-[#00AFC2]" />}
                               </button>
                             ))}
                           </motion.div>
@@ -971,7 +983,7 @@ const LoginPage: React.FC = () => {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="p-4 bg-rose-500/10 border-l-2 border-rose-500 text-rose-400 text-sm font-bold flex items-start gap-3 backdrop-blur-md"
+                        className="p-4 bg-rose-500/10 border-l-2 border-rose-500 text-rose-400 text-sm font-bold flex items-start gap-3 backdrop-blur-md rounded-xl"
                       >
                         <AlertCircle size={20} className="shrink-0 mt-0.5" />
                         <span className="leading-tight">{error || mobileError}</span>
@@ -983,10 +995,10 @@ const LoginPage: React.FC = () => {
                     <button 
                       type="submit" 
                       disabled={isLoading || isProcessingImage} 
-                      className="w-full h-12 bg-white text-black hover:bg-white/90 rounded-xl flex items-center justify-center transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-base"
+                      className="w-full h-12 bg-gradient-to-r from-[#00AFC2] via-[#00A1E0] to-[#005e82] hover:from-[#00c3d9] hover:to-[#00709b] text-white shadow-[0_4px_25px_rgba(0,175,194,0.3)] hover:shadow-[0_8px_35px_rgba(0,175,194,0.55)] rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-bold text-base tracking-wide"
                     >
                       {isLoading ? (
-                        <Loader2 className="animate-spin text-black mx-auto" size={20} />
+                        <Loader2 className="animate-spin text-white mx-auto" size={20} />
                       ) : (
                         <div className="flex items-center justify-center gap-2">
                           <span>שלח בקשה</span>

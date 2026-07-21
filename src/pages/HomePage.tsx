@@ -1,7 +1,6 @@
 
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { SurfCallsWidget } from '../components/SurfCallsWidget';
 import { 
   Users, 
   Image as ImageIcon, 
@@ -590,7 +589,6 @@ const HomePage: React.FC = () => {
            </div>
         </div>
       )}
-      <SurfCallsWidget />
     </div>
   );
 };

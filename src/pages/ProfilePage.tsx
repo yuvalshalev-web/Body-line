@@ -802,7 +802,7 @@ const ProfilePage: React.FC = () => {
                           exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           className="absolute top-full left-0 right-0 mt-3 bg-white/95 border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-[70] overflow-hidden p-2 rounded-[1.5rem]"
                         >
-                          {(['זכר', 'נקבה', 'לא בינארי', 'מעדיף/ה לא לציין'] as const).map((g) => (
+                          {(['זכר', 'נקבה', 'לא בינארי', 'מעדיפ/ה לא לציין'] as const).map((g) => (
                             <button
                               key={g}
                               type="button"

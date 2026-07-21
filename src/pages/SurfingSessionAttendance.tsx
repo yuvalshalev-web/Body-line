@@ -16,6 +16,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useModal } from '../contexts/ModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Member } from '../types';
 import { formatDate } from '../utils/dateUtils';
@@ -38,6 +39,7 @@ const SurfingSessionAttendance: React.FC = () => {
     siteConfig
   } = useData();
   const { currentUser } = useAuth();
+  const { showAlert } = useModal();
   
   const headerImage = useRandomHeader();
   const [selectedSession, setSelectedSession] = useState<{ id: string | 'active', date: any, participantIds: string[] } | null>(null);
@@ -63,9 +65,10 @@ const SurfingSessionAttendance: React.FC = () => {
     }
   }, []);
 
-  const isFuture = useMemo(() => {
-    if (!selectedSession) return false;
-    const sessionDate = selectedSession.date?.toDate ? selectedSession.date.toDate() : new Date(selectedSession.date);
+    const isFuture = useMemo(() => {
+    if (!selectedSession || !selectedSession.date) return false;
+    // Handle both Firestore Timestamp and JS Date
+    const sessionDate = selectedSession.date.toDate ? selectedSession.date.toDate() : new Date(selectedSession.date);
     return sessionDate > new Date();
   }, [selectedSession]);
 
@@ -635,11 +638,17 @@ const SurfingSessionAttendance: React.FC = () => {
                     )}
                     {selectedSession.id !== 'new' && (
                       <button
-                        onClick={handleSalesforceSync}
+                        onClick={() => {
+                          if (isFuture) {
+                            showAlert('ניתן לסנכרן סשנים רק לאחר שהם הסתיימו. סשן עתידי לא ניתן לסנכרן לדאטה בייס חיצוני.');
+                            return;
+                          }
+                          handleSalesforceSync();
+                        }}
                         disabled={sfSyncing}
                         className={`px-6 py-3 rounded-xl font-black text-sm uppercase shadow-md transition-all duration-300 flex items-center gap-2 ${
                           isFuture 
-                            ? 'bg-slate-200 text-slate-500 cursor-not-allowed opacity-70 grayscale' 
+                            ? 'bg-slate-200 text-slate-500 opacity-70 grayscale cursor-pointer' 
                             : 'bg-[#00A1E0] text-white hover:bg-[#0089bf]'
                         }`}
                       >
