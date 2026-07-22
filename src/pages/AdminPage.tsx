@@ -68,8 +68,9 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
 
   const totalEvents = allPastEventsMap.size;
 
-  // Active members participation
-  const activeMembers = members.filter((m: any) => m.isActive);
+  // Active community members participation (excludes App-Shapers from community statistics)
+  const isAppShaperDoc = (m: any) => m.role === 'Support' || (m.email || '').toLowerCase() === 'yuval.shalev@gmail.com';
+  const activeMembers = members.filter((m: any) => m.isActive && !isAppShaperDoc(m));
   
   // Get all unique attendees from these events
   const allAttendeeIds = new Set<string>();
@@ -212,12 +213,14 @@ const AdminPage: React.FC = () => {
     { id: 'ASSETS', label: 'נכסים ועיצוב', icon: <ImageIcon size={20} /> }
   ];
 
-  const isAdmin = currentUser?.role === 'Admin';
+  const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'Support' || currentUser?.email?.toLowerCase() === 'yuval.shalev@gmail.com';
 
   const handleTabChange = (id: string) => {
     setActiveTab(id as any);
   };
   const [searchTerm, setSearchTerm] = useState('');
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState<'ALL' | 'Admin' | 'Support' | 'Instructor' | 'Volunteer' | 'Member'>('ALL');
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [approvedUser, setApprovedUser] = useState<{ firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null>(null);
 
@@ -514,7 +517,7 @@ const AdminPage: React.FC = () => {
   const filteredRequests = joinRequests.filter(req => 
     (req.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
     (req.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-    req.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (req.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleApprove = async (id: string) => {
@@ -614,7 +617,7 @@ const AdminPage: React.FC = () => {
             {activeTab === 'DASHBOARD' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
                 {[
-                  { id: 'USERS', label: 'ניהול משתתפים ומתנדבים', desc: `${members.length} משתתפים/מתנדבים`, icon: Users, color: 'bg-[#00FFFF]' },
+                  { id: 'USERS', label: 'ניהול משתתפים ומתנדבים', desc: `${members.length} חברי קהילה`, icon: Users, color: 'bg-[#00FFFF]' },
                   { id: 'EVENTS', label: 'ניהול אירועים', desc: `${events.length} אירועים בלוח`, icon: Calendar, color: 'bg-[#FFD700]' },
                   { id: 'GALLERY', label: 'גלריית תמונות', desc: `${galleryItems.length} פריטים במדיה`, icon: ImageIcon, color: 'bg-[#FF007F]' },
                   { id: 'POSTS', label: 'פוסטים', desc: 'ניהול תכני האתר', icon: Newspaper, color: 'bg-[#00FFFF]' },
@@ -765,12 +768,19 @@ const AdminPage: React.FC = () => {
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Members Summary Card */}
             {(() => {
+              const isAppShaper = (m: any) => m.role === 'Support' || (m.email || '').toLowerCase() === 'yuval.shalev@gmail.com';
+              const communityMembers = members.filter(m => !isAppShaper(m));
+              const appShapers = members.filter(m => isAppShaper(m));
+
               const stats = {
-                total: members.length,
-                active: members.filter(m => m.isActive !== false).length,
-                suspended: members.filter(m => m.isActive === false).length,
-                instructors: members.filter(m => m.role === 'Instructor').length,
-                coordinators: members.filter(m => m.role === 'Admin').length,
+                communityTotal: communityMembers.length,
+                communityActive: communityMembers.filter(m => m.isActive !== false).length,
+                communitySuspended: communityMembers.filter(m => m.isActive === false).length,
+                appShapersTotal: appShapers.length,
+                coordinators: communityMembers.filter(m => m.role === 'Admin').length,
+                instructors: communityMembers.filter(m => m.role === 'Instructor').length,
+                volunteers: communityMembers.filter(m => m.role === 'Volunteer').length,
+                participants: communityMembers.filter(m => m.role === 'Member').length,
               };
               return (
                 <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
@@ -782,22 +792,28 @@ const AdminPage: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">משתתפים ומתנדבים</h3>
-                      <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול וסינון משתתפי ומתנדבי הקהילה</p>
+                      <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול חברי הקהילה וצוות האפליקציה</p>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 relative z-10">
                     <div className="flex items-center gap-2 px-4 py-2 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)] rounded-xl border border-[var(--surfer-aqua-mist)]/20 text-xs font-bold shadow-sm">
                       <span className="w-2 h-2 rounded-full bg-slate-400" />
-                      רשומים {stats.total}
+                      חברי קהילה {stats.communityTotal}
                     </div>
                     <div className="flex items-center gap-2 px-4 py-2 bg-[#2D6A4F]/10 text-[#2D6A4F] rounded-xl border border-[#2D6A4F]/20 text-xs font-bold shadow-sm">
                       <span className="w-2 h-2 rounded-full bg-[#2D6A4F] animate-pulse" />
-                      פעילים {stats.active}
+                      פעילים {stats.communityActive}
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-[#BC4749]/10 text-[#BC4749] rounded-xl border border-[#BC4749]/20 text-xs font-bold shadow-sm">
-                      <span className="w-2 h-2 rounded-full bg-[#BC4749]" />
-                      מושעים {stats.suspended}
+                    {stats.communitySuspended > 0 && (
+                      <div className="flex items-center gap-2 px-4 py-2 bg-[#BC4749]/10 text-[#BC4749] rounded-xl border border-[#BC4749]/20 text-xs font-bold shadow-sm">
+                        <span className="w-2 h-2 rounded-full bg-[#BC4749]" />
+                        מושעים {stats.communitySuspended}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-800 rounded-xl border border-amber-200 text-xs font-bold shadow-sm" title="צוות פיתוח, תחזוקה ושירות">
+                      <span className="w-2 h-2 rounded-full bg-amber-500" />
+                      אפ-שייפרים {stats.appShapersTotal}
                     </div>
                     <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-xs font-bold shadow-sm">
                       <span className="w-2 h-2 rounded-full bg-indigo-500" />
@@ -854,6 +870,43 @@ const AdminPage: React.FC = () => {
               />
             ) : (
             <div className="admin-info-card overflow-hidden">
+                {/* Search & Filter Bar */}
+                <div className="p-6 bg-white/40 border-b border-[var(--surfer-vibrant-cyan)]/10 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="relative w-full md:w-80">
+                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input 
+                      type="text" 
+                      placeholder="חיפוש לפי שם, אימייל או טלפון..." 
+                      value={userSearchTerm} 
+                      onChange={(e) => setUserSearchTerm(e.target.value)} 
+                      className="w-full pr-11 pl-4 py-2.5 bg-white/80 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--surfer-vibrant-cyan)] transition-all"
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                    {[
+                      { id: 'ALL', label: 'הכל' },
+                      { id: 'Admin', label: 'רכזים' },
+                      { id: 'Support', label: 'אפ-שייפרים' },
+                      { id: 'Instructor', label: 'מדריכים' },
+                      { id: 'Volunteer', label: 'מתנדבים' },
+                      { id: 'Member', label: 'משתתפים' },
+                    ].map(f => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setUserRoleFilter(f.id as any)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                          userRoleFilter === f.id 
+                            ? 'bg-[#00426a] text-white shadow-md' 
+                            : 'bg-white/60 text-slate-600 hover:bg-white border border-slate-200/50'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="overflow-x-auto">
                   <table className="w-full text-right">
                     <thead className="bg-[var(--surfer-aqua-mist)]/10 border-b border-[var(--surfer-vibrant-cyan)]/10">
@@ -865,7 +918,24 @@ const AdminPage: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--surfer-aqua-mist)]/10">
-                      {members.sort((a, b) => {
+                      {members.filter(member => {
+                        const name = `${member.firstName || ''} ${member.lastName || ''}`.toLowerCase();
+                        const email = (member.email || '').toLowerCase();
+                        const phone = member.mobile || '';
+                        const search = userSearchTerm.toLowerCase().trim();
+
+                        const matchesSearch = !search || name.includes(search) || email.includes(search) || phone.includes(search);
+
+                        const isAppShaper = member.role === 'Support' || email === 'yuval.shalev@gmail.com';
+                        let matchesRole = true;
+                        if (userRoleFilter === 'Support') matchesRole = isAppShaper;
+                        else if (userRoleFilter === 'Admin') matchesRole = member.role === 'Admin' && !isAppShaper;
+                        else if (userRoleFilter === 'Instructor') matchesRole = member.role === 'Instructor';
+                        else if (userRoleFilter === 'Volunteer') matchesRole = member.role === 'Volunteer';
+                        else if (userRoleFilter === 'Member') matchesRole = member.role === 'Member' && !isAppShaper;
+
+                        return matchesSearch && matchesRole;
+                      }).sort((a, b) => {
                         const aLast = a.lastName || '';
                         const bLast = b.lastName || '';
                         const aFirst = a.firstName || '';
@@ -876,7 +946,9 @@ const AdminPage: React.FC = () => {
                           return aFirst.localeCompare(bFirst, 'he');
                         }
                         return aFirst.localeCompare(bFirst, 'he');
-                      }).map(member => (
+                      }).map(member => {
+                        const isAppShaper = member.role === 'Support' || (member.email || '').toLowerCase() === 'yuval.shalev@gmail.com';
+                        return (
                         <tr key={member.id} className={`hover:bg-[var(--surfer-aqua-mist)]/10 transition-all group ${member.isActive === false ? 'grayscale opacity-60' : ''}`}>
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-4">
@@ -902,13 +974,17 @@ const AdminPage: React.FC = () => {
                           </td>
                           <td className="px-8 py-6">
                             <span className={`px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest ${
-                              member.role === 'Admin' 
-                                ? 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)]' 
-                                : member.role === 'Instructor'
-                                  ? 'bg-amber-50 text-amber-600'
-                                  : 'bg-[var(--surfer-aqua-mist)]/10 text-[#000000]'
+                              isAppShaper
+                                ? 'bg-amber-100 text-amber-800 border border-amber-300 shadow-sm'
+                                : member.role === 'Admin' 
+                                  ? 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)]' 
+                                  : member.role === 'Instructor'
+                                    ? 'bg-purple-50 text-purple-600'
+                                    : member.role === 'Volunteer'
+                                      ? 'bg-emerald-50 text-emerald-600'
+                                      : 'bg-[var(--surfer-aqua-mist)]/10 text-[#000000]'
                             }`}>
-                              {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
+                              {isAppShaper ? 'אפ-שייפר' : member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
                             </span>
                           </td>
                           <td className="px-8 py-6">
@@ -932,7 +1008,8 @@ const AdminPage: React.FC = () => {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      );
+                      })}
                     </tbody>
                   </table>
                 </div>

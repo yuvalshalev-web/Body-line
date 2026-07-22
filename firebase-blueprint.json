@@ -33,8 +33,10 @@
           "type": "string",
           "enum": [
             "Member",
+            "Volunteer",
             "Instructor",
-            "Admin"
+            "Admin",
+            "Support"
           ]
         },
         "joinedAt": {

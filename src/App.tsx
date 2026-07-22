@@ -5,6 +5,7 @@ import { useAuth } from './contexts/AuthContext';
 import { useData } from './contexts/DataContext';
 import { Loader2 } from 'lucide-react';
 import { SurfCallsWidget } from './components/SurfCallsWidget';
+import { isAdminUser } from './constants';
 
 import ErrorBoundary from './components/ErrorBoundary';
 import FloatingMenu from './components/FloatingMenu';
@@ -312,13 +313,13 @@ const App: React.FC = () => {
               <Route path="/surfer-card" element={<SurferCardPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/shaper" element={<ShaperPage />} />
-              {(currentUser.role === 'Admin' || currentUser.role === 'Instructor') && (
+              {(isAdminUser(currentUser) || currentUser.role === 'Instructor') && (
                 <>
                   <Route path="/admin-info" element={<AdminInfoPage />} />
                   <Route path="/grading" element={<MemberGradingPage />} />
                 </>
               )}
-              {currentUser.role === 'Admin' && (
+              {isAdminUser(currentUser) && (
                 <>
                   <Route path="/admin" element={<AdminPage />} />
                   <Route path="/attendance" element={<SurfingSessionAttendance />} />

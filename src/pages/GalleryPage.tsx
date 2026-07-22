@@ -10,6 +10,7 @@ import { processImage } from '../utils/imageProcessor';
 import { analyzeImage } from '../services/geminiService';
 import { GalleryItem } from '../types';
 import { syncStorageOnUpload, syncStorageOnDelete } from '../utils/storageStats';
+import { isAdminUser } from '../constants';
 
 import { useRandomHeader } from '../hooks/useRandomHeader';
 
@@ -237,7 +238,7 @@ const GalleryPage: React.FC = () => {
                   </div>
                </div>
                
-               {(currentUser?.role === 'Admin' || currentUser?.id === item.uploaderId) && (
+               {(isAdminUser(currentUser) || currentUser?.id === item.uploaderId) && (
                  <button 
                    onClick={(e) => { 
                      e.stopPropagation(); 

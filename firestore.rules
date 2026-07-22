@@ -47,19 +47,19 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && 
-        ((exists(/databases/$(database)/documents/members/$(request.auth.uid)) && 
-          get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role == 'Admin') ||
-         (('email' in request.auth.token) && request.auth.token.email.lower() in ["yuval.shalev@gmail.com", "yuval@shalev.io"]));
+        ((('email' in request.auth.token) && request.auth.token.email != null && request.auth.token.email.lower() in ["yuval.shalev@gmail.com", "yuval@shalev.io"]) ||
+         (exists(/databases/$(database)/documents/members/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role in ['Admin', 'Support']));
     }
 
     function isInstructor() {
       return isAuthenticated() && 
         exists(/databases/$(database)/documents/members/$(request.auth.uid)) && 
-        get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role == 'Instructor';
+        get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role in ['Instructor', 'Admin', 'Support'];
     }
 
     function isValidEmail(email) {
-      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+      return email is string && (email.size() == 0 || email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"));
     }
 
     function hasOnlyAllowedFields(fields) {
@@ -77,24 +77,21 @@ service cloud.firestore {
     // ===============================================================
 
     function isValidMember(data) {
-      return data.firstName is string && data.firstName.size() > 0 && data.firstName.size() < 100 &&
-             data.lastName is string && data.lastName.size() > 0 && data.lastName.size() < 100 &&
-             isValidEmail(data.email) &&
-             data.role in ['Member', 'Instructor', 'Admin'] &&
-             (!('certifications' in data) || data.certifications is list) &&
-             (!('otherCertification' in data) || data.otherCertification is string);
+      return (!('firstName' in data) || data.firstName is string) &&
+             (!('lastName' in data) || data.lastName is string) &&
+             (!('email' in data) || data.email is string) &&
+             (!('role' in data) || data.role in ['Member', 'Volunteer', 'Instructor', 'Admin', 'Support']);
     }
 
     function isValidGalleryItem(data) {
       return data.imageUrl is string && 
-             data.caption is string && data.caption.size() <= 1000;
+             (!('caption' in data) || data.caption is string);
     }
 
     function isValidJoinRequest(data) {
-      return data.firstName is string && data.firstName.size() > 0 &&
-             data.lastName is string && data.lastName.size() > 0 &&
-             isValidEmail(data.email) &&
-             data.mobile is string && data.mobile.size() >= 9;
+      return (!('firstName' in data) || data.firstName is string) &&
+             (!('lastName' in data) || data.lastName is string) &&
+             (!('email' in data) || data.email is string);
     }
 
     // ===============================================================
@@ -178,13 +175,16 @@ service cloud.firestore {
 
     match /members/{memberId} {
       allow read: if true;
-      allow create: if (
-        (isAuthenticated() && isValidMember(request.resource.data) && (isAdmin() || isOwner(memberId))) ||
+      allow create: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(memberId) ||
         (memberId == 'initial-admin' && !exists(/databases/$(database)/documents/members/initial-admin))
       );
-      allow update: if isAuthenticated() && isValidMember(request.resource.data) && 
-                    (isAdmin() || (isOwner(memberId) && request.resource.data.role == resource.data.role));
-      allow delete: if isAdmin() || (isAuthenticated() && resource.data.email.lower() == request.auth.token.email.lower());
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        (isOwner(memberId) && (!('role' in request.resource.data) || request.resource.data.role == resource.data.role))
+      );
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.email != null && request.auth.token.email != null && resource.data.email.lower() == request.auth.token.email.lower());
     }
 
     match /gallery/{document=**} {

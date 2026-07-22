@@ -301,9 +301,15 @@ const LoginPage: React.FC = () => {
           
           if (emailSnapshot.empty) {
             // Check for join request
-            const qRequest = query(collection(db, 'joinRequests'), where('email', '==', normalizedEmail), limit(1));
-            const requestSnapshot = await trackedGetDocs(qRequest);
-            if (!requestSnapshot.empty) {
+            let requestSnapshot = null;
+            try {
+              const qRequest = query(collection(db, 'joinRequests'), where('email', '==', normalizedEmail), limit(1));
+              requestSnapshot = await trackedGetDocs(qRequest);
+            } catch (reqErr) {
+              console.log('LoginPage: joinRequests query skipped or denied (expected for unauthenticated users):', reqErr);
+            }
+
+            if (requestSnapshot && !requestSnapshot.empty) {
               setError('בקשת ההצטרפות שלך עדיין בטיפול. תקבל הודעה כשהיא תאושר.');
             } else {
               setError('אימייל זה אינו רשום במערכת');
@@ -637,7 +643,7 @@ const LoginPage: React.FC = () => {
                      
                      <div className="space-y-2 mt-2">
                        <h1 className="text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-200 to-cyan-100 text-2xl sm:text-3xl font-black tracking-tight drop-shadow-[0_2px_10px_rgba(0,175,194,0.15)]">
-                         🌊 כיף לראות אותך שוב איתנו
+                         כיף לראות אותך שוב איתנו 🌊
                        </h1>
                        <p className="text-cyan-100/60 text-sm font-medium">
                          הבית הדיגיטלי של קהילת חבל זוג

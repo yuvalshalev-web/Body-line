@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Filter, User, Mail, Phone, MapPin, Waves, Loader2, MessageCircle, LayoutGrid, List, X, Users } from 'lucide-react';
+import { Search, Filter, User, Mail, Phone, MapPin, Waves, Loader2, MessageCircle, LayoutGrid, List, X, Users, Headset, Send } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Member } from '../types';
@@ -14,31 +14,50 @@ const DirectoryPage: React.FC = () => {
   const [selectedIdentity, setSelectedIdentity] = useState<string>('הכל');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [supportModalMember, setSupportModalMember] = useState<Member | null>(null);
 
-  const identities = ['הכל', 'רכז', 'מדריך', 'מתנדב', 'משתתף'];
+  const isAppShaperMember = (m: Member) => {
+    const emailLower = (m.email || '').toLowerCase();
+    return m.role === 'Support' || emailLower === 'yuval.shalev@gmail.com';
+  };
+
+  const getRoleLabel = (m: Member) => {
+    if (isAppShaperMember(m)) {
+      return 'אפ-שייפר';
+    }
+    if (m.role === 'Admin') return 'רכז';
+    if (m.role === 'Instructor') return 'מדריך';
+    if (m.role === 'Volunteer') return 'מתנדב';
+    return 'משתתף';
+  };
+
+  const identities = ['הכל', 'רכז', 'אפ-שייפר', 'מדריך', 'מתנדב', 'משתתף'];
 
   const headerImage = useRandomHeader();
 
   const filteredMembers = members.filter(member => {
+    const memberEmail = member.email || '';
     const matchesSearch = 
       `${member.firstName} ${member.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      memberEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (member.mobile && member.mobile.includes(searchTerm));
     
-    const memberIdentity = member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף';
+    const memberIdentity = getRoleLabel(member);
     const matchesIdentity = selectedIdentity === 'הכל' || memberIdentity === selectedIdentity;
     
     return matchesSearch && matchesIdentity && member.isActive !== false;
   });
 
-  const roleOrder: Record<string, number> = { 'רכז': 1, 'מדריך': 2, 'מתנדב': 3, 'משתתף': 4 };
+  const roleOrder: Record<string, number> = { 'רכז': 1, 'אפ-שייפר': 2, 'מדריך': 3, 'מתנדב': 4, 'משתתף': 5 };
   const sortedMembers = [...filteredMembers].sort((a, b) => {
-    const roleA = a.role === 'Admin' ? 'רכז' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף';
-    const roleB = b.role === 'Admin' ? 'רכז' : b.role === 'Instructor' ? 'מדריך' : b.role === 'Volunteer' ? 'מתנדב' : 'משתתף';
+    const roleA = getRoleLabel(a);
+    const roleB = getRoleLabel(b);
     return roleOrder[roleA] - roleOrder[roleB];
   });
 
   const renderMember = (member: Member, index: number, isGrid: boolean) => {
+    const isAppShaper = isAppShaperMember(member);
+
     return isGrid ? (
       <motion.div
         key={member.id}
@@ -68,12 +87,27 @@ const DirectoryPage: React.FC = () => {
         </div>
 
         {/* Info - Bottom Half */}
-        <div className="absolute bottom-0 left-0 w-full p-4 flex flex-col items-center">
-          <h3 className="text-sm sm:text-base font-black text-slate-800 truncate w-full">
+        <div className="absolute bottom-0 left-0 w-full p-3 sm:p-4 flex flex-col items-center justify-center h-1/2">
+          {/* App-Shaper Support Widget - Placed directly between Image and Name */}
+          {isAppShaper && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSupportModalMember(member);
+              }}
+              className="-mt-5 mb-1.5 z-30 flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-slate-700 via-blue-600 to-slate-500 text-white rounded-full text-[11px] font-black shadow-lg hover:scale-105 active:scale-95 transition-all border-2 border-white backdrop-blur-md cursor-pointer animate-pulse hover:animate-none"
+              title="תמיכה טכנית - App-Shaper"
+            >
+              <Headset size={13} className="text-white" />
+              <span>תמיכה טכנית</span>
+            </button>
+          )}
+
+          <h3 className="text-sm sm:text-base font-black text-slate-800 truncate w-full flex items-center justify-center gap-1">
             {member.firstName} {member.lastName}
           </h3>
           <p className="text-[10px] sm:text-xs font-bold text-slate-400 truncate w-full">
-            {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
+            {getRoleLabel(member)}
           </p>
 
           {/* Quick Actions */}
@@ -93,7 +127,7 @@ const DirectoryPage: React.FC = () => {
         className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-4 cursor-pointer"
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 relative">
             {member.avatar ? (
               <img 
                 src={member.avatar} 
@@ -106,13 +140,36 @@ const DirectoryPage: React.FC = () => {
                 <User size={20} />
               </div>
             )}
+            {isAppShaper && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSupportModalMember(member);
+                }}
+                className="absolute -top-1 -right-1 z-30 p-1.5 bg-gradient-to-r from-slate-700 to-blue-600 text-white rounded-full shadow-md hover:scale-110 transition-all border border-white/80"
+                title="תמיכה טכנית - App-Shaper"
+              >
+                <Headset size={12} />
+              </button>
+            )}
           </div>
           <div>
-            <h3 className="font-black text-slate-800">
+            <h3 className="font-black text-slate-800 flex items-center gap-2">
               {member.firstName} {member.lastName}
+              {isAppShaper && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSupportModalMember(member);
+                  }}
+                  className="px-2.5 py-0.5 text-[10px] bg-gradient-to-r from-slate-700 via-blue-600 to-slate-500 text-white font-bold rounded-full flex items-center gap-1 hover:brightness-110 transition-all cursor-pointer shadow-sm"
+                >
+                  <Headset size={10} /> תמיכה טכנית
+                </button>
+              )}
             </h3>
             <p className="text-xs font-bold text-slate-400">
-              {member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף'} • {member.email}
+              {getRoleLabel(member)} • {member.email}
             </p>
           </div>
         </div>
@@ -128,14 +185,14 @@ const DirectoryPage: React.FC = () => {
     let lastRole: string | null = null;
 
     sortedMembers.forEach((member, index) => {
-      const currentRole = member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף';
+      const currentRole = getRoleLabel(member);
       
       if (!lastRole || lastRole !== currentRole) {
         rendered.push(
           <div key={`sep-${index}`} className="col-span-full flex items-center gap-4 my-6">
             <div className="flex-grow border-t border-slate-200" />
             <span className="text-sm font-black text-slate-400 px-2">
-              {currentRole === 'רכז' ? 'רכזים' : currentRole === 'מדריך' ? 'מדריכים' : currentRole === 'מתנדב' ? 'מתנדבים' : 'משתתפים'}
+              {currentRole === 'רכז' ? 'רכזים' : currentRole === 'אפ-שייפר' ? 'אפ-שייפר' : currentRole === 'מדריך' ? 'מדריכים' : currentRole === 'מתנדב' ? 'מתנדבים' : 'משתתפים'}
             </span>
             <div className="flex-grow border-t border-slate-200" />
           </div>
@@ -293,6 +350,117 @@ const DirectoryPage: React.FC = () => {
               <div className="p-8 max-h-[90vh] overflow-y-auto">
                 <PlayerCard userId={selectedMemberId} />
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* App-Shaper Tech Support Modal */}
+      <AnimatePresence>
+        {supportModalMember && (
+          <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4" dir="rtl">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSupportModalMember(null)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 sm:p-8 z-10 text-center"
+            >
+              {/* Top Accent Icon & Close */}
+              <button 
+                onClick={() => setSupportModalMember(null)}
+                className="absolute top-4 left-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-slate-700 via-blue-600 to-slate-500 text-white shadow-lg shadow-slate-500/30 mb-4 mx-auto">
+                <Headset size={32} />
+              </div>
+
+              <h3 className="text-xl font-black text-slate-800 mb-1">
+                תמיכה טכנית - App-Shaper
+              </h3>
+              <p className="text-xs font-bold text-slate-500 mb-6">
+                פנייה ישירה למפתח המערכת ({supportModalMember.firstName} {supportModalMember.lastName})
+              </p>
+
+              <div className="space-y-3 mb-6">
+                {/* WhatsApp Button */}
+                <button
+                  onClick={() => {
+                    const mobile = supportModalMember.mobile ? supportModalMember.mobile.replace(/\D/g, '') : '';
+                    const finalMobile = mobile ? (mobile.startsWith('0') ? '972' + mobile.substring(1) : mobile) : '972540000000';
+                    const msg = encodeURIComponent('היי יובל, אשמח לקבל עזרה טכנית במערכת BodyLine');
+                    window.open(`https://wa.me/${finalMobile}?text=${msg}`, '_blank');
+                  }}
+                  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-green-50 hover:from-emerald-100 hover:to-green-100 border border-emerald-200/80 rounded-2xl text-emerald-800 transition-all group cursor-pointer shadow-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                      <MessageCircle size={20} />
+                    </div>
+                    <div className="text-right">
+                      <div className="font-black text-sm">פנייה בוואטסאפ (WhatsApp)</div>
+                      <div className="text-[11px] font-bold text-emerald-600">מענה מהיר לשאלות ותקלות</div>
+                    </div>
+                  </div>
+                  <Send size={18} className="text-emerald-600 group-hover:-translate-x-1 transition-transform" />
+                </button>
+
+                {/* Email Button */}
+                <button
+                  onClick={() => {
+                    const email = supportModalMember.email || 'yuval.shalev@gmail.com';
+                    const subject = encodeURIComponent('פנייה לתמיכה טכנית - BodyLine');
+                    const body = encodeURIComponent('היי יובל,\n\nאשמח לקבל עזרה בנושא: ');
+                    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+                  }}
+                  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-sky-50 to-cyan-50 hover:from-sky-100 hover:to-cyan-100 border border-sky-200/80 rounded-2xl text-sky-900 transition-all group cursor-pointer shadow-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                      <Mail size={20} />
+                    </div>
+                    <div className="text-right">
+                      <div className="font-black text-sm">שליחת אימייל</div>
+                      <div className="text-[11px] font-bold text-sky-600">{supportModalMember.email || 'yuval.shalev@gmail.com'}</div>
+                    </div>
+                  </div>
+                  <Send size={18} className="text-sky-600 group-hover:-translate-x-1 transition-transform" />
+                </button>
+
+                {/* Phone Call Button if mobile exists */}
+                {supportModalMember.mobile && (
+                  <button
+                    onClick={() => {
+                      window.location.href = `tel:${supportModalMember.mobile}`;
+                    }}
+                    className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200/80 rounded-2xl text-blue-900 transition-all group cursor-pointer shadow-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                        <Phone size={20} />
+                      </div>
+                      <div className="text-right">
+                        <div className="font-black text-sm">שיחה טלפונית</div>
+                        <div className="text-[11px] font-bold text-blue-600">{supportModalMember.mobile}</div>
+                      </div>
+                    </div>
+                    <Phone size={18} className="text-blue-600" />
+                  </button>
+                )}
+              </div>
+
+              <p className="text-[11px] text-slate-400 font-bold">
+                App-Shaper • מפתח המערכת וכל התשתיות הטכנולוגיות
+              </p>
             </motion.div>
           </div>
         )}

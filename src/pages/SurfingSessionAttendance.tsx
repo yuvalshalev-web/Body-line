@@ -18,6 +18,7 @@ import {
 import { useData } from '../contexts/DataContext';
 import { useModal } from '../contexts/ModalContext';
 import { useAuth } from '../contexts/AuthContext';
+import { isAdminUser } from '../constants';
 import { Member } from '../types';
 import { formatDate } from '../utils/dateUtils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -227,7 +228,7 @@ const SurfingSessionAttendance: React.FC = () => {
                   <span>הוסף סשן ידנית</span>
                 </motion.button>
                 
-                {currentUser?.role === 'Admin' && (
+                {isAdminUser(currentUser) && (
                   <motion.button 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}

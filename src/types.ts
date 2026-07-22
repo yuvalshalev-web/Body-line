@@ -16,7 +16,7 @@ export interface Member {
   mobile: string;
   avatar: string;
   bio: string;
-  role: 'Member' | 'Volunteer' | 'Instructor' | 'Admin';
+  role: 'Member' | 'Volunteer' | 'Instructor' | 'Admin' | 'Support';
   joinedAt: string;
   deactivatedAt?: any;
   isActive?: boolean; // true = active, false = inactive

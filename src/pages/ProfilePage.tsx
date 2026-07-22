@@ -183,7 +183,7 @@ const ProfileAvatar = React.memo(({
        <h3 className="text-3xl md:text-5xl font-black text-[#0f172a] tracking-tight">{firstName} {lastName}</h3>
        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
          <span className="px-3 py-1 md:px-4 md:py-1.5 bg-sky-100 text-sky-700 rounded-full text-[10px] md:text-[11px] font-black uppercase tracking-widest border border-sky-200 shadow-sm">
-           {role === 'Admin' ? 'רכז' : role === 'Instructor' ? 'מדריך' : role === 'Volunteer' ? 'מתנדב' : 'משתתף נבחרת'}
+           {role === 'Admin' ? 'רכז' : role === 'Support' ? 'אפ-שייפר' : role === 'Instructor' ? 'מדריך' : role === 'Volunteer' ? 'מתנדב' : 'משתתף נבחרת'}
          </span>
          <span className="hidden md:block w-1.5 h-1.5 bg-slate-200 rounded-full" />
          <p className="text-slate-400 font-bold text-[10px] md:text-[11px] uppercase tracking-widest">בקהילה מאז {new Date(joinedAt).toLocaleDateString('he-IL')}</p>

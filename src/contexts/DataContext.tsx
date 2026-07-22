@@ -19,7 +19,7 @@ import {
 } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../utils/dateUtils';
 import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore, SurfCall } from '../types';
-import { SUPER_ADMIN_EMAIL } from '../constants';
+import { SUPER_ADMIN_EMAIL, isAdminUser } from '../constants';
 import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageStats';
 import { storage } from '../utils/storage';
@@ -241,7 +241,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [currentUser?.role]);
 
   useEffect(() => {
-    if (currentUser?.role === 'Admin' && !isLoading) {
+    if (isAdminUser(currentUser) && !isLoading) {
       seedActiveSession();
     }
   }, [currentUser?.role, isLoading, seedActiveSession]);
@@ -403,7 +403,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
 
         // Log to history if Admin - only once per hour to prevent spam
-        if (currentUser?.role === 'Admin') {
+        if (isAdminUser(currentUser)) {
           const now = new Date();
           const hourKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}T${now.getHours()}:00:00`;
           const lastLogKey = 'last_sea_condition_log_hour';
@@ -613,7 +613,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     let unsubPerformance: (() => void) | null = null;
-    if (currentUser.role === 'Admin' || currentUser.role === 'Instructor') {
+    if (isAdminUser(currentUser) || currentUser.role === 'Instructor') {
       unsubPerformance = trackedOnSnapshot(query(collection(db, 'performance_scores'), limit(500)), (snapshot) => {
         const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
         console.log('performanceScores updated:', scores);
@@ -647,7 +647,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     let unsubRequests: (() => void) | null = null;
-    if (currentUser.role === 'Admin') {
+    if (isAdminUser(currentUser)) {
       unsubRequests = trackedOnSnapshot(query(collection(db, 'joinRequests'), limit(200)), (snapshot) => {
         setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
       });

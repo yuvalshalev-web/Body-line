@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, Variants } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { isAdminUser } from '../constants';
 import { 
   Waves, 
   Users, 
@@ -113,7 +114,7 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
     onClose();
   };
 
-  const isAdmin = currentUser?.role === 'Admin';
+  const isAdmin = isAdminUser(currentUser);
   const isInstructor = currentUser?.role === 'Instructor';
 
   const allNavItems = React.useMemo(() => [

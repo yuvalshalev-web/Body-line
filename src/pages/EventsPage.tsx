@@ -5,6 +5,7 @@ import { Calendar, MapPin, Clock, User, Users, X, Navigation, Plus, Edit2, Trash
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { Event } from '../types';
 import { EventEditor } from '../components/admin/EventEditor';
+import { isAdminUser } from '../constants';
 
 const EventsPage: React.FC = () => {
   const headerImage = useRandomHeader();
@@ -19,7 +20,7 @@ const EventsPage: React.FC = () => {
   
   const sortedEvents = [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const roleFilteredEvents = sortedEvents.filter(e => {
-    if (currentUser?.role === 'Admin') return true;
+    if (isAdminUser(currentUser)) return true;
     if (e.type === 'COMMUNITY') return true;
     if (e.type === 'MEMBER' && currentUser?.role === 'Member') return true;
     if (e.type === 'VOLUNTEER' && currentUser?.role === 'Volunteer') return true;
@@ -66,7 +67,7 @@ const EventsPage: React.FC = () => {
   };
 
   const openModal = (event: Event) => {
-    if (currentUser && (event.creatorId === currentUser.id || currentUser.role === 'Admin')) {
+    if (currentUser && (event.creatorId === currentUser.id || isAdminUser(currentUser))) {
       setEditingEvent(event);
       setIsEditing(true);
     } else {
@@ -260,7 +261,7 @@ const EventsPage: React.FC = () => {
                     מארגן האירוע: {getCreatorName(selectedEvent.creatorId)}
                   </span>
                 )}
-                {(currentUser?.id === selectedEvent.creatorId || currentUser?.role === 'Admin') && (
+                {(currentUser?.id === selectedEvent.creatorId || isAdminUser(currentUser)) && (
                   <div className="flex gap-2">
                     <button 
                       onClick={() => handleEditEvent(selectedEvent)}

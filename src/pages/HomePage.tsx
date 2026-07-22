@@ -27,6 +27,7 @@ import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { getNextSessionDate } from '../services/rolloverService';
+import { isAdminUser } from '../constants';
 import { getBodyLineStats } from '../utils/bodyLineStats';
 import { SURF_QUOTES } from '../data/surfQuotes';
 import { SURF_DICTIONARY } from '../data/surfDictionary';
@@ -229,7 +230,7 @@ const HomePage: React.FC = () => {
     return events.filter(e => {
       if (e.isArchived) return false;
       const hasAccess = (() => {
-        if (currentUser?.role === 'Admin') return true;
+        if (isAdminUser(currentUser)) return true;
         if (e.type === 'COMMUNITY') return true;
         if (e.type === 'MEMBER' && currentUser?.role === 'Member') return true;
         if (e.type === 'VOLUNTEER' && currentUser?.role === 'Volunteer') return true;
@@ -296,7 +297,7 @@ const HomePage: React.FC = () => {
                 loading="lazy"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
-                  console.error('Hero image failed to load, falling back to Elite Alabaster background:', heroBg);
+                  console.warn('Hero image failed to load, falling back to Elite Alabaster background:', heroBg);
                   setHeroImageError(true);
                 }}
               />

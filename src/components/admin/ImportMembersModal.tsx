@@ -50,7 +50,7 @@ export default function ImportMembersModal({ isOpen, onClose }: ImportMembersMod
             }
 
             // Check if email already exists
-            const emailExists = members.some(m => m.email.toLowerCase() === row.email.trim().toLowerCase());
+            const emailExists = members.some(m => (m.email || '').toLowerCase() === row.email.trim().toLowerCase());
             if (emailExists) {
               failedCount++;
               errors.push(`אימייל כבר קיים במערכת: ${row.email}`);

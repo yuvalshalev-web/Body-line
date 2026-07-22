@@ -78,8 +78,12 @@ export const SurfCallsWidget: React.FC = () => {
 
       autocompleteRef.current.addListener('place_changed', () => {
         const place = autocompleteRef.current.getPlace();
-        if (place.formatted_address || place.name) {
-          setNewCall(prev => ({ ...prev, customBeach: place.name || place.formatted_address }));
+        const selectedValue = place.name || place.formatted_address || customBeachRef.current?.value || '';
+        if (selectedValue) {
+          setNewCall(prev => ({ ...prev, customBeach: selectedValue }));
+          if (customBeachRef.current) {
+            customBeachRef.current.value = selectedValue;
+          }
         }
       });
     } catch (err) {
@@ -175,7 +179,7 @@ export const SurfCallsWidget: React.FC = () => {
 
           <div className="relative flex flex-col items-center">
             <span className="text-2xl group-hover:animate-bounce transform transition-transform duration-500" style={{ lineHeight: 1 }}>🏄‍♂️</span>
-            <span className="text-[9px] font-black uppercase tracking-[0.15em] mt-1 text-white/90 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">LIVE</span>
+            <span className="text-[13px] font-black mt-1 text-white/90 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">מי בא?</span>
           </div>
 
           <AnimatePresence>
@@ -220,7 +224,7 @@ export const SurfCallsWidget: React.FC = () => {
                       className="px-6 py-3 bg-sky-500 text-white rounded-full font-bold shadow-md hover:bg-sky-600 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Plus size={20} />
-                      {hasActiveCallByUser ? 'כבר פתחת קריאה' : 'יצירת קריאה חדשה'}
+                      {hasActiveCallByUser ? 'כבר שלחת הזמנה' : 'יצירת הזמנה חדשה'}
                     </button>
                   </div>
 
@@ -378,7 +382,7 @@ export const SurfCallsWidget: React.FC = () => {
               ) : (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-black text-lg text-slate-800">יצירת קריאה לים</h3>
+                    <h3 className="font-black text-lg text-slate-800">יצירת הזמנה לים</h3>
                     <button onClick={() => setIsCreating(false)} className="text-sm text-slate-400 hover:text-slate-600">חזור</button>
                   </div>
 
@@ -399,9 +403,9 @@ export const SurfCallsWidget: React.FC = () => {
                         ref={customBeachRef}
                         type="text"
                         placeholder="איזה חוף?"
-                        value={newCall.customBeach}
+                        value={newCall.customBeach || ''}
                         onChange={e => setNewCall({ ...newCall, customBeach: e.target.value })}
-                        className="w-full p-3 mt-2 rounded-xl bg-slate-50 border border-slate-200 font-bold outline-none focus:border-sky-500"
+                        className="w-full p-3 mt-2 rounded-xl bg-slate-50 border border-slate-200 font-bold outline-none focus:border-sky-500 text-slate-800"
                       />
                     )}
                   </div>

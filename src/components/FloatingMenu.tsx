@@ -95,7 +95,7 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ scrollRef, onOpenDrawer, on
               />
             </div>
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] leading-none text-white/90 drop-shadow-md">Menu</span>
+          <span className="text-[13px] font-black leading-none text-white/90 drop-shadow-md">תפריט</span>
         </div>
       </motion.button>
     </div>

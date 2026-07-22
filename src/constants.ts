@@ -1,6 +1,20 @@
 
 export const SUPER_ADMIN_EMAIL = 'yuval.shalev@gmail.com';
 
+export const isAdminUser = (user: { role?: string; email?: string } | null | undefined): boolean => {
+  if (!user) return false;
+  return (
+    user.role === 'Admin' ||
+    user.role === 'Support' ||
+    user.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()
+  );
+};
+
+export const isAppShaperUser = (user: { role?: string; email?: string } | null | undefined): boolean => {
+  if (!user) return false;
+  return user.role === 'Support' || user.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+};
+
 export const RANKS = [
   { level:1, id:"pop-upist",      he:"פופ-אפיסט",  min:0,   max:5,   accent:"#00B4D8", perks:["מנסה לעמוד בלי ליפול","שותה יותר מים מים המלח","מפחד מהגלשן של עצמך"],                            desc:"המסע מתחיל. כל גלשן אגדי היה כאן." },
   { level:2, id:"corner-catcher", he:"קצפ-אפיסט",  min:5,   max:15,  accent:"#D4A373", perks:["תופס קצף כמו מקצוען","עדיין מחפש את הבלנס","הגלשן תמיד בורח"],                desc:"המים מכירים אותך. אתה מתחיל לקרוא גלים." },

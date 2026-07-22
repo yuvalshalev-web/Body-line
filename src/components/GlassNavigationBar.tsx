@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Users, Image, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { isAdminUser } from '../constants';
 import { motion } from 'motion/react';
 
 interface GlassNavigationBarProps {
@@ -97,7 +98,7 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
     { path: '/gallery', icon: <Image size={20} />, label: 'גלריה' },
   ];
 
-  if (currentUser?.role === 'Admin') {
+  if (isAdminUser(currentUser)) {
     navItems.push({ path: '/admin', icon: <Settings size={20} />, label: 'ניהול' });
   }
 
