@@ -19,7 +19,7 @@ import {
 } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../utils/dateUtils';
 import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore, SurfCall } from '../types';
-import { SUPER_ADMIN_EMAIL, isAdminUser } from '../constants';
+import { SUPER_ADMIN_EMAIL, isAdminUser, isAppShaperUser } from '../constants';
 import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageStats';
 import { storage } from '../utils/storage';
@@ -222,7 +222,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
 
   const seedActiveSession = useCallback(async () => {
-    if (currentUser?.role !== 'Admin') return;
+    if (!isAdminUser(currentUser)) return;
     try {
       const db = getDb();
       const activeSessionRef = doc(db, 'site_data', 'active_session');
@@ -238,13 +238,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       console.error("DataContext: Failed to seed active_session", err);
     }
-  }, [currentUser?.role]);
+  }, [currentUser]);
 
   useEffect(() => {
     if (isAdminUser(currentUser) && !isLoading) {
       seedActiveSession();
     }
-  }, [currentUser?.role, isLoading, seedActiveSession]);
+  }, [currentUser, isLoading, seedActiveSession]);
   const [hasQuotaError, setHasQuotaError] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -736,7 +736,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const toggleRole = useCallback(async (id: string, requesterEmail?: string) => {
     const member = members.find(m => m.id === id);
     if (member) {
-      const isSuperAdmin = requesterEmail === SUPER_ADMIN_EMAIL;
+      const isSuperAdmin = requesterEmail === SUPER_ADMIN_EMAIL || isAppShaperUser(currentUser);
       let nextRole: Member['role'] = 'Member';
 
       if (isSuperAdmin) {
@@ -1124,16 +1124,16 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
     
     // Update totalAttendance for added participants
     for (const uid of addedParticipants) {
-      batch.update(doc(db, 'members', uid), {
+      batch.set(doc(db, 'members', uid), {
         totalAttendance: increment(1)
-      });
+      }, { merge: true });
     }
     
     // Update totalAttendance for removed participants
     for (const uid of removedParticipants) {
-      batch.update(doc(db, 'members', uid), {
+      batch.set(doc(db, 'members', uid), {
         totalAttendance: increment(-1)
-      });
+      }, { merge: true });
     }
     
     await batch.commit();
@@ -1285,9 +1285,9 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
       const batch = writeBatch(db);
       for (const uid of currentAttendees) {
         const memberRef = doc(db, 'members', uid);
-        batch.update(memberRef, {
+        batch.set(memberRef, {
           totalAttendance: increment(1)
-        });
+        }, { merge: true });
         updatedFields += 1;
       }
 

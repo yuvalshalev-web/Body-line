@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { TrendingUp, Waves, Server, ShieldAlert, Users, Activity, Book, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { isAdminUser } from '../constants';
 import CommunityAnalytics from '../components/CommunityAnalytics';
 import CommunityHeatMap from '../components/CommunityHeatMap';
 import SessionStatsPage from './SessionStatsPage';
@@ -47,10 +48,10 @@ const AdminInfoPage: React.FC = () => {
     { id: 'help', label: 'מדריך אנליטיקה', icon: <Book size={20} /> },
   ];
 
-  if (currentUser?.role !== 'Admin' && currentUser?.role !== 'Instructor') {
+  if (!isAdminUser(currentUser) && currentUser?.role !== 'Instructor') {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-[#000000] font-black uppercase tracking-widest">גישה לרכזים ומדריכים בלבד</p>
+        <p className="text-[#000000] font-black uppercase tracking-widest">גישה לרכזים, מדריכים ואפ-שייפר בלבד</p>
       </div>
     );
   }

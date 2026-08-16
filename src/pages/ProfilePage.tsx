@@ -254,9 +254,6 @@ const ProfilePage: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const [boardFeet, setBoardFeet] = useState('');
-  const [boardInches, setBoardInches] = useState('');
-
   const [toast, setToast] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -370,13 +367,7 @@ const ProfilePage: React.FC = () => {
       { label: 'טיקטוק', value: formData.tiktokUrl },
       { label: 'לינקדאין', value: formData.linkedinUrl },
       { label: 'טוויטר / X', value: formData.twitterUrl },
-      { label: 'אתר אישי', value: formData.websiteUrl },
-      { label: 'משקל', value: formData.weight },
-      { label: 'גובה', value: formData.height },
-      { label: 'רמת גלישה', value: formData.surfingLevel },
-      { label: 'רמת כושר', value: formData.fitnessLevel },
-      { label: 'נפח גלשן נוכחי', value: formData.currentBoardVolume },
-      { label: 'אורך גלשן נוכחי', value: formData.currentBoardLength }
+      { label: 'אתר אישי', value: formData.websiteUrl }
     ];
     
     const missing = fieldMap.filter(f => !f.value).map(f => f.label);
@@ -409,78 +400,6 @@ const ProfilePage: React.FC = () => {
     setFormData(prev => prev ? ({ ...prev, [field]: value }) : null);
     setIsDirty(true);
   }, []);
-
-  const parseBoardLength = useCallback((lengthStr: string | undefined | null) => {
-    if (!lengthStr) return { feet: '', inches: '' };
-    const cleanStr = lengthStr.trim();
-    
-    // Check standard format X'Y"
-    const match = cleanStr.match(/^(\d+)'\s*(\d+)"?$/);
-    if (match) {
-      return { feet: match[1], inches: match[2] };
-    }
-    
-    // Check format X'
-    const matchFeetOnly = cleanStr.match(/^(\d+)'?$/);
-    if (matchFeetOnly) {
-      return { feet: matchFeetOnly[1], inches: '' };
-    }
-    
-    // Try to match any two numbers
-    const numbers = cleanStr.match(/\d+/g);
-    if (numbers && numbers.length >= 2) {
-      return { feet: numbers[0], inches: numbers[1] };
-    } else if (numbers && numbers.length === 1) {
-      if (cleanStr.includes('"') && !cleanStr.includes("'")) {
-        return { feet: '', inches: numbers[0] };
-      }
-      return { feet: numbers[0], inches: '' };
-    }
-    
-    return { feet: '', inches: '' };
-  }, []);
-
-  // Sync from formData to local inputs on component load/change profile
-  useEffect(() => {
-    if (formData?.currentBoardLength) {
-      const { feet, inches } = parseBoardLength(formData.currentBoardLength);
-      setBoardFeet(feet);
-      setBoardInches(inches);
-    } else {
-      setBoardFeet('');
-      setBoardInches('');
-    }
-  }, [formData?.id]);
-
-  const handleFeetChange = (val: string) => {
-    const digits = val.replace(/\D/g, '');
-    setBoardFeet(digits);
-    
-    let formatted = '';
-    if (digits) {
-      formatted += `${digits}'`;
-    }
-    if (boardInches) {
-      formatted += `${boardInches}"`;
-    }
-    handleFieldChange('currentBoardLength', formatted);
-  };
-
-  const handleInchesChange = (val: string) => {
-    const digits = val.replace(/\D/g, '');
-    setBoardInches(digits);
-    
-    let formatted = '';
-    if (boardFeet) {
-      formatted += `${boardFeet}'`;
-    } else if (digits) {
-      formatted += "0'";
-    }
-    if (digits) {
-      formatted += `${digits}"`;
-    }
-    handleFieldChange('currentBoardLength', formatted);
-  };
 
   const handleMobileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     handleFieldChange('mobile', formatMobileNumber(e.target.value));
@@ -1424,109 +1343,6 @@ const ProfilePage: React.FC = () => {
                   <SocialInput label="LinkedIn" value={formData.linkedinUrl} onChange={handleLinkedInChange} icon={Linkedin} brandColor="#0A66C2" placeholder="קישור לפרופיל לינקדאין" />
                   <SocialInput label="Twitter / X" value={formData.twitterUrl} onChange={handleTwitterChange} icon={Twitter} brandColor="#000000" placeholder="קישור לפרופיל טוויטר" />
                   <SocialInput label="Personal Website" value={formData.websiteUrl} onChange={handleWebsiteChange} icon={Globe} brandColor="#00AFC2" placeholder="קישור לאתר אישי" />
-                </div>
-              </section>
-
-              <section className="space-y-6 md:space-y-8">
-                <SectionHeader 
-                  icon={Sparkles} 
-                  title="פרופיל גלישה" 
-                  subtitle="Surfing Profile"
-                  colorClass="text-sky-600" 
-                  bgColorClass="bg-sky-100" 
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                  <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">משקל (ק"ג)</label>
-                    <input 
-                      type="number" 
-                      value={formData.weight || ''} 
-                      onChange={e => handleFieldChange('weight', Number(e.target.value))} 
-                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a]" 
-                    />
-                  </div>
-                  <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">גובה (ס"מ)</label>
-                    <input 
-                      type="number" 
-                      value={formData.height || ''} 
-                      onChange={e => handleFieldChange('height', Number(e.target.value))} 
-                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a]" 
-                    />
-                  </div>
-                  <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">רמת גלישה</label>
-                    <select 
-                      value={formData.surfingLevel || ''} 
-                      onChange={e => handleFieldChange('surfingLevel', e.target.value)}
-                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a] appearance-none"
-                    >
-                      <option value="">בחר רמת גלישה</option>
-                      <option value="Learner">לומד (Learner)</option>
-                      <option value="Beginner">מתחיל (Beginner)</option>
-                      <option value="Intermediate">בינוני (Intermediate)</option>
-                      <option value="Advanced">מתקדם (Advanced)</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">רמת כושר</label>
-                    <select 
-                      value={formData.fitnessLevel || ''} 
-                      onChange={e => handleFieldChange('fitnessLevel', e.target.value)}
-                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a] appearance-none"
-                    >
-                      <option value="">בחר רמת כושר</option>
-                      <option value="Low">נמוכה (Low)</option>
-                      <option value="Average">ממוצעת (Average)</option>
-                      <option value="High">גבוהה (High)</option>
-                      <option value="Elite">עילית (Elite)</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">נפח גלשן נוכחי (ליטר)</label>
-                    <input 
-                      type="number" 
-                      value={formData.currentBoardVolume || ''} 
-                      onChange={e => handleFieldChange('currentBoardVolume', Number(e.target.value))} 
-                      className="w-full p-4 md:p-5 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a]" 
-                    />
-                  </div>
-                  <div className="space-y-2 group">
-                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest pr-3 group-focus-within:text-sky-600 transition-colors">אורך גלשן נוכחי (פיט ואינצ'ים)</label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1 relative">
-                        <input 
-                          type="text" 
-                          pattern="\d*"
-                          inputMode="numeric"
-                          value={boardInches} 
-                          onChange={e => handleInchesChange(e.target.value)} 
-                          className="w-full p-4 md:p-5 pl-10 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a] text-center" 
-                          placeholder="10"
-                        />
-                        <span className="absolute left-4 top-[18px] md:top-[22px] text-xs font-bold text-slate-400 pointer-events-none">in</span>
-                        <div className="text-[10px] text-slate-400 pr-2">אינץ' (Inches)</div>
-                      </div>
-                      <div className="space-y-1 relative">
-                        <input 
-                          type="text" 
-                          pattern="\d*"
-                          inputMode="numeric"
-                          value={boardFeet} 
-                          onChange={e => handleFeetChange(e.target.value)} 
-                          className="w-full p-4 md:p-5 pl-10 bg-white/70 border border-white/80 shadow-sm rounded-[1.25rem] font-bold outline-none focus:bg-white focus:border-sky-200 transition-all text-[#0f172a] text-center" 
-                          placeholder="6"
-                        />
-                        <span className="absolute left-4 top-[18px] md:top-[22px] text-xs font-bold text-slate-400 pointer-events-none">ft</span>
-                        <div className="text-[10px] text-slate-400 pr-2">פיט (Feet)</div>
-                      </div>
-                    </div>
-                    {formData.currentBoardLength && (
-                      <div className="text-xs font-semibold text-slate-500 pr-3 mt-1">
-                        תצוגה מנורמלת: <span className="font-mono text-sky-600 font-bold" dir="ltr">{formData.currentBoardLength}</span>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </section>
             </div>

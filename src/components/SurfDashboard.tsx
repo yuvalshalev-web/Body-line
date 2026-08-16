@@ -82,12 +82,7 @@ export const SurfDashboard: React.FC = () => {
           
           const rawMeters = data.daily.wave_height_max[idx] || 0;
           const period = data.daily.wave_period_max ? data.daily.wave_period_max[idx] || 0 : 0;
-          let heightCm = Math.max(0, Math.round((rawMeters * 100) * 0.65 - 10));
-          if (heightCm < 25) {
-             heightCm = 0;
-          } else {
-             heightCm = Math.round(heightCm / 10) * 10;
-          }
+          const heightCm = Math.max(0, Math.round(rawMeters * 100));
           
           return {
             id: timeStr,
@@ -115,23 +110,121 @@ export const SurfDashboard: React.FC = () => {
   }, [activeSpot]);
 
   const getWaveConditionGrade = (height: number, period: number = 0) => {
-    // Wave Power Calculation (kW/m) based on Oceanography Wave Physics: P ≈ 0.5 * H^2 * T
-    const power = period > 0 ? 0.5 * (height * height) * period : 0;
+    // Physical wave height in cm for intuitive Israeli surf scale calibration
+    const cm = Math.round(height * 100);
+    const isLongPeriod = period >= 6.5;
+    const isShortPeriod = period > 0 && period < 4.5;
 
-    // Extreme conditions as specified:
-    if (power >= 20 || height >= 4.0) return { score: 10, name: 'הירושימה / דאבל', hand: '🙌', symbol: '🌪️', color: 'text-purple-600', bg: 'bg-purple-100/50', border: 'border-purple-200' };
-    if (power >= 10 || height >= 2.5) return { score: 9, name: 'ים סוער / עוצמתי', hand: '🤙', symbol: '💨', color: 'text-emerald-600', bg: 'bg-emerald-100/50', border: 'border-emerald-200' };
-    if (power >= 5 || height >= 1.5) return { score: 8, name: 'גבוה וחזק', hand: '👍', symbol: '🌊', color: 'text-cyan-600', bg: 'bg-cyan-100/50', border: 'border-cyan-200' };
+    // 1. Extreme / Storm (2.5m+)
+    if (cm >= 250) {
+      return { score: 10, name: 'ים סוער / אקסטרים', hand: '🙌', symbol: '🌪️', color: 'text-purple-600', bg: 'bg-purple-100/50', border: 'border-purple-200' };
+    }
     
-    // Surfable conditions - incorporating power as the true engine of waves
-    if (power >= 2.5 || height >= 1.3) return { score: 7, name: 'גובה ראש + / קירות', hand: '👌', symbol: '🎯', color: 'text-blue-600', bg: 'bg-blue-100/50', border: 'border-blue-200' };
-    if (power >= 1.5 || height >= 1.1) return { score: 6, name: 'גובה ראש / מנוע ארוך', hand: '🤘', symbol: '✨', color: 'text-indigo-600', bg: 'bg-indigo-100/50', border: 'border-indigo-200' };
-    if (power >= 0.8 || height >= 0.9) return { score: 5, name: 'גובה חזה', hand: '🖐️', symbol: '🪵', color: 'text-amber-600', bg: 'bg-amber-100/50', border: 'border-amber-200' };
-    if (power >= 0.4 || height >= 0.7) return { score: 4, name: 'גובה מותן (Waist)', hand: '🤏', symbol: '🦵', color: 'text-orange-600', bg: 'bg-orange-100/50', border: 'border-orange-200' };
-    if (power >= 0.1 || height >= 0.4) return { score: 3, name: 'גובה ברך (Knee)', hand: '🫳', symbol: '🦶', color: 'text-red-500', bg: 'bg-red-100/50', border: 'border-red-200' };
-    if (height >= 0.2) return { score: 2, name: 'קרסול / קצף (Ankle)', hand: '🤏', symbol: '〰️', color: 'text-slate-500', bg: 'bg-slate-100/50', border: 'border-slate-200' };
-    if (height > 0) return { score: 1, name: 'זכוכית (Glassy)', hand: '🤲', symbol: '🪟', color: 'text-slate-400', bg: 'bg-slate-100/50', border: 'border-slate-200' };
-    return { score: 0, name: 'בריכה (Flat)', hand: '👎', symbol: '🏊‍♀️', color: 'text-slate-400', bg: 'bg-slate-100/50', border: 'border-slate-200' };
+    // 2. Double Overhead / High Waves (1.85m - 2.5m)
+    if (cm >= 185) {
+      return { score: 9, name: 'דאבל אוברהד / עוצמתי', hand: '🤙', symbol: '💨', color: 'text-emerald-600', bg: 'bg-emerald-100/50', border: 'border-emerald-200' };
+    }
+
+    // 3. Overhead / Head+ (1.35m - 1.85m)
+    if (cm >= 135) {
+      return { 
+        score: 8, 
+        name: isLongPeriod ? 'ראש + / קירות פתוחים' : 'גובה ראש + (Overhead)', 
+        hand: '👍', 
+        symbol: '🌊', 
+        color: 'text-cyan-600', 
+        bg: 'bg-cyan-100/50', 
+        border: 'border-cyan-200' 
+      };
+    }
+    
+    // 4. Head High (1.05m - 1.35m / 110-135cm) - Classic 120cm Israeli Surf
+    if (cm >= 105) {
+      return { 
+        score: isLongPeriod ? 7 : 6, 
+        name: isLongPeriod ? 'גובה ראש / מנוע ארוך' : isShortPeriod ? 'גובה ראש / סוול צפוף' : 'גובה ראש (Head High)', 
+        hand: '🤘', 
+        symbol: '✨', 
+        color: 'text-indigo-600', 
+        bg: 'bg-indigo-100/50', 
+        border: 'border-indigo-200' 
+      };
+    }
+
+    // 5. Chest High (75cm - 105cm)
+    if (cm >= 75) {
+      return { 
+        score: isLongPeriod ? 6 : 5, 
+        name: isLongPeriod ? 'גובה חזה / קירות מסודרים' : 'גובה חזה (Chest High)', 
+        hand: '🖐️', 
+        symbol: '🪵', 
+        color: 'text-blue-600', 
+        bg: 'bg-blue-100/50', 
+        border: 'border-blue-200' 
+      };
+    }
+
+    // 6. Waist High (45cm - 75cm)
+    if (cm >= 45) {
+      return { 
+        score: 4, 
+        name: isLongPeriod ? 'גובה מותן / גל ארוך' : 'גובה מותן (Waist High)', 
+        hand: '🤏', 
+        symbol: '🦵', 
+        color: 'text-amber-600', 
+        bg: 'bg-amber-100/50', 
+        border: 'border-amber-200' 
+      };
+    }
+
+    // 7. Knee High (25cm - 45cm)
+    if (cm >= 25) {
+      return { 
+        score: 3, 
+        name: 'גובה ברך (Knee High)', 
+        hand: '🫳', 
+        symbol: '🦶', 
+        color: 'text-orange-500', 
+        bg: 'bg-orange-100/50', 
+        border: 'border-orange-200' 
+      };
+    }
+
+    // 8. Ankle / Ripples (10cm - 25cm)
+    if (cm >= 10) {
+      return { 
+        score: 2, 
+        name: 'קרסול / קצף (Ankle)', 
+        hand: '🤏', 
+        symbol: '〰️', 
+        color: 'text-slate-500', 
+        bg: 'bg-slate-100/50', 
+        border: 'border-slate-200' 
+      };
+    }
+
+    // 9. Flat / Glassy (< 10cm)
+    if (cm > 0) {
+      return { 
+        score: 1, 
+        name: 'זכוכית (Glassy)', 
+        hand: '🤲', 
+        symbol: '🪟', 
+        color: 'text-slate-400', 
+        bg: 'bg-slate-100/50', 
+        border: 'border-slate-200' 
+      };
+    }
+
+    return { 
+      score: 0, 
+      name: 'בריכה (Flat)', 
+      hand: '👎', 
+      symbol: '🏊‍♀️', 
+      color: 'text-slate-400', 
+      bg: 'bg-slate-100/50', 
+      border: 'border-slate-200' 
+    };
   };
 
   const getUvColor = (uv: number) => {

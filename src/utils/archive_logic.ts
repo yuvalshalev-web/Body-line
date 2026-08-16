@@ -239,7 +239,7 @@ export const syncUserStatsLegacy = async () => {
       const currentAttendance = memberDoc.data().totalAttendance || 0;
       const calculatedAttendance = attendanceMap.get(uid) || 0;
       if (currentAttendance !== calculatedAttendance) {
-        finalBatch.update(doc(db, 'members', uid), { totalAttendance: calculatedAttendance });
+        finalBatch.set(doc(db, 'members', uid), { totalAttendance: calculatedAttendance }, { merge: true });
         finalUpdateCount++;
       }
     });

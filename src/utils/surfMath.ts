@@ -149,8 +149,191 @@ export const calculateMatchScore = (
   currentVol: number,
   currentLenStr: string,
   recVol: number,
-  recLenInches: number
-) => {
+  recLenInches: number,
+  currentBoardType?: string,
+  waveHeight?: number
+): number => {
+  const details = calculateMatchScoreDetails(
+    currentVol,
+    currentLenStr,
+    recVol,
+    recLenInches,
+    currentBoardType,
+    waveHeight
+  );
+  return details.totalScore;
+};
+
+export interface MatchScoreDetails {
+  totalScore: number;
+  volScore: number;
+  lenScore: number;
+  typeScore?: number;
+  typeReason?: string;
+}
+
+export const normalizeBoardCategory = (typeStr?: string): string => {
+  if (!typeStr) return 'unknown';
+  const lower = typeStr.toLowerCase();
+  
+  if (lower.includes('performance soft') || lower.includes('פרפורמנס סופט')) return 'perf_softboard';
+  if (lower.includes('beginner soft') || lower.includes('softboard') || lower.includes('foamie') || lower.includes('סופט')) return 'beg_softboard';
+  if (lower.includes('longboard') || lower.includes('לונג')) return 'longboard';
+  if (lower.includes('mini mal') || lower.includes('malibu') || lower.includes('מיני-מאל')) return 'minimal';
+  if (lower.includes('funboard') || lower.includes('egg') || lower.includes('פאנבורד')) return 'funboard';
+  if (lower.includes('midlength') || lower.includes('מידלנגת')) return 'midlength';
+  if (lower.includes('fish') || lower.includes('פיש')) return 'fish';
+  if (lower.includes('hybrid') || lower.includes('groveler') || lower.includes('גרובבלר')) return 'hybrid';
+  if (lower.includes('hpsb') || lower.includes('high-performance')) return 'hpsb';
+  if (lower.includes('shortboard') || lower.includes('שורטבורד')) return 'shortboard';
+  return 'shortboard';
+};
+
+export const calculateTypeCompatibility = (
+  currentBoardType?: string,
+  waveHeight?: number,
+  surfingLevel?: SurfingLevel
+): { score: number; reason?: string } => {
+  if (!currentBoardType || waveHeight === undefined) {
+    return { score: 100 };
+  }
+
+  const category = normalizeBoardCategory(currentBoardType);
+
+  // 1. Check Surfing Level vs. Board Type Compatibility
+  if (surfingLevel) {
+    // Beginner or Learner trying to ride Shortboard / HPSB
+    if ((surfingLevel === 'Learner' || surfingLevel === 'Beginner') && (category === 'shortboard' || category === 'hpsb')) {
+      return {
+        score: 20,
+        reason: 'גולש מתחיל/לומד יתקשה מאוד לחתור, לתפוס גלים ולעמוד על גלשן שורטבורד/HPSB (חסר ציפה ויציבות קריטית לרמה)'
+      };
+    }
+
+    // Learner trying to ride Fish
+    if (surfingLevel === 'Learner' && category === 'fish') {
+      return {
+        score: 40,
+        reason: 'גולש לומד יתקשה לשמור על יציבות ולתפוס גלים על גלשן פיש קצר ומשוחרר'
+      };
+    }
+
+    // Advanced or Intermediate surfer riding a Beginner Softboard
+    if ((surfingLevel === 'Advanced' || surfingLevel === 'Intermediate') && category === 'beg_softboard') {
+      if (surfingLevel === 'Advanced') {
+        return {
+          score: 50,
+          reason: 'גולש מתקדם יפיק ביצועים, מהירות ויכולת תמרון גבוהות בהרבה בים נמוך עם גלשן פיש, מידלנגת\' או גרובבלר מאשר עם סופטבורד מתחילים'
+        };
+      } else {
+        return {
+          score: 65,
+          reason: 'גולש ברמת ביניים יקבל מנוף התקדמות, תמרון וזריזות עדיפים בהרבה מגלשן מידלנגת\', פאנבורד או פיש מאשר מסופטבורד מתחילים'
+        };
+      }
+    }
+  }
+
+  // 2. Wave Height vs Board Type Compatibility
+  // Small / Flat Waves (< 0.6m)
+  if (waveHeight < 0.6) {
+    switch (category) {
+      case 'beg_softboard':
+      case 'perf_softboard':
+      case 'longboard':
+      case 'minimal':
+      case 'funboard':
+        return { score: 100 };
+      case 'fish':
+      case 'hybrid':
+      case 'midlength':
+        return { score: 90 };
+      case 'shortboard':
+        return { score: 60, reason: 'שורטבורד רגיל דורש כוח גל ויתקשה לייצר מהירות בגלים נמוכים וחלשים' };
+      case 'hpsb':
+        return { score: 40, reason: 'גלשן HPSB בעל רוקר תלול וצורת גוף צרה ייגרר מים ויעצור בגלים נמוכים וחלשים' };
+      default:
+        return { score: 75 };
+    }
+  }
+
+  // Medium-Small Waves (0.6m - 1.2m)
+  if (waveHeight <= 1.2) {
+    switch (category) {
+      case 'funboard':
+      case 'midlength':
+      case 'fish':
+      case 'hybrid':
+      case 'minimal':
+      case 'beg_softboard':
+      case 'perf_softboard':
+        return { score: 100 };
+      case 'longboard':
+        return { score: 90 };
+      case 'shortboard':
+        return { score: 85 };
+      case 'hpsb':
+        return { score: 70, reason: 'גלשן HPSB יעבוד טוב יותר בגלים חזקים וחלולים יותר' };
+      default:
+        return { score: 85 };
+    }
+  }
+
+  // Good / Medium-High Waves (1.2m - 1.8m)
+  if (waveHeight <= 1.8) {
+    switch (category) {
+      case 'shortboard':
+      case 'hpsb':
+      case 'hybrid':
+        return { score: 100 };
+      case 'perf_softboard':
+        return { score: 85, reason: 'סופטבורד פרפורמנס מתמודד היטב בגלים בינוניים-גבוהים, אך בגל תלול וחלול גלשן קשיח ייתן אחיזה עדיפה' };
+      case 'midlength':
+      case 'funboard':
+      case 'fish':
+        return { score: 80, reason: 'בגלים גבוהים, גלשנים רחבים בעלי זנב רחב עלולים לאבד אחיזה בפניות חדות' };
+      case 'longboard':
+      case 'minimal':
+        return { score: 65, reason: 'בגלים גבוהים, גלשן ארוך ומסיבי דורש כושר חתירה גבוה ומעבר קשה דרך הקצפים (Duck Dive)' };
+      case 'beg_softboard':
+        return { score: 50, reason: 'סופטבורד מתחילים רחב בעל חרבות גמישות יתקשה להיכנס לגלים גבוהים ותלולים ואינו מספק אחיזה במהירות גבוהה' };
+      default:
+        return { score: 85 };
+    }
+  }
+
+  // Big / Heavy Waves (> 1.8m)
+  switch (category) {
+    case 'shortboard':
+    case 'hpsb':
+      return { score: 100 };
+    case 'hybrid':
+    case 'midlength':
+      return { score: 70, reason: 'בגלים עוצמתיים וגבוהים דרוש רוקר גבוה וזנב צר יותר לשליטה במהירות' };
+    case 'perf_softboard':
+      return { score: 50, reason: 'גלים גבוהים ועוצמתיים מאוד מאתגרים את מבנה הסופטבורד ומגבילים ביצועים' };
+    case 'fish':
+    case 'funboard':
+      return { score: 50, reason: 'בגלים גבוהים מאוד, גלשן רחב ושטוח עלול להחליק או לסחרר בפניות מהירות' };
+    case 'longboard':
+    case 'minimal':
+      return { score: 45, reason: 'בגלים גבוהים ועוצמתיים, לונגבורד מתקשה לעבור את הקצפים בחזרה לים ותופס רוח' };
+    case 'beg_softboard':
+      return { score: 30, reason: 'ים גבוה ועוצמתי מדי לסופטבורד מתחילים - סכנת בטיחות ואובדן שליטה בגל' };
+    default:
+      return { score: 60 };
+  }
+};
+
+export const calculateMatchScoreDetails = (
+  currentVol: number,
+  currentLenStr: string,
+  recVol: number,
+  recLenInches: number,
+  currentBoardType?: string,
+  waveHeight?: number,
+  surfingLevel?: SurfingLevel
+): MatchScoreDetails => {
   const { feet, inches } = parseLength(currentLenStr);
   const currLenInches = feet * 12 + inches;
   
@@ -163,5 +346,24 @@ export const calculateMatchScore = (
   const lenDiff = Math.abs(currLenInches - recLenInches);
   const lenScore = Math.max(0, 100 - (lenDiff * 2));
   
-  return Math.round((volScore * 0.7) + (lenScore * 0.3));
+  if (currentBoardType && waveHeight !== undefined) {
+    const { score: typeScore, reason: typeReason } = calculateTypeCompatibility(currentBoardType, waveHeight, surfingLevel);
+    // Weighted model: 40% Volume, 25% Length, 35% Board Type Hydrodynamics & Level Match
+    const totalScore = Math.round((volScore * 0.40) + (lenScore * 0.25) + (typeScore * 0.35));
+    return {
+      totalScore,
+      volScore,
+      lenScore,
+      typeScore,
+      typeReason
+    };
+  }
+
+  // Fallback when board type or wave height isn't available: 65% Volume, 35% Length
+  const totalScore = Math.round((volScore * 0.65) + (lenScore * 0.35));
+  return {
+    totalScore,
+    volScore,
+    lenScore
+  };
 };

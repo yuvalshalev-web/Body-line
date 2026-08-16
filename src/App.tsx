@@ -15,19 +15,39 @@ import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { DatabaseStatus } from './components/DatabaseStatus';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
-const HomePage = lazy(() => import('./pages/HomePage'));
-const DirectoryPage = lazy(() => import('./pages/DirectoryPage'));
-const GalleryPage = lazy(() => import('./pages/GalleryPage'));
-const AdminPage = lazy(() => import('./pages/AdminPage'));
-const EventsPage = lazy(() => import('./pages/EventsPage'));
-const NewsPage = lazy(() => import('./pages/NewsPage'));
-const SurfingNewsPage = lazy(() => import('./pages/SurfingNewsPage'));
-const AdminInfoPage = lazy(() => import('./pages/AdminInfoPage'));
-const SurferCardPage = lazy(() => import('./pages/SurferCardPage'));
-const SurfingSessionAttendance = lazy(() => import('./pages/SurfingSessionAttendance'));
-const SessionStatsPage = lazy(() => import('./pages/SessionStatsPage'));
-const ShaperPage = lazy(() => import('./pages/ShaperPage'));
-const MemberGradingPage = lazy(() => import('./pages/MemberGradingPage'));
+
+// Helper to handle dynamic import failures gracefully (e.g. after server updates or module cache clearing)
+const lazyWithRetry = (componentImport: () => Promise<any>) =>
+  lazy(async () => {
+    const pageHasBeenReloaded = JSON.parse(
+      window.sessionStorage.getItem('page_reload_retry') || 'false'
+    );
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem('page_reload_retry', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasBeenReloaded) {
+        window.sessionStorage.setItem('page_reload_retry', 'true');
+        window.location.reload();
+      }
+      throw error;
+    }
+  });
+
+const HomePage = lazyWithRetry(() => import('./pages/HomePage'));
+const DirectoryPage = lazyWithRetry(() => import('./pages/DirectoryPage'));
+const GalleryPage = lazyWithRetry(() => import('./pages/GalleryPage'));
+const AdminPage = lazyWithRetry(() => import('./pages/AdminPage'));
+const EventsPage = lazyWithRetry(() => import('./pages/EventsPage'));
+const NewsPage = lazyWithRetry(() => import('./pages/NewsPage'));
+const SurfingNewsPage = lazyWithRetry(() => import('./pages/SurfingNewsPage'));
+const AdminInfoPage = lazyWithRetry(() => import('./pages/AdminInfoPage'));
+const SurferCardPage = lazyWithRetry(() => import('./pages/SurferCardPage'));
+const SurfingSessionAttendance = lazyWithRetry(() => import('./pages/SurfingSessionAttendance'));
+const SessionStatsPage = lazyWithRetry(() => import('./pages/SessionStatsPage'));
+const ShaperPage = lazyWithRetry(() => import('./pages/ShaperPage'));
+const MemberGradingPage = lazyWithRetry(() => import('./pages/MemberGradingPage'));
 
 const PageLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">

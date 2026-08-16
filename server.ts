@@ -284,20 +284,21 @@ async function startServer() {
   app.get("/api/coastal-weather", async (req, res) => {
     const stationId = req.query.stationId ? String(req.query.stationId) : "178"; // Default to Tel Aviv Coast
     
-    // Map station IDs to coordinates for Open-Meteo fallback
+    // Map station IDs to coordinates for Open-Meteo fallback (pointing directly to the coastal sea line)
     const stationCoords: Record<string, { lat: number, lon: number, name: string }> = {
-      "178": { lat: 32.08, lon: 34.78, name: "תל אביב" },
-      "26": { lat: 32.82, lon: 34.99, name: "חיפה" },
+      "178": { lat: 32.08, lon: 34.76, name: "תל אביב" },
+      "26": { lat: 32.82, lon: 34.96, name: "חיפה" },
       "124": { lat: 31.81, lon: 34.64, name: "אשדוד" },
-      "208": { lat: 31.67, lon: 34.56, name: "אשקלון" },
+      "208": { lat: 31.67, lon: 34.55, name: "אשקלון" },
       "343": { lat: 32.98, lon: 35.08, name: "שבי ציון" },
-      "46": { lat: 32.44, lon: 34.88, name: "חדרה" }
+      "46": { lat: 32.44, lon: 34.87, name: "חדרה" }
     };
 
     const coords = stationCoords[stationId] || stationCoords["178"];
     
     try {
-      const { lat, lon } = coords;
+      const lat = req.query.lat ? Number(req.query.lat) : coords.lat;
+      const lon = req.query.lon ? Number(req.query.lon) : coords.lon;
       
       const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=wave_height,wave_direction,wave_period&hourly=sea_surface_temperature&timezone=auto`;
       const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m,uv_index,surface_pressure,relative_humidity_2m&hourly=uv_index&forecast_days=2&timezone=auto`;
@@ -437,17 +438,13 @@ async function startServer() {
         }
       }
 
-      // Mediterranean nearshore breaking logic (User-centric view)
-      const rawMeters = marineData.current?.wave_height || 0;
-      let heightCm = Math.max(0, Math.round((rawMeters * 100) * 0.65 - 10));
+      // True Mediterranean Marine Significant Wave Height (Hs)
+      const rawMeters = typeof marineData.current?.wave_height === 'number' 
+        ? marineData.current.wave_height 
+        : parseFloat(String(marineData.current?.wave_height || 0)) || 0;
       
-      if (heightCm < 25) {
-         heightCm = 0;
-      } else {
-         heightCm = Math.round(heightCm / 10) * 10;
-      }
-      
-      const processedWaveHeightMeters = heightCm / 100;
+      // Preserve exact significant wave height in meters (e.g. 1.20m = 120cm)
+      const processedWaveHeightMeters = Math.max(0, Math.round(rawMeters * 100) / 100);
 
       // Extract hourly UV (07:00 to 20:00)
       let hourlyUv: { hour: string; uv: number }[] = [];

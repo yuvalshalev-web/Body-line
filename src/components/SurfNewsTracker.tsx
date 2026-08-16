@@ -1,7 +1,8 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { analyzeIsraelSurfConditions } from '../utils/surfAnalysis';
-import { Radio, Waves, Wind, Clock, AlertTriangle, Zap, Info } from 'lucide-react';
+import { parseDate } from '../utils/dateUtils';
+import { Waves, Wind, Clock, Info, Cake, Thermometer, Sun, Activity } from 'lucide-react';
 
 const getWindDirCode = (deg: number): string => {
   const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
@@ -9,7 +10,7 @@ const getWindDirCode = (deg: number): string => {
 };
 
 export const SurfNewsTracker: React.FC = () => {
-  const { coastalWeather, seaStats } = useData();
+  const { coastalWeather, seaStats, members } = useData();
   const [marineForecast, setMarineForecast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,6 +42,23 @@ export const SurfNewsTracker: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Filter members who have a birthday today
+  const birthdayMembers = useMemo(() => {
+    if (!members || members.length === 0) return [];
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+
+    return members.filter(m => {
+      if (m.isActive === false) return false;
+      const bdayStr = m.birthday || (m as any).birthDate;
+      if (!bdayStr) return false;
+      const d = parseDate(bdayStr);
+      if (!d) return false;
+      return d.getMonth() === currentMonth && d.getDate() === currentDate;
+    });
+  }, [members]);
+
   const trackerData = useMemo(() => {
     if (!coastalWeather) {
       return {
@@ -66,107 +84,127 @@ export const SurfNewsTracker: React.FC = () => {
   }, [coastalWeather, seaStats]);
 
   const severity = trackerData.content.severity;
-  
-  const severityConfig = {
-    Low: {
-      statusColor: 'text-emerald-700', 
-      bg: 'bg-emerald-50/80',
-      icon: <Waves className="w-4 h-4 text-sky-500" />
-    },
-    Medium: {
-      statusColor: 'text-slate-800', 
-      bg: 'bg-white/80',
-      icon: <Wind className="w-4 h-4 text-sky-500" /> 
-    },
-    High: {
-      statusColor: 'text-rose-700', 
-      bg: 'bg-rose-50/80',
-      icon: <AlertTriangle className="w-4 h-4 text-sky-500" /> 
-    }
-  };
 
-  const config = severityConfig[severity];
+  // Extract structured telemetry metrics
+  const waveCm = coastalWeather ? (coastalWeather.waveHeight === 0 ? 0 : Math.round(coastalWeather.waveHeight * 100)) : null;
+  const wavePeriod = coastalWeather?.wavePeriod ? coastalWeather.wavePeriod.toFixed(1) : null;
+  const windKts = coastalWeather?.windSpeed !== undefined ? Math.round(coastalWeather.windSpeed) : null;
+  const windDirStr = coastalWeather?.windDirection !== undefined ? getWindDirCode(coastalWeather.windDirection) : null;
+  const waterTemp = coastalWeather?.waterTemp !== undefined ? coastalWeather.waterTemp.toFixed(1) : null;
+  const uvIndex = coastalWeather?.uvIndex !== undefined ? Math.round(coastalWeather.uvIndex) : null;
 
   const renderTickerContent = () => (
-    <div className="flex items-center shrink-0 px-8 gap-12" dir="rtl">
-      {/* Tangible Message Capsule */}
-      <div className={`flex items-center gap-4 px-5 py-2 rounded-2xl ${config.bg} border border-white shadow-sm backdrop-blur-md transition-all duration-300`}>
-        <div className="p-1.5 rounded-lg bg-white shadow-inner border border-slate-100">
-          {config.icon}
-        </div>
-        <span className={`text-[15px] font-black tracking-tight text-slate-800`}>
-          {trackerData.content.scrollingText}
-        </span>
-        {/* Status Indicator Dot */}
-        <div className="flex items-center gap-2 ml-2 pl-4 border-l border-slate-200">
-          <span className={`w-2 h-2 rounded-full ${severity === 'Low' ? 'bg-emerald-500' : severity === 'High' ? 'bg-rose-500' : 'bg-sky-500'} shadow-[0_0_8px_rgba(0,0,0,0.1)]`} />
-          <span className={`text-[11px] font-black uppercase tracking-wider ${config.statusColor}`}>
-            {severity === 'Low' ? 'ACTIVE' : severity === 'High' ? 'ALERT' : 'MONITORING'}
-          </span>
-        </div>
-      </div>
+    <div className="flex items-center shrink-0 px-3 gap-3" dir="rtl">
       
-      {marineForecast && (
-        <div className="flex items-center gap-4 px-5 py-2 rounded-xl bg-white/60 border border-white backdrop-blur-md shadow-sm transition-all duration-300">
-          <div className="p-1.5 rounded-lg bg-white shadow-inner border border-slate-100">
-            <Info className="w-4 h-4 text-sky-500" />
-          </div>
-          <span className="text-[15px] font-black tracking-tight text-slate-700">
-            {marineForecast}
+      {/* 🎂 Birthday Tracker Chip */}
+      {birthdayMembers.length > 0 && (
+        <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-900 text-xs font-semibold shrink-0 shadow-2xs">
+          <Cake className="w-3.5 h-3.5 text-amber-600 shrink-0 animate-bounce" />
+          <span className="text-[10px] font-mono uppercase font-black text-amber-700 tracking-wider">יום הולדת:</span>
+          <span className="font-bold text-amber-950">
+            {birthdayMembers.map(m => `${m.firstName} ${m.lastName}`).join(', ')} 🎉
           </span>
         </div>
       )}
 
-      {/* Tangible Meta Data */}
-      <div className="flex items-center gap-3 px-4 py-1.5 rounded-lg bg-white/40 border border-white shadow-inner backdrop-blur-sm">
-        <Clock className="w-3.5 h-3.5 text-slate-400" />
-        <span className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-widest">
-          SYNC: {trackerData.content.lastFetch}
-        </span>
+      {/* 🌊 Wave Height Metric Chip */}
+      {waveCm !== null && (
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-white border border-slate-200/80 shadow-2xs text-xs font-medium shrink-0 hover:border-sky-300 transition-colors">
+          <Waves className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+          <span className="text-[10px] font-mono uppercase font-black text-slate-400">גובה:</span>
+          <span className="font-mono font-bold text-slate-800">{waveCm} cm</span>
+        </div>
+      )}
+
+      {/* ⏱️ Wave Period Metric Chip */}
+      {wavePeriod && (
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-white border border-slate-200/80 shadow-2xs text-xs font-medium shrink-0 hover:border-indigo-300 transition-colors">
+          <Clock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+          <span className="text-[10px] font-mono uppercase font-black text-slate-400">מחזור:</span>
+          <span className="font-mono font-bold text-slate-800">{wavePeriod}s</span>
+        </div>
+      )}
+
+      {/* 💨 Wind Metric Chip */}
+      {windKts !== null && (
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-white border border-slate-200/80 shadow-2xs text-xs font-medium shrink-0 hover:border-teal-300 transition-colors">
+          <Wind className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+          <span className="text-[10px] font-mono uppercase font-black text-slate-400">רוח:</span>
+          <span className="font-mono font-bold text-slate-800">{windKts} kts {windDirStr}</span>
+        </div>
+      )}
+
+      {/* 🌡️ Water Temp Metric Chip */}
+      {waterTemp && (
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-white border border-slate-200/80 shadow-2xs text-xs font-medium shrink-0 hover:border-cyan-300 transition-colors">
+          <Thermometer className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+          <span className="text-[10px] font-mono uppercase font-black text-slate-400">מים:</span>
+          <span className="font-mono font-bold text-slate-800">{waterTemp}°C</span>
+        </div>
+      )}
+
+      {/* ☀️ UV Index Metric Chip */}
+      {uvIndex !== null && (
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-white border border-slate-200/80 shadow-2xs text-xs font-medium shrink-0 hover:border-amber-300 transition-colors">
+          <Sun className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+          <span className="text-[10px] font-mono uppercase font-black text-slate-400">קרינה:</span>
+          <span className="font-mono font-bold text-slate-800">UV {uvIndex}</span>
+        </div>
+      )}
+
+      {/* 📢 Surf Analysis Chip */}
+      <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-slate-900 text-white shadow-2xs text-xs shrink-0">
+        <span className={`w-2 h-2 rounded-full shrink-0 ${severity === 'Low' ? 'bg-emerald-400' : severity === 'High' ? 'bg-rose-400' : 'bg-amber-400'} animate-pulse`} />
+        <span className="text-[10px] font-mono uppercase font-black text-slate-400">סטטוס:</span>
+        <span className="font-semibold text-slate-100 tracking-tight">{trackerData.content.scrollingText}</span>
       </div>
 
-      {/* Separator Element */}
-      <div className="flex gap-1.5 opacity-30">
-        <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-        <div className="h-1.5 w-1.5 rounded-full bg-sky-300" />
-        <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+      {/* 📡 Marine Forecast Chip */}
+      {marineForecast && (
+        <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-sky-50 border border-sky-100 text-xs shrink-0">
+          <Info className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+          <span className="text-[10px] font-mono uppercase font-black text-sky-600">תחזית ימית:</span>
+          <span className="text-slate-700 font-medium">{marineForecast}</span>
+        </div>
+      )}
+
+      {/* 🟢 Sync Time Chip */}
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200/60 text-[11px] font-mono text-slate-500 shrink-0">
+        <Activity className="w-3 h-3 text-slate-400" />
+        <span>SYNC {trackerData.content.lastFetch}</span>
       </div>
-      
-      <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
-        BodyLine Pulse Engine v4.0
-      </span>
+
+      {/* Separator Divider */}
+      <div className="h-4 w-[1px] bg-slate-200/80 mx-2 shrink-0" />
     </div>
   );
 
   return (
-    <div className="w-full h-16 bg-[#FDFDFC]/80 backdrop-blur-[24px] border-y border-slate-200/60 relative z-50 select-none overflow-hidden flex items-center shadow-sm" dir="rtl">
+    <div className="w-full h-11 bg-slate-50/90 backdrop-blur-md border-b border-slate-200 relative z-40 select-none overflow-hidden flex items-center shadow-xs" dir="rtl">
       
-      {/* Fixed Label - Right Side (RTL) - Improved with Gradient and Glass Border */}
-      <div className="h-full px-6 flex items-center gap-4 bg-gradient-to-l from-sky-50 to-transparent border-l border-slate-100 z-20 relative shrink-0 backdrop-blur-md">
+      {/* Fixed Live Tracker Badge - Right Side */}
+      <div className="h-full px-3.5 flex items-center gap-2 bg-slate-900 text-white z-20 relative shrink-0 shadow-sm border-l border-slate-800">
         <div className="relative flex items-center justify-center">
-          <div className="w-11 h-11 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-md transform rotate-3">
-            <Radio className="w-5 h-5 text-sky-500 -rotate-3" />
-          </div>
-          <span className="absolute w-3 h-3 bg-emerald-500 rounded-full -top-1 -right-1 border-2 border-white shadow-lg animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <span className="absolute w-3.5 h-3.5 rounded-full bg-emerald-400/40 animate-ping" />
         </div>
-        
-        <div className="flex flex-col leading-none justify-center">
-          <div className="flex items-center gap-1.5 mb-1">
-            <Zap className="w-3.5 h-3.5 text-rose-500" strokeWidth={3} />
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">LIVE FEED</span>
-          </div>
-          <span className="text-sm font-black text-slate-800 whitespace-nowrap tracking-tighter uppercase">REPORT</span>
-        </div>
+        <span className="text-[11px] font-mono font-black tracking-widest uppercase text-slate-100">
+          LIVE TRACKER
+        </span>
       </div>
 
-      {/* Scrolling Container with Advanced Masks */}
-      <div className="flex-1 h-full relative overflow-hidden flex items-center" style={{ maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
+      {/* Continuous Infinite Marquee Loop */}
+      <div className="flex-1 h-full relative overflow-hidden flex items-center" style={{ maskImage: 'linear-gradient(to right, transparent, black 3%, black 97%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 3%, black 97%, transparent)' }}>
         <div className="flex whitespace-nowrap animate-marquee-loop hover:[animation-play-state:paused]" dir="ltr">
           <div className="flex shrink-0">
             {renderTickerContent()}
             {renderTickerContent()}
+            {renderTickerContent()}
+            {renderTickerContent()}
           </div>
           <div className="flex shrink-0">
+            {renderTickerContent()}
+            {renderTickerContent()}
             {renderTickerContent()}
             {renderTickerContent()}
           </div>
@@ -187,3 +225,5 @@ export const SurfNewsTracker: React.FC = () => {
     </div>
   );
 };
+
+

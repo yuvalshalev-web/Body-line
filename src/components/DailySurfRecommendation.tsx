@@ -5,7 +5,7 @@ import WetsuitSVG from './WetsuitSVG';
 import { SurfboardOverlay, ExactSurfboard } from './SurfboardOverlay';
 import { Member } from '../types';
 import { SURFBOARD_CATALOG } from '../data/surfboardCatalog';
-import { calculateSurferFormula, calculateMatchScore, getBoardSize } from '../utils/surfMath';
+import { calculateSurferFormula, calculateMatchScoreDetails, getBoardSize } from '../utils/surfMath';
 import { roundToGritStandard } from '../utils/gritRounding';
 
 interface DailySurfRecommendationProps {
@@ -50,7 +50,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
     );
   }
 
-  const { weight, height, surfingLevel, currentBoardVolume, currentBoardLength } = member;
+  const { weight, height, surfingLevel, currentBoardVolume, currentBoardLength, currentBoardType } = member;
 
   const baseRec = calculateSurferFormula(weight, height, surfingLevel as any, member.fitnessLevel as any || 'Average');
   let recVol = baseRec.volume;
@@ -63,45 +63,54 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
     boardType = 'SUP';
     recVol = 0;
     recLenInches = 0;
-    explanation = 'הים פלטה (גלים נמוכים). הים נמוך ורגוע, מושלם אימון חתירה על סאפ, שחייה, או פשוט ליהנות מהחוף!';
+    explanation = 'הים פלטה (גלים שטוחים). תנאים מצוינים לאימון חתירה על סאפ, שחייה, או פעילות חוף!';
     isWarning = false;
   } else if (surfingLevel === 'Beginner') {
-    if (currentWaveHeight >= 1.5) {
+    if (currentWaveHeight >= 1.3) {
       boardType = 'Softboard';
-      explanation = 'ים גבוה מדי למתחילים - מומלץ להישאר בחוף או לגלוש רק בקצף הקרוב לחוף. בטיחות קודמת לכל!';
+      explanation = 'ים גבוה ומאתגר למתחילים - מומלץ להישאר בחוף או לתרגל אך ורק בקצף הקרוב לחוף. בטיחות קודמת לכל!';
       isWarning = true;
-    } else if (currentWaveHeight >= 0.8) {
-      boardType = 'Softboard / Funboard';
-      recVol = baseRec.volume * 1.05; // Slightly more volume for medium waves
+    } else if (currentWaveHeight >= 0.7) {
+      boardType = 'Softboard (7\'6" - 8\'0")';
+      recVol = baseRec.volume * 1.05;
       recLenInches = Math.round(baseRec.lengthInches + 2);
-      explanation = 'ים בינוני, מעולה לתרגול. קח גלשן עם קצת יותר נפח מהרגיל שיעזור לך לתפוס גלים ולשמור על יציבות.';
+      explanation = 'ים איכותי ומסודר (גובה חזה ומעלה), מעולה לתרגול יציבות וירידה בגלים פתוחים עם סופטבורד יציב.';
+    } else if (currentWaveHeight >= 0.4) {
+      boardType = 'Softboard (8\'0" - 9\'0")';
+      recVol = baseRec.volume * 1.15;
+      recLenInches = Math.round(baseRec.lengthInches + 4);
+      explanation = 'ים מתון ונעים (גובה ברך-מותן), תנאים אידיאליים ללימוד ותרגול תפיסת גלים ופופ-אפ.';
     } else {
-      boardType = 'Softboard';
-      recVol = baseRec.volume * 1.15; // Much more volume for small waves
+      boardType = 'Softboard / Longboard';
+      recVol = baseRec.volume * 1.25;
       recLenInches = Math.round(baseRec.lengthInches + 6);
-      explanation = 'ים נמוך ורגוע, מושלם למתחילים! סופטבורד גדול במיוחד ייתן לך מקסימום גלים והנאה.';
+      explanation = 'ים נמוך ורגוע מאוד. סופטבורד גדול בעל ציפה מקסימלית יאפשר לתפוס כל אדווה בקלות.';
     }
   } else if (surfingLevel === 'Advanced') {
-    if (currentWaveHeight > 2.0) {
-      boardType = 'Step-up';
-      recVol = baseRec.volume * 1.05; // Extra volume for big waves
-      recLenInches = Math.round(baseRec.lengthInches + 4); // Longer for big waves
-      explanation = 'ים גבוה ועוצמתי. קח גלשן ארוך יותר (Step-up) כדי להיכנס מוקדם לגל ולשמור על שליטה במהירויות גבוהות.';
+    if (currentWaveHeight > 1.8) {
+      boardType = 'Step-up / HPSB';
+      recVol = baseRec.volume * 1.05;
+      recLenInches = Math.round(baseRec.lengthInches + 3);
+      explanation = 'ים גבוה ועוצמתי. מומלץ גלשן Step-up או שורטבורד מקצועי עם אחיזה חזקה לרדיקליות ושליטה במהירות.';
     } else if (currentWaveHeight >= 1.2) {
-      boardType = 'Shortboard';
-      // Base volume is perfect here
+      boardType = 'Shortboard (HPSB)';
       recLenInches = Math.round(baseRec.lengthInches);
-      explanation = 'תנאים מצוינים לביצועים. שורטבורד קלאסי במידות הרגילות שלך ייתן לך את הרדיקליות שאתה מחפש.';
-    } else if (currentWaveHeight >= 0.7) {
-      boardType = 'Groveler / Hybrid';
+      explanation = 'תנאי גלישה מושלמים! שורטבורד קלאסי במידות התחרותיות שלך ייתן ביצועים חדים, פניות מהירות ואחיזה מדויקת.';
+    } else if (currentWaveHeight >= 0.75) {
+      boardType = 'Shortboard / Performance Fish';
+      recVol = baseRec.volume;
+      recLenInches = Math.round(baseRec.lengthInches);
+      explanation = 'ים איכותי ומסודר (גובה חזה עד כתף). השורטבורד היומיומי או פיש ביצועים יעבדו כאן מצוין לייצור מהירות וביצועים.';
+    } else if (currentWaveHeight >= 0.45) {
+      boardType = 'Groveler / Fish';
       recVol = baseRec.volume * 1.08;
       recLenInches = Math.round(baseRec.lengthInches - 2);
-      explanation = 'ים בינוני-נמוך. גלשן מעט קצר ורחב יותר יעזור לך לייצר מהירות בחלקים החלשים של הגל.';
+      explanation = 'ים בינוני-נמוך (גובה מותן). גלשן גרובבלר או פיש קצר ורחב יעזור לייצר מהירות מרבית בקטעים הפחות תלולים.';
     } else {
-      boardType = 'Fish / Groveler';
-      recVol = baseRec.volume * 1.15; // Extra volume for weak waves
-      recLenInches = Math.round(baseRec.lengthInches - 4); // Shorter
-      explanation = 'ים חלש. קח גלשן קצר, רחב ושטוח (פיש או גרובבלר) כדי לייצר מהירות גם כשאין כוח בגל.';
+      boardType = 'Fish / Midlength';
+      recVol = baseRec.volume * 1.15;
+      recLenInches = Math.round(baseRec.lengthInches - 2);
+      explanation = 'ים נמוך (גובה ברך ומטה). גלשן פיש רחב ומשוחרר, מידלנגת\' או לונגבורד יספקו זרימה ומהירות מדהימה.';
     }
   } else {
     // Intermediate
@@ -110,25 +119,29 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
       recVol = baseRec.volume * 1.08;
       recLenInches = Math.round(baseRec.lengthInches + 4);
       explanation = 'ים גבוה ומאתגר. קח גלשן ארוך יותר עם אקסטרה נפח כדי להבטיח כניסה בטוחה לגלים.';
-    } else if (currentWaveHeight >= 1.0) {
+    } else if (currentWaveHeight >= 1.2) {
       boardType = 'Shortboard / Hybrid';
-      // Base volume is perfect here
       recLenInches = Math.round(baseRec.lengthInches);
-      explanation = 'תנאים קלאסיים! הגלשן היומיומי שלך (All-rounder) במידות הרגילות יעבוד כאן בצורה מושלמת.';
-    } else if (currentWaveHeight >= 0.6) {
-      boardType = 'Funboard / Fish';
-      recVol = baseRec.volume * 1.15;
+      explanation = 'תנאים מצוינים (גובה ראש ומעלה)! גלשן שורטבורד / הייבריד יומי יספק מהירות, יציבות ותמרון נהדר.';
+    } else if (currentWaveHeight >= 0.75) {
+      boardType = 'Hybrid / Shortboard / Fish';
+      recVol = baseRec.volume;
+      recLenInches = Math.round(baseRec.lengthInches);
+      explanation = 'ים איכותי ומסודר (גובה חזה עד כתף). תנאים מעולים לגלשן היומיומי שלך (All-Rounder או Hybrid) במידות הרגילות!';
+    } else if (currentWaveHeight >= 0.45) {
+      boardType = 'Funboard / Fish / Groveler';
+      recVol = baseRec.volume * 1.10;
       recLenInches = Math.round(baseRec.lengthInches - 2);
-      explanation = 'ים חלש יחסית. גלשן עם יותר נפח (כמו פאן-בורד או פיש) יעזור לך לא לפספס גלים ולשמור על מהירות.';
+      explanation = 'ים בינוני-נמוך (גובה מותן). גלשן עם טיפה יותר נפח ורוחב (פאן-בורד או פיש) יעזור לשמור על מהירות ורציפות.';
     } else {
-      recLenInches = Math.round(baseRec.lengthInches + 12);
-      recVol = baseRec.volume * 1.35;
-      if (recLenInches >= 108) {
+      recLenInches = Math.round(baseRec.lengthInches + 8);
+      recVol = baseRec.volume * 1.25;
+      if (recLenInches >= 102) {
         boardType = 'Longboard';
-        explanation = 'ים נמוך מאוד. תהנה מהציפה עם לונגבורד קלאסי שיתפוס כל אדווה בים.';
+        explanation = 'ים נמוך (גובה ברך ומטה). תהנה מהציפה עם לונגבורד קלאסי שיתפוס כל גל בקלות.';
       } else {
-        boardType = 'Mini Mal / Midlength';
-        explanation = 'ים נמוך מאוד. גלשן מיני-מאל או מידלנגת\' יעניק לך שפע של ציפה ויעזור לתפוס כל אדווה בים.';
+        boardType = 'Midlength / Mini Mal';
+        explanation = 'ים נמוך (גובה ברך ומטה). מידלנגת\' או פאן-בורד יעניקו לך שפע ציפה ורציפות על הגל.';
       }
     }
   }
@@ -138,7 +151,16 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
   let matchText = '';
   let idealBoardRecommendation = '';
   if (currentBoardVolume && currentBoardLength) {
-    matchScore = calculateMatchScore(currentBoardVolume, currentBoardLength, recVol, recLenInches);
+    const matchDetails = calculateMatchScoreDetails(
+      currentBoardVolume,
+      currentBoardLength,
+      recVol,
+      recLenInches,
+      currentBoardType,
+      currentWaveHeight,
+      surfingLevel as any
+    );
+    matchScore = matchDetails.totalScore;
     
     if (matchScore >= 85) {
       matchText = 'הגלשן שלך מתאים בדיוק לתנאי הים היום!';
@@ -149,11 +171,19 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
         const parsed = parseLength(currentBoardLength);
         currentBoardLengthInches = parsed.feet * 12 + parsed.inches;
       }
-      if (currentBoardVolume < recVol * 0.85) reason = 'הגלשן בעל נפח נמוך מדי לתנאים (חסרה ציפה)';
-      else if (currentBoardVolume > recVol * 1.25) reason = 'הגלשן בעל נפח גדול מדי לתנאים';
-      else if (currentBoardLengthInches > 0 && currentBoardLengthInches < recLenInches * 0.9) reason = 'הגלשן קצר מדי לתנאים (חסרה מהירות כניסה)';
-      else if (currentBoardLengthInches > 0 && currentBoardLengthInches > recLenInches * 1.15) reason = 'הגלשן ארוך מדי לתנאים';
-      else reason = 'המידות שלו פחות אידיאליות למצב הים';
+      if (matchDetails.typeReason) {
+        reason = matchDetails.typeReason;
+      } else if (currentBoardVolume < recVol * 0.85) {
+        reason = 'הגלשן בעל נפח נמוך מדי לתנאים (חסרה ציפה)';
+      } else if (currentBoardVolume > recVol * 1.25) {
+        reason = 'הגלשן בעל נפח גדול מדי לתנאים';
+      } else if (currentBoardLengthInches > 0 && currentBoardLengthInches < recLenInches * 0.9) {
+        reason = 'הגלשן קצר מדי לתנאים (חסרה מהירות כניסה)';
+      } else if (currentBoardLengthInches > 0 && currentBoardLengthInches > recLenInches * 1.15) {
+        reason = 'הגלשן ארוך מדי לתנאים';
+      } else {
+        reason = 'המידות וסוג הגלשן פחות אידיאליים למצב הים';
+      }
 
       if (matchScore >= 60) matchText = `הגלשן שלך סביר להיום, אך ${reason}.`;
       else matchText = `הגלשן שלך פחות מתאים לתנאים היום - ${reason}.`;
@@ -322,24 +352,21 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                 </div>
 
                 {recVol > 0 && recLenInches > 0 && currentBoardVolume && currentBoardLength && (
-                  <div className="bg-white/50 border border-white/40 rounded-2xl p-6 shadow-sm">
-                    <div className="mb-6">
-                      <p className="text-xs text-[#007085] uppercase tracking-widest mb-1">התאמת הגלשן שלך להיום</p>
-                      <p className="text-sm font-bold text-[#002b44]">{matchText}</p>
-                      {idealBoardRecommendation && (
-                        <div className="mt-3 p-3 bg-white/60 border border-white/50 rounded-xl">
-                          <p className="text-[11px] font-black text-[#007085] mb-1">הגלשן האידאלי במקום:</p>
-                          <p className="text-sm text-[#002b44]/80 leading-relaxed font-medium">{idealBoardRecommendation}</p>
-                        </div>
-                      )}
+                  <div className="bg-white/70 border border-white/60 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
+                    <div>
+                      <h4 className="text-base sm:text-lg font-black text-[#002b44] tracking-tight mb-2 flex items-center gap-2">
+                        <Sparkles size={18} className="text-[#007085]" />
+                        התאמת הגלשן שלך להיום
+                      </h4>
+                      <p className="text-sm font-bold text-[#002b44]/90 leading-relaxed">{matchText}</p>
                     </div>
-                    
-                    {/* Visual Gauge */}
-                    <div className="flex items-center gap-4 mt-2">
-                      <span className={`text-3xl font-black shrink-0 leading-none drop-shadow-sm ${matchScore >= 85 ? 'text-emerald-500' : matchScore >= 60 ? 'text-amber-500' : 'text-rose-500'}`}>
+
+                    {/* Visual Gauge - Progress Bar & Score (Positioned ABOVE ideal board recommendation) */}
+                    <div className="flex items-center gap-4 pt-1 pb-2">
+                      <span className={`text-2xl sm:text-3xl font-black shrink-0 leading-none drop-shadow-sm ${matchScore >= 85 ? 'text-emerald-600' : matchScore >= 60 ? 'text-amber-500' : 'text-rose-500'}`}>
                         {matchScore}%
                       </span>
-                      <div className="flex-1 h-5 bg-white/40 backdrop-blur-sm border border-white/50 rounded-full overflow-hidden relative shadow-[inset_0_2px_5px_rgba(0,0,0,0.05)]">
+                      <div className="flex-1 h-5 bg-white/80 backdrop-blur-sm border border-slate-200/80 rounded-full overflow-hidden relative shadow-[inset_0_2px_5px_rgba(0,0,0,0.05)]">
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: `${matchScore}%` }}
@@ -355,6 +382,13 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                         </motion.div>
                       </div>
                     </div>
+
+                    {idealBoardRecommendation && (
+                      <div className="p-3.5 bg-white/80 border border-slate-200/60 rounded-xl shadow-xs">
+                        <p className="text-xs font-black text-[#007085] mb-1">הגלשן האידאלי במקום:</p>
+                        <p className="text-sm text-[#002b44]/80 leading-relaxed font-medium">{idealBoardRecommendation}</p>
+                      </div>
+                    )}
                   </div>
                 )}
 

@@ -21,13 +21,26 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
-import { calculateSurferFormula, calculateMatchScore } from '../utils/surfMath';
+import { calculateSurferFormula, calculateMatchScore, calculateMatchScoreDetails } from '../utils/surfMath';
 import { SurfboardOverlay, ExactSurfboard } from '../components/SurfboardOverlay';
 import WetsuitSVG from '../components/WetsuitSVG';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { getShaperConsultation } from '../services/geminiService';
 import Markdown from 'react-markdown';
+
+const POPULAR_SURFBOARD_TYPES = [
+  'Beginner Softboard (Soft-Top / Foamie)',
+  'Performance Softboard',
+  'Longboard (9\'0"+)',
+  'Mini Mal / Malibu',
+  'Funboard / Egg',
+  'Midlength (7\'0" - 8\'0")',
+  'Fish / Retro Fish',
+  'Hybrid / Groveler',
+  'Shortboard (Performance)',
+  'High-Performance Shortboard (HPSB)'
+];
 
 const ShaperPage: React.FC = () => {
   const headerImage = useRandomHeader();
@@ -47,6 +60,9 @@ const ShaperPage: React.FC = () => {
   );
   const [currentVol, setCurrentVol] = useState<number | undefined>(currentUser?.currentBoardVolume);
   const [currentLen, setCurrentLen] = useState<string | undefined>(currentUser?.currentBoardLength);
+  const [currentType, setCurrentType] = useState<string>(
+    currentUser?.currentBoardType || POPULAR_SURFBOARD_TYPES[0]
+  );
   
   const waterTempRaw = seaStats?.waterTemp ?? coastalWeather?.waterTemp ?? siteConfig?.seaState?.waterTemp;
   const waterTemp = (waterTempRaw !== undefined && waterTempRaw !== null) 
@@ -85,17 +101,32 @@ const ShaperPage: React.FC = () => {
     return calculateSurferFormula(weight, height, level, fitnessLevel);
   }, [weight, height, level, fitnessLevel]);
 
+  const waveHeightRaw = seaStats?.waveHeight ?? coastalWeather?.waveHeight ?? siteConfig?.seaState?.waveHeight ?? 1.0;
+  const currentWaveHeight = typeof waveHeightRaw === 'number' ? waveHeightRaw : parseFloat(String(waveHeightRaw)) || 1.0;
+
   const matchResults = useMemo(() => {
     if (!currentVol || !currentLen) return null;
     
-    const score = calculateMatchScore(currentVol, currentLen, recommendation.volume, recommendation.lengthInches);
+    const matchDetails = calculateMatchScoreDetails(
+      currentVol,
+      currentLen,
+      recommendation.volume,
+      recommendation.lengthInches,
+      currentType,
+      currentWaveHeight,
+      level
+    );
+    const score = matchDetails.totalScore;
     
     let coachTip = '';
     let matchColor = '';
     
     if (score >= 90) {
-      coachTip = 'הגלשן שלך במידות מושלמות עבורך! צא למים ותהנה מכל רגע.';
+      coachTip = 'הגלשן וסוג הגלשן שלך במידות והתאמה מושלמות עבורך למצב הים!';
       matchColor = 'text-emerald-500';
+    } else if (matchDetails.typeReason) {
+      coachTip = matchDetails.typeReason;
+      matchColor = score >= 60 ? 'text-amber-500' : 'text-rose-500';
     } else if (currentVol < recommendation.volume - 5) {
       coachTip = 'הגלשן קטן מדי למשקלך ולרמתך. יהיה לך קשה לחתור ולתפוס גלים בים נמוך.';
       matchColor = 'text-rose-500';
@@ -108,7 +139,7 @@ const ShaperPage: React.FC = () => {
     }
     
     return { score, coachTip, matchColor };
-  }, [currentVol, currentLen, recommendation]);
+  }, [currentVol, currentLen, currentType, currentWaveHeight, recommendation, level]);
 
   const handleSave = async () => {
     if (!currentUser) return;
@@ -123,6 +154,7 @@ const ShaperPage: React.FC = () => {
         fitnessLevel,
         currentBoardVolume: currentVol,
         currentBoardLength: currentLen,
+        currentBoardType: currentType,
         recommendedBoardVolume: recommendation.volume,
         recommendedBoardLength: recommendation.lengthFormatted
       });
@@ -307,6 +339,25 @@ const ShaperPage: React.FC = () => {
                         <h3 className="text-2xl font-black text-[#00426a]">הגלשן הנוכחי שלי</h3>
                       </div>
                       <p className="text-xs text-[#00426a]/50 font-bold">הזן את נתוני הגלשן שלך כדי לקבל ציון התאמה (אופציונלי)</p>
+                      
+                      {/* Surfboard Type Dropdown (10 common types in English, beginner to performance) */}
+                      <div className="space-y-2">
+                        <label className="text-[10px] text-[#00426a]/40 uppercase tracking-widest font-black block">
+                          סוג הגלשן (Surfboard Type)
+                        </label>
+                        <select 
+                          value={currentType} 
+                          onChange={e => setCurrentType(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-[#00426a] font-black outline-none focus:border-[var(--surfer-cyan)] transition-all cursor-pointer"
+                          dir="ltr"
+                        >
+                          {POPULAR_SURFBOARD_TYPES.map((type, idx) => (
+                            <option key={type} value={type}>
+                              {idx + 1}. {type}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">

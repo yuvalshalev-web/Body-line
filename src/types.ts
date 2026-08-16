@@ -39,6 +39,7 @@ export interface Member {
   fitnessLevel?: 'Low' | 'Average' | 'High' | 'Elite';
   currentBoardVolume?: number; // in liters
   currentBoardLength?: string; // e.g., "6'2"
+  currentBoardType?: string; // e.g., "Softboard"
   recommendedBoardVolume?: number; // in liters
   recommendedBoardLength?: string; // e.g., "6'2"
   street_name?: string;
