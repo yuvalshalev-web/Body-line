@@ -5,6 +5,7 @@ import { Calendar, MapPin, Clock, User, Users, X, Navigation, Plus, Edit2, Trash
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { Event } from '../types';
 import { EventEditor } from '../components/admin/EventEditor';
+import { EventDietarySummary } from '../components/EventDietarySummary';
 import { isAdminUser } from '../constants';
 
 const EventsPage: React.FC = () => {
@@ -202,6 +203,15 @@ const EventsPage: React.FC = () => {
                               </div>
                             ))}
                           </div>
+
+                          {/* Real-time Dietary & Kosher Breakdown for confirmed attendees */}
+                          <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                            <EventDietarySummary 
+                              attendees={eventAttendees} 
+                              compact={true} 
+                              title="סיכום כשרות ותזונה לאירוע" 
+                            />
+                          </div>
                         </div>
                       )}
 
@@ -248,12 +258,12 @@ const EventsPage: React.FC = () => {
       {/* Event Details Modal */}
       {isModalOpen && selectedEvent && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={closeModal}>
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl relative overflow-hidden" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar" onClick={e => e.stopPropagation()}>
             <button onClick={closeModal} className="absolute top-4 left-4 z-50 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm text-slate-800 hover:text-slate-900 transition-all">
               <X size={24} />
             </button>
             <div className="flex justify-between items-start mb-4 pl-12">
-              <h2 className="text-2xl font-bold text-slate-800">{selectedEvent.title}</h2>
+              <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">{selectedEvent.title}</h2>
               <div className="flex flex-col items-end gap-2">
                 {getCreatorName(selectedEvent.creatorId) && (
                   <span className="text-sm text-slate-800 font-medium bg-slate-100 px-3 py-1 rounded-full inline-flex items-center gap-1">
@@ -281,56 +291,71 @@ const EventsPage: React.FC = () => {
                 )}
               </div>
             </div>
-            <p className="text-slate-800 mb-6">{selectedEvent.description}</p>
+            <p className="text-slate-800 mb-6 text-sm md:text-base leading-relaxed">{selectedEvent.description}</p>
             
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center gap-2 text-slate-800">
-                <Calendar size={20} className="text-slate-800" />
-                {new Date(selectedEvent.date).toLocaleDateString('he-IL')} {selectedEvent.time}
-              </div>
-              <div className="flex items-center gap-2 text-slate-800">
-                <MapPin size={20} className="text-slate-800" />
-                {selectedEvent.location}
-              </div>
-              
-              <div className="flex items-center gap-2 text-slate-800 border-t border-slate-100 pt-4 mt-4">
-                <Users size={20} className="text-[#007085]" />
-                <span className="font-black text-slate-800">{selectedEvent.attendees?.length || 0} משתתפים אישרו הגעה</span>
+            <div className="space-y-6 mb-6">
+              <div className="flex flex-wrap gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                  <Calendar size={18} className="text-sky-600" />
+                  {new Date(selectedEvent.date).toLocaleDateString('he-IL')} {selectedEvent.time}
+                </div>
+                <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                  <MapPin size={18} className="text-rose-600" />
+                  {selectedEvent.location}
+                </div>
               </div>
               
-              <div className="bg-slate-50/50 rounded-2xl border border-slate-100 p-4">
-                <p className="font-black text-xs text-[#007085] uppercase tracking-wider mb-3">רשימת משתתפים:</p>
-                {selectedEvent.attendees && selectedEvent.attendees.length > 0 ? (
-                  <div className="flex flex-col gap-2 max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
-                    {members.filter(m => (selectedEvent.attendees || []).includes(m.id)).map(a => (
-                      <div key={a.id} className="flex items-center gap-3 p-2 bg-white rounded-xl shadow-sm border border-slate-100/50">
-                        {a.avatar ? (
-                          <img src={a.avatar} className="w-8 h-8 rounded-lg object-cover shadow-sm flex-shrink-0" alt="" />
-                        ) : (
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center text-xs text-slate-500 font-bold flex-shrink-0">
-                            {a.firstName.charAt(0)}
-                          </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <p className="font-bold text-slate-800 text-sm truncate">{a.firstName} {a.lastName}</p>
-                        </div>
-                        <span className="text-[10px] font-black bg-sky-50 text-sky-600 px-2 py-0.5 rounded-md flex-shrink-0">
-                          {a.role === 'Admin' ? 'רכז' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
-                        </span>
-                      </div>
-                    ))}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-slate-800">
+                    <Users size={20} className="text-[#007085]" />
+                    <span className="font-black text-slate-800">{selectedEvent.attendees?.length || 0} משתתפים אישרו הגעה</span>
                   </div>
-                ) : (
-                  <p className="text-sm text-slate-400 font-medium">עדיין אין משתתפים באירוע זה</p>
-                )}
+                </div>
+                
+                <div className="bg-slate-50/50 rounded-2xl border border-slate-100 p-4">
+                  <p className="font-black text-xs text-[#007085] uppercase tracking-wider mb-3">רשימת משתתפים:</p>
+                  {selectedEvent.attendees && selectedEvent.attendees.length > 0 ? (
+                    <div className="flex flex-col gap-2 max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
+                      {members.filter(m => (selectedEvent.attendees || []).includes(m.id)).map(a => (
+                        <div key={a.id} className="flex items-center gap-3 p-2 bg-white rounded-xl shadow-sm border border-slate-100/50">
+                          {a.avatar ? (
+                            <img src={a.avatar} className="w-8 h-8 rounded-lg object-cover shadow-sm flex-shrink-0" alt="" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center text-xs text-slate-500 font-bold flex-shrink-0">
+                              {a.firstName.charAt(0)}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-slate-800 text-sm truncate">{a.firstName} {a.lastName}</p>
+                          </div>
+                          <span className="text-[10px] font-black bg-sky-50 text-sky-600 px-2 py-0.5 rounded-md flex-shrink-0">
+                            {a.role === 'Admin' ? 'רכז' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400 font-medium">עדיין אין משתתפים באירוע זה</p>
+                  )}
+                </div>
               </div>
+
+              {/* Real-time Dietary & Kosher Breakdown inside Event Details Modal */}
+              {selectedEvent.attendees && selectedEvent.attendees.length > 0 && (
+                <EventDietarySummary
+                  attendees={members.filter(m => (selectedEvent.attendees || []).includes(m.id))}
+                  compact={false}
+                  title="סיכום תזונה וכשרות (נתוני זמן אמת למארגן)"
+                />
+              )}
             </div>
 
-            <div className="flex gap-4">
-              <a href={`https://waze.com/ul?q=${encodeURIComponent(selectedEvent.location)}`} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-sky-500 text-white py-3 rounded-xl font-bold hover:bg-sky-600">
+            <div className="flex gap-4 pt-2">
+              <a href={`https://waze.com/ul?q=${encodeURIComponent(selectedEvent.location)}`} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-sky-500 text-white py-3.5 rounded-2xl font-bold hover:bg-sky-600 shadow-md">
                 <Navigation size={20} /> Waze
               </a>
-              <a href={`https://maps.google.com/?q=${encodeURIComponent(selectedEvent.location)}`} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-indigo-500 text-white py-3 rounded-xl font-bold hover:bg-indigo-600">
+              <a href={`https://maps.google.com/?q=${encodeURIComponent(selectedEvent.location)}`} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-indigo-500 text-white py-3.5 rounded-2xl font-bold hover:bg-indigo-600 shadow-md">
                 <MapPin size={20} /> Google Maps
               </a>
             </div>

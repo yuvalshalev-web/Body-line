@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, increment, addDoc, limit, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
-import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, ChevronDown, MapPin, CheckCircle2, UserPlus, Mail, RotateCcw, X, UserCheck, Sparkles, Waves, User, Terminal } from 'lucide-react';
+import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, ChevronDown, MapPin, CheckCircle2, UserPlus, Mail, RotateCcw, X, UserCheck, Sparkles, Waves, User, Terminal, Fingerprint, ShieldCheck } from 'lucide-react';
 import { getDb, trackedGetDocs, auth, handleFirestoreError, OperationType } from '../services/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword, getAuth } from 'firebase/auth';
 import { Member, JoinRequest } from '../types';
@@ -15,6 +15,7 @@ import { useData } from '../contexts/DataContext';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { processImage } from '../utils/imageProcessor';
 import { loadGoogleMaps } from '../utils/googlePlaces';
+import { isBiometricAvailable, authenticateWithBiometrics, getEnrolledBiometricUsers } from '../utils/biometrics';
 import emailjs from '@emailjs/browser';
 
 const groups = [
@@ -44,6 +45,23 @@ const LoginPage: React.FC = () => {
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [showSeaWaterAlert, setShowSeaWaterAlert] = useState(false);
   const [resetSuccessMessage, setResetSuccessMessage] = useState('');
+  const [hasBiometrics, setHasBiometrics] = useState(true);
+  const [isBiometricLoading, setIsBiometricLoading] = useState(false);
+  const [enrolledBioUsers, setEnrolledBioUsers] = useState<any[]>([]);
+  const [showBioGuideModal, setShowBioGuideModal] = useState(false);
+
+  // Check if biometric login is available on this device and fetch enrolled users
+  useEffect(() => {
+    isBiometricAvailable().then(available => {
+      setHasBiometrics(available);
+      if (available) {
+        const enrolled = getEnrolledBiometricUsers();
+        setEnrolledBioUsers(enrolled);
+      }
+    }).catch(() => {
+      setHasBiometrics(true);
+    });
+  }, []);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -109,6 +127,98 @@ const LoginPage: React.FC = () => {
       }
       return next;
     });
+  };
+
+  const handleBiometricLogin = async () => {
+    setIsBiometricLoading(true);
+    setError('');
+    const db = getDb();
+
+    // Check if any credentials are saved on this device
+    const currentEnrolled = getEnrolledBiometricUsers();
+    if (currentEnrolled.length === 0) {
+      setIsBiometricLoading(false);
+      setShowBioGuideModal(true);
+      return;
+    }
+
+    try {
+      const authResult = await authenticateWithBiometrics(email || undefined);
+      if (!authResult.success || !authResult.userEmail) {
+        if (authResult.error) {
+          setError(authResult.error);
+        }
+        setIsBiometricLoading(false);
+        return;
+      }
+
+      const targetEmail = authResult.userEmail.toLowerCase().trim();
+      setEmail(targetEmail);
+
+      // Authenticate via bridging password with Firebase
+      const fbBridgingPassword = await calculateFbPassword(targetEmail);
+      let userCredential;
+      try {
+        userCredential = await signInWithEmailAndPassword(auth, targetEmail, fbBridgingPassword);
+      } catch (authErr: any) {
+        // Fallback: search doc in members collection
+        const qEmail = query(collection(db, 'members'), where('email', '==', targetEmail), limit(1));
+        const emailSnapshot = await trackedGetDocs(qEmail);
+        if (!emailSnapshot.empty) {
+          const mDoc = emailSnapshot.docs[0];
+          const mData = { ...mDoc.data(), id: mDoc.id } as Member;
+          if (mData.isActive === false) {
+            setError('החשבון שלך כרגע בחופשה קצרה ⛱️⛺🛫🍹🌴\nלא ניתן להתחבר כרגע בגלל השעיה זמנית');
+            setIsBiometricLoading(false);
+            return;
+          }
+          login(mData);
+          navigate('/');
+          return;
+        }
+        throw authErr;
+      }
+
+      const user = userCredential.user;
+      const memberDoc = await getDoc(doc(db, 'members', user.uid));
+      if (memberDoc.exists()) {
+        const memberData = { ...memberDoc.data(), id: memberDoc.id } as Member;
+        if (memberData.isActive === false) {
+          setError('החשבון שלך כרגע בחופשה קצרה ⛱️⛺🛫🍹🌴\nלא ניתן להתחבר כרגע בגלל השעיה זמנית');
+          await auth.signOut();
+          setIsBiometricLoading(false);
+          return;
+        }
+
+        try {
+          await updateDoc(doc(db, 'members', user.uid), {
+            loginCount: increment(1)
+          });
+        } catch (updateErr) {
+          console.warn('Could not update login count:', updateErr);
+        }
+
+        login({ ...memberData, loginCount: (memberData.loginCount || 0) + 1 });
+        navigate('/');
+      } else {
+        // Find by email fallback
+        const qEmail = query(collection(db, 'members'), where('email', '==', targetEmail), limit(1));
+        const emailSnapshot = await trackedGetDocs(qEmail);
+        if (!emailSnapshot.empty) {
+          const mDoc = emailSnapshot.docs[0];
+          const mData = { ...mDoc.data(), id: mDoc.id } as Member;
+          login(mData);
+          navigate('/');
+        } else {
+          setError('פרטי החבר לא נמצאו במערכת');
+        }
+      }
+    } catch (bioErr: any) {
+      console.error('Biometric login failed:', bioErr);
+      setError(bioErr.message || 'שגיאה באימות ביומטרי');
+    } finally {
+      setIsBiometricLoading(false);
+    }
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -754,10 +864,10 @@ const LoginPage: React.FC = () => {
                 )}
               </AnimatePresence>
 
-              <div className="pt-2">
+              <div className="pt-2 flex flex-col gap-3">
                 <button 
                   type="submit" 
-                  disabled={isLoading} 
+                  disabled={isLoading || isBiometricLoading} 
                   className="w-full h-12 bg-gradient-to-r from-[#00AFC2] via-[#00A1E0] to-[#005e82] hover:from-[#00c3d9] hover:to-[#00709b] text-white shadow-[0_4px_25px_rgba(0,175,194,0.3)] hover:shadow-[0_8px_35px_rgba(0,175,194,0.55)] rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-bold text-base tracking-wide"
                 >
                   {isLoading ? (
@@ -768,6 +878,26 @@ const LoginPage: React.FC = () => {
                     </span>
                   )}
                 </button>
+
+                {hasBiometrics && (
+                  <button 
+                    type="button" 
+                    onClick={handleBiometricLogin}
+                    disabled={isLoading || isBiometricLoading}
+                    className="w-full h-12 bg-gradient-to-r from-[#00AFC2]/15 via-cyan-500/10 to-[#00AFC2]/15 hover:from-[#00AFC2]/25 hover:to-cyan-500/20 border border-[#00AFC2]/40 hover:border-[#00AFC2]/80 text-cyan-200 hover:text-white rounded-2xl flex items-center justify-center gap-2.5 transition-all duration-300 active:scale-[0.98] font-bold text-sm backdrop-blur-md shadow-[0_4px_20px_rgba(0,175,194,0.2)] group"
+                  >
+                    {isBiometricLoading ? (
+                      <Loader2 className="animate-spin text-[#00AFC2]" size={18} />
+                    ) : (
+                      <Fingerprint size={22} className="text-[#00AFC2] group-hover:scale-110 transition-transform" />
+                    )}
+                    <span>
+                      {enrolledBioUsers.length > 0 
+                        ? `התחבר בטביעת אצבע (${enrolledBioUsers[0].userName || enrolledBioUsers[0].userEmail})` 
+                        : 'התחבר בטביעת אצבע / Face ID'}
+                    </span>
+                  </button>
+                )}
               </div>
               
               <div className="pt-6 mt-6 border-t border-white/10 flex flex-col items-center gap-4">
@@ -1101,6 +1231,56 @@ const LoginPage: React.FC = () => {
                   </button>
                 </div>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Biometric Guide Modal */}
+      <AnimatePresence>
+        {showBioGuideModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="bg-[#0f1d24] border border-[#00AFC2]/30 p-8 max-w-sm w-full rounded-3xl relative overflow-hidden shadow-[0_20px_50px_rgba(0,175,194,0.25)] text-center"
+            >
+              <div className="w-16 h-16 bg-[#00AFC2]/15 text-[#00AFC2] flex items-center justify-center mx-auto mb-5 rounded-2xl border border-[#00AFC2]/30 shadow-inner">
+                <Fingerprint size={34} className="animate-pulse" />
+              </div>
+
+              <h3 className="text-xl font-bold text-white mb-2">הפעלת כניסה מהירה</h3>
+              <p className="text-white/70 text-sm leading-relaxed mb-6">
+                כדי להשתמש בטביעת אצבע או Face ID:
+              </p>
+
+              <div className="bg-black/30 border border-white/10 rounded-2xl p-4 text-right mb-6 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-[#00AFC2]/20 text-[#00AFC2] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">1</div>
+                  <p className="text-xs text-white/90 font-medium">התחבר תחילה עם מספר הטלפון / אימייל והסיסמה שלך.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-[#00AFC2]/20 text-[#00AFC2] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">2</div>
+                  <p className="text-xs text-white/90 font-medium">היכנס לדף הפרופיל שלך ולחץ על <span className="text-[#00AFC2] font-bold">"הפעל כניסה בטביעת אצבע"</span>.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-[#00AFC2]/20 text-[#00AFC2] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">3</div>
+                  <p className="text-xs text-white/90 font-medium">החל מהפעם הבאה, הכניסה תתבצע בנגיעה אחת בלבד!</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowBioGuideModal(false)}
+                className="w-full h-12 bg-gradient-to-r from-[#00AFC2] to-[#00709b] hover:from-[#00c3d9] hover:to-[#0089bd] text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center shadow-lg active:scale-[0.98]"
+              >
+                הבנתי, תודה!
+              </button>
             </motion.div>
           </motion.div>
         )}

@@ -1,10 +1,11 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
-import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCircle, Phone, Twitter, Music2, Mail, MapPin, ShieldCheck } from 'lucide-react';
+import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCircle, Phone, Twitter, Music2, Mail, MapPin, ShieldCheck, UtensilsCrossed } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateUserStats } from '../utils/analytics';
 import UserCategories from './UserCategories';
+import { getDietaryOptionLabel } from '../constants/dietary';
 
 interface PlayerCardProps {
   userId: string;
@@ -213,6 +214,29 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
                   </span>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Dietary Preferences Section */}
+          {((member.dietaryPreferences && member.dietaryPreferences.length > 0) || member.dietaryNotes) && (
+            <div className="w-full p-4 bg-emerald-50/40 backdrop-blur-[20px] border border-emerald-100/60 rounded-2xl mt-4" dir="rtl">
+              <div className="text-emerald-700 text-sm font-black mb-3 flex items-center gap-2 justify-center">
+                <UtensilsCrossed size={16} /> העדפות תזונה
+              </div>
+              {member.dietaryPreferences && member.dietaryPreferences.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {member.dietaryPreferences.map((pref, idx) => (
+                    <span key={idx} className="px-3 py-1 bg-white/90 border border-emerald-200 text-emerald-800 text-[10px] font-bold rounded-lg shadow-sm">
+                      {getDietaryOptionLabel(pref)}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {member.dietaryNotes && (
+                <p className="text-[11px] font-bold text-slate-600 text-center mt-2.5 bg-white/60 p-2 rounded-xl border border-emerald-100/50">
+                  {member.dietaryNotes}
+                </p>
+              )}
             </div>
           )}
         </div>

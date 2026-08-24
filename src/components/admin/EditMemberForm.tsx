@@ -4,10 +4,11 @@ import { createPortal } from 'react-dom';
 import { 
   X, Camera, UserCircle, ChevronLeft, Save, Archive, Loader2, Cake, Phone, Mail, AlertCircle, 
   ChevronDown, Instagram, Facebook, Music2, Linkedin, Twitter, Globe, Key, Check, HeartPulse,
-  Award, Search, Sparkles, User, RefreshCw
+  Award, Search, Sparkles, User, RefreshCw, UtensilsCrossed
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Member } from '../../types';
+import { DietaryPreferencesSection } from '../DietaryPreferencesSection';
 import { processImage } from '../../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../../utils/validation';
 import { useModal } from '../../contexts/ModalContext';
@@ -697,6 +698,26 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               </motion.div>
             )}
           </div>
+        </section>
+
+        {/* Section 2.4: Nutrition & Dietary Preferences */}
+        <section className="space-y-10">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+              <UtensilsCrossed size={24} />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-[#1e293b]">תזונה</h2>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nutrition & Dietary Preferences</p>
+            </div>
+          </div>
+
+          <DietaryPreferencesSection
+            selectedPreferences={editingMember.dietaryPreferences || []}
+            dietaryNotes={editingMember.dietaryNotes || ''}
+            onChangePreferences={(prefs) => setEditingMember({ ...editingMember, dietaryPreferences: prefs })}
+            onChangeNotes={(notes) => setEditingMember({ ...editingMember, dietaryNotes: notes })}
+          />
         </section>
 
         {/* Section 2.5: Medical Info */}

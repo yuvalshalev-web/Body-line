@@ -53,6 +53,8 @@ export interface Member {
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   medicalInfo?: string;
+  dietaryPreferences?: string[];
+  dietaryNotes?: string;
   certifications?: string[];
   digitalWallet?: DigitalLicense[];
   otherCertification?: string;

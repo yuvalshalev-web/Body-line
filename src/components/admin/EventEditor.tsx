@@ -4,6 +4,7 @@ import { X, Calendar, Clock, MapPin, Image as ImageIcon, Save, Upload, Loader2, 
 import { processImage } from '../../utils/imageProcessor';
 import { loadGoogleMaps } from '../../utils/googlePlaces';
 import { useData } from '../../contexts/DataContext';
+import { EventDietarySummary } from '../EventDietarySummary';
 
 interface EventEditorProps {
   event: Partial<Event> | null;
@@ -299,6 +300,17 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
             <p className="text-xs text-slate-500 mt-1 mr-1">
               {formData.attendees?.length || 0} משתתפים נבחרו
             </p>
+
+            {/* Live dietary & kosher summary for selected participants */}
+            {formData.attendees && formData.attendees.length > 0 && (
+              <div className="mt-3">
+                <EventDietarySummary
+                  attendees={members.filter(m => (formData.attendees || []).includes(m.id))}
+                  compact={true}
+                  title="סיכום תזונה וכשרות למשתתפים שנבחרו"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-3 pt-6 border-t border-slate-100 mt-8">

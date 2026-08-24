@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, X, Cake, ChevronDown, Globe, Sparkles, Loader2, Save, Camera, Check, HeartPulse, Search } from 'lucide-react';
+import { Plus, X, Cake, ChevronDown, Globe, Sparkles, Loader2, Save, Camera, Check, HeartPulse, Search, UtensilsCrossed } from 'lucide-react';
 import { Member, Gender } from '../../types';
+import { DietaryPreferencesSection } from '../DietaryPreferencesSection';
 import { processImage } from '../../utils/imageProcessor';
 import { generateBio } from '../../services/geminiService';
 import { hashPassword } from '../../utils/crypto';
@@ -524,6 +525,18 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
                         </div>
 
                       </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <h4 className="text-[12px] font-black text-[#00426a] uppercase tracking-[0.3em] flex items-center gap-3">
+                        <UtensilsCrossed size={14} /> תזונה
+                      </h4>
+                      <DietaryPreferencesSection
+                        selectedPreferences={newMemberData.dietaryPreferences || []}
+                        dietaryNotes={newMemberData.dietaryNotes || ''}
+                        onChangePreferences={(prefs) => setNewMemberData(prev => ({ ...prev, dietaryPreferences: prefs }))}
+                        onChangeNotes={(notes) => setNewMemberData(prev => ({ ...prev, dietaryNotes: notes }))}
+                      />
                     </div>
 
                     <div className="space-y-6">

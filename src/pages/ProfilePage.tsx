@@ -38,12 +38,15 @@ import {
   Video,
   Waves,
   Wind,
-  Maximize2
+  Maximize2,
+  UtensilsCrossed,
+  Fingerprint
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { Member } from '../types';
+import { DietaryPreferencesSection } from '../components/DietaryPreferencesSection';
 import { generateBio, verifyLicense } from '../services/geminiService';
 import { processImage, compressBase64Image } from '../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
@@ -51,6 +54,7 @@ import { hashPassword } from '../utils/crypto';
 import { loadGoogleMaps } from '../utils/googlePlaces';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useRandomHeader } from '../hooks/useRandomHeader';
+import { isBiometricAvailable, isUserBiometricEnrolled, registerBiometrics, disableBiometrics } from '../utils/biometrics';
 
 const ensureAbsoluteUrl = (url?: string) => {
   if (!url) return '';
@@ -262,6 +266,53 @@ const ProfilePage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isPlaceSelected, setIsPlaceSelected] = useState(!!currentUser?.full_address);
+  const [isBiometricSupported, setIsBiometricSupported] = useState(false);
+  const [isBiometricEnrolled, setIsBiometricEnrolled] = useState(false);
+  const [isEnrollingBiometrics, setIsEnrollingBiometrics] = useState(false);
+
+  useEffect(() => {
+    isBiometricAvailable().then(supported => {
+      setIsBiometricSupported(supported);
+      if (supported && currentUser) {
+        setIsBiometricEnrolled(isUserBiometricEnrolled(currentUser.id, currentUser.email));
+      }
+    });
+  }, [currentUser]);
+
+  const handleToggleBiometrics = async () => {
+    if (!currentUser) return;
+    
+    if (isBiometricEnrolled) {
+      disableBiometrics(currentUser.id);
+      setIsBiometricEnrolled(false);
+      setToast({ msg: 'הזדהות ביומטרית בוטלה במכשיר זה', type: 'success' });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
+    setIsEnrollingBiometrics(true);
+    try {
+      const res = await registerBiometrics(
+        currentUser.id,
+        currentUser.email,
+        `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || 'חבר קהילה'
+      );
+
+      if (res.success) {
+        setIsBiometricEnrolled(true);
+        setToast({ msg: 'הזדהות ביומטרית (טביעת אצבע / Face ID) הופעלה בהצלחה! ✨', type: 'success' });
+        setTimeout(() => setToast(null), 4000);
+      } else {
+        setToast({ msg: res.error || 'נכשלה הפעלת הזדהות ביומטרית', type: 'error' });
+        setTimeout(() => setToast(null), 7000);
+      }
+    } catch (err: any) {
+      setToast({ msg: err.message || 'שגיאה בהפעלת ביומטריה', type: 'error' });
+      setTimeout(() => setToast(null), 7000);
+    } finally {
+      setIsEnrollingBiometrics(false);
+    }
+  };
   const addressInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
   
@@ -361,6 +412,7 @@ const ProfilePage: React.FC = () => {
       { label: 'שם איש קשר לחירום', value: formData.emergencyContactName },
       { label: 'טלפון לחירום', value: formData.emergencyContactPhone },
       { label: 'מידע רפואי', value: formData.medicalInfo },
+      { label: 'העדפות תזונה וכשרות', value: (formData.dietaryPreferences && formData.dietaryPreferences.length > 0) || Boolean(formData.dietaryNotes && formData.dietaryNotes.trim()) },
       { label: 'הכשרות והסמכות', value: formData.certifications && formData.certifications.length > 0 },
       { label: 'אינסטגרם', value: formData.instagramUrl },
       { label: 'פייסבוק', value: formData.facebookUrl },
@@ -386,12 +438,15 @@ const ProfilePage: React.FC = () => {
     formData?.emergencyContactName, 
     formData?.emergencyContactPhone,
     formData?.medicalInfo,
+    formData?.dietaryPreferences,
+    formData?.dietaryNotes,
     formData?.certifications,
     formData?.instagramUrl,
     formData?.facebookUrl,
     formData?.tiktokUrl,
     formData?.linkedinUrl,
-    formData?.twitterUrl
+    formData?.twitterUrl,
+    formData?.websiteUrl
   ]);
 
   const completionPercentage = completionDetails.percentage;
@@ -902,389 +957,21 @@ const ProfilePage: React.FC = () => {
                 </div>
               </section>
 
-              {/* Digital Document Verification Section */}
+              {/* Section: Nutrition & Dietary Preferences */}
               <section className="space-y-6 md:space-y-8">
                 <SectionHeader 
-                  icon={ShieldCheck} 
-                  title="אימות מסמכים דיגיטלי" 
-                  subtitle="Digital Document Verification"
-                  colorClass="text-blue-600" 
-                  bgColorClass="bg-blue-100" 
-                />
-                
-                <div className="luxury-card !p-8 bg-white/40 border border-white/60 rounded-[2.5rem] shadow-sm relative overflow-hidden group">
-                  <div className="grain-overlay opacity-[0.02]" />
-                  
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleDocumentUpload} 
-                    className="hidden" 
-                    accept="image/*"
-                  />
-
-                  {!verificationResult && !isVerifying && !isCameraOpen && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex flex-col items-center justify-center gap-4 py-10 border-2 border-dashed border-slate-200/60 rounded-[2rem] cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all group"
-                      >
-                        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-400 group-hover:text-blue-500 transition-colors">
-                          <Upload size={32} />
-                        </div>
-                        <div className="text-center">
-                          <p className="text-base font-black text-slate-700">העלה קובץ קיים</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">PNG, JPG up to 10MB</p>
-                        </div>
-                      </div>
-
-                      <div 
-                        onClick={startCamera}
-                        className="flex flex-col items-center justify-center gap-4 py-10 border-2 border-dashed border-slate-200/60 rounded-[2rem] cursor-pointer hover:border-sky-400 hover:bg-sky-50/30 transition-all group"
-                      >
-                        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-400 group-hover:text-sky-500 transition-colors">
-                          <Video size={32} />
-                        </div>
-                        <div className="text-center">
-                          <p className="text-base font-black text-slate-700">סרוק עם המצלמה</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Live Capture and Scan</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {isCameraOpen && (
-                    <div className="flex flex-col items-center gap-6 py-6">
-                      <div className="relative w-full max-w-sm aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20">
-                        <video 
-                          ref={videoRef} 
-                          autoPlay 
-                          playsInline 
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 border-2 border-sky-500/30 border-dashed pointer-events-none rounded-2xl m-4" />
-                        <div className="absolute top-4 right-4 animate-pulse">
-                           <div className="w-2 h-2 bg-rose-500 rounded-full" />
-                        </div>
-                      </div>
-                      <canvas ref={canvasRef} className="hidden" />
-                      <div className="flex gap-4 w-full max-w-xs">
-                        <button 
-                          onClick={stopCamera}
-                          className="flex-1 py-3 bg-white text-slate-600 rounded-xl font-black text-xs shadow-sm hover:bg-slate-50"
-                        >
-                          ביטול
-                        </button>
-                        <button 
-                          onClick={capturePhoto}
-                          className="flex-1 py-3 bg-sky-500 text-white rounded-xl font-black text-xs shadow-lg shadow-sky-500/20 hover:bg-sky-600"
-                        >
-                          צלם ואמת
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {isVerifying && (
-                    <div className="flex flex-col items-center justify-center gap-6 py-12">
-                      <div className="relative">
-                        <Loader2 size={48} className="text-blue-500 animate-spin" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <ShieldCheck size={20} className="text-blue-600 animate-pulse" />
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-base font-black text-slate-800 animate-pulse">מנתח מסמך ומאמת נתונים...</p>
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Gemini 1.5 Flash AI Specialist</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {verificationResult && (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="flex flex-col gap-6"
-                    >
-                      {verificationResult.error ? (
-                        <div className="bg-rose-50 border border-rose-100/50 rounded-2xl p-8 text-center">
-                          <XCircle size={40} className="text-rose-500 mx-auto mb-3" />
-                          <p className="text-sm font-black text-rose-800">{verificationResult.error === "Invalid or unclear image" ? "התמונה לא ברורה או אינה רישיון תקין" : verificationResult.error}</p>
-                          <button 
-                            type="button"
-                            onClick={() => setVerificationResult(null)}
-                            className="mt-4 text-xs font-bold text-rose-600 underline underline-offset-4"
-                          >
-                            נסה שוב
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="space-y-6">
-                          <div className="flex items-center justify-between bg-white/50 p-6 rounded-2xl border border-white/60">
-                            <div className="flex items-center gap-4">
-                              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${verificationResult.is_valid ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
-                                {verificationResult.is_valid ? <CheckCircle size={28} /> : <XCircle size={28} />}
-                              </div>
-                              <div className="text-right">
-                                <div className="flex items-center gap-2 mb-1">
-                                   <h5 className="text-lg font-black text-slate-900 tracking-tight">{verificationResult.full_name}</h5>
-                                   {verificationResult.confidence_score > 0.9 && <ShieldCheck size={16} className="text-sky-500" />}
-                                </div>
-                                <p className="text-xs font-bold text-slate-500 leading-none">{verificationResult.organization} • {verificationResult.level}</p>
-                              </div>
-                            </div>
-                            <div className="text-left">
-                              <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-tighter ${verificationResult.is_valid ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                                {verificationResult.is_valid ? 'Verified Document' : 'Invalid / Expired'}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4 text-right">
-                            <div className="bg-white/60 p-5 rounded-2xl border border-white/80 shadow-sm">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">מספר רישיון</span>
-                              <span className="font-mono text-sm font-black text-slate-800">{verificationResult.license_id}</span>
-                            </div>
-                            <div className="bg-white/60 p-5 rounded-2xl border border-white/80 shadow-sm">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">תאריך תפוגה</span>
-                              <span className={`text-sm font-black ${verificationResult.is_valid ? 'text-slate-800' : 'text-rose-600'}`}>
-                                {verificationResult.expiration_date}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 py-2 text-[10px] font-bold text-slate-400 justify-center bg-slate-50/50 rounded-xl">
-                            <Camera size={12} />
-                            <span className="uppercase tracking-widest">Conf Score: {Math.round(verificationResult.confidence_score * 100)}% • AI Verified</span>
-                          </div>
-
-                          <div className="flex gap-4">
-                            <button 
-                              type="button"
-                              onClick={() => setVerificationResult(null)}
-                              className="flex-1 py-4 bg-white/70 border border-white/80 rounded-2xl text-xs font-black text-slate-500 hover:bg-white transition-all shadow-sm active:scale-95"
-                            >
-                              ביטול
-                            </button>
-                            {verificationResult.is_valid && (
-                              <button 
-                                type="button"
-                                onClick={() => {
-                                  if (!formData) return;
-                                  
-                                  const currentCerts = formData.certifications || [];
-                                  const certText = `${verificationResult.organization}: ${verificationResult.level}`;
-                                  
-                                  // Add to certifications if not present (legacy support)
-                                  let newCerts = [...currentCerts];
-                                  if (!currentCerts.includes(certText)) {
-                                    newCerts.push(certText);
-                                  }
-
-                                  // Add to digital wallet
-                                  const rawType = (verificationResult.type || '').toLowerCase();
-                                  const org = (verificationResult.organization || '').toLowerCase();
-                                  
-                                  const walletType = 
-                                          ['diving', 'surfing', 'sailing', 'skydiving', 'climbing'].includes(rawType) ? (rawType.charAt(0).toUpperCase() + rawType.slice(1)) :
-                                          (org.includes('scuba') || org.includes('padi') || org.includes('ssi') ? 'Diving' : 
-                                           org.includes('surf') ? 'Surfing' : 
-                                           org.includes('sail') || org.includes('skipper') ? 'Sailing' :
-                                           org.includes('skydive') ? 'Skydiving' :
-                                           org.includes('climb') ? 'Climbing' : 'Other');
-
-                                  const walletEntity = {
-                                    id: crypto.randomUUID(),
-                                    full_name: verificationResult.full_name,
-                                    license_id: verificationResult.license_id,
-                                    organization: verificationResult.organization,
-                                    expiration_date: verificationResult.expiration_date,
-                                    level: verificationResult.level,
-                                    rank: verificationResult.rank,
-                                    issue_date: verificationResult.issue_date,
-                                    school_number: verificationResult.school_number,
-                                    instructor: verificationResult.instructor,
-                                    metadata: verificationResult.metadata || {},
-                                    image_data: lastVerifiedImage, // Save the base64 image
-                                    confidence_score: verificationResult.confidence_score,
-                                    is_valid: verificationResult.is_valid,
-                                    type: walletType,
-                                    verifiedAt: new Date().toISOString()
-                                  };
-
-                                  const currentWallet = formData.digitalWallet || [];
-                                  
-                                  setFormData({
-                                    ...formData,
-                                    certifications: newCerts,
-                                    digitalWallet: [...currentWallet, walletEntity]
-                                  });
-
-                                  setToast({ msg: 'המסמך אומת ונשמר זמנית. אל תשכח ללחוץ על "שמור שינויים" בתחתית העמוד כדי לעדכן את הפרופיל והדרכון האתלט שלך!', type: 'success' });
-                                  setVerificationResult(null);
-                                  setIsDirty(true);
-                                  setTimeout(() => setToast(null), 5000);
-                                }}
-                                className="flex-1 py-4 bg-slate-900 text-white rounded-2xl text-xs font-black hover:bg-slate-800 transition-all shadow-lg active:scale-95"
-                              >
-                                הוסף לארנק הדיגיטלי
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </div>
-                
-                {uploadError && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="bg-rose-50 text-rose-600 text-xs font-bold p-4 rounded-xl border border-rose-100 flex items-center gap-3"
-                  >
-                    <AlertTriangle size={16} />
-                    {uploadError}
-                  </motion.div>
-                )}
-              </section>
-              
-              {/* Digital Wallet Section */}
-              <section className="space-y-6 md:space-y-8">
-                <SectionHeader 
-                  icon={Award} 
-                  title="ארנק מסמכים דיגיטלי" 
-                  subtitle="Your Digital Sport Wallet"
+                  icon={UtensilsCrossed} 
+                  title="תזונה" 
+                  subtitle="Nutrition & Dietary Preferences"
                   colorClass="text-emerald-600" 
                   bgColorClass="bg-emerald-100" 
                 />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {formData.digitalWallet && formData.digitalWallet.length > 0 ? (
-                    formData.digitalWallet.map((license: any) => (
-                      <motion.div 
-                        key={license.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="luxury-card !p-6 bg-white/40 border border-white/80 rounded-3xl shadow-sm space-y-4 relative overflow-hidden group"
-                      >
-                         <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-100/20 blur-2xl rounded-full translate-x-1/2 -translate-y-1/2" />
-                         <div className="flex items-center justify-between relative z-10">
-                            <div className="flex items-center gap-3">
-                               <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-md">
-                                  {license.type === 'Diving' ? <Waves size={20} /> : license.type === 'Surfing' ? <Wind size={20} /> : <ShieldCheck size={20} />}
-                               </div>
-                               <div>
-                                  <h5 className="font-black text-slate-900 leading-tight">{license.organization}</h5>
-                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{license.level}</p>
-                               </div>
-                            </div>
-                            <div className="text-left">
-                               <button 
-                                 type="button"
-                                 onClick={() => {
-                                   const newWallet = formData.digitalWallet?.filter((item: any) => item.id !== license.id);
-                                   handleFieldChange('digitalWallet', newWallet);
-                                 }}
-                                 className="text-slate-300 hover:text-rose-500 transition-colors p-1"
-                               >
-                                  <Trash2 size={16} />
-                               </button>
-                            </div>
-                         </div>
-                         
-                          {license.image_data && (
-                            <div className="relative group/scan h-44 w-full rounded-2xl overflow-hidden border border-white/60 shadow-inner my-4">
-                              <img src={license.image_data} alt="Scan" className="w-full h-full object-cover transition-transform group-hover/scan:scale-105 duration-700" />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-3 opacity-0 group-hover/scan:opacity-100 transition-opacity">
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const win = window.open();
-                                    win?.document.write(`<html><body style="margin:0;display:flex;justify-content:center;align-items:center;background:#000;"><img src="${license.image_data}" style="max-width:100%;max-height:100vh;"></body></html>`);
-                                  }}
-                                  className="text-[9px] font-black text-white uppercase tracking-widest bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-2 ml-auto hover:bg-white/40 transition-all border border-white/20 shadow-xl"
-                                >
-                                  <Maximize2 size={12} /> הצג סריקה מקורית
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="grid grid-cols-2 gap-3 relative z-10">
-                            <div className="bg-white/50 p-3 rounded-xl border border-white/60">
-                               <span className="text-[9px] font-bold text-slate-400 uppercase block">ID</span>
-                               <span className="font-mono text-xs font-black text-slate-700">{license.license_id}</span>
-                            </div>
-                            <div className="bg-white/50 p-3 rounded-xl border border-white/60">
-                               <span className="text-[9px] font-bold text-slate-400 uppercase block">Expires</span>
-                               <span className="text-xs font-black text-slate-700">{license.expiration_date || 'N/A'}</span>
-                            </div>
-                            {license.rank && (
-                              <div className="bg-white/50 p-3 rounded-xl border border-white/60">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">Rank</span>
-                                <span className="text-xs font-black text-slate-700">{license.rank}</span>
-                              </div>
-                            )}
-                            {license.issue_date && (
-                              <div className="bg-white/50 p-3 rounded-xl border border-white/60">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">Issued</span>
-                                <span className="text-xs font-black text-slate-700">{license.issue_date}</span>
-                              </div>
-                            )}
-                            {license.school_number && (
-                              <div className="bg-white/50 p-3 rounded-xl border border-white/60">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">School</span>
-                                <span className="text-xs font-black text-slate-700">{license.school_number}</span>
-                              </div>
-                            )}
-                            {license.instructor && (
-                              <div className="bg-white/50 p-3 rounded-xl border border-white/60 col-span-2">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">Instructor</span>
-                                <span className="text-xs font-black text-slate-700">{license.instructor}</span>
-                              </div>
-                            )}
-                            
-                            {/* Dynamic Metadata Fields */}
-                            {license.metadata && Object.entries(license.metadata).map(([key, value]) => (
-                              <div key={key} className="bg-white/50 p-3 rounded-xl border border-white/60">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block leading-none mb-1">{key.replace(/_/g, ' ')}</span>
-                                <span className="text-xs font-black text-slate-700 leading-tight">{String(value)}</span>
-                              </div>
-                            ))}
-                         </div>
-                         
-                         <div className="flex items-center justify-between pt-2 border-t border-slate-100 relative z-10">
-                            <div className="flex items-center gap-1">
-                               <VerifiedIcon size={12} className="text-emerald-500" />
-                               <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">Verified License</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                               <span className="text-[9px] font-bold text-slate-300 italic">Added: {new Date(license.verifiedAt).toLocaleDateString('he-IL')}</span>
-                               <button 
-                                 onClick={() => {
-                                   if (!formData.digitalWallet) return;
-                                   const newWallet = formData.digitalWallet.filter((item: any) => item.id !== license.id);
-                                   handleFieldChange('digitalWallet', newWallet);
-                                   setIsDirty(true);
-                                   setToast({ msg: 'המסמך הוסר מהארנק', type: 'success' });
-                                   setTimeout(() => setToast(null), 3000);
-                                 }}
-                                 className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-                               >
-                                 <Trash2 size={12} />
-                               </button>
-                            </div>
-                         </div>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <div className="md:col-span-2 py-12 text-center bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200">
-                       <FileDigit size={40} className="text-slate-300 mx-auto mb-4" />
-                       <p className="text-slate-400 font-bold">הארנק הדיגיטלי ריק. השתמש במאמת המסמכים למעלה כדי להוסיף רישיונות.</p>
-                    </div>
-                  )}
-                </div>
+                <DietaryPreferencesSection
+                  selectedPreferences={formData.dietaryPreferences || []}
+                  dietaryNotes={formData.dietaryNotes || ''}
+                  onChangePreferences={(prefs) => handleFieldChange('dietaryPreferences', prefs)}
+                  onChangeNotes={(notes) => handleFieldChange('dietaryNotes', notes)}
+                />
               </section>
 
               <section className="space-y-6 md:space-y-8">
@@ -1382,6 +1069,394 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
 
+          {/* Digital Documents & Wallet (Positioned at bottom below My Story) */}
+          <div className="mt-16 md:mt-24 space-y-12 md:space-y-16 relative z-10">
+            {/* Digital Document Verification Section */}
+            <section className="space-y-6 md:space-y-8">
+              <SectionHeader 
+                icon={ShieldCheck} 
+                title="אימות מסמכים דיגיטלי" 
+                subtitle="Digital Document Verification"
+                colorClass="text-blue-600" 
+                bgColorClass="bg-blue-100" 
+              />
+              
+              <div className="luxury-card !p-8 bg-white/40 border border-white/60 rounded-[2.5rem] shadow-sm relative overflow-hidden group">
+                <div className="grain-overlay opacity-[0.02]" />
+                
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleDocumentUpload} 
+                  className="hidden" 
+                  accept="image/*"
+                />
+
+                {!verificationResult && !isVerifying && !isCameraOpen && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex flex-col items-center justify-center gap-4 py-10 border-2 border-dashed border-slate-200/60 rounded-[2rem] cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all group"
+                    >
+                      <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-400 group-hover:text-blue-500 transition-colors">
+                        <Upload size={32} />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-base font-black text-slate-700">העלה קובץ קיים</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">PNG, JPG up to 10MB</p>
+                      </div>
+                    </div>
+
+                    <div 
+                      onClick={startCamera}
+                      className="flex flex-col items-center justify-center gap-4 py-10 border-2 border-dashed border-slate-200/60 rounded-[2rem] cursor-pointer hover:border-sky-400 hover:bg-sky-50/30 transition-all group"
+                    >
+                      <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-400 group-hover:text-sky-500 transition-colors">
+                        <Video size={32} />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-base font-black text-slate-700">סרוק עם המצלמה</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Live Capture and Scan</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {isCameraOpen && (
+                  <div className="flex flex-col items-center gap-6 py-6">
+                    <div className="relative w-full max-w-sm aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20">
+                      <video 
+                        ref={videoRef} 
+                        autoPlay 
+                        playsInline 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 border-2 border-sky-500/30 border-dashed pointer-events-none rounded-2xl m-4" />
+                      <div className="absolute top-4 right-4 animate-pulse">
+                         <div className="w-2 h-2 bg-rose-500 rounded-full" />
+                      </div>
+                    </div>
+                    <canvas ref={canvasRef} className="hidden" />
+                    <div className="flex gap-4 w-full max-w-xs">
+                      <button 
+                        onClick={stopCamera}
+                        className="flex-1 py-3 bg-white text-slate-600 rounded-xl font-black text-xs shadow-sm hover:bg-slate-50"
+                      >
+                        ביטול
+                      </button>
+                      <button 
+                        onClick={capturePhoto}
+                        className="flex-1 py-3 bg-sky-500 text-white rounded-xl font-black text-xs shadow-lg shadow-sky-500/20 hover:bg-sky-600"
+                      >
+                        צלם ואמת
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {isVerifying && (
+                  <div className="flex flex-col items-center justify-center gap-6 py-12">
+                    <div className="relative">
+                      <Loader2 size={48} className="text-blue-500 animate-spin" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <ShieldCheck size={20} className="text-blue-600 animate-pulse" />
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-base font-black text-slate-800 animate-pulse">מנתח מסמך ומאמת נתונים...</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Gemini 1.5 Flash AI Specialist</p>
+                    </div>
+                  </div>
+                )}
+
+                {verificationResult && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col gap-6"
+                  >
+                    {verificationResult.error ? (
+                      <div className="bg-rose-50 border border-rose-100/50 rounded-2xl p-8 text-center">
+                        <XCircle size={40} className="text-rose-500 mx-auto mb-3" />
+                        <p className="text-sm font-black text-rose-800">{verificationResult.error === "Invalid or unclear image" ? "התמונה לא ברורה או אינה רישיון תקין" : verificationResult.error}</p>
+                        <button 
+                          type="button"
+                          onClick={() => setVerificationResult(null)}
+                          className="mt-4 text-xs font-bold text-rose-600 underline underline-offset-4"
+                        >
+                          נסה שוב
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between bg-white/50 p-6 rounded-2xl border border-white/60">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${verificationResult.is_valid ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
+                              {verificationResult.is_valid ? <CheckCircle size={28} /> : <XCircle size={28} />}
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center gap-2 mb-1">
+                                 <h5 className="text-lg font-black text-slate-900 tracking-tight">{verificationResult.full_name}</h5>
+                                 {verificationResult.confidence_score > 0.9 && <ShieldCheck size={16} className="text-sky-500" />}
+                              </div>
+                              <p className="text-xs font-bold text-slate-500 leading-none">{verificationResult.organization} • {verificationResult.level}</p>
+                            </div>
+                          </div>
+                          <div className="text-left">
+                            <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-tighter ${verificationResult.is_valid ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                              {verificationResult.is_valid ? 'Verified Document' : 'Invalid / Expired'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 text-right">
+                          <div className="bg-white/60 p-5 rounded-2xl border border-white/80 shadow-sm">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">מספר רישיון</span>
+                            <span className="font-mono text-sm font-black text-slate-800">{verificationResult.license_id}</span>
+                          </div>
+                          <div className="bg-white/60 p-5 rounded-2xl border border-white/80 shadow-sm">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">תאריך תפוגה</span>
+                            <span className={`text-sm font-black ${verificationResult.is_valid ? 'text-slate-800' : 'text-rose-600'}`}>
+                              {verificationResult.expiration_date}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 py-2 text-[10px] font-bold text-slate-400 justify-center bg-slate-50/50 rounded-xl">
+                          <Camera size={12} />
+                          <span className="uppercase tracking-widest">Conf Score: {Math.round(verificationResult.confidence_score * 100)}% • AI Verified</span>
+                        </div>
+
+                        <div className="flex gap-4">
+                          <button 
+                            type="button"
+                            onClick={() => setVerificationResult(null)}
+                            className="flex-1 py-4 bg-white/70 border border-white/80 rounded-2xl text-xs font-black text-slate-500 hover:bg-white transition-all shadow-sm active:scale-95"
+                          >
+                            ביטול
+                          </button>
+                          {verificationResult.is_valid && (
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                if (!formData) return;
+                                
+                                const currentCerts = formData.certifications || [];
+                                const certText = `${verificationResult.organization}: ${verificationResult.level}`;
+                                
+                                // Add to certifications if not present (legacy support)
+                                let newCerts = [...currentCerts];
+                                if (!currentCerts.includes(certText)) {
+                                  newCerts.push(certText);
+                                }
+
+                                // Add to digital wallet
+                                const rawType = (verificationResult.type || '').toLowerCase();
+                                const org = (verificationResult.organization || '').toLowerCase();
+                                
+                                const walletType = 
+                                        ['diving', 'surfing', 'sailing', 'skydiving', 'climbing'].includes(rawType) ? (rawType.charAt(0).toUpperCase() + rawType.slice(1)) :
+                                        (org.includes('scuba') || org.includes('padi') || org.includes('ssi') ? 'Diving' : 
+                                         org.includes('surf') ? 'Surfing' : 
+                                         org.includes('sail') || org.includes('skipper') ? 'Sailing' :
+                                         org.includes('skydive') ? 'Skydiving' :
+                                         org.includes('climb') ? 'Climbing' : 'Other');
+
+                                const walletEntity = {
+                                  id: crypto.randomUUID(),
+                                  full_name: verificationResult.full_name,
+                                  license_id: verificationResult.license_id,
+                                  organization: verificationResult.organization,
+                                  expiration_date: verificationResult.expiration_date,
+                                  level: verificationResult.level,
+                                  rank: verificationResult.rank,
+                                  issue_date: verificationResult.issue_date,
+                                  school_number: verificationResult.school_number,
+                                  instructor: verificationResult.instructor,
+                                  metadata: verificationResult.metadata || {},
+                                  image_data: lastVerifiedImage, // Save the base64 image
+                                  confidence_score: verificationResult.confidence_score,
+                                  is_valid: verificationResult.is_valid,
+                                  type: walletType,
+                                  verifiedAt: new Date().toISOString()
+                                };
+
+                                const currentWallet = formData.digitalWallet || [];
+                                
+                                setFormData({
+                                  ...formData,
+                                  certifications: newCerts,
+                                  digitalWallet: [...currentWallet, walletEntity]
+                                });
+
+                                setToast({ msg: 'המסמך אומת ונשמר זמנית. אל תשכח ללחוץ על "שמור שינויים" בתחתית העמוד כדי לעדכן את הפרופיל והדרכון האתלט שלך!', type: 'success' });
+                                setVerificationResult(null);
+                                setIsDirty(true);
+                                setTimeout(() => setToast(null), 5000);
+                              }}
+                              className="flex-1 py-4 bg-slate-900 text-white rounded-2xl text-xs font-black hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                            >
+                              הוסף לארנק הדיגיטלי
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </div>
+              
+              {uploadError && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="bg-rose-50 text-rose-600 text-xs font-bold p-4 rounded-xl border border-rose-100 flex items-center gap-3"
+                >
+                  <AlertTriangle size={16} />
+                  {uploadError}
+                </motion.div>
+              )}
+            </section>
+            
+            {/* Digital Wallet Section */}
+            <section className="space-y-6 md:space-y-8">
+              <SectionHeader 
+                icon={Award} 
+                title="ארנק מסמכים דיגיטלי" 
+                subtitle="Your Digital Sport Wallet"
+                colorClass="text-emerald-600" 
+                bgColorClass="bg-emerald-100" 
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {formData.digitalWallet && formData.digitalWallet.length > 0 ? (
+                  formData.digitalWallet.map((license: any) => (
+                    <motion.div 
+                      key={license.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="luxury-card !p-6 bg-white/40 border border-white/80 rounded-3xl shadow-sm space-y-4 relative overflow-hidden group"
+                    >
+                       <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-100/20 blur-2xl rounded-full translate-x-1/2 -translate-y-1/2" />
+                       <div className="flex items-center justify-between relative z-10">
+                          <div className="flex items-center gap-3">
+                             <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-md">
+                                {license.type === 'Diving' ? <Waves size={20} /> : license.type === 'Surfing' ? <Wind size={20} /> : <ShieldCheck size={20} />}
+                             </div>
+                             <div>
+                                <h5 className="font-black text-slate-900 leading-tight">{license.organization}</h5>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{license.level}</p>
+                             </div>
+                          </div>
+                          <div className="text-left">
+                             <button 
+                               type="button"
+                               onClick={() => {
+                                 const newWallet = formData.digitalWallet?.filter((item: any) => item.id !== license.id);
+                                 handleFieldChange('digitalWallet', newWallet);
+                               }}
+                               className="text-slate-300 hover:text-rose-500 transition-colors p-1"
+                             >
+                                <Trash2 size={16} />
+                             </button>
+                          </div>
+                       </div>
+                       
+                        {license.image_data && (
+                          <div className="relative group/scan h-44 w-full rounded-2xl overflow-hidden border border-white/60 shadow-inner my-4">
+                            <img src={license.image_data} alt="Scan" className="w-full h-full object-cover transition-transform group-hover/scan:scale-105 duration-700" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-3 opacity-0 group-hover/scan:opacity-100 transition-opacity">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const win = window.open();
+                                  win?.document.write(`<html><body style="margin:0;display:flex;justify-content:center;align-items:center;background:#000;"><img src="${license.image_data}" style="max-width:100%;max-height:100vh;"></body></html>`);
+                                }}
+                                className="text-[9px] font-black text-white uppercase tracking-widest bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-2 ml-auto hover:bg-white/40 transition-all border border-white/20 shadow-xl"
+                              >
+                                <Maximize2 size={12} /> הצג סריקה מקורית
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-3 relative z-10">
+                          <div className="bg-white/50 p-3 rounded-xl border border-white/60">
+                             <span className="text-[9px] font-bold text-slate-400 uppercase block">ID</span>
+                             <span className="font-mono text-xs font-black text-slate-700">{license.license_id}</span>
+                          </div>
+                          <div className="bg-white/50 p-3 rounded-xl border border-white/60">
+                             <span className="text-[9px] font-bold text-slate-400 uppercase block">Expires</span>
+                             <span className="text-xs font-black text-slate-700">{license.expiration_date || 'N/A'}</span>
+                          </div>
+                          {license.rank && (
+                            <div className="bg-white/50 p-3 rounded-xl border border-white/60">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase block">Rank</span>
+                              <span className="text-xs font-black text-slate-700">{license.rank}</span>
+                            </div>
+                          )}
+                          {license.issue_date && (
+                            <div className="bg-white/50 p-3 rounded-xl border border-white/60">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase block">Issued</span>
+                              <span className="text-xs font-black text-slate-700">{license.issue_date}</span>
+                            </div>
+                          )}
+                          {license.school_number && (
+                            <div className="bg-white/50 p-3 rounded-xl border border-white/60">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase block">School</span>
+                              <span className="text-xs font-black text-slate-700">{license.school_number}</span>
+                            </div>
+                          )}
+                          {license.instructor && (
+                            <div className="bg-white/50 p-3 rounded-xl border border-white/60 col-span-2">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase block">Instructor</span>
+                              <span className="text-xs font-black text-slate-700">{license.instructor}</span>
+                            </div>
+                          )}
+                          
+                          {/* Dynamic Metadata Fields */}
+                          {license.metadata && Object.entries(license.metadata).map(([key, value]) => (
+                            <div key={key} className="bg-white/50 p-3 rounded-xl border border-white/60">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase block leading-none mb-1">{key.replace(/_/g, ' ')}</span>
+                              <span className="text-xs font-black text-slate-700 leading-tight">{String(value)}</span>
+                            </div>
+                          ))}
+                       </div>
+                       
+                       <div className="flex items-center justify-between pt-2 border-t border-slate-100 relative z-10">
+                          <div className="flex items-center gap-1">
+                             <VerifiedIcon size={12} className="text-emerald-500" />
+                             <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tighter">Verified License</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                             <span className="text-[9px] font-bold text-slate-300 italic">Added: {new Date(license.verifiedAt).toLocaleDateString('he-IL')}</span>
+                             <button 
+                               onClick={() => {
+                                 if (!formData.digitalWallet) return;
+                                 const newWallet = formData.digitalWallet.filter((item: any) => item.id !== license.id);
+                                 handleFieldChange('digitalWallet', newWallet);
+                                 setIsDirty(true);
+                                 setToast({ msg: 'המסמך הוסר מהארנק', type: 'success' });
+                                 setTimeout(() => setToast(null), 3000);
+                               }}
+                               className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                             >
+                               <Trash2 size={12} />
+                             </button>
+                          </div>
+                       </div>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="md:col-span-2 py-12 text-center bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200">
+                     <FileDigit size={40} className="text-slate-300 mx-auto mb-4" />
+                     <p className="text-slate-400 font-bold">הארנק הדיגיטלי ריק. השתמש במאמת המסמכים למעלה כדי להוסיף רישיונות.</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+
           <div className="mt-16 md:mt-24 flex flex-col items-center gap-4 md:gap-6 w-full max-w-md mx-auto relative z-10">
              <GlassButton 
                type="submit" 
@@ -1394,6 +1469,23 @@ const ProfilePage: React.FC = () => {
                  <span>שמור שינויים</span>
              </GlassButton>
              
+             {isBiometricSupported && (
+               <GlassButton 
+                 type="button" 
+                 variant="secondary"
+                 isLoading={isEnrollingBiometrics}
+                 onClick={handleToggleBiometrics}
+                 className={`w-full !py-5 md:!py-6 !text-lg md:!text-xl !rounded-2xl md:!rounded-3xl border transition-all ${
+                   isBiometricEnrolled 
+                     ? '!bg-emerald-50/80 !border-emerald-200 text-emerald-700 hover:!bg-emerald-100' 
+                     : '!bg-cyan-50/80 !border-cyan-200 text-[#00AFC2] hover:!bg-cyan-100'
+                 }`}
+               >
+                 <Fingerprint size={22} className={`transition-transform group-hover:scale-110 ${isBiometricEnrolled ? 'text-emerald-500' : 'text-[#00AFC2]'}`} />
+                 <span>{isBiometricEnrolled ? 'כניסה ביומטרית מופעלת (לחץ לביטול)' : 'הפעל כניסה בטביעת אצבע / Face ID'}</span>
+               </GlassButton>
+             )}
+
              <GlassButton 
                type="button" 
                variant="secondary"

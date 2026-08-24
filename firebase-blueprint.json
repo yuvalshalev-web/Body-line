@@ -60,6 +60,15 @@
             "type": "string"
           }
         },
+        "dietaryPreferences": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dietaryNotes": {
+          "type": "string"
+        },
         "otherCertification": {
           "type": "string"
         }
