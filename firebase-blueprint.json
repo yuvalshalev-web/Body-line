@@ -71,6 +71,18 @@
         },
         "otherCertification": {
           "type": "string"
+        },
+        "biometricEnabled": {
+          "type": "boolean"
+        },
+        "biometricCredentialId": {
+          "type": "string"
+        },
+        "biometricEnrolledAt": {
+          "type": "string"
+        },
+        "biometricDevice": {
+          "type": "string"
         }
       },
       "required": [

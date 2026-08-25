@@ -1,4 +1,6 @@
 import { safeLocalStorage } from './storage';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getDb, trackedUpdateDoc } from '../services/firebase';
 
 export interface BiometricCredential {
   credentialId: string;
@@ -70,7 +72,7 @@ function bufferToBase64(buffer: ArrayBuffer): string {
 }
 
 /**
- * Register a biometric credential for the logged-in user
+ * Register a biometric credential for the logged-in user and persist to Firestore database
  */
 export async function registerBiometrics(
   userId: string,
@@ -128,24 +130,26 @@ export async function registerBiometrics(
     }
 
     const credentialId = bufferToBase64(credential.rawId);
+    const nowIso = new Date().toISOString();
+    const deviceName = navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') 
+      ? 'Apple Touch/Face ID' 
+      : navigator.userAgent.includes('Android') 
+      ? 'Android Fingerprint / Biometrics' 
+      : 'מחשב / מכשיר אישי';
 
     const bioEntry: BiometricCredential = {
       credentialId,
       userId,
       userEmail: userEmail.toLowerCase().trim(),
       userName,
-      createdAt: new Date().toISOString(),
-      deviceLabel: navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') 
-        ? 'Apple Touch/Face ID' 
-        : navigator.userAgent.includes('Android') 
-        ? 'Android Fingerprint / Biometrics' 
-        : 'מחשב / מכשיר אישי'
+      createdAt: nowIso,
+      deviceLabel: deviceName
     };
 
-    // Save specific credential record
+    // Save specific credential record in localStorage
     safeLocalStorage.setItem(`${BIOMETRIC_KEY_PREFIX}${userId}`, JSON.stringify(bioEntry));
 
-    // Also update general biometric users lookup map
+    // Also update general biometric users lookup map in localStorage
     const existingUsersRaw = safeLocalStorage.getItem(BIOMETRIC_USER_MAP_KEY);
     let usersList: BiometricCredential[] = [];
     if (existingUsersRaw) {
@@ -159,6 +163,21 @@ export async function registerBiometrics(
     usersList = usersList.filter(u => u.userId !== userId && u.userEmail !== userEmail.toLowerCase().trim());
     usersList.push(bioEntry);
     safeLocalStorage.setItem(BIOMETRIC_USER_MAP_KEY, JSON.stringify(usersList));
+
+    // Persist permanently in Firestore database under the user document
+    try {
+      const db = getDb();
+      await trackedUpdateDoc(doc(db, 'members', userId), {
+        biometricEnabled: true,
+        biometricCredentialId: credentialId,
+        biometricEnrolledAt: nowIso,
+        biometricDevice: deviceName
+      });
+      console.log(`Biometric enrollment permanently saved to Firestore for user: ${userId}`);
+    } catch (firestoreErr) {
+      console.warn('Could not save biometricEnabled status to Firestore:', firestoreErr);
+      // Even if Firestore update encounters a network hiccup, the local credential was created
+    }
 
     return { success: true, credentialId };
   } catch (err: any) {
@@ -309,23 +328,91 @@ export async function authenticateWithBiometrics(targetEmail?: string): Promise<
 }
 
 /**
- * Check if a specific user has biometrics enrolled on this device
+ * Check if a specific user has biometrics enrolled on this device or in their member profile
  */
-export function isUserBiometricEnrolled(userId?: string, userEmail?: string): boolean {
+export function isUserBiometricEnrolled(userId?: string, userEmail?: string, memberData?: { biometricEnabled?: boolean }): boolean {
+  if (memberData?.biometricEnabled === false) {
+    return false;
+  }
+  
   if (userId) {
     const specific = safeLocalStorage.getItem(`${BIOMETRIC_KEY_PREFIX}${userId}`);
     if (specific) return true;
   }
   
   const existingUsersRaw = safeLocalStorage.getItem(BIOMETRIC_USER_MAP_KEY);
-  if (!existingUsersRaw) return false;
-  try {
-    const list: BiometricCredential[] = JSON.parse(existingUsersRaw);
-    if (userId && list.some(u => u.userId === userId)) return true;
-    if (userEmail && list.some(u => u.userEmail.toLowerCase() === userEmail.toLowerCase().trim())) return true;
-    return list.length > 0;
-  } catch (e) {
-    return false;
+  if (existingUsersRaw) {
+    try {
+      const list: BiometricCredential[] = JSON.parse(existingUsersRaw);
+      if (userId && list.some(u => u.userId === userId)) return true;
+      if (userEmail && list.some(u => u.userEmail.toLowerCase() === userEmail.toLowerCase().trim())) return true;
+      if (list.length > 0 && !userId && !userEmail) return true;
+    } catch (e) {
+      // Continue to memberData check
+    }
+  }
+
+  if (memberData?.biometricEnabled === true) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Synchronize biometric credentials from user's member document to local storage if needed
+ */
+export function syncBiometricFromMemberDoc(member: {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  biometricEnabled?: boolean;
+  biometricCredentialId?: string;
+  biometricEnrolledAt?: string;
+  biometricDevice?: string;
+}): void {
+  if (!member || !member.id) return;
+
+  if (member.biometricEnabled === false) {
+    // If explicitly disabled in database, clear local storage enrollment
+    safeLocalStorage.removeItem(`${BIOMETRIC_KEY_PREFIX}${member.id}`);
+    const existingUsersRaw = safeLocalStorage.getItem(BIOMETRIC_USER_MAP_KEY);
+    if (existingUsersRaw) {
+      try {
+        const list: BiometricCredential[] = JSON.parse(existingUsersRaw);
+        const filtered = list.filter(u => u.userId !== member.id);
+        safeLocalStorage.setItem(BIOMETRIC_USER_MAP_KEY, JSON.stringify(filtered));
+      } catch (e) {}
+    }
+    return;
+  }
+
+  if (member.biometricEnabled && member.biometricCredentialId) {
+    const fullName = `${member.firstName || ''} ${member.lastName || ''}`.trim() || member.email;
+    const bioEntry: BiometricCredential = {
+      credentialId: member.biometricCredentialId,
+      userId: member.id,
+      userEmail: member.email.toLowerCase().trim(),
+      userName: fullName,
+      createdAt: member.biometricEnrolledAt || new Date().toISOString(),
+      deviceLabel: member.biometricDevice || 'מכשיר אישי'
+    };
+
+    safeLocalStorage.setItem(`${BIOMETRIC_KEY_PREFIX}${member.id}`, JSON.stringify(bioEntry));
+
+    const existingUsersRaw = safeLocalStorage.getItem(BIOMETRIC_USER_MAP_KEY);
+    let usersList: BiometricCredential[] = [];
+    if (existingUsersRaw) {
+      try {
+        usersList = JSON.parse(existingUsersRaw);
+      } catch (e) {
+        usersList = [];
+      }
+    }
+    usersList = usersList.filter(u => u.userId !== member.id && u.userEmail !== member.email.toLowerCase().trim());
+    usersList.push(bioEntry);
+    safeLocalStorage.setItem(BIOMETRIC_USER_MAP_KEY, JSON.stringify(usersList));
   }
 }
 
@@ -343,9 +430,9 @@ export function getEnrolledBiometricUsers(): BiometricCredential[] {
 }
 
 /**
- * Remove biometrics enrollment for a user
+ * Remove biometrics enrollment for a user locally and in Firestore database
  */
-export function disableBiometrics(userId: string): void {
+export async function disableBiometrics(userId: string): Promise<void> {
   safeLocalStorage.removeItem(`${BIOMETRIC_KEY_PREFIX}${userId}`);
   const existingUsersRaw = safeLocalStorage.getItem(BIOMETRIC_USER_MAP_KEY);
   if (existingUsersRaw) {
@@ -357,4 +444,16 @@ export function disableBiometrics(userId: string): void {
       console.warn('Error clearing biometric registry:', e);
     }
   }
+
+  // Update in Firestore database
+  try {
+    const db = getDb();
+    await trackedUpdateDoc(doc(db, 'members', userId), {
+      biometricEnabled: false
+    });
+    console.log(`Biometric disabled in Firestore for user: ${userId}`);
+  } catch (firestoreErr) {
+    console.warn('Could not update biometricEnabled status in Firestore:', firestoreErr);
+  }
 }
+

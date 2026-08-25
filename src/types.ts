@@ -59,6 +59,10 @@ export interface Member {
   digitalWallet?: DigitalLicense[];
   otherCertification?: string;
   status?: 'אלוף' | 'מתמיד' | 'לא יציב' | 'בנסיגה' | 'מזדמן';
+  biometricEnabled?: boolean;
+  biometricCredentialId?: string;
+  biometricEnrolledAt?: string;
+  biometricDevice?: string;
 }
 
 export interface PerformanceScore {

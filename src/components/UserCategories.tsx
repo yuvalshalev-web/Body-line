@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
-import { Snowflake, Sun, Zap, Trophy } from 'lucide-react';
+import { Snowflake, Sun, Zap, Trophy, Award, Waves, Check } from 'lucide-react';
 import { parseDate } from '../utils/dateUtils';
 
 interface UserCategoriesProps {
@@ -86,9 +86,10 @@ const UserCategories: React.FC<UserCategoriesProps> = ({ userId }) => {
     if (!userStats) return [];
 
     const categories = [];
-    if (jellyfish.some(j => j.id === userId)) categories.push({ name: 'מנטה ריי', icon: Sun, color: 'text-slate-800', iconColor: 'text-slate-600', bg: 'bg-[#f0f8ff]/50 border border-slate-800/10 shadow-sm' });
-    if (sharks.some(s => s.id === userId)) categories.push({ name: 'כריש', icon: Zap, color: 'text-slate-800', iconColor: 'text-slate-600', bg: 'bg-[#f0f8ff]/50 border border-slate-800/10 shadow-sm' });
-    if (orcas.some(o => o.id === userId)) categories.push({ name: 'אורקה', icon: Trophy, color: 'text-slate-800', iconColor: 'text-slate-600', bg: 'bg-[#f0f8ff]/50 border border-slate-800/10 shadow-sm' });
+    if (penguins.some(p => p.id === userId)) categories.push({ name: 'פינגווין חורף', title: 'לוחם חורף', icon: Snowflake, color: 'text-sky-900', bg: 'bg-sky-50 border border-sky-200' });
+    if (jellyfish.some(j => j.id === userId)) categories.push({ name: 'מנטה ריי', title: 'גליידר קיץ', icon: Sun, color: 'text-cyan-900', bg: 'bg-cyan-50 border border-cyan-200' });
+    if (sharks.some(s => s.id === userId)) categories.push({ name: 'כריש', title: 'מכונת עקביות', icon: Zap, color: 'text-slate-900', bg: 'bg-slate-100 border border-slate-300' });
+    if (orcas.some(o => o.id === userId)) categories.push({ name: 'אורקה', title: 'מאסטר חוף הבית', icon: Trophy, color: 'text-emerald-900', bg: 'bg-emerald-50 border border-emerald-300' });
 
     return categories;
   }, [members, weeklyHistory, userId]);
@@ -96,11 +97,19 @@ const UserCategories: React.FC<UserCategoriesProps> = ({ userId }) => {
   if (categories.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-2 justify-center mt-4">
+    <div className="flex flex-wrap gap-2.5 items-center mb-6" dir="rtl">
+      <span className="text-xs font-dana-yad font-bold text-slate-500 ml-1">
+        הישגים פעילים בעונה:
+      </span>
       {categories.map(cat => (
-        <div key={cat.name} className={`flex items-center gap-1 px-3 py-1 rounded-full ${cat.bg} ${cat.color} font-bold text-xs`}>
-          <cat.icon size={14} className={cat.iconColor} />
-          {cat.name}
+        <div 
+          key={cat.name} 
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full ${cat.bg} ${cat.color} font-dana-yad font-bold text-xs sm:text-sm shadow-xs transition-transform hover:scale-102`}
+        >
+          <cat.icon size={14} className="opacity-80" />
+          <span>{cat.name}</span>
+          <span className="text-[10px] font-sans font-normal opacity-70">({cat.title})</span>
+          <Check size={12} className="text-emerald-600 mr-0.5" strokeWidth={3} />
         </div>
       ))}
     </div>

@@ -5,6 +5,7 @@ import { doc, onSnapshot, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { getDb, auth, trackedGetDoc, trackedOnSnapshot } from '../services/firebase';
 import { Member } from '../types';
+import { syncBiometricFromMemberDoc } from '../utils/biometrics';
 
 interface AuthContextType {
   currentUser: Member | null;
@@ -28,6 +29,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // We don't strictly need localStorage anymore as Firebase Auth handles persistence,
     // but it can be useful for immediate UI rendering before onAuthStateChanged fires.
     safeLocalStorage.setItem('habal_zug_user', JSON.stringify(user));
+    if (user) {
+      syncBiometricFromMemberDoc(user);
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -44,6 +48,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updateUser = useCallback((user: Member) => {
     setCurrentUser(user);
     safeLocalStorage.setItem('habal_zug_user', JSON.stringify(user));
+    if (user) {
+      syncBiometricFromMemberDoc(user);
+    }
   }, []);
 
   // @ai-preserve: Firebase Auth State Listener
@@ -83,6 +90,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               safeLocalStorage.removeItem('habal_zug_user');
             } else {
               console.log("AuthContext: Member doc found:", memberData.email);
+              syncBiometricFromMemberDoc(memberData);
               setCurrentUser(memberData);
               safeLocalStorage.setItem('habal_zug_user', JSON.stringify(memberData));
             }

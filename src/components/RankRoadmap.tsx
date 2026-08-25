@@ -1,163 +1,185 @@
-/**
- * TODO: REFACTOR
- * The "Whiteboard" aesthetic of this component (RankRoadmap) is "Tangible" 
- * but does not strongly align with the "Surfer" (wood, horizontal signs) 
- * or "Elite Alabaster" (luxury white, glassmorphism) theme. 
- * Consider replacing the whiteboard surface with a weathered wood sign or a premium glass panel.
- */
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { RANKS } from "../constants";
 import { motion } from "motion/react";
+import { Check, Flame, Waves, Sparkles } from "lucide-react";
 
-export const RankRoadmap: React.FC<{ name: string, sessions: number, overallProgressPercent: number, noFrame?: boolean }> = ({ name, sessions, overallProgressPercent, noFrame = false }) => {
+export const RankRoadmap: React.FC<{ 
+  name: string; 
+  sessions: number; 
+  overallProgressPercent: number; 
+  noFrame?: boolean;
+}> = ({ name, sessions, overallProgressPercent, noFrame = false }) => {
+  
+  // Calculate precise continuous vertical progress (0% to 100%)
+  const calculateVerticalProgress = (s: number): number => {
+    if (s <= 0) return 0;
+    if (s < 5) return (s / 5) * 25;
+    if (s < 15) return 25 + ((s - 5) / 10) * 25;
+    if (s < 30) return 50 + ((s - 15) / 15) * 25;
+    if (s < 35) return 75 + ((s - 30) / 5) * 25;
+    return 100;
+  };
+
+  const progressPercent = calculateVerticalProgress(sessions);
+
   const content = (
-    <div className="relative w-full h-full rounded-sm whiteboard-surface overflow-hidden flex flex-col font-dana-yad font-normal"
-         style={{ minHeight: '500px', fontFamily: 'var(--font-dana-yad)' }}>
+    <div className="relative w-full h-full rounded-2xl bg-gradient-to-br from-white/95 via-[#f8fafc]/90 to-[#f1f5f9]/90 border border-white/60 p-5 sm:p-7 md:p-8 backdrop-blur-xl shadow-lg flex flex-col justify-between"
+         dir="rtl"
+         style={{ fontFamily: 'var(--font-dana-yad)' }}>
       
-      {/* Glossy Reflection & Smudges */}
-      <div className="absolute inset-0 pointer-events-none opacity-40 whiteboard-smudge z-0" />
-
       {/* Content */}
-      <div className="relative z-10 p-6 md:p-10 flex flex-col gap-8 text-right font-dana-yad font-normal" dir="rtl" style={{ color: '#164E63' }}>
-        <h2 className="text-4xl md:text-5xl mb-2 text-center font-dana-yad font-normal" style={{ transform: 'rotate(-2deg)', fontFamily: 'var(--font-dana-yad)' }}>
-          מה הוויב שלך בליין-אפ?
-        </h2>
+      <div className="relative z-10 flex flex-col gap-5 text-right font-dana-yad font-normal" style={{ color: '#092734' }}>
         
-        <div className="flex flex-col gap-6 font-dana-yad font-normal">
-          {RANKS.map((rank, i) => {
-            const isCurrent = sessions >= rank.min && (rank.max === null || sessions < rank.max);
-            const textColor = isCurrent ? '#d52518' : '#9CA3AF';
-            const rotation = (i % 2 === 0 ? -1 : 1) * (Math.random() * 1.5 + 0.5);
-            
-            return (
-              <div key={rank.id} 
-                   className={`flex flex-col gap-2 transition-all duration-500 font-dana-yad font-normal ${isCurrent ? 'scale-105 origin-right' : ''}`}
-                   style={{ 
-                     color: textColor, 
-                     transform: `rotate(${rotation}deg)`,
-                     opacity: isCurrent ? 1 : 0.7,
-                     textShadow: isCurrent ? '0 0 1px currentColor, 0 0 2px currentColor, 0 0 3px rgba(213,37,24,0.3)' : 'none'
-                   }}>
-                <div className="flex items-center gap-3 justify-start font-dana-yad font-normal">
-                  {isCurrent && (
-                    <motion.span 
-                      className="text-2xl ml-2 font-dana-yad font-normal" 
-                      animate={{ 
-                        color: ["#00f2fe", "#ff009f", "#00ff00", "#ffde45", "#00f2fe"],
-                        textShadow: [
-                          "0 0 7px #00f2fe, 0 0 10px #00f2fe, 0 0 21px #00f2fe",
-                          "0 0 7px #ff009f, 0 0 10px #ff009f, 0 0 21px #ff009f",
-                          "0 0 7px #00ff00, 0 0 10px #00ff00, 0 0 21px #00ff00",
-                          "0 0 7px #ffde45, 0 0 10px #ffde45, 0 0 21px #ffde45",
-                          "0 0 7px #00f2fe, 0 0 10px #00f2fe, 0 0 21px #00f2fe",
-                        ],
-                        opacity: [1, 0.6, 1, 0.8, 1]
-                      }}
-                      transition={{ 
-                        duration: 4, 
-                        repeat: Infinity, 
-                        ease: "linear" 
-                      }}
-                      style={{ transform: 'rotate(5deg)', display: 'inline-block' }}
-                    >
-                      👈 אתה כאן!
-                    </motion.span>
-                  )}
-                  <span className="text-3xl font-dana-yad font-normal">{rank.he}</span>
-                  <span className="text-xl opacity-80 font-dana-yad font-normal">({rank.min}{rank.max ? `-${rank.max}` : '+'} סשנים)</span>
-                </div>
-                <p className="text-xl leading-relaxed pl-4 font-dana-yad font-normal">{rank.desc}</p>
-                <ul className="list-disc list-inside pr-6 text-lg opacity-90 font-dana-yad font-normal">
-                  {rank.perks.map((perk, idx) => (
-                    <li key={idx} className="font-dana-yad font-normal" style={{ transform: `rotate(${Math.random() * 1 - 0.5}deg)` }}>{perk}</li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
+        {/* Header with Title and Current Sessions Pill */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-cyan-900/20 pb-3.5">
+          <div className="text-center sm:text-right">
+            <h2 className="text-3xl sm:text-4xl md:text-[2.6rem] font-dana-yad font-bold text-[#092734]" style={{ transform: 'rotate(-1deg)', fontFamily: 'var(--font-dana-yad)' }}>
+              מה הוויב שלך בליין-אפ?
+            </h2>
+            <p className="text-sm sm:text-base text-cyan-950 font-dana-yad font-semibold mt-0.5">
+              מסלול הדרגות וההתמדה בים • לפי כמות סשנים
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 bg-[#00AFC2]/15 border border-[#00AFC2]/40 px-3.5 py-1.5 rounded-full shadow-xs">
+            <Waves size={16} className="text-[#007b8a]" />
+            <span className="text-base font-bold text-slate-950 font-dana-yad">
+              {sessions} סשנים במים
+            </span>
+          </div>
         </div>
+        
+        {/* Main Content Layout with Refined Minimalist Vertical Progress Bar */}
+        <div className="relative flex gap-3.5 sm:gap-5 items-stretch">
+          
+          {/* Subtle Vertical Progress Spine */}
+          <div className="relative flex flex-col items-center shrink-0 w-6 sm:w-7 pt-3 pb-3 select-none">
+            {/* Background Track Line */}
+            <div className="absolute top-5 bottom-5 w-1.5 bg-slate-300 rounded-full overflow-hidden" />
+
+            {/* Filled Active Progress Line */}
+            <motion.div 
+              className="absolute top-5 w-1.5 rounded-full bg-gradient-to-b from-[#00AFC2] via-cyan-600 to-[#b91c1c] z-0"
+              initial={{ height: 0 }}
+              animate={{ height: `${progressPercent}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              style={{ maxHeight: 'calc(100% - 40px)' }}
+            />
+
+            {/* Subtle Milestone Dots */}
+            <div className="relative z-10 w-full h-full flex flex-col justify-between items-center py-1">
+              {RANKS.map((rank, i) => {
+                const isPassed = rank.max !== null && sessions >= rank.max;
+                const isCurrent = sessions >= rank.min && (rank.max === null || sessions < rank.max);
+
+                return (
+                  <div key={rank.id} className="relative flex items-center justify-center my-auto">
+                    {/* Minimal Ripple on Current Node */}
+                    {isCurrent && (
+                      <motion.div
+                        className="absolute w-5 h-5 rounded-full bg-[#b91c1c]/25 z-0 pointer-events-none"
+                        animate={{ scale: [1, 1.5, 1], opacity: [0.6, 0, 0.6] }}
+                        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                    )}
+
+                    {/* Milestone Dot */}
+                    <div 
+                      className={`w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        isCurrent
+                          ? 'bg-[#b91c1c] text-white ring-2 ring-[#b91c1c]/30 scale-110 shadow-xs'
+                          : isPassed
+                            ? 'bg-[#007b8a] text-white shadow-xs'
+                            : 'bg-white border-2 border-slate-400'
+                      }`}
+                    >
+                      {isCurrent ? (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      ) : isPassed ? (
+                        <Check size={10} strokeWidth={3} />
+                      ) : (
+                        <div className="w-1 h-1 rounded-full bg-slate-400" />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Ranks Cards List */}
+          <div className="flex-1 flex flex-col justify-between gap-4 sm:gap-5 font-dana-yad font-normal">
+            {RANKS.map((rank, i) => {
+              const isPassed = rank.max !== null && sessions >= rank.max;
+              const isCurrent = sessions >= rank.min && (rank.max === null || sessions < rank.max);
+              const textColor = isCurrent ? '#b91c1c' : isPassed ? '#0c4a6e' : '#1e293b';
+              const rotation = (i % 2 === 0 ? -0.5 : 0.5) * (Math.random() * 0.5 + 0.2);
+              
+              return (
+                <div 
+                  key={rank.id} 
+                  className={`flex flex-col gap-1 transition-all duration-300 font-dana-yad rounded-lg p-2 sm:p-2.5 ${
+                    isCurrent 
+                      ? 'scale-[1.01] origin-right bg-red-100/50 border-r-4 border-[#b91c1c] pr-3 shadow-xs' 
+                      : isPassed
+                        ? 'opacity-100'
+                        : 'opacity-90'
+                  }`}
+                  style={{ 
+                    color: textColor, 
+                    transform: `rotate(${rotation}deg)`
+                  }}
+                >
+                  <div className="flex items-center gap-2 justify-start font-dana-yad font-normal flex-wrap">
+                    {isCurrent && (
+                      <span 
+                        className="text-sm sm:text-base font-bold ml-1 font-dana-yad text-red-800 bg-red-100 border border-red-300 px-2 py-0.5 rounded-md inline-flex items-center gap-1 shadow-xs"
+                        style={{ transform: 'rotate(1deg)' }}
+                      >
+                        👈 אתה כאן
+                      </span>
+                    )}
+                    
+                    <span className="text-2xl sm:text-[1.75rem] font-bold font-dana-yad" style={{ color: textColor }}>
+                      {rank.he}
+                    </span>
+
+                    <span className="text-sm sm:text-base font-medium font-dana-yad text-slate-900 bg-slate-200/90 border border-slate-300/80 px-2 py-0.5 rounded">
+                      ({rank.min}{rank.max ? `-${rank.max}` : '+'} סשנים)
+                    </span>
+
+                    {isPassed && (
+                      <span className="text-[11px] sm:text-xs text-emerald-900 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full font-sans font-bold shadow-xs">
+                        הושלם ✓
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-base sm:text-lg leading-relaxed pl-2 font-dana-yad font-semibold text-slate-900">
+                    {rank.desc}
+                  </p>
+
+                  <ul className="list-disc list-inside pr-3 text-sm sm:text-base font-dana-yad font-medium text-slate-800 flex flex-wrap gap-x-3.5 gap-y-0.5">
+                    {rank.perks.map((perk, idx) => (
+                      <li key={idx} className="font-dana-yad">
+                        {perk}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+
       </div>
     </div>
   );
-
-  if (noFrame) {
-    return (
-      <>
-        <style>{`
-          .whiteboard-surface {
-            background-color: #F8F9FA;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1), inset 0 -2px 5px rgba(255,255,255,0.5);
-          }
-          .whiteboard-smudge {
-            background-image: 
-              linear-gradient(105deg, rgba(255,255,255,0) 20%, rgba(255,255,255,0.6) 35%, rgba(255,255,255,0) 50%),
-              url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
-          }
-        `}</style>
-        {content}
-      </>
-    );
-  }
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 md:p-12 relative rounded-[2.5rem] shadow-2xl bg-gradient-to-br from-[#083344] to-[#164E63]">
-      <style>{`
-        .whiteboard-surface {
-          background-color: #F8F9FA;
-          box-shadow: inset 0 2px 10px rgba(0,0,0,0.1), inset 0 -2px 5px rgba(255,255,255,0.5);
-        }
-        .whiteboard-smudge {
-          background-image: 
-            linear-gradient(105deg, rgba(255,255,255,0) 20%, rgba(255,255,255,0.6) 35%, rgba(255,255,255,0) 50%),
-            url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
-        }
-        .marker-shadow {
-          box-shadow: 2px 4px 6px rgba(0,0,0,0.6);
-        }
-        .eraser-shadow {
-          box-shadow: 2px 4px 6px rgba(0,0,0,0.6);
-        }
-        .tray-shadow {
-          box-shadow: 0 10px 15px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.8);
-        }
-        .frame-shadow {
-          box-shadow: 
-            0 25px 50px -12px rgba(0,0,0,0.7),
-            inset 4px 4px 6px rgba(255,255,255,0.9),
-            inset -4px -4px 8px rgba(0,0,0,0.4),
-            inset 1px 1px 0px rgba(255,255,255,1),
-            0 0 0 1px rgba(150,150,150,0.5);
-        }
-      `}</style>
-      
-      {/* Pulsating Alabaster Glow */}
-      <div className="absolute inset-0 z-0 animate-pulse bg-[#E0F2FE] opacity-20 blur-3xl rounded-[2.5rem]" style={{ animationDuration: '4s' }} />
-
-      {/* Whiteboard Frame */}
-      <div className="relative z-10 w-full rounded-2xl frame-shadow"
-           style={{
-             background: '#A8A9AD',
-             padding: '16px',
-             backgroundImage: 'linear-gradient(145deg, #e2e3e5 0%, #c5c6c9 20%, #A8A9AD 50%, #d0d1d4 80%, #828387 100%)'
-           }}>
-        
-        {/* Whiteboard Surface */}
-        {content}
-
-        {/* Lower Tray */}
-        <div className="absolute bottom-0 left-8 right-8 h-8 bg-gradient-to-b from-[#e5e7eb] to-[#9ca3af] rounded-b-lg tray-shadow flex items-end px-12 pb-2 gap-8 z-20 transform translate-y-full">
-          {/* Black Marker */}
-          <div className="w-24 h-4 bg-gradient-to-b from-gray-700 via-black to-gray-900 rounded-full marker-shadow relative transform -rotate-2 translate-y-1">
-            <div className="absolute right-0 top-0 bottom-0 w-4 bg-gray-600 rounded-r-full" />
-            <div className="absolute left-2 top-0 bottom-0 w-1 bg-gray-500 rounded-full" />
-          </div>
-          {/* Blue Eraser */}
-          <div className="w-20 h-6 bg-gradient-to-b from-blue-500 to-blue-800 rounded-sm eraser-shadow relative transform rotate-3">
-            <div className="absolute bottom-0 left-0 right-0 h-2 bg-gray-800 rounded-b-sm" />
-            <div className="absolute top-0 left-0 right-0 h-1 bg-blue-400 rounded-t-sm opacity-50" />
-          </div>
-        </div>
-      </div>
+    <div className="w-full h-full flex flex-col">
+      {content}
     </div>
   );
-}
+};

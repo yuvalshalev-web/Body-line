@@ -54,7 +54,7 @@ import { hashPassword } from '../utils/crypto';
 import { loadGoogleMaps } from '../utils/googlePlaces';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useRandomHeader } from '../hooks/useRandomHeader';
-import { isBiometricAvailable, isUserBiometricEnrolled, registerBiometrics, disableBiometrics } from '../utils/biometrics';
+import { isBiometricAvailable, isUserBiometricEnrolled, registerBiometrics, disableBiometrics, syncBiometricFromMemberDoc } from '../utils/biometrics';
 
 const ensureAbsoluteUrl = (url?: string) => {
   if (!url) return '';
@@ -274,7 +274,10 @@ const ProfilePage: React.FC = () => {
     isBiometricAvailable().then(supported => {
       setIsBiometricSupported(supported);
       if (supported && currentUser) {
-        setIsBiometricEnrolled(isUserBiometricEnrolled(currentUser.id, currentUser.email));
+        if (currentUser.biometricEnabled && currentUser.biometricCredentialId) {
+          syncBiometricFromMemberDoc(currentUser);
+        }
+        setIsBiometricEnrolled(isUserBiometricEnrolled(currentUser.id, currentUser.email, currentUser));
       }
     });
   }, [currentUser]);
@@ -283,9 +286,9 @@ const ProfilePage: React.FC = () => {
     if (!currentUser) return;
     
     if (isBiometricEnrolled) {
-      disableBiometrics(currentUser.id);
+      await disableBiometrics(currentUser.id);
       setIsBiometricEnrolled(false);
-      setToast({ msg: 'הזדהות ביומטרית בוטלה במכשיר זה', type: 'success' });
+      setToast({ msg: 'הזדהות ביומטרית בוטלה ונמחקה ממסד הנתונים', type: 'success' });
       setTimeout(() => setToast(null), 3000);
       return;
     }
@@ -300,7 +303,7 @@ const ProfilePage: React.FC = () => {
 
       if (res.success) {
         setIsBiometricEnrolled(true);
-        setToast({ msg: 'הזדהות ביומטרית (טביעת אצבע / Face ID) הופעלה בהצלחה! ✨', type: 'success' });
+        setToast({ msg: 'הזדהות ביומטרית (טביעת אצבע / Face ID) הופעלה ונשמרה במסד הנתונים! ✨', type: 'success' });
         setTimeout(() => setToast(null), 4000);
       } else {
         setToast({ msg: res.error || 'נכשלה הפעלת הזדהות ביומטרית', type: 'error' });
