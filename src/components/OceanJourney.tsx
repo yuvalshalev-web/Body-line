@@ -346,7 +346,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                 </div>
 
                 <span className={`text-xs sm:text-sm font-dana-yad font-bold truncate max-w-full ${
-                  isSelected ? 'text-slate-950 font-black' : isUnlocked ? 'text-slate-800' : 'text-slate-500'
+                  isSelected ? 'text-slate-950 font-black' : isUnlocked ? 'text-slate-900' : 'text-slate-700'
                 }`}>
                   {milestone.name}
                 </span>
@@ -354,9 +354,9 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                 {/* Status Dot Indicator */}
                 <div className="mt-1 flex items-center justify-center">
                   {isUnlocked ? (
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-200" />
+                    <div className="w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-emerald-300" />
                   ) : (
-                    <Lock size={10} className="text-slate-400" />
+                    <Lock size={11} className="text-slate-700" />
                   )}
                 </div>
               </button>
@@ -375,7 +375,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
             className={`rounded-2xl p-4 sm:p-5 border transition-all duration-300 ${
               isSelectedUnlocked 
                 ? 'bg-gradient-to-br from-cyan-50/90 via-white to-sky-50/60 border-cyan-300 shadow-sm' 
-                : 'bg-slate-100/80 border-slate-200 shadow-xs'
+                : 'bg-slate-100/90 border-slate-300 shadow-xs'
             }`}
           >
             {/* Header info */}
@@ -383,25 +383,25 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
               <div className="flex items-center gap-2">
                 <span className={`text-xs font-sans font-bold px-2.5 py-0.5 rounded-full border ${
                   isSelectedUnlocked 
-                    ? 'bg-cyan-100 text-cyan-900 border-cyan-300' 
-                    : 'bg-slate-200 text-slate-600 border-slate-300'
+                    ? 'bg-cyan-100 text-cyan-950 border-cyan-300' 
+                    : 'bg-slate-200 text-slate-800 border-slate-300'
                 }`}>
                   {selectedMilestone.badge}
                 </span>
-                <span className="text-xs sm:text-sm font-sans font-semibold text-slate-500">
+                <span className="text-sm font-sans font-bold text-slate-700">
                   • {selectedMilestone.title}
                 </span>
               </div>
 
               <div>
                 {isSelectedUnlocked ? (
-                  <span className="flex items-center gap-1 text-xs font-sans font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 rounded-full shadow-xs">
-                    <Check size={12} strokeWidth={3} />
-                    פתוח בחשבונך
+                  <span className="flex items-center gap-1 text-xs font-sans font-bold text-emerald-900 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full shadow-xs">
+                    <Check size={13} strokeWidth={3} />
+                    הרווחת!
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 text-xs font-sans font-medium text-slate-600 bg-slate-200/90 border border-slate-300 px-2 py-0.5 rounded-full">
-                    <Lock size={11} />
+                  <span className="flex items-center gap-1 text-xs font-sans font-bold text-slate-800 bg-slate-200 border border-slate-300 px-2 py-0.5 rounded-full">
+                    <Lock size={12} />
                     נעול כרגע
                   </span>
                 )}
@@ -410,7 +410,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
 
             {/* Content with Large Animal Image & Text */}
             <div className="my-2 flex items-center gap-4">
-              <div className="shrink-0 p-2 rounded-xl bg-white/80 border border-slate-200/80 shadow-xs flex items-center justify-center">
+              <div className="shrink-0 p-2 rounded-xl bg-white/90 border border-slate-200/80 shadow-xs flex items-center justify-center">
                 <AnimalAvatar 
                   src={selectedMilestone.src} 
                   name={selectedMilestone.name} 
@@ -424,19 +424,19 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                 <h3 className="text-2xl sm:text-[1.75rem] font-bold font-dana-yad text-slate-950 mb-1">
                   {selectedMilestone.name}
                 </h3>
-                <p className="text-base sm:text-lg font-dana-yad font-semibold text-slate-800 leading-relaxed">
+                <p className="text-base sm:text-lg font-dana-yad font-bold text-slate-900 leading-relaxed">
                   {selectedMilestone.desc}
                 </p>
               </div>
             </div>
 
             {/* Criteria Footer */}
-            <div className="pt-2.5 mt-2 border-t border-slate-200/80 flex items-center justify-between gap-2 text-xs sm:text-sm font-dana-yad text-slate-700">
+            <div className="pt-2.5 mt-2 border-t border-slate-200/80 flex items-center justify-between gap-2 text-sm sm:text-base font-dana-yad text-slate-800">
               <div className="flex items-center gap-1.5">
-                <Sparkles size={14} className={isSelectedUnlocked ? "text-[#00AFC2]" : "text-slate-400"} />
-                <span className="font-semibold">{selectedMilestone.criteria}</span>
+                <Sparkles size={16} className={isSelectedUnlocked ? "text-[#00AFC2]" : "text-slate-600"} />
+                <span className="font-bold">{selectedMilestone.criteria}</span>
               </div>
-              <span className="text-xs font-sans font-medium text-slate-400">
+              <span className="text-xs font-sans font-bold text-slate-700">
                 {selectedIdx + 1} מתוך 5
               </span>
             </div>
@@ -445,9 +445,9 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
       </div>
 
       {/* Subtle Hint & Mini Track */}
-      <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between flex-wrap gap-2 text-xs font-dana-yad text-slate-600">
+      <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between flex-wrap gap-2 text-xs sm:text-sm font-dana-yad text-slate-700 font-bold">
         <div className="flex items-center gap-1.5">
-          <Waves size={14} className="text-[#00AFC2]" />
+          <Waves size={16} className="text-[#00AFC2]" />
           <span>לחץ על כל חיה למעלה לחשיפת פרטי האתגר והקריטריונים</span>
         </div>
         <div className="w-24 h-1.5 bg-slate-200 rounded-full overflow-hidden" dir="ltr">

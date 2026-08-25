@@ -77,11 +77,63 @@ const SurferCardPage: React.FC = () => {
         <AthletePassport />
       </div>
 
-      {/* Motivation Title */}
-      <div className="max-w-6xl mx-auto mb-6 text-center lg:text-right px-4" dir="rtl">
-        <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-l from-red-600 via-red-500 to-orange-500 bg-clip-text text-transparent tracking-tight font-yehuda drop-shadow-sm">
-          הגעת – ניצחת. כל השאר בונוס
-        </h2>
+      {/* Motivation Title - Tangible Surfer UI Signature Banner */}
+      <div className="max-w-6xl mx-auto mb-8 px-2" dir="rtl">
+        <div className="relative overflow-hidden rounded-3xl p-5 sm:p-7 bg-gradient-to-r from-[#003b5c]/95 via-[#004e75]/95 to-[#002f4a]/95 border border-cyan-400/30 shadow-xl backdrop-blur-xl group">
+          
+          {/* Subtle Ambient Waves & Light Flare in Background */}
+          <div className="absolute -right-16 -top-16 w-56 h-56 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+          <div className="absolute -left-16 -bottom-16 w-56 h-56 bg-amber-400/15 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent pointer-events-none" />
+          
+          {/* Subtle Animated Gold/Cyan Sweep */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5 text-center md:text-right">
+            
+            {/* Right side: Icon Badge & High-End Typography */}
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
+              {/* Glowing Medal / Flame Icon Pod */}
+              <div className="relative shrink-0">
+                <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-amber-400 to-cyan-400 opacity-60 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-slate-900/90 to-[#002b44] border border-amber-300/40 flex items-center justify-center text-amber-300 shadow-inner">
+                  <Trophy size={28} className="drop-shadow-[0_2px_10px_rgba(251,191,36,0.5)] animate-pulse" />
+                </div>
+              </div>
+
+              {/* Multi-layered High-Impact Title */}
+              <div className="flex flex-col">
+                <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-dana-yad font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 backdrop-blur-md shadow-xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                    פילוסופיית המועדון
+                  </span>
+                  <span className="text-xs font-dana-yad text-cyan-200/80 hidden sm:inline">• ערך הליבה ב-Body-Line</span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black font-dana-yad tracking-tight leading-tight drop-shadow-md">
+                  <span className="bg-gradient-to-l from-amber-200 via-amber-300 to-yellow-400 bg-clip-text text-transparent font-extrabold ml-2">
+                    הגעת – ניצחת.
+                  </span>
+                  <span className="bg-gradient-to-l from-cyan-100 via-cyan-200 to-white bg-clip-text text-transparent font-bold">
+                    כל השאר בונוס
+                  </span>
+                </h2>
+              </div>
+            </div>
+
+            {/* Left side: Tagline & Grit Indicator */}
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="px-4 py-2 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md flex items-center gap-2.5 shadow-sm">
+                <Waves size={18} className="text-[#3dbbd3]" />
+                <span className="text-xs sm:text-sm font-dana-yad font-bold text-cyan-100">
+                  הים תמיד מחכה לך
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
       
       {/* Modern Coastal Bento Grid: Rank Roadmap & Ocean Journey */}
@@ -115,7 +167,7 @@ const SurferCardPage: React.FC = () => {
               <h2 className="text-2xl sm:text-3xl font-dana-yad font-bold text-[#092734]">
                 נתוני התמדה והשתתפות
               </h2>
-              <p className="text-xs sm:text-sm font-dana-yad font-semibold text-slate-500 mt-0.5">
+              <p className="text-sm sm:text-base font-dana-yad font-bold text-slate-800 mt-0.5">
                 מדדי עקביות, נחישות (Grit) וסטטיסטיקת אימונים אישית
               </p>
             </div>

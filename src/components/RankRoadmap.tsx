@@ -149,8 +149,8 @@ export const RankRoadmap: React.FC<{
                     </span>
 
                     {isPassed && (
-                      <span className="text-[11px] sm:text-xs text-emerald-900 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full font-sans font-bold shadow-xs">
-                        הושלם ✓
+                      <span className="text-[11px] sm:text-xs text-emerald-900 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full font-sans font-bold shadow-xs">
+                        הרווחת! ✓
                       </span>
                     )}
                   </div>
