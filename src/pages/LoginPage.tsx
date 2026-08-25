@@ -16,6 +16,7 @@ import { useRandomHeader } from '../hooks/useRandomHeader';
 import { processImage } from '../utils/imageProcessor';
 import { loadGoogleMaps } from '../utils/googlePlaces';
 import { isBiometricAvailable, authenticateWithBiometrics, getEnrolledBiometricUsers } from '../utils/biometrics';
+import { BiometricCircularButton } from '../components/BiometricCircularButton';
 import emailjs from '@emailjs/browser';
 
 const groups = [
@@ -864,7 +865,7 @@ const LoginPage: React.FC = () => {
                 )}
               </AnimatePresence>
 
-              <div className="pt-2 flex flex-col gap-3">
+              <div className="pt-2 flex flex-col items-center gap-4">
                 <button 
                   type="submit" 
                   disabled={isLoading || isBiometricLoading} 
@@ -880,23 +881,19 @@ const LoginPage: React.FC = () => {
                 </button>
 
                 {hasBiometrics && (
-                  <button 
-                    type="button" 
-                    onClick={handleBiometricLogin}
-                    disabled={isLoading || isBiometricLoading}
-                    className="w-full h-12 bg-gradient-to-r from-[#00AFC2]/15 via-cyan-500/10 to-[#00AFC2]/15 hover:from-[#00AFC2]/25 hover:to-cyan-500/20 border border-[#00AFC2]/40 hover:border-[#00AFC2]/80 text-cyan-200 hover:text-white rounded-2xl flex items-center justify-center gap-2.5 transition-all duration-300 active:scale-[0.98] font-bold text-sm backdrop-blur-md shadow-[0_4px_20px_rgba(0,175,194,0.2)] group"
-                  >
-                    {isBiometricLoading ? (
-                      <Loader2 className="animate-spin text-[#00AFC2]" size={18} />
-                    ) : (
-                      <Fingerprint size={22} className="text-[#00AFC2] group-hover:scale-110 transition-transform" />
-                    )}
-                    <span>
-                      {enrolledBioUsers.length > 0 
-                        ? `התחבר בטביעת אצבע (${enrolledBioUsers[0].userName || enrolledBioUsers[0].userEmail})` 
-                        : 'התחבר בטביעת אצבע / Face ID'}
-                    </span>
-                  </button>
+                  <div className="w-full flex flex-col items-center pt-2">
+                    <div className="w-full flex items-center gap-3 my-2">
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+                      <span className="text-[11px] font-bold text-cyan-300/60 uppercase tracking-widest">או כניסה מהירה בנגיעה</span>
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+                    </div>
+                    <BiometricCircularButton
+                      onClick={handleBiometricLogin}
+                      isLoading={isBiometricLoading}
+                      disabled={isLoading}
+                      userName={enrolledBioUsers.length > 0 ? (enrolledBioUsers[0].userName || enrolledBioUsers[0].userEmail) : undefined}
+                    />
+                  </div>
                 )}
               </div>
               
