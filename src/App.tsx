@@ -12,6 +12,7 @@ import FloatingMenu from './components/FloatingMenu';
 import { FloatingDrawer } from './components/FloatingDock';
 import { SurfNewsTracker } from './components/SurfNewsTracker';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
+import { PWAUpdateNotification } from './components/PWAUpdateNotification';
 import { DatabaseStatus } from './components/DatabaseStatus';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
@@ -291,6 +292,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="*" element={<LoginPage />} />
         </Routes>
+        <PWAUpdateNotification />
         <DatabaseStatus />
       </div>
     );
@@ -356,7 +358,8 @@ const App: React.FC = () => {
         setIsDrawerOpen(true);
       }} />
       
-      {/* PWA Install Banner */}
+      {/* PWA Update & Install Banners */}
+      <PWAUpdateNotification />
       <PWAInstallBanner />
       
       {/* Database Status Alert */}
