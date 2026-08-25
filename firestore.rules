@@ -107,22 +107,9 @@ service cloud.firestore {
     match /events/{eventId} {
       allow read: if true;
       allow create: if isAuthenticated() && request.resource.data.creatorId == request.auth.uid;
-      allow update: if isAdmin() || (
-        isAuthenticated() && (
-          (resource.data.creatorId == request.auth.uid && request.resource.data.creatorId == resource.data.creatorId) || 
-          (
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees']) &&
-            (
-              (request.resource.data.attendees.size() == resource.data.attendees.size() + 1 && 
-               request.resource.data.attendees.hasAll(resource.data.attendees) && 
-               request.resource.data.attendees.hasAll([request.auth.uid])) ||
-              (request.resource.data.attendees.size() == resource.data.attendees.size() - 1 && 
-               resource.data.attendees.hasAll(request.resource.data.attendees) && 
-               resource.data.attendees.hasAll([request.auth.uid]))
-            )
-          )
-        )
-      );
+      allow update: if isAdmin() || 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees']) ||
+        (isAuthenticated() && resource.data.creatorId == request.auth.uid && request.resource.data.creatorId == resource.data.creatorId);
       allow delete: if isAdmin() || (isAuthenticated() && resource.data.creatorId == request.auth.uid);
     }
 
@@ -148,18 +135,7 @@ service cloud.firestore {
 
     match /site_data/active_session {
       allow read: if true;
-      allow update: if isAdmin() || (
-        isAuthenticated() && 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees']) &&
-        (
-          (request.resource.data.attendees.size() == resource.data.attendees.size() + 1 && 
-           request.resource.data.attendees.hasAll(resource.data.attendees) && 
-           request.resource.data.attendees.hasAll([request.auth.uid])) ||
-          (request.resource.data.attendees.size() == resource.data.attendees.size() - 1 && 
-           resource.data.attendees.hasAll(request.resource.data.attendees) && 
-           resource.data.attendees.hasAll([request.auth.uid]))
-        )
-      );
+      allow update: if isAdmin() || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendees']);
       allow write: if isAdmin();
     }
 
