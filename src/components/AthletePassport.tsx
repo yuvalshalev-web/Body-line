@@ -205,10 +205,10 @@ export const AthletePassport: React.FC = () => {
       {/* Title & Tabs */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
         <div className="text-center md:text-right">
-          <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-l from-slate-800 to-slate-500 bg-clip-text text-transparent tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-black text-[#121212] tracking-tight">
             Athlete Passport
           </h2>
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mt-1">Verified Action ID</p>
+          <p className="text-[#121212] font-bold uppercase tracking-widest text-xs mt-1">Verified Action ID</p>
         </div>
         
         {/* Apple Wallet Style Tabs */}
@@ -222,7 +222,7 @@ export const AthletePassport: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveDiscipline(tab.id)}
-                  className={`relative px-4 py-2 rounded-full flex items-center gap-2 text-sm font-black transition-all whitespace-nowrap ${isActive ? 'text-white' : 'text-slate-500 hover:text-slate-800'}`}
+                  className={`relative px-4 py-2 rounded-full flex items-center gap-2 text-sm font-black transition-all whitespace-nowrap ${isActive ? 'text-white' : 'text-[#121212]/70 hover:text-[#121212]'}`}
                 >
                   {isActive && (
                     <motion.div 

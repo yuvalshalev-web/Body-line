@@ -112,7 +112,7 @@ export const RankRoadmap: React.FC<{
             {RANKS.map((rank, i) => {
               const isPassed = rank.max !== null && sessions >= rank.max;
               const isCurrent = sessions >= rank.min && (rank.max === null || sessions < rank.max);
-              const textColor = isCurrent ? '#b91c1c' : isPassed ? '#0c4a6e' : '#1e293b';
+              const textColor = isCurrent ? '#b91c1c' : isPassed ? '#0c4a6e' : '#121212';
               const rotation = (i % 2 === 0 ? -0.5 : 0.5) * (Math.random() * 0.5 + 0.2);
               
               return (
@@ -144,7 +144,7 @@ export const RankRoadmap: React.FC<{
                       {rank.he}
                     </span>
 
-                    <span className="text-sm sm:text-base font-medium font-dana-yad text-slate-900 bg-slate-200/90 border border-slate-300/80 px-2 py-0.5 rounded">
+                    <span className="text-sm sm:text-base font-medium font-dana-yad text-[#121212] bg-slate-200/90 border border-slate-300/80 px-2 py-0.5 rounded">
                       ({rank.min}{rank.max ? `-${rank.max}` : '+'} סשנים)
                     </span>
 
@@ -155,11 +155,11 @@ export const RankRoadmap: React.FC<{
                     )}
                   </div>
 
-                  <p className="text-base sm:text-lg leading-relaxed pl-2 font-dana-yad font-semibold text-slate-900">
+                  <p className="text-base sm:text-lg leading-relaxed pl-2 font-dana-yad font-semibold text-[#121212]">
                     {rank.desc}
                   </p>
 
-                  <ul className="list-disc list-inside pr-3 text-sm sm:text-base font-dana-yad font-medium text-slate-800 flex flex-wrap gap-x-3.5 gap-y-0.5">
+                  <ul className="list-disc list-inside pr-3 text-sm sm:text-base font-dana-yad font-medium text-[#121212] flex flex-wrap gap-x-3.5 gap-y-0.5">
                     {rank.perks.map((perk, idx) => (
                       <li key={idx} className="font-dana-yad">
                         {perk}

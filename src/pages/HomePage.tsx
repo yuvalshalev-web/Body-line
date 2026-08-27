@@ -371,16 +371,16 @@ const HomePage: React.FC = () => {
               {/* Centered Avatars */}
               <div className="flex justify-center -space-x-4 md:-space-x-6 space-x-reverse">
                 {attendees.slice(0, 12).map(a => (
-                  <Link to={`/directory?id=${a.id}`} key={a.id} className="relative group feathered-avatar-hover flex-shrink-0">
+                  <div key={a.id} className="relative group flex-shrink-0 cursor-default">
                     {a.avatar ? (
                       <img 
                         src={a.avatar} 
-                        className="w-14 h-14 md:w-16 md:h-16 rounded-2xl border-2 border-white/40 shadow-xl object-cover transition-all duration-500 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-4 group-hover:rotate-6 feathered-avatar" 
+                        className="w-14 h-14 md:w-16 md:h-16 rounded-2xl border-2 border-white/40 shadow-xl object-cover transition-all duration-300 group-hover:scale-110 group-hover:z-20 group-hover:-translate-y-1 feathered-avatar" 
                         alt="" 
                         loading="lazy" 
                       />
                     ) : (
-                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-[#002b44] to-[#00426a] border-2 border-white/40 flex items-center justify-center text-sm text-white font-black shadow-xl transition-all duration-500 group-hover:scale-125 group-hover:z-20 group-hover:-translate-y-4 group-hover:rotate-6">
+                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-[#002b44] to-[#00426a] border-2 border-white/40 flex items-center justify-center text-sm text-white font-black shadow-xl transition-all duration-300 group-hover:scale-110 group-hover:z-20 group-hover:-translate-y-1">
                         {a.firstName.charAt(0)}
                       </div>
                     )}
@@ -388,7 +388,7 @@ const HomePage: React.FC = () => {
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 px-3 py-1.5 bg-[#002b44]/90 backdrop-blur-md text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap pointer-events-none z-30 shadow-xl border border-white/20">
                       {a.firstName} {a.lastName}
                     </div>
-                  </Link>
+                  </div>
                 ))}
                 {attendees.length > 12 && (
                   <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-[#002b44]/80 backdrop-blur-md border-2 border-white/40 flex items-center justify-center text-sm text-white font-black shadow-xl z-10">
