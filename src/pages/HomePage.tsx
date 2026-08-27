@@ -20,7 +20,12 @@ import {
   ChevronRight,
   MessageSquareQuote,
   WifiOff,
-  AlertCircle
+  AlertCircle,
+  Phone,
+  MessageCircle,
+  Mail,
+  MapPin,
+  X
 } from 'lucide-react';
 import { SurfDashboard } from '../components/SurfDashboard';
 import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
@@ -53,6 +58,7 @@ const HomePage: React.FC = () => {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAttendees, setShowAttendees] = useState(false);
+  const [selectedMemberProfile, setSelectedMemberProfile] = useState<any | null>(null);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [randomGlossary, setRandomGlossary] = useState<any[]>([]);
   const [randomQuotes, setRandomQuotes] = useState<any[]>([]);
@@ -559,35 +565,168 @@ const HomePage: React.FC = () => {
 
       {showAttendees && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-md animate-in fade-in" onClick={() => setShowAttendees(false)}>
-           <div className="relative bg-gradient-to-br from-[#FCFCFC] via-[#FFFFFF] to-[#F0F7F9] border border-white/80 shadow-[0_40px_80px_-20px_rgba(0,43,68,0.2)] rounded-[2rem] w-full max-w-lg p-8 sm:p-10 animate-in zoom-in-95 overflow-hidden" onClick={e => e.stopPropagation()}>
+           <div className="relative bg-gradient-to-br from-[#FCFCFC] via-[#FFFFFF] to-[#F0F7F9] border border-white/80 shadow-[0_40px_80px_-20px_rgba(0,43,68,0.2)] rounded-[2rem] w-full max-w-lg p-6 sm:p-8 animate-in zoom-in-95 overflow-hidden" onClick={e => e.stopPropagation()}>
               {/* Micro-grain texture */}
               <div className="absolute inset-0 opacity-[0.04] mix-blend-multiply pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
               
               <div className="relative z-10">
-                <div className="flex justify-between items-center mb-8">
+                <div className="flex justify-between items-center mb-6">
                   <h3 className="text-3xl font-black text-[#002b44] tracking-tight font-yehuda">נבחרת הסשן</h3>
                   <div className="px-4 py-1.5 bg-[#007085]/10 text-[#007085] rounded-full text-sm font-black tracking-widest">{attendees.length} גולשים</div>
                 </div>
-                <div className="space-y-4 max-h-[55vh] overflow-y-auto custom-scrollbar pr-2 pb-4">
+                <div className="space-y-3 max-h-[55vh] overflow-y-auto custom-scrollbar pr-2 pb-2">
                   {attendees.map(a => (
-                    <div key={a.id} className="flex items-center gap-5 p-4 bg-white/80 backdrop-blur-sm rounded-2xl shadow-[0_16px_40px_-12px_rgba(0,43,68,0.12)] border border-white hover:shadow-[0_24px_50px_-16px_rgba(0,43,68,0.2)] hover:-translate-y-1 transition-all duration-300">
-                      {a.avatar ? (
-                        <img src={a.avatar} className="w-14 h-14 rounded-2xl object-cover shadow-md border border-slate-100/50 flex-shrink-0" alt="" loading="lazy" />
-                      ) : (
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-white shadow-inner flex items-center justify-center text-slate-400 flex-shrink-0">
-                          <UserCircle size={28} strokeWidth={1.5} />
+                    <div 
+                      key={a.id} 
+                      onClick={() => setSelectedMemberProfile(a)}
+                      role="button"
+                      tabIndex={0}
+                      className="flex items-center justify-between p-3.5 bg-white/80 backdrop-blur-sm rounded-2xl shadow-[0_8px_24px_-8px_rgba(0,43,68,0.08)] border border-white hover:border-[#007085]/30 hover:shadow-[0_16px_36px_-10px_rgba(0,43,68,0.18)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-4">
+                        {a.avatar ? (
+                          <img src={a.avatar} className="w-13 h-13 rounded-2xl object-cover shadow-sm border border-slate-100/60 flex-shrink-0" alt="" loading="lazy" />
+                        ) : (
+                          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-white shadow-inner flex items-center justify-center text-slate-400 flex-shrink-0">
+                            <UserCircle size={26} strokeWidth={1.5} />
+                          </div>
+                        )}
+                        <div className="text-right">
+                          <p className="font-black text-[#002b44] text-base group-hover:text-[#007085] transition-colors">{a.firstName} {a.lastName}</p>
+                          <p className="text-[11px] font-black text-[#007085] uppercase tracking-[0.15em] opacity-80 mt-0.5">
+                            {a.role === 'Admin' ? 'רכז' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
+                            {(a.full_address || a.city) && (
+                              <span className="text-slate-400 font-normal mr-2 font-sans text-[11px]">
+                                • {a.full_address || a.city}
+                              </span>
+                            )}
+                          </p>
                         </div>
-                      )}
-                      <div>
-                        <p className="font-black text-[#002b44] text-lg">{a.firstName} {a.lastName}</p>
-                        <p className="text-[10px] font-black text-[#007085] uppercase tracking-[0.2em] opacity-80">{a.role === 'Admin' ? 'רכז' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}</p>
+                      </div>
+
+                      <div className="w-8 h-8 rounded-full bg-[#007085]/10 text-[#007085] group-hover:bg-[#007085] group-hover:text-white flex items-center justify-center transition-colors">
+                        <Phone size={14} />
                       </div>
                     </div>
                   ))}
                 </div>
-                <button onClick={() => setShowAttendees(false)} className="w-full mt-6 py-4 bg-[#002b44] text-white rounded-2xl shadow-[0_12px_24px_-8px_rgba(0,43,68,0.4)] font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-95 hover:bg-[#003b5c] hover:shadow-[0_16px_32px_-8px_rgba(0,43,68,0.5)]">סגור</button>
+                <button onClick={() => setShowAttendees(false)} className="w-full mt-5 py-3.5 bg-[#002b44] text-white rounded-2xl shadow-[0_12px_24px_-8px_rgba(0,43,68,0.4)] font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-95 hover:bg-[#003b5c]">סגור</button>
               </div>
            </div>
+        </div>
+      )}
+
+      {/* Member Profile Quick-View Modal */}
+      {selectedMemberProfile && (
+        <div 
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in"
+          onClick={() => setSelectedMemberProfile(null)}
+        >
+          <div 
+            className="relative bg-white rounded-3xl p-6 sm:p-7 w-full max-w-sm shadow-[0_30px_90px_-20px_rgba(0,0,0,0.4)] border border-slate-100 text-center animate-in zoom-in-95 overflow-hidden"
+            onClick={e => e.stopPropagation()}
+            dir="rtl"
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedMemberProfile(null)}
+              className="absolute top-4 left-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-all cursor-pointer"
+              aria-label="סגור"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Profile Avatar */}
+            <div className="flex flex-col items-center mt-1">
+              <div className="relative mb-3">
+                {selectedMemberProfile.avatar ? (
+                  <img 
+                    src={selectedMemberProfile.avatar} 
+                    alt={`${selectedMemberProfile.firstName} ${selectedMemberProfile.lastName}`}
+                    className="w-24 h-24 rounded-3xl object-cover ring-4 ring-[#007085]/20 shadow-lg"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-3xl bg-slate-100 ring-4 ring-[#007085]/20 shadow-lg flex items-center justify-center text-slate-400">
+                    <UserCircle size={54} strokeWidth={1.5} />
+                  </div>
+                )}
+                <span className="absolute -bottom-1 -right-1 px-3 py-0.5 rounded-full text-[11px] font-black bg-[#002b44] text-white shadow-sm">
+                  {selectedMemberProfile.role === 'Admin' ? 'רכז' :
+                   selectedMemberProfile.role === 'Instructor' ? 'מדריך' :
+                   selectedMemberProfile.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
+                </span>
+              </div>
+
+              {/* Name */}
+              <h3 className="text-2xl font-black text-[#002b44] tracking-tight font-yehuda">
+                {selectedMemberProfile.firstName} {selectedMemberProfile.lastName}
+              </h3>
+
+              {/* Residential Address */}
+              <div className="flex items-center justify-center gap-1.5 text-slate-700 text-xs sm:text-sm font-medium mt-2 mb-4 px-3.5 py-1.5 bg-slate-50 rounded-full border border-slate-200/80 max-w-full">
+                <MapPin size={14} className="text-[#007085] shrink-0" />
+                <span className="truncate">
+                  {selectedMemberProfile.full_address || 
+                   (selectedMemberProfile.street_name ? `${selectedMemberProfile.street_name} ${selectedMemberProfile.house_number || ''}, ${selectedMemberProfile.city || ''}` : selectedMemberProfile.city) || 
+                   'לא צוינה כתובת מגורים'}
+                </span>
+              </div>
+            </div>
+
+            {/* Contact Action Buttons */}
+            <div className="flex flex-col gap-2.5 w-full mt-2">
+              {/* Phone Call */}
+              {selectedMemberProfile.mobile ? (
+                <a 
+                  href={`tel:${selectedMemberProfile.mobile}`}
+                  className="flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-2xl bg-[#007085] hover:bg-[#005a6b] active:scale-98 text-white font-black text-sm shadow-md transition-all font-yehuda tracking-wide"
+                >
+                  <Phone size={16} />
+                  <span>שיחת טלפון ({selectedMemberProfile.mobile})</span>
+                </a>
+              ) : (
+                <div className="py-2.5 text-xs text-slate-400 bg-slate-50 rounded-xl">
+                  לא הוזן מספר טלפון
+                </div>
+              )}
+
+              {/* WhatsApp */}
+              {selectedMemberProfile.mobile && (
+                <a 
+                  href={`https://wa.me/${selectedMemberProfile.mobile.replace(/[^0-9]/g, '').replace(/^0/, '972')}`}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] active:scale-98 text-white font-black text-sm shadow-md transition-all font-yehuda tracking-wide"
+                >
+                  <MessageCircle size={16} />
+                  <span>שליחת הודעת WhatsApp</span>
+                </a>
+              )}
+
+              {/* Email */}
+              {selectedMemberProfile.email ? (
+                <a 
+                  href={`mailto:${selectedMemberProfile.email}`}
+                  className="flex items-center justify-center gap-2.5 w-full py-2.5 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-98 text-[#002b44] font-bold text-sm border border-slate-200 transition-all font-sans"
+                >
+                  <Mail size={16} className="text-[#007085]" />
+                  <span className="truncate">{selectedMemberProfile.email}</span>
+                </a>
+              ) : (
+                <div className="py-2 text-xs text-slate-400 bg-slate-50 rounded-xl">
+                  לא הוזנה כתובת אימייל
+                </div>
+              )}
+            </div>
+
+            {/* Back Button */}
+            <button
+              onClick={() => setSelectedMemberProfile(null)}
+              className="w-full mt-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors"
+            >
+              חזרה לרשימת הנבחרת
+            </button>
+          </div>
         </div>
       )}
     </div>
