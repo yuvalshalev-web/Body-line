@@ -1,35 +1,46 @@
 {
-  "name": "Body-Line MemberHub",
-  "short_name": "Body-Line",
-  "description": "אפליקציית מועדון הגלישה Body-Line",
+  "name": "חבל זוג - עמותת העטלף",
+  "short_name": "חבל זוג",
+  "description": "קהילת גלישה - עמותת העטלף",
   "theme_color": "#0f172a",
   "background_color": "#0f172a",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",
-  "start_url": "/",
+  "start_url": "/?v=4",
   "icons": [
     {
-      "src": "pwa-192x192.svg",
+      "src": "/pwa-192x192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/png"
     },
     {
-      "src": "pwa-512x512.svg",
+      "src": "/pwa-512x512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml"
+      "type": "image/png"
     },
     {
-      "src": "pwa-512x512.svg",
+      "src": "/pwa-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "pwa-512x512.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
     }
   ]
 }

@@ -1,11 +1,12 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
-import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCircle, Phone, Twitter, Music2, Mail, MapPin, ShieldCheck, UtensilsCrossed } from 'lucide-react';
+import { Calendar, Crown, Star, Facebook, Instagram, Linkedin, Globe, MessageCircle, Phone, Twitter, Music2, Mail, MapPin, ShieldCheck, UtensilsCrossed, Clock } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { calculateUserStats } from '../utils/analytics';
 import UserCategories from './UserCategories';
 import { getDietaryOptionLabel } from '../constants/dietary';
+import { getAvailabilityLabel } from '../constants/availability';
 
 interface PlayerCardProps {
   userId: string;
@@ -200,6 +201,20 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
           )}
 
           <UserCategories userId={userId} />
+
+          {/* Availability Schedule Section */}
+          {member.availabilitySchedule && member.availabilitySchedule !== 'always' && (
+            <div className="w-full p-3.5 bg-amber-50/40 backdrop-blur-[20px] border border-amber-200/60 rounded-2xl mt-4" dir="rtl">
+              <div className="text-amber-800 text-xs font-black mb-1.5 flex items-center gap-2 justify-center">
+                <Clock size={14} className="text-amber-600" /> זמינות לפעילויות
+              </div>
+              <div className="flex justify-center">
+                <span className="px-3 py-1 bg-white/95 border border-amber-200 text-amber-900 text-[11px] font-bold rounded-lg shadow-xs">
+                  {getAvailabilityLabel(member.availabilitySchedule)}
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Certifications Section */}
           {member.certifications && member.certifications.length > 0 && (

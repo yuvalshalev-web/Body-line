@@ -4,11 +4,12 @@ import { createPortal } from 'react-dom';
 import { 
   X, Camera, UserCircle, ChevronLeft, Save, Archive, Loader2, Cake, Phone, Mail, AlertCircle, 
   ChevronDown, Instagram, Facebook, Music2, Linkedin, Twitter, Globe, Key, Check, HeartPulse,
-  Award, Search, Sparkles, User, RefreshCw, UtensilsCrossed
+  Award, Search, Sparkles, User, RefreshCw, UtensilsCrossed, Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Member } from '../../types';
 import { DietaryPreferencesSection } from '../DietaryPreferencesSection';
+import { AvailabilityPreferenceSection } from '../AvailabilityPreferenceSection';
 import { processImage } from '../../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../../utils/validation';
 import { useModal } from '../../contexts/ModalContext';
@@ -22,6 +23,7 @@ interface EditMemberFormProps {
   member: Member;
   gritScore: number;
   isSuperAdmin: boolean;
+  readOnly?: boolean;
   onSave: (updatedMember: Member) => Promise<void>;
   onArchive: (id: string) => Promise<void>;
   onClose: () => void;
@@ -42,7 +44,15 @@ const CERTIFICATION_OPTIONS = [
   'טקסט חופשי'
 ];
 
-const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSuperAdmin, onSave, onArchive, onClose }) => {
+const EditMemberForm: React.FC<EditMemberFormProps> = ({ 
+  member, 
+  gritScore, 
+  isSuperAdmin, 
+  readOnly = false,
+  onSave, 
+  onArchive, 
+  onClose 
+}) => {
   const { showSuccess, showError, showConfirm } = useModal();
   const [editingMember, setEditingMember] = useState<Member>(member);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -267,7 +277,11 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
         </div>
 
         <h1 className="text-5xl md:text-6xl font-black text-[#1e293b] uppercase tracking-tight leading-none">
-          עריכת <span className="text-[#00AFC2]">פרופיל</span>
+          {readOnly ? (
+            <>פרופיל <span className="text-[#00AFC2]">משתמש</span></>
+          ) : (
+            <>עריכת <span className="text-[#00AFC2]">פרופיל</span></>
+          )}
         </h1>
 
         <div className="w-24 h-1 bg-gradient-to-r from-transparent via-[#00AFC2] to-transparent rounded-full" />
@@ -299,24 +313,28 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
                       <UserCircle size={100} strokeWidth={1} />
                     </div>
                   )}
-                  <label className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-all duration-500 cursor-pointer z-20">
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      accept="image/*"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const processed = await processImage(file);
-                          setEditingMember({ ...editingMember, avatar: processed.dataUrl });
-                        }
-                      }}
-                    />
-                  </label>
+                  {!readOnly && (
+                    <label className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-all duration-500 cursor-pointer z-20">
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const processed = await processImage(file);
+                            setEditingMember({ ...editingMember, avatar: processed.dataUrl });
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
                 </div>
-                <div className="absolute bottom-2 left-2 p-3 bg-[#00AFC2] text-white rounded-2xl shadow-lg z-30 pointer-events-none">
-                  <Camera size={20} />
-                </div>
+                {!readOnly && (
+                  <div className="absolute bottom-2 left-2 p-3 bg-[#00AFC2] text-white rounded-2xl shadow-lg z-30 pointer-events-none">
+                    <Camera size={20} />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -327,8 +345,8 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
                 <div 
                   className="relative w-full max-w-[500px] p-1.5 bg-slate-100/40 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 grid grid-cols-5 shadow-[inset_0_2px_12px_rgba(0,0,0,0.08)]"
                   dir="rtl"
-                  onMouseEnter={() => setShowRoleWarning(true)}
-                  onMouseLeave={() => setShowRoleWarning(false)}
+                  onMouseEnter={() => !readOnly && setShowRoleWarning(true)}
+                  onMouseLeave={() => !readOnly && setShowRoleWarning(false)}
                 >
                   {[
                     { id: 'Member', label: 'משתתף' },
@@ -340,14 +358,15 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
                     <button
                       key={r.id}
                       type="button"
+                      disabled={readOnly || (r.id === 'Admin' && !isSuperAdmin)}
                       onClick={() => {
+                        if (readOnly) return;
                         if (r.id === 'Admin' && !isSuperAdmin) return;
                         setEditingMember({ ...editingMember, role: r.id as any });
                       }}
-                      disabled={r.id === 'Admin' && !isSuperAdmin}
                       className={`relative py-3.5 text-[13px] font-black text-center flex items-center justify-center transition-all duration-500 outline-none group ${
                         editingMember.role === r.id ? 'text-white' : 'text-slate-400 hover:text-slate-600'
-                      } ${r.id === 'Admin' && !isSuperAdmin ? 'opacity-20 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-95'}`}
+                      } ${readOnly ? 'cursor-default' : r.id === 'Admin' && !isSuperAdmin ? 'opacity-20 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-95'}`}
                     >
                       {editingMember.role === r.id && (
                         <motion.div
@@ -361,7 +380,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
                   ))}
                 </div>
                 <AnimatePresence>
-                  {showRoleWarning && (
+                  {!readOnly && showRoleWarning && (
                     <motion.div 
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
@@ -386,10 +405,11 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
                     <button 
                       key={s.label}
                       type="button"
-                      onClick={() => setEditingMember({ ...editingMember, isActive: s.id })}
+                      disabled={readOnly}
+                      onClick={() => !readOnly && setEditingMember({ ...editingMember, isActive: s.id })}
                       className={`relative h-full text-sm font-black text-center flex items-center justify-center transition-all duration-500 rounded-[2rem] group ${
                         (editingMember.isActive !== false) === s.id ? 'text-white' : 'text-slate-400 hover:text-slate-500'
-                      } hover:scale-[1.02] active:scale-95`}
+                      } ${readOnly ? 'cursor-default' : 'hover:scale-[1.02] active:scale-95'}`}
                     >
                       {(editingMember.isActive !== false) === s.id && (
                         <motion.div 
@@ -444,8 +464,12 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               <input 
                 type="text"
                 value={editingMember.firstName || ''}
+                readOnly={readOnly}
+                disabled={readOnly}
                 onChange={(e) => setEditingMember({ ...editingMember, firstName: e.target.value })}
-                className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10 transition-all outline-none"
+                className={`w-full p-6 luxury-card font-bold text-slate-700 transition-all outline-none ${
+                  readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10'
+                }`}
               />
             </div>
 
@@ -454,8 +478,12 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               <input 
                 type="text"
                 value={editingMember.lastName || ''}
+                readOnly={readOnly}
+                disabled={readOnly}
                 onChange={(e) => setEditingMember({ ...editingMember, lastName: e.target.value })}
-                className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10 transition-all outline-none"
+                className={`w-full p-6 luxury-card font-bold text-slate-700 transition-all outline-none ${
+                  readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10'
+                }`}
               />
             </div>
 
@@ -464,8 +492,12 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               <input 
                 type="email"
                 value={editingMember.email}
+                readOnly={readOnly}
+                disabled={readOnly}
                 onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
-                className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10 transition-all outline-none"
+                className={`w-full p-6 luxury-card font-bold text-slate-700 transition-all outline-none ${
+                  readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10'
+                }`}
               />
             </div>
 
@@ -474,8 +506,12 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               <input 
                 type="text"
                 value={editingMember.mobile}
+                readOnly={readOnly}
+                disabled={readOnly}
                 onChange={(e) => setEditingMember({ ...editingMember, mobile: formatMobileNumber(e.target.value) })}
-                className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10 transition-all text-left outline-none"
+                className={`w-full p-6 luxury-card font-bold text-slate-700 transition-all text-left outline-none ${
+                  readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white focus:ring-4 focus:ring-[#00AFC2]/10'
+                }`}
                 dir="ltr"
               />
             </div>
@@ -485,15 +521,20 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               <div className="relative">
                 <button 
                   type="button"
-                  onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                  className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all outline-none flex items-center justify-between"
+                  disabled={readOnly}
+                  onClick={() => !readOnly && setIsGenderDropdownOpen(!isGenderDropdownOpen)}
+                  className={`w-full p-6 luxury-card font-bold text-slate-700 transition-all outline-none flex items-center justify-between ${
+                    readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white'
+                  }`}
                 >
-                  <span className="text-right flex-1">{editingMember.gender || 'בחר מגדר'}</span>
-                  <ChevronDown size={20} className={`text-[#00AFC2] transition-transform duration-500 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
+                  <span className="text-right flex-1">{editingMember.gender || 'לא צוין'}</span>
+                  {!readOnly && (
+                    <ChevronDown size={20} className={`text-[#00AFC2] transition-transform duration-500 ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
+                  )}
                 </button>
 
                 <AnimatePresence>
-                  {isGenderDropdownOpen && (
+                  {!readOnly && isGenderDropdownOpen && (
                     <>
                       <div className="fixed inset-0 z-[60]" onClick={() => setIsGenderDropdownOpen(false)} />
                       <motion.div 
@@ -529,10 +570,14 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               <div className="relative">
                 <Cake size={20} className="absolute right-6 top-1/2 -translate-y-1/2 text-[#00AFC2]" />
                 <input 
-                  type="date"
-                  value={editingMember.birthday || ''}
+                  type={readOnly ? "text" : "date"}
+                  value={editingMember.birthday || (readOnly ? 'לא צוין' : '')}
+                  readOnly={readOnly}
+                  disabled={readOnly}
                   onChange={(e) => setEditingMember({ ...editingMember, birthday: e.target.value })}
-                  className="w-full pr-16 pl-6 py-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all outline-none"
+                  className={`w-full pr-16 pl-6 py-6 luxury-card font-bold text-slate-700 transition-all outline-none ${
+                    readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white'
+                  }`}
                 />
               </div>
             </div>
@@ -545,10 +590,14 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               <input 
                 type="text" 
                 ref={addressInputRef}
-                defaultValue={editingMember.full_address || ''} 
+                defaultValue={editingMember.full_address || (readOnly ? 'לא צוינה כתובת' : '')} 
+                readOnly={readOnly}
+                disabled={readOnly}
                 onChange={() => setIsPlaceSelected(false)} 
-                placeholder="התחל להקליד: עיר, רחוב ומספר בית..."
-                className="w-full pr-16 pl-6 py-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all outline-none" 
+                placeholder={readOnly ? "לא צוינה כתובת" : "התחל להקליד: עיר, רחוב ומספר בית..."}
+                className={`w-full pr-16 pl-6 py-6 luxury-card font-bold text-slate-700 transition-all outline-none ${
+                  readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white'
+                }`}
                 autoComplete="off"
               />
             </div>
@@ -557,9 +606,13 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
           <div className="space-y-3">
             <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">ביוגרפיה</label>
             <textarea 
-              value={editingMember.bio}
+              value={editingMember.bio || (readOnly ? 'אין ביוגרפיה' : '')}
+              readOnly={readOnly}
+              disabled={readOnly}
               onChange={(e) => setEditingMember({ ...editingMember, bio: e.target.value })}
-              className="w-full p-8 luxury-card font-bold text-slate-700 focus:bg-white transition-all min-h-[160px] outline-none leading-relaxed"
+              className={`w-full p-8 luxury-card font-bold text-slate-700 transition-all min-h-[160px] outline-none leading-relaxed ${
+                readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white'
+              }`}
               placeholder="ספר קצת על עצמך..."
             />
           </div>
@@ -579,23 +632,28 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
 
           <div className="space-y-6">
             <div className="space-y-3">
-              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">בחר הכשרות והסמכות</label>
+              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">הכשרות והסמכות</label>
               <div className="relative">
                 <button 
                   type="button"
-                  onClick={() => setIsCertDropdownOpen(!isCertDropdownOpen)}
-                  className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all outline-none flex items-center justify-between"
+                  disabled={readOnly}
+                  onClick={() => !readOnly && setIsCertDropdownOpen(!isCertDropdownOpen)}
+                  className={`w-full p-6 luxury-card font-bold text-slate-700 transition-all outline-none flex items-center justify-between ${
+                    readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white'
+                  }`}
                 >
                   <span className="text-right flex-1 truncate">
                     {editingMember.certifications && editingMember.certifications.length > 0 
                       ? editingMember.certifications.join(', ') 
-                      : 'בחר הכשרות והסמכות'}
+                      : readOnly ? 'אין הכשרות מוגדרות' : 'בחר הכשרות והסמכות'}
                   </span>
-                  <ChevronDown size={20} className={`text-[#00AFC2] transition-transform duration-500 ${isCertDropdownOpen ? 'rotate-180' : ''}`} />
+                  {!readOnly && (
+                    <ChevronDown size={20} className={`text-[#00AFC2] transition-transform duration-500 ${isCertDropdownOpen ? 'rotate-180' : ''}`} />
+                  )}
                 </button>
 
                 <AnimatePresence>
-                  {isCertDropdownOpen && (
+                  {!readOnly && isCertDropdownOpen && (
                     <>
                       <div className="fixed inset-0 z-[60]" onClick={() => setIsCertDropdownOpen(false)} />
                       <motion.div 
@@ -691,16 +749,39 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">פירוט הכשרה נוספת</label>
                 <textarea 
                   value={editingMember.otherCertification || ''} 
+                  readOnly={readOnly}
+                  disabled={readOnly}
                   onChange={e => setEditingMember({ ...editingMember, otherCertification: e.target.value })} 
-                  placeholder="פרט כאן הכשרות נוספות..."
-                  className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all min-h-[100px] resize-none outline-none leading-relaxed" 
+                  placeholder={readOnly ? "אין פירוט נוסף" : "פרט כאן הכשרות נוספות..."}
+                  className={`w-full p-6 luxury-card font-bold text-slate-700 transition-all min-h-[100px] resize-none outline-none leading-relaxed ${
+                    readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white'
+                  }`}
                 />
               </motion.div>
             )}
           </div>
         </section>
 
-        {/* Section 2.4: Nutrition & Dietary Preferences */}
+        {/* Section 2.4: Availability Schedule */}
+        <section className="space-y-10">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+              <Clock size={24} />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-[#1e293b]">זמינות לפעילויות</h2>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Availability & Activity Schedule</p>
+            </div>
+          </div>
+
+          <AvailabilityPreferenceSection
+            value={editingMember.availabilitySchedule || 'always'}
+            onChange={(schedule) => setEditingMember({ ...editingMember, availabilitySchedule: schedule })}
+            readOnly={readOnly}
+          />
+        </section>
+
+        {/* Section 2.5: Nutrition & Dietary Preferences */}
         <section className="space-y-10">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
@@ -717,6 +798,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
             dietaryNotes={editingMember.dietaryNotes || ''}
             onChangePreferences={(prefs) => setEditingMember({ ...editingMember, dietaryPreferences: prefs })}
             onChangeNotes={(notes) => setEditingMember({ ...editingMember, dietaryNotes: notes })}
+            readOnly={readOnly}
           />
         </section>
 
@@ -738,9 +820,13 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               <input 
                 type="text" 
                 value={editingMember.emergencyContactName || ''} 
+                readOnly={readOnly}
+                disabled={readOnly}
                 onChange={e => setEditingMember({ ...editingMember, emergencyContactName: e.target.value })} 
-                placeholder="שם מלא של איש הקשר"
-                className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all outline-none" 
+                placeholder={readOnly ? "לא צוין" : "שם מלא של איש הקשר"}
+                className={`w-full p-6 luxury-card font-bold text-slate-700 transition-all outline-none ${
+                  readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white'
+                }`}
               />
             </div>
             <div className="space-y-3">
@@ -748,24 +834,30 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
               <input 
                 type="tel" 
                 value={editingMember.emergencyContactPhone || ''} 
+                readOnly={readOnly}
+                disabled={readOnly}
                 onChange={e => setEditingMember({ ...editingMember, emergencyContactPhone: formatMobileNumber(e.target.value) })} 
-                placeholder="מספר טלפון לחירום"
-                className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all outline-none" 
+                placeholder={readOnly ? "לא צוין" : "מספר טלפון לחירום"}
+                className={`w-full p-6 luxury-card font-bold text-slate-700 transition-all outline-none ${
+                  readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white'
+                }`}
               />
             </div>
             <div className="md:col-span-2 space-y-3">
               <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">מידע רפואי / רגישויות</label>
               <textarea 
-                value={editingMember.medicalInfo || ''} 
+                value={editingMember.medicalInfo || (readOnly ? 'אין מידע רפואי או רגישויות רשומים' : '')} 
+                readOnly={readOnly}
+                disabled={readOnly}
                 onChange={e => setEditingMember({ ...editingMember, medicalInfo: e.target.value })} 
-                placeholder="פרט כאן רגישויות, פציעות עבר או מידע רפואי שחשוב שנדע..."
-                className="w-full p-8 luxury-card font-bold text-slate-700 focus:bg-white transition-all min-h-[120px] resize-none outline-none leading-relaxed" 
+                placeholder={readOnly ? "אין מידע רפואי או רגישויות רשומים" : "פרט כאן רגישויות, פציעות עבר או מידע רפואי שחשוב שנדע..."}
+                className={`w-full p-8 luxury-card font-bold text-slate-700 transition-all min-h-[120px] resize-none outline-none leading-relaxed ${
+                  readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white'
+                }`}
               />
             </div>
           </div>
         </section>
-
-
 
         {/* Section 3: Social Networks */}
         <section className="space-y-10">
@@ -796,9 +888,13 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
                 <input 
                   type="text"
                   value={(editingMember as any)[social.id] || ''}
+                  readOnly={readOnly}
+                  disabled={readOnly}
                   onChange={(e) => setEditingMember({ ...editingMember, [social.id]: e.target.value })}
-                  placeholder={social.placeholder}
-                  className="w-full p-6 luxury-card font-bold text-slate-700 focus:bg-white transition-all text-left outline-none"
+                  placeholder={readOnly ? "לא הוגדר" : social.placeholder}
+                  className={`w-full p-6 luxury-card font-bold text-slate-700 transition-all text-left outline-none ${
+                    readOnly ? 'bg-slate-50/70 border-slate-200/60 cursor-default' : 'focus:bg-white'
+                  }`}
                   dir="ltr"
                 />
               </div>
@@ -808,78 +904,93 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({ member, gritScore, isSu
 
         {/* Footer Actions */}
         <div className="pt-16 border-t border-slate-100 flex flex-col gap-8">
-          <div className="flex flex-col md:flex-row gap-6">
-            <button 
-              type="button"
-              onClick={handleSave}
-              disabled={isProcessing}
-              className="flex-[2] py-8 rounded-[2rem] font-black text-xl transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 shadow-xl relative overflow-hidden group bg-[#00AFC2] text-white"
-            >
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              {isProcessing ? (
-                <Loader2 className="animate-spin" size={28} />
-              ) : (
-                <>
-                  <Save size={28} /> 
-                  <span className="tracking-tight">
-                    שמירת שינויים
-                  </span>
-                </>
-              )}
-            </button>
+          {readOnly ? (
+            <div className="flex justify-center">
+              <button 
+                type="button"
+                onClick={onClose}
+                className="px-12 py-6 rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-3 bg-[#00AFC2] text-white hover:bg-[#00AFC2]/90 shadow-xl shadow-[#00AFC2]/20 active:scale-95 cursor-pointer"
+              >
+                <ChevronLeft size={22} />
+                <span>סגירת תצוגה</span>
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col md:flex-row gap-6">
+                <button 
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isProcessing}
+                  className="flex-[2] py-8 rounded-[2rem] font-black text-xl transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 shadow-xl relative overflow-hidden group bg-[#00AFC2] text-white cursor-pointer"
+                >
+                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {isProcessing ? (
+                    <Loader2 className="animate-spin" size={28} />
+                  ) : (
+                    <>
+                      <Save size={28} /> 
+                      <span className="tracking-tight">
+                        שמירת שינויים
+                      </span>
+                    </>
+                  )}
+                </button>
 
-            <button 
-              type="button"
-              onClick={() => {
-                showConfirm({
-                  title: editingMember.isActive !== false ? 'השעיית משתמש' : 'שחרור משתמש',
-                  message: editingMember.isActive !== false ? `האם להשעות את ${editingMember.firstName} ${editingMember.lastName}?` : `האם לשחרר את ${editingMember.firstName} ${editingMember.lastName} ולהחזירו לפעילות?`,
-                  confirmText: editingMember.isActive !== false ? 'השעה משתמש' : 'שחרר משתמש',
-                  cancelText: 'ביטול',
-                  onConfirm: async () => {
-                    setIsProcessing(true);
-                    try {
-                      if (editingMember.isActive !== false) {
-                        await onArchive(editingMember.id);
-                        showSuccess('המשתמש הושעה בהצלחה');
-                      } else {
-                        await onSave({ ...editingMember, isActive: true });
-                        showSuccess('המשתמש הוחזר לפעילות');
+                <button 
+                  type="button"
+                  onClick={() => {
+                    showConfirm({
+                      title: editingMember.isActive !== false ? 'השעיית משתמש' : 'שחרור משתמש',
+                      message: editingMember.isActive !== false ? `האם להשעות את ${editingMember.firstName} ${editingMember.lastName}?` : `האם לשחרר את ${editingMember.firstName} ${editingMember.lastName} ולהחזירו לפעילות?`,
+                      confirmText: editingMember.isActive !== false ? 'השעה משתמש' : 'שחרר משתמש',
+                      cancelText: 'ביטול',
+                      onConfirm: async () => {
+                        setIsProcessing(true);
+                        try {
+                          if (editingMember.isActive !== false) {
+                            await onArchive(editingMember.id);
+                            showSuccess('המשתמש הושעה בהצלחה');
+                          } else {
+                            await onSave({ ...editingMember, isActive: true });
+                            showSuccess('המשתמש הוחזר לפעילות');
+                          }
+                          onClose();
+                        } catch (err: any) {
+                          showError('שגיאה: ' + err.message);
+                        } finally {
+                          setIsProcessing(false);
+                        }
                       }
-                      onClose();
-                    } catch (err: any) {
-                      showError('שגיאה: ' + err.message);
-                    } finally {
-                      setIsProcessing(false);
-                    }
-                  }
-                });
-              }}
-              disabled={isProcessing}
-              className={`flex-1 py-8 rounded-[2rem] font-black text-xl transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 ${
-                editingMember.isActive !== false 
-                  ? 'bg-[#FF2D60] text-white hover:bg-[#FF2D60]/90 shadow-lg shadow-[#FF2D60]/30' 
-                  : 'bg-[#FF2D60] text-white hover:bg-[#FF2D60]/90 shadow-lg shadow-[#FF2D60]/30'
-              }`}
-            >
-              {editingMember.isActive !== false ? (
-                <><Archive size={28} /> השעייה</>
-              ) : (
-                <><RefreshCw size={28} /> שחרור</>
-              )}
-            </button>
-          </div>
-          
-          <div className="flex justify-center">
-            <button 
-              type="button" 
-              onClick={() => setShowPasswordModal(true)}
-              className="flex items-center gap-3 text-slate-400 hover:text-[#00AFC2] font-black transition-all uppercase tracking-[0.2em] text-[11px] px-8 py-4 rounded-full border border-slate-200"
-            >
-              <Key size={16} />
-              <span>החלפת סיסמה למשתמש</span>
-            </button>
-          </div>
+                    });
+                  }}
+                  disabled={isProcessing}
+                  className={`flex-1 py-8 rounded-[2rem] font-black text-xl transition-all flex items-center justify-center gap-4 active:scale-95 disabled:opacity-50 cursor-pointer ${
+                    editingMember.isActive !== false 
+                      ? 'bg-[#FF2D60] text-white hover:bg-[#FF2D60]/90 shadow-lg shadow-[#FF2D60]/30' 
+                      : 'bg-[#FF2D60] text-white hover:bg-[#FF2D60]/90 shadow-lg shadow-[#FF2D60]/30'
+                  }`}
+                >
+                  {editingMember.isActive !== false ? (
+                    <><Archive size={28} /> השעייה</>
+                  ) : (
+                    <><RefreshCw size={28} /> שחרור</>
+                  )}
+                </button>
+              </div>
+              
+              <div className="flex justify-center">
+                <button 
+                  type="button" 
+                  onClick={() => setShowPasswordModal(true)}
+                  className="flex items-center gap-3 text-slate-400 hover:text-[#00AFC2] font-black transition-all uppercase tracking-[0.2em] text-[11px] px-8 py-4 rounded-full border border-slate-200 cursor-pointer"
+                >
+                  <Key size={16} />
+                  <span>החלפת סיסמה למשתמש</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

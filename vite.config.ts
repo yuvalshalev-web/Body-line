@@ -20,11 +20,24 @@ export default defineConfig({
         clientsClaim: true,
         cleanupOutdatedCaches: true,
       },
-      includeAssets: ['app-logo.svg', 'apple-touch-icon.png', 'pwa-192x192.svg', 'pwa-512x512.svg'],
+      includeAssets: [
+        'favicon-32x32.png',
+        'favicon-16x16.png',
+        'favicon.ico',
+        'apple-touch-icon.png',
+        'pwa-192x192.png',
+        'pwa-512x512.png',
+        'pwa-maskable-192x192.png',
+        'pwa-maskable-512x512.png',
+        'app-logo.png',
+        'app-logo.svg',
+        'pwa-192x192.svg',
+        'pwa-512x512.svg'
+      ],
       manifest: {
-        name: 'Body-Line MemberHub',
-        short_name: 'Body-Line',
-        description: 'אפליקציית מועדון הגלישה Body-Line',
+        name: 'חבל זוג - עמותת העטלף',
+        short_name: 'חבל זוג',
+        description: 'קהילת גלישה - עמותת העטלף',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
@@ -32,26 +45,37 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.svg',
+            src: '/pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/png'
           },
           {
-            src: 'pwa-512x512.svg',
+            src: '/pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml'
+            type: 'image/png'
           },
           {
-            src: 'pwa-512x512.svg',
+            src: '/pwa-maskable-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: '/pwa-maskable-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
             purpose: 'any'
           },
           {
-            src: 'pwa-512x512.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'maskable'
+            src: '/apple-touch-icon.png',
+            sizes: '180x180',
+            type: 'image/png'
           }
         ]
       }

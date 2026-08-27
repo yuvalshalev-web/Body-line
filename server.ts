@@ -119,6 +119,28 @@ async function startServer() {
     next();
   });
 
+  // PWA Manifest and Icons explicit routes - Top Level
+  app.get(['/manifest.json', '/manifest.webmanifest'], (req, res) => {
+    res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    const manifestPath = path.join(process.cwd(), 'public', 'manifest.json');
+    if (fs.existsSync(manifestPath)) {
+      res.sendFile(manifestPath);
+    } else {
+      res.status(404).send('Not found');
+    }
+  });
+
+  // Serve static assets from public/ folder directly
+  app.use(express.static(path.join(process.cwd(), 'public'), {
+    maxAge: 0,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.png') || filePath.endsWith('.svg') || filePath.endsWith('.ico') || filePath.endsWith('.json')) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+      }
+    }
+  }));
+
   // API routes FIRST - explicitly defined before any static/vite middleware
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", mode: isProd ? 'production' : 'development' });
@@ -1095,6 +1117,18 @@ async function startServer() {
     } catch (err: any) {
       console.error("Vercel status fetch failed:", err);
       res.status(500).json({ error: err.message || "Failed to fetch Vercel status" });
+    }
+  });
+
+  // PWA Manifest and Icons explicit routes
+  app.get(['/manifest.json', '/manifest.webmanifest'], (req, res) => {
+    res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    const manifestPath = path.join(process.cwd(), 'public', 'manifest.json');
+    if (fs.existsSync(manifestPath)) {
+      res.sendFile(manifestPath);
+    } else {
+      res.status(404).send('Not found');
     }
   });
 

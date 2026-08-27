@@ -8,7 +8,7 @@ import {
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
   PanelTop, ArrowUpCircle, ArrowDownCircle, User, Globe, Activity,
   Waves, AlertTriangle, Terminal,
-  FileText, Map as MapIcon, Clock, Upload, BarChart2
+  FileText, Map as MapIcon, Clock, Upload, BarChart2, Utensils
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -29,6 +29,7 @@ import EditMemberForm from '../components/admin/EditMemberForm';
 import AddMemberModal from '../components/admin/AddMemberModal';
 import ImportMembersModal from '../components/admin/ImportMembersModal';
 import { PostEditor } from '../components/admin/PostEditor';
+import { DietaryReportModal } from '../components/admin/DietaryReportModal';
 import { AdminRolloverReport } from './AdminRolloverReport';
 import { AdminAssets } from './AdminAssets';
 import SystemMonitor from '../components/SystemMonitor';
@@ -139,7 +140,7 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
         <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
           <div className="text-3xl font-black text-slate-800 mb-1">{overallStats.rate}%</div>
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">השתתפות כללית</div>
-          <div className="text-[10px] text-slate-400 mt-1">{overallStats.count} מתוך {overallStats.total} משתתפים ומתנדבים פעילים</div>
+          <div className="text-[10px] text-slate-400 mt-1">{overallStats.count} מתוך {overallStats.total} חברי קהילה פעילים</div>
         </div>
         <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
           <div className="text-3xl font-black text-slate-800 mb-1">{femaleStats.rate}%</div>
@@ -225,8 +226,10 @@ const AdminPage: React.FC = () => {
   const [approvedUser, setApprovedUser] = useState<{ firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null>(null);
 
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [isMemberReadOnly, setIsMemberReadOnly] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isDietaryModalOpen, setIsDietaryModalOpen] = useState(false);
   const [editingConflictId, setEditingConflictId] = useState<string | null>(null);
   const [conflictNewEmail, setConflictNewEmail] = useState('');
   const [newMemberData, setNewMemberData] = useState<Partial<Member>>({
@@ -240,6 +243,7 @@ const AdminPage: React.FC = () => {
     gender: 'מעדיפ/ה לא לציין',
     isActive: true,
     birthday: '',
+    availabilitySchedule: 'always',
     instagramUrl: '',
     facebookUrl: '',
     linkedinUrl: '',
@@ -592,7 +596,7 @@ const AdminPage: React.FC = () => {
                 <span className="surfer-title text-[#121212]">פאנל ניהול</span>
               </h1>
               <p className="header-subtitle max-w-2xl mx-auto text-[#121212]">
-                ניהול משתתפים ומתנדבים, בקשות הצטרפות והגדרות מערכת מתקדמות 🛡️
+                ניהול חברי הקהילה, בקשות הצטרפות והגדרות מערכת מתקדמות 🛡️
               </p>
             </div>
           </div>
@@ -617,7 +621,7 @@ const AdminPage: React.FC = () => {
             {activeTab === 'DASHBOARD' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
                 {[
-                  { id: 'USERS', label: 'ניהול משתתפים ומתנדבים', desc: `${members.length} חברי קהילה`, icon: Users, color: 'bg-[#00FFFF]' },
+                  { id: 'USERS', label: 'ניהול חברי הקהילה', desc: `${members.length} חברי קהילה`, icon: Users, color: 'bg-[#00FFFF]' },
                   { id: 'EVENTS', label: 'ניהול אירועים', desc: `${events.length} אירועים בלוח`, icon: Calendar, color: 'bg-[#FFD700]' },
                   { id: 'GALLERY', label: 'גלריית תמונות', desc: `${galleryItems.length} פריטים במדיה`, icon: ImageIcon, color: 'bg-[#FF007F]' },
                   { id: 'POSTS', label: 'פוסטים', desc: 'ניהול תכני האתר', icon: Newspaper, color: 'bg-[#00FFFF]' },
@@ -791,7 +795,7 @@ const AdminPage: React.FC = () => {
                       <Users size={32} />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">משתתפים ומתנדבים</h3>
+                      <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">חברי הקהילה</h3>
                       <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול חברי הקהילה וצוות האפליקציה</p>
                     </div>
                   </div>
@@ -828,7 +832,7 @@ const AdminPage: React.FC = () => {
               );
             })()}
 
-            <div className="flex justify-center mt-6 gap-4">
+            <div className="flex flex-wrap justify-center mt-6 gap-4">
               <button 
                 onClick={() => setIsAddMemberModalOpen(true)}
                 className="flex items-center gap-2 px-8 py-4 bg-[#FF9F1C] text-white rounded-2xl font-black text-sm hover:bg-[#FF9F1C]/90 transition-all shadow-lg shadow-[#FF9F1C]/20"
@@ -841,6 +845,12 @@ const AdminPage: React.FC = () => {
               >
                 <Upload size={18} /> ייבוא משתמשים
               </button>
+              <button 
+                onClick={() => setIsDietaryModalOpen(true)}
+                className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-amber-500/20"
+              >
+                <Utensils size={18} /> דו"ח תזונה, זמינות והעדפות
+              </button>
             </div>
 
             {editingMember ? (
@@ -848,10 +858,12 @@ const AdminPage: React.FC = () => {
                 member={editingMember}
                 gritScore={calculateUserStats(editingMember.id, members, weeklyHistory, yearConfig, events)?.gritScore || 0}
                 isSuperAdmin={isSuperAdmin}
+                readOnly={isMemberReadOnly}
                 onSave={async (updatedMember) => {
                   try {
                     await updateMember(updatedMember);
                     setEditingMember(null);
+                    setIsMemberReadOnly(false);
                   } catch (err: any) {
                     let errorMessage = err.message || err;
                     try {
@@ -864,9 +876,13 @@ const AdminPage: React.FC = () => {
                 onArchive={async (memberId) => {
                   await archiveMember(memberId);
                   setEditingMember(null);
+                  setIsMemberReadOnly(false);
                   setActiveTab('USERS');
                 }}
-                onClose={() => setEditingMember(null)}
+                onClose={() => {
+                  setEditingMember(null);
+                  setIsMemberReadOnly(false);
+                }}
               />
             ) : (
             <div className="admin-info-card overflow-hidden">
@@ -952,11 +968,18 @@ const AdminPage: React.FC = () => {
                         <tr key={member.id} className={`hover:bg-[var(--surfer-aqua-mist)]/10 transition-all group ${member.isActive === false ? 'grayscale opacity-60' : ''}`}>
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-4">
-                              <div className="relative flex-shrink-0">
+                              <div 
+                                onClick={() => {
+                                  setIsMemberReadOnly(true);
+                                  setEditingMember(member);
+                                }}
+                                className="relative flex-shrink-0 cursor-pointer group/avatar"
+                                title="צפייה בפרופיל משתמש"
+                              >
                                 {member.avatar ? (
-                                  <img src={member.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm border border-white/30" alt="" />
+                                  <img src={member.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm border border-white/30 group-hover/avatar:ring-2 group-hover/avatar:ring-[#00AFC2] transition-all" alt="" />
                                 ) : (
-                                  <div className="w-12 h-12 rounded-xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)]/40 border border-white/30">
+                                  <div className="w-12 h-12 rounded-xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)]/40 border border-white/30 group-hover/avatar:ring-2 group-hover/avatar:ring-[#00AFC2] transition-all">
                                     <UserCircle size={24} />
                                   </div>
                                 )}
@@ -967,7 +990,16 @@ const AdminPage: React.FC = () => {
                                 )}
                               </div>
                               <div>
-                                <h4 className="font-black text-[var(--surfer-electric-pink)]">{member.firstName} {member.lastName}</h4>
+                                <h4 
+                                  onClick={() => {
+                                    setIsMemberReadOnly(true);
+                                    setEditingMember(member);
+                                  }}
+                                  className="font-black text-[var(--surfer-electric-pink)] cursor-pointer hover:underline"
+                                  title="צפייה בפרופיל משתמש"
+                                >
+                                  {member.firstName} {member.lastName}
+                                </h4>
                                 <p className="text-[12px] text-[#000000]/70 font-black truncate max-w-[150px]">{member.email}</p>
                               </div>
                             </div>
@@ -999,8 +1031,11 @@ const AdminPage: React.FC = () => {
                           <td className="px-8 py-6">
                             <div className="flex items-center justify-center">
                               <button 
-                                onClick={() => setEditingMember(member)}
-                                className="w-10 h-10 bg-white/40 backdrop-blur-md border border-white/30 rounded-xl flex items-center justify-center text-[#000000]/40 hover:text-[var(--surfer-electric-pink)] hover:border-[var(--surfer-electric-pink)]/30 hover:shadow-lg transition-all"
+                                onClick={() => {
+                                  setIsMemberReadOnly(false);
+                                  setEditingMember(member);
+                                }}
+                                className="w-10 h-10 bg-white/40 backdrop-blur-md border border-white/30 rounded-xl flex items-center justify-center text-[#000000]/40 hover:text-[var(--surfer-electric-pink)] hover:border-[var(--surfer-electric-pink)]/30 hover:shadow-lg transition-all cursor-pointer"
                                 title="עריכת משתמש"
                               >
                                 <Pencil size={18} />
@@ -1027,6 +1062,11 @@ const AdminPage: React.FC = () => {
             <ImportMembersModal
               isOpen={isImportModalOpen}
               onClose={() => setIsImportModalOpen(false)}
+            />
+            <DietaryReportModal
+              isOpen={isDietaryModalOpen}
+              onClose={() => setIsDietaryModalOpen(false)}
+              members={members}
             />
           </div>
         )}

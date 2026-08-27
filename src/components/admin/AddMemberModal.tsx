@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, X, Cake, ChevronDown, Globe, Sparkles, Loader2, Save, Camera, Check, HeartPulse, Search, UtensilsCrossed } from 'lucide-react';
+import { Plus, X, Cake, ChevronDown, Globe, Sparkles, Loader2, Save, Camera, Check, HeartPulse, Search, UtensilsCrossed, Clock } from 'lucide-react';
 import { Member, Gender } from '../../types';
 import { DietaryPreferencesSection } from '../DietaryPreferencesSection';
+import { AvailabilityPreferenceSection } from '../AvailabilityPreferenceSection';
 import { processImage } from '../../utils/imageProcessor';
 import { generateBio } from '../../services/geminiService';
 import { hashPassword } from '../../utils/crypto';
@@ -525,6 +526,16 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, newMem
                         </div>
 
                       </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <h4 className="text-[12px] font-black text-[#00426a] uppercase tracking-[0.3em] flex items-center gap-3">
+                        <Clock size={14} /> זמינות לפעילויות
+                      </h4>
+                      <AvailabilityPreferenceSection
+                        value={newMemberData.availabilitySchedule || 'always'}
+                        onChange={(schedule) => setNewMemberData(prev => ({ ...prev, availabilitySchedule: schedule }))}
+                      />
                     </div>
 
                     <div className="space-y-6">

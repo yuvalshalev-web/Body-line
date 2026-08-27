@@ -55,6 +55,7 @@ export interface Member {
   medicalInfo?: string;
   dietaryPreferences?: string[];
   dietaryNotes?: string;
+  availabilitySchedule?: 'always' | 'no_shabbat_holidays' | 'weekdays_only';
   certifications?: string[];
   digitalWallet?: DigitalLicense[];
   otherCertification?: string;

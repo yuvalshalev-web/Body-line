@@ -40,13 +40,15 @@ import {
   Wind,
   Maximize2,
   UtensilsCrossed,
-  Fingerprint
+  Fingerprint,
+  Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { Member } from '../types';
 import { DietaryPreferencesSection } from '../components/DietaryPreferencesSection';
+import { AvailabilityPreferenceSection } from '../components/AvailabilityPreferenceSection';
 import { generateBio, verifyLicense } from '../services/geminiService';
 import { processImage, compressBase64Image } from '../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
@@ -958,6 +960,21 @@ const ProfilePage: React.FC = () => {
                     </motion.div>
                   )}
                 </div>
+              </section>
+
+              {/* Section: Availability & Schedule */}
+              <section className="space-y-6 md:space-y-8">
+                <SectionHeader 
+                  icon={Clock} 
+                  title="זמינות לפעילויות" 
+                  subtitle="Availability & Activity Schedule"
+                  colorClass="text-amber-600" 
+                  bgColorClass="bg-amber-100" 
+                />
+                <AvailabilityPreferenceSection
+                  value={formData.availabilitySchedule || 'always'}
+                  onChange={(schedule) => handleFieldChange('availabilitySchedule', schedule)}
+                />
               </section>
 
               {/* Section: Nutrition & Dietary Preferences */}

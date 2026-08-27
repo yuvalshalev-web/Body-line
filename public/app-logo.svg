@@ -1,25 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- White background for the icon square -->
-  <rect width="512" height="512" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Clean white circular/rounded base background -->
+  <rect width="512" height="512" fill="#FFFFFF"/>
   
-  <!-- Bat Wings (Teal: #2fb0c0) -->
-  <path d="M256 256 
-           L 20 140 
-           Q 70 170 120 110 
-           Q 150 160 210 140 
-           Q 230 180 256 180 
-           Q 282 180 302 140 
-           Q 362 160 392 110 
-           Q 442 160 492 140 
-           L 256 256 Z" fill="#2fb0c0"/>
-           
-  <!-- Central Circle -->
-  <circle cx="256" cy="256" r="115" fill="#2fb0c0"/>
-  
-  <!-- Flexing Person (White) -->
-  <!-- Head -->
-  <circle cx="256" cy="230" r="18" fill="white"/>
-  <!-- Arms (W-shape biceps) -->
-  <path d="M195 285 C 175 255, 175 220, 220 220 C 240 220, 245 240, 245 260" fill="none" stroke="white" stroke-width="20" stroke-linecap="round"/>
-  <path d="M317 285 C 337 255, 337 220, 292 220 C 272 220, 267 240, 267 260" fill="none" stroke="white" stroke-width="20" stroke-linecap="round"/>
+  <g transform="translate(0, 10)">
+    <!-- Bat Wings (Gold #d8a243 / #cca03c) -->
+    <!-- Left Wing -->
+    <path d="M 256 185 C 215 110, 140 70, 30 75 C 65 115, 80 145, 60 180 C 100 170, 140 185, 175 225 Z" fill="#d49e38" />
+    <path d="M 40 85 C 80 120, 95 145, 75 175 C 105 165, 135 180, 165 210" fill="none" stroke="#FFFFFF" stroke-width="4" opacity="0.6"/>
+    
+    <!-- Right Wing -->
+    <path d="M 256 185 C 297 110, 372 70, 482 75 C 447 115, 432 145, 452 180 C 412 170, 372 185, 337 225 Z" fill="#d49e38" />
+    <path d="M 472 85 C 432 120, 417 145, 437 175 C 407 165, 377 180, 347 210" fill="none" stroke="#FFFFFF" stroke-width="4" opacity="0.6"/>
+
+    <!-- Central Gold Circle Medallion -->
+    <circle cx="256" cy="185" r="90" fill="#d49e38" />
+
+    <!-- Flexed Arms Emblem inside Medallion (White) -->
+    <!-- Head / Clasped Hands -->
+    <ellipse cx="256" cy="150" rx="14" ry="18" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/>
+    <path d="M 250 140 Q 256 132 262 140" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+
+    <!-- Left Arm -->
+    <path d="M 205 160 C 185 165, 175 195, 205 225 C 235 245, 255 200, 255 165" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Right Arm -->
+    <path d="M 307 160 C 327 165, 337 195, 307 225 C 277 245, 257 200, 257 165" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Hebrew Typography: חבל זוג -->
+  <text x="256" y="380" text-anchor="middle" font-family="'Heebo', 'Rubik', 'Assistant', sans-serif" font-weight="900" font-size="82" fill="#d49e38" letter-spacing="4">חבל זוג</text>
+
+  <!-- Hebrew Typography: עמותת העטלף -->
+  <text x="256" y="445" text-anchor="middle" font-family="'Assistant', 'Heebo', sans-serif" font-weight="700" font-size="34" fill="#d49e38" letter-spacing="2">עמותת העטלף</text>
 </svg>
