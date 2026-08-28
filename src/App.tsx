@@ -179,7 +179,7 @@ const App: React.FC = () => {
         // Normalize fontData to an array of objects
         const fonts = (Array.isArray(fontData) ? fontData : [fontData])
           .map(f => {
-            if (typeof f === 'string') return { url: f, format: 'woff' };
+            if (typeof f === 'string' && f.trim()) return { url: f.trim(), format: 'woff' };
             if (f && typeof f === 'object' && f.url) return f;
             return null;
           })
@@ -194,6 +194,7 @@ const App: React.FC = () => {
           if (lowerUrl.includes('.ttf')) format = 'truetype';
           else if (lowerUrl.includes('.otf')) format = 'opentype';
           else if (lowerUrl.includes('.woff2')) format = 'woff2';
+          else if (lowerUrl.includes('.woff')) format = 'woff';
           else if (lowerUrl.includes('.eot')) format = 'embedded-opentype';
           
           return `url("${url}") format("${format}")`;
@@ -205,25 +206,53 @@ const App: React.FC = () => {
             src: ${sources};
             font-weight: ${weight};
             font-style: normal;
-            font-display: block;
+            font-display: swap;
           }
         `;
       };
 
       let css = '';
-      // Unify under 'Yehuda CLM' family name
-      css += generateFontFace('Yehuda CLM', siteAssets.fonts.yehudaLight, '300');
-      css += generateFontFace('Yehuda CLM', siteAssets.fonts.yehudaBold, '700');
-      css += generateFontFace('Miriwin', siteAssets.fonts.miriwin);
       
-      // Dana Yad - Define for multiple weights to ensure it's used regardless of Tailwind classes
+      // Yehuda CLM (Light & Bold) with aliases
+      const yehudaFamilies = ['Yehuda CLM', 'YehudaCLM', 'Yehuda', 'yehuda'];
+      if (siteAssets.fonts.yehudaLight) {
+        yehudaFamilies.forEach(family => {
+          css += generateFontFace(family, siteAssets.fonts.yehudaLight, '300');
+          css += generateFontFace(family, siteAssets.fonts.yehudaLight, 'normal');
+          css += generateFontFace(family, siteAssets.fonts.yehudaLight, '400');
+        });
+      }
+      if (siteAssets.fonts.yehudaBold) {
+        yehudaFamilies.forEach(family => {
+          css += generateFontFace(family, siteAssets.fonts.yehudaBold, '700');
+          css += generateFontFace(family, siteAssets.fonts.yehudaBold, 'bold');
+          css += generateFontFace(family, siteAssets.fonts.yehudaBold, '800');
+          css += generateFontFace(family, siteAssets.fonts.yehudaBold, '900');
+        });
+      } else if (siteAssets.fonts.yehudaLight) {
+        // Fallback for bold if only light is uploaded
+        yehudaFamilies.forEach(family => {
+          css += generateFontFace(family, siteAssets.fonts.yehudaLight, '700');
+          css += generateFontFace(family, siteAssets.fonts.yehudaLight, 'bold');
+        });
+      }
+
+      // Miriwin with aliases
+      const miriFamilies = ['Miriwin', 'Miri', 'miri'];
+      if (siteAssets.fonts.miriwin) {
+        miriFamilies.forEach(family => {
+          ['normal', '300', '400', '700', 'bold'].forEach(weight => {
+            css += generateFontFace(family, siteAssets.fonts.miriwin, weight);
+          });
+        });
+      }
+      
+      // Dana Yad with aliases
       const danaYadData = siteAssets.fonts.danaYad;
       if (danaYadData) {
-        // We use 'DanaYad' as the primary name, but also support common variations
-        const families = ['DanaYad', 'Dana Yad', 'Dana Yad Alef Alef'];
-        const weights = ['normal', '400', '700', 'bold', '900'];
-        
-        families.forEach(family => {
+        const danaFamilies = ['DanaYad', 'Dana Yad', 'Dana Yad Alef Alef', 'danaYad'];
+        const weights = ['normal', '300', '400', '700', 'bold', '900'];
+        danaFamilies.forEach(family => {
           weights.forEach(weight => {
             css += generateFontFace(family, danaYadData, weight);
           });
@@ -231,7 +260,7 @@ const App: React.FC = () => {
       }
       
       if (css) {
-        console.log('Injecting custom fonts CSS');
+        console.log('Custom fonts injected successfully');
         styleEl.textContent = css;
       }
     }

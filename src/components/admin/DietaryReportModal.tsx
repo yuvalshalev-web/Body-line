@@ -43,7 +43,8 @@ export const DietaryReportModal: React.FC<DietaryReportModalProps> = ({
     const isOmnivore = prefs.some(p => p === 'omnivore' || p === 'אוכל הכל (ברירת מחדל)' || p === 'אוכל הכל' || p === 'אוכלי כל') ||
       (!prefs.some(p => p === 'vegetarian' || p === 'צמחוני' || p === 'vegan' || p === 'טבעוני') && !m.is_vegetarian && !m.is_vegan && m.dietary_preference !== 'vegetarian' && m.dietary_preference !== 'vegan');
       
-    const isKosher = prefs.some(p => p === 'kosher' || p === 'כשר' || p === 'kosher_dairy_meat' || p === 'כשר חלבי / כשר בשרי') ||
+    const isMehadrin = prefs.some(p => p === 'kosher_mehadrin' || p === 'כשר למהדרין (בד״ץ)' || p === 'כשר למהדרין');
+    const isKosher = isMehadrin || prefs.some(p => p === 'kosher' || p === 'כשר' || p === 'כשר (רגיל)' || p === 'kosher_dairy_meat' || p === 'כשר חלבי / כשר בשרי') ||
       m.is_kosher || m.dietary_preference === 'kosher';
       
     const isVegetarian = prefs.some(p => p === 'vegetarian' || p === 'צמחוני') ||
@@ -89,6 +90,7 @@ export const DietaryReportModal: React.FC<DietaryReportModalProps> = ({
       displayName,
       isOmnivore,
       isKosher,
+      isMehadrin,
       isVegetarian,
       isVegan,
       isGlutenFree,
@@ -206,7 +208,7 @@ export const DietaryReportModal: React.FC<DietaryReportModalProps> = ({
         'תפקיד': m.role === 'Admin' ? 'מנהל/רכז' : m.role === 'Instructor' ? 'מדריך' : m.role === 'Volunteer' ? 'מתנדב' : 'חבר קהילה',
         'זמינות לפעילויות': d.availabilityLabel,
         'סגנון תזונה': d.isVegan ? 'טבעוני' : d.isVegetarian ? 'צמחוני' : 'אוכל הכל',
-        'כשרות': d.isKosher ? 'כן' : 'לא',
+        'כשרות': d.isMehadrin ? 'כשר למהדרין (בד״ץ)' : d.isKosher ? 'כשר' : 'לא שומר',
         'צמחוני': d.isVegetarian ? 'כן' : 'לא',
         'טבעוני': d.isVegan ? 'כן' : 'לא',
         'ללא גלוטן': d.isGlutenFree ? 'כן' : 'לא',

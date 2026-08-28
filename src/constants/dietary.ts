@@ -5,6 +5,7 @@ export interface DietaryCategory {
   colorClass: string;
   bgColorClass: string;
   badgeBg: string;
+  selectionType: 'single' | 'multiple';
   options: DietaryOption[];
 }
 
@@ -23,6 +24,7 @@ export const DIETARY_TAXONOMY: DietaryCategory[] = [
     colorClass: 'text-emerald-700',
     bgColorClass: 'bg-emerald-500/10',
     badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    selectionType: 'single',
     options: [
       { id: 'omnivore', label: 'אוכל הכל (ברירת מחדל)', enLabel: 'Omnivore / Everything' },
       { id: 'vegetarian', label: 'צמחוני', enLabel: 'Vegetarian' },
@@ -36,10 +38,11 @@ export const DIETARY_TAXONOMY: DietaryCategory[] = [
     colorClass: 'text-sky-700',
     bgColorClass: 'bg-sky-500/10',
     badgeBg: 'bg-sky-50 text-sky-700 border-sky-200',
+    selectionType: 'single',
     options: [
       { id: 'not_kosher', label: 'לא שומר/ת', enLabel: 'Non-Kosher / Any' },
-      { id: 'kosher', label: 'כשר', enLabel: 'Kosher' },
-      { id: 'kosher_dairy_meat', label: 'כשר חלבי / כשר בשרי', enLabel: 'Kosher Dairy / Meat' },
+      { id: 'kosher', label: 'כשר (רגיל)', enLabel: 'Kosher (Standard)' },
+      { id: 'kosher_mehadrin', label: 'כשר למהדרין (בד״ץ)', enLabel: 'Kosher Mehadrin (Glatt / Badatz)' },
       { id: 'halal', label: 'חלאל', enLabel: 'Halal' }
     ]
   },
@@ -50,6 +53,7 @@ export const DIETARY_TAXONOMY: DietaryCategory[] = [
     colorClass: 'text-amber-700',
     bgColorClass: 'bg-amber-500/10',
     badgeBg: 'bg-amber-50 text-amber-700 border-amber-200',
+    selectionType: 'multiple',
     options: [
       { id: 'gluten_free', label: 'ללא גלוטן / רגישות לגלוטן', enLabel: 'Gluten-Free' },
       { id: 'lactose_free', label: 'ללא לקטוז / רגישות לחלב', enLabel: 'Lactose-Free' },

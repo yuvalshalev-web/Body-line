@@ -4,23 +4,8 @@ import { Image as ImageIcon } from 'lucide-react';
 
 import { useData } from '../contexts/DataContext';
 
-const storageBucket = 'body-line-67637.firebasestorage.app';
-const uiPath = 'assets%2Fui';
-const getStorageUrl = (filename: string) => `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/${uiPath}%2F${filename}?alt=media`;
+const defaultAssets: Record<string, string> = {};
 
-const wetsuit43 = getStorageUrl('wetsuit43.png');
-const wetsuit32 = getStorageUrl('wetsuit32.png');
-const wetsuit22 = getStorageUrl('wetsuit22.png');
-const wetsuit22ss = getStorageUrl('wetsuit22ss.png');
-const sunShirt = getStorageUrl('sunShirt.png');
-
-const defaultAssets: Record<string, string> = {
-  '4/3': wetsuit43,
-  '3/2': wetsuit32,
-  '2/2': wetsuit22,
-  '2/2-ss': wetsuit22ss,
-  'sun-shirt': sunShirt
-};
 
 interface WetsuitSVGProps {
   thickness?: '4/3' | '3/2' | '2/2' | '2/2-ss' | 'sun-shirt';
@@ -118,7 +103,7 @@ const WetsuitSVG: React.FC<WetsuitSVGProps> = ({ thickness = '4/3', alignBottom 
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 bg-[var(--surfer-cyan)]/20 blur-[80px] rounded-full pointer-events-none" />
         
         {imgSrc && !imgError ? (
-          <div className={`relative z-10 w-full max-w-[255px] flex flex-col items-center ${alignBottom ? '-translate-y-10' : ''}`}>
+          <div className="relative z-10 w-full max-w-[220px] sm:max-w-[255px] flex flex-col items-center">
             <motion.img
               key={thickness} // Force re-animation on change
               initial={{ opacity: 0, y: 20 }}
@@ -126,21 +111,21 @@ const WetsuitSVG: React.FC<WetsuitSVGProps> = ({ thickness = '4/3', alignBottom 
               transition={{ duration: 0.8, ease: "easeOut" }}
               src={imgSrc} 
               alt={`${thickness} Full Wetsuit`}
-              className="w-full h-auto scale-125 origin-bottom drop-shadow-[0_30px_40px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-135"
+              className="max-w-full max-h-[300px] sm:max-h-[360px] object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.4)] transition-transform duration-500 group-hover:scale-105"
               onError={() => setImgError(true)}
             />
           </div>
         ) : (
-          <div className={`relative z-10 w-full max-w-[180px] flex flex-col items-center ${alignBottom ? '-translate-y-10' : ''}`}>
+          <div className="relative z-10 w-full max-w-[150px] sm:max-w-[180px] flex flex-col items-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="w-full h-auto scale-125 origin-bottom"
+              className="w-full max-h-[300px] sm:max-h-[360px] flex items-center justify-center"
             >
               <WetsuitIllustration thickness={thickness} />
             </motion.div>
             {!imgSrc && (
-              <p className="absolute -bottom-12 text-center font-bold text-[9px] text-[#00426a]/40 bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full border border-white/40 whitespace-nowrap">
+              <p className="mt-2 text-center font-bold text-[9px] text-[#00426a]/40 bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full border border-white/40 whitespace-nowrap">
                 יוצג איור ברירת מחדל עד להעלאת תמונה
               </p>
             )}

@@ -26,8 +26,9 @@ import { storage } from '../utils/storage';
 import { useAuth } from './AuthContext';
 import { useModal } from './ModalContext';
 import { getNextSessionDate } from '../services/rolloverService';
+import { DEFAULT_SITE_ASSETS } from '../data/defaultAssets';
 
-interface SiteAssets {
+export interface SiteAssets {
   headers: string[];
   uiImages: string[];
   fonts: {
@@ -38,6 +39,21 @@ interface SiteAssets {
   surfboardModels: {
     [key: string]: string;
   };
+  atalefLogo?: string;
+  reefLogo?: string;
+  habalZugLogo?: string;
+  starfish?: string;
+  penguin?: string;
+  mantaRay?: string;
+  shark?: string;
+  orca?: string;
+  cork?: string;
+  wetsuit43?: string;
+  wetsuit32?: string;
+  wetsuit22?: string;
+  wetsuit22ss?: string;
+  sunShirt?: string;
+  defaultEventImage?: string;
   [key: string]: any;
 }
 
@@ -127,6 +143,8 @@ interface DataContextType {
   updateHistory: (id: string, participantIds: string[]) => Promise<void>;
   finalizeSession: (saveWeather?: boolean) => Promise<void>;
   updateSiteAssets: (assets: any) => Promise<void>;
+  getSiteAssetsBackups: () => Promise<any[]>;
+  restoreSiteAssetsBackup: (backupId: string) => Promise<void>;
   updateSiteConfig: (config: Partial<{ 
     navPosition: 'bottom' | 'top',
     home_break: any,
@@ -166,18 +184,30 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
   const [performanceScores, setPerformanceScores] = useState<PerformanceScore[]>([]);
   const [weeklyHistory, setWeeklyHistory] = useState<any[]>([]);
-  const [siteAssets, setSiteAssets] = useState<SiteAssets>({
-    headers: [],
-    uiImages: [],
-    fonts: {
-      yehudaLight: [],
-      yehudaBold: [],
-      miriwin: [],
-      danaYad: []
-    },
-    staticHeroImage: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?q=80&w=1920&auto=format&fit=crop',
-    loginBg: 'https://images.unsplash.com/photo-1505972186483-70ff335e0d78?q=80&w=1920&auto=format&fit=crop',
-    surfboardModels: {}
+  const [siteAssets, setSiteAssets] = useState<SiteAssets>(() => {
+    try {
+      const cached = safeLocalStorage.getItem('cached_site_assets_v2');
+      if (cached) {
+        return {
+          ...DEFAULT_SITE_ASSETS,
+          ...JSON.parse(cached)
+        };
+      }
+    } catch (e) {
+      // ignore
+    }
+    return {
+      ...DEFAULT_SITE_ASSETS,
+      headers: [],
+      uiImages: [],
+      fonts: {
+        yehudaLight: [],
+        yehudaBold: [],
+        miriwin: [],
+        danaYad: []
+      },
+      surfboardModels: {}
+    };
   });
   const [siteConfig, setSiteConfig] = useState<{ 
     navPosition: 'bottom' | 'top',
@@ -248,10 +278,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [hasQuotaError, setHasQuotaError] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [dbStatus, setDbStatusState] = useState<'ONLINE' | 'OFFLINE'>(() => {
-    const saved = safeLocalStorage.getItem('kill_switch_active');
-    return saved === 'true' ? 'OFFLINE' : 'ONLINE';
-  });
+  const [dbStatus, setDbStatusState] = useState<'ONLINE' | 'OFFLINE'>('ONLINE');
 
   const toggleDbStatus = useCallback(() => {
     const newStatus = dbStatus === 'ONLINE' ? 'OFFLINE' : 'ONLINE';
@@ -453,29 +480,45 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [dbStatus, currentUser?.id, currentUser?.role, selectedStationId]);
 
-  // 3. Public Site Data Listeners
+  // 3. Public Site Data & Collection Listeners
   useEffect(() => {
     if (dbStatus === 'OFFLINE') return;
     const db = getDb();
 
-    let configLoaded = false;
-    let assetsLoaded = false;
-    const checkPublicDataReady = () => {
-      if (!firebaseUser?.uid && configLoaded && assetsLoaded) {
-        setIsLoading(false);
-      }
-    };
+    // Initial Placeholder from Cache
+    const cachedMembers = storage.get('cached_members_v3');
+    if (cachedMembers) setMembers(cachedMembers);
+    
+    const cachedHistory = storage.get('cached_history_v3');
+    if (cachedHistory) setWeeklyHistory(cachedHistory);
 
-    const unsubSeaStats = trackedOnSnapshot(doc(db, 'seaConditionsStats', 'current'), (doc) => {
-      if (doc.exists()) setSeaStats(doc.data());
+    const unsubSeaStats = trackedOnSnapshot(doc(db, 'seaConditionsStats', 'current'), (docSnap) => {
+      if (docSnap.exists()) setSeaStats(docSnap.data());
     });
 
     const unsubAssets = trackedOnSnapshot(doc(db, 'site_data', 'assets'), (snapshot) => {
       if (snapshot.exists()) {
-        const data = snapshot.data() as SiteAssets;
-        // Ensure default structure exists even if document is partially populated
+        const data = snapshot.data() as any;
         const sanitizedData: SiteAssets = {
+          ...DEFAULT_SITE_ASSETS,
           ...data,
+          starfish: data.starfish || data.starFish || DEFAULT_SITE_ASSETS.starfish,
+          penguin: data.penguin || DEFAULT_SITE_ASSETS.penguin,
+          mantaRay: data.mantaRay || data.manta_ray || DEFAULT_SITE_ASSETS.mantaRay,
+          shark: data.shark || DEFAULT_SITE_ASSETS.shark,
+          orca: data.orca || DEFAULT_SITE_ASSETS.orca,
+          cork: data.cork || DEFAULT_SITE_ASSETS.cork,
+          wetsuit43: data.wetsuit43 || DEFAULT_SITE_ASSETS.wetsuit43,
+          wetsuit32: data.wetsuit32 || DEFAULT_SITE_ASSETS.wetsuit32,
+          wetsuit22: data.wetsuit22 || DEFAULT_SITE_ASSETS.wetsuit22,
+          wetsuit22ss: data.wetsuit22ss || DEFAULT_SITE_ASSETS.wetsuit22ss,
+          sunShirt: data.sunShirt || data.sun_shirt || DEFAULT_SITE_ASSETS.sunShirt,
+          staticHeroImage: data.staticHeroImage || data.static_hero || DEFAULT_SITE_ASSETS.staticHeroImage,
+          loginBg: data.loginBg || data.login_bg || DEFAULT_SITE_ASSETS.loginBg,
+          atalefLogo: data.atalefLogo || data.atalef_logo || DEFAULT_SITE_ASSETS.atalefLogo,
+          reefLogo: data.reefLogo || data.reef_logo || DEFAULT_SITE_ASSETS.reefLogo,
+          habalZugLogo: data.habalZugLogo || data.habal_zug_logo || DEFAULT_SITE_ASSETS.habalZugLogo,
+          defaultEventImage: data.defaultEventImage || DEFAULT_SITE_ASSETS.defaultEventImage,
           headers: data.headers || [],
           uiImages: data.uiImages || [],
           fonts: data.fonts || {
@@ -488,101 +531,40 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         console.log('Site assets updated from Firestore:', sanitizedData);
         setSiteAssets(sanitizedData);
+        safeLocalStorage.setItem('cached_site_assets_v2', JSON.stringify(sanitizedData));
       } else {
-        // Seed initial assets if they don't exist
-        console.log('Site assets do not exist, seeding...');
+        console.log('Site assets document empty in Firestore, seeding default assets...');
         seedInitialAssets();
       }
-      assetsLoaded = true;
-      checkPublicDataReady();
     });
 
-    const unsubConfig = trackedOnSnapshot(doc(db, 'site_data', 'config'), (doc) => {
-      if (doc.exists()) {
-        setSiteConfig(doc.data() as any);
+    const unsubConfig = trackedOnSnapshot(doc(db, 'site_data', 'config'), (docSnap) => {
+      if (docSnap.exists()) {
+        setSiteConfig(docSnap.data() as any);
       }
-      configLoaded = true;
-      checkPublicDataReady();
     });
 
-    const unsubYearConfig = trackedOnSnapshot(doc(db, 'site_data', 'year_config'), (doc) => {
-      if (doc.exists()) setYearConfig(doc.data() as { startDate: string; endDate: string });
+    const unsubYearConfig = trackedOnSnapshot(doc(db, 'site_data', 'year_config'), (docSnap) => {
+      if (docSnap.exists()) setYearConfig(docSnap.data() as { startDate: string; endDate: string });
     });
 
-    // Safety timeout for public data
-    const publicDataTimeout = setTimeout(() => {
-      if (!firebaseUser?.uid) {
-        setIsLoading(false);
-      }
-    }, 4000);
+    const unsubQuotes = trackedOnSnapshot(collection(db, 'quotes'), (snapshot) => {
+      setQuotes(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as QuoteItem)));
+    });
 
-    return () => {
-      clearTimeout(publicDataTimeout);
-      unsubSeaStats();
-      unsubAssets();
-      unsubConfig();
-      unsubYearConfig();
-    };
-  }, [dbStatus, firebaseUser?.uid, handleFirestoreError]);
+    const unsubExercises = trackedOnSnapshot(collection(db, 'exercises'), (snapshot) => {
+      setExercises(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Exercise)));
+    });
 
-  // 4. Auth-dependent Data Listeners
-  useEffect(() => {
-    if (dbStatus === 'OFFLINE' || !currentUser) {
-      setIsLoading(false);
-      return;
-    }
+    const unsubGlossary = trackedOnSnapshot(collection(db, 'glossary'), (snapshot) => {
+      setGlossary(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GlossaryTerm)));
+    });
 
-    const db = getDb();
-
-    // Initial Placeholder from Cache
-    const cachedMembers = storage.get('cached_members_v3');
-    if (cachedMembers) setMembers(cachedMembers);
-    
-    const cachedHistory = storage.get('cached_history_v3');
-    if (cachedHistory) setWeeklyHistory(cachedHistory);
-
-    // One-time fetches
-    const fetchData = async () => {
-      try {
-        const cachedGlossary = storage.get('cached_glossary_v2');
-        if (cachedGlossary) {
-          setGlossary(cachedGlossary);
-        } else {
-          const glSnap = await trackedGetDocs(collection(db, 'glossary'));
-          const glData = glSnap.docs.map(d => ({ id: d.id, ...d.data() } as GlossaryTerm));
-          setGlossary(glData);
-          storage.set('cached_glossary_v2', glData, 24);
-        }
-
-        const cachedExercises = storage.get('cached_exercises_v2');
-        if (cachedExercises) {
-          setExercises(cachedExercises);
-        } else {
-          const exSnap = await trackedGetDocs(collection(db, 'exercises'));
-          const exData = exSnap.docs.map(d => ({ id: d.id, ...d.data() } as Exercise));
-          setExercises(exData);
-          storage.set('cached_exercises_v2', exData, 24);
-        }
-        
-        const qSnap = await trackedGetDocs(collection(db, 'quotes'));
-        setQuotes(qSnap.docs.map(d => ({ id: d.id, ...d.data() } as QuoteItem)));
-      } catch (e: any) {
-        if (e.message !== 'QUOTA_EXCEEDED_OR_KILL_SWITCH') handleFirestoreError(e);
-      }
-    };
-    fetchData();
-
-    // Real-time listeners
     const unsubMembers = trackedOnSnapshot(query(collection(db, 'members'), limit(1000)), (snapshot) => {
       const rawDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member));
       setMembers(rawDocs);
       setIsDbEmpty(snapshot.empty);
       storage.set('cached_members_v3', rawDocs, 2 / 60);
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`DataContext: Loaded ${rawDocs.length} members.`);
-        const yuval = rawDocs.find(m => m.email === 'yuval.shalev@gmail.com');
-        if (yuval) console.log('DataContext: Found Yuval Luxembourg in members:', yuval);
-      }
     });
 
     const unsubHistory = trackedOnSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(1000)), (snapshot) => {
@@ -591,7 +573,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       storage.set('cached_history_v3', hData, 2 / 60);
     });
 
-    
     const unsubSurfCalls = trackedOnSnapshot(query(collection(db, 'surf_calls')), (snapshot) => {
       setSurfCalls(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as SurfCall)));
     });
@@ -612,22 +593,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
     });
 
-    let unsubPerformance: (() => void) | null = null;
-    if (isAdminUser(currentUser) || currentUser.role === 'Instructor') {
-      unsubPerformance = trackedOnSnapshot(query(collection(db, 'performance_scores'), limit(500)), (snapshot) => {
-        const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
-        console.log('performanceScores updated:', scores);
-        setPerformanceScores(scores);
-      });
-    } else if (currentUser.role === 'Member' && firebaseUser) {
-      // Members only see their own scores
-      const myScoresQuery = query(collection(db, 'performance_scores'), where('memberId', '==', firebaseUser.uid), limit(100));
-      unsubPerformance = trackedOnSnapshot(myScoresQuery, (snapshot) => {
-        const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
-        setPerformanceScores(scores);
-      });
-    }
-
     const unsubAttendees = trackedOnSnapshot(doc(db, 'site_data', 'active_session'), async (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data() as any;
@@ -646,6 +611,52 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoading(false);
     });
 
+    // Safety timeout to ensure loading spinner dismisses
+    const publicDataTimeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+
+    return () => {
+      clearTimeout(publicDataTimeout);
+      unsubSeaStats();
+      unsubAssets();
+      unsubConfig();
+      unsubYearConfig();
+      unsubMembers();
+      unsubHistory();
+      unsubSurfCalls();
+      unsubEvents();
+      unsubNews();
+      unsubPodcasts();
+      unsubGallery();
+      unsubQuotes();
+      unsubExercises();
+      unsubGlossary();
+      unsubAttendees();
+    };
+  }, [dbStatus, handleFirestoreError]);
+
+  // 4. Role & Auth-dependent Data Listeners
+  useEffect(() => {
+    if (dbStatus === 'OFFLINE' || !currentUser) {
+      return;
+    }
+
+    const db = getDb();
+    let unsubPerformance: (() => void) | null = null;
+    if (isAdminUser(currentUser) || currentUser.role === 'Instructor') {
+      unsubPerformance = trackedOnSnapshot(query(collection(db, 'performance_scores'), limit(500)), (snapshot) => {
+        const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
+        setPerformanceScores(scores);
+      });
+    } else if (currentUser.role === 'Member' && firebaseUser) {
+      const myScoresQuery = query(collection(db, 'performance_scores'), where('memberId', '==', firebaseUser.uid), limit(100));
+      unsubPerformance = trackedOnSnapshot(myScoresQuery, (snapshot) => {
+        const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
+        setPerformanceScores(scores);
+      });
+    }
+
     let unsubRequests: (() => void) | null = null;
     if (isAdminUser(currentUser)) {
       unsubRequests = trackedOnSnapshot(query(collection(db, 'joinRequests'), limit(200)), (snapshot) => {
@@ -654,19 +665,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       initializeStorageStats();
     }
 
-    const timeoutId = setTimeout(() => setIsLoading(false), 4000);
-
     return () => {
-      clearTimeout(timeoutId);
-      unsubMembers();
-      unsubHistory();
-      unsubEvents();
-      unsubSurfCalls();
-      unsubNews();
-      unsubPodcasts();
-      unsubGallery();
       if (unsubPerformance) unsubPerformance();
-      unsubAttendees();
       if (unsubRequests) unsubRequests();
     };
   }, [dbStatus, currentUser?.id, currentUser?.role, firebaseUser?.uid, handleFirestoreError]);
@@ -1401,7 +1401,82 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
 
   const updateSiteAssets = useCallback(async (assets: any) => {
     console.log('Updating site assets in Firestore:', assets);
-    await setDoc(doc(getDb(), 'site_data', 'assets'), assets, { merge: true });
+    setSiteAssets((prev: SiteAssets) => {
+      const updated = { ...prev, ...assets };
+      safeLocalStorage.setItem('cached_site_assets_v2', JSON.stringify(updated));
+      return updated;
+    });
+    try {
+      const db = getDb();
+      // Write hot backup before saving
+      try {
+        const backupId = `assets_backup_${Date.now()}`;
+        await setDoc(doc(db, 'site_data', backupId), { 
+          ...assets, 
+          _backupTimestamp: new Date().toISOString() 
+        });
+        
+        // Keep only the last 10 backups by querying and deleting older ones
+        import('firebase/firestore').then(async ({ collection, query, getDocs, deleteDoc, orderBy }) => {
+          try {
+            const backupsQuery = query(collection(db, 'site_data'));
+            const snapshot = await getDocs(backupsQuery);
+            const backups = snapshot.docs
+              .filter(d => d.id.startsWith('assets_backup_'))
+              .map(d => ({ id: d.id, timestamp: d.data()._backupTimestamp }))
+              .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+              
+            if (backups.length > 10) {
+              for (let i = 10; i < backups.length; i++) {
+                await deleteDoc(doc(db, 'site_data', backups[i].id));
+              }
+            }
+          } catch(e) {}
+        });
+      } catch (backupErr) {
+        console.warn('Failed to create hot backup for site assets:', backupErr);
+      }
+      
+      await setDoc(doc(db, 'site_data', 'assets'), assets, { merge: true });
+    } catch (err) {
+      console.error("Failed to persist site assets to Firestore:", err);
+    }
+  }, []);
+
+  const getSiteAssetsBackups = useCallback(async () => {
+    try {
+      const { collection, getDocs, query } = await import('firebase/firestore');
+      const backupsQuery = query(collection(getDb(), 'site_data'));
+      const snapshot = await getDocs(backupsQuery);
+      return snapshot.docs
+        .filter(d => d.id.startsWith('assets_backup_'))
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => new Date(b._backupTimestamp).getTime() - new Date(a._backupTimestamp).getTime());
+    } catch (e) {
+      console.error('Failed to get backups', e);
+      return [];
+    }
+  }, []);
+
+  const restoreSiteAssetsBackup = useCallback(async (backupId: string) => {
+    try {
+      const { getDoc, setDoc, doc } = await import('firebase/firestore');
+      const db = getDb();
+      const backupDoc = await getDoc(doc(db, 'site_data', backupId));
+      if (backupDoc.exists()) {
+        const data = backupDoc.data();
+        const { _backupTimestamp, ...assetsToRestore } = data;
+        await setDoc(doc(db, 'site_data', 'assets'), assetsToRestore, { merge: false });
+        setSiteAssets((prev: SiteAssets) => {
+          const updated = { ...DEFAULT_SITE_ASSETS, ...assetsToRestore };
+          safeLocalStorage.setItem('cached_site_assets_v2', JSON.stringify(updated));
+          return updated;
+        });
+      }
+    } catch (e) {
+      console.error('Failed to restore backup', e);
+      throw e;
+    }
   }, []);
 
   const updateSiteConfig = useCallback(async (config: Partial<{ 
@@ -1518,37 +1593,9 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
 
   const seedInitialAssets = useCallback(async () => {
     const db = getDb();
-    const storageBucket = 'body-line-67637.firebasestorage.app';
-    const uiPath = 'assets%2Fui';
-    const getStorageUrl = (filename: string) => `https://firebasestorage.googleapis.com/v0/b/${storageBucket}/o/${uiPath}%2F${filename}?alt=media`;
 
     const initialAssets: SiteAssets = {
-      starfish: '',
-      penguin: '',
-      mantaRay: '',
-      shark: '',
-      orca: '',
-      cork: '',
-      staticHeroImage: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?q=80&w=1920&auto=format&fit=crop',
-      loginBg: 'https://images.unsplash.com/photo-1505972186483-70ff335e0d78?q=80&w=1920&auto=format&fit=crop',
-      wetsuit43: getStorageUrl('wetsuit43.png'),
-      wetsuit32: getStorageUrl('wetsuit32.png'),
-      wetsuit22: getStorageUrl('wetsuit22.png'),
-      wetsuit22ss: getStorageUrl('wetsuit22ss.png'),
-      sunShirt: getStorageUrl('sunShirt.png'),
-      headers: [],
-      uiImages: [],
-      fonts: {
-        yehudaLight: [],
-        yehudaBold: [],
-        miriwin: [],
-        danaYad: []
-      },
-      surfboardModels: {},
-      atalefLogo: '',
-      reefLogo: '',
-      habalZugLogo: '',
-      defaultEventImage: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?q=80&w=1920&auto=format&fit=crop'
+      ...DEFAULT_SITE_ASSETS
     };
     try {
       await setDoc(doc(db, 'site_data', 'assets'), initialAssets, { merge: true });
@@ -1604,14 +1651,14 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
     toggleSurfCallAttendance,
     archiveSurfCall,
     addSurfCallComment, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
-      finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
+      finalizeSession, updateSiteAssets, getSiteAssetsBackups, restoreSiteAssetsBackup, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
       isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets
     }), [
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, connectionError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, toggleStatus, toggleRole, approveRequest, rejectRequest,
       addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
-      finalizeSession, updateSiteAssets, updateSiteConfig, updateYearConfig, archiveMember, addMember,
+      finalizeSession, updateSiteAssets, getSiteAssetsBackups, restoreSiteAssetsBackup, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
       isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets,
       surfCalls, addSurfCall, toggleSurfCallAttendance, archiveSurfCall, addSurfCallComment

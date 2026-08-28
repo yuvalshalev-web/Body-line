@@ -35,12 +35,12 @@
   --surfer-deep-blue: #1e3a8a;
   --surfer-light-blue: #dbeafe;
 
-  --font-yehuda: "Yehuda CLM", sans-serif;
-  --font-miri: "Miriwin", sans-serif;
-  --font-dana-yad: "DanaYad", "Dana Yad", "Dana Yad Alef Alef", cursive;
-  --font-assistant: "Assistant", sans-serif;
-  --font-inter: "Inter", sans-serif;
-  --font-heebo: "Heebo", sans-serif;
+  --font-yehuda: "Yehuda CLM", "YehudaCLM", "Yehuda", "Assistant", "Heebo", system-ui, sans-serif;
+  --font-miri: "Miriwin", "Miri", "Heebo", "Assistant", system-ui, sans-serif;
+  --font-dana-yad: "DanaYad", "Dana Yad", "Dana Yad Alef Alef", "Caveat", "Amatic SC", cursive;
+  --font-assistant: "Assistant", "Heebo", system-ui, sans-serif;
+  --font-inter: "Inter", "Assistant", "Heebo", system-ui, sans-serif;
+  --font-heebo: "Heebo", "Assistant", system-ui, sans-serif;
 }
 
 @layer components {

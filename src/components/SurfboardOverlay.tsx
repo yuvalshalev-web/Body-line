@@ -5,10 +5,15 @@ import { useData } from '../contexts/DataContext';
 export const ExactSurfboard = ({ type, isSelected }: { type: string; isSelected?: boolean }) => {
   const { siteAssets } = useData();
   const idPrefix = useId().replace(/:/g, '');
+  const [imgError, setImgError] = React.useState(false);
   
   const customImage = siteAssets?.surfboardModels?.[type];
   
-  if (customImage) {
+  React.useEffect(() => {
+    setImgError(false);
+  }, [customImage]);
+  
+  if (customImage && !imgError) {
     return (
       <div className="w-full h-full flex items-end justify-center">
         <img 
@@ -16,6 +21,7 @@ export const ExactSurfboard = ({ type, isSelected }: { type: string; isSelected?
           alt={type} 
           className={`max-w-full max-h-full object-contain drop-shadow-2xl transition-all duration-500 scale-100`}
           referrerPolicy="no-referrer"
+          onError={() => setImgError(true)}
           style={{
             filter: isSelected ? 'drop-shadow(0 0 15px rgba(6, 182, 212, 0.4))' : 'grayscale(100%) opacity(0.3)'
           }}

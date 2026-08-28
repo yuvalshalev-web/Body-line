@@ -1158,7 +1158,7 @@ const LoginPage: React.FC = () => {
               <img 
                 src={siteAssets.atalefLogo} 
                 alt="עמותת העטלף" 
-                className="h-14 sm:h-16 w-auto transition-all duration-500" 
+                className="h-20 sm:h-28 w-auto transition-all duration-500" 
                 referrerPolicy="no-referrer"
               />
             )}
