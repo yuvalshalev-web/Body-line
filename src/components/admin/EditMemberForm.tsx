@@ -343,7 +343,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
               <div className="space-y-4 flex flex-col items-center">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] block">תפקיד במערכת</label>
                 <div 
-                  className="relative w-full max-w-[500px] p-1.5 bg-slate-100/40 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 grid grid-cols-5 shadow-[inset_0_2px_12px_rgba(0,0,0,0.08)]"
+                  className="relative w-full max-w-[600px] p-1.5 bg-slate-100/40 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 grid grid-cols-6 shadow-[inset_0_2px_12px_rgba(0,0,0,0.08)]"
                   dir="rtl"
                   onMouseEnter={() => !readOnly && setShowRoleWarning(true)}
                   onMouseLeave={() => !readOnly && setShowRoleWarning(false)}
@@ -353,7 +353,8 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
                     { id: 'Volunteer', label: 'מתנדב' },
                     { id: 'Instructor', label: 'מדריך' },
                     { id: 'Admin', label: 'רכז' },
-                    { id: 'Support', label: 'אפ-שייפר' }
+                    { id: 'Support', label: 'אפ-שייפר' },
+                    { id: 'Staff', label: 'צוות עמותה' }
                   ].map((r) => (
                     <button
                       key={r.id}

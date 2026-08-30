@@ -46,7 +46,8 @@ import {
 
 const SessionStatsPage: React.FC = () => {
   const headerImage = useRandomHeader();
-  const { members, weeklyHistory, yearConfig, isLoading } = useData();
+  const { members: allMembers, weeklyHistory, yearConfig, isLoading } = useData();
+  const members = useMemo(() => allMembers.filter(m => m.role !== 'Staff'), [allMembers]);
   const [searchTerm, setSearchTerm] = useState('');
   const [gritSearchTerm, setGritSearchTerm] = useState('');
   const [ageView, setAgeView] = useState<'annual' | 'monthly' | 'lastSession'>('annual');

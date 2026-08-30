@@ -293,8 +293,9 @@ const CommunityAnalytics: React.FC = () => {
   const stats = useMemo(() => {
     if (!members.length) return null;
 
-    const activeMembers = members.filter(m => m.isActive);
-    const totalMembers = members.length;
+    const communityMembers = members.filter(m => m.role !== 'Staff');
+    const activeMembers = communityMembers.filter(m => m.isActive);
+    const totalMembers = communityMembers.length;
     
     // Distance Distribution (Operational & Bins)
     const homeLat = siteConfig.home_break?.lat || 32.1624;
@@ -414,7 +415,7 @@ const CommunityAnalytics: React.FC = () => {
       else ageGroups['לא צוין / אחר']++;
     });
 
-    members.forEach(m => {
+    communityMembers.forEach(m => {
       const age = calculateAge(m.birthday || (m as any).birthDate);
       if (age === null) {
         ageGroupsTotal['לא צוין / אחר']++;
@@ -560,15 +561,15 @@ const CommunityAnalytics: React.FC = () => {
     // 2. Gender Mix
     const genderCounts = {
       'זכר': activeMembers.filter(m => m.gender === 'זכר').length,
-      'נקבה': activeMembers.filter(m => m.gender === 'נקבה').length,
+      'נקבה': activeMembers.filter(m => m.gender === 'נקבה' && m.role !== 'Staff').length,
       'אחר': activeMembers.filter(m => !m.gender || m.gender === 'מעדיפ/ה לא לציין' || m.gender === 'לא בינארי').length,
     };
 
-    const totalWomen = members.filter(m => m.gender === 'נקבה').length;
-    const activeWomen = activeMembers.filter(m => m.gender === 'נקבה').length;
+    const totalWomen = communityMembers.filter(m => m.gender === 'נקבה').length;
+    const activeWomen = activeMembers.filter(m => m.gender === 'נקבה' && m.role !== 'Staff').length;
     const femaleRetention = totalWomen > 0 ? Math.round((activeWomen / totalWomen) * 100) : 100;
     const overallRetention = totalMembers > 0 ? Math.round((activeMembers.length / totalMembers) * 100) : 0;
-    const churnedCount = members.filter(m => m.isActive === false).length;
+    const churnedCount = communityMembers.filter(m => m.isActive === false).length;
 
     // 3. Churn & Low Pulse (Risk of Churn)
     // New Rule: Member is at risk if they haven't participated in any of the last 4 historical sessions
@@ -591,7 +592,7 @@ const CommunityAnalytics: React.FC = () => {
     const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
     // Members who were active at the start of the month (or joined during the month)
-    const activeAtStartOfMonth = members.filter(m => {
+    const activeAtStartOfMonth = communityMembers.filter(m => {
       if (m.isActive) return true;
       if (!m.deactivatedAt) return true; // Fallback for members suspended before tracking
       const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : parseDate(m.deactivatedAt);
@@ -599,7 +600,7 @@ const CommunityAnalytics: React.FC = () => {
     });
     
     // Members who are currently inactive AND were deactivated THIS month
-    const churnedThisMonth = members.filter(m => {
+    const churnedThisMonth = communityMembers.filter(m => {
       if (m.isActive) return false;
       if (!m.deactivatedAt) return true; // Fallback
       const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : parseDate(m.deactivatedAt);
@@ -617,7 +618,7 @@ const CommunityAnalytics: React.FC = () => {
     const yearStart = now.getMonth() >= 8 ? new Date(currentYear, 8, 1) : new Date(currentYear - 1, 8, 1);
     
     // Annual churned: currently inactive AND deactivated since yearStart
-    const annualChurned = members.filter(m => {
+    const annualChurned = communityMembers.filter(m => {
       if (m.isActive) return false;
       if (!m.deactivatedAt) return true; // Fallback
       const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : parseDate(m.deactivatedAt);
@@ -625,7 +626,7 @@ const CommunityAnalytics: React.FC = () => {
     }).length;
     
     // Annual total: currently active OR deactivated since yearStart
-    const annualTotal = members.filter(m => {
+    const annualTotal = communityMembers.filter(m => {
       if (m.isActive) return true;
       if (!m.deactivatedAt) return true; // Fallback
       const dDate = m.deactivatedAt.toDate ? m.deactivatedAt.toDate() : parseDate(m.deactivatedAt);
@@ -734,7 +735,7 @@ const CommunityAnalytics: React.FC = () => {
     });
 
     // Member Classifications
-    const memberClassifications = members.map(member => {
+    const memberClassifications = communityMembers.map(member => {
       let attended = 0;
       let absenceStreak = 0;
       let countingStreak = true;

@@ -594,7 +594,7 @@ const HomePage: React.FC = () => {
                         <div className="text-right">
                           <p className="font-black text-[#002b44] text-base group-hover:text-[#007085] transition-colors">{a.firstName} {a.lastName}</p>
                           <p className="text-[11px] font-black text-[#007085] uppercase tracking-[0.15em] opacity-80 mt-0.5">
-                            {a.role === 'Admin' ? 'רכז' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
+                            {a.role === 'Admin' ? 'רכז' : a.role === 'Staff' ? 'צוות עמותה' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
                             {(a.full_address || a.city) && (
                               <span className="text-slate-400 font-normal mr-2 font-sans text-[11px]">
                                 • {a.full_address || a.city}
@@ -651,7 +651,7 @@ const HomePage: React.FC = () => {
                   </div>
                 )}
                 <span className="absolute -bottom-1 -right-1 px-3 py-0.5 rounded-full text-[11px] font-black bg-[#002b44] text-white shadow-sm">
-                  {selectedMemberProfile.role === 'Admin' ? 'רכז' :
+                  {selectedMemberProfile.role === 'Admin' ? 'רכז' : selectedMemberProfile.role === 'Staff' ? 'צוות עמותה' :
                    selectedMemberProfile.role === 'Instructor' ? 'מדריך' :
                    selectedMemberProfile.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
                 </span>

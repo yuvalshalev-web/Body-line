@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Filter, User, Mail, Phone, MapPin, Waves, Loader2, MessageCircle, LayoutGrid, List, X, Users, Headset, Send } from 'lucide-react';
+import { Search, Filter, User, Mail, Phone, MapPin, Waves, Loader2, MessageCircle, LayoutGrid, List, X, Users, Headset, Send, Link2 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Member } from '../types';
@@ -26,12 +26,13 @@ const DirectoryPage: React.FC = () => {
       return 'אפ-שייפר';
     }
     if (m.role === 'Admin') return 'רכז';
+    if (m.role === 'Staff') return 'צוות עמותה';
     if (m.role === 'Instructor') return 'מדריך';
     if (m.role === 'Volunteer') return 'מתנדב';
     return 'משתתף';
   };
 
-  const identities = ['הכל', 'רכז', 'אפ-שייפר', 'מדריך', 'מתנדב', 'משתתף'];
+  const identities = ['הכל', 'רכז', 'צוות עמותה', 'אפ-שייפר', 'מדריך', 'מתנדב', 'משתתף'];
 
   const headerImage = useRandomHeader();
 
@@ -57,6 +58,7 @@ const DirectoryPage: React.FC = () => {
 
   const renderMember = (member: Member, index: number, isGrid: boolean) => {
     const isAppShaper = isAppShaperMember(member);
+    const partner = member.partnerId ? members.find(m => m.id === member.partnerId) : null;
 
     return isGrid ? (
       <motion.div
@@ -112,6 +114,22 @@ const DirectoryPage: React.FC = () => {
 
           {/* Quick Actions */}
           <div className="flex gap-2 mt-2">
+            {partner && (
+              <div 
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-[var(--surfer-aqua-mist)]/20 to-indigo-500/10 border border-indigo-500/20 rounded-full text-xs font-bold text-indigo-700 shadow-sm hover:scale-105 transition-transform"
+                title={`חבל זוג עם ${partner.firstName}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedMemberId(partner.id);
+                }}
+              >
+                <Link2 size={12} className="text-indigo-500" />
+                <div className="w-4 h-4 rounded-full overflow-hidden bg-white border border-indigo-200">
+                  {partner.avatar ? <img src={partner.avatar} className="w-full h-full object-cover" /> : <User size={10} className="m-auto opacity-50 mt-0.5" />}
+                </div>
+                <span className="truncate max-w-[65px]">{partner.firstName}</span>
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
@@ -174,7 +192,28 @@ const DirectoryPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {partner && (
+            <div 
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors"
+              title={`חבל זוג עם ${partner.firstName} ${partner.lastName}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedMemberId(partner.id);
+              }}
+            >
+              <div className="flex flex-col text-left">
+                <span className="text-[9px] font-black tracking-widest text-indigo-400 uppercase leading-none">חבל זוג</span>
+                <span className="text-xs font-bold text-indigo-700 leading-tight">{partner.firstName} {partner.lastName}</span>
+              </div>
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-white border-2 border-indigo-200 shrink-0 relative">
+                {partner.avatar ? <img src={partner.avatar} className="w-full h-full object-cover" /> : <User size={16} className="m-auto opacity-50 mt-1" />}
+                <div className="absolute -bottom-1 -right-1 bg-indigo-500 text-white p-0.5 rounded-full border-2 border-white">
+                  <Link2 size={10} />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
     );

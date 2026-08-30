@@ -330,7 +330,7 @@ const EventsPage: React.FC = () => {
                             <p className="font-bold text-slate-800 text-sm truncate">{a.firstName} {a.lastName}</p>
                           </div>
                           <span className="text-[10px] font-black bg-sky-50 text-sky-600 px-2 py-0.5 rounded-md flex-shrink-0">
-                            {a.role === 'Admin' ? 'רכז' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
+                            {a.role === 'Admin' ? 'רכז' : a.role === 'Staff' ? 'צוות עמותה' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
                           </span>
                         </div>
                       ))}
@@ -396,7 +396,7 @@ const EventsPage: React.FC = () => {
                     <div>
                       <p className="font-black text-[#002b44] text-lg">{a.firstName} {a.lastName}</p>
                       <p className="text-[10px] font-black text-[#007085] uppercase tracking-[0.2em] opacity-80">
-                        {a.role === 'Admin' ? 'רכז' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
+                        {a.role === 'Admin' ? 'רכז' : a.role === 'Staff' ? 'צוות עמותה' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
                       </p>
                     </div>
                   </div>

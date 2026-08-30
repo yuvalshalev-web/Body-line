@@ -205,7 +205,7 @@ export const DietaryReportModal: React.FC<DietaryReportModalProps> = ({
         'שם מלא': d.displayName,
         'טלפון': m.mobile || memberAny.phone || '',
         'אימייל': m.email || '',
-        'תפקיד': m.role === 'Admin' ? 'מנהל/רכז' : m.role === 'Instructor' ? 'מדריך' : m.role === 'Volunteer' ? 'מתנדב' : 'חבר קהילה',
+        'תפקיד': m.role === 'Admin' ? 'רכז' : m.role === 'Staff' ? 'צוות עמותה' : m.role === 'Instructor' ? 'מדריך' : m.role === 'Volunteer' ? 'מתנדב' : 'משתתף',
         'זמינות לפעילויות': d.availabilityLabel,
         'סגנון תזונה': d.isVegan ? 'טבעוני' : d.isVegetarian ? 'צמחוני' : 'אוכל הכל',
         'כשרות': d.isMehadrin ? 'כשר למהדרין (בד״ץ)' : d.isKosher ? 'כשר' : 'לא שומר',
@@ -664,7 +664,7 @@ export const DietaryReportModal: React.FC<DietaryReportModalProps> = ({
                           <div className="flex items-center gap-1.5">
                             <p className="font-bold text-slate-900 text-sm">{d.displayName}</p>
                             <span className="text-[10px] px-2 py-0.2 rounded-full bg-slate-100 text-slate-600 font-medium">
-                              {m.role === 'Admin' ? 'מנהל/רכז' : m.role === 'Instructor' ? 'מדריך' : m.role === 'Volunteer' ? 'מתנדב' : 'חבר קהילה'}
+                              {m.role === 'Admin' ? 'רכז' : m.role === 'Staff' ? 'צוות עמותה' : m.role === 'Instructor' ? 'מדריך' : m.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">

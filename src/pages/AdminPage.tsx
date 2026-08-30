@@ -1,3 +1,4 @@
+import { PairsManagerModal } from "../components/admin/PairsManagerModal";
 
 import React, { useState, useRef, useEffect } from 'react';
 import GlassNavigationBar from '../components/GlassNavigationBar';
@@ -7,7 +8,7 @@ import {
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
   PanelTop, ArrowUpCircle, ArrowDownCircle, User, Globe, Activity,
-  Waves, AlertTriangle, Terminal,
+  Waves, AlertTriangle, Terminal, Link2,
   FileText, Map as MapIcon, Clock, Upload, BarChart2, Utensils
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -71,7 +72,7 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
 
   // Active community members participation (excludes App-Shapers from community statistics)
   const isAppShaperDoc = (m: any) => m.role === 'Support' || (m.email || '').toLowerCase() === 'yuval.shalev@gmail.com';
-  const activeMembers = members.filter((m: any) => m.isActive && !isAppShaperDoc(m));
+  const activeMembers = members.filter((m: any) => m.isActive && !isAppShaperDoc(m) && m.role !== 'Staff');
   
   // Get all unique attendees from these events
   const allAttendeeIds = new Set<string>();
@@ -194,7 +195,7 @@ const AdminPage: React.FC = () => {
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
     joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, archiveEvent, updateEvent, addEvent, toggleRole, toggleStatus, updateSiteAssets, updateMember, deleteMember, archiveMember, addMember,
-    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, weeklyHistory
+    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, weeklyHistory, linkPair, unlinkPair
   } = useData();
 
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ROLLOVER' | 'ENGINE_ROOM' | 'ASSETS' | 'SURF_CALLS'>('USERS');
@@ -214,7 +215,7 @@ const AdminPage: React.FC = () => {
     { id: 'ASSETS', label: 'נכסים ועיצוב', icon: <ImageIcon size={20} /> }
   ];
 
-  const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'Support' || currentUser?.email?.toLowerCase() === 'yuval.shalev@gmail.com';
+  const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'Staff' || currentUser?.role === 'Support' || currentUser?.email?.toLowerCase() === 'yuval.shalev@gmail.com';
 
   const handleTabChange = (id: string) => {
     setActiveTab(id as any);
@@ -230,6 +231,7 @@ const AdminPage: React.FC = () => {
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isDietaryModalOpen, setIsDietaryModalOpen] = useState(false);
+  const [isPairsModalOpen, setIsPairsModalOpen] = useState(false);
   const [editingConflictId, setEditingConflictId] = useState<string | null>(null);
   const [conflictNewEmail, setConflictNewEmail] = useState('');
   const [newMemberData, setNewMemberData] = useState<Partial<Member>>({
@@ -532,7 +534,7 @@ const AdminPage: React.FC = () => {
       if (result) {
         setApprovedUser(result);
       } else {
-        showError('הבקשה כבר אינה קיימת או שאושרה על ידי מנהל אחר.');
+        showError('הבקשה כבר אינה קיימת או שאושרה על ידי רכז אחר.');
       }
     } catch (err) {
       console.error('AdminPage: Approve error:', err);
@@ -773,14 +775,15 @@ const AdminPage: React.FC = () => {
             {/* Members Summary Card */}
             {(() => {
               const isAppShaper = (m: any) => m.role === 'Support' || (m.email || '').toLowerCase() === 'yuval.shalev@gmail.com';
-              const communityMembers = members.filter(m => !isAppShaper(m));
+              const communityMembers = members.filter(m => !isAppShaper(m) && m.role !== 'Staff');
               const appShapers = members.filter(m => isAppShaper(m));
-
+              const staffMembers = members.filter(m => m.role === 'Staff');
               const stats = {
                 communityTotal: communityMembers.length,
                 communityActive: communityMembers.filter(m => m.isActive !== false).length,
                 communitySuspended: communityMembers.filter(m => m.isActive === false).length,
                 appShapersTotal: appShapers.length,
+                staffTotal: staffMembers.length,
                 coordinators: communityMembers.filter(m => m.role === 'Admin').length,
                 instructors: communityMembers.filter(m => m.role === 'Instructor').length,
                 volunteers: communityMembers.filter(m => m.role === 'Volunteer').length,
@@ -815,6 +818,10 @@ const AdminPage: React.FC = () => {
                         מושעים {stats.communitySuspended}
                       </div>
                     )}
+                    <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-800 rounded-xl border border-rose-200 text-xs font-bold shadow-sm" title="צוות העמותה">
+                      <span className="w-2 h-2 rounded-full bg-rose-500" />
+                      עמותה {stats.staffTotal}
+                    </div>
                     <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-800 rounded-xl border border-amber-200 text-xs font-bold shadow-sm" title="צוות פיתוח, תחזוקה ושירות">
                       <span className="w-2 h-2 rounded-full bg-amber-500" />
                       אפ-שייפרים {stats.appShapersTotal}
@@ -850,6 +857,12 @@ const AdminPage: React.FC = () => {
                 className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-amber-500/20"
               >
                 <Utensils size={18} /> דו"ח תזונה, זמינות והעדפות
+              </button>
+              <button 
+                onClick={() => setIsPairsModalOpen(true)}
+                className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[var(--surfer-electric-pink)] to-purple-500 hover:from-[var(--surfer-electric-pink)]/90 hover:to-purple-600 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-[var(--surfer-electric-pink)]/20"
+              >
+                <Link2 size={18} /> חבל זוג (ניהול זוגות)
               </button>
             </div>
 
@@ -1016,7 +1029,7 @@ const AdminPage: React.FC = () => {
                                       ? 'bg-emerald-50 text-emerald-600'
                                       : 'bg-[var(--surfer-aqua-mist)]/10 text-[#000000]'
                             }`}>
-                              {isAppShaper ? 'אפ-שייפר' : member.role === 'Admin' ? 'רכז' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
+                              {isAppShaper ? 'אפ-שייפר' : member.role === 'Admin' ? 'רכז' : member.role === 'Staff' ? 'צוות עמותה' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
                             </span>
                           </td>
                           <td className="px-8 py-6">
@@ -1067,6 +1080,14 @@ const AdminPage: React.FC = () => {
               isOpen={isDietaryModalOpen}
               onClose={() => setIsDietaryModalOpen(false)}
               members={members}
+            />
+            <PairsManagerModal
+              isOpen={isPairsModalOpen}
+              onClose={() => setIsPairsModalOpen(false)}
+              members={members}
+              onUpdateMember={updateMember}
+              onLinkPair={linkPair}
+              onUnlinkPair={unlinkPair}
             />
           </div>
         )}
@@ -1152,7 +1173,7 @@ const AdminPage: React.FC = () => {
                         <span className="px-2 py-0.5 bg-rose-200 text-rose-700 text-[10px] font-black rounded uppercase tracking-tighter">Critical</span>
                         <h4 className="text-2xl font-black text-rose-800">התנגשויות אימייל (Super Admin)</h4>
                       </div>
-                      <p className="text-base text-rose-700 font-bold opacity-80">נמצאו כפילויות של אימייל מנהל המערכת. יש להשאיר רק חשבון אחד עם האימייל הראשי.</p>
+                      <p className="text-base text-rose-700 font-bold opacity-80">נמצאו כפילויות של אימייל רכז המערכת. יש להשאיר רק חשבון אחד עם האימייל הראשי.</p>
                     </div>
                   </div>
                       

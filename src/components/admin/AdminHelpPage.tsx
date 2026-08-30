@@ -304,7 +304,7 @@ const AdminHelpPage = () => {
       </section>
 
       <div className="mt-10 p-6 admin-info-card border-r-8 border-[#121212] rounded-2xl text-center text-[#121212] font-black text-lg shadow-lg">
-        <strong>💡 טיפ למנהל:</strong> כל הנתונים שאתם רואים ב-Dashboards נגזרים מהלוגיקה הזו. הבנת התהליכים תעזור לכם להסביר למשתמשים למה הדירוג שלהם השתנה או איך להשתפר.
+        <strong>💡 טיפ לרכז:</strong> כל הנתונים שאתם רואים ב-Dashboards נגזרים מהלוגיקה הזו. הבנת התהליכים תעזור לכם להסביר למשתמשים למה הדירוג שלהם השתנה או איך להשתפר.
       </div>
     </div>
   );

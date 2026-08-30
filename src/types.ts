@@ -16,7 +16,7 @@ export interface Member {
   mobile: string;
   avatar: string;
   bio: string;
-  role: 'Member' | 'Volunteer' | 'Instructor' | 'Admin' | 'Support';
+  role: 'Member' | 'Volunteer' | 'Instructor' | 'Admin' | 'Support' | 'Staff';
   joinedAt: string;
   deactivatedAt?: any;
   isActive?: boolean; // true = active, false = inactive
@@ -33,6 +33,7 @@ export interface Member {
   loginCount?: number; // Added for analytics
   birthday?: string; // YYYY-MM-DD
   gender?: Gender;
+  partnerId?: string; // ID of the paired member (חבל זוג)
   weight?: number; // in kg
   height?: number; // in cm
   surfingLevel?: 'Learner' | 'Beginner' | 'Intermediate' | 'Advanced';

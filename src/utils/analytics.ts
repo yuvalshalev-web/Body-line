@@ -327,6 +327,7 @@ export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) =
       // Calculate how many members were active AT THE TIME of this session
       const activeMembersAtTime = members.filter(m => {
         // If they actually participated in this session, they must have been active!
+        if (m.role === 'Staff') return false;
         if (s.participantIds?.includes(m.id)) return true;
 
         const joinedDate = parseDate(m.joinedAt);

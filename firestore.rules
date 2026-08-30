@@ -49,13 +49,13 @@ service cloud.firestore {
       return isAuthenticated() && 
         ((('email' in request.auth.token) && request.auth.token.email != null && request.auth.token.email.lower() in ["yuval.shalev@gmail.com", "yuval@shalev.io"]) ||
          (exists(/databases/$(database)/documents/members/$(request.auth.uid)) && 
-          get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role in ['Admin', 'Support']));
+          get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role in ['Admin', 'Support', 'Staff']));
     }
 
     function isInstructor() {
       return isAuthenticated() && 
         exists(/databases/$(database)/documents/members/$(request.auth.uid)) && 
-        get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role in ['Instructor', 'Admin', 'Support'];
+        get(/databases/$(database)/documents/members/$(request.auth.uid)).data.role in ['Instructor', 'Admin', 'Support', 'Staff'];
     }
 
     function isValidEmail(email) {
@@ -80,7 +80,7 @@ service cloud.firestore {
       return (!('firstName' in data) || data.firstName is string) &&
              (!('lastName' in data) || data.lastName is string) &&
              (!('email' in data) || data.email is string) &&
-             (!('role' in data) || data.role in ['Member', 'Volunteer', 'Instructor', 'Admin', 'Support']);
+             (!('role' in data) || data.role in ['Member', 'Volunteer', 'Instructor', 'Admin', 'Support', 'Staff']);
     }
 
     function isValidGalleryItem(data) {

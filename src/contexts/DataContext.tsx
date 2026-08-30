@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { safeLocalStorage } from '../utils/storage';
-import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp, runTransaction, serverTimestamp, where } from 'firebase/firestore';
+import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, arrayUnion, arrayRemove, increment, getDoc, getDocs, orderBy, limit, addDoc, writeBatch, Timestamp, runTransaction, serverTimestamp, where, deleteField } from 'firebase/firestore';
 import { ref, deleteObject, getMetadata } from 'firebase/storage';
 import { 
   getDb, 
@@ -122,6 +122,8 @@ interface DataContextType {
   toggleDbStatus: () => void;
   updateMember: (member: Member) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
+  linkPair: (memberAId: string, memberBId: string) => Promise<void>;
+  unlinkPair: (memberAId: string, memberBId?: string) => Promise<void>;
   toggleStatus: (id: string) => Promise<void>;
   toggleRole: (id: string, requesterEmail?: string) => Promise<void>;
   approveRequest: (id: string) => Promise<{ firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null>;
@@ -688,11 +690,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error('משתמש עם אימייל זה כבר קיים במערכת.');
       }
     }
+
+    if ('partnerId' in data && !data.partnerId) {
+      (data as any).partnerId = deleteField();
+    }
     
     // Delta Checking: Only update if data actually changed
     const existing = members.find(m => m.id === id);
     if (existing) {
-      const hasChanged = Object.keys(data).some(key => (data as any)[key] !== (existing as any)[key]);
+      const hasChanged = Object.keys(data).some(key => {
+        const newVal = (data as any)[key];
+        const oldVal = (existing as any)[key];
+        return newVal !== oldVal;
+      });
       if (!hasChanged) {
         console.log("DataContext: No changes detected for member", id, "- skipping update.");
         return;
@@ -703,6 +713,70 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await trackedUpdateDoc(doc(db, 'members', id), data);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `members/${id}`);
+    }
+  }, [members, handleFirestoreError]);
+
+  const linkPair = useCallback(async (memberAId: string, memberBId: string) => {
+    const db = getDb();
+    if (!db) return;
+    try {
+      const memberA = members.find(m => m.id === memberAId);
+      const memberB = members.find(m => m.id === memberBId);
+
+      if (!memberA || !memberB) {
+        throw new Error('משתמשים לא נמצאו במערכת.');
+      }
+
+      const isValidPair = 
+        (memberA.role === 'Volunteer' && memberB.role === 'Member') ||
+        (memberA.role === 'Member' && memberB.role === 'Volunteer');
+
+      if (!isValidPair) {
+        throw new Error('חבל זוג מתאפשר אך ורק בין מתנדב למשתתף. רכזים, צוות עמותה ומדריכים אינם יכולים להיות בני זוג.');
+      }
+
+      const batch = writeBatch(db);
+      
+      if (memberA?.partnerId && memberA.partnerId !== memberBId) {
+        batch.update(doc(db, 'members', memberA.partnerId), { partnerId: deleteField() });
+      }
+      if (memberB?.partnerId && memberB.partnerId !== memberAId) {
+        batch.update(doc(db, 'members', memberB.partnerId), { partnerId: deleteField() });
+      }
+
+      batch.update(doc(db, 'members', memberAId), { partnerId: memberBId });
+      batch.update(doc(db, 'members', memberBId), { partnerId: memberAId });
+      
+      await batch.commit();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `members/${memberAId}-pair`);
+      throw error;
+    }
+  }, [members, handleFirestoreError]);
+
+  const unlinkPair = useCallback(async (memberAId: string, memberBId?: string) => {
+    const db = getDb();
+    if (!db) return;
+    try {
+      const batch = writeBatch(db);
+      batch.update(doc(db, 'members', memberAId), { partnerId: deleteField() });
+      
+      if (memberBId) {
+        batch.update(doc(db, 'members', memberBId), { partnerId: deleteField() });
+      } else {
+        const other = members.find(m => m.partnerId === memberAId || (m.id === memberAId && m.partnerId));
+        if (other && other.partnerId && other.partnerId !== memberAId) {
+          batch.update(doc(db, 'members', other.partnerId), { partnerId: deleteField() });
+        }
+        if (other && other.id !== memberAId) {
+          batch.update(doc(db, 'members', other.id), { partnerId: deleteField() });
+        }
+      }
+      
+      await batch.commit();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `members/${memberAId}-unlink`);
+      throw error;
     }
   }, [members, handleFirestoreError]);
 
@@ -1209,6 +1283,12 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
 
       // 3. Archive to weekly_history
       console.log("finalizeSession: Archiving to weekly_history...");
+      // Filter out Staff members from the attendees list for statistical purposes
+      const attendeesWithoutStaff = currentAttendees.filter((uid: string) => {
+        const member = members.find(m => m.id === uid);
+        return member && member.role !== 'Staff';
+      });
+      
       // Generate a deterministic ID based on the session date to prevent duplicate sessions 
       // in case of Race Conditions from multiple clients triggering rollover simultaneously.
       const sessionDateStr = currentDate || new Date().toISOString();
@@ -1218,8 +1298,8 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
       
       await setDoc(historyDocRef, {
         date: sessionDateStr,
-        participantIds: currentAttendees,
-        participantsCount: currentAttendees.length,
+        participantIds: attendeesWithoutStaff,
+        participantsCount: attendeesWithoutStaff.length,
         status: 'finalized',
         finalizedAt: new Date().toISOString(),
         ...(saveWeather ? { seaState: coastalWeather || null } : {})
@@ -1283,7 +1363,7 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
       console.log("finalizeSession: Preparing batch update for member stats...");
       await addRolloverLog('update_stats', 'success', 'סטטיסטיקות עודכנו');
       const batch = writeBatch(db);
-      for (const uid of currentAttendees) {
+      for (const uid of attendeesWithoutStaff) {
         const memberRef = doc(db, 'members', uid);
         batch.set(memberRef, {
           totalAttendance: increment(1)
@@ -1450,8 +1530,8 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
       const snapshot = await getDocs(backupsQuery);
       return snapshot.docs
         .filter(d => d.id.startsWith('assets_backup_'))
-        .map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => new Date(b._backupTimestamp).getTime() - new Date(a._backupTimestamp).getTime());
+        .map(d => ({ id: d.id, ...(d.data() as any) }))
+        .sort((a: any, b: any) => new Date(b._backupTimestamp).getTime() - new Date(a._backupTimestamp).getTime());
     } catch (e) {
       console.error('Failed to get backups', e);
       return [];
@@ -1468,7 +1548,7 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
         const { _backupTimestamp, ...assetsToRestore } = data;
         await setDoc(doc(db, 'site_data', 'assets'), assetsToRestore, { merge: false });
         setSiteAssets((prev: SiteAssets) => {
-          const updated = { ...DEFAULT_SITE_ASSETS, ...assetsToRestore };
+          const updated = { ...prev, ...assetsToRestore } as SiteAssets;
           safeLocalStorage.setItem('cached_site_assets_v2', JSON.stringify(updated));
           return updated;
         });
@@ -1594,7 +1674,7 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
   const seedInitialAssets = useCallback(async () => {
     const db = getDb();
 
-    const initialAssets: SiteAssets = {
+    const initialAssets: any = {
       ...DEFAULT_SITE_ASSETS
     };
     try {
@@ -1611,7 +1691,7 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
       const db = getDb();
       const hashedPassword = await hashPassword('admin123');
       const adminData = {
-        firstName: 'מנהל',
+        firstName: 'רכז',
         lastName: 'מערכת',
         email: SUPER_ADMIN_EMAIL,
         mobile: '0500000000',
@@ -1622,7 +1702,7 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
         loginCount: 0,
         totalAttendance: 0,
         avatar: '',
-        bio: 'מנהל מערכת ראשוני',
+        bio: 'רכז מערכת ראשוני',
         gender: 'זכר',
         isTemporary: true
       };
@@ -1644,7 +1724,7 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
         setIsLoading(true);
         setConnectionError(null);
       }, dbStatus, toggleDbStatus,
-      updateMember, deleteMember, toggleStatus, toggleRole, approveRequest, rejectRequest,
+      updateMember, deleteMember, linkPair, unlinkPair, toggleStatus, toggleRole, approveRequest, rejectRequest,
       addEvent,
     surfCalls,
     addSurfCall,
@@ -1656,7 +1736,7 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
       isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets
     }), [
       members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, connectionError, dbStatus, toggleDbStatus,
-      updateMember, deleteMember, toggleStatus, toggleRole, approveRequest, rejectRequest,
+      updateMember, deleteMember, linkPair, unlinkPair, toggleStatus, toggleRole, approveRequest, rejectRequest,
       addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, getSiteAssetsBackups, restoreSiteAssetsBackup, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,

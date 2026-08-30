@@ -189,7 +189,7 @@ const ProfileAvatar = React.memo(({
        <h3 className="text-3xl md:text-5xl font-black text-[#0f172a] tracking-tight">{firstName} {lastName}</h3>
        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
          <span className="px-3 py-1 md:px-4 md:py-1.5 bg-sky-100 text-sky-700 rounded-full text-[10px] md:text-[11px] font-black uppercase tracking-widest border border-sky-200 shadow-sm">
-           {role === 'Admin' ? 'רכז' : role === 'Support' ? 'אפ-שייפר' : role === 'Instructor' ? 'מדריך' : role === 'Volunteer' ? 'מתנדב' : 'משתתף נבחרת'}
+           {role === 'Admin' ? 'רכז' : role === 'Staff' ? 'צוות עמותה' : role === 'Support' ? 'אפ-שייפר' : role === 'Instructor' ? 'מדריך' : role === 'Volunteer' ? 'מתנדב' : 'משתתף נבחרת'}
          </span>
          <span className="hidden md:block w-1.5 h-1.5 bg-slate-200 rounded-full" />
          <p className="text-slate-400 font-bold text-[10px] md:text-[11px] uppercase tracking-widest">בקהילה מאז {new Date(joinedAt).toLocaleDateString('he-IL')}</p>
@@ -1635,7 +1635,7 @@ const ProfilePage: React.FC = () => {
               </div>
               <h4 className="text-3xl font-black text-rose-600 uppercase tracking-tight">השעיית חשבון</h4>
             </div>
-            <p className="text-slate-500 font-bold text-lg max-w-lg leading-relaxed opacity-80">השעיית החשבון תמנע ממך גישה למערכת עד שמנהל יחזיר אותך לפעילות. הפעולה הפיכה ומיועדת למקרים של חופשה ארוכה או הפסקה זמנית.</p>
+            <p className="text-slate-500 font-bold text-lg max-w-lg leading-relaxed opacity-80">השעיית החשבון תמנע ממך גישה למערכת עד שרכז יחזיר אותך לפעילות. הפעולה הפיכה ומיועדת למקרים של חופשה ארוכה או הפסקה זמנית.</p>
           </div>
           
           <GlassButton 
@@ -1681,7 +1681,7 @@ const ProfilePage: React.FC = () => {
                 </div>
                 <h3 className="text-4xl font-black text-[#0f172a] mb-6 leading-tight tracking-tight">בטוח שברצונך להשעות את החשבון?</h3>
                 <p className="text-slate-500 font-bold mb-12 leading-relaxed text-xl opacity-80">
-                  השעיית החשבון תמנע ממך גישה למערכת עד שמנהל יחזיר אותך לפעילות. הפעולה הפיכה ומיועדת למקרים של הפסקה זמנית.
+                  השעיית החשבון תמנע ממך גישה למערכת עד שרכז יחזיר אותך לפעילות. הפעולה הפיכה ומיועדת למקרים של הפסקה זמנית.
                 </p>
                 
                 <div className="flex flex-col gap-5">

@@ -14,7 +14,7 @@ const MemberGradingPage: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
   const filteredMembers = members.filter(m => 
-    m.role !== 'Instructor' && 
+    m.role !== 'Instructor' && m.role !== 'Staff' && 
     (m.firstName.toLowerCase().includes(searchTerm.toLowerCase()) || 
      m.lastName.toLowerCase().includes(searchTerm.toLowerCase()))
   );

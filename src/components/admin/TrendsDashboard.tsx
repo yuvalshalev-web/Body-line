@@ -36,6 +36,7 @@ import OperationalChartHeader from '../OperationalChartHeader';
 import { calculateDistance } from '../../utils/distanceCalculator';
 import { getCoordinates } from '../../utils/geocoding';
 import { calculateAge, parseDate, formatDate } from '../../utils/dateUtils';
+import { Member } from '../../types';
 
 const getTachometerColor = (percentage: number) => {
   const stops = [
@@ -81,8 +82,9 @@ const TrendsDashboard: React.FC = () => {
   const stats = useMemo(() => {
     if (!members.length) return null;
 
-    const activeMembers = members.filter(m => m.isActive);
-    const totalMembers = members.length;
+    const communityMembers = members.filter(m => m.role !== 'Staff');
+    const activeMembers = communityMembers.filter(m => m.isActive);
+    const totalMembers = communityMembers.length;
     
     // Distance Distribution (Operational & Bins)
     const homeLat = siteConfig.home_break?.lat || 32.1624;
@@ -161,7 +163,7 @@ const TrendsDashboard: React.FC = () => {
       else ageGroups['לא צוין / אחר']++;
     });
 
-    members.forEach(m => {
+    communityMembers.forEach(m => {
       const age = calculateAge(m.birthday || (m as any).birthDate);
       if (age === null) {
         ageGroupsTotal['לא צוין / אחר']++;
@@ -315,13 +317,13 @@ const TrendsDashboard: React.FC = () => {
     // 2. Gender Mix
   const genderCounts = {
       'זכר': activeMembers.filter(m => m.gender === 'זכר').length,
-      'נקבה': activeMembers.filter(m => m.gender === 'נקבה').length,
+      'נקבה': activeMembers.filter(m => m.gender === 'נקבה' && m.role !== 'Staff').length,
       'לא בינארי': activeMembers.filter(m => m.gender === 'לא בינארי').length,
       'אחר': activeMembers.filter(m => !m.gender || m.gender === 'מעדיפ/ה לא לציין').length,
     };
 
-    const totalWomen = members.filter(m => m.gender === 'נקבה').length;
-    const activeWomen = activeMembers.filter(m => m.gender === 'נקבה').length;
+    const totalWomen = communityMembers.filter(m => m.gender === 'נקבה').length;
+    const activeWomen = activeMembers.filter(m => m.gender === 'נקבה' && m.role !== 'Staff').length;
     const femaleRetention = totalWomen > 0 ? Math.round((activeWomen / totalWomen) * 100) : 100;
     
     // Calculate overall 8-week retention
@@ -388,13 +390,13 @@ const TrendsDashboard: React.FC = () => {
       ? Math.round((overallYearlyActualAttendance / overallYearlyPotentialAttendance) * 100) 
       : 0;
 
-    const churnedCount = members.filter(m => m.isActive === false).length;
+    const churnedCount = communityMembers.filter(m => m.isActive === false).length;
 
     // 3. Churn & Low Pulse
     const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
     // Members who were active at the start of the month (or joined during the month)
-    const activeAtStartOfMonth = members.filter(m => {
+    const activeAtStartOfMonth = communityMembers.filter(m => {
       if (m.isActive) return true;
       if (!m.deactivatedAt) return true; // Fallback for members suspended before tracking
       const dDate = parseDate(m.deactivatedAt);
@@ -402,7 +404,7 @@ const TrendsDashboard: React.FC = () => {
     });
     
     // Members who are currently inactive AND were deactivated THIS month
-    const churnedThisMonth = members.filter(m => {
+    const churnedThisMonth = communityMembers.filter(m => {
       if (m.isActive) return false;
       if (!m.deactivatedAt) return true; // Fallback
       const dDate = parseDate(m.deactivatedAt);
@@ -433,7 +435,7 @@ const TrendsDashboard: React.FC = () => {
     const yearStart = now.getMonth() >= 8 ? new Date(currentYear, 8, 1) : new Date(currentYear - 1, 8, 1);
     
     // Annual churned: currently inactive AND deactivated since yearStart
-    const annualChurned = members.filter(m => {
+    const annualChurned = communityMembers.filter(m => {
       if (m.isActive) return false;
       if (!m.deactivatedAt) return true; // Fallback
       const dDate = parseDate(m.deactivatedAt);
@@ -441,7 +443,7 @@ const TrendsDashboard: React.FC = () => {
     }).length;
     
     // Annual total: currently active OR deactivated since yearStart
-    const annualTotal = members.filter(m => {
+    const annualTotal = communityMembers.filter(m => {
       if (m.isActive) return true;
       if (!m.deactivatedAt) return true; // Fallback
       const dDate = parseDate(m.deactivatedAt);
@@ -783,6 +785,9 @@ const TrendsDashboard: React.FC = () => {
     { id: 'other', label: 'אחר/לא צוין', color: '#718096' }
   ];
 
+  const isAppShaper = (m: Member) => m.role === 'Support' || (m.email || '').toLowerCase() === 'yuval.shalev@gmail.com';
+  const communityMembers = useMemo(() => members.filter(m => m.isActive && !isAppShaper(m) && m.role !== 'Staff'), [members]);
+
   const chartData = useMemo(() => {
     if (!yearConfig) return [];
     
@@ -823,9 +828,9 @@ const TrendsDashboard: React.FC = () => {
         groups.forEach(group => {
           if (historyEntry) {
             const attendees = historyEntry.participantIds || [];
-            const groupMembers = members.filter(m => {
+            const groupMembers = communityMembers.filter(m => {
               if (group.id === 'male') return m.gender === 'זכר';
-              if (group.id === 'female') return m.gender === 'נקבה';
+              if (group.id === 'female') return m.gender === 'נקבה' && m.role !== 'Staff';
               if (group.id === 'nonBinary') return m.gender === 'לא בינארי';
               if (group.id === 'other') return !m.gender || m.gender === 'מעדיפ/ה לא לציין';
               

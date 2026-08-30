@@ -5,6 +5,7 @@ export const isAdminUser = (user: { role?: string; email?: string } | null | und
   if (!user) return false;
   return (
     user.role === 'Admin' ||
+    user.role === 'Staff' ||
     user.role === 'Support' ||
     user.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()
   );
