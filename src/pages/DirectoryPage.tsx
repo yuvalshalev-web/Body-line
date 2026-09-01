@@ -32,7 +32,7 @@ const DirectoryPage: React.FC = () => {
     return 'משתתף';
   };
 
-  const identities = ['הכל', 'רכז', 'צוות עמותה', 'אפ-שייפר', 'מדריך', 'מתנדב', 'משתתף'];
+  const identities = ['הכל', 'רכז', 'אפ-שייפר', 'מדריך', 'מתנדב', 'משתתף', 'צוות עמותה'];
 
   const headerImage = useRandomHeader();
 
@@ -49,11 +49,26 @@ const DirectoryPage: React.FC = () => {
     return matchesSearch && matchesIdentity && member.isActive !== false;
   });
 
-  const roleOrder: Record<string, number> = { 'רכז': 1, 'אפ-שייפר': 2, 'מדריך': 3, 'מתנדב': 4, 'משתתף': 5 };
+  const roleOrder: Record<string, number> = { 
+    'רכז': 1, 
+    'אפ-שייפר': 2, 
+    'מדריך': 3, 
+    'מתנדב': 4, 
+    'משתתף': 5,
+    'צוות עמותה': 6
+  };
+
   const sortedMembers = [...filteredMembers].sort((a, b) => {
     const roleA = getRoleLabel(a);
     const roleB = getRoleLabel(b);
-    return roleOrder[roleA] - roleOrder[roleB];
+    const orderA = roleOrder[roleA] ?? 99;
+    const orderB = roleOrder[roleB] ?? 99;
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+    const nameA = `${a.firstName || ''} ${a.lastName || ''}`.trim();
+    const nameB = `${b.firstName || ''} ${b.lastName || ''}`.trim();
+    return nameA.localeCompare(nameB, 'he');
   });
 
   const renderMember = (member: Member, index: number, isGrid: boolean) => {
@@ -219,6 +234,18 @@ const DirectoryPage: React.FC = () => {
     );
   };
 
+  const getSectionTitle = (role: string) => {
+    switch (role) {
+      case 'רכז': return 'רכזים';
+      case 'אפ-שייפר': return 'אפ-שייפר';
+      case 'מדריך': return 'מדריכים';
+      case 'מתנדב': return 'מתנדבים';
+      case 'משתתף': return 'משתתפים';
+      case 'צוות עמותה': return 'צוות עמותה';
+      default: return role;
+    }
+  };
+
   const renderMembers = () => {
     const rendered: JSX.Element[] = [];
     let lastRole: string | null = null;
@@ -228,10 +255,10 @@ const DirectoryPage: React.FC = () => {
       
       if (!lastRole || lastRole !== currentRole) {
         rendered.push(
-          <div key={`sep-${index}`} className="col-span-full flex items-center gap-4 my-6">
+          <div key={`sep-${currentRole}-${index}`} className="col-span-full flex items-center gap-4 my-6">
             <div className="flex-grow border-t border-slate-200" />
             <span className="text-sm font-black text-slate-400 px-2">
-              {currentRole === 'רכז' ? 'רכזים' : currentRole === 'אפ-שייפר' ? 'אפ-שייפר' : currentRole === 'מדריך' ? 'מדריכים' : currentRole === 'מתנדב' ? 'מתנדבים' : 'משתתפים'}
+              {getSectionTitle(currentRole)}
             </span>
             <div className="flex-grow border-t border-slate-200" />
           </div>

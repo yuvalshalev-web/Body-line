@@ -8,7 +8,7 @@ import {
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
   PanelTop, ArrowUpCircle, ArrowDownCircle, User, Globe, Activity,
-  Waves, AlertTriangle, Terminal, Link2,
+  Waves, AlertTriangle, Terminal, Link2, Eye,
   FileText, Map as MapIcon, Clock, Upload, BarChart2, Utensils
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -17,7 +17,8 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
 import { JoinRequest, Member } from '../types';
-import { SUPER_ADMIN_EMAIL } from '../constants';
+import { SUPER_ADMIN_EMAIL, isAppShaperUser } from '../constants';
+import { ReadOnlyNoticeModal } from '../components/admin/ReadOnlyNoticeModal';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getStorageInstance } from '../services/firebase';
 import { processImage } from '../utils/imageProcessor';
@@ -216,6 +217,16 @@ const AdminPage: React.FC = () => {
   ];
 
   const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'Staff' || currentUser?.role === 'Support' || currentUser?.email?.toLowerCase() === 'yuval.shalev@gmail.com';
+  const isAppShaper = isAppShaperUser(currentUser);
+  const [showReadOnlyNotice, setShowReadOnlyNotice] = useState(false);
+
+  const checkAppShaper = () => {
+    if (!isAppShaper) {
+      setShowReadOnlyNotice(true);
+      return false;
+    }
+    return true;
+  };
 
   const handleTabChange = (id: string) => {
     setActiveTab(id as any);
@@ -1619,13 +1630,40 @@ const AdminPage: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'ASSETS' && (
+        {activeTab === 'ENGINE_ROOM' && (
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Section */}
             <div className="flex flex-col gap-1">
-              <h2 className="text-3xl font-black text-slate-800 tracking-tight">הגדרות מערכת</h2>
-              <p className="text-slate-500 font-medium">ניהול פרמטרים טכניים וקונפיגורציית ליבה של האתר</p>
+              <h2 className="text-3xl font-black text-slate-800 tracking-tight">חדר מכונות והגדרות מערכת</h2>
+              <p className="text-slate-500 font-medium">ניהול פרמטרים טכניים, תשתיות וקונפיגורציית ליבה של האתר</p>
             </div>
+
+            {/* Read-Only Notice for Non-AppShapers */}
+            {!isAppShaper && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-5 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-500/10 border border-amber-300/40 rounded-2xl flex items-center justify-between gap-4 text-amber-900 shadow-sm backdrop-blur-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-sm">
+                    <Eye size={22} />
+                  </div>
+                  <div>
+                    <p className="font-black text-sm">מצב צפייה בלבד (Read-Only) 👀</p>
+                    <p className="text-xs text-amber-800/80 font-medium">
+                      רק משתמשים בעלי הרשאת אפ-שייפר מורשים לבצע שינויים בפרמטרים והגדרות בחדר המכונות.
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowReadOnlyNotice(true)}
+                  className="px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-xl shadow hover:bg-amber-600 transition-colors whitespace-nowrap active:scale-95"
+                >
+                  לפרטים
+                </button>
+              </motion.div>
+            )}
 
             {/* Warning Banner - Redesigned for Elegance & Impact */}
             <motion.div 
@@ -1744,7 +1782,10 @@ const AdminPage: React.FC = () => {
                   </div>
 
                   <button 
-                    onClick={() => setIsEditingYear(true)}
+                    onClick={() => {
+                      if (!checkAppShaper()) return;
+                      setIsEditingYear(true);
+                    }}
                     className="w-full py-4 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white rounded-2xl font-black text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 backdrop-blur-sm border border-white/20 active:scale-95"
                   >
                     <Edit2 size={18} />
@@ -1780,6 +1821,7 @@ const AdminPage: React.FC = () => {
                       defaultValue={siteConfig.home_break?.formatted || ''} 
                       readOnly={!hasConfirmedHomeBreakEdit}
                       onClick={() => {
+                        if (!checkAppShaper()) return;
                         if (!hasConfirmedHomeBreakEdit) {
                           showConfirm({
                             title: 'שינוי חוף הבית',
@@ -1811,6 +1853,7 @@ const AdminPage: React.FC = () => {
                       </button>
                       <button 
                         onClick={async () => {
+                          if (!checkAppShaper()) return;
                           const currentValue = addressInputRef.current?.value || '';
                           if (currentValue.trim() === '') {
                             try {
@@ -1923,6 +1966,7 @@ const AdminPage: React.FC = () => {
                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">סטטוס</span>
                               <div 
                                 onClick={() => {
+                                  if (!checkAppShaper()) return;
                                   const newSessions = [...weeklySessions];
                                   newSessions[index] = { ...newSessions[index], isActive: !session.isActive };
                                   setWeeklySessions(newSessions);
@@ -1934,7 +1978,10 @@ const AdminPage: React.FC = () => {
                             </div>
 
                             <button
-                              onClick={() => setSessionToDelete(index)}
+                              onClick={() => {
+                                if (!checkAppShaper()) return;
+                                setSessionToDelete(index);
+                              }}
                               className="w-11 h-11 rounded-xl bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white transition-all duration-300 flex items-center justify-center shadow-sm border border-rose-100 group-hover/item:scale-105"
                             >
                               <Trash2 size={18} />
@@ -1983,6 +2030,7 @@ const AdminPage: React.FC = () => {
                     
                     <button
                       onClick={() => {
+                        if (!checkAppShaper()) return;
                         const newSession = {
                           dayOfWeek: newSessionDay,
                           time: newSessionTime,
@@ -2010,6 +2058,7 @@ const AdminPage: React.FC = () => {
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">יש לשמור את השינויים כדי לעדכן את המערכת</p>
                 <button
                   onClick={async () => {
+                    if (!checkAppShaper()) return;
                     setIsSavingSessions(true);
                     try {
                       await updateSiteConfig({ weeklySessions });
@@ -2030,6 +2079,15 @@ const AdminPage: React.FC = () => {
               </div>
             </div>
 
+            {/* System Monitor Component */}
+            <div className="pt-8 border-t border-slate-200">
+              <SystemMonitor />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'ASSETS' && (
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <AdminAssets />
           </div>
         )}
@@ -2104,6 +2162,7 @@ const AdminPage: React.FC = () => {
               <div className="flex flex-col gap-3 pt-2">
                 <button 
                   onClick={async () => {
+                    if (!checkAppShaper()) return;
                     setIsSavingYear(true);
                     try {
                       await updateYearConfig(yearForm);
@@ -2196,6 +2255,11 @@ const AdminPage: React.FC = () => {
         onClose={() => setMarkdownConfig(prev => ({ ...prev, isOpen: false }))}
         filePath={markdownConfig.path}
         title={markdownConfig.title}
+      />
+
+      <ReadOnlyNoticeModal 
+        isOpen={showReadOnlyNotice}
+        onClose={() => setShowReadOnlyNotice(false)}
       />
     </div>
     </div>

@@ -4,7 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
-import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp, Skull, TriangleAlert, HeartPulse, Zap, Terminal, Filter, Search as SearchIcon, Clock, Wifi, Trash2 } from 'lucide-react';
+import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp, Skull, TriangleAlert, HeartPulse, Zap, Terminal, Filter, Search as SearchIcon, Clock, Wifi, Trash2, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import VercelStatusWidget from './admin/VercelStatusWidget';
 import GitHubCommandCenter from './admin/GitHubCommandCenter';
@@ -12,6 +12,9 @@ import WorkflowVisualizer from './admin/WorkflowVisualizer';
 import { getStorageSizeMB, recalculateStorageFromStorage, recalculateDatabaseSize } from '../utils/storageStats';
 import { sessionReadCount, incrementReadCount, db, saveLogsToDatabase, loadLogsFromDatabase } from '../services/firebase';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
+import { isAppShaperUser } from '../constants';
+import { ReadOnlyNoticeModal } from './admin/ReadOnlyNoticeModal';
 import { get24hBandwidth } from '../utils/bandwidthTracker';
 import { getLogs, SystemLog, LogSeverity, clearLogs } from '../utils/systemLogs';
 import { doc, onSnapshot, collection, getDocs, query, limit } from 'firebase/firestore';
@@ -377,6 +380,18 @@ const QuotaMonitor: React.FC = () => {
  * Interactive log table for system events.
  */
 const TechnicalLogs: React.FC = () => {
+  const { currentUser } = useAuth();
+  const isAppShaper = isAppShaperUser(currentUser);
+  const [showReadOnlyNotice, setShowReadOnlyNotice] = useState(false);
+
+  const checkAppShaper = () => {
+    if (!isAppShaper) {
+      setShowReadOnlyNotice(true);
+      return false;
+    }
+    return true;
+  };
+
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [filter, setFilter] = useState<LogSeverity | 'All'>('All');
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -447,6 +462,7 @@ const TechnicalLogs: React.FC = () => {
           <div className="flex items-center gap-2">
             <button 
               onClick={async () => {
+                if (!checkAppShaper()) return;
                 await saveLogsToDatabase(logs);
                 clearLogs();
                 refreshLogs();
@@ -546,6 +562,11 @@ const TechnicalLogs: React.FC = () => {
           </div>
         )}
       </div>
+
+      <ReadOnlyNoticeModal 
+        isOpen={showReadOnlyNotice}
+        onClose={() => setShowReadOnlyNotice(false)}
+      />
     </div>
   );
 };
@@ -556,9 +577,21 @@ const TechnicalLogs: React.FC = () => {
  */
 const RepairRecovery: React.FC = () => {
   const { retryConnection, isLoading, seedInitialAssets, seedInitialAdmin } = useData();
+  const { currentUser } = useAuth();
+  const isAppShaper = isAppShaperUser(currentUser);
+  const [showReadOnlyNotice, setShowReadOnlyNotice] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
 
+  const checkAppShaper = () => {
+    if (!isAppShaper) {
+      setShowReadOnlyNotice(true);
+      return false;
+    }
+    return true;
+  };
+
   const handleClearCache = async () => {
+    if (!checkAppShaper()) return;
     if (window.confirm('האם אתה בטוח שברצונך לנקות את המטמון המקומי? המערכת תבצע טעינה מחדש.')) {
       try { window.localStorage.clear(); } catch(e){}
       try { window.sessionStorage.clear(); } catch(e){}
@@ -578,6 +611,7 @@ const RepairRecovery: React.FC = () => {
   };
 
   const handleForceSeed = async () => {
+    if (!checkAppShaper()) return;
     if (window.confirm('האם אתה בטוח שברצונך להריץ Seed לנתוני המערכת? פעולה זו תוודא שכל נכסי האתר והרשאות האדמין קיימים.')) {
       setIsRepairing(true);
       try {
@@ -609,7 +643,10 @@ const RepairRecovery: React.FC = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <button 
-          onClick={retryConnection}
+          onClick={() => {
+            if (!checkAppShaper()) return;
+            retryConnection();
+          }}
           disabled={isLoading}
           className="flex flex-col items-center gap-3 p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-indigo-50 hover:border-indigo-200 transition-all group"
         >
@@ -637,6 +674,11 @@ const RepairRecovery: React.FC = () => {
           <p className="text-[9px] text-slate-400 font-bold text-center">שחזור נכסי מערכת והרשאות בסיס</p>
         </button>
       </div>
+
+      <ReadOnlyNoticeModal 
+        isOpen={showReadOnlyNotice}
+        onClose={() => setShowReadOnlyNotice(false)}
+      />
     </div>
   );
 };
@@ -667,6 +709,18 @@ const Gauge = ({ value, label, color, sublabel }: { value: number, label: string
 
 const SystemMonitor: React.FC = () => {
   const { dbStatus, toggleDbStatus, members, events } = useData();
+  const { currentUser } = useAuth();
+  const isAppShaper = isAppShaperUser(currentUser);
+  const [showReadOnlyNotice, setShowReadOnlyNotice] = useState(false);
+
+  const checkAppShaper = () => {
+    if (!isAppShaper) {
+      setShowReadOnlyNotice(true);
+      return false;
+    }
+    return true;
+  };
+
   const [data, setData] = useState<any>({
     dbSize: 0,
     errorRate: 0,
@@ -812,6 +866,7 @@ const SystemMonitor: React.FC = () => {
   }, []);
 
   const handleButtonClick = () => {
+    if (!checkAppShaper()) return;
     if (isKillSwitchActive) {
       // Reconnecting doesn't need a countdown, just do it
       toggleDbStatus();
@@ -882,6 +937,7 @@ const SystemMonitor: React.FC = () => {
 
             <button 
               onClick={async () => {
+                if (!checkAppShaper()) return;
                 setIsRecalculating(true);
                 try {
                   await Promise.all([
@@ -932,6 +988,7 @@ const SystemMonitor: React.FC = () => {
               whileHover={{ scale: 1.05, rotate: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => {
+                if (!checkAppShaper()) return;
                 try { window.localStorage.clear(); } catch(e){}
                 try { window.sessionStorage.clear(); } catch(e){}
                 window.location.reload();
@@ -1217,6 +1274,11 @@ const SystemMonitor: React.FC = () => {
           </ResponsiveContainer>
         </div>
       </div>
+
+      <ReadOnlyNoticeModal 
+        isOpen={showReadOnlyNotice}
+        onClose={() => setShowReadOnlyNotice(false)}
+      />
     </div>
   );
 };

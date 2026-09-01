@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
+import { isAppShaperUser } from '../constants';
 import { storage as firebaseStorage } from '../services/firebase';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { Upload, Trash2, Image as ImageIcon, Type, Loader2, CheckCircle, AlertTriangle, Sparkles, RefreshCw } from 'lucide-react';
+import { Upload, Trash2, Image as ImageIcon, Type, Loader2, CheckCircle, AlertTriangle, Sparkles, RefreshCw, Eye } from 'lucide-react';
+import { ReadOnlyNoticeModal } from '../components/admin/ReadOnlyNoticeModal';
 
 import { SURFBOARD_CATALOG } from '../data/surfboardCatalog';
 
@@ -78,6 +81,10 @@ const AssetImage: React.FC<AssetImageProps> = ({ url, alt, className = "h-24", o
 
 export const AdminAssets: React.FC = () => {
   const { siteAssets, updateSiteAssets, seedInitialAssets, getSiteAssetsBackups, restoreSiteAssetsBackup } = useData();
+  const { currentUser } = useAuth();
+  const isAppShaper = isAppShaperUser(currentUser);
+  const [showReadOnlyNotice, setShowReadOnlyNotice] = useState(false);
+
   const [uploading, setUploading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -89,6 +96,14 @@ export const AdminAssets: React.FC = () => {
   const [loadingBackups, setLoadingBackups] = useState(false);
   const [showBackups, setShowBackups] = useState(false);
   const [restoringBackupId, setRestoringBackupId] = useState<string | null>(null);
+
+  const checkAppShaper = (): boolean => {
+    if (!isAppShaper) {
+      setShowReadOnlyNotice(true);
+      return false;
+    }
+    return true;
+  };
 
   const loadBackups = async () => {
     setLoadingBackups(true);
@@ -103,6 +118,7 @@ export const AdminAssets: React.FC = () => {
   };
 
   const handleRestoreBackup = async (backupId: string) => {
+    if (!checkAppShaper()) return;
     if (!window.confirm('האם אתה בטוח שברצונך לשחזר מגיבוי זה? פעולה זו תדרוס את כל הנכסים הנוכחיים.')) return;
     setRestoringBackupId(backupId);
     try {
@@ -117,10 +133,12 @@ export const AdminAssets: React.FC = () => {
   };
 
   const handleResetAssetsClick = () => {
+    if (!checkAppShaper()) return;
     setShowResetConfirm(true);
   };
 
   const confirmResetAssets = async () => {
+    if (!checkAppShaper()) return;
     setShowResetConfirm(false);
     setIsResetting(true);
     try {
@@ -134,6 +152,7 @@ export const AdminAssets: React.FC = () => {
   };
 
   const handleCleanBrokenLinks = async () => {
+    if (!checkAppShaper()) return;
     try {
       setIsResetting(true);
       setError(null);
@@ -172,6 +191,10 @@ export const AdminAssets: React.FC = () => {
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'staticHero' | 'headers' | 'fonts' | 'loginBg' | 'uiImages' | 'atalefLogo' | 'reefLogo' | 'habalZugLogo' | 'starfish' | 'penguin' | 'mantaRay' | 'shark' | 'orca' | 'cork' | 'wetsuit43' | 'wetsuit32' | 'wetsuit22' | 'wetsuit22ss' | 'sunShirt' | 'surfboardModels' | 'defaultEventImage', fontName?: string) => {
+    if (!checkAppShaper()) {
+      if (e.target) e.target.value = '';
+      return;
+    }
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -253,10 +276,12 @@ export const AdminAssets: React.FC = () => {
   };
 
   const handleDeleteClick = (type: any, urlToDelete: string, fontName?: string) => {
+    if (!checkAppShaper()) return;
     setAssetToDelete({ type, url: urlToDelete, fontName });
   };
 
   const confirmDelete = async () => {
+    if (!checkAppShaper()) return;
     if (!assetToDelete) return;
     const { type, url: urlToDelete, fontName } = assetToDelete;
     setAssetToDelete(null);
@@ -306,6 +331,33 @@ export const AdminAssets: React.FC = () => {
 
   return (
     <div className="space-y-8" dir="rtl">
+      {/* Read-Only Notice Banner for non-AppShapers */}
+      {!isAppShaper && (
+        <div 
+          onClick={() => setShowReadOnlyNotice(true)}
+          className="cursor-pointer bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-500/10 border border-amber-300/60 rounded-2xl p-4 flex items-center justify-between gap-4 text-amber-900 shadow-xs hover:border-amber-400 transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100/80 border border-amber-200 flex items-center justify-center text-lg shrink-0 group-hover:scale-110 transition-transform">
+              👀
+            </div>
+            <div>
+              <p className="text-sm font-black text-amber-900 flex items-center gap-2">
+                <span>פה מסתכלים, לא נוגעים 👀</span>
+                <span className="text-[10px] font-black uppercase tracking-wider bg-amber-200/70 text-amber-800 px-2 py-0.5 rounded-full">צפייה בלבד</span>
+              </p>
+              <p className="text-xs font-bold text-amber-700/90 mt-0.5">עריכה ושינוי של נכסי האתר והעיצוב מורשים אך ורק למשתמשי אפ-שייפר.</p>
+            </div>
+          </div>
+          <button 
+            type="button"
+            className="text-xs font-black px-3.5 py-1.5 bg-amber-100 group-hover:bg-amber-200 text-amber-900 rounded-xl transition-all shrink-0 border border-amber-200"
+          >
+            פרטים
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -379,6 +431,7 @@ export const AdminAssets: React.FC = () => {
               />
               <label
                 htmlFor="upload-static-hero"
+                onClick={(e) => { if (!checkAppShaper()) { e.preventDefault(); } }}
                 className="cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-xl hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-sm shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20 backdrop-blur-sm"
               >
                 {uploading === 'staticHero' ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
@@ -413,6 +466,7 @@ export const AdminAssets: React.FC = () => {
               />
               <label
                 htmlFor="upload-login-bg"
+                onClick={(e) => { if (!checkAppShaper()) { e.preventDefault(); } }}
                 className="cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-xl hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-sm shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20 backdrop-blur-sm"
               >
                 {uploading === 'loginBg' ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
@@ -453,6 +507,7 @@ export const AdminAssets: React.FC = () => {
               />
               <label
                 htmlFor="upload-header"
+                onClick={(e) => { if (!checkAppShaper()) { e.preventDefault(); } }}
                 className="cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-xl hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-sm shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20 backdrop-blur-sm"
               >
                 {uploading === 'headers' ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
@@ -493,6 +548,7 @@ export const AdminAssets: React.FC = () => {
               />
               <label
                 htmlFor="upload-ui-image"
+                onClick={(e) => { if (!checkAppShaper()) { e.preventDefault(); } }}
                 className="cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-xl hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-sm shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20 backdrop-blur-sm"
               >
                 {uploading === 'uiImages' ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
@@ -535,6 +591,7 @@ export const AdminAssets: React.FC = () => {
                   />
                   <label
                     htmlFor={`upload-${asset.id}`}
+                    onClick={(e) => { if (!checkAppShaper()) { e.preventDefault(); } }}
                     className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-lg hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-xs shadow-md shadow-sky-500/20 hover:shadow-sky-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20 w-full"
                   >
                     {uploading === asset.id ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
@@ -576,6 +633,7 @@ export const AdminAssets: React.FC = () => {
                   />
                   <label
                     htmlFor={`upload-${asset.id}`}
+                    onClick={(e) => { if (!checkAppShaper()) { e.preventDefault(); } }}
                     className="cursor-pointer inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-md hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-bold text-[10px] shadow-sm shadow-sky-500/20 hover:shadow-sky-500/40 hover:-translate-y-px active:translate-y-0 active:scale-95 border border-white/20 w-full"
                   >
                     {uploading === asset.id ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
@@ -616,6 +674,7 @@ export const AdminAssets: React.FC = () => {
                   />
                   <label
                     htmlFor={`upload-${asset.id}`}
+                    onClick={(e) => { if (!checkAppShaper()) { e.preventDefault(); } }}
                     className="cursor-pointer inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-md hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-bold text-[10px] shadow-sm shadow-sky-500/20 hover:shadow-sky-500/40 hover:-translate-y-px active:translate-y-0 active:scale-95 border border-white/20 w-full"
                   >
                     {uploading === asset.id ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
@@ -650,6 +709,7 @@ export const AdminAssets: React.FC = () => {
                   />
                   <label
                     htmlFor={`upload-board-${board.type}`}
+                    onClick={(e) => { if (!checkAppShaper()) { e.preventDefault(); } }}
                     className="cursor-pointer inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-md hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-bold text-[10px] shadow-sm shadow-sky-500/20 hover:shadow-sky-500/40 hover:-translate-y-px active:translate-y-0 active:scale-95 border border-white/20 w-full"
                   >
                     {uploading === 'surfboardModels' + board.type ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
@@ -703,6 +763,7 @@ export const AdminAssets: React.FC = () => {
                       />
                       <label
                         htmlFor={`upload-font-${font.id}`}
+                        onClick={(e) => { if (!checkAppShaper()) { e.preventDefault(); } }}
                         className="cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-xl hover:from-sky-400 hover:to-indigo-400 transition-all duration-300 font-black text-sm shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 border border-white/20"
                       >
                         {uploading === 'fonts' + font.id ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
@@ -855,6 +916,12 @@ export const AdminAssets: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Read Only Notice Modal */}
+      <ReadOnlyNoticeModal 
+        isOpen={showReadOnlyNotice} 
+        onClose={() => setShowReadOnlyNotice(false)} 
+      />
     </div>
   );
 };
