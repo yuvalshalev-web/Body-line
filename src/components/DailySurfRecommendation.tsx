@@ -4,7 +4,7 @@ import { Sparkles, AlertTriangle, CheckCircle2, Info, Compass, Save, Loader2 } f
 import WetsuitSVG from './WetsuitSVG';
 import { SurfboardOverlay, ExactSurfboard } from './SurfboardOverlay';
 import { Member } from '../types';
-import { SURFBOARD_CATALOG } from '../data/surfboardCatalog';
+import { SURFBOARD_CATALOG, DEFAULT_MEMBER_SURFBOARD } from '../data/surfboardCatalog';
 import { calculateSurferFormula, calculateMatchScoreDetails, getBoardSize } from '../utils/surfMath';
 import { roundToGritStandard } from '../utils/gritRounding';
 
@@ -50,7 +50,10 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
     );
   }
 
-  const { weight, height, surfingLevel, currentBoardVolume, currentBoardLength, currentBoardType } = member;
+  const { weight, height, surfingLevel } = member;
+  const currentBoardVolume = member.currentBoardVolume !== undefined ? member.currentBoardVolume : DEFAULT_MEMBER_SURFBOARD.volume;
+  const currentBoardLength = member.currentBoardLength || DEFAULT_MEMBER_SURFBOARD.length;
+  const currentBoardType = member.currentBoardType || DEFAULT_MEMBER_SURFBOARD.type;
 
   const baseRec = calculateSurferFormula(weight, height, surfingLevel as any, member.fitnessLevel as any || 'Average');
   let recVol = baseRec.volume;

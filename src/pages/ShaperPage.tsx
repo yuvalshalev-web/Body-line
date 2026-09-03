@@ -29,6 +29,8 @@ import { useRandomHeader } from '../hooks/useRandomHeader';
 import { getShaperConsultation } from '../services/geminiService';
 import Markdown from 'react-markdown';
 
+import { DEFAULT_MEMBER_SURFBOARD } from '../data/surfboardCatalog';
+
 const POPULAR_SURFBOARD_TYPES = [
   'Beginner Softboard (Soft-Top / Foamie)',
   'Performance Softboard',
@@ -58,11 +60,40 @@ const ShaperPage: React.FC = () => {
   const [fitnessLevel, setFitnessLevel] = useState<'Low' | 'Average' | 'High' | 'Elite'>(
     (currentUser?.fitnessLevel as any) || 'Average'
   );
-  const [currentVol, setCurrentVol] = useState<number | undefined>(currentUser?.currentBoardVolume);
-  const [currentLen, setCurrentLen] = useState<string | undefined>(currentUser?.currentBoardLength);
-  const [currentType, setCurrentType] = useState<string>(
-    currentUser?.currentBoardType || POPULAR_SURFBOARD_TYPES[0]
+  // Default for users who haven't set their board dimensions is Long Softboard: 8'0", 112 Liters
+  const [currentVol, setCurrentVol] = useState<number | undefined>(
+    currentUser?.currentBoardVolume !== undefined ? currentUser.currentBoardVolume : DEFAULT_MEMBER_SURFBOARD.volume
   );
+  const [currentLen, setCurrentLen] = useState<string | undefined>(
+    currentUser?.currentBoardLength || DEFAULT_MEMBER_SURFBOARD.length
+  );
+  const [currentType, setCurrentType] = useState<string>(
+    currentUser?.currentBoardType || DEFAULT_MEMBER_SURFBOARD.type
+  );
+
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.weight) setWeight(currentUser.weight < 10 ? currentUser.weight * 10 : currentUser.weight);
+      if (currentUser.height) setHeight(currentUser.height < 3 ? currentUser.height * 100 : currentUser.height);
+      if (currentUser.surfingLevel) setLevel(currentUser.surfingLevel as any);
+      if (currentUser.fitnessLevel) setFitnessLevel(currentUser.fitnessLevel as any);
+      if (currentUser.currentBoardVolume !== undefined) {
+        setCurrentVol(currentUser.currentBoardVolume);
+      } else {
+        setCurrentVol(DEFAULT_MEMBER_SURFBOARD.volume);
+      }
+      if (currentUser.currentBoardLength) {
+        setCurrentLen(currentUser.currentBoardLength);
+      } else {
+        setCurrentLen(DEFAULT_MEMBER_SURFBOARD.length);
+      }
+      if (currentUser.currentBoardType) {
+        setCurrentType(currentUser.currentBoardType);
+      } else {
+        setCurrentType(DEFAULT_MEMBER_SURFBOARD.type);
+      }
+    }
+  }, [currentUser]);
   
   const waterTempRaw = seaStats?.waterTemp ?? coastalWeather?.waterTemp ?? siteConfig?.seaState?.waterTemp;
   const waterTemp = (waterTempRaw !== undefined && waterTempRaw !== null) 
@@ -334,11 +365,22 @@ const ShaperPage: React.FC = () => {
 
                     {/* Current Board Section */}
                     <div className="space-y-6 pt-6 border-t border-slate-100">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Target className="text-[var(--surfer-cyan)]" size={24} />
-                        <h3 className="text-2xl font-black text-[#00426a]">הגלשן הנוכחי שלי</h3>
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-3">
+                          <Target className="text-[var(--surfer-cyan)]" size={24} />
+                          <h3 className="text-2xl font-black text-[#00426a]">הגלשן הנוכחי שלי</h3>
+                        </div>
+                        {(!currentUser?.currentBoardVolume && !currentUser?.currentBoardLength) && (
+                          <span className="text-[11px] font-black bg-cyan-50 text-[var(--ocean-2)] border border-cyan-200 px-3 py-1 rounded-full shadow-xs">
+                            ברירת מחדל (סופטבורד ארוך 8'0" 112L)
+                          </span>
+                        )}
                       </div>
-                      <p className="text-xs text-[#00426a]/50 font-bold">הזן את נתוני הגלשן שלך כדי לקבל ציון התאמה (אופציונלי)</p>
+                      <p className="text-xs text-[#00426a]/60 font-bold">
+                        {(!currentUser?.currentBoardVolume && !currentUser?.currentBoardLength)
+                          ? 'ברירת מחדל: סופטבורד ארוך 8 רגל (8\'0") בנפח 112 ליטרים. באפשרותך לעדכן את סוג ומידות הגלשן שלך ולשמור.'
+                          : 'נתוני הגלשן האישי שלך מעודכנים במערכת. באפשרותך לשנות ולשמור בכל עת.'}
+                      </p>
                       
                       {/* Surfboard Type Dropdown (10 common types in English, beginner to performance) */}
                       <div className="space-y-2">

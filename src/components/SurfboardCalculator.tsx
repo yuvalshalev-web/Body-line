@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Waves, Info, CheckCircle2, AlertTriangle, Ruler, Weight } from 'lucide-react';
 import { Member } from '../types';
 import { calculateSurferFormula, getBoardSize } from '../utils/surfMath';
+import { DEFAULT_MEMBER_SURFBOARD } from '../data/surfboardCatalog';
 
 import { roundToGritStandard } from '../utils/gritRounding';
 
@@ -50,28 +51,30 @@ export const SurfboardCalculator: React.FC<SurfboardCalculatorProps> = ({ formDa
   };
 
   const getVolumeComparison = () => {
-    if (!recommendedVolume || !formData.currentBoardVolume) return null;
+    const currentVol = formData.currentBoardVolume !== undefined ? formData.currentBoardVolume : DEFAULT_MEMBER_SURFBOARD.volume;
+    if (!recommendedVolume || !currentVol) return null;
     
-    const diff = formData.currentBoardVolume - recommendedVolume;
+    const diff = currentVol - recommendedVolume;
     const absDiff = Math.abs(diff);
+    const isDefault = formData.currentBoardVolume === undefined;
     
     if (absDiff <= 2) {
       return {
-        text: 'הנפח מעולה לרמתך!',
+        text: `הנפח (${currentVol}L${isDefault ? ' - ברירת מחדל' : ''}) מעולה לרמתך!`,
         type: 'success',
         icon: CheckCircle2,
         colorClass: 'text-emerald-600 bg-emerald-50/50 border-emerald-200'
       };
     } else if (diff > 2) {
       return {
-        text: `גדול בכ-${Math.round(absDiff)}L. מצוין לימים חלשים.`,
+        text: `גלשן (${currentVol}L${isDefault ? ' - ברירת מחדל סופטבורד' : ''}) גדול בכ-${Math.round(absDiff)}L. מצוין ללמידה ולימים חלשים.`,
         type: 'info',
         icon: Info,
         colorClass: 'text-blue-600 bg-blue-50/50 border-blue-200'
       };
     } else {
       return {
-        text: `קטן בכ-${Math.round(absDiff)}L. עלול להקשות.`,
+        text: `גלשן (${currentVol}L${isDefault ? ' - ברירת מחדל' : ''}) קטן בכ-${Math.round(absDiff)}L. עלול להקשות.`,
         type: 'warning',
         icon: AlertTriangle,
         colorClass: 'text-amber-600 bg-amber-50/50 border-amber-200'
@@ -151,9 +154,9 @@ export const SurfboardCalculator: React.FC<SurfboardCalculatorProps> = ({ formDa
               type="number" 
               value={formData.currentBoardVolume || ''} 
               onChange={e => onChange('currentBoardVolume', parseFloat(e.target.value) || undefined)}
-              placeholder="לדוגמה: 32.5"
+              placeholder="112 (ברירת מחדל: סופטבורד ארוך)"
               step="0.1"
-              className="w-full p-4 tangible-input rounded-2xl outline-none transition-all placeholder:text-[#00426a]/30"
+              className="w-full p-4 tangible-input rounded-2xl outline-none transition-all placeholder:text-[#00426a]/40"
             />
           </div>
         </div>

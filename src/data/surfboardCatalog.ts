@@ -1,3 +1,14 @@
+export const DEFAULT_MEMBER_SURFBOARD = {
+  type: 'Beginner Softboard (Soft-Top / Foamie)',
+  name: 'Softboard',
+  nameHebrew: 'סופטבורד ארוך',
+  volume: 112,
+  length: "8'0\"",
+  lengthFeet: 8,
+  lengthInches: 0,
+  description: 'גלשן ברירת מחדל: סופטבורד ארוך 8\'0" בנפח 112 ליטר לציפה ויציבות מרביות.'
+};
+
 export const SURFBOARD_CATALOG = [
   { 
     id: '1', 
