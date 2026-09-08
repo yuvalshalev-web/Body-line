@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { TrendingUp, Waves, Server, ShieldAlert, Users, Activity, Book, Calendar, HeartHandshake } from 'lucide-react';
+import { TrendingUp, Waves, Server, ShieldAlert, Users, Activity, Book, Calendar, HeartHandshake, HelpCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { isAdminUser } from '../constants';
 import CommunityAnalytics from '../components/CommunityAnalytics';
@@ -47,7 +47,7 @@ const AdminInfoPage: React.FC = () => {
     { id: 'pairs', label: 'התמדה זוגית', icon: <HeartHandshake size={20} /> },
     { id: 'seasonal', label: 'התמדה עונתית', icon: <Calendar size={20} /> },
     { id: 'attendance', label: 'צוללים לסשנים', icon: <Waves size={20} /> },
-    { id: 'help', label: 'מדריך אנליטיקה', icon: <Book size={20} /> },
+    { id: 'help', label: 'איך זה עובד?', icon: <HelpCircle size={20} /> },
   ];
 
   if (!isAdminUser(currentUser) && currentUser?.role !== 'Instructor') {

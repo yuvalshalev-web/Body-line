@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Users, Image, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { isAdminUser } from '../constants';
@@ -15,6 +15,7 @@ interface GlassNavigationBarProps {
 const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId, onChange, theme }) => {
   const { logout, currentUser } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [hoveredTab, setHoveredTab] = React.useState<string | null>(null);
 
   // Mode 1: Tab Bar (used in Admin pages)
@@ -121,8 +122,16 @@ const GlassNavigationBar: React.FC<GlassNavigationBarProps> = ({ items, activeId
           </Link>
         ))}
         <button
-          onClick={logout}
-          className="flex flex-col items-center p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+          id="glass-nav-logout-btn"
+          onClick={async () => {
+            try {
+              await logout();
+              navigate('/', { replace: true });
+            } catch (err) {
+              console.error("Logout error in GlassNavigationBar:", err);
+            }
+          }}
+          className="flex flex-col items-center p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
         >
           <LogOut size={20} />
           <span className="text-[10px] mt-1 font-medium">התנתק</span>

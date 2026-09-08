@@ -147,9 +147,9 @@ const App: React.FC = () => {
     }
   }, [siteConfig.globalColor]);
 
-  const handleLogout = useCallback(() => {
-    logout();
-    navigate('/');
+  const handleLogout = useCallback(async () => {
+    await logout();
+    navigate('/', { replace: true });
   }, [logout, navigate]);
 
   // Global Progress Bar Function

@@ -65,6 +65,8 @@ export interface Member {
   biometricCredentialId?: string;
   biometricEnrolledAt?: string;
   biometricDevice?: string;
+  lastLoginAt?: string;
+  updatedAt?: string;
 }
 
 export interface PerformanceScore {

@@ -212,10 +212,13 @@ export const handleFirestoreError = (error: any, operationType: OperationType, p
   };
   
   const jsonError = JSON.stringify(errInfo);
-  console.error(`[Firestore ${operationType}] Error at ${path}:`, errCode, errMsg);
-  
-  // Log to system logs (localStorage)
-  addLog(`Firestore ${operationType} Error: ${errMsg}`, 'Critical', 'Database', jsonError);
+  const isPermissionDenied = errCode === 'permission-denied' || errMsg.includes('insufficient permissions');
+  if (!isPermissionDenied) {
+    console.error(`[Firestore ${operationType}] Error at ${path}:`, errCode, errMsg);
+    addLog(`Firestore ${operationType} Error: ${errMsg}`, 'Critical', 'Database', jsonError);
+  } else {
+    console.warn(`[Firestore ${operationType}] Permission note at ${path}:`, errMsg);
+  }
   
   // Handle Quota Exceeded
   if (errCode === 'resource-exhausted' || errMsg.toLowerCase().includes('quota') || errMsg.includes('429')) {

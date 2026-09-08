@@ -6,6 +6,8 @@ import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { getDb, auth, trackedGetDoc, trackedOnSnapshot } from '../services/firebase';
 import { Member } from '../types';
 import { syncBiometricFromMemberDoc } from '../utils/biometrics';
+import { ensureFirebaseAuthSession } from '../services/authSession';
+import { isAdminUser } from '../constants';
 
 interface AuthContextType {
   currentUser: Member | null;
@@ -20,32 +22,69 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<Member | null>(null);
+  const isLoggingOutRef = React.useRef(false);
+  const [currentUser, setCurrentUser] = useState<Member | null>(() => {
+    const saved = safeLocalStorage.getItem('habal_zug_user');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.isActive !== false) {
+          return parsed;
+        }
+      } catch (e) {
+        console.error("Error parsing saved user:", e);
+      }
+    }
+    return null;
+  });
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const login = useCallback((user: Member) => {
+    isLoggingOutRef.current = false;
     setCurrentUser(user);
-    // We don't strictly need localStorage anymore as Firebase Auth handles persistence,
-    // but it can be useful for immediate UI rendering before onAuthStateChanged fires.
     safeLocalStorage.setItem('habal_zug_user', JSON.stringify(user));
     if (user) {
       syncBiometricFromMemberDoc(user);
+      ensureFirebaseAuthSession(isAdminUser(user) ? 'Admin' : (user.role || 'Member')).catch(err => {
+        console.warn("Background Firebase Auth session sync note:", err);
+      });
     }
   }, []);
 
   const logout = useCallback(async () => {
+    isLoggingOutRef.current = true;
+    console.log("AuthContext: Initiating complete user logout...");
+    
+    // 1. Immediately wipe stored session tokens synchronously
+    safeLocalStorage.removeItem('habal_zug_user');
+    safeLocalStorage.removeItem('admin_stats_initialized');
+
+    // 2. Immediately clear React user state so the UI transitions to logged-out state instantly
+    setCurrentUser(null);
+    setFirebaseUser(null);
+
+    // 3. Terminate Firebase Auth session
     try {
       await signOut(auth);
+    } catch (error) {
+      console.warn("Error signing out from firebase auth:", error);
+    } finally {
+      // 4. Double check storage and state are completely clean
+      safeLocalStorage.removeItem('habal_zug_user');
+      safeLocalStorage.removeItem('admin_stats_initialized');
       setCurrentUser(null);
       setFirebaseUser(null);
-      safeLocalStorage.removeItem('habal_zug_user');
-    } catch (error) {
-      console.error("Error signing out:", error);
+      setLoading(false);
+      // Keep guard active briefly to prevent any in-flight requests from resurrecting state
+      setTimeout(() => {
+        isLoggingOutRef.current = false;
+      }, 1000);
     }
   }, []);
 
   const updateUser = useCallback((user: Member) => {
+    if (isLoggingOutRef.current) return;
     setCurrentUser(user);
     safeLocalStorage.setItem('habal_zug_user', JSON.stringify(user));
     if (user) {
@@ -62,25 +101,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const authTimeout = setTimeout(() => {
       console.warn("AuthContext: onAuthStateChanged timed out, forcing loading to false");
       setLoading(false);
-    }, 5000);
+    }, 4000);
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       clearTimeout(authTimeout);
       console.log("AuthContext: onAuthStateChanged fired. User:", user?.email || 'null');
+      
+      if (isLoggingOutRef.current) {
+        console.log("AuthContext: onAuthStateChanged ignored during logout");
+        setCurrentUser(null);
+        setFirebaseUser(null);
+        setLoading(false);
+        return;
+      }
+
       setFirebaseUser(user);
       
       if (user) {
+        // If this is the background session user, do not overwrite the human member's state
+        if (user.email?.includes('@bodyline.internal')) {
+          setLoading(false);
+          return;
+        }
+
         try {
           const db = getDb();
           console.log("AuthContext: Fetching member doc for", user.uid);
           
-          // Add a timeout to prevent hanging on flaky connections
-          const fetchPromise = trackedGetDoc(doc(db, 'members', user.uid));
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Timeout fetching member doc")), 5000)
-          );
-          
-          const memberDoc = await Promise.race([fetchPromise, timeoutPromise]) as any;
+          const memberDoc = await trackedGetDoc(doc(db, 'members', user.uid));
           
           if (memberDoc.exists()) {
             const memberData = { id: memberDoc.id, ...memberDoc.data() } as Member;
@@ -89,40 +137,66 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               setCurrentUser(null);
               safeLocalStorage.removeItem('habal_zug_user');
             } else {
+              if (isLoggingOutRef.current) return;
               console.log("AuthContext: Member doc found:", memberData.email);
               syncBiometricFromMemberDoc(memberData);
               setCurrentUser(memberData);
               safeLocalStorage.setItem('habal_zug_user', JSON.stringify(memberData));
             }
-          } else {
-            console.warn("AuthContext: Member doc NOT found for", user.uid);
-            let savedUser = safeLocalStorage.getItem('habal_zug_user');
-            if (savedUser) {
-              const parsedUser = JSON.parse(savedUser);
-              if (parsedUser.isActive === false) {
-                setCurrentUser(null);
-                safeLocalStorage.removeItem('habal_zug_user');
-              } else {
-                setCurrentUser(parsedUser);
-              }
-            }
           }
         } catch (error) {
           console.error("AuthContext: Error fetching user doc in AuthContext:", error);
-          let savedUser = safeLocalStorage.getItem('habal_zug_user');
-          if (savedUser) {
-            const parsedUser = JSON.parse(savedUser);
-            if (parsedUser.isActive === false) {
-              setCurrentUser(null);
-              safeLocalStorage.removeItem('habal_zug_user');
-            } else {
-              setCurrentUser(parsedUser);
-            }
-          }
         }
       } else {
-        setCurrentUser(null);
-        safeLocalStorage.removeItem('habal_zug_user');
+        if (isLoggingOutRef.current) {
+          setCurrentUser(null);
+          setLoading(false);
+          return;
+        }
+
+        // Firebase Auth has no user (e.g. in-memory persistence in iframe).
+        // Check if there is an active session in safeLocalStorage
+        const saved = safeLocalStorage.getItem('habal_zug_user');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.isActive !== false) {
+              if (isLoggingOutRef.current) return;
+              setCurrentUser(parsed);
+              // Ensure Firebase Auth session is established for the restored user
+              ensureFirebaseAuthSession(isAdminUser(parsed) ? 'Admin' : (parsed.role || 'Member')).catch(err => {
+                console.warn("Background Firebase Auth restore note:", err);
+              });
+
+              // Verify in background against Firestore to keep data fresh
+              const db = getDb();
+              getDoc(doc(db, 'members', parsed.id)).then(docSnap => {
+                if (isLoggingOutRef.current) return;
+                if (docSnap.exists()) {
+                  const latest = { id: docSnap.id, ...docSnap.data() } as Member;
+                  if (latest.isActive === false) {
+                    setCurrentUser(null);
+                    safeLocalStorage.removeItem('habal_zug_user');
+                  } else {
+                    if (isLoggingOutRef.current) return;
+                    setCurrentUser(latest);
+                    safeLocalStorage.setItem('habal_zug_user', JSON.stringify(latest));
+                  }
+                }
+              }).catch(err => {
+                console.warn("Background verify failed, keeping cached session:", err);
+              });
+            } else {
+              setCurrentUser(null);
+              safeLocalStorage.removeItem('habal_zug_user');
+            }
+          } catch (e) {
+            setCurrentUser(null);
+            safeLocalStorage.removeItem('habal_zug_user');
+          }
+        } else {
+          setCurrentUser(null);
+        }
       }
       console.log("AuthContext: Setting loading to false");
       setLoading(false);
@@ -131,12 +205,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => unsubscribeAuth();
   }, []);
 
+  // Ensure Firebase Auth session is synchronized whenever currentUser is loaded
+  useEffect(() => {
+    if (currentUser && !firebaseUser && !isLoggingOutRef.current) {
+      ensureFirebaseAuthSession(isAdminUser(currentUser) ? 'Admin' : (currentUser.role || 'Member')).catch(err => {
+        console.warn("Failed to ensure Firebase Auth session on currentUser change:", err);
+      });
+    }
+  }, [currentUser, firebaseUser]);
+
   // Listen to the current user's document for real-time updates
   useEffect(() => {
-    if (!currentUser?.id) return;
+    if (!currentUser?.id || isLoggingOutRef.current) return;
 
     const db = getDb();
     const unsub = trackedOnSnapshot(doc(db, 'members', currentUser.id), (snapshot) => {
+      if (isLoggingOutRef.current) return;
       if (snapshot.exists()) {
         const updatedData = { id: snapshot.id, ...snapshot.data() } as Member;
         if (updatedData.isActive === false) {
@@ -144,6 +228,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           logout();
         } else {
           setCurrentUser(prev => {
+            if (!prev || isLoggingOutRef.current) return null;
             if (JSON.stringify(updatedData) !== JSON.stringify(prev)) {
               safeLocalStorage.setItem('habal_zug_user', JSON.stringify(updatedData));
               return updatedData;

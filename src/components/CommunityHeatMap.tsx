@@ -1,6 +1,5 @@
-
-import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   BarChart, 
   Bar, 
@@ -11,25 +10,34 @@ import {
   ResponsiveContainer, 
   Cell 
 } from 'recharts';
-import { ShieldAlert } from 'lucide-react';
+import { 
+  MapPin, 
+  Activity, 
+  Navigation, 
+  Layers, 
+  BarChart2, 
+  Map, 
+  ShieldAlert,
+  Compass,
+  Building2,
+  Users
+} from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { getCoordinates } from '../utils/geocoding';
-import { getBodyLineStats } from '../utils/bodyLineStats';
+import { calculateDistance } from '../utils/distanceCalculator';
 
 declare const L: any;
 
 interface BinData {
   label: string;
   count: number;
+  min: number;
+  max: number;
   color: string;
+  category: 'infantry' | 'armor' | 'airforce';
 }
 
-interface Stats {
-  near: number;
-  medium: number;
-  far: number;
-  bins: BinData[];
-}
+type ViewMode = 'split' | 'map' | 'chart';
 
 const CommunityHeatMap: React.FC = () => {
   const { members, siteConfig } = useData();
@@ -37,13 +45,111 @@ const CommunityHeatMap: React.FC = () => {
   const mapInstance = useRef<any>(null);
   const heatmapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMounted = useRef(true);
-  const [stats, setStats] = useState<Stats>({ 
-    near: 0, 
-    medium: 0, 
-    far: 0,
-    bins: [] 
-  });
+  
+  const [viewMode, setViewMode] = useState<ViewMode>('split');
+  const [selectedRange, setSelectedRange] = useState<'all' | 'infantry' | 'armor' | 'airforce'>('all');
 
+  // Pre-calculate all distance data, bins, cities and operational KPIs
+  const geoStats = useMemo(() => {
+    const communityMembers = members.filter(m => m.role !== 'Staff');
+    const activeMembers = communityMembers.filter(m => m.isActive);
+
+    const homeLat = siteConfig?.home_break?.lat || 32.1624;
+    const homeLng = siteConfig?.home_break?.lng || 34.8447;
+
+    const binDefinitions: BinData[] = [
+      { label: '0-10', min: 0, max: 10, count: 0, color: '#10b981', category: 'infantry' },
+      { label: '11-20', min: 10, max: 20, count: 0, color: '#10b981', category: 'infantry' },
+      { label: '21-30', min: 20, max: 30, count: 0, color: '#f59e0b', category: 'armor' },
+      { label: '31-40', min: 30, max: 40, count: 0, color: '#f59e0b', category: 'armor' },
+      { label: '41-50', min: 40, max: 50, count: 0, color: '#f59e0b', category: 'armor' },
+      { label: '51-60', min: 50, max: 60, count: 0, color: '#f59e0b', category: 'armor' },
+      { label: '61-70', min: 60, max: 70, count: 0, color: '#f59e0b', category: 'armor' },
+      { label: '71-80', min: 70, max: 80, count: 0, color: '#f59e0b', category: 'armor' },
+      { label: '81-90', min: 80, max: 90, count: 0, color: '#f59e0b', category: 'armor' },
+      { label: '91-100+', min: 90, max: Infinity, count: 0, color: '#ef4444', category: 'airforce' },
+    ];
+
+    let nearCount = 0; // מקומיים 0-20 ק״מ
+    let mediumCount = 0; // סמוכים 21-100 ק״מ
+    let farCount = 0; // מרוחקים 100+ ק״מ
+    let totalDistanceSum = 0;
+    let mappedMembersCount = 0;
+
+    const heatPoints: [number, number, number][] = [];
+    const cityCountMap: { [city: string]: number } = {};
+
+    activeMembers.forEach(member => {
+      let coords = getCoordinates(member.city, member.lat, member.lng);
+      
+      if (coords && coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        const distanceKm = calculateDistance(homeLat, homeLng, coords[0], coords[1]);
+        
+        mappedMembersCount++;
+        totalDistanceSum += distanceKm;
+
+        // Group counts
+        if (distanceKm <= 20) {
+          nearCount++;
+        } else if (distanceKm <= 100) {
+          mediumCount++;
+        } else {
+          farCount++;
+        }
+
+        // Bins
+        const binIndex = binDefinitions.findIndex(b => distanceKm >= b.min && distanceKm < b.max);
+        if (binIndex !== -1) {
+          binDefinitions[binIndex].count++;
+        } else if (distanceKm >= 90) {
+          binDefinitions[9].count++;
+        }
+
+        // Heat points for Leaflet [lat, lng, intensity]
+        heatPoints.push([coords[0], coords[1], 0.85]);
+
+        // City tracking
+        const cityName = member.city?.trim() || 'לא צוינה עיר';
+        cityCountMap[cityName] = (cityCountMap[cityName] || 0) + 1;
+      }
+    });
+
+    const avgDistance = mappedMembersCount > 0 ? (totalDistanceSum / mappedMembersCount).toFixed(1) : '0';
+
+    // Top cities sorted descending
+    const topCities = Object.entries(cityCountMap)
+      .map(([city, count]) => ({
+        city,
+        count,
+        percentage: mappedMembersCount > 0 ? Math.round((count / mappedMembersCount) * 100) : 0
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    return {
+      totalActive: activeMembers.length,
+      mappedCount: mappedMembersCount,
+      near: nearCount,
+      medium: mediumCount,
+      far: farCount,
+      avgDistance,
+      bins: binDefinitions,
+      heatPoints,
+      topCities,
+      homeLat,
+      homeLng
+    };
+  }, [members, siteConfig]);
+
+  // Filtered chart data based on active range selection
+  const filteredBins = useMemo(() => {
+    if (selectedRange === 'all') return geoStats.bins;
+    return geoStats.bins.filter(b => b.category === selectedRange);
+  }, [geoStats.bins, selectedRange]);
+
+  const heatLayerRef = useRef<any>(null);
+
+  // Leaflet Map Initialization & Updates
   useEffect(() => {
     isMounted.current = true;
     return () => { 
@@ -51,8 +157,16 @@ const CommunityHeatMap: React.FC = () => {
       if (heatmapTimeoutRef.current) {
         clearTimeout(heatmapTimeoutRef.current);
       }
+      if (heatLayerRef.current && mapInstance.current) {
+        try {
+          mapInstance.current.removeLayer(heatLayerRef.current);
+        } catch (_) {}
+        heatLayerRef.current = null;
+      }
       if (mapInstance.current) {
-        mapInstance.current.remove();
+        try {
+          mapInstance.current.remove();
+        } catch (_) {}
         mapInstance.current = null;
       }
     };
@@ -63,207 +177,173 @@ const CommunityHeatMap: React.FC = () => {
     if (!isMounted.current || !mapRef.current || typeof L === 'undefined') return;
 
     try {
-      // Center on "חוף הבית" (Home Beach)
-      const homeLat = siteConfig?.home_break?.lat || 32.1624;
-      const homeLng = siteConfig?.home_break?.lng || 34.8447;
-      const homeLatLng = L.latLng(homeLat, homeLng);
+      const container = mapRef.current;
+      const rect = container.getBoundingClientRect();
+      if (rect.width < 10 || rect.height < 10 || container.clientWidth < 10 || container.clientHeight < 10) {
+        setTimeout(initHeatMap, 200);
+        return;
+      }
+
+      const { homeLat, homeLng, heatPoints } = geoStats;
 
       if (!mapInstance.current) {
-        const rect = mapRef.current.getBoundingClientRect();
-        if (rect.width === 0 || rect.height === 0) {
-          // If container has no size, retry later
-          setTimeout(initHeatMap, 200);
-          return;
-        }
-
-        // Initialize map
-        mapInstance.current = L.map(mapRef.current, {
+        mapInstance.current = L.map(container, {
           center: [homeLat, homeLng],
           zoom: 11,
           zoomControl: true,
           scrollWheelZoom: true
         });
 
-        // Add tile layer (OpenStreetMap)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors'
+          attribution: '&copy; OpenStreetMap'
         }).addTo(mapInstance.current);
 
-        // Force a resize check
         setTimeout(() => {
           if (isMounted.current && mapInstance.current) {
             mapInstance.current.invalidateSize();
           }
-        }, 100);
+        }, 150);
       }
 
       const map = mapInstance.current;
-      console.log("Map before whenReady: map exists");
-      if (map) {
-        console.log("Map has layerPointToLatLng:", typeof map.layerPointToLatLng === 'function');
-      }
       if (!map || !isMounted.current || !map.getContainer()) return;
 
-      // Clear existing layers except tiles
+      // Ensure map dimensions are valid before drawing layers
+      map.invalidateSize();
+      const mapSize = map.getSize();
+      if (!mapSize || mapSize.x <= 0 || mapSize.y <= 0) {
+        setTimeout(initHeatMap, 200);
+        return;
+      }
+
+      // Clear layers except tiles
       map.eachLayer((layer: any) => {
-        // Only remove layers that are NOT tile layers
         if (!(layer instanceof L.TileLayer)) {
           map.removeLayer(layer);
         }
       });
+      heatLayerRef.current = null;
 
-      // Prepare data for heatmap and stats
-      const activeMembers = getBodyLineStats(members).activeMembers;
-      const heatPoints: [number, number, number][] = [];
-      
-      let nearCount = 0;
-      let mediumCount = 0;
-      let farCount = 0;
-
-      // Initialize 10 bins with continuous ranges
-      const binDefinitions = [
-        { label: '0-10', min: 0, max: 10, color: '#10b981' },
-        { label: '10-20', min: 10, max: 20, color: '#10b981' },
-        { label: '20-30', min: 20, max: 30, color: '#f59e0b' },
-        { label: '30-40', min: 30, max: 40, color: '#f59e0b' },
-        { label: '40-50', min: 40, max: 50, color: '#f59e0b' },
-        { label: '50-60', min: 50, max: 60, color: '#f59e0b' },
-        { label: '60-70', min: 60, max: 70, color: '#f59e0b' },
-        { label: '70-80', min: 70, max: 80, color: '#f59e0b' },
-        { label: '80-90', min: 80, max: 90, color: '#f59e0b' },
-        { label: '90+', min: 90, max: Infinity, color: '#ef4444' },
-      ];
-
-      const binCounts = binDefinitions.map(b => ({ ...b, count: 0 }));
-      let mappedCount = 0;
-
-      activeMembers.forEach(member => {
-        if (!isMounted.current) return;
-        const coords = getCoordinates(member.city, member.lat, member.lng);
-        if (coords) {
-          mappedCount++;
-          const memberLatLng = L.latLng(coords[0], coords[1]);
-          const distanceKm = homeLatLng.distanceTo(memberLatLng) / 1000;
-
-          // Operational stats calculation
-          if (distanceKm <= 20) nearCount++;
-          else if (distanceKm <= 100) mediumCount++;
-          else farCount++;
-
-          // Bin calculation for chart - using continuous ranges
-          const binIndex = binDefinitions.findIndex(b => distanceKm >= b.min && distanceKm < b.max);
-          if (binIndex !== -1) {
-            binCounts[binIndex].count++;
-          } else if (distanceKm >= 90) {
-            binCounts[9].count++; 
-          }
-
-          // [lat, lng, intensity]
-          heatPoints.push([coords[0], coords[1], 0.8]); 
-        }
+      // Add home break icon marker
+      const homeIcon = L.divIcon({
+        className: 'home-break-marker',
+        html: `
+          <div style="
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 18px;
+          ">
+            🏄
+          </div>
+        `,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19]
       });
 
-      if (isMounted.current) {
-        setStats({ 
-          near: nearCount, 
-          medium: mediumCount, 
-          far: farCount,
-          bins: binCounts.map(b => ({ label: b.label, count: b.count, color: b.color }))
-        });
-      }
+      L.marker([homeLat, homeLng], { icon: homeIcon })
+        .addTo(map)
+        .bindPopup(`
+          <div style="text-align: right; font-family: sans-serif; direction: rtl; padding: 4px;">
+            <b style="color: #0369a1; font-size: 14px;">🏖️ חוף הבית (נקודת הייחוס)</b>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">מרכז הפעילות של הקהילה</div>
+          </div>
+        `);
 
-      // Add home marker
-      L.marker([homeLat, homeLng]).addTo(map).bindPopup('חוף הבית');
-
-      // Add distance circles every 10km up to 100km
+      // Concentric distance radar circles (10km intervals)
       for (let i = 1; i <= 10; i++) {
-        const radius = i * 10000; // 10km, 20km, ...
+        const radius = i * 10000;
         const distanceKm = i * 10;
+        
+        const ringColor = distanceKm <= 20 ? '#10b981' : (distanceKm <= 60 ? '#f59e0b' : '#ef4444');
         
         L.circle([homeLat, homeLng], {
           radius: radius,
-          color: distanceKm <= 20 ? '#10b981' : (distanceKm <= 60 ? '#f59e0b' : '#ef4444'),
+          color: ringColor,
           fill: false,
-          weight: 1,
-          dashArray: i % 2 === 0 ? null : '5, 5',
-          opacity: 0.4 - (i * 0.03), // Outer rings are more subtle
+          weight: 1.5,
+          dashArray: i % 2 === 0 ? null : '6, 6',
+          opacity: Math.max(0.15, 0.45 - (i * 0.03)),
           interactive: false
         }).addTo(map);
       }
 
-      // Add heatmap layer
+      // Heatmap layer or fallback
       if (typeof L.heatLayer === 'function' && heatPoints.length > 0) {
         map.whenReady(() => {
           if (heatmapTimeoutRef.current) {
             clearTimeout(heatmapTimeoutRef.current);
           }
-              heatmapTimeoutRef.current = setTimeout(() => {
+          heatmapTimeoutRef.current = setTimeout(() => {
             try {
-              if (!isMounted.current) return;
+              if (!isMounted.current || !mapInstance.current) return;
               
               const currentMap = mapInstance.current;
-              
-              if (!currentMap) {
-                console.log("Map instance is null, skipping heatmap layer addition");
-                return;
-              }
-              
-              // Check if map is still valid and has required methods
-              if (typeof currentMap.getContainer !== 'function' || !currentMap.getContainer()) {
-                console.log("Map container not ready or destroyed, skipping heatmap layer addition");
-                return;
-              }
-              
-              if (typeof currentMap.layerPointToLatLng !== 'function') {
-                console.log("Map is missing layerPointToLatLng, skipping heatmap layer");
-                return;
-              }
-              
-              console.log("Adding heatmap layer with points:", heatPoints.length);
-              
+              if (typeof currentMap.getContainer !== 'function' || !currentMap.getContainer()) return;
+              const currentSize = currentMap.getSize();
+              if (!currentSize || currentSize.x <= 0 || currentSize.y <= 0) return;
+
               const layer = L.heatLayer(heatPoints, {
-                radius: 45, // Increased radius
-                blur: 20,
-                maxZoom: 10,
+                radius: 42,
+                blur: 22,
+                maxZoom: 11,
                 max: 1.0,
                 gradient: {
-                  0.4: '#3b82f6', // blue
-                  0.6: '#10b981', // green
-                  0.8: '#f59e0b', // yellow/orange
-                  1.0: '#ef4444'  // red
+                  0.3: '#3b82f6', // blue (low)
+                  0.55: '#10b981', // green (medium)
+                  0.75: '#f59e0b', // yellow/orange (high)
+                  1.0: '#ef4444'  // red (very high)
                 }
               });
-              
-              // Final check before adding
+
               if (isMounted.current && mapInstance.current === currentMap) {
                 layer.addTo(currentMap);
+                heatLayerRef.current = layer;
               }
             } catch (e: any) {
-              console.error("Error adding heatmap layer:", e.message || e);
+              console.warn("Heatmap layer warning (using fallback markers):", e.message || e);
+              // Fallback circle markers if heatLayer fails
+              if (mapInstance.current) {
+                heatPoints.forEach(p => {
+                  L.circleMarker([p[0], p[1]], {
+                    radius: 8,
+                    fillColor: '#0ea5e9',
+                    color: '#ffffff',
+                    weight: 2,
+                    opacity: 0.9,
+                    fillOpacity: 0.5
+                  }).addTo(mapInstance.current);
+                });
+              }
             }
-          }, 1000);
-          
-          // Store timeout ID to clear it if needed (though we check isMounted)
+          }, 200);
         });
       } else if (heatPoints.length > 0) {
-        // Fallback: Add glowing pulses for each point if heatmap fails
+        // Fallback pulsing circle markers
         heatPoints.forEach(p => {
           L.circleMarker([p[0], p[1]], {
-            radius: 12,
-            fillColor: '#3b82f6',
-            color: '#fff',
+            radius: 10,
+            fillColor: '#0ea5e9',
+            color: '#ffffff',
             weight: 2,
-            opacity: 0.8,
-            fillOpacity: 0.4,
-            className: 'pulse-marker'
+            opacity: 0.9,
+            fillOpacity: 0.5
           }).addTo(map);
         });
       }
 
-      // Adjust view to fit data or default radius
+      // Fit bounds
       if (heatPoints.length > 0) {
         const bounds = L.latLngBounds(heatPoints.map(p => [p[0], p[1]]));
-        map.fitBounds(bounds.pad(0.1));
+        bounds.extend([homeLat, homeLng]);
+        map.fitBounds(bounds.pad(0.15));
       } else {
         const focusCircle = L.circle([homeLat, homeLng], { radius: 25000 });
         map.fitBounds(focusCircle.getBounds(), { padding: [20, 20] });
@@ -273,125 +353,397 @@ const CommunityHeatMap: React.FC = () => {
     }
   };
 
-  const hasNoPoints = members.length > 0 && stats.bins.reduce((a, b) => a + b.count, 0) === 0;
-
   useEffect(() => {
     let retryCount = 0;
     const maxRetries = 10;
 
     const tryInit = () => {
-      if (typeof L !== 'undefined') {
+      const L = (window as any).L;
+      if (typeof L !== 'undefined' && mapRef.current) {
         initHeatMap();
       } else if (retryCount < maxRetries) {
         retryCount++;
-        setTimeout(tryInit, 500);
+        setTimeout(tryInit, 400);
       }
     };
 
     tryInit();
-  }, [members, siteConfig]);
+  }, [geoStats, viewMode]);
+
+  // Set up ResizeObserver for map container
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0 && entry.contentRect.height > 0 && mapInstance.current) {
+          mapInstance.current.invalidateSize();
+        }
+      }
+    });
+
+    observer.observe(mapRef.current);
+    return () => observer.disconnect();
+  }, [viewMode]);
+
+  // Invalidate map size when view mode changes
+  const handleViewChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    if (mode !== 'chart') {
+      setTimeout(() => {
+        if (mapInstance.current) {
+          mapInstance.current.invalidateSize();
+        }
+      }, 200);
+    }
+  };
+
+  const hasNoPoints = geoStats.totalActive > 0 && geoStats.mappedCount === 0;
 
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="admin-info-card p-8 relative overflow-hidden group min-h-[700px] flex flex-col gap-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="admin-info-card p-6 md:p-8 rounded-[3rem] relative overflow-hidden group flex flex-col gap-6"
+      dir="rtl"
     >
-      {/* Header Overlay */}
-      <div className="flex items-center justify-between z-[1000]">
+      {/* Background Ambience Glow */}
+      <div className="absolute inset-0 overflow-hidden rounded-[3rem] pointer-events-none">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--surfer-cyan)]/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[var(--surfer-pink)]/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2" />
+      </div>
+
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 z-10">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-slate-900 shadow-lg border border-white/20">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
+          <div className="w-14 h-14 rounded-2xl glass-effect flex items-center justify-center text-[#004D40] shadow-inner border border-white/20">
+            <Compass size={28} className="animate-spin-slow" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-[#7A1555] tracking-tight">מפת חום וסטטיסטיקת מרחק</h3>
-            <p className="text-[#000000] text-[8px] font-bold uppercase tracking-[0.3em]">Geographic Density • Operational Ranges</p>
+            <div className="flex items-center gap-3">
+              <h3 className="text-2xl md:text-3xl font-black text-[#7A1555] tracking-tight">
+                פיזור גיאוגרפי ומפת חום
+              </h3>
+              <span className="hidden sm:inline-block px-3 py-1 rounded-full text-xs font-black bg-[#004D40]/10 text-[#004D40] border border-[#004D40]/20">
+                {geoStats.mappedCount} מתוך {geoStats.totalActive} חברים מופו
+              </span>
+            </div>
+            <p className="text-[#000000] text-[10px] font-bold uppercase tracking-[0.25em] opacity-75 mt-0.5">
+              Geographic Intelligence • Density Heatmap & Distance Distribution
+            </p>
           </div>
         </div>
-        
-        {/* Operational Legend */}
-        <div className="flex gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-emerald-500" />
-            <span className="text-[12px] font-bold text-[#000000]">חי"ר (0-20)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-amber-500" />
-            <span className="text-[12px] font-bold text-[#000000]">שיריון (21-100)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <span className="text-[12px] font-bold text-[#000000]">חיל אויר (100+)</span>
-          </div>
+
+        {/* View Mode Controls */}
+        <div className="flex items-center gap-1.5 p-1.5 bg-black/5 rounded-2xl border border-white/30 backdrop-blur-md self-start md:self-auto">
+          <button
+            onClick={() => handleViewChange('split')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+              viewMode === 'split' 
+                ? 'bg-white text-[#7A1555] shadow-md border border-white/50' 
+                : 'text-gray-700 hover:text-black hover:bg-white/40'
+            }`}
+          >
+            <Layers size={16} />
+            <span>משולב (מפה + נתונים)</span>
+          </button>
+
+          <button
+            onClick={() => handleViewChange('map')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+              viewMode === 'map' 
+                ? 'bg-white text-[#7A1555] shadow-md border border-white/50' 
+                : 'text-gray-700 hover:text-black hover:bg-white/40'
+            }`}
+          >
+            <Map size={16} />
+            <span>מפת חום</span>
+          </button>
+
+          <button
+            onClick={() => handleViewChange('chart')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
+              viewMode === 'chart' 
+                ? 'bg-white text-[#7A1555] shadow-md border border-white/50' 
+                : 'text-gray-700 hover:text-black hover:bg-white/40'
+            }`}
+          >
+            <BarChart2 size={16} />
+            <span>גרף פיזור מספרי</span>
+          </button>
         </div>
       </div>
 
-      <div className="flex flex-col gap-8 flex-1">
-        {/* Map Container - Full Width */}
-        <div className="rounded-[2rem] overflow-hidden border border-white/10 shadow-inner relative h-[600px]">
-          <div 
-            ref={mapRef} 
-            className="w-full h-full z-0"
-            style={{ background: '#f0f0f0', minHeight: '600px' }}
-          />
-          
-          {hasNoPoints && (
-            <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-              <div className="admin-info-card p-6 text-center max-w-xs">
-                <ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-                <h4 className="text-lg font-black text-[#7A1555] mb-2">לא נמצאו נתוני מיקום</h4>
-                <p className="text-xs text-[#000000] leading-relaxed">
-                  כדי להציג את מפת החום, יש לוודא שלמשתתפי הקהילה מוגדרת עיר מגורים תקינה בטבלת החברים.
-                </p>
-              </div>
-            </div>
-          )}
-          
-          {/* Stats Overlay on Map */}
-          <div className="absolute bottom-4 left-4 z-[1000]">
-            <div className="glass-effect p-4 rounded-2xl border border-white/20 shadow-xl backdrop-blur-xl">
-              <div className="flex items-center gap-3 mb-1">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[12px] font-black text-[#7A1555] uppercase tracking-widest">חי"ר</span>
-              </div>
-              <p className="text-xl font-black text-[#7A1555]">{stats.near} <span className="text-xs font-normal opacity-50">חברים</span></p>
-              {/* Debug Info */}
-              <div className="mt-2 pt-2 border-t border-white/10">
-                <p className="text-[8px] font-bold text-[#000000] uppercase tracking-tighter">
-                  Mapped: {stats.near + stats.medium + stats.far} Members • Points: {stats.bins.reduce((a, b) => a + b.count, 0)}
-                </p>
-              </div>
-            </div>
+      {/* Top Operational Metrics (KPIs) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 z-10">
+        {/* Infantry (0-20km) */}
+        <div 
+          onClick={() => setSelectedRange(selectedRange === 'infantry' ? 'all' : 'infantry')}
+          className={`p-4 md:p-5 rounded-2xl border transition-all cursor-pointer shadow-sm ${
+            selectedRange === 'infantry'
+              ? 'bg-emerald-500/20 border-emerald-500 shadow-md ring-2 ring-emerald-500/30'
+              : 'glass-effect border-white/30 hover:bg-white/40'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              מקומיים (0-20 ק״מ)
+            </span>
+            <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+              {geoStats.mappedCount > 0 ? Math.round((geoStats.near / geoStats.mappedCount) * 100) : 0}%
+            </span>
           </div>
-
-          {/* Heatmap Color Legend */}
-          <div className="absolute bottom-4 right-4 z-[1000]">
-            <div className="glass-effect p-4 rounded-2xl border border-white/20 shadow-xl backdrop-blur-xl flex flex-col gap-3">
-              <span className="text-[12px] font-black text-[#7A1555] uppercase tracking-widest mb-1">צפיפות משתמשים</span>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#ef4444] shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
-                  <span className="text-[12px] font-bold text-[#000000]">גבוהה מאוד</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#f59e0b] shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
-                  <span className="text-[12px] font-bold text-[#000000]">גבוהה</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#10b981] shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                  <span className="text-[12px] font-bold text-[#000000]">בינונית</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#3b82f6] shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                  <span className="text-[12px] font-bold text-[#000000]">נמוכה</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <p className="text-2xl md:text-3xl font-black text-emerald-950 flex items-baseline gap-1.5">
+            {geoStats.near}
+            <span className="text-xs font-bold text-emerald-700 opacity-80">חברים מקומיים</span>
+          </p>
         </div>
+
+        {/* Armor (21-100km) */}
+        <div 
+          onClick={() => setSelectedRange(selectedRange === 'armor' ? 'all' : 'armor')}
+          className={`p-4 md:p-5 rounded-2xl border transition-all cursor-pointer shadow-sm ${
+            selectedRange === 'armor'
+              ? 'bg-amber-500/20 border-amber-500 shadow-md ring-2 ring-amber-500/30'
+              : 'glass-effect border-white/30 hover:bg-white/40'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-black text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              סמוכים (21-100 ק״מ)
+            </span>
+            <span className="text-[11px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-full">
+              {geoStats.mappedCount > 0 ? Math.round((geoStats.medium / geoStats.mappedCount) * 100) : 0}%
+            </span>
+          </div>
+          <p className="text-2xl md:text-3xl font-black text-amber-950 flex items-baseline gap-1.5">
+            {geoStats.medium}
+            <span className="text-xs font-bold text-amber-700 opacity-80">חברים סמוכים</span>
+          </p>
+        </div>
+
+        {/* Airforce (100+ km) */}
+        <div 
+          onClick={() => setSelectedRange(selectedRange === 'airforce' ? 'all' : 'airforce')}
+          className={`p-4 md:p-5 rounded-2xl border transition-all cursor-pointer shadow-sm ${
+            selectedRange === 'airforce'
+              ? 'bg-red-500/20 border-red-500 shadow-md ring-2 ring-red-500/30'
+              : 'glass-effect border-white/30 hover:bg-white/40'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-black text-red-800 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+              מרוחקים (100+ ק״מ)
+            </span>
+            <span className="text-[11px] font-bold text-red-700 bg-red-100/80 px-2 py-0.5 rounded-full">
+              {geoStats.mappedCount > 0 ? Math.round((geoStats.far / geoStats.mappedCount) * 100) : 0}%
+            </span>
+          </div>
+          <p className="text-2xl md:text-3xl font-black text-red-950 flex items-baseline gap-1.5">
+            {geoStats.far}
+            <span className="text-xs font-bold text-red-700 opacity-80">חברים מרוחקים</span>
+          </p>
+        </div>
+
+        {/* Average Distance */}
+        <div className="p-4 md:p-5 rounded-2xl glass-effect border border-white/30 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-black text-[#004D40] uppercase tracking-wider flex items-center gap-1.5">
+              <Navigation size={14} className="text-[#004D40]" />
+              מרחק ממוצע מהחוף
+            </span>
+            <span className="text-[10px] font-bold text-gray-500">קו אווירי</span>
+          </div>
+          <p className="text-2xl md:text-3xl font-black text-[#004D40] flex items-baseline gap-1.5">
+            {geoStats.avgDistance}
+            <span className="text-xs font-bold text-gray-700 opacity-80">ק״מ בממוצע</span>
+          </p>
+        </div>
+      </div>
+
+      {/* Main Unified Interactive Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 z-10">
+        {/* Map Column */}
+        {(viewMode === 'split' || viewMode === 'map') && (
+          <div className={`${viewMode === 'split' ? 'lg:col-span-7' : 'lg:col-span-12'} flex flex-col gap-4`}>
+            <div className="rounded-[2.5rem] overflow-hidden border border-white/40 shadow-[0_10px_30px_rgba(0,0,0,0.08)] relative h-[520px] bg-slate-100">
+              <div 
+                ref={mapRef} 
+                className="w-full h-full z-0"
+                style={{ minHeight: '520px' }}
+              />
+
+              {hasNoPoints && (
+                <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+                  <div className="admin-info-card p-6 text-center max-w-xs rounded-2xl">
+                    <ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+                    <h4 className="text-lg font-black text-[#7A1555] mb-2">לא נמצאו נתוני מיקום</h4>
+                    <p className="text-xs text-[#000000] leading-relaxed">
+                      כדי להציג את מפת החום, יש לוודא שלמשתתפי הקהילה מוגדרת עיר מגורים תקינה.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Floating Map Legend */}
+              <div className="absolute bottom-4 right-4 z-[1000] max-w-[200px]">
+                <div className="glass-effect p-3.5 rounded-2xl border border-white/30 shadow-xl backdrop-blur-xl">
+                  <p className="text-[11px] font-black text-[#7A1555] uppercase tracking-wider mb-2">צפיפות משתמשים</p>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#ef4444] shadow-sm" />
+                      <span className="text-[11px] font-bold text-gray-800">גבוהה מאוד</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#f59e0b] shadow-sm" />
+                      <span className="text-[11px] font-bold text-gray-800">גבוהה</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#10b981] shadow-sm" />
+                      <span className="text-[11px] font-bold text-gray-800">בינונית</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#3b82f6] shadow-sm" />
+                      <span className="text-[11px] font-bold text-gray-800">נמוכה</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating Range Legend */}
+              <div className="absolute top-4 left-4 z-[1000]">
+                <div className="glass-effect px-3.5 py-2 rounded-xl border border-white/30 shadow-md backdrop-blur-md flex items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="text-[10px] font-bold text-gray-800">0-20 ק״מ</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span className="text-[10px] font-bold text-gray-800">21-100 ק״מ</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-red-500" />
+                    <span className="text-[10px] font-bold text-gray-800">100+ ק״מ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Numeric Distribution Column (Bar Chart & City Breakdown) */}
+        {(viewMode === 'split' || viewMode === 'chart') && (
+          <div className={`${viewMode === 'split' ? 'lg:col-span-5' : 'lg:col-span-12'} flex flex-col gap-6`}>
+            {/* Numeric Bar Chart Card */}
+            <div className="admin-info-card p-6 rounded-[2.5rem] flex flex-col justify-between border border-white/30 shadow-sm flex-1">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl glass-effect flex items-center justify-center text-[#004D40] border border-white/20">
+                    <BarChart2 size={20} />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-black text-[#7A1555] tracking-tight">פיזור מרחקים מספרי</h4>
+                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">כמות חברים לפי מרחקי ק"מ</p>
+                  </div>
+                </div>
+
+                {selectedRange !== 'all' && (
+                  <button 
+                    onClick={() => setSelectedRange('all')}
+                    className="text-[11px] font-black text-[#004D40] hover:underline bg-[#004D40]/10 px-2.5 py-1 rounded-full"
+                  >
+                    הצג הכל
+                  </button>
+                )}
+              </div>
+
+              {/* Bar Chart */}
+              <div className="w-full h-[260px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={filteredBins} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+                    <XAxis 
+                      dataKey="label" 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#1f2937', fontSize: 11, fontWeight: 800 }}
+                      dy={8}
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#1f2937', fontSize: 10, fontWeight: 700 }}
+                      allowDecimals={false}
+                    />
+                    <Tooltip 
+                      cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload as BinData;
+                          return (
+                            <div className="glass-effect p-3 rounded-xl border border-white/30 shadow-xl backdrop-blur-md text-right" dir="rtl">
+                              <p className="text-xs font-black text-[#7A1555] mb-1">טווח מרחק: {data.label} ק״מ</p>
+                              <p className="text-base font-black text-[#004D40] flex items-center gap-1.5">
+                                {data.count} <span className="text-xs font-normal text-gray-700">חברי קהילה</span>
+                              </p>
+                              <p className="text-[10px] font-bold text-gray-500 mt-1">
+                                {geoStats.mappedCount > 0 ? ((data.count / geoStats.mappedCount) * 100).toFixed(1) : 0}% מכלל החברים הממופים
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar dataKey="count" radius={[8, 8, 0, 0]} barSize={viewMode === 'chart' ? 44 : 26}>
+                      {filteredBins.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={entry.color} 
+                          fillOpacity={0.85}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Bottom Top Cities Distribution */}
+              <div className="mt-4 pt-4 border-t border-black/5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-black text-[#7A1555] flex items-center gap-1.5">
+                    <Building2 size={14} className="text-[#004D40]" />
+                    5 הערים המובילות בקהילה
+                  </span>
+                  <span className="text-[10px] font-bold text-gray-500">לפי מקום מגורים</span>
+                </div>
+
+                <div className="space-y-2">
+                  {geoStats.topCities.map((item, idx) => (
+                    <div key={item.city} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 flex-1">
+                        <span className="w-4 text-center font-black text-gray-400">{idx + 1}.</span>
+                        <span className="font-black text-gray-800 min-w-[70px]">{item.city}</span>
+                        <div className="flex-1 bg-black/5 h-2 rounded-full overflow-hidden max-w-[120px] mx-2">
+                          <div 
+                            className="bg-[#004D40] h-full rounded-full transition-all duration-500" 
+                            style={{ width: `${item.percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="font-black text-[#004D40]">{item.count} חברים ({item.percentage}%)</span>
+                    </div>
+                  ))}
+                  {geoStats.topCities.length === 0 && (
+                    <p className="text-xs text-gray-400 text-center py-2">אין נתוני ערים זמינים</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

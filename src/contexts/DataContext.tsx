@@ -4,6 +4,7 @@ import { collection, onSnapshot, query, doc, updateDoc, deleteDoc, setDoc, array
 import { ref, deleteObject, getMetadata } from 'firebase/storage';
 import { 
   getDb, 
+  auth,
   trackedGetDocs, 
   trackedGetDoc,
   trackedAddDoc,
@@ -438,7 +439,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const lastLogKey = 'last_sea_condition_log_hour';
           const lastLogHour = safeLocalStorage.getItem(lastLogKey);
 
-          if (lastLogHour !== hourKey) {
+          if (lastLogHour !== hourKey && auth.currentUser) {
             trackedAddDoc(collection(db, 'seaConditions'), {
               timestamp: now.toISOString(),
               waveHeight: data.waveHeight,
@@ -448,7 +449,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }).then(() => {
               safeLocalStorage.setItem(lastLogKey, hourKey);
             }).catch(err => {
-              console.error("Failed to log sea conditions:", err);
+              console.warn("Could not log sea conditions to Firestore:", err?.message || err);
             });
           }
         }
@@ -646,25 +647,47 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const db = getDb();
     let unsubPerformance: (() => void) | null = null;
-    if (isAdminUser(currentUser) || currentUser.role === 'Instructor') {
-      unsubPerformance = trackedOnSnapshot(query(collection(db, 'performance_scores'), limit(500)), (snapshot) => {
-        const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
-        setPerformanceScores(scores);
-      });
+    const isAuthed = !!(firebaseUser || auth.currentUser);
+
+    if ((isAdminUser(currentUser) || currentUser.role === 'Instructor') && isAuthed) {
+      unsubPerformance = trackedOnSnapshot(
+        query(collection(db, 'performance_scores'), limit(500)),
+        (snapshot) => {
+          const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
+          setPerformanceScores(scores);
+        },
+        (err) => {
+          console.warn('Performance scores listener note:', err?.message || err);
+        }
+      );
     } else if (currentUser.role === 'Member' && firebaseUser) {
       const myScoresQuery = query(collection(db, 'performance_scores'), where('memberId', '==', firebaseUser.uid), limit(100));
-      unsubPerformance = trackedOnSnapshot(myScoresQuery, (snapshot) => {
-        const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
-        setPerformanceScores(scores);
-      });
+      unsubPerformance = trackedOnSnapshot(
+        myScoresQuery,
+        (snapshot) => {
+          const scores = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PerformanceScore));
+          setPerformanceScores(scores);
+        },
+        (err) => {
+          console.warn('Member scores listener note:', err?.message || err);
+        }
+      );
     }
 
     let unsubRequests: (() => void) | null = null;
-    if (isAdminUser(currentUser)) {
-      unsubRequests = trackedOnSnapshot(query(collection(db, 'joinRequests'), limit(200)), (snapshot) => {
-        setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
+    if (isAdminUser(currentUser) && isAuthed) {
+      unsubRequests = trackedOnSnapshot(
+        query(collection(db, 'joinRequests'), limit(200)),
+        (snapshot) => {
+          setJoinRequests(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as JoinRequest)));
+        },
+        (err) => {
+          console.warn('Join requests listener note:', err?.message || err);
+        }
+      );
+      initializeStorageStats().catch(err => {
+        console.warn('Storage stats initialization note:', err?.message || err);
       });
-      initializeStorageStats();
     }
 
     return () => {

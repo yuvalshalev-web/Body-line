@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Users, 
@@ -18,277 +18,13 @@ import { motion } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { parseDate } from '../utils/dateUtils';
 import { EliteStatCard } from './UserAnalytics';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { calculateDistance } from '../utils/distanceCalculator';
-import { getCoordinates } from '../utils/geocoding';
+import { ResponsiveContainer, Cell, PieChart, Pie, Tooltip } from 'recharts';
 import { calculateAge } from '../utils/dateUtils';
 
 const CommunityAnalytics: React.FC = () => {
   const { members, weeklyHistory, siteConfig, yearConfig, isLoading, updateMember } = useData();
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!members || members.length === 0 || !canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const maxRadius = 182; // רדיוס הטבעת החיצונית (הוגדל ב-30% מ-140)
-
-    // Home Break Coords with defaults if missing
-    const homeLat = siteConfig.home_break?.lat || 32.1624;
-    const homeLng = siteConfig.home_break?.lng || 34.8447;
-
-    // Load Logo
-    const logoImg = new Image();
-    logoImg.src = 'https://firebasestorage.googleapis.com/v0/b/body-line-67637.firebasestorage.app/o/site_assets%2FextraLogo_1771271649909?alt=media';
-
-    // Pre-calculate member positions and distances
-    const membersWithCanvasPos = members.map((member, index) => {
-        let distance = 0;
-        const coords = getCoordinates(member.city, member.lat, member.lng);
-        
-        if (homeLat && homeLng && coords) {
-          distance = calculateDistance(homeLat, homeLng, coords[0], coords[1]);
-        } else {
-          distance = member.distance || 0;
-        }
-        
-        const distanceLimit = 30;
-        let relativeRadius = (distance / distanceLimit) * maxRadius;
-        
-        const minRadius = 35; 
-        if (relativeRadius < minRadius) relativeRadius = minRadius;
-        if (relativeRadius > maxRadius) relativeRadius = maxRadius - 10;
-
-        const angle = (index * 137.5) * (Math.PI / 180); 
-
-        const x = centerX + relativeRadius * Math.cos(angle);
-        const y = centerY + relativeRadius * Math.sin(angle);
-        
-        return { ...member, canvasX: x, canvasY: y, calculatedDistance: distance };
-    });
-
-    // 3. הוספת אינטראקציה (נגיעה/עכבר)
-    const handleMouseMove = (e: MouseEvent) => {
-        const mouseX = e.offsetX;
-        const mouseY = e.offsetY;
-        const tooltip = tooltipRef.current;
-        
-        if (!tooltip) return;
-
-        // Get visual coordinates relative to the container for the tooltip
-        const containerRect = canvas.parentElement?.getBoundingClientRect();
-        const visualX = containerRect ? e.clientX - containerRect.left : e.offsetX;
-        const visualY = containerRect ? e.clientY - containerRect.top : e.offsetY;
-
-        let found = false;
-        membersWithCanvasPos.forEach(m => {
-            const dist = Math.sqrt((mouseX - m.canvasX)**2 + (mouseY - m.canvasY)**2);
-            if (dist < 7) {
-                tooltip.style.display = 'block';
-                tooltip.style.left = visualX + 15 + 'px';
-                tooltip.style.top = visualY + 15 + 'px';
-                tooltip.style.padding = '10px 14px';
-                tooltip.style.background = 'rgba(255, 255, 255, 0.98)';
-                tooltip.style.backdropFilter = 'blur(12px)';
-                tooltip.style.borderRadius = '16px';
-                tooltip.style.border = '1.5px solid #00E5FF';
-                tooltip.style.boxShadow = '0 12px 30px rgba(0,0,0,0.12)';
-                tooltip.style.minWidth = '150px';
-                
-                tooltip.innerHTML = `
-                  <div style="display: flex; flex-direction: column; gap: 2px; text-align: right;">
-                    <div style="font-weight: 900; color: #000; font-size: 14px; margin-bottom: 0px; line-height: 1.2;">${m.firstName} ${m.lastName}</div>
-                    
-                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin: 2px 0;">
-                      <div style="font-size: 12px; font-weight: 700; color: #444;">${m.calculatedDistance.toFixed(2)} ק"מ</div>
-                      ${m.avatar ? 
-                        `<img src="${m.avatar}" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;" />` :
-                        `<div style="width: 26px; height: 26px; border-radius: 50%; background: #00426a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 1px solid #eee;">${m.firstName[0]}</div>`
-                      }
-                    </div>
-                    
-                    <div style="font-size: 10px; color: #777; font-weight: 700; margin-top: 2px; border-top: 1px solid #f5f5f5; padding-top: 4px; line-height: 1.1;">
-                      ${m.full_address || m.city || 'לא צוינה'}
-                    </div>
-                  </div>
-                `;
-                found = true;
-            }
-        });
-        if (!found) tooltip.style.display = 'none';
-    };
-
-    canvas.onmousemove = handleMouseMove as any;
-
-    let animationFrameId: number;
-    const startTime = Date.now();
-
-    const render = () => {
-      const elapsed = Date.now() - startTime;
-      const pulseCycle = 4000; // 4 seconds per full cycle
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 1. ציור הטבעות (המרחקים) - Elite Alabaster marble texture
-      const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-      gradient.addColorStop(0.5, 'rgba(245, 245, 245, 0.7)');
-      gradient.addColorStop(1, 'rgba(230, 230, 230, 0.5)');
-      
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2);
-      ctx.fillStyle = gradient;
-      ctx.fill();
-
-      // Frosted, translucent crystal glass ripples
-      const rings = [
-          { r: maxRadius, label: '25km' },
-          { r: maxRadius * 0.6, label: '10km' },
-          { r: maxRadius * 0.3, label: '3km' }
-      ];
-
-      rings.forEach(ring => {
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, ring.r, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-          ctx.fill();
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          
-          // Etched labels
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-          ctx.font = 'bold 14px Inter';
-          ctx.textAlign = 'center';
-          ctx.fillText(ring.label, centerX, centerY - ring.r + 20);
-      });
-
-      // --- RADAR PULSE ANIMATION ---
-      const rippleCount = 3;
-      for (let i = 0; i < rippleCount; i++) {
-        // Offset each ripple's start time
-        const offset = (i / rippleCount) * pulseCycle;
-        const progress = ((elapsed + offset) % pulseCycle) / pulseCycle;
-        
-        // Ease-out expansion
-        const rippleRadius = progress * maxRadius;
-        // Fade out as it expands
-        const opacity = (1 - progress) * 0.4;
-        
-        if (rippleRadius > 24) { // Don't show inside the logo sphere
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, rippleRadius, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(54, 140, 176, ${opacity})`; // #368cb0
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
-      }
-
-      // Draw Logo in a pulsating crystal sphere
-      const logoSize = 48;
-      const coreGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, logoSize);
-      coreGradient.addColorStop(0, 'rgba(0, 251, 255, 0.6)'); // Ocean Cyan
-      coreGradient.addColorStop(1, 'rgba(0, 251, 255, 0)');
-      
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, logoSize, 0, Math.PI * 2);
-      ctx.fillStyle = coreGradient;
-      ctx.fill();
-
-      if (logoImg.complete && logoImg.naturalWidth > 0) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
-        ctx.clip();
-        try {
-          ctx.drawImage(logoImg, centerX - logoSize / 2, centerY - logoSize / 2, logoSize, logoSize);
-        } catch (e) {
-          console.warn("Failed to draw logo image:", e);
-          // Fallback cyan dot if drawImage fails
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
-          ctx.fillStyle = '#00fbff';
-          ctx.fill();
-        }
-        ctx.restore();
-        
-        // Glass reflection on the sphere
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
-        const glassGrad = ctx.createLinearGradient(centerX - logoSize/2, centerY - logoSize/2, centerX + logoSize/2, centerY + logoSize/2);
-        glassGrad.addColorStop(0, 'rgba(255,255,255,0.8)');
-        glassGrad.addColorStop(0.5, 'rgba(255,255,255,0)');
-        ctx.fillStyle = glassGrad;
-        ctx.fill();
-      } else {
-        // Fallback
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2);
-        ctx.fillStyle = '#00fbff';
-        ctx.fill();
-      }
-
-      // 2. ציור משתתפי הקהילה כטיפות מים
-      membersWithCanvasPos.forEach((m) => {
-          // Water Droplet (Circle)
-          const dropRadius = 6;
-          
-          // Color mapping: Green for close, Red for far
-          const ratio = Math.min(m.calculatedDistance / 25, 1);
-          const r = Math.round(34 + ratio * (239 - 34));
-          const g = Math.round(197 + ratio * (68 - 197));
-          const b = Math.round(94 + ratio * (68 - 94));
-          const dropColor = `rgb(${r}, ${g}, ${b})`;
-
-          ctx.save();
-          ctx.translate(m.canvasX, m.canvasY);
-          
-          // Circle shape
-          ctx.beginPath();
-          ctx.arc(0, 0, dropRadius, 0, Math.PI * 2);
-          
-          const dropGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, dropRadius);
-          dropGrad.addColorStop(0, dropColor);
-          dropGrad.addColorStop(1, `rgba(${r},${g},${b},0.8)`);
-          
-          ctx.fillStyle = dropGrad;
-          ctx.shadowColor = `rgba(${r},${g},${b},0.5)`;
-          ctx.shadowBlur = 8;
-          ctx.fill();
-          
-          // Brilliant highlight
-          ctx.beginPath();
-          ctx.arc(-dropRadius*0.3, -dropRadius*0.2, dropRadius*0.2, 0, Math.PI*2);
-          ctx.fillStyle = 'rgba(255,255,255,0.9)';
-          ctx.shadowBlur = 0;
-          ctx.fill();
-          
-          ctx.restore();
-      });
-
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    logoImg.onload = () => {
-      // The render loop is already running, no need to start another one
-    };
-    
-    // Start the render loop
-    animationFrameId = requestAnimationFrame(render);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      canvas.onmousemove = null;
-    };
-  }, [members, siteConfig]);
+  const [compositionTab, setCompositionTab] = useState<'status' | 'age' | 'gender'>('status');
+  const [selectedGroup, setSelectedGroup] = useState<{ type: 'status' | 'age' | 'gender'; name: string } | null>(null);
 
   const stats = useMemo(() => {
     if (!members.length) return null;
@@ -296,51 +32,6 @@ const CommunityAnalytics: React.FC = () => {
     const communityMembers = members.filter(m => m.role !== 'Staff');
     const activeMembers = communityMembers.filter(m => m.isActive);
     const totalMembers = communityMembers.length;
-    
-    // Distance Distribution (Operational & Bins)
-    const homeLat = siteConfig.home_break?.lat || 32.1624;
-    const homeLng = siteConfig.home_break?.lng || 34.8447;
-    
-    let nearCount = 0;
-    let mediumCount = 0;
-    let farCount = 0;
-
-    const binDefinitions = [
-      { label: '0-10', min: 0, max: 10, color: '#e5e0d5' },
-      { label: '11-20', min: 11, max: 20, color: '#dbd5c5' },
-      { label: '21-30', min: 21, max: 30, color: '#d1cab5' },
-      { label: '31-40', min: 31, max: 40, color: '#c7bfa5' },
-      { label: '41-50', min: 41, max: 50, color: '#bdb495' },
-      { label: '51-60', min: 51, max: 60, color: '#b3a985' },
-      { label: '61-70', min: 61, max: 70, color: '#a99e75' },
-      { label: '71-80', min: 71, max: 80, color: '#9f9365' },
-      { label: '81-90', min: 81, max: 90, color: '#958855' },
-      { label: '91-100+', min: 91, max: Infinity, color: '#8b7d45' },
-    ];
-
-    const binCounts = binDefinitions.map(b => ({ ...b, count: 0 }));
-
-    activeMembers.forEach(member => {
-      // Simple distance calculation for analytics (Euclidean approximation is fine for these ranges)
-      if (member.lat && member.lng) {
-        const dLat = (member.lat - homeLat) * 111;
-        const dLng = (member.lng - homeLng) * 111 * Math.cos(homeLat * Math.PI / 180);
-        const distanceKm = Math.sqrt(dLat * dLat + dLng * dLng);
-
-        if (distanceKm <= 20) nearCount++;
-        else if (distanceKm <= 100) mediumCount++;
-        else farCount++;
-
-        const binIndex = binDefinitions.findIndex(b => distanceKm >= b.min && distanceKm <= b.max);
-        if (binIndex !== -1) {
-          binCounts[binIndex].count++;
-        } else if (distanceKm > 100) {
-          binCounts[9].count++;
-        }
-      }
-    });
-
-    const distanceData = binCounts.map(b => ({ label: b.label, count: b.count, color: b.color }));
 
     // 1. Demographics
     const now = new Date();
@@ -834,11 +525,7 @@ const CommunityAnalytics: React.FC = () => {
       globalRetentionIndex,
       churnRate,
       churnedCount,
-      annualChurnRate,
-      near: nearCount,
-      medium: mediumCount,
-      far: farCount,
-      distanceData
+      annualChurnRate
     };
   }, [members, weeklyHistory, siteConfig, yearConfig]);
 
@@ -862,6 +549,66 @@ const CommunityAnalytics: React.FC = () => {
     updateStatuses();
   }, [stats, members, updateMember]);
 
+  const currentTabItems = useMemo(() => {
+    if (!stats) return [];
+    if (compositionTab === 'status') {
+      return [
+        { label: 'אלוף', color: 'var(--surfer-yellow)', hex: '#eab308', count: stats.classificationCounts['אלוף'] },
+        { label: 'מתמיד', color: 'var(--surfer-teal)', hex: '#0d9488', count: stats.classificationCounts['מתמיד'] },
+        { label: 'לא יציב', color: 'var(--surfer-orange)', hex: '#f97316', count: stats.classificationCounts['לא יציב'] },
+        { label: 'בנסיגה', color: 'var(--surfer-magenta)', hex: '#d946ef', count: stats.classificationCounts['בנסיגה'] },
+        { label: 'מזדמן', color: 'var(--surfer-cyan)', hex: '#06b6d4', count: stats.classificationCounts['מזדמן'] }
+      ];
+    }
+    if (compositionTab === 'age') {
+      const items = [
+        { label: 'צעירים (18-25)', color: '#0284c7', hex: '#0284c7', count: stats.ageGroups['צעירים (18-25)'] },
+        { label: 'בוגרים (26-40)', color: '#10b981', hex: '#10b981', count: stats.ageGroups['בוגרים (26-40)'] },
+        { label: 'אמצע החיים (41-60)', color: '#8b5cf6', hex: '#8b5cf6', count: stats.ageGroups['אמצע החיים (41-60)'] },
+        { label: 'ותיקים (60+)', color: '#f59e0b', hex: '#f59e0b', count: stats.ageGroups['ותיקים (60+)'] }
+      ];
+      if (stats.ageGroups['לא צוין / אחר'] > 0) {
+        items.push({ label: 'לא צוין / אחר', color: '#94a3b8', hex: '#94a3b8', count: stats.ageGroups['לא צוין / אחר'] });
+      }
+      return items;
+    }
+    // gender
+    const items = [
+      { label: 'גברים', color: '#2563eb', hex: '#2563eb', count: stats.genderCounts['זכר'] },
+      { label: 'נשים', color: '#db2777', hex: '#db2777', count: stats.genderCounts['נקבה'] }
+    ];
+    if (stats.genderCounts['אחר'] > 0) {
+      items.push({ label: 'אחר / לא צוין', color: '#7c3aed', hex: '#7c3aed', count: stats.genderCounts['אחר'] });
+    }
+    return items;
+  }, [compositionTab, stats]);
+
+  const modalMembers = useMemo(() => {
+    if (!selectedGroup || !stats) return [];
+    if (selectedGroup.type === 'status') {
+      return stats.memberClassifications.filter(m => m.status === selectedGroup.name);
+    }
+    if (selectedGroup.type === 'age') {
+      return stats.memberClassifications.filter(m => {
+        const age = calculateAge(m.birthday || (m as any).birthDate);
+        if (selectedGroup.name === 'צעירים (18-25)') return age !== null && age >= 18 && age <= 25;
+        if (selectedGroup.name === 'בוגרים (26-40)') return age !== null && age >= 26 && age <= 40;
+        if (selectedGroup.name === 'אמצע החיים (41-60)') return age !== null && age >= 41 && age <= 60;
+        if (selectedGroup.name === 'ותיקים (60+)') return age !== null && age > 60;
+        if (selectedGroup.name === 'לא צוין / אחר') return age === null || age < 18;
+        return false;
+      });
+    }
+    if (selectedGroup.type === 'gender') {
+      return stats.memberClassifications.filter(m => {
+        if (selectedGroup.name === 'גברים') return m.gender === 'זכר';
+        if (selectedGroup.name === 'נשים') return m.gender === 'נקבה';
+        return !m.gender || m.gender === 'מעדיפ/ה לא לציין' || m.gender === 'לא בינארי';
+      });
+    }
+    return [];
+  }, [selectedGroup, stats]);
+
   if (isLoading || !stats) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
@@ -871,374 +618,183 @@ const CommunityAnalytics: React.FC = () => {
     );
   }
 
+  const currentTabTooltip = 
+    compositionTab === 'status' 
+      ? 'סיווג התנהגותי של משתתפי הקהילה המבוסס על רצף, תדירות ומועד ההגעה האחרון שלהם לאורך כל זמן הפעילות.'
+      : compositionTab === 'age'
+      ? 'פילוח גילאי חברי הקהילה: צעירים (18-25), בוגרים (26-40), אמצע החיים (41-60) וותיקים (60+).'
+      : 'התפלגות מגדרית של משתתפי הקהילה: גברים, נשים ואחרים.';
+
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 relative" dir="rtl">
       <div className="relative z-10 space-y-12">
-        <div className="hidden">
-          <h1 className="text-5xl md:text-7xl font-black text-[#7A1555] tracking-tighter leading-none uppercase drop-shadow-md">
-            מבט על הקהילה
-          </h1>
-          <p className="max-w-2xl text-xl font-bold text-[#004D40]">
-            ניתוח מעמיק של נתוני הקהילה, דמוגרפיה והתמדה.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="admin-info-card p-8 relative group min-h-[550px] flex flex-col items-center justify-center rounded-[3rem]"
-          >
-            {/* Background elements that need clipping */}
-            <div className="absolute inset-0 overflow-hidden rounded-[3rem] pointer-events-none">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
-            </div>
-            
-            <div className="w-full flex items-center justify-between mb-8 relative z-10 px-2">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[#004D40] shadow-inner border border-white/20">
-                  <Sparkles size={24} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-black text-[#7A1555] tracking-tight">הרכב הקהילה</h3>
-                    <div className="relative group flex items-center">
-                      <Info size={16} className="text-gray-400 hover:text-gray-600 cursor-help transition-colors" />
-                      <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-white/90 backdrop-blur-md text-gray-800 text-xs font-medium rounded-xl shadow-xl border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed">
-                        סיווג התנהגותי של משתתפי הקהילה המבוסס על רצף, תדירות ומועד ההגעה האחרון שלהם לאורך כל זמן הפעילות.
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-[#000000] text-[8px] font-bold uppercase tracking-[0.3em] opacity-80">Community Aura • Ocean Analytics</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Classification Summary */}
-            <div className="w-full mb-6 grid grid-cols-2 sm:grid-cols-5 gap-2 relative z-10">
-              {[
-                { label: 'אלוף', color: 'var(--surfer-yellow)', count: stats.classificationCounts['אלוף'] },
-                { label: 'מתמיד', color: 'var(--surfer-teal)', count: stats.classificationCounts['מתמיד'] },
-                { label: 'לא יציב', color: 'var(--surfer-orange)', count: stats.classificationCounts['לא יציב'] },
-                { label: 'בנסיגה', color: 'var(--surfer-magenta)', count: stats.classificationCounts['בנסיגה'] },
-                { label: 'מזדמן', color: 'var(--surfer-cyan)', count: stats.classificationCounts['מזדמן'] }
-              ].map(group => {
-                const percentage = stats.totalCount > 0 ? Math.round((group.count / stats.totalCount) * 100) : 0;
-                return (
-                  <div 
-                    key={group.label} 
-                    className="flex flex-col items-center p-2 rounded-xl glass-effect border border-white/20 shadow-sm cursor-pointer hover:bg-white/40 transition-colors"
-                    onClick={() => setSelectedGroup(group.label)}
-                  >
-                    <span className="text-xs font-bold mb-1" style={{ color: group.color }}>{group.label}</span>
-                    <span className="text-lg font-black text-gray-900">{percentage}%</span>
-                    <span className="text-[10px] text-gray-500">{group.count} משתמשים</span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Member Classification Pie Chart */}
-            <div className="w-full flex-1 relative min-h-[400px] z-10" style={{ filter: 'drop-shadow(0px 15px 20px rgba(0,0,0,0.2))' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <defs>
-                    <filter id="pie3d" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="8" stdDeviation="6" floodOpacity="0.3" />
-                      <feComponentTransfer>
-                        <feFuncA type="linear" slope="0.9"/>
-                      </feComponentTransfer>
-                    </filter>
-                  </defs>
-                  <Pie
-                    data={[
-                      { name: 'אלוף', value: stats.classificationCounts['אלוף'], color: 'var(--surfer-yellow)' },
-                      { name: 'מתמיד', value: stats.classificationCounts['מתמיד'], color: 'var(--surfer-teal)' },
-                      { name: 'לא יציב', value: stats.classificationCounts['לא יציב'], color: 'var(--surfer-orange)' },
-                      { name: 'בנסיגה', value: stats.classificationCounts['בנסיגה'], color: 'var(--surfer-magenta)' },
-                      { name: 'מזדמן', value: stats.classificationCounts['מזדמן'], color: 'var(--surfer-cyan)' }
-                    ].filter(d => d.value > 0)}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={72}
-                    outerRadius={120}
-                    paddingAngle={5}
-                    dataKey="value"
-                    onClick={(data) => setSelectedGroup(data.name || null)}
-                    style={{ cursor: 'pointer', filter: 'url(#pie3d)' }}
-                    stroke="rgba(255,255,255,0.2)"
-                    strokeWidth={2}
-                    labelLine={false}
-                    label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value, fill }) => {
-                      if (midAngle === undefined || percent === undefined) return null;
-                      const RADIAN = Math.PI / 180;
-                      const sin = Math.sin(-RADIAN * midAngle);
-                      const cos = Math.cos(-RADIAN * midAngle);
-                      const sx = cx + (outerRadius) * cos;
-                      const sy = cy + (outerRadius) * sin;
-                      const mx = cx + (outerRadius + 25) * cos;
-                      const my = cy + (outerRadius + 25) * sin;
-                      const ex = mx + (cos >= 0 ? 1 : -1) * 20;
-                      const ey = my;
-                      const textAnchor = cos >= 0 ? 'start' : 'end';
-
-                      return (
-                        <g style={{ pointerEvents: 'none' }}>
-                          <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" strokeWidth={2} />
-                          <circle cx={ex} cy={ey} r={4} fill={fill} stroke="none" />
-                          <text x={ex + (cos >= 0 ? 1 : -1) * 10} y={ey - 8} textAnchor={textAnchor} fill={fill} className="text-sm font-black" dominantBaseline="central">
-                            {name}
-                          </text>
-                          <text x={ex + (cos >= 0 ? 1 : -1) * 10} y={ey + 10} textAnchor={textAnchor} fill="#333" className="text-[12px] font-bold" dominantBaseline="central">
-                            {`${value} משתמשים (${(percent * 100).toFixed(0)}%)`}
-                          </text>
-                        </g>
-                      );
-                    }}
-                  >
-                    {[
-                      { name: 'אלוף', value: stats.classificationCounts['אלוף'], color: 'var(--surfer-yellow)' },
-                      { name: 'מתמיד', value: stats.classificationCounts['מתמיד'], color: 'var(--surfer-teal)' },
-                      { name: 'לא יציב', value: stats.classificationCounts['לא יציב'], color: 'var(--surfer-orange)' },
-                      { name: 'בנסיגה', value: stats.classificationCounts['בנסיגה'], color: 'var(--surfer-magenta)' },
-                      { name: 'מזדמן', value: stats.classificationCounts['מזדמן'], color: 'var(--surfer-cyan)' }
-                    ].filter(d => d.value > 0).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="glass-effect p-3 rounded-xl border border-white/20 shadow-xl backdrop-blur-md">
-                            <p className="text-xs font-black mb-1" style={{ color: payload[0].payload.color }}>{payload[0].name}</p>
-                            <p className="text-lg font-black text-gray-900">{payload[0].value} <span className="text-[12px] text-gray-700 opacity-80">חברים</span></p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <p className="text-center text-xs text-gray-500 mt-2">לחץ על פלח כדי לראות את רשימת המשתמשים</p>
-            </div>
-
-
-
-          </motion.div>
-
-          {/* Distance Distribution Card */}
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="admin-info-card p-8 flex flex-col min-h-[550px] relative group rounded-[3rem]"
-          >
-            {/* Background elements that need clipping */}
-            <div className="absolute inset-0 overflow-hidden rounded-[3rem] pointer-events-none">
-              {/* Background Glow */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
-            </div>
-
-            <div className="flex items-center gap-3 mb-8 relative z-10">
-              <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[#004D40] shadow-inner border border-white/20">
-                <Activity size={24} />
-              </div>
-              <div>
-                <h3 className="text-xl font-black home-title tracking-tight">פיזור גיאוגרפי של המשתמשים</h3>
-                <p className="home-data-text text-[8px] font-bold uppercase tracking-[0.3em] opacity-60">Distance Distribution • Ocean Analytics</p>
-              </div>
-            </div>
-
-            <div className="flex-1 w-full min-h-[300px] relative z-10">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.distanceData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
-                  <XAxis 
-                    dataKey="label" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#000000', fontSize: 12, fontWeight: 900 }}
-                    dy={10}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#000000', fontSize: 10, fontWeight: 900 }}
-                    allowDecimals={false}
-                    width={30}
-                  />
-                  <Tooltip 
-                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="admin-info-card p-3 rounded-xl border border-white/20">
-                            <p className="text-xs font-black text-[#7A1555] mb-1">{payload[0].payload.label} ק"מ</p>
-                            <p className="text-lg font-black text-[#004D40]">{payload[0].value} <span className="text-[12px] text-[#000000] opacity-80">חברים</span></p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar dataKey="count" radius={[10, 10, 0, 0]} barSize={40}>
-                    {stats.distanceData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.color} 
-                        fillOpacity={0.8}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="mt-6 grid grid-cols-3 gap-4 relative z-10">
-              <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
-                <p className="text-[12px] font-black text-[#000000] uppercase tracking-widest mb-1 opacity-90">חי״ר (0-20 ק״מ)</p>
-                <p className="text-xl font-black text-[#004D40] flex items-baseline gap-1">
-                  {stats.near}
-                  <span className="text-[12px] font-bold text-[#000000] opacity-80">חברים</span>
-                </p>
-              </div>
-              <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
-                <p className="text-[12px] font-black text-[#000000] uppercase tracking-widest mb-1 opacity-90">שיריון (21-100 ק״מ)</p>
-                <p className="text-xl font-black text-[#004D40] flex items-baseline gap-1">
-                  {stats.medium}
-                  <span className="text-[12px] font-bold text-[#000000] opacity-80">חברים</span>
-                </p>
-              </div>
-              <div className="p-4 rounded-2xl glass-effect border border-white/20 shadow-sm group/stat hover:bg-white/10 transition-all">
-                <p className="text-[12px] font-black text-[#000000] uppercase tracking-widest mb-1 opacity-90">חיל אויר (100+ ק״מ)</p>
-                <p className="text-xl font-black text-[#004D40] flex items-baseline gap-1">
-                  {stats.far}
-                  <span className="text-[12px] font-bold text-[#000000] opacity-80">חברים</span>
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Churn & Retention Card - Moved here per user request */}
+        {/* Member Composition Card */}
         <motion.div 
-          whileHover={{ scale: 1.005 }}
-          className="admin-info-card p-10 rounded-[3rem] transition-all duration-500 relative group lg:col-span-2"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="admin-info-card p-6 sm:p-8 relative group min-h-[550px] flex flex-col justify-between rounded-[3rem]"
         >
           {/* Background elements that need clipping */}
           <div className="absolute inset-0 overflow-hidden rounded-[3rem] pointer-events-none">
-            {/* Glossy Shimmer Effect */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--surfer-cyan)]/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
           </div>
           
-          <div className="grid grid-cols-1 gap-12">
-            
-            {/* Low Pulse List */}
-            <div className="space-y-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl glass-effect flex items-center justify-center text-[var(--surfer-pink)] shadow-inner border border-white/10">
-                    <UserMinus size={20} />
-                  </div>
-                  <h4 className="text-xl font-black text-[#7A1555] tracking-tight">דופק נמוך (בסיכון נטישה)</h4>
-                </div>
-                <span className="text-[12px] font-black text-[#000000] uppercase tracking-widest glass-effect px-4 py-1.5 rounded-full border border-white/20 shadow-sm">
-                  לא השתתפו ב-4 הסשנים האחרונים ({stats.lowPulseMembers.length})
-                </span>
-              </div>
-
-              <div className="max-h-[300px] overflow-y-auto custom-scrollbar pl-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {stats.lowPulseMembers.length > 0 ? (
-                    stats.lowPulseMembers.map(member => (
-                      <div key={member.id} className="flex items-center justify-between p-6 rounded-2xl admin-info-card border border-white/20 hover:bg-white/10 transition-all group/item shadow-lg">
-                        <div className="flex items-center gap-4">
-                          {member.avatar ? (
-                            <img 
-                              src={member.avatar} 
-                              alt="" 
-                              className="w-12 h-12 rounded-xl border-2 border-white/20 shadow-inner object-cover flex-shrink-0"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 border-2 border-white/20 shadow-inner flex-shrink-0">
-                              <User size={24} />
-                            </div>
-                          )}
-                          <div>
-                            <p className="text-base font-black text-[#7A1555]">{member.firstName} {member.lastName}</p>
-                            <p className="text-[12px] font-bold text-[#000000] italic">פעם אחרונה: {(member as any).lastSessionDate}</p>
-                          </div>
-                        </div>
-                        <button className="p-3 rounded-xl glass-effect text-[#004D40] opacity-0 group-hover/item:opacity-100 transition-all hover:bg-white/20">
-                          <MessageSquare size={18} />
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="col-span-2 p-12 text-center border border-dashed border-white/20 rounded-3xl glass-effect">
-                      <p className="text-[#000000] font-black uppercase tracking-[0.3em] text-sm">כל המשתמשים פעילים בדופק גבוה ✨</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </motion.div>
-
-
-
-
-        {/* Churn Buckets Section - Unified Background */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-2 admin-info-card p-10 rounded-[4rem] mt-12 relative overflow-hidden group"
-        >
-          {/* Glossy Shimmer for the whole container */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 z-30 pointer-events-none" />
-          
-          <div className="flex items-center justify-between mb-12 relative z-10">
+          <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10 px-2">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center text-[var(--surfer-pink)] shadow-inner border border-white/10">
-                <UserMinus size={24} />
+              <div className="w-12 h-12 rounded-xl glass-effect flex items-center justify-center text-[#004D40] shadow-inner border border-white/20 flex-shrink-0">
+                <Sparkles size={24} />
               </div>
               <div>
-                <h3 className="text-[#7A1555] font-black text-2xl md:text-3xl tracking-tighter uppercase">שיעורי עזיבה Churn rate</h3>
-                <p className="text-[#000000] text-[12px] tracking-[0.3em] mt-1 font-black uppercase">COMMUNITY INSIGHTS • ATTRITION</p>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-black text-[#7A1555] tracking-tight">הרכב הקהילה</h3>
+                  <div className="relative group flex items-center">
+                    <Info size={16} className="text-gray-400 hover:text-gray-600 cursor-help transition-colors" />
+                    <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-white/90 backdrop-blur-md text-gray-800 text-xs font-medium rounded-xl shadow-xl border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed">
+                      {currentTabTooltip}
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[#000000] text-[8px] font-bold uppercase tracking-[0.3em] opacity-80">Community Aura • Ocean Analytics</p>
               </div>
+            </div>
+
+            {/* View Mode Tabs */}
+            <div className="flex items-center gap-1.5 p-1.5 rounded-2xl glass-effect border border-white/20 shadow-inner self-start md:self-auto">
+              <button
+                onClick={() => setCompositionTab('status')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  compositionTab === 'status'
+                    ? 'bg-[#7A1555] text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/40'
+                }`}
+              >
+                סיווג התנהגותי
+              </button>
+              <button
+                onClick={() => setCompositionTab('age')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  compositionTab === 'age'
+                    ? 'bg-[#7A1555] text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/40'
+                }`}
+              >
+                קבוצות גיל
+              </button>
+              <button
+                onClick={() => setCompositionTab('gender')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  compositionTab === 'gender'
+                    ? 'bg-[#7A1555] text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/40'
+                }`}
+              >
+                פילוח מגדר
+              </button>
             </div>
           </div>
 
-          <div className="flex flex-row justify-center gap-16">
-            <EliteStatCard 
-              value={stats.churnRate}
-              label="שיעור עזיבה חודשי"
-              icon={<UserMinus size={18} />}
-              tooltip="אחוז המתאמנים שעזבו את הנבחרת בחודש האחרון."
-            />
-            <EliteStatCard 
-              value={stats.annualChurnRate}
-              label="שיעור עזיבה שנתי"
-              icon={<UserMinus size={18} />}
-              tooltip="אחוז המתאמנים שעזבו את הנבחרת בשנה האחרונה."
-            />
+          {/* Composition Summary Cards */}
+          <div className="w-full mb-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 relative z-10">
+            {currentTabItems.map(group => {
+              const totalInTab = currentTabItems.reduce((acc, curr) => acc + curr.count, 0);
+              const percentage = totalInTab > 0 ? Math.round((group.count / totalInTab) * 100) : 0;
+              return (
+                <div 
+                  key={group.label} 
+                  className="flex flex-col items-center p-2.5 rounded-xl glass-effect border border-white/20 shadow-sm cursor-pointer hover:bg-white/40 transition-all hover:scale-[1.02]"
+                  onClick={() => setSelectedGroup({ type: compositionTab, name: group.label })}
+                >
+                  <span className="text-xs font-black mb-1 truncate max-w-full" style={{ color: group.color }}>{group.label}</span>
+                  <span className="text-lg font-black text-gray-900">{percentage}%</span>
+                  <span className="text-[10px] text-gray-500 font-bold">{group.count} חברים</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Member Classification / Demographics Pie Chart */}
+          <div className="w-full flex-1 relative min-h-[340px] z-10" style={{ filter: 'drop-shadow(0px 15px 20px rgba(0,0,0,0.2))' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <defs>
+                  <filter id="pie3d" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="8" stdDeviation="6" floodOpacity="0.3" />
+                    <feComponentTransfer>
+                      <feFuncA type="linear" slope="0.9"/>
+                    </feComponentTransfer>
+                  </filter>
+                </defs>
+                <Pie
+                  data={currentTabItems.map(item => ({
+                    name: item.label,
+                    value: item.count,
+                    color: item.color,
+                    hex: item.hex
+                  })).filter(d => d.value > 0)}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={68}
+                  outerRadius={110}
+                  paddingAngle={5}
+                  dataKey="value"
+                  onClick={(data) => {
+                    if (data?.name) {
+                      setSelectedGroup({ type: compositionTab, name: data.name });
+                    }
+                  }}
+                  style={{ cursor: 'pointer', filter: 'url(#pie3d)' }}
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth={2}
+                  labelLine={false}
+                  label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value, fill }) => {
+                    if (midAngle === undefined || percent === undefined) return null;
+                    const RADIAN = Math.PI / 180;
+                    const sin = Math.sin(-RADIAN * midAngle);
+                    const cos = Math.cos(-RADIAN * midAngle);
+                    const sx = cx + (outerRadius) * cos;
+                    const sy = cy + (outerRadius) * sin;
+                    const mx = cx + (outerRadius + 25) * cos;
+                    const my = cy + (outerRadius + 25) * sin;
+                    const ex = mx + (cos >= 0 ? 1 : -1) * 20;
+                    const ey = my;
+                    const textAnchor = cos >= 0 ? 'start' : 'end';
+
+                    return (
+                      <g style={{ pointerEvents: 'none' }}>
+                        <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" strokeWidth={2} />
+                        <circle cx={ex} cy={ey} r={4} fill={fill} stroke="none" />
+                        <text x={ex + (cos >= 0 ? 1 : -1) * 10} y={ey - 8} textAnchor={textAnchor} fill={fill} className="text-sm font-black" dominantBaseline="central">
+                          {name}
+                        </text>
+                        <text x={ex + (cos >= 0 ? 1 : -1) * 10} y={ey + 10} textAnchor={textAnchor} fill="#333" className="text-[12px] font-bold" dominantBaseline="central">
+                          {`${value} (${(percent * 100).toFixed(0)}%)`}
+                        </text>
+                      </g>
+                    );
+                  }}
+                >
+                  {currentTabItems.filter(d => d.count > 0).map((entry, index) => (
+                    <Cell key={`cell-${compositionTab}-${index}`} fill={entry.hex || entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="glass-effect p-3 rounded-xl border border-white/20 shadow-xl backdrop-blur-md">
+                          <p className="text-xs font-black mb-1" style={{ color: payload[0].payload.color || payload[0].payload.hex }}>{payload[0].name}</p>
+                          <p className="text-lg font-black text-gray-900">{payload[0].value} <span className="text-[12px] text-gray-700 opacity-80">חברים</span></p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <p className="text-center text-xs text-gray-500 mt-2">לחץ על פלח כדי לראות את רשימת המשתמשים</p>
           </div>
         </motion.div>
-
-        {/* Community Radius Widget */}
-        <div className="admin-info-card p-8 rounded-[3rem] border border-white/40 shadow-[0_20px_40px_rgba(0,0,0,0.1)] flex flex-col items-center mt-8 relative overflow-hidden backdrop-blur-xl bg-white/30">
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--surfer-cyan)]/10 to-transparent pointer-events-none" />
-          
-          <h3 className="text-3xl font-black text-[#000000] tracking-tight mb-8 z-10" style={{ fontFamily: "var(--primary-font)" }}>רדיוס הקהילה</h3>
-          
-          <div className="w-[450px] relative darts-wrapper flex flex-col items-center z-10">
-            <canvas ref={canvasRef} id="dartsBoard" width="450" height="450" className="rounded-full" />
-            <div id="darts-tooltip" ref={tooltipRef} className="absolute hidden pointer-events-none z-50 whitespace-pre-line text-sm text-center"></div>
-          </div>
-        </div>
-
       </div>
 
       {/* Modal for selected group */}
@@ -1251,36 +807,52 @@ const CommunityAnalytics: React.FC = () => {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6 sticky top-0 z-10 pb-2 border-b border-white/10">
-              <h3 className="text-2xl font-black text-[#121212] drop-shadow-md">{selectedGroup}</h3>
+              <div>
+                <h3 className="text-2xl font-black text-[#121212] drop-shadow-md">{selectedGroup.name}</h3>
+                <p className="text-xs text-gray-600 font-bold">
+                  {selectedGroup.type === 'status' ? 'סיווג התנהגותי' : selectedGroup.type === 'age' ? 'קבוצת גיל' : 'מגדר'} • {modalMembers.length} חברים
+                </p>
+              </div>
               <button onClick={() => setSelectedGroup(null)} className="p-2 rounded-full hover:bg-white/10 transition-colors text-[#121212]">
                 <X size={24} />
               </button>
             </div>
             <div className="space-y-4">
-              {stats.memberClassifications
-                .filter(m => m.status === selectedGroup)
-                .map(member => (
-                  <div key={member.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 transition-colors backdrop-blur-md">
-                    <div className="w-12 h-12 rounded-full bg-slate-800 overflow-hidden flex-shrink-0 flex items-center justify-center border-2 border-white/30 shadow-lg">
-                      {member.avatar ? (
-                        <img src={member.avatar} alt={member.firstName} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-[#121212] font-bold text-lg">
-                          {member.firstName[0]}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#121212] drop-shadow-sm">{member.firstName} {member.lastName}</p>
-                      <div className="flex flex-col">
-                        <p className="text-xs text-[#121212]/70">נוכחות: {member.rate.toFixed(0)}%</p>
-                        <p className="text-[10px] text-[#121212]/50 italic">פעם אחרונה: {member.lastSessionDate}</p>
+              {modalMembers.map(member => {
+                const memberAge = calculateAge(member.birthday || (member as any).birthDate);
+                return (
+                  <div key={member.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 transition-colors backdrop-blur-md">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 rounded-full bg-slate-800 overflow-hidden flex-shrink-0 flex items-center justify-center border-2 border-white/30 shadow-lg">
+                        {member.avatar ? (
+                          <img src={member.avatar} alt={member.firstName} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-white font-bold text-lg">
+                            {member.firstName[0]}
+                          </span>
+                        )}
+                      </div>
+                      <div className="truncate">
+                        <p className="font-bold text-[#121212] drop-shadow-sm truncate">{member.firstName} {member.lastName}</p>
+                        <div className="flex items-center gap-2 text-xs text-[#121212]/70">
+                          <span>נוכחות: {member.rate.toFixed(0)}%</span>
+                          {memberAge !== null && <span>• גיל: {memberAge}</span>}
+                          {member.gender && <span>• {member.gender}</span>}
+                        </div>
+                        <p className="text-[10px] text-[#121212]/50 italic truncate">פעם אחרונה: {member.lastSessionDate}</p>
                       </div>
                     </div>
+                    <span 
+                      className="px-2.5 py-1 rounded-full text-[10px] font-black flex-shrink-0 border border-white/20 shadow-sm"
+                      style={{ backgroundColor: member.bgColor || 'rgba(0,0,0,0.05)', color: '#121212' }}
+                    >
+                      {member.status}
+                    </span>
                   </div>
-                ))}
-              {stats.memberClassifications.filter(m => m.status === selectedGroup).length === 0 && (
-                <p className="text-center text-white/50 py-4">אין משתמשים בקבוצה זו</p>
+                );
+              })}
+              {modalMembers.length === 0 && (
+                <p className="text-center text-gray-500 py-4">אין משתמשים בקבוצה זו</p>
               )}
             </div>
           </motion.div>

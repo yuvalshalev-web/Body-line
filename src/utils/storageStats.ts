@@ -1,6 +1,8 @@
-import { doc, increment, collection } from 'firebase/firestore';
+import { doc, increment, collection, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, listAll, getMetadata } from 'firebase/storage';
-import { db, getStorageInstance, trackedGetDoc, trackedSetDoc, trackedUpdateDoc, trackedGetDocs } from '../services/firebase';
+import { db, auth, getStorageInstance, trackedSetDoc, trackedUpdateDoc, trackedGetDocs } from '../services/firebase';
+import { safeLocalStorage } from './storage';
+import { ensureFirebaseAuthSession } from '../services/authSession';
 
 /**
  * Updates the global storage statistics in Firestore.
@@ -8,22 +10,22 @@ import { db, getStorageInstance, trackedGetDoc, trackedSetDoc, trackedUpdateDoc,
 export const updateStorageStats = async (bytes: number) => {
   try {
     const statsRef = doc(db, "admin", "storage_metadata");
-    const statsDoc = await trackedGetDoc(statsRef);
+    const statsDoc = await getDoc(statsRef);
     
     if (!statsDoc.exists()) {
       // Initialize if doesn't exist
-      await trackedSetDoc(statsRef, {
+      await setDoc(statsRef, {
         totalBytes: bytes,
         updatedAt: new Date().toISOString()
       });
     } else {
-      await trackedUpdateDoc(statsRef, {
+      await updateDoc(statsRef, {
         totalBytes: increment(bytes),
         updatedAt: new Date().toISOString()
       });
     }
-  } catch (error) {
-    console.error('Error updating storage stats:', error);
+  } catch (error: any) {
+    console.warn('Note updating storage stats:', error?.message || error);
   }
 };
 
@@ -33,15 +35,15 @@ export const updateStorageStats = async (bytes: number) => {
 export const getStorageSizeMB = async (): Promise<number> => {
   try {
     const statsRef = doc(db, "admin", "storage_metadata");
-    const statsDoc = await trackedGetDoc(statsRef);
+    const statsDoc = await getDoc(statsRef);
     
     if (statsDoc.exists()) {
       const totalBytes = statsDoc.data().totalBytes || 0;
       return Number((totalBytes / (1024 * 1024)).toFixed(2));
     }
     return 0;
-  } catch (error) {
-    console.error('Error getting storage size:', error);
+  } catch (error: any) {
+    console.warn('Note getting storage size:', error?.message || error);
     return 0;
   }
 };
@@ -52,23 +54,23 @@ export const getStorageSizeMB = async (): Promise<number> => {
 export const syncStorageOnUpload = async (fileSizeInBytes: number) => {
   try {
     const statsRef = doc(db, "admin", "storage_metadata");
-    const statsDoc = await trackedGetDoc(statsRef);
+    const statsDoc = await getDoc(statsRef);
     
     if (!statsDoc.exists()) {
-      await trackedSetDoc(statsRef, {
+      await setDoc(statsRef, {
         totalBytes: fileSizeInBytes,
         updatedAt: new Date().toISOString(),
         initialized: true
       });
     } else {
-      await trackedUpdateDoc(statsRef, {
+      await updateDoc(statsRef, {
         totalBytes: increment(fileSizeInBytes),
         updatedAt: new Date().toISOString()
       });
     }
     console.log("✅ המונה עודכן: נוספו " + fileSizeInBytes + " בתים");
-  } catch (error) {
-    console.error("❌ שגיאה בעדכון המונה:", error);
+  } catch (error: any) {
+    console.warn("⚠️ שגיאה בעדכון המונה לאחר העלאה:", error?.message || error);
   }
 };
 
@@ -78,23 +80,23 @@ export const syncStorageOnUpload = async (fileSizeInBytes: number) => {
 export const syncStorageOnDelete = async (fileSizeInBytes: number) => {
   try {
     const statsRef = doc(db, "admin", "storage_metadata");
-    const statsDoc = await trackedGetDoc(statsRef);
+    const statsDoc = await getDoc(statsRef);
     
     if (!statsDoc.exists()) {
-      await trackedSetDoc(statsRef, {
+      await setDoc(statsRef, {
         totalBytes: 0,
         updatedAt: new Date().toISOString(),
         initialized: true
       });
     } else {
-      await trackedUpdateDoc(statsRef, {
+      await updateDoc(statsRef, {
         totalBytes: increment(-fileSizeInBytes),
         updatedAt: new Date().toISOString()
       });
     }
     console.log("🗑️ המונה עודכן: הוסרו " + fileSizeInBytes + " בתים");
-  } catch (error) {
-    console.error("❌ שגיאה בעדכון המונה לאחר מחיקה:", error);
+  } catch (error: any) {
+    console.warn("⚠️ שגיאה בעדכון המונה לאחר מחיקה:", error?.message || error);
   }
 };
 
@@ -188,16 +190,27 @@ export const recalculateDatabaseSize = async (): Promise<number> => {
  */
 export const initializeStorageStats = async () => {
   try {
+    if (safeLocalStorage.getItem('admin_stats_initialized') === 'true') {
+      return;
+    }
+
+    // Ensure Admin session is active before checking admin collections
+    await ensureFirebaseAuthSession('Admin');
+
+    if (!auth.currentUser) {
+      return;
+    }
+
     const storageStatsRef = doc(db, "admin", "storage_metadata");
     const dbStatsRef = doc(db, "admin", "database_metadata");
     
     const [storageSnap, dbSnap] = await Promise.all([
-      trackedGetDoc(storageStatsRef),
-      trackedGetDoc(dbStatsRef)
+      getDoc(storageStatsRef),
+      getDoc(dbStatsRef)
     ]);
 
     if (!storageSnap.exists()) {
-      await trackedSetDoc(storageStatsRef, {
+      await setDoc(storageStatsRef, {
         totalBytes: 11450000,
         updatedAt: new Date().toISOString(),
         initialized: true
@@ -206,7 +219,7 @@ export const initializeStorageStats = async () => {
     }
 
     if (!dbSnap.exists()) {
-      await trackedSetDoc(dbStatsRef, {
+      await setDoc(dbStatsRef, {
         estimatedBytes: 204800,
         estimatedMB: 0.2,
         totalDocs: 100,
@@ -215,11 +228,15 @@ export const initializeStorageStats = async () => {
       });
       console.log("✅ Database stats initialized");
     }
+
+    safeLocalStorage.setItem('admin_stats_initialized', 'true');
   } catch (error: any) {
     if (error?.code === 'unavailable' || error?.message?.includes('offline')) {
       console.warn("⚠️ Stats initialization deferred: Client is offline.");
+    } else if (error?.code === 'permission-denied' || error?.message?.includes('permission-denied') || error?.message?.includes('insufficient permissions')) {
+      console.warn("⚠️ Stats initialization deferred: Waiting for Admin permissions.");
     } else {
-      console.error("❌ Error initializing stats:", error);
+      console.warn("⚠️ Stats initialization note:", error?.message || error);
     }
   }
 };

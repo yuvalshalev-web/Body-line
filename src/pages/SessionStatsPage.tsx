@@ -25,7 +25,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { getBodyLineStats } from '../utils/bodyLineStats';
 import { calculateAge, parseDate, formatDate } from '../utils/dateUtils';
-import { useRandomHeader } from '../hooks/useRandomHeader';
 import { 
   BarChart, 
   Bar, 
@@ -45,7 +44,6 @@ import {
 } from 'recharts';
 
 const SessionStatsPage: React.FC = () => {
-  const headerImage = useRandomHeader();
   const { members: allMembers, weeklyHistory, yearConfig, isLoading } = useData();
   const members = useMemo(() => allMembers.filter(m => m.role !== 'Staff'), [allMembers]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -582,28 +580,9 @@ const SessionStatsPage: React.FC = () => {
   }, [stats]);
 
   return (
-    <div className="max-w-7xl mx-auto font-yehuda pb-20 relative luxury-bg mt-8 rounded-[3rem] overflow-hidden px-4 md:px-0" dir="rtl">
+    <div className="max-w-7xl mx-auto font-yehuda pb-20 relative luxury-bg mt-8 rounded-[3rem] overflow-hidden px-4 md:px-0 pt-8" dir="rtl">
       <div className="grain-overlay" />
       
-      {/* Unified Header */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 mb-12 mt-8">
-        <div className="luxury-card p-6 border border-white/40">
-          <div className="surfboard-hero-container header-wallpaper !py-12 rounded-[3rem]" style={{ '--bg-image': `url(${headerImage})` } as React.CSSProperties}>
-            <div className="header-content-wrapper relative z-20">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-sky-500/10 text-sky-500 mb-2 shadow-sm border border-sky-500/20 relative z-10">
-                <BarChart3 size={40} />
-              </div>
-              <h1 className="main-page-title">
-                <span className="surfer-title text-[#121212]">יומן סשנים</span>
-              </h1>
-              <p className="header-subtitle max-w-2xl mx-auto font-black text-[#121212]">
-                סטטיסטיקות, נוכחות ונתוני גלישה של משתתפי הקהילה 📊
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Sea-Time & Progress Bar Row */}
       <div className="flex flex-col md:flex-row gap-8 items-center justify-center mb-12 w-full px-8">
         <div className="relative group">
@@ -875,81 +854,133 @@ const SessionStatsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="luxury-card p-10 overflow-hidden">
+              <div className="luxury-card p-8 sm:p-10 overflow-hidden">
                 <div className="grain-overlay" />
-                <div className="flex justify-between items-start mb-10 relative z-10">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 relative z-10">
                   <div>
-                    <h3 className="text-slate-800 font-black text-2xl tracking-tighter">פילוח מגדרי ואימפקט</h3>
-                    <p className="text-slate-400 text-[10px] uppercase tracking-[0.2em] mt-1 font-black">Community Mix • Retention Metrics</p>
+                    <h3 className="text-slate-800 font-black text-2xl tracking-tight">פילוח מגדרי: תמהיל והתמדה</h3>
+                    <p className="text-slate-500 text-xs mt-1 font-bold">
+                      השוואה בין גברים לנשים: גודל הקבוצה בקהילה לעומת עקביות ההגעה למפגשים
+                    </p>
                   </div>
-                  <div className="p-3 bg-sky-500/10 text-sky-600 rounded-2xl shadow-sm border border-sky-500/20">
+                  <div className="p-3 bg-sky-500/10 text-sky-600 rounded-2xl shadow-sm border border-sky-500/20 self-start sm:self-auto">
                     <PieChartIcon size={24} />
                   </div>
                 </div>
 
-                {/* Stacked Progress Bar */}
-                <div className="mb-12 relative z-10">
-                  <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
-                    <span>תמהיל קהילתי</span>
-                    <span>{stats?.activeMembersCount} משתתפים פעילים</span>
+                {/* Explanation Banner */}
+                <div className="mb-8 p-4 rounded-2xl bg-sky-50/70 border border-sky-200/60 relative z-10 flex items-start gap-3">
+                  <span className="text-lg">💡</span>
+                  <div className="text-xs text-sky-900 leading-relaxed font-medium">
+                    <strong>איך לקרוא את הנתונים?</strong>
+                    <div className="mt-1 flex flex-col sm:flex-row gap-2 sm:gap-6 text-[11px] text-sky-800">
+                      <span>• <strong>נתח בקהילה:</strong> אחוז החברים מכלל הקהילה</span>
+                      <span>• <strong>שיעור התמדה:</strong> ממוצע הגעה בפועל מתוך כלל המפגשים</span>
+                    </div>
                   </div>
-                  <div className="flex h-4 w-full rounded-full overflow-hidden bg-slate-100 border border-slate-200/50">
+                </div>
+
+                {/* Stacked Progress Bar - Community Share */}
+                <div className="mb-8 relative z-10">
+                  <div className="flex justify-between text-xs font-black text-slate-600 mb-2.5">
+                    <span>1. תמהיל הקהילה (חלוקה מספרית)</span>
+                    <span className="text-slate-400 font-bold">{stats?.activeMembersCount} משתתפים פעילים</span>
+                  </div>
+                  <div className="flex h-5 w-full rounded-full overflow-hidden bg-slate-100 border border-slate-200/80 p-0.5 shadow-inner">
                     {(stats?.genderImpact || []).map((item, idx) => {
                       const width = (item.count / (stats?.activeMembersCount || 1)) * 100;
                       if (width === 0) return null;
                       return (
                         <div 
                           key={idx}
-                          className={`${item.color} h-full transition-all duration-1000 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]`}
+                          className={`${item.color} h-full transition-all duration-1000 first:rounded-r-full last:rounded-l-full`}
                           style={{ 
                             width: `${width}%`
                           }}
+                          title={`${item.label}: ${item.count} (${Math.round(width)}%)`}
                         />
+                      );
+                    })}
+                  </div>
+                  <div className="flex flex-wrap gap-4 mt-2 justify-center sm:justify-start">
+                    {(stats?.genderImpact || []).filter(item => item.count > 0).map((item, idx) => {
+                      const width = Math.round((item.count / (stats?.activeMembersCount || 1)) * 100);
+                      return (
+                        <div key={idx} className="flex items-center gap-1.5 text-xs">
+                          <span className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
+                          <span className="font-black text-slate-700">{item.label}:</span>
+                          <span className="font-bold text-slate-500">{item.count} ({width}%)</span>
+                        </div>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Detailed Metrics */}
-                <div className="space-y-4 relative z-10">
-                  {(stats?.genderImpact || []).map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-5 rounded-3xl bg-white/40 border border-white hover:bg-white/60 transition-all group shadow-sm">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-3 h-3 rounded-full ${item.color} shadow-sm outline outline-2 outline-white`} />
-                        <div>
-                          <span className="text-slate-800 font-black text-lg block leading-none mb-1">{item.label}</span>
-                          <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{item.count} משתתפים</span>
+                {/* Detailed Attendance/Retention Comparison per Gender */}
+                <div className="space-y-4 relative z-10 mb-8">
+                  <div className="text-xs font-black text-slate-600 mb-1">
+                    2. עקביות הגעה והתמדה בפועל (מתוך 100% מפגשים)
+                  </div>
+                  {(stats?.genderImpact || []).filter(item => item.count > 0).map((item, idx) => {
+                    const sharePct = Math.round((item.count / (stats?.activeMembersCount || 1)) * 100);
+                    return (
+                      <div key={idx} className="p-4 sm:p-5 rounded-3xl bg-white/60 border border-slate-200/60 hover:bg-white/80 transition-all shadow-sm">
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-3.5 h-3.5 rounded-full ${item.color} shadow-sm outline outline-2 outline-white`} />
+                            <div>
+                              <span className="text-slate-800 font-black text-base sm:text-lg block leading-tight">{item.label}</span>
+                              <span className="text-slate-500 text-[11px] font-bold">{item.count} חברים ({sharePct}% מהקהילה)</span>
+                            </div>
+                          </div>
+                          
+                          <div className="text-left flex flex-col items-end">
+                            <div className="flex items-baseline gap-1">
+                              <span className={`font-black text-2xl ${item.retention >= 80 ? 'text-emerald-600' : item.retention >= 65 ? 'text-sky-600' : 'text-amber-600'}`}>
+                                {item.retention}%
+                              </span>
+                            </div>
+                            <span className="text-slate-400 text-[10px] font-black uppercase tracking-wider">נוכחות שנתית ממוצעת</span>
+                          </div>
+                        </div>
+
+                        {/* Retention Progress Bar */}
+                        <div className="space-y-1">
+                          <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${item.retention}%` }}
+                              transition={{ duration: 1, delay: idx * 0.1 }}
+                              className={`h-full rounded-full ${item.retention >= 80 ? 'bg-emerald-500' : item.retention >= 65 ? 'bg-sky-500' : 'bg-amber-500'}`}
+                            />
+                          </div>
+                          <div className="flex justify-between text-[10px] text-slate-400 font-bold px-1">
+                            <span>0%</span>
+                            <span>יעד: 80% ומעלה</span>
+                            <span>100%</span>
+                          </div>
                         </div>
                       </div>
-                      
-                      <div className="text-left">
-                        <div className="flex flex-col items-end">
-                          <span className={`font-black text-2xl ${item.retention >= 90 ? 'text-emerald-600' : 'text-slate-800'}`}>
-                            {item.retention}%
-                          </span>
-                          <span className="text-slate-400 text-[9px] uppercase font-black tracking-widest">התמדה</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Age Attendance Rates */}
-                <div className="mt-10 pt-10 border-t border-slate-100 relative z-10">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 px-1">שיעורי השתתפות לפי גיל</h4>
-                  <div className="space-y-6">
+                <div className="mt-8 pt-8 border-t border-slate-100 relative z-10">
+                  <h4 className="text-xs font-black text-slate-600 mb-4 px-1">שיעורי השתתפות שנתיים לפי קבוצת גיל</h4>
+                  <div className="space-y-4">
                     {(stats?.radialPercentages || []).map((item, idx) => (
-                      <div key={idx} className="space-y-2">
-                        <div className="flex justify-between text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">
+                      <div key={idx} className="space-y-1.5 p-3 rounded-2xl bg-slate-50/60 border border-slate-100">
+                        <div className="flex justify-between text-xs font-black text-slate-700 px-1">
                           <span>{item.group}</span>
-                          <span>{item.annual}% שנתי</span>
+                          <span className="font-black text-sky-700">{item.annual}% הגעה</span>
                         </div>
-                        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-2 w-full bg-slate-200/70 rounded-full overflow-hidden">
                           <motion.div 
                             initial={{ width: 0 }}
                             animate={{ width: `${item.annual}%` }}
                             transition={{ duration: 1, delay: idx * 0.1 }}
-                            className="h-full rounded-full shadow-[0_0_8px_rgba(0,0,0,0.1)]"
+                            className="h-full rounded-full"
                             style={{ backgroundColor: item.color }}
                           />
                         </div>
@@ -959,18 +990,20 @@ const SessionStatsPage: React.FC = () => {
                 </div>
 
                 {/* Impact Insight */}
-                <div className="mt-10 pt-10 border-t border-slate-100 relative z-10">
-                  <div className="bg-sky-500/5 p-5 rounded-2xl border border-sky-500/10">
-                    <p className="text-xs text-slate-600 leading-relaxed text-center font-bold">
-                      💡 <strong className="text-sky-700 uppercase tracking-tighter">Impact Insight:</strong> {(() => {
+                <div className="mt-8 pt-6 border-t border-slate-100 relative z-10">
+                  <div className="bg-emerald-50/80 p-4 rounded-2xl border border-emerald-200/60">
+                    <p className="text-xs text-emerald-900 leading-relaxed font-medium">
+                      🎯 <strong className="text-emerald-950 font-black">תובנה מרכזית:</strong> {(() => {
                         const women = stats?.genderImpact?.find(g => g.key === 'women');
                         const men = stats?.genderImpact?.find(g => g.key === 'men');
                         if (women && men && women.retention > men.retention) {
-                          return `קבוצת הנשים שומרת על אחוזי התמדה גבוהים (${women.retention}%) לעומת הגברים (${men.retention}%), מה שמעיד על חיבור עמוק לקהילה.`;
+                          return `קבוצת הנשים מציגה שיעור הגעה ממוצע של ${women.retention}% (לעומת ${men.retention}% אצל הגברים). למרות שגודל הקבוצות שונה, עקביות ההגעה בקרב הנשים גבוהה ב-${women.retention - men.retention}%.`;
+                        } else if (women && men && men.retention > women.retention) {
+                          return `קבוצת הגברים מציגה שיעור הגעה ממוצע של ${men.retention}% (לעומת ${women.retention}% אצל הנשים), פער של ${men.retention - women.retention}%.`;
                         } else if (women && men) {
-                          return `קבוצת הנשים מציגה אחוזי התמדה של ${women.retention}%.`;
+                          return `קבוצות הגברים והנשים שומרות על רמת התמדה זהה של כ-${women.retention}%.`;
                         }
-                        return "ניתוח נתוני התמדה לפי מגדר.";
+                        return "הנתונים מתעדכנים לפי נוכחות בסשנים בפועל.";
                       })()}
                     </p>
                   </div>
@@ -978,12 +1011,14 @@ const SessionStatsPage: React.FC = () => {
               </div>
 
               {/* Age & Activity Card */}
-              <div className="luxury-card p-10">
+              <div className="luxury-card p-5 sm:p-8 md:p-10">
                 <div className="grain-overlay" />
-                <div className="flex items-center gap-4 mb-10 relative z-10">
-                  <div className="p-3 bg-indigo-500/10 text-indigo-600 rounded-xl shadow-sm border border-indigo-500/20"><Activity size={20} /></div>
+                <div className="flex items-center gap-3 sm:gap-4 mb-6 relative z-10" dir="rtl">
+                  <div className="p-3 bg-indigo-500/10 text-indigo-600 rounded-xl shadow-sm border border-indigo-500/20 shrink-0">
+                    <Activity size={20} />
+                  </div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-2xl font-black text-slate-800 tracking-tighter">מדדי פעילות לפי גיל</h3>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">מדדי פעילות לפי גיל</h3>
                     <div className="relative group">
                       <Info size={16} className="text-slate-400 opacity-50 hover:opacity-100 transition-opacity cursor-help" />
                       <div className="absolute right-0 bottom-full mb-2 w-64 p-4 luxury-card !bg-white/95 text-slate-700 text-xs font-black rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 border-white">
@@ -992,17 +1027,30 @@ const SessionStatsPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Custom Responsive Legend for Age Groups */}
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-4 relative z-10" dir="rtl">
+                  {(stats?.ageGroupsBase || []).map((group, idx) => (
+                    <div 
+                      key={idx} 
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-slate-200/80 shadow-2xs text-[11px] font-bold text-slate-700 backdrop-blur-xs"
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: group.color }} />
+                      <span className="whitespace-nowrap">{group.label}</span>
+                    </div>
+                  ))}
+                </div>
                 
-                <div className="h-[300px] w-full mt-4 relative z-10">
+                <div className="h-[260px] sm:h-[280px] w-full relative z-10">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={parallelData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                    <LineChart data={parallelData} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
                       <XAxis 
                         dataKey="name" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }} 
-                        dy={10}
+                        tick={{ fill: '#64748b', fontSize: 11, fontWeight: 900 }} 
+                        dy={8}
                       />
                       <YAxis 
                         domain={[0, 100]} 
@@ -1024,10 +1072,6 @@ const SessionStatsPage: React.FC = () => {
                         }}
                         itemStyle={{ fontWeight: 900, fontSize: '12px' }}
                       />
-                      <Legend 
-                        wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 900 }}
-                        iconType="circle"
-                      />
                       {(stats?.ageGroupsBase || []).map((group, idx) => (
                         <Line 
                           key={idx}
@@ -1035,9 +1079,9 @@ const SessionStatsPage: React.FC = () => {
                           dataKey={group.label} 
                           name={group.label}
                           stroke={group.color} 
-                          strokeWidth={4}
-                          dot={{ r: 5, strokeWidth: 2, fill: '#fff', stroke: group.color }}
-                          activeDot={{ r: 7, strokeWidth: 0, fill: group.color }}
+                          strokeWidth={3.5}
+                          dot={{ r: 4, strokeWidth: 2, fill: '#fff', stroke: group.color }}
+                          activeDot={{ r: 6, strokeWidth: 0, fill: group.color }}
                         />
                       ))}
                     </LineChart>
@@ -1045,44 +1089,60 @@ const SessionStatsPage: React.FC = () => {
                 </div>
 
                 {/* Age Stacked Data - Comparison */}
-                <div className="mt-12 pt-10 border-t border-slate-100 h-[300px] w-full relative z-10">
-                  <div className="flex items-center gap-2 mb-6">
+                <div className="mt-8 pt-8 border-t border-slate-100 relative z-10">
+                  <div className="flex items-center justify-between gap-2 mb-3" dir="rtl">
                     <h4 className="text-lg font-black text-slate-800 tracking-tight">השוואת נוכחות מצטברת</h4>
                   </div>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={stats?.ageStackedData || []} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
-                      <XAxis 
-                        dataKey="name" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }} 
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                          backdropFilter: 'blur(12px)',
-                          borderRadius: '16px', 
-                          border: '1px solid #fff',
-                          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-                          fontFamily: 'Yehuda_CLM',
-                          direction: 'rtl'
-                        }}
-                      />
-                      <Legend 
-                        wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 900 }}
-                      />
-                      <Bar dataKey="חודש אחרון" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="מתחילת שנה" fill="#00426a" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+
+                  {/* Custom Responsive Legend for Comparison */}
+                  <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-4 relative z-10" dir="rtl">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-slate-200/80 shadow-2xs text-[11px] font-bold text-slate-700 backdrop-blur-xs">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-[#0ea5e9] shrink-0" />
+                      <span className="whitespace-nowrap">חודש אחרון</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-slate-200/80 shadow-2xs text-[11px] font-bold text-slate-700 backdrop-blur-xs">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-[#00426a] shrink-0" />
+                      <span className="whitespace-nowrap">מתחילת שנה</span>
+                    </div>
+                  </div>
+
+                  <div className="h-[240px] sm:h-[260px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats?.ageStackedData || []} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+                        <XAxis 
+                          dataKey="name" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fill: '#64748b', fontSize: 11, fontWeight: 900 }} 
+                          dy={8}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }}
+                          tickFormatter={(val) => `${val}%`}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                            backdropFilter: 'blur(12px)',
+                            borderRadius: '16px', 
+                            border: '1px solid #fff',
+                            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
+                            fontFamily: 'Yehuda_CLM',
+                            direction: 'rtl'
+                          }}
+                        />
+                        <Bar dataKey="חודש אחרון" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="מתחילת שנה" fill="#00426a" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-4 font-bold text-center tracking-wide relative z-10" dir="rtl">
+                    * הנתונים מייצגים אחוז השתתפות מתוך פוטנציאל הקבוצה
+                  </p>
                 </div>
-                <p className="text-[9px] text-slate-400 mt-6 font-black text-center uppercase tracking-widest relative z-10">הנתונים מייצגים אחוז השתתפות מתוך פוטנציאל הקבוצה</p>
               </div>
             </div>
 

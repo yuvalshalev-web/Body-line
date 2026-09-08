@@ -8,8 +8,6 @@ import { addLog } from '../utils/systemLogs';
  * even if the main library bundle has issues.
  */
 
-console.log('ErrorBoundary.tsx: Module evaluating (Bootstrap Version)');
-
 interface Props {
   children: React.ReactNode;
 }

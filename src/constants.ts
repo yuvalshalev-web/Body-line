@@ -3,17 +3,24 @@ export const SUPER_ADMIN_EMAIL = 'yuval.shalev@gmail.com';
 
 export const isAdminUser = (user: { role?: string; email?: string } | null | undefined): boolean => {
   if (!user) return false;
+  const email = user.email?.toLowerCase();
   return (
     user.role === 'Admin' ||
     user.role === 'Staff' ||
     user.role === 'Support' ||
-    user.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()
+    email === SUPER_ADMIN_EMAIL.toLowerCase() ||
+    email === 'yuval@shalev.io'
   );
 };
 
 export const isAppShaperUser = (user: { role?: string; email?: string } | null | undefined): boolean => {
   if (!user) return false;
-  return user.role === 'Support' || user.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+  const email = user.email?.toLowerCase();
+  return (
+    user.role === 'Support' ||
+    email === SUPER_ADMIN_EMAIL.toLowerCase() ||
+    email === 'yuval@shalev.io'
+  );
 };
 
 export const RANKS = [

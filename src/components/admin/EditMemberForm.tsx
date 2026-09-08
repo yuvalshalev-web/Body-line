@@ -13,6 +13,7 @@ import { AvailabilityPreferenceSection } from '../AvailabilityPreferenceSection'
 import { processImage } from '../../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../../utils/validation';
 import { useModal } from '../../contexts/ModalContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { SUPER_ADMIN_EMAIL } from '../../constants';
 import { hashPassword } from '../../utils/crypto';
 import { sendPasswordResetEmail, updatePassword } from 'firebase/auth';
@@ -54,6 +55,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
   onClose 
 }) => {
   const { showSuccess, showError, showConfirm } = useModal();
+  const { currentUser, updateUser } = useAuth();
   const [editingMember, setEditingMember] = useState<Member>(member);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
@@ -164,82 +166,84 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
     
     setIsChangingPassword(true);
     try {
-      const isCurrentUser = editingMember.uid && auth.currentUser && editingMember.uid === auth.currentUser.uid;
+      if (newPassword.length < 6) {
+        showError('הסיסמה חייבת להכיל לפחות 6 תווים');
+        setIsChangingPassword(false);
+        return;
+      }
       
-      if (isCurrentUser && auth.currentUser) {
-        // Admin is changing their own password
-        if (newPassword.length < 6) {
-          showError('הסיסמה חייבת להכיל לפחות 6 תווים');
-          setIsChangingPassword(false);
-          return;
-        }
-        
-        if (newPassword !== confirmPassword) {
-          showError('הסיסמאות אינן תואמות');
-          setIsChangingPassword(false);
-          return;
+      if (newPassword !== confirmPassword) {
+        showError('הסיסמאות אינן תואמות');
+        setIsChangingPassword(false);
+        return;
+      }
+
+      const isSelf = editingMember.id === currentUser?.id || (currentUser?.email && editingMember.email?.toLowerCase() === currentUser.email.toLowerCase());
+      const hashed = await hashPassword(newPassword);
+
+      if (isSelf) {
+        // User changing their own password
+        try {
+          if (auth.currentUser) {
+            await updatePassword(auth.currentUser, newPassword);
+          }
+        } catch (authErr) {
+          console.warn('Firebase Auth update skipped:', authErr);
         }
 
-        await updatePassword(auth.currentUser, newPassword);
-        const hashed = await hashPassword(newPassword);
-        const updatedMember = { ...editingMember, password: hashed };
+        const updatedMember = { 
+          ...editingMember, 
+          password: hashed, 
+          isTemporary: false,
+          updatedAt: new Date().toISOString()
+        };
         setEditingMember(updatedMember);
         await onSave(updatedMember);
-        showSuccess('הסיסמה שלך שונתה בהצלחה');
-        setShowPasswordModal(false);
-        setNewPassword('');
-        setConfirmPassword('');
-      } else {
-        // Resetting password for another user (migrated or legacy)
-        if (newPassword.length < 6) {
-          showError('הסיסמה חייבת להכיל לפחות 6 תווים');
-          setIsChangingPassword(false);
-          return;
-        }
-        
-        if (newPassword !== confirmPassword) {
-          showError('הסיסמאות אינן תואמות');
-          setIsChangingPassword(false);
-          return;
-        }
+        updateUser(updatedMember);
 
-        console.log('EditMemberForm: Resetting password for user via API and Firestore', editingMember.email);
-        const response = await fetch('/api/admin/reset-password', {
+        // Sync with server Firestore and Auth
+        fetch('/api/admin/reset-password', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             uid: editingMember.uid || editingMember.id,
             email: editingMember.email,
             password: newPassword,
+            isTemporary: false
           }),
-        });
-
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.error || 'שגיאה בעדכון הסיסמה בשרת האבטחה');
-        }
-
-        const resData = await response.json();
-
-        // Hash and save in Firestore so they stay in sync
-        const hashed = await hashPassword(newPassword);
+        }).catch(e => console.warn('Background Auth sync skipped:', e));
+        
+        showSuccess('הסיסמה שלך עודכנה בהצלחה!');
+      } else {
+        // Admin resetting/setting password for another user
         const updatedMember = { 
           ...editingMember, 
           password: hashed, 
           isTemporary: true,
-          ...(resData.uid ? { uid: resData.uid } : {})
+          updatedAt: new Date().toISOString()
         };
         
+        // Background sync with Firestore and Auth
+        fetch('/api/admin/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            uid: editingMember.uid || editingMember.id,
+            email: editingMember.email,
+            password: newPassword,
+            isTemporary: true
+          }),
+        }).catch(e => console.warn('Background Auth sync skipped:', e));
+
         setEditingMember(updatedMember);
         await onSave(updatedMember);
         
-        showSuccess('הסיסמה עודכנה בהצלחה באופן מיידי!');
-        setShowPasswordModal(false);
-        setNewPassword('');
-        setConfirmPassword('');
+        showSuccess('הסיסמה הזמנית עודכנה בהצלחה! המשתמש יידרש לקבוע סיסמה חדשה בהתחברותו הבאה.');
       }
+
+      setShowPasswordModal(false);
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/requires-recent-login' || (err.message && err.message.includes('requires-recent-login'))) {

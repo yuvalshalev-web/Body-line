@@ -817,7 +817,7 @@ const SystemMonitor: React.FC = () => {
         setStorageSize(mb);
       }
     }, (error) => {
-      console.error("Error listening to storage stats in SystemMonitor:", error);
+      console.warn("Storage stats snapshot note in SystemMonitor:", error?.message || error);
     });
 
     const unsubDb = onSnapshot(dbStatsRef, (snapshot) => {
@@ -826,7 +826,7 @@ const SystemMonitor: React.FC = () => {
         setDbSize(mb);
       }
     }, (error) => {
-      console.error("Error listening to database stats in SystemMonitor:", error);
+      console.warn("Database stats snapshot note in SystemMonitor:", error?.message || error);
     });
 
     return () => {

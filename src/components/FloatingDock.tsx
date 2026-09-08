@@ -269,13 +269,19 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
                 className="relative z-10"
               >
                 <motion.button
+                  id="main-menu-logout-btn"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    logout();
-                    onClose();
+                  onClick={async () => {
+                    try {
+                      onClose();
+                      await logout();
+                      navigate('/', { replace: true });
+                    } catch (err) {
+                      console.error("Logout error in FloatingDock:", err);
+                    }
                   }}
-                  className="flex items-center justify-center gap-3 p-4 rounded-3xl w-full bg-rose-500/20 text-rose-200 hover:bg-rose-500/30 hover:text-white border border-rose-500/30 transition-all group shadow-lg"
+                  className="flex items-center justify-center gap-3 p-4 rounded-3xl w-full bg-rose-500/20 text-rose-200 hover:bg-rose-500/30 hover:text-white border border-rose-500/30 transition-all group shadow-lg cursor-pointer"
                 >
                   <LogOut size={20} strokeWidth={2} className="group-hover:-translate-x-1 transition-transform" />
                   <span className="font-bold tracking-wide">

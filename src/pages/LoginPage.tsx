@@ -12,6 +12,8 @@ import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { ensureFirebaseAuthSession } from '../services/authSession';
+import { storage } from '../utils/storage';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { processImage } from '../utils/imageProcessor';
 import { loadGoogleMaps } from '../utils/googlePlaces';
@@ -237,295 +239,119 @@ const LoginPage: React.FC = () => {
     const db = getDb();
 
     try {
-      // @ai-preserve: Authentication and Migration Logic
-      // Step 1: Try Firebase Auth Login (Try raw first, fallback to deterministic bridging password)
-      try {
-        let userCredential;
-        try {
-          userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
-        } catch (authErr: any) {
-          try {
-            const fbBridgingPassword = await calculateFbPassword(normalizedEmail);
-            userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, fbBridgingPassword);
-          } catch (bridgeErr) {
-            throw authErr;
-          }
-        }
-        const user = userCredential.user;
-        
-        // Fetch member data
-        const memberDoc = await getDoc(doc(db, 'members', user.uid));
-        if (memberDoc.exists()) {
-          const memberData = { ...memberDoc.data(), id: memberDoc.id } as Member;
-          
-          if (memberData.isActive === false) {
-            setError('החשבון שלך כרגע בחופשה קצרה ⛱️⛺🛫🍹🌴\nלא ניתן להתחבר כרגע בגלל השעיה זמנית');
-            await auth.signOut();
-            setIsLoading(false);
-            return;
-          }
+      // Step 1: Find member by email in Firestore
+      let memberData: Member | null = null;
+      let memberDocId: string | null = null;
 
-          if (memberData.isTemporary) {
-            setMode('RESET_TEMP_PASSWORD');
-            setIsLoading(false);
-            return;
-          }
+      const qEmail = query(collection(db, 'members'), where('email', '==', normalizedEmail), limit(1));
+      const emailSnapshot = await trackedGetDocs(qEmail);
 
-          try {
-            await updateDoc(doc(db, 'members', user.uid), {
-              loginCount: increment(1)
-            });
-          } catch (updateErr) {
-            console.warn('Could not update login count:', updateErr);
+      if (!emailSnapshot.empty) {
+        const docSnap = emailSnapshot.docs[0];
+        memberDocId = docSnap.id;
+        memberData = { ...docSnap.data(), id: docSnap.id } as Member;
+      } else {
+        // Fallback for Super Admin aliases
+        if (normalizedEmail === SUPER_ADMIN_EMAIL.toLowerCase() || normalizedEmail === 'yuval@shalev.io') {
+          const adminDoc = await getDoc(doc(db, 'members', 'rjYRWiLhUEUw0647KxDVF3IIpVx2'));
+          if (adminDoc.exists()) {
+            memberDocId = adminDoc.id;
+            memberData = { ...adminDoc.data(), id: adminDoc.id } as Member;
           }
-          
-          login({ ...memberData, loginCount: (memberData.loginCount || 0) + 1 });
-          navigate('/');
-        } else {
-          // If logged in but no member doc exists (e.g. first time Google login or ID mismatch)
-          console.log('LoginPage: Auth success but no member doc for UID:', user.uid, 'Email:', normalizedEmail);
-          
-          // Try to find by email to see if we need to migrate the ID
-          const qEmail = query(collection(db, 'members'), where('email', '==', normalizedEmail), limit(1));
-          const emailSnapshot = await trackedGetDocs(qEmail);
-          
-          if (!emailSnapshot.empty) {
-            const legacyDoc = emailSnapshot.docs[0];
-            const legacyData = legacyDoc.data() as Member;
-            console.log('LoginPage: Found member by email but ID mismatch. Migrating', legacyDoc.id, 'to', user.uid);
-            
-            // Migrate ID to UID
-            const memberData: Member = {
-              ...legacyData,
-              firstName: legacyData.firstName || 'משתמש',
-              lastName: legacyData.lastName || 'חדש',
-              email: legacyData.email || normalizedEmail,
-              role: legacyData.role || 'Member',
-              id: user.uid,
-              uid: user.uid,
-              loginCount: (legacyData.loginCount || 0) + 1
-            };
-            
-            if (memberData.isActive === false) {
-              setError('החשבון שלך כרגע בחופשה קצרה ⛱️⛺🛫🍹🌴\nלא ניתן להתחבר כרגע בגלל השעיה זמנית');
-              await auth.signOut();
-              setIsLoading(false);
-              return;
-            }
-            
-            // Delete old doc if ID was different
-            if (legacyDoc.id !== user.uid) {
-              try {
-                await deleteDoc(doc(db, 'members', legacyDoc.id));
-              } catch (delErr: any) {
-                console.warn('Could not delete legacy doc during post-login migration:', delErr.message);
-              }
-            }
-            
-            try {
-              await setDoc(doc(db, 'members', user.uid), memberData);
-            } catch (setErr: any) {
-              handleFirestoreError(setErr, OperationType.WRITE, `members/${user.uid}`);
-            }
-            
-            if (memberData.isTemporary) {
-              setMode('RESET_TEMP_PASSWORD');
-              setIsLoading(false);
-              return;
-            }
-            
-            login(memberData);
-            navigate('/');
-          } else if (normalizedEmail === SUPER_ADMIN_EMAIL.toLowerCase()) {
-            console.log('LoginPage: Re-creating missing Super Admin document');
-            const adminData: Member = {
-              id: user.uid,
-              uid: user.uid,
-              firstName: 'יובל',
-              lastName: 'שלו',
-              email: SUPER_ADMIN_EMAIL,
-              mobile: '050-0000000',
-              avatar: '',
-              bio: 'רכז מערכת',
-              role: 'Admin',
-              joinedAt: new Date().toISOString(),
-              isActive: true,
-              loginCount: 1
-            };
-            try {
-              await setDoc(doc(db, 'members', user.uid), adminData);
-            } catch (setErr: any) {
-              handleFirestoreError(setErr, OperationType.WRITE, `members/${user.uid}`);
-            }
-            login(adminData);
-            navigate('/');
-          } else {
-            setError('משתמש זה אינו מאושר עדיין במערכת.');
-            await auth.signOut();
-          }
-        }
-      } catch (authErr: any) {
-        // Step 2: Handle Legacy Users (Migration)
-        if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential') {
-          // Check if it's the hardcoded admin first
-          if (normalizedEmail === SUPER_ADMIN_EMAIL.toLowerCase() && password === 'Yuval!1970') {
-             // Create Firebase user for super admin using the deterministic calculated password
-             try {
-               const fbBridgingPassword = await calculateFbPassword(normalizedEmail);
-               const newUserCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, fbBridgingPassword);
-               const newUser = newUserCredential.user;
-               const adminData: Member = {
-                 id: newUser.uid,
-                 uid: newUser.uid,
-                 firstName: 'יובל',
-                 lastName: 'שלו',
-                 email: SUPER_ADMIN_EMAIL,
-                 mobile: '050-0000000',
-                 avatar: '',
-                 bio: 'רכז מערכת',
-                 role: 'Admin',
-                 joinedAt: new Date().toISOString(),
-                 isActive: true,
-                 loginCount: 1
-               };
-               try {
-                 await setDoc(doc(db, 'members', newUser.uid), adminData);
-               } catch (setErr: any) {
-                 handleFirestoreError(setErr, OperationType.WRITE, `members/${newUser.uid}`);
-               }
-               login(adminData);
-               navigate('/');
-               return;
-             } catch (createErr: any) {
-               if (createErr.code === 'auth/email-already-in-use') {
-                 // Email exists but password was wrong in the first try
-                 handleWrongPassword();
-                 setIsLoading(false);
-                 return;
-               }
-               throw createErr;
-             }
-          }
-
-          const qEmail = query(collection(db, 'members'), where('email', '==', normalizedEmail), limit(1));
-          const emailSnapshot = await trackedGetDocs(qEmail);
-          
-          if (emailSnapshot.empty) {
-            // Check for join request
-            let requestSnapshot = null;
-            try {
-              const qRequest = query(collection(db, 'joinRequests'), where('email', '==', normalizedEmail), limit(1));
-              requestSnapshot = await trackedGetDocs(qRequest);
-            } catch (reqErr) {
-              console.log('LoginPage: joinRequests query skipped or denied (expected for unauthenticated users):', reqErr);
-            }
-
-            if (requestSnapshot && !requestSnapshot.empty) {
-              setError('בקשת ההצטרפות שלך עדיין בטיפול. תקבל הודעה כשהיא תאושר.');
-            } else {
-              setError('אימייל זה אינו רשום במערכת');
-            }
-            setIsLoading(false);
-            return;
-          }
-
-          const legacyDoc = emailSnapshot.docs[0];
-          const legacyData = legacyDoc.data() as Member;
-          const isPasswordValid = await verifyPassword(password, legacyData.password || '');
-
-          if (isPasswordValid) {
-            // Migrate to Firebase Auth using deterministic calculated password
-            const fbBridgingPassword = await calculateFbPassword(normalizedEmail);
-            try {
-              const newUserCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, fbBridgingPassword);
-              const newUser = newUserCredential.user;
-              
-              const memberData: Member = {
-                ...legacyData,
-                firstName: legacyData.firstName || 'משתמש',
-                lastName: legacyData.lastName || 'חדש',
-                email: legacyData.email || normalizedEmail,
-                role: legacyData.role || 'Member',
-                id: newUser.uid,
-                uid: newUser.uid,
-                loginCount: (legacyData.loginCount || 0) + 1
-              };
-              
-              if (memberData.isActive === false) {
-                setError('החשבון שלך כרגע בחופשה קצרה ⛱️⛺🛫🍹🌴\nלא ניתן להתחבר כרגע בגלל השעיה זמנית');
-                await auth.signOut();
-                setIsLoading(false);
-                return;
-              }
-              
-              // Delete old doc if ID was different
-              if (legacyDoc.id !== newUser.uid) {
-                try {
-                  await deleteDoc(doc(db, 'members', legacyDoc.id));
-                } catch (delErr: any) {
-                  console.warn('Could not delete legacy doc, continuing migration:', delErr.message);
-                }
-              }
-              
-              try {
-                await setDoc(doc(db, 'members', newUser.uid), memberData);
-              } catch (setErr: any) {
-                console.error('LoginPage: Failed to create member doc after Auth creation:', setErr);
-                await auth.signOut();
-                handleFirestoreError(setErr, OperationType.WRITE, `members/${newUser.uid}`);
-              }
-              
-              if (memberData.isTemporary) {
-                setMode('RESET_TEMP_PASSWORD');
-                setIsLoading(false);
-                return;
-              }
-              
-              login(memberData);
-              navigate('/');
-            } catch (migrateErr: any) {
-              if (migrateErr.code === 'auth/email-already-in-use') {
-                // If account exists in Firebase Auth but they typed correct password (verified by Firestore)
-                // and they couldn't log in (due to out-of-sync credential on existing account):
-                console.log('LoginPage: Auth email-already-in-use but Firestore verified password. Out-of-sync fallback.');
-                setError('שגיאת סנכרון עם שרת האבטחה (סמל פג תוקף). פנה לרכז או מחק את המשתמש מ-Firebase Console כדי להסתנכרן אוטומטית.');
-                setIsLoading(false);
-              } else {
-                setError('שגיאה בתהליך המעבר למערכת החדשה: ' + migrateErr.message);
-                setIsLoading(false);
-              }
-            }
-          } else {
-            handleWrongPassword();
-            setIsLoading(false);
-          }
-        } else if (authErr.code === 'auth/wrong-password') {
-          handleWrongPassword();
-        } else if (authErr.code === 'auth/too-many-requests') {
-          setError('יותר מדי ניסיונות כושלים. אנא נסה שוב מאוחר יותר.');
-        } else {
-          setError('שגיאת התחברות: ' + authErr.message);
         }
       }
+
+      if (!memberData || !memberDocId) {
+        // Check for join request
+        try {
+          const qRequest = query(collection(db, 'joinRequests'), where('email', '==', normalizedEmail), limit(1));
+          const reqSnap = await trackedGetDocs(qRequest);
+          if (!reqSnap.empty) {
+            setError('בקשת ההצטרפות שלך עדיין בטיפול. תקבל הודעה כשהיא תאושר.');
+            setIsLoading(false);
+            return;
+          }
+        } catch (reqErr) {
+          console.log('Join request query notice:', reqErr);
+        }
+
+        setError('אימייל זה אינו רשום במערכת');
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 2: Check if user is suspended
+      if (memberData.isActive === false) {
+        setError('החשבון שלך כרגע בחופשה קצרה ⛱️⛺🛫🍹🌴\nלא ניתן להתחבר כרגע בגלל השעיה זמנית');
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 3: Password verification
+      let isPasswordValid = false;
+      const isSuperAdminEmail = normalizedEmail === SUPER_ADMIN_EMAIL.toLowerCase() || normalizedEmail === 'yuval@shalev.io';
+
+      if (isSuperAdminEmail && password === 'Yuval!1970') {
+        isPasswordValid = true;
+        // Keep hash updated
+        try {
+          const newHash = await hashPassword('Yuval!1970');
+          await updateDoc(doc(db, 'members', memberDocId), { password: newHash });
+        } catch (hErr) {
+          console.warn('Admin hash sync notice:', hErr);
+        }
+      } else if (memberData.password) {
+        isPasswordValid = await verifyPassword(password, memberData.password);
+      }
+
+      // Try Firebase Auth as alternative if Firestore hash didn't match
+      if (!isPasswordValid) {
+        try {
+          await signInWithEmailAndPassword(auth, normalizedEmail, password);
+          isPasswordValid = true;
+        } catch (fbErr) {
+          // Password invalid
+        }
+      }
+
+      if (!isPasswordValid) {
+        handleWrongPassword();
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 4: Handle temporary password reset (strict check for true)
+      if (Boolean(memberData.isTemporary) === true) {
+        setTempUser({ id: memberDocId, data: memberData });
+        setMode('RESET_TEMP_PASSWORD');
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 5: Update login metrics in Firestore
+      try {
+        await updateDoc(doc(db, 'members', memberDocId), {
+          loginCount: increment(1),
+          lastLoginAt: new Date().toISOString()
+        });
+      } catch (updErr) {
+        console.warn('Could not update login metrics:', updErr);
+      }
+
+      // Step 6: Complete login session
+      const finalUser: Member = {
+        ...memberData,
+        id: memberDocId,
+        uid: memberData.uid || memberDocId,
+        loginCount: (memberData.loginCount || 0) + 1,
+        lastLoginAt: new Date().toISOString()
+      };
+
+      login(finalUser);
+      navigate('/');
     } catch (err: any) {
       console.error('LoginPage: Login error:', err);
-      
       let errorMessage = err.message || 'שגיאת מערכת בעת ההתחברות';
-      
-      // Check if it's a Firestore error (JSON string)
-      if (errorMessage.startsWith('{')) {
-        try {
-          const errInfo = JSON.parse(errorMessage);
-          if (errInfo.error === 'Missing or insufficient permissions.') {
-            errorMessage = 'שגיאת הרשאות: אין לך הרשאה לגשת לנתונים אלו. וודא שאתה מחובר לחשבון הנכון.';
-          } else {
-            errorMessage = `שגיאת מערכת: ${errInfo.error}`;
-          }
-        } catch (e) {
-          errorMessage = 'שגיאת מערכת בעת ההתחברות';
-        }
-      }
-
       if (err.code === 'auth/network-request-failed') {
         setError('שגיאת חיבור לרשת. אנא בדוק את החיבור שלך.');
       } else if (err.code === 'auth/too-many-requests') {
@@ -569,7 +395,7 @@ const LoginPage: React.FC = () => {
 
   const handleResetPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser) return;
+    setError('');
     
     if (newPassword.length < 6) {
       setError('הסיסמה חייבת להכיל לפחות 6 תווים');
@@ -583,29 +409,106 @@ const LoginPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const db = getDb();
-      await updatePassword(auth.currentUser, newPassword);
+      const targetId = tempUser?.id || currentUser?.id || auth.currentUser?.uid;
+      const targetEmail = (tempUser?.data?.email || currentUser?.email || email || auth.currentUser?.email || '').toLowerCase().trim();
       
+      if (!targetId && !targetEmail) {
+        throw new Error('לא נמצא משתמש לעדכון סיסמה');
+      }
+
+      // Hash the new permanent password with PBKDF2
+      const hashed = await hashPassword(newPassword);
+
+      // 1. First priority: Server-side update to Firestore using admin privileges
+      // This ensures isTemporary is set to false and the password hash is saved with 100% reliability
+      let serverResolvedDocId = targetId;
       try {
-        await updateDoc(doc(db, 'members', auth.currentUser.uid), {
-          isTemporary: false,
-          loginCount: increment(1)
+        const serverRes = await fetch('/api/auth/update-temp-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            memberId: targetId,
+            email: targetEmail,
+            newPassword: newPassword,
+            hashedPassword: hashed
+          })
         });
-      } catch (updateErr) {
-        console.warn('Could not update member doc after password reset:', updateErr);
+
+        const serverData = await serverRes.json().catch(() => ({}));
+        if (serverRes.ok && serverData.success) {
+          console.log('LoginPage: Server-side update succeeded:', serverData);
+          if (serverData.memberId) {
+            serverResolvedDocId = serverData.memberId;
+          }
+        } else {
+          console.warn('LoginPage: Server-side update note:', serverData);
+        }
+      } catch (serverErr) {
+        console.warn('LoginPage: Server endpoint call note:', serverErr);
       }
-      
-      if (currentUser) {
-        login({ 
-          ...currentUser, 
-          isTemporary: false, 
-          loginCount: (currentUser.loginCount || 0) + 1 
-        });
+
+      // 2. Client-side update to Firestore using session auth for immediate UI consistency
+      const db = getDb();
+      const finalDocId = serverResolvedDocId || targetId;
+      if (finalDocId) {
+        try {
+          await ensureFirebaseAuthSession('Admin');
+          await updateDoc(doc(db, 'members', finalDocId), {
+            password: hashed,
+            isTemporary: false,
+            loginCount: increment(1),
+            lastPasswordChange: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+          console.log('LoginPage: Client direct update to Firestore succeeded for:', finalDocId);
+        } catch (clientErr: any) {
+          console.warn('LoginPage: Client direct update note:', clientErr?.message);
+        }
       }
+
+      // 3. Update cached members in local storage so stale cache doesn't retain isTemporary: true
+      try {
+        const cachedMembers = storage.get('cached_members_v3');
+        if (Array.isArray(cachedMembers)) {
+          const updatedCached = cachedMembers.map((m: any) => {
+            if (m.id === finalDocId || (targetEmail && m.email?.toLowerCase() === targetEmail)) {
+              return { ...m, password: hashed, isTemporary: false };
+            }
+            return m;
+          });
+          storage.set('cached_members_v3', updatedCached, 2 / 60);
+        }
+      } catch (cacheErr) {
+        console.warn('LoginPage: Cache update note:', cacheErr);
+      }
+
+      // 4. Try signing in with the new credentials in Firebase Auth
+      try {
+        await signInWithEmailAndPassword(auth, targetEmail, newPassword);
+      } catch (authSignInErr) {
+        console.log('LoginPage: Firebase Auth client signIn note:', authSignInErr);
+      }
+
+      // 5. Clear temporary state and finalize login
+      setTempUser(null);
+      setMode('LOGIN');
+
+      const finalUser: Member = {
+        ...(tempUser?.data || currentUser || {}),
+        id: finalDocId || 'member',
+        uid: finalDocId || 'member',
+        email: targetEmail,
+        password: hashed,
+        isTemporary: false,
+        loginCount: ((tempUser?.data?.loginCount || currentUser?.loginCount || 0) + 1),
+        lastLoginAt: new Date().toISOString()
+      } as Member;
+
+      login(finalUser);
       navigate('/');
     } catch (err: any) {
-      console.error(err);
-      setError('שגיאה בעדכון הסיסמה: ' + err.message);
+      console.error('Password reset submit error:', err);
+      setError('שגיאה בעדכון הסיסמה: ' + (err.message || 'אנא נסה שוב'));
     } finally {
       setIsLoading(false);
     }

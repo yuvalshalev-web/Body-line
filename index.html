@@ -12,6 +12,9 @@
     <meta name="theme-color" content="#0f172a" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>חבל זוג - עמותת העטלף</title>
+    <meta name="description" content="אפליקציית חבל זוג של עמותת העטלף לניהול חברים, סשנים, תחזיות גלים ומפות קהילה" />
+    <meta property="og:title" content="חבל זוג - עמותת העטלף" />
+    <meta property="og:description" content="אפליקציית חבל זוג של עמותת העטלף לניהול חברים, סשנים, תחזיות גלים ומפות קהילה" />
     <meta name="apple-mobile-web-app-title" content="חבל זוג" />
     
     <script>
@@ -35,6 +38,23 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js" crossorigin></script>
+    <script>
+      // Safe guard leaflet-heat against 0-dimension canvas calls
+      if (window.L && window.L.HeatLayer) {
+        var origRedraw = window.L.HeatLayer.prototype._redraw;
+        window.L.HeatLayer.prototype._redraw = function() {
+          if (!this._map) return;
+          var size = this._map.getSize();
+          if (!size || size.x <= 0 || size.y <= 0) return;
+          if (this._canvas && (this._canvas.width <= 0 || this._canvas.height <= 0)) return;
+          try {
+            origRedraw.call(this);
+          } catch (e) {
+            console.warn('Heatmap redraw safely ignored:', e);
+          }
+        };
+      }
+    </script>
   <style>
     body {
       background-color: #0f172a !important; /* Dark Blue so we know it loaded */

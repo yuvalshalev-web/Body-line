@@ -639,11 +639,15 @@ const ProfilePage: React.FC = () => {
     setIsChangingPassword(true);
     try {
       if (firebaseUser) {
-        const { updatePassword } = await import('firebase/auth');
-        await updatePassword(firebaseUser, newPassword);
+        try {
+          const { updatePassword } = await import('firebase/auth');
+          await updatePassword(firebaseUser, newPassword);
+        } catch (authErr) {
+          console.warn('Firebase Auth update skipped or not recent login:', authErr);
+        }
       }
       const hashed = await hashPassword(newPassword);
-      await updateMember({ ...formData, password: hashed });
+      await updateMember({ ...formData, password: hashed, isTemporary: false, updatedAt: new Date().toISOString() });
       setToast({ msg: 'הסיסמה שונתה בהצלחה', type: 'success' });
       setShowPasswordModal(false);
       setNewPassword('');

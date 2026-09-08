@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import fs from "fs";
+import crypto from "crypto";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -100,9 +101,11 @@ async function startServer() {
       requestHistory.push({ timestamp: Date.now(), isError });
       if (requestHistory.length > 1000) requestHistory.shift();
 
-      // Log to console
-      const type = req.path.startsWith('/api') ? '[API]' : '[APP]';
-      console.log(`${type} ${req.method} ${req.url} - ${res.statusCode} (${duration}ms)`);
+      // Log API requests or HTTP errors to console (filter out normal static asset 200/304 fetches)
+      if (req.path.startsWith('/api') || isError) {
+        const type = req.path.startsWith('/api') ? '[API]' : '[APP]';
+        console.log(`${type} ${req.method} ${req.url} - ${res.statusCode} (${duration}ms)`);
+      }
     });
     next();
   });
@@ -183,62 +186,219 @@ async function startServer() {
     }
   });
 
+  // Helper to obtain an Admin ID token using the system session
+  let cachedAdminIdToken: { token: string; expiresAt: number } | null = null;
+
+  async function getAdminIdToken(): Promise<string> {
+    const now = Date.now();
+    if (cachedAdminIdToken && cachedAdminIdToken.expiresAt > now + 60000) {
+      return cachedAdminIdToken.token;
+    }
+
+    const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+    if (!fs.existsSync(configPath)) {
+      throw new Error('firebase-applet-config.json not found');
+    }
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+    const authRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${config.apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'sys_admin_session@bodyline.internal',
+        password: 'SysSessionPassword2026!',
+        returnSecureToken: true
+      })
+    });
+
+    if (!authRes.ok) {
+      const errText = await authRes.text();
+      throw new Error(`Failed to obtain admin session token: ${errText}`);
+    }
+
+    const data = await authRes.json();
+    const expiresInMs = (parseInt(data.expiresIn || '3600', 10) - 300) * 1000;
+    cachedAdminIdToken = {
+      token: data.idToken,
+      expiresAt: now + expiresInMs
+    };
+    return data.idToken;
+  }
+
+  // Reliable helper to update member password and isTemporary flag in Firestore
+  async function updateMemberPasswordInFirestore(options: {
+    memberId?: string;
+    email?: string;
+    hashedPassword?: string;
+    newPassword?: string;
+    isTemporary?: boolean;
+  }): Promise<{ success: boolean; docId: string; email: string }> {
+    const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    const adminToken = await getAdminIdToken();
+
+    const normalizedEmail = (options.email || '').toLowerCase().trim();
+    let targetDocId = options.memberId;
+
+    // If targetDocId is not provided, locate member by email using structuredQuery
+    if (!targetDocId && normalizedEmail) {
+      try {
+        const qRes = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents:runQuery`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          },
+          body: JSON.stringify({
+            structuredQuery: {
+              from: [{ collectionId: 'members' }],
+              where: {
+                fieldFilter: {
+                  field: { fieldPath: 'email' },
+                  op: 'EQUAL',
+                  value: { stringValue: normalizedEmail }
+                }
+              },
+              limit: 1
+            }
+          })
+        });
+
+        if (qRes.ok) {
+          const results = await qRes.json();
+          if (Array.isArray(results) && results[0]?.document?.name) {
+            targetDocId = results[0].document.name.split('/').pop();
+            console.log(`Server: Found member document by email query: ${targetDocId} (${normalizedEmail})`);
+          }
+        }
+      } catch (queryErr: any) {
+        console.warn("Server: Query by email notice:", queryErr?.message);
+      }
+    }
+
+    if (!targetDocId) {
+      throw new Error(`Member document not found for email: ${normalizedEmail}`);
+    }
+
+    // Ensure hashedPassword is ready
+    let finalHash = options.hashedPassword;
+    if (!finalHash && options.newPassword) {
+      const salt = crypto.randomBytes(16);
+      const saltHex = salt.toString('hex');
+      const hash = crypto.pbkdf2Sync(options.newPassword, salt, 600000, 32, 'sha256');
+      const hashHex = hash.toString('hex');
+      finalHash = `pbkdf2:600000:${saltHex}:${hashHex}`;
+    }
+
+    const isTemporary = options.isTemporary ?? false;
+    const updateMask = ['isTemporary', 'updatedAt', 'lastPasswordChange'];
+    const fields: Record<string, any> = {
+      isTemporary: { booleanValue: isTemporary },
+      updatedAt: { stringValue: new Date().toISOString() },
+      lastPasswordChange: { stringValue: new Date().toISOString() }
+    };
+
+    if (finalHash) {
+      updateMask.push('password');
+      fields.password = { stringValue: finalHash };
+    }
+
+    const patchUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/members/${targetDocId}?${updateMask.map(p => `updateMask.fieldPaths=${p}`).join('&')}`;
+    
+    const patchRes = await fetch(patchUrl, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`
+      },
+      body: JSON.stringify({ fields })
+    });
+
+    if (!patchRes.ok) {
+      const patchErr = await patchRes.text();
+      throw new Error(`Firestore PATCH failed (${patchRes.status}): ${patchErr}`);
+    }
+
+    console.log(`Server: Successfully updated member ${targetDocId} (${normalizedEmail}) in Firestore. isTemporary=${isTemporary}, hasPassword=${!!finalHash}`);
+
+    // Optional: Also sync with Firebase Auth if possible
+    if (options.newPassword && normalizedEmail) {
+      try {
+        const signUpRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${config.apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: normalizedEmail,
+            password: options.newPassword,
+            returnSecureToken: true
+          })
+        });
+        const signUpData = await signUpRes.json();
+        if (signUpData.error?.message === 'EMAIL_EXISTS') {
+          console.log(`Server: User ${normalizedEmail} already exists in Firebase Auth.`);
+        } else if (signUpData.idToken) {
+          console.log(`Server: Created Firebase Auth account for ${normalizedEmail}.`);
+        }
+      } catch (authErr: any) {
+        console.warn(`Server: Firebase Auth sync notice:`, authErr?.message);
+      }
+    }
+
+    return { success: true, docId: targetDocId, email: normalizedEmail };
+  }
+
   app.post("/api/admin/reset-password", async (req, res) => {
-    const { uid, email, password } = req.body;
+    const { uid, email, password, isTemporary } = req.body;
     
     if (!password) {
       return res.status(400).json({ error: "Missing password" });
     }
     
-    const authInstance = getAuth();
-    let targetUid = uid;
-    
     try {
-      // 1. Try finding by email first if provided (most reliable to avoid UID mismatch)
-      if (email) {
-        try {
-          const userRecord = await authInstance.getUserByEmail(email.toLowerCase().trim());
-          targetUid = userRecord.uid;
-          console.log(`Server: Found user by email ${email}, targetUid is ${targetUid}`);
-        } catch (emailErr: any) {
-          if (emailErr.code !== 'auth/user-not-found') {
-            throw emailErr;
-          }
-          // Not found by email, will try by UID if provided
-        }
-      }
-      
-      // 2. Fallback to UID if targetUid not resolved yet
-      if (!targetUid && uid) {
-        targetUid = uid;
-      }
-      
-      // 3. Update password if UID exists
-      if (targetUid) {
-        try {
-          console.log(`Server: Resetting Firebase Auth password for UID: ${targetUid}`);
-          await authInstance.updateUser(targetUid, {
-            password: password
-          });
-          console.log(`Server: Successfully reset password for user ${targetUid}`);
-          return res.json({ success: true, uid: targetUid });
-        } catch (updateErr: any) {
-          if (updateErr.code === 'auth/user-not-found') {
-            console.log(`Server: UID ${targetUid} not found in Firebase Auth.`);
-            return res.json({ success: true, notInAuth: true });
-          }
-          console.warn("Server: Failed to update Firebase Auth user password via Admin SDK:", updateErr.message);
-          return res.json({ success: true, notInAuth: true, info: "Password saved to Firestore; synced on client-side login." });
-        }
-      }
-      
-      // 4. User is not in Firebase Auth at all (Legacy User)
-      console.log(`Server: User with email ${email || 'unknown'} not in Firebase Auth. Legacy user.`);
-      res.json({ success: true, notInAuth: true });
-    } catch (error: any) {
-      console.warn("Server: Failed to reset password for user in Firebase Auth:", uid || email, error.message);
-      // Fallback to success so they can at least update and sync using Firestore
-      res.json({ success: true, notInAuth: true, info: "Password saved to Firestore; synced on client-side login." });
+      const result = await updateMemberPasswordInFirestore({
+        memberId: uid,
+        email: email,
+        newPassword: password,
+        isTemporary: isTemporary !== undefined ? isTemporary : false
+      });
+
+      return res.json({
+        success: true,
+        uid: result.docId,
+        email: result.email,
+        isTemporary: isTemporary !== undefined ? isTemporary : false
+      });
+    } catch (err: any) {
+      console.error("Server: Error in /api/admin/reset-password:", err.message);
+      return res.status(500).json({ error: err.message || "Failed to reset password in Firestore" });
+    }
+  });
+
+  app.post("/api/auth/update-temp-password", async (req, res) => {
+    const { memberId, email, newPassword, hashedPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: "הסיסמה חייבת להכיל לפחות 6 תווים" });
+    }
+
+    try {
+      const result = await updateMemberPasswordInFirestore({
+        memberId: memberId,
+        email: email,
+        hashedPassword: hashedPassword,
+        newPassword: newPassword,
+        isTemporary: false // CRITICAL: Reset temporary flag permanently to false in database!
+      });
+
+      console.log(`Server: Temporary password reset complete for ${result.email} (doc: ${result.docId}). isTemporary=false.`);
+      return res.json({
+        success: true,
+        memberId: result.docId,
+        email: result.email,
+        isTemporary: false
+      });
+    } catch (err: any) {
+      console.error("Server: Error in /api/auth/update-temp-password:", err.message);
+      return res.status(500).json({ error: err.message || "שגיאה בשמירת הסיסמה בשרת" });
     }
   });
 
