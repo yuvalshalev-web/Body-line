@@ -304,8 +304,8 @@ const LoginPage: React.FC = () => {
         isPasswordValid = await verifyPassword(password, memberData.password);
       }
 
-      // Try Firebase Auth as alternative if Firestore hash didn't match
-      if (!isPasswordValid) {
+      // Try Firebase Auth as alternative only if member document does not have a password hash in Firestore
+      if (!isPasswordValid && !memberData.password) {
         try {
           await signInWithEmailAndPassword(auth, normalizedEmail, password);
           isPasswordValid = true;

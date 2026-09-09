@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { 
   X, Camera, UserCircle, ChevronLeft, Save, Archive, Loader2, Cake, Phone, Mail, AlertCircle, 
   ChevronDown, Instagram, Facebook, Music2, Linkedin, Twitter, Globe, Key, Check, HeartPulse,
-  Award, Search, Sparkles, User, RefreshCw, UtensilsCrossed, Clock
+  Award, Search, Sparkles, User, RefreshCw, UtensilsCrossed, Clock, MessageCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Member } from '../../types';
@@ -19,6 +19,8 @@ import { hashPassword } from '../../utils/crypto';
 import { sendPasswordResetEmail, updatePassword } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { updateMemberAddress, loadGoogleMaps } from '../../utils/googlePlaces';
+import { TempPasswordWhatsAppModal } from './TempPasswordWhatsAppModal';
+import { formatResetPasswordWhatsAppMessage, openWhatsAppWithMessage } from '../../utils/whatsapp';
 
 interface EditMemberFormProps {
   member: Member;
@@ -66,6 +68,25 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [whatsAppData, setWhatsAppData] = useState<{
+    isOpen: boolean;
+    memberName: string;
+    email: string;
+    mobile: string;
+    tempPassword: string;
+    autoOpened: boolean;
+  } | null>(null);
+
+  const generateRandomPassword = () => {
+    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz';
+    let pass = 'Wave';
+    for (let i = 0; i < 4; i++) {
+      pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    pass += '!';
+    setNewPassword(pass);
+    setConfirmPassword(pass);
+  };
   const [isPlaceSelected, setIsPlaceSelected] = useState(!!member.full_address);
   const addressInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
@@ -215,7 +236,10 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
         
         showSuccess('הסיסמה שלך עודכנה בהצלחה!');
       } else {
-        // Admin resetting/setting password for another user
+        // Admin / Coordinator / App-Shaper resetting/setting password for another user
+        const memberName = `${editingMember.firstName || ''} ${editingMember.lastName || ''}`.trim() || 'חבר/ת קהילה';
+        const rawTempPassword = newPassword;
+
         const updatedMember = { 
           ...editingMember, 
           password: hashed, 
@@ -230,15 +254,36 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
           body: JSON.stringify({
             uid: editingMember.uid || editingMember.id,
             email: editingMember.email,
-            password: newPassword,
+            password: rawTempPassword,
             isTemporary: true
           }),
         }).catch(e => console.warn('Background Auth sync skipped:', e));
 
         setEditingMember(updatedMember);
         await onSave(updatedMember);
-        
-        showSuccess('הסיסמה הזמנית עודכנה בהצלחה! המשתמש יידרש לקבוע סיסמה חדשה בהתחברותו הבאה.');
+
+        // Attempt opening WhatsApp directly to the user's mobile defined in the system
+        let autoOpened = false;
+        if (editingMember.mobile) {
+          const msg = formatResetPasswordWhatsAppMessage({
+            name: memberName,
+            email: editingMember.email,
+            tempPassword: rawTempPassword
+          });
+          autoOpened = openWhatsAppWithMessage(editingMember.mobile, msg);
+        }
+
+        // Open the WhatsApp confirmation modal with full details
+        setWhatsAppData({
+          isOpen: true,
+          memberName,
+          email: editingMember.email,
+          mobile: editingMember.mobile || '',
+          tempPassword: rawTempPassword,
+          autoOpened
+        });
+
+        showSuccess('הסיסמה הזמנית עודכנה בהצלחה ונשלחה בוואטסאפ למשתמש!');
       }
 
       setShowPasswordModal(false);
@@ -1033,7 +1078,19 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
                   <form onSubmit={handlePasswordChange} className="space-y-6">
                     <>
                       <div className="space-y-2">
-                        <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest pr-3">סיסמה חדשה</label>
+                        <div className="flex justify-between items-center pr-3">
+                          <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest">סיסמה חדשה</label>
+                          {editingMember.id !== currentUser?.id && (
+                            <button
+                              type="button"
+                              onClick={generateRandomPassword}
+                              className="text-xs font-bold text-sky-600 hover:text-sky-700 flex items-center gap-1 cursor-pointer transition-colors"
+                            >
+                              <Sparkles size={13} />
+                              חולל סיסמה אקראית
+                            </button>
+                          )}
+                        </div>
                         <input 
                           type="password"
                           value={newPassword}
@@ -1056,14 +1113,23 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
                           minLength={6}
                         />
                       </div>
+
+                      {editingMember.id !== currentUser?.id && (
+                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-2.5 text-xs text-emerald-800 font-medium">
+                          <MessageCircle size={16} className="text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <span>
+                            הסיסמה תוגדר כזמנית ותישלח בוואטסאפ לנייד של המשתמש ({editingMember.mobile || 'לא מוגדר נייד'}).
+                          </span>
+                        </div>
+                      )}
                     </>
                     <button 
                       type="submit"
                       disabled={isChangingPassword || !newPassword || !confirmPassword}
-                      className="w-full py-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl font-black text-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
+                      className="w-full py-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl font-black text-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                     >
                       {isChangingPassword ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                      עדכן סיסמה
+                      {editingMember.id !== currentUser?.id ? 'עדכן ושלח בוואטסאפ' : 'עדכן סיסמה'}
                     </button>
                   </form>
                 </div>
@@ -1072,6 +1138,19 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
           )}
         </AnimatePresence>,
         document.body
+      )}
+
+      {/* WhatsApp Delivery Modal */}
+      {whatsAppData && (
+        <TempPasswordWhatsAppModal
+          isOpen={whatsAppData.isOpen}
+          onClose={() => setWhatsAppData(null)}
+          memberName={whatsAppData.memberName}
+          memberEmail={whatsAppData.email}
+          memberMobile={whatsAppData.mobile}
+          tempPassword={whatsAppData.tempPassword}
+          autoOpenedWhatsApp={whatsAppData.autoOpened}
+        />
       )}
     </div>
   );

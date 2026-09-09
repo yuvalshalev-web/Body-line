@@ -8,7 +8,7 @@ import {
   Camera, UserCircle, ChevronLeft, ArrowLeft, LayoutDashboard, Copy, Check, Share2,
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
   PanelTop, ArrowUpCircle, ArrowDownCircle, User, Globe, Activity,
-  Waves, AlertTriangle, Terminal, Link2, Eye,
+  Waves, AlertTriangle, Terminal, Link2, Eye, Key,
   FileText, Map as MapIcon, Clock, Upload, BarChart2, Utensils
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -29,6 +29,7 @@ import { DayPicker } from '../components/DayPicker';
 import { EventEditor } from '../components/admin/EventEditor';
 import EditMemberForm from '../components/admin/EditMemberForm';
 import AddMemberModal from '../components/admin/AddMemberModal';
+import { QuickResetPasswordModal } from '../components/admin/QuickResetPasswordModal';
 import ImportMembersModal from '../components/admin/ImportMembersModal';
 import { PostEditor } from '../components/admin/PostEditor';
 import { DietaryReportModal } from '../components/admin/DietaryReportModal';
@@ -238,6 +239,7 @@ const AdminPage: React.FC = () => {
   const [approvedUser, setApprovedUser] = useState<{ firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null>(null);
 
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [passwordResetMember, setPasswordResetMember] = useState<Member | null>(null);
   const [isMemberReadOnly, setIsMemberReadOnly] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -1053,7 +1055,7 @@ const AdminPage: React.FC = () => {
                             </span>
                           </td>
                           <td className="px-8 py-6">
-                            <div className="flex items-center justify-center">
+                            <div className="flex items-center justify-center gap-2">
                               <button 
                                 onClick={() => {
                                   setIsMemberReadOnly(false);
@@ -1063,6 +1065,13 @@ const AdminPage: React.FC = () => {
                                 title="עריכת משתמש"
                               >
                                 <Pencil size={18} />
+                              </button>
+                              <button 
+                                onClick={() => setPasswordResetMember(member)}
+                                className="w-10 h-10 bg-white/40 backdrop-blur-md border border-white/30 rounded-xl flex items-center justify-center text-[#000000]/40 hover:text-emerald-600 hover:border-emerald-400 hover:shadow-lg transition-all cursor-pointer"
+                                title="החלפת סיסמה ושליחה בוואטסאפ"
+                              >
+                                <Key size={18} />
                               </button>
                             </div>
                           </td>
@@ -2260,6 +2269,15 @@ const AdminPage: React.FC = () => {
       <ReadOnlyNoticeModal 
         isOpen={showReadOnlyNotice}
         onClose={() => setShowReadOnlyNotice(false)}
+      />
+
+      <QuickResetPasswordModal 
+        isOpen={!!passwordResetMember}
+        member={passwordResetMember}
+        onClose={() => setPasswordResetMember(null)}
+        onSuccess={(updatedMember) => {
+          showSuccess(`הסיסמה הזמנית עודכנה ונשלחה בוואטסאפ בהצלחה!`);
+        }}
       />
     </div>
     </div>
