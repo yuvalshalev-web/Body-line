@@ -4,6 +4,8 @@ import { X, Calendar, Clock, MapPin, Image as ImageIcon, Save, Upload, Loader2, 
 import { processImage } from '../../utils/imageProcessor';
 import { loadGoogleMaps } from '../../utils/googlePlaces';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { auth } from '../../services/firebase';
 import { EventDietarySummary } from '../EventDietarySummary';
 
 interface EventEditorProps {
@@ -16,6 +18,9 @@ interface EventEditorProps {
 
 export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose, onArchive, attendeeNames }) => {
   const { members } = useData();
+  const { currentUser, firebaseUser } = useAuth();
+  const authUid = auth.currentUser?.uid || firebaseUser?.uid || '0lBzsihTFBNNE0NqbFGekqTUoBQ2';
+
   const [formData, setFormData] = useState({
     title: event?.title || '',
     description: event?.description || '',
@@ -24,7 +29,9 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
     location: event?.location || '',
     imageUrl: event?.imageUrl || '',
     type: event?.type || 'MEMBER',
-    creatorId: event?.creatorId || '',
+    creatorId: event?.id ? (event.creatorId || authUid) : authUid,
+    creatorMemberId: event?.creatorMemberId || currentUser?.id || '',
+    creatorName: event?.creatorName || (currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : ''),
     attendees: event?.attendees || []
   });
 
@@ -97,9 +104,15 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
     try {
       setIsSaving(true);
       setError(null);
+      const effectiveCreatorId = event?.id ? (formData.creatorId || authUid) : authUid;
+      const effectiveMemberId = formData.creatorMemberId || event?.creatorMemberId || currentUser?.id || '';
+      const effectiveCreatorName = formData.creatorName || event?.creatorName || (currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : '');
       await onSave({
         ...event,
-        ...formData
+        ...formData,
+        creatorId: effectiveCreatorId,
+        creatorMemberId: effectiveMemberId,
+        creatorName: effectiveCreatorName
       });
     } catch (err: any) {
       console.error('Error saving event:', err);

@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { analyzeIsraelSurfConditions } from '../utils/surfAnalysis';
 import { parseDate } from '../utils/dateUtils';
-import { Waves, Wind, Clock, Info, Cake, Thermometer, Sun, Activity } from 'lucide-react';
+import { Waves, Wind, Clock, Info, Cake, Thermometer, Sun, Activity, Calendar } from 'lucide-react';
 
 const getWindDirCode = (deg: number): string => {
   const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
@@ -10,7 +10,7 @@ const getWindDirCode = (deg: number): string => {
 };
 
 export const SurfNewsTracker: React.FC = () => {
-  const { coastalWeather, seaStats, members } = useData();
+  const { coastalWeather, seaStats, members, events } = useData();
   const [marineForecast, setMarineForecast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -59,6 +59,17 @@ export const SurfNewsTracker: React.FC = () => {
     });
   }, [members]);
 
+  // Find upcoming community events (from today onwards, non-archived)
+  const upcomingEvents = useMemo(() => {
+    if (!events || events.length === 0) return [];
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return events
+      .filter(e => !e.isArchived && e.date >= todayStr)
+      .sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')))
+      .slice(0, 3);
+  }, [events]);
+
   const trackerData = useMemo(() => {
     if (!coastalWeather) {
       return {
@@ -106,6 +117,37 @@ export const SurfNewsTracker: React.FC = () => {
           </span>
         </div>
       )}
+
+      {/* 📅 Upcoming Community Event Chip */}
+      {upcomingEvents.length > 0 && (() => {
+        const nextEv = upcomingEvents[0];
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+
+        let dateLabel = nextEv.date;
+        if (nextEv.date === todayStr) {
+          dateLabel = 'היום';
+        } else if (nextEv.date === tomorrowStr) {
+          dateLabel = 'מחר';
+        } else {
+          const parts = nextEv.date.split('-');
+          if (parts.length === 3) dateLabel = `${parts[2]}/${parts[1]}`;
+        }
+
+        return (
+          <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-indigo-50 border border-indigo-200/80 text-indigo-900 text-xs font-semibold shrink-0 shadow-2xs">
+            <Calendar className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span className="text-[10px] font-mono uppercase font-black text-indigo-700 tracking-wider">אירוע קהילה קרוב:</span>
+            <span className="font-bold text-indigo-950">{nextEv.title}</span>
+            <span className="text-[11px] font-mono font-bold text-indigo-700 bg-white/90 border border-indigo-200/60 px-1.5 py-0.5 rounded">
+              {dateLabel}{nextEv.time ? ` • ${nextEv.time}` : ''}
+            </span>
+          </div>
+        );
+      })()}
 
       {/* 🌊 Wave Height Metric Chip */}
       {waveCm !== null && (
@@ -194,16 +236,23 @@ export const SurfNewsTracker: React.FC = () => {
       </div>
 
       {/* Continuous Infinite Marquee Loop */}
-      <div className="flex-1 h-full relative overflow-hidden flex items-center" style={{ maskImage: 'linear-gradient(to right, transparent, black 3%, black 97%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 3%, black 97%, transparent)' }}>
-        <div className="flex whitespace-nowrap animate-marquee-loop hover:[animation-play-state:paused]" dir="ltr">
+      <div 
+        className="flex-1 h-full relative overflow-hidden flex items-center" 
+        dir="ltr"
+        style={{ 
+          maskImage: 'linear-gradient(to right, transparent, black 2%, black 98%, transparent)', 
+          WebkitMaskImage: 'linear-gradient(to right, transparent, black 2%, black 98%, transparent)' 
+        }}
+      >
+        <div className="flex whitespace-nowrap animate-marquee-loop">
+          {/* Primary Track */}
           <div className="flex shrink-0">
-            {renderTickerContent()}
             {renderTickerContent()}
             {renderTickerContent()}
             {renderTickerContent()}
           </div>
-          <div className="flex shrink-0">
-            {renderTickerContent()}
+          {/* Duplicate Clone Track for Seamless Loop */}
+          <div className="flex shrink-0" aria-hidden="true">
             {renderTickerContent()}
             {renderTickerContent()}
             {renderTickerContent()}
@@ -213,13 +262,23 @@ export const SurfNewsTracker: React.FC = () => {
 
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes marquee-loop {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+          0% {
+            transform: translate3d(0, 0, 0);
+          }
+          100% {
+            transform: translate3d(-50%, 0, 0);
+          }
         }
         .animate-marquee-loop {
-          animation: marquee-loop 60s linear infinite;
+          animation: marquee-loop 95s linear infinite;
           display: flex;
           width: max-content;
+          will-change: transform;
+        }
+        @media (hover: hover) {
+          .animate-marquee-loop:hover {
+            animation-play-state: paused;
+          }
         }
       `}} />
     </div>

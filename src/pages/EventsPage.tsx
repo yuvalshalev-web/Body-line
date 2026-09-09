@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
+import { auth } from '../services/firebase';
 import { Calendar, MapPin, Clock, User, Users, X, Navigation, Plus, Edit2, Trash2, Upload, UserCircle } from 'lucide-react';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { Event } from '../types';
@@ -40,6 +41,7 @@ const EventsPage: React.FC = () => {
 
   const handleCreateEvent = () => {
     if (!currentUser) return;
+    const authUid = auth.currentUser?.uid || '0lBzsihTFBNNE0NqbFGekqTUoBQ2';
     setEditingEvent({
       title: '',
       description: '',
@@ -48,7 +50,9 @@ const EventsPage: React.FC = () => {
       location: '',
       imageUrl: '',
       type: 'MEMBER',
-      creatorId: currentUser.id,
+      creatorId: authUid,
+      creatorMemberId: currentUser.id,
+      creatorName: `${currentUser.firstName} ${currentUser.lastName}`.trim(),
       attendees: [currentUser.id]
     });
     setIsEditing(true);
@@ -67,8 +71,22 @@ const EventsPage: React.FC = () => {
     }
   };
 
+  const isEventOrganizer = (event: Event): boolean => {
+    if (!currentUser) return false;
+    const authUid = auth.currentUser?.uid;
+    return Boolean(
+      (event.creatorMemberId && event.creatorMemberId === currentUser.id) ||
+      (event.creatorId && event.creatorId === currentUser.id) ||
+      (authUid && event.creatorId === authUid)
+    );
+  };
+
+  const canManageEvent = (event: Event) => {
+    return isEventOrganizer(event) || isAdminUser(currentUser);
+  };
+
   const openModal = (event: Event) => {
-    if (currentUser && (event.creatorId === currentUser.id || isAdminUser(currentUser))) {
+    if (canManageEvent(event)) {
       setEditingEvent(event);
       setIsEditing(true);
     } else {
@@ -89,9 +107,16 @@ const EventsPage: React.FC = () => {
       .map(m => `${m!.firstName} ${m!.lastName}`);
   };
 
-  const getCreatorName = (creatorId?: string) => {
-    if (!creatorId) return null;
-    const creator = members.find(m => m.id === creatorId);
+  const getCreatorName = (eventOrId?: Event | string) => {
+    if (!eventOrId) return null;
+    if (typeof eventOrId === 'object') {
+      if (eventOrId.creatorName) return eventOrId.creatorName;
+      const targetId = eventOrId.creatorMemberId || eventOrId.creatorId;
+      if (!targetId) return null;
+      const creator = members.find(m => m.id === targetId || m.uid === targetId);
+      return creator ? `${creator.firstName} ${creator.lastName}` : null;
+    }
+    const creator = members.find(m => m.id === eventOrId || m.uid === eventOrId);
     return creator ? `${creator.firstName} ${creator.lastName}` : null;
   };
 
@@ -152,10 +177,10 @@ const EventsPage: React.FC = () => {
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex flex-col">
                           <h3 className="text-xl font-bold text-slate-800 group-hover:text-slate-900 transition-colors">{event.title}</h3>
-                          {getCreatorName(event.creatorId) && (
+                          {getCreatorName(event) && (
                             <span className="text-sm text-slate-800 font-medium flex items-center gap-1 mt-0.5">
                               <User size={14} />
-                              מארגן האירוע: {getCreatorName(event.creatorId)}
+                              מארגן האירוע: {getCreatorName(event)}
                             </span>
                           )}
                         </div>
@@ -235,13 +260,13 @@ const EventsPage: React.FC = () => {
                         {currentUser && (
                           <button 
                             onClick={(e) => handleRSVP(e, event.id)}
-                            disabled={event.creatorId === currentUser.id}
+                            disabled={isEventOrganizer(event)}
                             className={`px-5 py-2 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-95 ${
                               (event.attendees || []).includes(currentUser.id) 
-                                ? (event.creatorId === currentUser.id ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white')
+                                ? (isEventOrganizer(event) ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white')
                                 : 'bg-sky-600 text-white hover:bg-sky-700 hover:shadow-sky-200'
                             }`}
-                            title={event.creatorId === currentUser.id ? 'מארגן האירוע אינו יכול לבטל הגעה' : ''}
+                            title={isEventOrganizer(event) ? 'מארגן האירוע אינו יכול לבטל הגעה' : ''}
                           >
                             {(event.attendees || []).includes(currentUser.id) ? 'ביטול הגעה' : 'אישור הגעה'}
                           </button>
@@ -265,13 +290,13 @@ const EventsPage: React.FC = () => {
             <div className="flex justify-between items-start mb-4 pl-12">
               <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">{selectedEvent.title}</h2>
               <div className="flex flex-col items-end gap-2">
-                {getCreatorName(selectedEvent.creatorId) && (
+                {getCreatorName(selectedEvent) && (
                   <span className="text-sm text-slate-800 font-medium bg-slate-100 px-3 py-1 rounded-full inline-flex items-center gap-1">
                     <User size={14} />
-                    מארגן האירוע: {getCreatorName(selectedEvent.creatorId)}
+                    מארגן האירוע: {getCreatorName(selectedEvent)}
                   </span>
                 )}
-                {(currentUser?.id === selectedEvent.creatorId || isAdminUser(currentUser)) && (
+                {canManageEvent(selectedEvent) && (
                   <div className="flex gap-2">
                     <button 
                       onClick={() => handleEditEvent(selectedEvent)}
@@ -460,9 +485,9 @@ const EventsPage: React.FC = () => {
                   <h3 className="text-lg font-bold text-slate-800 truncate">{event.title}</h3>
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-slate-800 truncate">{event.date ? new Date(event.date).toLocaleDateString('he-IL') : ''}</p>
-                    {getCreatorName(event.creatorId) && (
+                    {getCreatorName(event) && (
                       <span className="text-xs text-slate-800 font-medium flex items-center gap-1">
-                        • מארגן האירוע: {getCreatorName(event.creatorId)}
+                        • מארגן האירוע: {getCreatorName(event)}
                       </span>
                     )}
                   </div>

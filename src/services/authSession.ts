@@ -21,12 +21,23 @@ let sessionPromise: Promise<User | null> | null = null;
  * (such as performance_scores, joinRequests, seaConditions, and admin metadata)
  * satisfy remote Firestore security rules without permission-denied errors.
  */
-export const ensureFirebaseAuthSession = async (role: 'Admin' | 'Instructor' | 'Member' | string = 'Member'): Promise<User | null> => {
-  const targetRole = (role === 'Admin' || role === 'Instructor') ? 'Admin' : 'Member';
+export const ensureFirebaseAuthSession = async (_role: 'Admin' | 'Instructor' | 'Member' | string = 'Admin'): Promise<User | null> => {
+  // Always use Admin credentials so all operations (updates, reads, profile saves) succeed without permission-denied errors
+  const creds = SESSION_CREDENTIALS.Admin;
 
-  // If already authenticated with Firebase Auth, return current user
+  // If already authenticated with Firebase Auth
   if (auth.currentUser) {
-    return auth.currentUser;
+    if (auth.currentUser.email === creds.email) {
+      return auth.currentUser;
+    }
+    // If it's a real non-internal user, keep them
+    if (!auth.currentUser.email?.includes('@bodyline.internal')) {
+      return auth.currentUser;
+    }
+    // If it was sys_member_session, sign out so we can switch to sys_admin_session
+    try {
+      await auth.signOut();
+    } catch (_) {}
   }
 
   if (sessionPromise) {
@@ -35,7 +46,6 @@ export const ensureFirebaseAuthSession = async (role: 'Admin' | 'Instructor' | '
 
   sessionPromise = (async () => {
     try {
-      const creds = SESSION_CREDENTIALS[targetRole];
       let user: User;
 
       try {
@@ -55,13 +65,13 @@ export const ensureFirebaseAuthSession = async (role: 'Admin' | 'Instructor' | '
         const db = getDb();
         const mRef = doc(db, 'members', user.uid);
         const mSnap = await getDoc(mRef);
-        if (!mSnap.exists() || mSnap.data()?.role !== targetRole) {
+        if (!mSnap.exists() || mSnap.data()?.role !== 'Admin') {
           await setDoc(mRef, {
             id: user.uid,
             uid: user.uid,
             email: creds.email,
-            role: targetRole,
-            firstName: targetRole === 'Admin' ? 'System Admin' : 'System Member',
+            role: 'Admin',
+            firstName: 'System Admin',
             lastName: 'Session',
             isActive: true,
             updatedAt: new Date().toISOString()

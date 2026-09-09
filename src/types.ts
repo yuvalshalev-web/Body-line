@@ -128,6 +128,8 @@ export interface Event {
   imageUrl: string;
   type: 'COMMUNITY' | 'MEMBER' | 'INSTRUCTOR' | 'VOLUNTEER';
   creatorId?: string;
+  creatorMemberId?: string;
+  creatorName?: string;
   attendees: string[]; // Array of member IDs
   attendeeCount?: number; // Added for analysis
   isArchived?: boolean;

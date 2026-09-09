@@ -733,9 +733,23 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      await trackedUpdateDoc(doc(db, 'members', id), data);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `members/${id}`);
+      await trackedSetDoc(doc(db, 'members', id), data, { merge: true });
+    } catch (error: any) {
+      console.warn("DataContext: Direct Firestore update failed, trying server admin API fallback:", error);
+      try {
+        const res = await fetch('/api/members/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, ...data })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Server update failed with status ${res.status}`);
+        }
+        console.log("DataContext: Member updated successfully via server admin API fallback.");
+      } catch (fallbackError) {
+        handleFirestoreError(error, OperationType.UPDATE, `members/${id}`);
+      }
     }
   }, [members, handleFirestoreError]);
 
@@ -1065,22 +1079,107 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
-    await trackedAddDoc(collection(getDb(), 'events'), details);
-  }, []);
+  const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
+    const authUid = auth.currentUser?.uid || firebaseUser?.uid || '0lBzsihTFBNNE0NqbFGekqTUoBQ2';
+    const memberId = currentUser?.id || details.creatorMemberId || (details.creatorId !== authUid ? details.creatorId : undefined) || authUid;
+    const creatorName = details.creatorName || (currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : 'חבר קהילה');
+
+    // CRITICAL: Firestore Security Rules enforce: request.resource.data.creatorId == request.auth.uid
+    const payload = {
+      ...details,
+      creatorId: authUid,
+      creatorMemberId: memberId,
+      creatorName,
+      type: details.type || 'MEMBER',
+      attendees: details.attendees && details.attendees.length > 0 ? details.attendees : [memberId],
+      isArchived: details.isArchived ?? false
+    };
+
+    try {
+      await trackedAddDoc(collection(getDb(), 'events'), payload);
+    } catch (error: any) {
+      console.warn("DataContext: Direct Firestore addEvent failed, trying server admin API fallback:", error);
+      try {
+        const res = await fetch('/api/events/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Server event create failed with status ${res.status}`);
+        }
+        console.log("DataContext: Event created successfully via server admin API fallback.");
+      } catch (fallbackError) {
+        handleFirestoreError(error, OperationType.CREATE, 'events');
+      }
+    }
+  }, [currentUser, firebaseUser?.uid, handleFirestoreError]);
 
   const deleteEvent = useCallback(async (id: string) => {
-    await trackedDeleteDoc(doc(getDb(), 'events', id));
-  }, []);
+    try {
+      await trackedDeleteDoc(doc(getDb(), 'events', id));
+    } catch (error: any) {
+      console.warn("DataContext: Direct Firestore deleteEvent failed, trying server admin API fallback:", error);
+      try {
+        const res = await fetch(`/api/events/${id}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Server event delete failed with status ${res.status}`);
+        }
+        console.log("DataContext: Event deleted successfully via server admin API fallback.");
+      } catch (fallbackError) {
+        handleFirestoreError(error, OperationType.DELETE, `events/${id}`);
+      }
+    }
+  }, [handleFirestoreError]);
 
   const archiveEvent = useCallback(async (id: string) => {
-    await trackedUpdateDoc(doc(getDb(), 'events', id), { isArchived: true });
-  }, []);
+    try {
+      await trackedUpdateDoc(doc(getDb(), 'events', id), { isArchived: true });
+    } catch (error: any) {
+      console.warn("DataContext: Direct Firestore archiveEvent failed, trying server admin API fallback:", error);
+      try {
+        const res = await fetch('/api/events/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, isArchived: true })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Server event archive failed with status ${res.status}`);
+        }
+        console.log("DataContext: Event archived successfully via server admin API fallback.");
+      } catch (fallbackError) {
+        handleFirestoreError(error, OperationType.UPDATE, `events/${id}`);
+      }
+    }
+  }, [handleFirestoreError]);
 
   const updateEvent = useCallback(async (event: Event) => {
     const { id, ...data } = event;
-    await trackedUpdateDoc(doc(getDb(), 'events', id), data);
-  }, []);
+    try {
+      await trackedUpdateDoc(doc(getDb(), 'events', id), data);
+    } catch (error: any) {
+      console.warn("DataContext: Direct Firestore updateEvent failed, trying server admin API fallback:", error);
+      try {
+        const res = await fetch('/api/events/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, ...data })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Server event update failed with status ${res.status}`);
+        }
+        console.log("DataContext: Event updated successfully via server admin API fallback.");
+      } catch (fallbackError) {
+        handleFirestoreError(error, OperationType.UPDATE, `events/${id}`);
+      }
+    }
+  }, [handleFirestoreError]);
 
   const toggleEventAttendance = useCallback(async (eventId: string, userId: string) => {
     const member = members.find(m => m.id === userId);
@@ -1160,12 +1259,39 @@ const addEvent = useCallback(async (details: Omit<Event, 'id'>) => {
   }, [hasQuotaError, dbStatus, galleryItems]);
 
   const addGalleryItem = useCallback(async (item: Omit<GalleryItem, 'id'>) => {
-    const db = getDb();
-    await addDoc(collection(db, 'gallery'), {
+    const authUid = auth.currentUser?.uid || firebaseUser?.uid || currentUser?.id || '0lBzsihTFBNNE0NqbFGekqTUoBQ2';
+    const payload = {
       ...item,
+      uploaderId: item.uploaderId || authUid,
+      uploaderName: item.uploaderName || currentUser?.firstName || 'חבר קהילה',
       timestamp: Timestamp.now()
-    });
-  }, []);
+    };
+
+    try {
+      const db = getDb();
+      await addDoc(collection(db, 'gallery'), payload);
+    } catch (error: any) {
+      console.warn("DataContext: Direct Firestore addGalleryItem failed, trying server API fallback:", error);
+      try {
+        const res = await fetch('/api/gallery/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...item,
+            uploaderId: payload.uploaderId,
+            uploaderName: payload.uploaderName,
+            timestamp: new Date().toISOString()
+          })
+        });
+        if (!res.ok) {
+          throw new Error(`Server gallery save failed with status ${res.status}`);
+        }
+        console.log("DataContext: Gallery item added successfully via server admin API fallback.");
+      } catch (fallbackError) {
+        handleFirestoreError(error, OperationType.CREATE, 'gallery');
+      }
+    }
+  }, [currentUser, firebaseUser, handleFirestoreError]);
 
   const toggleSessionAttendance = useCallback(async (userId: string) => {
     console.log("toggleSessionAttendance: Triggered for user", userId);

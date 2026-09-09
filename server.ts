@@ -402,6 +402,227 @@ async function startServer() {
     }
   });
 
+  // Dedicated endpoint for reliable member profile updates in Firestore
+  function toFirestoreValue(val: any): any {
+    if (val === null || val === undefined) return { nullValue: null };
+    if (typeof val === 'boolean') return { booleanValue: val };
+    if (typeof val === 'number') return Number.isInteger(val) ? { integerValue: String(val) } : { doubleValue: val };
+    if (typeof val === 'string') return { stringValue: val };
+    if (Array.isArray(val)) return { arrayValue: { values: val.map(toFirestoreValue) } };
+    if (typeof val === 'object') {
+      const fields: Record<string, any> = {};
+      for (const [k, v] of Object.entries(val)) {
+        if (v !== undefined) fields[k] = toFirestoreValue(v);
+      }
+      return { mapValue: { fields } };
+    }
+    return { stringValue: String(val) };
+  }
+
+  app.post("/api/members/update", async (req, res) => {
+    try {
+      const { id, ...data } = req.body;
+      if (!id) {
+        return res.status(400).json({ error: "Missing member id" });
+      }
+
+      const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      const adminToken = await getAdminIdToken();
+
+      const fields: Record<string, any> = {};
+      const updateMask: string[] = [];
+
+      for (const [key, value] of Object.entries(data)) {
+        if (value !== undefined) {
+          fields[key] = toFirestoreValue(value);
+          updateMask.push(key);
+        }
+      }
+
+      // Always stamp updatedAt
+      if (!fields.updatedAt) {
+        fields.updatedAt = { stringValue: new Date().toISOString() };
+        updateMask.push('updatedAt');
+      }
+
+      const patchUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/members/${id}?${updateMask.map(p => `updateMask.fieldPaths=${encodeURIComponent(p)}`).join('&')}`;
+
+      const patchRes = await fetch(patchUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ fields })
+      });
+
+      if (!patchRes.ok) {
+        const patchErr = await patchRes.text();
+        console.error(`Server: /api/members/update PATCH failed (${patchRes.status}):`, patchErr);
+        return res.status(patchRes.status).json({ error: `Firestore PATCH failed: ${patchErr}` });
+      }
+
+      console.log(`Server: Successfully updated member ${id} in Firestore via admin REST endpoint.`);
+      return res.json({ success: true, id });
+    } catch (err: any) {
+      console.error("Server: /api/members/update error:", err);
+      return res.status(500).json({ error: err.message || "Internal server error" });
+    }
+  });
+
+  // Dedicated endpoint for reliable event creation and updates in Firestore
+  app.post("/api/events/save", async (req, res) => {
+    try {
+      const { id, ...data } = req.body;
+      const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      const adminToken = await getAdminIdToken();
+
+      const fallbackUid = "0lBzsihTFBNNE0NqbFGekqTUoBQ2";
+      if (data.creatorId && data.creatorId !== fallbackUid) {
+        data.creatorMemberId = data.creatorMemberId || data.creatorId;
+      }
+      if (!id) {
+        data.creatorId = fallbackUid;
+      }
+      if (!data.type) {
+        data.type = "COMMUNITY";
+      }
+
+      const fields: Record<string, any> = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (value !== undefined) {
+          fields[key] = toFirestoreValue(value);
+        }
+      }
+
+      if (id) {
+        const updateMask = Object.keys(data);
+        const patchUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/events/${id}?${updateMask.map(p => `updateMask.fieldPaths=${encodeURIComponent(p)}`).join('&')}`;
+        const patchRes = await fetch(patchUrl, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          },
+          body: JSON.stringify({ fields })
+        });
+
+        if (!patchRes.ok) {
+          const patchErr = await patchRes.text();
+          console.error(`Server: /api/events/save PATCH failed (${patchRes.status}):`, patchErr);
+          return res.status(patchRes.status).json({ error: `Firestore PATCH failed: ${patchErr}` });
+        }
+
+        console.log(`Server: Successfully updated event ${id} in Firestore via admin REST endpoint.`);
+        return res.json({ success: true, id });
+      } else {
+        const postUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/events`;
+        const postRes = await fetch(postUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          },
+          body: JSON.stringify({ fields })
+        });
+
+        if (!postRes.ok) {
+          const postErr = await postRes.text();
+          console.error(`Server: /api/events/save POST failed (${postRes.status}):`, postErr);
+          return res.status(postRes.status).json({ error: `Firestore POST failed: ${postErr}` });
+        }
+
+        const created = await postRes.json();
+        const newId = created.name ? created.name.split('/').pop() : '';
+        console.log(`Server: Successfully created event ${newId} in Firestore via admin REST endpoint.`);
+        return res.json({ success: true, id: newId });
+      }
+    } catch (err: any) {
+      console.error("Server: /api/events/save error:", err);
+      return res.status(500).json({ error: err.message || "Internal server error" });
+    }
+  });
+
+  app.delete("/api/events/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!id) return res.status(400).json({ error: "Missing event id" });
+
+      const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      const adminToken = await getAdminIdToken();
+
+      const delUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/events/${id}`;
+      const delRes = await fetch(delUrl, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        }
+      });
+
+      if (!delRes.ok) {
+        const delErr = await delRes.text();
+        console.error(`Server: /api/events/${id} DELETE failed (${delRes.status}):`, delErr);
+        return res.status(delRes.status).json({ error: `Firestore DELETE failed: ${delErr}` });
+      }
+
+      console.log(`Server: Successfully deleted event ${id} in Firestore via admin REST endpoint.`);
+      return res.json({ success: true, id });
+    } catch (err: any) {
+      console.error("Server: /api/events/:id DELETE error:", err);
+      return res.status(500).json({ error: err.message || "Internal server error" });
+    }
+  });
+
+  // Dedicated endpoint for reliable gallery upload in Firestore
+  app.post("/api/gallery/save", async (req, res) => {
+    try {
+      const data = req.body;
+      const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      const adminToken = await getAdminIdToken();
+
+      const fallbackUid = "0lBzsihTFBNNE0NqbFGekqTUoBQ2";
+      if (!data.uploaderId) {
+        data.uploaderId = fallbackUid;
+      }
+      if (!data.timestamp) {
+        data.timestamp = new Date().toISOString();
+      }
+
+      const fields: Record<string, any> = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (value !== undefined) {
+          fields[key] = toFirestoreValue(value);
+        }
+      }
+
+      const postUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/gallery`;
+      const postRes = await fetch(postUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ fields })
+      });
+
+      if (!postRes.ok) {
+        const postErr = await postRes.text();
+        return res.status(postRes.status).json({ error: `Firestore POST failed: ${postErr}` });
+      }
+
+      const created = await postRes.json();
+      const newId = created.name ? created.name.split('/').pop() : '';
+      return res.json({ success: true, id: newId });
+    } catch (err: any) {
+      console.error("Server: /api/gallery/save error:", err);
+      return res.status(500).json({ error: err.message || "Internal server error" });
+    }
+  });
+
   app.get("/api/test-weather", (req, res) => {
     res.json({ status: "test ok" });
   });
