@@ -48,14 +48,14 @@ if (typeof window !== 'undefined') {
   }
 }
 
-// Handle "(default)" database ID correctly with auto-detect long polling for maximum reliability across iframes and sandboxes
+// Handle "(default)" database ID correctly with force long polling for maximum reliability across iframes and sandboxes
 export const db: Firestore = (() => {
   const dbId = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== '(default)'
     ? firebaseConfig.firestoreDatabaseId
     : undefined;
   try {
     return initializeFirestore(app, {
-      experimentalAutoDetectLongPolling: true,
+      experimentalForceLongPolling: true,
     }, dbId);
   } catch (e) {
     console.warn("initializeFirestore already called or failed, falling back to getFirestore:", e);

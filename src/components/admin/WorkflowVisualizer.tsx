@@ -27,10 +27,10 @@ const WorkflowVisualizer: React.FC = () => {
             }
           }
         } catch (err) {
-          if (err instanceof Error && err.message === "SERVER_STARTING") {
-            // Silent retry
+          if (err instanceof Error && (err.message === "SERVER_STARTING" || err.message.includes("Failed to fetch") || err.message.includes("NetworkError"))) {
+            // Silent retry during server restart or offline mode
           } else {
-            console.error('Error fetching GitHub status:', err);
+            console.warn('Could not refresh GitHub status:', err);
           }
         }
 
@@ -48,14 +48,14 @@ const WorkflowVisualizer: React.FC = () => {
             }
           }
         } catch (err) {
-          if (err instanceof Error && err.message === "SERVER_STARTING") {
-            // Silent retry
+          if (err instanceof Error && (err.message === "SERVER_STARTING" || err.message.includes("Failed to fetch") || err.message.includes("NetworkError"))) {
+            // Silent retry during server restart or offline mode
           } else {
-            console.error('Error fetching Vercel status:', err);
+            console.warn('Could not refresh Vercel status:', err);
           }
         }
       } catch (error) {
-        console.error('Error fetching workflow statuses:', error);
+        console.warn('Could not refresh workflow statuses:', error);
       }
     };
 

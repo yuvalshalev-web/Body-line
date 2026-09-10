@@ -6,6 +6,7 @@ import {
 } from 'recharts';
 import { Server, Database, Activity, AlertCircle, Power, ShieldAlert, Info, RefreshCw, ArrowDown, ArrowUp, Skull, TriangleAlert, HeartPulse, Zap, Terminal, Filter, Search as SearchIcon, Clock, Wifi, Trash2, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import ProviderCostCounters from './admin/ProviderCostCounters';
 import VercelStatusWidget from './admin/VercelStatusWidget';
 import GitHubCommandCenter from './admin/GitHubCommandCenter';
 import WorkflowVisualizer from './admin/WorkflowVisualizer';
@@ -855,7 +856,7 @@ const SystemMonitor: React.FC = () => {
         const statsJson = await statsRes.json();
         setData(statsJson);
       } catch (err) {
-        console.error('Error fetching system stats:', err);
+        console.warn('System stats fetch notice:', err);
         setError('שגיאה בטעינת נתוני המערכת.');
       } finally {
         setLoading(false);
@@ -922,7 +923,7 @@ const SystemMonitor: React.FC = () => {
                     const statsJson = await statsRes.json();
                     setData(statsJson);
                   } catch (err) {
-                    console.error('Error fetching system stats:', err);
+                    console.warn('System stats fetch notice:', err);
                   } finally {
                     setLoading(false);
                   }
@@ -1000,6 +1001,11 @@ const SystemMonitor: React.FC = () => {
             </motion.button>
             <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">ניקוי מטמון</span>
           </div>
+        </div>
+
+        {/* Infrastructure & Cloud Cost Counters */}
+        <div className="w-full max-w-5xl mx-auto">
+          <ProviderCostCounters />
         </div>
 
         {/* Vercel Command Center */}

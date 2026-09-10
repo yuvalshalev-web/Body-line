@@ -109,12 +109,15 @@ export const SurfNewsTracker: React.FC = () => {
       
       {/* 🎂 Birthday Tracker Chip */}
       {birthdayMembers.length > 0 && (
-        <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-900 text-xs font-semibold shrink-0 shadow-2xs">
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-amber-500/15 border border-amber-400/40 text-amber-950 text-xs font-semibold shrink-0 shadow-2xs">
           <Cake className="w-3.5 h-3.5 text-amber-600 shrink-0 animate-bounce" />
-          <span className="text-[10px] font-mono uppercase font-black text-amber-700 tracking-wider">יום הולדת:</span>
-          <span className="font-bold text-amber-950">
-            {birthdayMembers.map(m => `${m.firstName} ${m.lastName}`).join(', ')} 🎉
+          <span className="font-bold text-amber-800">
+            {birthdayMembers.length === 1 ? 'יום הולדת שמח ל-' : 'יום הולדת שמח ל-'}
           </span>
+          <span className="font-black text-amber-950">
+            {birthdayMembers.map(m => `${m.firstName} ${m.lastName}`).join(', ')}!
+          </span>
+          <span className="text-xs inline-flex items-center gap-0.5">🎂🎉🥳</span>
         </div>
       )}
 
