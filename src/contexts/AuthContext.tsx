@@ -29,10 +29,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // 1. If user explicitly logged out, never restore
     if (safeLocalStorage.getItem('habal_zug_logged_out') === 'true') {
+      safeSessionStorage.removeItem('habal_zug_user');
       return null;
     }
 
-    // 2. Strictly restore ONLY from active tab/window sessionStorage
+    // 2. Check if the page/PWA was closed
+    const pagehideAt = parseInt(safeLocalStorage.getItem('habal_zug_pagehide_at') || '0', 10);
+    const now = Date.now();
+    const navEntry = (typeof performance !== 'undefined' && performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) as PerformanceNavigationTiming | undefined;
+    const isPageReload = navEntry ? navEntry.type === 'reload' : (typeof performance !== 'undefined' && (performance as any).navigation?.type === 1);
+
+    // If app/tab was closed and reopened (more than 3 seconds since pagehide, and NOT an immediate in-tab reload):
+    if (!isPageReload && pagehideAt > 0 && (now - pagehideAt) > 3000) {
+      console.log("AuthContext: Fresh launch after page/PWA close. Ending previous session.");
+      safeSessionStorage.removeItem('habal_zug_user');
+      safeLocalStorage.removeItem('habal_zug_pagehide_at');
+      return null;
+    }
+
+    // 3. Strictly restore ONLY from active tab/window sessionStorage
     const saved = safeSessionStorage.getItem('habal_zug_user');
     if (saved) {
       try {
@@ -49,9 +64,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Track app close and background transitions to ensure session terminates when app is closed
+  useEffect(() => {
+    const handlePageHide = () => {
+      safeLocalStorage.setItem('habal_zug_pagehide_at', Date.now().toString());
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        safeLocalStorage.setItem('habal_zug_pagehide_at', Date.now().toString());
+      } else if (document.visibilityState === 'visible') {
+        const hideTime = parseInt(safeLocalStorage.getItem('habal_zug_pagehide_at') || '0', 10);
+        // If app was backgrounded for more than 3 minutes, terminate session for security
+        if (hideTime > 0 && (Date.now() - hideTime) > 3 * 60 * 1000) {
+          console.log("AuthContext: Session timed out while backgrounded. Requiring re-login.");
+          safeSessionStorage.removeItem('habal_zug_user');
+          safeLocalStorage.removeItem('habal_zug_pagehide_at');
+          setCurrentUser(null);
+          if (auth.currentUser && !auth.currentUser.email?.includes('@bodyline.internal')) {
+            signOut(auth).catch(() => {});
+          }
+        }
+      }
+    };
+
+    window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   const login = useCallback((user: Member) => {
     isLoggingOutRef.current = false;
     safeLocalStorage.removeItem('habal_zug_logged_out');
+    safeLocalStorage.removeItem('habal_zug_pagehide_at');
     // Save to sessionStorage ONLY so closing the PWA/tab terminates the session
     safeLocalStorage.removeItem('habal_zug_user');
     safeSessionStorage.setItem('habal_zug_user', JSON.stringify(user));
@@ -73,6 +121,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     safeLocalStorage.setItem('habal_zug_logged_out', 'true');
     safeSessionStorage.removeItem('habal_zug_user');
     safeLocalStorage.removeItem('habal_zug_user');
+    safeLocalStorage.removeItem('habal_zug_pagehide_at');
     safeLocalStorage.removeItem('admin_stats_initialized');
 
     // 2. Immediately clear React user state so the UI transitions to logged-out state instantly
@@ -89,6 +138,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       safeLocalStorage.setItem('habal_zug_logged_out', 'true');
       safeSessionStorage.removeItem('habal_zug_user');
       safeLocalStorage.removeItem('habal_zug_user');
+      safeLocalStorage.removeItem('habal_zug_pagehide_at');
       safeLocalStorage.removeItem('admin_stats_initialized');
       setCurrentUser(null);
       setFirebaseUser(null);
@@ -130,7 +180,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       // STRICT SESSION-ONLY CHECK:
-      // If the browser tab or PWA was closed, sessionStorage is wiped.
+      // If the browser tab or PWA was closed, sessionStorage is wiped or timed out.
       // Do NOT auto-login the user just because Firebase Auth or IndexedDB had a cached token!
       const activeSessionUser = safeSessionStorage.getItem('habal_zug_user');
       if (!activeSessionUser) {
@@ -138,6 +188,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setFirebaseUser(user);
         setCurrentUser(null);
         setLoading(false);
+        // Clear any lingering human Firebase Auth session from IndexedDB
+        if (user && !user.email?.includes('@bodyline.internal')) {
+          signOut(auth).catch(() => {});
+        }
         return;
       }
 

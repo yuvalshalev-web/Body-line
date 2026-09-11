@@ -2050,6 +2050,41 @@ async function startServer() {
         res.status(404).json({ error: `API route not found: ${req.method} ${req.path}` });
       });
 
+      // Missing asset recovery handler for stale PWA chunks
+      app.use((req, res, next) => {
+        if (req.path.startsWith('/assets/') && req.path.endsWith('.js')) {
+          const distAssetPath = path.join(__dirname, "dist", req.path);
+          if (fs.existsSync(distAssetPath)) {
+            return res.sendFile(distAssetPath);
+          }
+          console.warn(`[Self-Repair] Missing bundle requested: ${req.path}. Returning recovery script.`);
+          res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+          res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+          return res.send(`
+            console.warn("[PWA Cache Recovery] Stale chunk requested: " + location.pathname);
+            if (typeof window !== "undefined") {
+              try {
+                if ("serviceWorker" in navigator) {
+                  navigator.serviceWorker.getRegistrations().then(function(regs) {
+                    for (var i = 0; i < regs.length; i++) { regs[i].unregister(); }
+                  });
+                }
+                if ("caches" in window) {
+                  caches.keys().then(function(names) {
+                    for (var i = 0; i < names.length; i++) { caches.delete(names[i]); }
+                  });
+                }
+              } catch(e) {}
+              setTimeout(function() {
+                var cleanUrl = window.location.origin + window.location.pathname + "?v=" + Date.now() + window.location.hash;
+                window.location.replace(cleanUrl);
+              }, 300);
+            }
+          `);
+        }
+        next();
+      });
+
       app.use(vite.middlewares);
       console.log("Vite server initialized successfully.");
     } catch (viteError) {
@@ -2062,6 +2097,37 @@ async function startServer() {
     
     // Serve built assets from dist (which includes public assets)
     app.use(express.static(distPath, { maxAge: '1y' }));
+
+    // Missing asset recovery handler for stale PWA chunks in production
+    app.use((req, res, next) => {
+      if (req.path.startsWith('/assets/') && req.path.endsWith('.js')) {
+        console.warn(`[Self-Repair Prod] Missing bundle requested: ${req.path}. Returning recovery script.`);
+        res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+        return res.send(`
+          console.warn("[PWA Cache Recovery] Stale chunk requested: " + location.pathname);
+          if (typeof window !== "undefined") {
+            try {
+              if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(regs) {
+                  for (var i = 0; i < regs.length; i++) { regs[i].unregister(); }
+                });
+              }
+              if ("caches" in window) {
+                caches.keys().then(function(names) {
+                  for (var i = 0; i < names.length; i++) { caches.delete(names[i]); }
+                });
+              }
+            } catch(e) {}
+            setTimeout(function() {
+              var cleanUrl = window.location.origin + window.location.pathname + "?v=" + Date.now() + window.location.hash;
+              window.location.replace(cleanUrl);
+            }, 300);
+          }
+        `);
+      }
+      next();
+    });
     
     // SPA Fallback - ONLY for non-API routes
     app.get("*all", (req, res) => {

@@ -34,27 +34,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Assistant:wght@200;300;400;500;600;700;800&family=Caveat:wght@400;700&family=Heebo:wght@100;300;400;500;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/culmus/culmus@master/yehuda/yehuda.css" />
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js" crossorigin></script>
-    <script>
-      // Safe guard leaflet-heat against 0-dimension canvas calls
-      if (window.L && window.L.HeatLayer) {
-        var origRedraw = window.L.HeatLayer.prototype._redraw;
-        window.L.HeatLayer.prototype._redraw = function() {
-          if (!this._map) return;
-          var size = this._map.getSize();
-          if (!size || size.x <= 0 || size.y <= 0) return;
-          if (this._canvas && (this._canvas.width <= 0 || this._canvas.height <= 0)) return;
-          try {
-            origRedraw.call(this);
-          } catch (e) {
-            console.warn('Heatmap redraw safely ignored:', e);
-          }
-        };
-      }
-    </script>
   <style>
     body {
       background-color: #0f172a !important; /* Dark Blue so we know it loaded */
@@ -119,10 +98,10 @@
 <body>
   <!-- This is the EMERGENCY repair UI -->
   <div id="repair-container" style="display: none;">
-    <p style="margin: 0 0 12px 0; font-size: 14px; text-align: center; color: #f8fafc;">הטעינה מתעכבת. ניתן לרענן או לאפס:</p>
+    <p id="repair-instruction" style="margin: 0 0 12px 0; font-size: 14px; text-align: center; color: #f8fafc;">טעינה ראשונית מתעכבת. מרענן גרסה...</p>
     <div style="display: flex; gap: 10px; width: 100%;">
       <button type="button" onclick="window.location.reload(true)" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer;">רענן דף</button>
-      <button id="repair-btn" type="button" onclick="repairApp()" style="flex: 1; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer;">איפוס מלא</button>
+      <button id="repair-btn" type="button" onclick="repairApp()" style="flex: 1; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer;">איפוס מטמון</button>
     </div>
   </div>
 
@@ -136,53 +115,42 @@
   </div>
   
   <script>
-    // Global Error Monitoring
-    window.onerror = function(msg, url, line, col, error) {
-      const errorMsg = "BOOT ERROR: " + msg + " at " + url + ":" + line;
-      console.error(errorMsg);
+    // Global Error Monitoring & Immediate Recovery
+    function triggerAutoRecovery(reason) {
+      console.warn("Triggering Auto Recovery:", reason);
       const display = document.getElementById('boot-error-display');
       if (display) {
-        display.innerText = errorMsg;
+        display.innerText = reason;
         display.style.display = 'block';
       }
-      // Show repair UI immediately on boot error
       const repairContainer = document.getElementById('repair-container');
       if (repairContainer) {
         repairContainer.style.display = 'flex';
-        repairContainer.style.border = "3px solid #ef4444";
       }
+      // Attempt clean recovery
+      setTimeout(() => {
+        repairApp();
+      }, 1000);
+    }
+
+    window.onerror = function(msg, url, line, col, error) {
+      const errorMsg = "BOOT ERROR: " + msg + " at " + url + ":" + line;
+      console.error(errorMsg);
+      triggerAutoRecovery(errorMsg);
       return false;
     };
 
     window.onunhandledrejection = function(event) {
       const errorMsg = "BOOT PROMISE REJECTION: " + (event.reason ? (event.reason.message || event.reason) : "Unknown reason");
       console.error(errorMsg);
-      const display = document.getElementById('boot-error-display');
-      if (display) {
-        display.innerText = display.innerText ? display.innerText + "\n" + errorMsg : errorMsg;
-        display.style.display = 'block';
-      }
-      const repairContainer = document.getElementById('repair-container');
-      if (repairContainer) {
-        repairContainer.style.display = 'flex';
-        repairContainer.style.border = "3px solid #ef4444";
-      }
+      triggerAutoRecovery(errorMsg);
     };
 
     window.addEventListener('error', function(event) {
       if (event.target && (event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK')) {
         const url = event.target.src || event.target.href || 'unknown';
         console.error("BOOT RESOURCE LOAD ERROR: " + url);
-        const display = document.getElementById('boot-error-display');
-        if (display) {
-          display.innerText = "שגיאת טעינת משאב: " + url;
-          display.style.display = 'block';
-        }
-        const repairContainer = document.getElementById('repair-container');
-        if (repairContainer) {
-          repairContainer.style.display = 'flex';
-          repairContainer.style.border = "3px solid #ef4444";
-        }
+        triggerAutoRecovery("שגיאת טעינת משאב: " + url);
       }
     }, true);
 
@@ -191,34 +159,43 @@
     const envStatus = document.getElementById('env-status');
     if (envStatus) envStatus.innerText = "סביבה: " + (isInIframe ? "Iframe (Preview)" : "Full Window");
     
-    // Self-repair logic
+    // Complete self-repair logic
     function repairApp() {
-      console.warn("Manual repair triggered");
+      console.warn("repairApp: Purging storage, unregistering SWs, clearing cache storage...");
       try {
-        localStorage.clear();
         sessionStorage.clear();
+        localStorage.removeItem('habal_zug_user');
+        
+        // 1. Unregister all service workers
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistrations().then(regs => {
-            if (regs.length === 0) {
-              window.location.reload(true);
-              return;
-            }
-            for(let r of regs) {
-              console.log("Unregistering SW:", r);
+            for (let r of regs) {
               r.unregister();
             }
-            setTimeout(() => { window.location.reload(true); }, 500);
-          }).catch(() => { window.location.reload(true); });
-        } else {
-          window.location.reload(true);
+          }).catch(e => console.warn(e));
         }
+
+        // 2. Delete all caches in CacheStorage
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            for (let name of names) {
+              caches.delete(name);
+            }
+          }).catch(e => console.warn(e));
+        }
+
+        // 3. Reload with cache-busting timestamp
+        setTimeout(() => {
+          const cleanUrl = window.location.origin + window.location.pathname + '?ts=' + Date.now() + window.location.hash;
+          window.location.replace(cleanUrl);
+        }, 500);
       } catch(e) {
         console.error("Repair failed:", e);
         window.location.reload(true);
       }
     }
 
-    // Auto-show repair if stuck for 10 seconds
+    // Auto-check: if app has not booted after 3.5 seconds, auto-heal
     setTimeout(() => {
       const status = document.documentElement.getAttribute('data-app-status');
       if (status !== 'ready') {
@@ -228,15 +205,22 @@
         const repairContainer = document.getElementById('repair-container');
         if (repairContainer) {
           repairContainer.style.display = 'flex';
-          repairContainer.style.backgroundColor = '#1e293b';
-          repairContainer.style.borderColor = '#3b82f6'; // Blue border for "Stuck" vs Red for "Error"
+          repairContainer.style.borderColor = '#3b82f6';
         }
-        const infoMsg = `App stuck. start=${hasStart}, beforeRender=${hasBeforeRender}, status=${status}`;
-        console.error(infoMsg);
-        const subtext = document.getElementById('boot-subtext');
-        if (subtext) subtext.innerText = infoMsg;
+        
+        if (!hasStart) {
+          console.warn("Bundle script never started executing. Outdated cache likely. Auto-recovering...");
+          const subtext = document.getElementById('boot-subtext');
+          if (subtext) subtext.innerText = "מטמון ישן זוהה. מרענן אוטומטית...";
+          setTimeout(repairApp, 800);
+        } else {
+          const infoMsg = `App stuck. start=${hasStart}, beforeRender=${hasBeforeRender}, status=${status}`;
+          console.error(infoMsg);
+          const subtext = document.getElementById('boot-subtext');
+          if (subtext) subtext.innerText = infoMsg;
+        }
       }
-    }, 10000);
+    }, 3500);
   </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
