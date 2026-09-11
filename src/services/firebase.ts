@@ -48,6 +48,23 @@ if (typeof window !== 'undefined') {
   }
 }
 
+// Initialize Auth safely before Firestore to prevent dependent-sdk crashes
+export const auth = (() => {
+  if (isIframe) {
+    try {
+      return initializeAuth(app, { persistence: inMemoryPersistence });
+    } catch {
+      return getAuth(app);
+    }
+  }
+  try {
+    return getAuth(app);
+  } catch (err) {
+    console.warn("getAuth failed, falling back to initializeAuth:", err);
+    return initializeAuth(app, { persistence: inMemoryPersistence });
+  }
+})();
+
 // Handle "(default)" database ID correctly with force long polling for maximum reliability across iframes and sandboxes
 export const db: Firestore = (() => {
   const dbId = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== '(default)'
@@ -64,26 +81,6 @@ export const db: Firestore = (() => {
 })();
 
 console.log("Firestore initialized successfully.");
-
-// Initialize Auth with session persistence so credentials never survive closing the tab/PWA
-export const auth = (() => {
-  if (isIframe) {
-    try {
-      return initializeAuth(app, { persistence: inMemoryPersistence });
-    } catch {
-      return getAuth(app);
-    }
-  }
-  try {
-    return initializeAuth(app, { persistence: [browserSessionPersistence, inMemoryPersistence] });
-  } catch {
-    const defaultAuth = getAuth(app);
-    setPersistence(defaultAuth, browserSessionPersistence).catch(err => {
-      console.warn("setPersistence note:", err);
-    });
-    return defaultAuth;
-  }
-})();
   
 export const storage = getStorage(app);
 console.log("Auth and Storage initialized.");

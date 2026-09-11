@@ -118,7 +118,13 @@
 </head>
 <body>
   <!-- This is the EMERGENCY repair UI -->
-  
+  <div id="repair-container" style="display: none;">
+    <p style="margin: 0 0 12px 0; font-size: 14px; text-align: center; color: #f8fafc;">הטעינה מתעכבת. ניתן לרענן או לאפס:</p>
+    <div style="display: flex; gap: 10px; width: 100%;">
+      <button type="button" onclick="window.location.reload(true)" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer;">רענן דף</button>
+      <button id="repair-btn" type="button" onclick="repairApp()" style="flex: 1; background: #ef4444; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer;">איפוס מלא</button>
+    </div>
+  </div>
 
   <div id="root">
     <div class="boot-screen">
@@ -162,6 +168,23 @@
         repairContainer.style.border = "3px solid #ef4444";
       }
     };
+
+    window.addEventListener('error', function(event) {
+      if (event.target && (event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK')) {
+        const url = event.target.src || event.target.href || 'unknown';
+        console.error("BOOT RESOURCE LOAD ERROR: " + url);
+        const display = document.getElementById('boot-error-display');
+        if (display) {
+          display.innerText = "שגיאת טעינת משאב: " + url;
+          display.style.display = 'block';
+        }
+        const repairContainer = document.getElementById('repair-container');
+        if (repairContainer) {
+          repairContainer.style.display = 'flex';
+          repairContainer.style.border = "3px solid #ef4444";
+        }
+      }
+    }, true);
 
     console.log("HTML Start - " + new Date().toISOString());
     const isInIframe = window.self !== window.top;
