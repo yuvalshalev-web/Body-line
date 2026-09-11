@@ -60,6 +60,9 @@ const LoginPage: React.FC = () => {
       if (available) {
         const enrolled = getEnrolledBiometricUsers();
         setEnrolledBioUsers(enrolled);
+        if (enrolled.length > 0) {
+          setEmail(prev => prev || enrolled[0].userEmail);
+        }
       }
     }).catch(() => {
       setHasBiometrics(true);
@@ -666,6 +669,16 @@ const LoginPage: React.FC = () => {
                    </motion.div>
                  )}
                </div>
+
+              {enrolledBioUsers.length > 0 && (
+                <div className="mb-3 px-3.5 py-2.5 bg-cyan-950/40 border border-cyan-500/25 rounded-2xl flex items-center justify-between gap-2 text-cyan-200 text-xs">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <Fingerprint size={16} className="text-cyan-400 shrink-0 animate-pulse" />
+                    <span className="truncate">כניסה מאובטחת ({enrolledBioUsers[0].userName || enrolledBioUsers[0].userEmail})</span>
+                  </div>
+                  <span className="text-[10px] text-cyan-400 font-bold bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20 shrink-0">הזדהות נדרשת</span>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <div className="relative group">

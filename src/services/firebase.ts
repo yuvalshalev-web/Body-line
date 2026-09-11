@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, initializeAuth, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence } from 'firebase/auth';
+import { getAuth, initializeAuth, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence, setPersistence } from 'firebase/auth';
 import { 
   getFirestore, initializeFirestore, getDocs, getDoc, Query, QuerySnapshot, collection, addDoc, query, orderBy, 
   limit, deleteDoc, writeBatch, doc, getDocFromServer, setDoc, updateDoc, onSnapshot,
@@ -65,10 +65,25 @@ export const db: Firestore = (() => {
 
 console.log("Firestore initialized successfully.");
 
-// Initialize Auth specifically to avoid IndexedDB crash in iframes
-export const auth = isIframe 
-  ? initializeAuth(app, { persistence: inMemoryPersistence }) 
-  : getAuth(app);
+// Initialize Auth with session persistence so credentials never survive closing the tab/PWA
+export const auth = (() => {
+  if (isIframe) {
+    try {
+      return initializeAuth(app, { persistence: inMemoryPersistence });
+    } catch {
+      return getAuth(app);
+    }
+  }
+  try {
+    return initializeAuth(app, { persistence: [browserSessionPersistence, inMemoryPersistence] });
+  } catch {
+    const defaultAuth = getAuth(app);
+    setPersistence(defaultAuth, browserSessionPersistence).catch(err => {
+      console.warn("setPersistence note:", err);
+    });
+    return defaultAuth;
+  }
+})();
   
 export const storage = getStorage(app);
 console.log("Auth and Storage initialized.");

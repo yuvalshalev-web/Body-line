@@ -39,6 +39,44 @@ export const safeLocalStorage = {
 };
 
 /**
+ * Helper for safe sessionStorage access
+ */
+export const safeSessionStorage = {
+  getItem: (key: string) => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return window.sessionStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string) => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.setItem(key, value);
+    } catch (e) {
+      // ignore
+    }
+  },
+  removeItem: (key: string) => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.removeItem(key);
+    } catch (e) {
+      // ignore
+    }
+  },
+  clear: () => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.clear();
+    } catch (e) {
+      // ignore
+    }
+  }
+};
+
+/**
  * Helper for localStorage with expiration
  */
 export const storage = {

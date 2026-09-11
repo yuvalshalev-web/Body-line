@@ -49,6 +49,7 @@ class ErrorBoundary extends React.Component<Props, State> {
     // Attempt cleanup
     try {
       localStorage.removeItem('habal_zug_user');
+      sessionStorage.removeItem('habal_zug_user');
       const keys = Object.keys(localStorage);
       keys.filter(k => k.includes('cache')).forEach(k => localStorage.removeItem(k));
     } catch (e) {}

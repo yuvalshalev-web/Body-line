@@ -92,3 +92,15 @@ export const ensureFirebaseAuthSession = async (_role: 'Admin' | 'Instructor' | 
 
   return sessionPromise;
 };
+
+/**
+ * Fully resets and signs out any active background or user Firebase Auth session.
+ */
+export const resetAuthSession = async (): Promise<void> => {
+  sessionPromise = null;
+  try {
+    await auth.signOut();
+  } catch (err) {
+    console.warn('resetAuthSession sign out note:', err);
+  }
+};
