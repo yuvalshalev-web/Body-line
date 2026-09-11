@@ -25,8 +25,7 @@ import {
 import { useData } from '../contexts/DataContext';
 import { getCoordinates } from '../utils/geocoding';
 import { calculateDistance } from '../utils/distanceCalculator';
-
-declare const L: any;
+import { loadLeafletWithHeat } from '../utils/leafletHeat';
 
 interface BinData {
   label: string;
@@ -48,6 +47,8 @@ const CommunityHeatMap: React.FC = () => {
   
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [selectedRange, setSelectedRange] = useState<'all' | 'infantry' | 'armor' | 'airforce'>('all');
+  const [mapReady, setMapReady] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   // Pre-calculate all distance data, bins, cities and operational KPIs
   const geoStats = useMemo(() => {
@@ -172,21 +173,30 @@ const CommunityHeatMap: React.FC = () => {
     };
   }, []);
 
-  const initHeatMap = () => {
-    const L = (window as any).L;
-    if (!isMounted.current || !mapRef.current || typeof L === 'undefined') return;
+  const initHeatMap = async () => {
+    if (!isMounted.current || !mapRef.current) return;
 
     try {
       const container = mapRef.current;
       const rect = container.getBoundingClientRect();
       if (rect.width < 10 || rect.height < 10 || container.clientWidth < 10 || container.clientHeight < 10) {
-        setTimeout(initHeatMap, 200);
+        setTimeout(() => {
+          if (isMounted.current) initHeatMap();
+        }, 150);
         return;
       }
+
+      const L = await loadLeafletWithHeat();
+      if (!isMounted.current || !mapRef.current) return;
 
       const { homeLat, homeLng, heatPoints } = geoStats;
 
       if (!mapInstance.current) {
+        // Clear any lingering leaflet id on container
+        if ((container as any)._leaflet_id) {
+          delete (container as any)._leaflet_id;
+        }
+
         mapInstance.current = L.map(container, {
           center: [homeLat, homeLng],
           zoom: 11,
@@ -202,17 +212,18 @@ const CommunityHeatMap: React.FC = () => {
           if (isMounted.current && mapInstance.current) {
             mapInstance.current.invalidateSize();
           }
-        }, 150);
+        }, 100);
       }
 
       const map = mapInstance.current;
       if (!map || !isMounted.current || !map.getContainer()) return;
 
-      // Ensure map dimensions are valid before drawing layers
       map.invalidateSize();
       const mapSize = map.getSize();
       if (!mapSize || mapSize.x <= 0 || mapSize.y <= 0) {
-        setTimeout(initHeatMap, 200);
+        setTimeout(() => {
+          if (isMounted.current) initHeatMap();
+        }, 150);
         return;
       }
 
@@ -269,77 +280,52 @@ const CommunityHeatMap: React.FC = () => {
           color: ringColor,
           fill: false,
           weight: 1.5,
-          dashArray: i % 2 === 0 ? null : '6, 6',
+          dashArray: i % 2 === 0 ? undefined : '6, 6',
           opacity: Math.max(0.15, 0.45 - (i * 0.03)),
           interactive: false
         }).addTo(map);
       }
 
       // Heatmap layer or fallback
-      if (typeof L.heatLayer === 'function' && heatPoints.length > 0) {
-        map.whenReady(() => {
-          if (heatmapTimeoutRef.current) {
-            clearTimeout(heatmapTimeoutRef.current);
-          }
-          heatmapTimeoutRef.current = setTimeout(() => {
-            try {
-              if (!isMounted.current || !mapInstance.current) return;
-              
-              const currentMap = mapInstance.current;
-              if (typeof currentMap.getContainer !== 'function' || !currentMap.getContainer()) return;
-              const currentSize = currentMap.getSize();
-              if (!currentSize || currentSize.x <= 0 || currentSize.y <= 0) return;
-
-              const layer = L.heatLayer(heatPoints, {
-                radius: 42,
-                blur: 22,
-                maxZoom: 11,
-                max: 1.0,
-                gradient: {
-                  0.3: '#3b82f6', // blue (low)
-                  0.55: '#10b981', // green (medium)
-                  0.75: '#f59e0b', // yellow/orange (high)
-                  1.0: '#ef4444'  // red (very high)
-                }
-              });
-
-              if (isMounted.current && mapInstance.current === currentMap) {
-                layer.addTo(currentMap);
-                heatLayerRef.current = layer;
-              }
-            } catch (e: any) {
-              console.warn("Heatmap layer warning (using fallback markers):", e.message || e);
-              // Fallback circle markers if heatLayer fails
-              if (mapInstance.current) {
-                heatPoints.forEach(p => {
-                  L.circleMarker([p[0], p[1]], {
-                    radius: 8,
-                    fillColor: '#0ea5e9',
-                    color: '#ffffff',
-                    weight: 2,
-                    opacity: 0.9,
-                    fillOpacity: 0.5
-                  }).addTo(mapInstance.current);
-                });
-              }
+      let heatLayerAdded = false;
+      if (typeof (L as any).heatLayer === 'function' && heatPoints.length > 0) {
+        try {
+          const layer = (L as any).heatLayer(heatPoints, {
+            radius: 42,
+            blur: 22,
+            maxZoom: 11,
+            max: 1.0,
+            gradient: {
+              0.3: '#3b82f6', // blue (low)
+              0.55: '#10b981', // green (medium)
+              0.75: '#f59e0b', // yellow/orange (high)
+              1.0: '#ef4444'  // red (very high)
             }
-          }, 200);
-        });
-      } else if (heatPoints.length > 0) {
-        // Fallback pulsing circle markers
+          });
+
+          layer.addTo(map);
+          heatLayerRef.current = layer;
+          heatLayerAdded = true;
+        } catch (e: any) {
+          console.warn("Heatmap layer warning (using fallback markers):", e.message || e);
+        }
+      }
+
+      // If heat layer wasn't added or points exist, also add pulsing circle markers as fallback/reinforcement
+      if (!heatLayerAdded && heatPoints.length > 0) {
         heatPoints.forEach(p => {
           L.circleMarker([p[0], p[1]], {
-            radius: 10,
+            radius: 9,
             fillColor: '#0ea5e9',
             color: '#ffffff',
             weight: 2,
             opacity: 0.9,
-            fillOpacity: 0.5
+            fillOpacity: 0.6
           }).addTo(map);
         });
       }
 
-      // Fit bounds
+      // Fit bounds to show all members + home break
       if (heatPoints.length > 0) {
         const bounds = L.latLngBounds(heatPoints.map(p => [p[0], p[1]]));
         bounds.extend([homeLat, homeLng]);
@@ -348,26 +334,22 @@ const CommunityHeatMap: React.FC = () => {
         const focusCircle = L.circle([homeLat, homeLng], { radius: 25000 });
         map.fitBounds(focusCircle.getBounds(), { padding: [20, 20] });
       }
+
+      setMapReady(true);
+      setMapError(null);
     } catch (error: any) {
       console.error("Error initializing heatmap:", error.message || error);
+      setMapError('שגיאה באתחול מפת החום');
     }
   };
 
   useEffect(() => {
-    let retryCount = 0;
-    const maxRetries = 10;
-
-    const tryInit = () => {
-      const L = (window as any).L;
-      if (typeof L !== 'undefined' && mapRef.current) {
+    if (viewMode !== 'chart') {
+      const timer = setTimeout(() => {
         initHeatMap();
-      } else if (retryCount < maxRetries) {
-        retryCount++;
-        setTimeout(tryInit, 400);
-      }
-    };
-
-    tryInit();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
   }, [geoStats, viewMode]);
 
   // Set up ResizeObserver for map container
@@ -574,6 +556,19 @@ const CommunityHeatMap: React.FC = () => {
                 className="w-full h-full z-0"
                 style={{ minHeight: '520px' }}
               />
+
+              {!mapReady && !hasNoPoints && (
+                <div className="absolute inset-0 z-[10] flex flex-col items-center justify-center bg-slate-100/90 backdrop-blur-xs">
+                  <div className="w-8 h-8 border-3 border-sky-500 border-t-transparent rounded-full animate-spin mb-2" />
+                  <span className="text-xs font-bold text-slate-700">טוען מפת חום ופיזור...</span>
+                </div>
+              )}
+
+              {mapError && (
+                <div className="absolute top-4 right-4 z-[1000] bg-red-50 text-red-700 px-3.5 py-2 rounded-xl text-xs font-bold border border-red-200 shadow-sm">
+                  {mapError}
+                </div>
+              )}
 
               {hasNoPoints && (
                 <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
