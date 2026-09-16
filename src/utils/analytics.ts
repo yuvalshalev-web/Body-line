@@ -1,7 +1,7 @@
 import { Member } from '../types';
 import { formatDate, parseDate } from './dateUtils';
 import { getBodyLineStats } from './bodyLineStats';
-import { RANKS } from '../constants';
+import { RANKS, isAppShaperUser } from '../constants';
 import { roundToGritStandard } from './gritRounding';
 
 export interface UserStats {
@@ -43,7 +43,7 @@ export const calculateUserStats = (
   events: any[] = []
 ): UserStats | null => {
   const member = members.find(m => m.id === userId);
-  if (!member) return null;
+  if (!member || isAppShaperUser(member)) return null;
 
   const seasonStart = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date('2026-01-01') : new Date('2026-01-01');
   seasonStart.setHours(0, 0, 0, 0);
@@ -326,8 +326,8 @@ export const calculateSeasonalGrit = (weeklyHistory: any[], members: Member[]) =
     seasonSessions.forEach(s => {
       // Calculate how many members were active AT THE TIME of this session
       const activeMembersAtTime = members.filter(m => {
-        // If they actually participated in this session, they must have been active!
-        if (m.role === 'Staff') return false;
+        // App-Shaper is a virtual user and Staff are excluded from team athletic stats
+        if (m.role === 'Staff' || isAppShaperUser(m)) return false;
         if (s.participantIds?.includes(m.id)) return true;
 
         const joinedDate = parseDate(m.joinedAt);

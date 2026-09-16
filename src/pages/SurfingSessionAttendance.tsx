@@ -18,7 +18,7 @@ import {
 import { useData } from '../contexts/DataContext';
 import { useModal } from '../contexts/ModalContext';
 import { useAuth } from '../contexts/AuthContext';
-import { isAdminUser } from '../constants';
+import { isAdminUser, isAppShaperUser } from '../constants';
 import { Member } from '../types';
 import { formatDate } from '../utils/dateUtils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -142,7 +142,7 @@ const SurfingSessionAttendance: React.FC = () => {
       });
   }, [weeklyHistory]);
 
-  const activeMembers = useMemo(() => members.filter(m => m.isActive !== false), [members]);
+  const activeMembers = useMemo(() => members.filter(m => m.isActive !== false && !isAppShaperUser(m)), [members]);
 
   const filteredMembers = useMemo(() => {
     if (!searchTerm) return activeMembers;
@@ -153,6 +153,11 @@ const SurfingSessionAttendance: React.FC = () => {
 
   const handleToggleAttendance = async (userId: string) => {
     if (!selectedSession) return;
+    const targetMember = members.find(m => m.id === userId);
+    if (isAppShaperUser(targetMember)) {
+      showAlert("משתמש בסטטוס אפ-שייפר הינו מנהל מערכת וירטואלי ואינו יכול להשתתף בסשנים", "שים לב");
+      return;
+    }
 
     if (selectedSession.id === 'active') {
       await toggleSessionAttendance(userId);

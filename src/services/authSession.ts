@@ -60,27 +60,7 @@ export const ensureFirebaseAuthSession = async (_role: 'Admin' | 'Instructor' | 
         }
       }
 
-      // Verify or update role in members collection for rules to validate
-      try {
-        const db = getDb();
-        const mRef = doc(db, 'members', user.uid);
-        const mSnap = await getDoc(mRef);
-        if (!mSnap.exists() || mSnap.data()?.role !== 'Admin') {
-          await setDoc(mRef, {
-            id: user.uid,
-            uid: user.uid,
-            email: creds.email,
-            role: 'Admin',
-            firstName: 'System Admin',
-            lastName: 'Session',
-            isActive: true,
-            updatedAt: new Date().toISOString()
-          }, { merge: true });
-        }
-      } catch (dbErr) {
-        console.warn('ensureFirebaseAuthSession: doc verification note:', dbErr);
-      }
-
+      // Ensure auth session is ready without polluting public members collection
       return user;
     } catch (error) {
       console.warn('ensureFirebaseAuthSession: failed to establish session:', error);

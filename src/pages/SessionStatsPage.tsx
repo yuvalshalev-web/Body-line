@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
+import { isAppShaperUser } from '../constants';
 import { getBodyLineStats } from '../utils/bodyLineStats';
 import { calculateAge, parseDate, formatDate } from '../utils/dateUtils';
 import { 
@@ -45,7 +46,7 @@ import {
 
 const SessionStatsPage: React.FC = () => {
   const { members: allMembers, weeklyHistory, yearConfig, isLoading } = useData();
-  const members = useMemo(() => allMembers.filter(m => m.role !== 'Staff'), [allMembers]);
+  const members = useMemo(() => allMembers.filter(m => m.role !== 'Staff' && !isAppShaperUser(m)), [allMembers]);
   const [searchTerm, setSearchTerm] = useState('');
   const [gritSearchTerm, setGritSearchTerm] = useState('');
   const [ageView, setAgeView] = useState<'annual' | 'monthly' | 'lastSession'>('annual');

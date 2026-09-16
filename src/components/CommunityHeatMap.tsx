@@ -23,6 +23,7 @@ import {
   Users
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { isAppShaperUser } from '../constants';
 import { getCoordinates } from '../utils/geocoding';
 import { calculateDistance } from '../utils/distanceCalculator';
 import { loadLeafletWithHeat } from '../utils/leafletHeat';
@@ -52,7 +53,7 @@ const CommunityHeatMap: React.FC = () => {
 
   // Pre-calculate all distance data, bins, cities and operational KPIs
   const geoStats = useMemo(() => {
-    const communityMembers = members.filter(m => m.role !== 'Staff');
+    const communityMembers = members.filter(m => m.role !== 'Staff' && !isAppShaperUser(m));
     const activeMembers = communityMembers.filter(m => m.isActive);
 
     const homeLat = siteConfig?.home_break?.lat || 32.1624;

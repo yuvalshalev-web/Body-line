@@ -222,6 +222,42 @@ async function startServer() {
       token: data.idToken,
       expiresAt: now + expiresInMs
     };
+
+    // Ensure the system admin record in members collection exists with role: 'Admin' so Firestore security rules authorize writes
+    const adminUid = data.localId;
+    if (adminUid) {
+      try {
+        const checkDocUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/members/${adminUid}`;
+        const docRes = await fetch(checkDocUrl, {
+          headers: { 'Authorization': `Bearer ${data.idToken}` }
+        });
+        const docData = docRes.ok ? await docRes.json() : null;
+        if (!docRes.ok || docData?.fields?.role?.stringValue !== 'Admin') {
+          await fetch(checkDocUrl, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${data.idToken}`
+            },
+            body: JSON.stringify({
+              fields: {
+                email: { stringValue: 'sys_admin_session@bodyline.internal' },
+                role: { stringValue: 'Admin' },
+                isSystem: { booleanValue: true },
+                isActive: { booleanValue: false },
+                firstName: { stringValue: 'System' },
+                lastName: { stringValue: 'Admin' },
+                updatedAt: { stringValue: new Date().toISOString() }
+              }
+            })
+          });
+          console.log(`Server: System admin member record (${adminUid}) verified with Admin role in Firestore.`);
+        }
+      } catch (bootstrapErr) {
+        console.warn("Server: System admin doc bootstrap notice:", bootstrapErr);
+      }
+    }
+
     return data.idToken;
   }
 

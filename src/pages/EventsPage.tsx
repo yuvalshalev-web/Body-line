@@ -7,7 +7,7 @@ import { useRandomHeader } from '../hooks/useRandomHeader';
 import { Event } from '../types';
 import { EventEditor } from '../components/admin/EventEditor';
 import { EventDietarySummary } from '../components/EventDietarySummary';
-import { isAdminUser } from '../constants';
+import { isAdminUser, isAppShaperUser } from '../constants';
 
 const EventsPage: React.FC = () => {
   const headerImage = useRandomHeader();
@@ -35,7 +35,7 @@ const EventsPage: React.FC = () => {
 
   const handleRSVP = async (e: React.MouseEvent, eventId: string) => {
     e.stopPropagation();
-    if (!currentUser) return;
+    if (!currentUser || isAppShaperUser(currentUser)) return;
     await toggleEventAttendance(eventId, currentUser.id);
   };
 
@@ -257,7 +257,7 @@ const EventsPage: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        {currentUser && (
+                        {currentUser && !isAppShaperUser(currentUser) && (
                           <button 
                             onClick={(e) => handleRSVP(e, event.id)}
                             disabled={isEventOrganizer(event)}
@@ -270,6 +270,11 @@ const EventsPage: React.FC = () => {
                           >
                             {(event.attendees || []).includes(currentUser.id) ? 'ביטול הגעה' : 'אישור הגעה'}
                           </button>
+                        )}
+                        {currentUser && isAppShaperUser(currentUser) && (
+                          <span className="text-[11px] font-bold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-lg">
+                            משתמש וירטואלי (אפ-שייפר)
+                          </span>
                         )}
                       </div>
                     </div>
@@ -342,7 +347,7 @@ const EventsPage: React.FC = () => {
                   <p className="font-black text-xs text-[#007085] uppercase tracking-wider mb-3">רשימת משתתפים:</p>
                   {selectedEvent.attendees && selectedEvent.attendees.length > 0 ? (
                     <div className="flex flex-col gap-2 max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
-                      {members.filter(m => (selectedEvent.attendees || []).includes(m.id)).map(a => (
+                      {members.filter(m => (selectedEvent.attendees || []).includes(m.id) && !isAppShaperUser(m)).map(a => (
                         <div key={a.id} className="flex items-center gap-3 p-2 bg-white rounded-xl shadow-sm border border-slate-100/50">
                           {a.avatar ? (
                             <img src={a.avatar} className="w-8 h-8 rounded-lg object-cover shadow-sm flex-shrink-0" alt="" />
@@ -369,7 +374,7 @@ const EventsPage: React.FC = () => {
               {/* Real-time Dietary & Kosher Breakdown inside Event Details Modal */}
               {selectedEvent.attendees && selectedEvent.attendees.length > 0 && (
                 <EventDietarySummary
-                  attendees={members.filter(m => (selectedEvent.attendees || []).includes(m.id))}
+                  attendees={members.filter(m => (selectedEvent.attendees || []).includes(m.id) && !isAppShaperUser(m))}
                   compact={false}
                   title="סיכום תזונה וכשרות (נתוני זמן אמת למארגן)"
                 />
@@ -409,7 +414,7 @@ const EventsPage: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-4 max-h-[55vh] overflow-y-auto custom-scrollbar pr-2 pb-4">
-                {members.filter(m => (selectedEventForAttendees.attendees || []).includes(m.id)).map(a => (
+                {members.filter(m => (selectedEventForAttendees.attendees || []).includes(m.id) && !isAppShaperUser(m)).map(a => (
                   <div key={a.id} className="flex items-center gap-5 p-4 bg-white/80 backdrop-blur-sm rounded-2xl shadow-[0_16px_40px_-12px_rgba(0,43,68,0.12)] border border-white hover:shadow-[0_24px_50px_-16px_rgba(0,43,68,0.2)] hover:-translate-y-1 transition-all duration-300">
                     {a.avatar ? (
                       <img src={a.avatar} className="w-14 h-14 rounded-2xl object-cover shadow-md border border-slate-100/50 flex-shrink-0" alt="" loading="lazy" />

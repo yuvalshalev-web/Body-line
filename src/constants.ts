@@ -18,9 +18,27 @@ export const isAppShaperUser = (user: { role?: string; email?: string } | null |
   const email = user.email?.toLowerCase();
   return (
     user.role === 'Support' ||
-    email === SUPER_ADMIN_EMAIL.toLowerCase() ||
-    email === 'yuval@shalev.io'
+    email === SUPER_ADMIN_EMAIL.toLowerCase()
   );
+};
+
+export const isSystemOrTestMember = (member: { email?: string; firstName?: string; lastName?: string; isSystem?: boolean } | null | undefined): boolean => {
+  if (!member) return true;
+  if (member.isSystem) return true;
+  const email = (member.email || '').toLowerCase().trim();
+  if (email.endsWith('@bodyline.internal') || email.includes('@bodyline.internal')) return true;
+  if (email.endsWith('@bodyline.test') || email.includes('@bodyline.test')) return true;
+  if (email.startsWith('sys_') || email.startsWith('test_')) return true;
+  const fullName = `${member.firstName || ''} ${member.lastName || ''}`.toLowerCase().trim();
+  if (
+    fullName.includes('system admin') || 
+    fullName.includes('system session') || 
+    fullName.includes('dev admin') || 
+    fullName.includes('test member')
+  ) {
+    return true;
+  }
+  return false;
 };
 
 export const RANKS = [

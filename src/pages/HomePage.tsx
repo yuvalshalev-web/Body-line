@@ -25,14 +25,20 @@ import {
   MessageCircle,
   Mail,
   MapPin,
-  X
+  X,
+  HeartHandshake,
+  UserCheck,
+  User,
+  ShieldCheck,
+  GraduationCap,
+  Building2
 } from 'lucide-react';
 import { SurfDashboard } from '../components/SurfDashboard';
 import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { getNextSessionDate } from '../services/rolloverService';
-import { isAdminUser } from '../constants';
+import { isAdminUser, isAppShaperUser } from '../constants';
 import { getBodyLineStats } from '../utils/bodyLineStats';
 import { SURF_QUOTES } from '../data/surfQuotes';
 import { SURF_DICTIONARY } from '../data/surfDictionary';
@@ -78,7 +84,8 @@ const HomePage: React.FC = () => {
   useEffect(() => { quotesRef.current = quotes; }, [quotes]);
 
   const activeMembers = useMemo(() => getBodyLineStats(members).activeMembers, [members]);
-  const attendees = useMemo(() => activeMembers.filter(m => attendeeIds.includes(m.id)).sort((a, b) => {
+  const isCurrentUserAppShaper = isAppShaperUser(currentUser);
+  const attendees = useMemo(() => activeMembers.filter(m => attendeeIds.includes(m.id) && !isAppShaperUser(m)).sort((a, b) => {
     const aLast = a.lastName || '';
     const bLast = b.lastName || '';
     const aFirst = a.firstName || '';
@@ -91,6 +98,162 @@ const HomePage: React.FC = () => {
     return (a.firstName + ' ' + a.lastName).localeCompare((b.firstName + ' ' + b.lastName), 'he');
   }), [activeMembers, attendeeIds]);
   const isUserAttending = useMemo(() => currentUser ? attendeeIds.includes(currentUser.id) : false, [attendeeIds, currentUser]);
+
+  const [attendeesFilter, setAttendeesFilter] = useState<'all' | 'pairs' | 'solo' | 'admins' | 'instructors' | 'staff'>('all');
+
+  const adminAttendees = useMemo(() => attendees.filter(a => a.role === 'Admin'), [attendees]);
+  const instructorAttendees = useMemo(() => attendees.filter(a => a.role === 'Instructor'), [attendees]);
+  const staffAttendees = useMemo(() => attendees.filter(a => a.role === 'Staff'), [attendees]);
+
+  const pairStats = useMemo(() => {
+    const attendeeIdSet = new Set(attendeeIds);
+    const memberMap = new Map<string, any>();
+    members.forEach(m => memberMap.set(m.id, m));
+
+    const confirmedPairs = new Map<string, { memberA: any; memberB: any }>();
+    const duoMemberIds = new Set<string>();
+    const soloWithPartner: { member: any; partner: any }[] = [];
+    const soloWithoutPartner: any[] = [];
+
+    attendees.forEach(m => {
+      // מדריך ורכז תמיד באים בתפקיד ללא בני זוג - נספרים כרכזים ומדריכים, אך לא כמי שמגיע לבד
+      if (m.role === 'Admin' || m.role === 'Instructor' || m.role === 'Staff') {
+        return;
+      }
+
+      let partner: any = null;
+      if (m.partnerId && memberMap.has(m.partnerId)) {
+        partner = memberMap.get(m.partnerId);
+      } else {
+        const found = members.find(other => other.partnerId === m.id);
+        if (found) partner = found;
+      }
+
+      if (partner && (partner.role === 'Admin' || partner.role === 'Instructor' || partner.role === 'Staff' || isAppShaperUser(partner))) {
+        partner = null;
+      }
+
+      if (partner) {
+        if (attendeeIdSet.has(partner.id)) {
+          duoMemberIds.add(m.id);
+          duoMemberIds.add(partner.id);
+          const pairKey = [m.id, partner.id].sort().join('_');
+          if (!confirmedPairs.has(pairKey)) {
+            confirmedPairs.set(pairKey, {
+              memberA: m.id < partner.id ? m : partner,
+              memberB: m.id < partner.id ? partner : m
+            });
+          }
+        } else {
+          soloWithPartner.push({ member: m, partner });
+        }
+      } else {
+        soloWithoutPartner.push(m);
+      }
+    });
+
+    const fullPairsCount = confirmedPairs.size;
+    const duoSurfersCount = duoMemberIds.size;
+    const soloWithPartnerCount = soloWithPartner.length;
+    const soloWithoutPartnerCount = soloWithoutPartner.length;
+    const totalSoloCount = soloWithPartnerCount + soloWithoutPartnerCount;
+
+    return {
+      fullPairsCount,
+      duoSurfersCount,
+      soloWithPartnerCount,
+      soloWithoutPartnerCount,
+      totalSoloCount,
+      duoMemberIds,
+      confirmedPairsList: Array.from(confirmedPairs.values()),
+      soloWithPartner,
+      soloWithoutPartner
+    };
+  }, [attendees, attendeeIds, members]);
+
+  const getAttendeePairInfo = useCallback((m: any) => {
+    if (m.role === 'Admin') {
+      return {
+        status: 'admin' as const,
+        partner: null,
+        label: 'רכז סשן',
+        isComingTogether: false
+      };
+    }
+    if (m.role === 'Instructor') {
+      return {
+        status: 'instructor' as const,
+        partner: null,
+        label: 'מדריך סשן',
+        isComingTogether: false
+      };
+    }
+    if (m.role === 'Staff') {
+      return {
+        status: 'staff' as const,
+        partner: null,
+        label: 'צוות עמותה',
+        isComingTogether: false
+      };
+    }
+
+    const attendeeIdSet = new Set(attendeeIds);
+    let partner: any = null;
+    if (m.partnerId) {
+      partner = members.find(p => p.id === m.partnerId) || null;
+    } else {
+      partner = members.find(p => p.partnerId === m.id) || null;
+    }
+
+    if (partner && (partner.role === 'Admin' || partner.role === 'Instructor' || partner.role === 'Staff' || isAppShaperUser(partner))) {
+      partner = null;
+    }
+
+    if (!partner) {
+      return {
+        status: 'independent' as const,
+        partner: null,
+        label: 'גולש/ת עצמאי/ת',
+        isComingTogether: false
+      };
+    }
+
+    const isComing = attendeeIdSet.has(partner.id);
+    if (isComing) {
+      return {
+        status: 'pair_both' as const,
+        partner,
+        label: `חבל זוג עם ${partner.firstName} ${partner.lastName} (מגיעים יחד)`,
+        isComingTogether: true
+      };
+    }
+
+    return {
+      status: 'pair_solo' as const,
+      partner,
+      label: `חבל זוג של ${partner.firstName} ${partner.lastName} (לא אישר/ה)`,
+      isComingTogether: false
+    };
+  }, [attendeeIds, members]);
+
+  const displayedAttendees = useMemo(() => {
+    if (attendeesFilter === 'pairs') {
+      return attendees.filter(a => pairStats.duoMemberIds.has(a.id));
+    }
+    if (attendeesFilter === 'solo') {
+      return attendees.filter(a => a.role !== 'Admin' && a.role !== 'Instructor' && a.role !== 'Staff' && !pairStats.duoMemberIds.has(a.id));
+    }
+    if (attendeesFilter === 'admins') {
+      return attendees.filter(a => a.role === 'Admin');
+    }
+    if (attendeesFilter === 'instructors') {
+      return attendees.filter(a => a.role === 'Instructor');
+    }
+    if (attendeesFilter === 'staff') {
+      return attendees.filter(a => a.role === 'Staff');
+    }
+    return attendees;
+  }, [attendees, attendeesFilter, pairStats.duoMemberIds]);
 
   const handleForecastAnalysis = async () => {
     if (!coastalWeather && !seaStats) return;
@@ -226,7 +389,7 @@ const HomePage: React.FC = () => {
   }, [activeSessionDate, siteConfig?.weeklySessions]);
 
   const handleToggle = async () => {
-    if (!currentUser) return;
+    if (!currentUser || isCurrentUserAppShaper) return;
     setIsProcessing(true);
     try { await toggleSessionAttendance(currentUser.id); } finally { setIsProcessing(false); }
   };
@@ -341,29 +504,38 @@ const HomePage: React.FC = () => {
              </div>
              
              {/* Hotspot */}
-             <div className="surfer-hotspot-container">
-               <button 
-                 onClick={handleToggle}
-                 disabled={isProcessing}
-                 className="surfer-hotspot"
-                 aria-label={isUserAttending ? "בטל הגעה" : "אני מגיע/ה"}
-               >
-                 <div className="pulse-halo"></div>
-                 {isProcessing ? (
-                   <Loader2 className="animate-spin text-white/50" size={32} />
-                 ) : (
-                    null
-                 )}
-               </button>
-               <motion.span 
-                 className="secondary-label w-max mt-6"
-                 style={{ color: isUserAttending ? '#FF2D60' : '#A2FF00' }}
-                 animate={{ opacity: [1, 0.4, 1], scale: [1, 1.02, 1] }}
-                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-               >
-                 {isUserAttending ? 'לחץ על הגולש לביטול הגעה' : 'לחץ על הגולש לאישור הגעה'}
-               </motion.span>
-             </div>
+             {isCurrentUserAppShaper ? (
+               <div className="surfer-hotspot-container pointer-events-none">
+                 <div className="bg-[#002b44]/80 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl shadow-xl text-center max-w-xs">
+                   <span className="text-xs font-black text-amber-300">משתמש וירטואלי (אפ-שייפר)</span>
+                   <p className="text-[11px] text-white/90 mt-0.5 leading-snug">ניהול מערכת בלבד • ללא השתתפות בסשנים ואירועים</p>
+                 </div>
+               </div>
+             ) : (
+               <div className="surfer-hotspot-container">
+                 <button 
+                   onClick={handleToggle}
+                   disabled={isProcessing}
+                   className="surfer-hotspot"
+                   aria-label={isUserAttending ? "בטל הגעה" : "אני מגיע/ה"}
+                 >
+                   <div className="pulse-halo"></div>
+                   {isProcessing ? (
+                     <Loader2 className="animate-spin text-white/50" size={32} />
+                   ) : (
+                      null
+                   )}
+                 </button>
+                 <motion.span 
+                   className="secondary-label w-max mt-6"
+                   style={{ color: isUserAttending ? '#FF2D60' : '#A2FF00' }}
+                   animate={{ opacity: [1, 0.4, 1], scale: [1, 1.02, 1] }}
+                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                 >
+                   {isUserAttending ? 'לחץ על הגולש לביטול הגעה' : 'לחץ על הגולש לאישור הגעה'}
+                 </motion.span>
+               </div>
+             )}
           </div>
         </section>
 
@@ -408,8 +580,108 @@ const HomePage: React.FC = () => {
                   הכוכבים שאישרו הגעה
                 </h4>
                 <p className="text-sm md:text-lg font-black text-[#007085] uppercase tracking-[0.3em] font-yehuda opacity-80">
-                  {attendees.length} גולשים כבר בפנים. מה איתך?
+                  {attendees.length === 1 ? 'גולש 1 כבר בפנים. מה איתך?' : `${attendees.length} גולשים כבר בפנים. מה איתך?`}
                 </p>
+              </div>
+
+              {/* Compact Single Horizontal Row for Attendance Breakdown */}
+              <div className="w-full max-w-2xl mx-auto pt-1">
+                <div className="grid grid-cols-5 divide-x divide-x-reverse divide-[#002b44]/10 bg-white/80 backdrop-blur-md rounded-2xl border border-white/90 shadow-[0_8px_25px_-6px_rgba(0,43,68,0.08)] p-1 sm:p-2">
+                  {/* זוגות */}
+                  <button
+                    type="button"
+                    onClick={() => { setAttendeesFilter('pairs'); setShowAttendees(true); }}
+                    className="flex flex-col items-center justify-center py-2 px-0.5 sm:px-1 rounded-xl hover:bg-emerald-500/[0.08] active:scale-95 transition-all text-center group cursor-pointer"
+                    title="זוגות ששניהם אישרו הגעה"
+                  >
+                    <div className="flex items-center gap-0.5 sm:gap-1 text-emerald-700 mb-0.5">
+                      <HeartHandshake className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform flex-shrink-0" />
+                      <span className="text-[10px] sm:text-xs font-black tracking-tight text-emerald-950">זוגות</span>
+                    </div>
+                    <span className="text-lg sm:text-2xl font-black text-emerald-800 font-yehuda leading-none my-0.5">
+                      {pairStats.fullPairsCount}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] font-bold text-emerald-700/80 leading-tight">
+                      {pairStats.duoSurfersCount} גולשים
+                    </span>
+                  </button>
+
+                  {/* לבד */}
+                  <button
+                    type="button"
+                    onClick={() => { setAttendeesFilter('solo'); setShowAttendees(true); }}
+                    className="flex flex-col items-center justify-center py-2 px-0.5 sm:px-1 rounded-xl hover:bg-amber-500/[0.08] active:scale-95 transition-all text-center group cursor-pointer"
+                    title="גולשים שמגיעים לבד (ללא רכזים, מדריכים וצוות עמותה)"
+                  >
+                    <div className="flex items-center gap-0.5 sm:gap-1 text-amber-700 mb-0.5">
+                      <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform flex-shrink-0" />
+                      <span className="text-[10px] sm:text-xs font-black tracking-tight text-amber-950">לבד</span>
+                    </div>
+                    <span className="text-lg sm:text-2xl font-black text-amber-800 font-yehuda leading-none my-0.5">
+                      {pairStats.totalSoloCount}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] font-bold text-amber-700/80 leading-tight">
+                      סולו
+                    </span>
+                  </button>
+
+                  {/* רכזים */}
+                  <button
+                    type="button"
+                    onClick={() => { setAttendeesFilter('admins'); setShowAttendees(true); }}
+                    className="flex flex-col items-center justify-center py-2 px-0.5 sm:px-1 rounded-xl hover:bg-sky-500/[0.08] active:scale-95 transition-all text-center group cursor-pointer"
+                    title="רכזים שאישרו הגעה"
+                  >
+                    <div className="flex items-center gap-0.5 sm:gap-1 text-sky-700 mb-0.5">
+                      <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform flex-shrink-0" />
+                      <span className="text-[10px] sm:text-xs font-black tracking-tight text-sky-950">רכזים</span>
+                    </div>
+                    <span className="text-lg sm:text-2xl font-black text-sky-800 font-yehuda leading-none my-0.5">
+                      {adminAttendees.length}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] font-bold text-sky-700/80 leading-tight">
+                      {adminAttendees.length === 1 ? 'רכז פעיל' : 'בסשן'}
+                    </span>
+                  </button>
+
+                  {/* מדריכים */}
+                  <button
+                    type="button"
+                    onClick={() => { setAttendeesFilter('instructors'); setShowAttendees(true); }}
+                    className="flex flex-col items-center justify-center py-2 px-0.5 sm:px-1 rounded-xl hover:bg-indigo-500/[0.08] active:scale-95 transition-all text-center group cursor-pointer"
+                    title="מדריכים שאישרו הגעה"
+                  >
+                    <div className="flex items-center gap-0.5 sm:gap-1 text-indigo-700 mb-0.5">
+                      <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform flex-shrink-0" />
+                      <span className="text-[10px] sm:text-xs font-black tracking-tight text-indigo-950">מדריכים</span>
+                    </div>
+                    <span className="text-lg sm:text-2xl font-black text-indigo-800 font-yehuda leading-none my-0.5">
+                      {instructorAttendees.length}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] font-bold text-indigo-700/80 leading-tight">
+                      {instructorAttendees.length === 1 ? 'מדריך פעיל' : 'בסשן'}
+                    </span>
+                  </button>
+
+                  {/* צוות העמותה */}
+                  <button
+                    type="button"
+                    onClick={() => { setAttendeesFilter('staff'); setShowAttendees(true); }}
+                    className="flex flex-col items-center justify-center py-2 px-0.5 sm:px-1 rounded-xl hover:bg-rose-500/[0.08] active:scale-95 transition-all text-center group cursor-pointer"
+                    title="צוות עמותה שאישרו הגעה (נלקחים בחשבון להדרכות וארוחת בוקר)"
+                  >
+                    <div className="flex items-center gap-0.5 sm:gap-1 text-rose-700 mb-0.5">
+                      <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform flex-shrink-0" />
+                      <span className="text-[10px] sm:text-xs font-black tracking-tight text-rose-950">צוות עמותה</span>
+                    </div>
+                    <span className="text-lg sm:text-2xl font-black text-rose-800 font-yehuda leading-none my-0.5">
+                      {staffAttendees.length}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] font-bold text-rose-700/80 leading-tight">
+                      {staffAttendees.length === 1 ? 'איש צוות' : 'בסשן'}
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -570,47 +842,185 @@ const HomePage: React.FC = () => {
               <div className="absolute inset-0 opacity-[0.04] mix-blend-multiply pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
               
               <div className="relative z-10">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-3xl font-black text-[#002b44] tracking-tight font-yehuda">נבחרת הסשן</h3>
-                  <div className="px-4 py-1.5 bg-[#007085]/10 text-[#007085] rounded-full text-sm font-black tracking-widest">{attendees.length} גולשים</div>
+                <div className="flex justify-between items-center mb-3">
+                  <div>
+                    <h3 className="text-2xl sm:text-3xl font-black text-[#002b44] tracking-tight font-yehuda">נבחרת הסשן</h3>
+                    <p className="text-[11px] sm:text-xs text-slate-500 font-bold mt-0.5">
+                      {pairStats.fullPairsCount} זוגות • {pairStats.totalSoloCount} לבד • {adminAttendees.length} רכזים • {instructorAttendees.length} מדריכים • {staffAttendees.length} צוות עמותה
+                    </p>
+                  </div>
+                  <div className="px-3 py-1.5 bg-[#007085]/10 text-[#007085] rounded-full text-xs font-black tracking-wider flex-shrink-0">
+                    {attendees.length} גולשים
+                  </div>
                 </div>
-                <div className="space-y-3 max-h-[55vh] overflow-y-auto custom-scrollbar pr-2 pb-2">
-                  {attendees.map(a => (
-                    <div 
-                      key={a.id} 
-                      onClick={() => setSelectedMemberProfile(a)}
-                      role="button"
-                      tabIndex={0}
-                      className="flex items-center justify-between p-3.5 bg-white/80 backdrop-blur-sm rounded-2xl shadow-[0_8px_24px_-8px_rgba(0,43,68,0.08)] border border-white hover:border-[#007085]/30 hover:shadow-[0_16px_36px_-10px_rgba(0,43,68,0.18)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-4">
-                        {a.avatar ? (
-                          <img src={a.avatar} className="w-13 h-13 rounded-2xl object-cover shadow-sm border border-slate-100/60 flex-shrink-0" alt="" loading="lazy" />
-                        ) : (
-                          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-white shadow-inner flex items-center justify-center text-slate-400 flex-shrink-0">
-                            <UserCircle size={26} strokeWidth={1.5} />
+
+                {/* Filter Tabs */}
+                <div className="flex items-center gap-1 mb-3.5 p-1 bg-slate-100/90 rounded-xl overflow-x-auto custom-scrollbar">
+                  <button
+                    onClick={() => setAttendeesFilter('all')}
+                    className={`py-1.5 px-2.5 rounded-lg text-[11px] sm:text-xs font-black transition-all whitespace-nowrap ${
+                      attendeesFilter === 'all'
+                        ? 'bg-white text-[#002b44] shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    הכל ({attendees.length})
+                  </button>
+                  <button
+                    onClick={() => setAttendeesFilter('pairs')}
+                    className={`py-1.5 px-2 rounded-lg text-[11px] sm:text-xs font-black transition-all flex items-center justify-center gap-1 whitespace-nowrap ${
+                      attendeesFilter === 'pairs'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-emerald-800 hover:text-emerald-950'
+                    }`}
+                  >
+                    <HeartHandshake size={12} />
+                    <span>זוגות ({pairStats.fullPairsCount})</span>
+                  </button>
+                  <button
+                    onClick={() => setAttendeesFilter('solo')}
+                    className={`py-1.5 px-2 rounded-lg text-[11px] sm:text-xs font-black transition-all flex items-center justify-center gap-1 whitespace-nowrap ${
+                      attendeesFilter === 'solo'
+                        ? 'bg-amber-600 text-white shadow-xs'
+                        : 'text-amber-800 hover:text-amber-950'
+                    }`}
+                  >
+                    <UserCheck size={12} />
+                    <span>לבד ({pairStats.totalSoloCount})</span>
+                  </button>
+                  <button
+                    onClick={() => setAttendeesFilter('admins')}
+                    className={`py-1.5 px-2 rounded-lg text-[11px] sm:text-xs font-black transition-all flex items-center justify-center gap-1 whitespace-nowrap ${
+                      attendeesFilter === 'admins'
+                        ? 'bg-sky-600 text-white shadow-xs'
+                        : 'text-sky-800 hover:text-sky-950'
+                    }`}
+                  >
+                    <ShieldCheck size={12} />
+                    <span>רכזים ({adminAttendees.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setAttendeesFilter('instructors')}
+                    className={`py-1.5 px-2 rounded-lg text-[11px] sm:text-xs font-black transition-all flex items-center justify-center gap-1 whitespace-nowrap ${
+                      attendeesFilter === 'instructors'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-indigo-800 hover:text-indigo-950'
+                    }`}
+                  >
+                    <GraduationCap size={12} />
+                    <span>מדריכים ({instructorAttendees.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setAttendeesFilter('staff')}
+                    className={`py-1.5 px-2 rounded-lg text-[11px] sm:text-xs font-black transition-all flex items-center justify-center gap-1 whitespace-nowrap ${
+                      attendeesFilter === 'staff'
+                        ? 'bg-rose-600 text-white shadow-xs'
+                        : 'text-rose-800 hover:text-rose-950'
+                    }`}
+                  >
+                    <Building2 size={12} />
+                    <span>צוות ({staffAttendees.length})</span>
+                  </button>
+                </div>
+
+                <div className="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2 pb-2">
+                  {displayedAttendees.map(a => {
+                    const pairInfo = getAttendeePairInfo(a);
+                    return (
+                      <div 
+                        key={a.id} 
+                        onClick={() => setSelectedMemberProfile(a)}
+                        role="button"
+                        tabIndex={0}
+                        className="flex items-center justify-between p-3.5 bg-white/90 backdrop-blur-sm rounded-2xl shadow-[0_4px_16px_-4px_rgba(0,43,68,0.08)] border border-white hover:border-[#007085]/30 hover:shadow-[0_12px_28px_-6px_rgba(0,43,68,0.15)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3.5">
+                          {a.avatar ? (
+                            <img src={a.avatar} className="w-13 h-13 rounded-2xl object-cover shadow-sm border border-slate-100/60 flex-shrink-0" alt="" loading="lazy" />
+                          ) : (
+                            <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-white shadow-inner flex items-center justify-center text-slate-400 flex-shrink-0">
+                              <UserCircle size={26} strokeWidth={1.5} />
+                            </div>
+                          )}
+                          <div className="text-right">
+                            <p className="font-black text-[#002b44] text-base group-hover:text-[#007085] transition-colors">{a.firstName} {a.lastName}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {a.role === 'Admin' ? (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-sky-100 text-sky-800 border border-sky-200/70">
+                                  <ShieldCheck size={11} className="text-sky-700" />
+                                  רכז
+                                </span>
+                              ) : a.role === 'Instructor' ? (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-indigo-100 text-indigo-800 border border-indigo-200/70">
+                                  <GraduationCap size={11} className="text-indigo-700" />
+                                  מדריך
+                                </span>
+                              ) : a.role === 'Staff' ? (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200/70">
+                                  <Building2 size={11} className="text-rose-700" />
+                                  צוות עמותה
+                                </span>
+                              ) : (
+                                <span className="text-[11px] font-black text-[#007085] uppercase tracking-[0.15em] opacity-80">
+                                  {a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
+                                </span>
+                              )}
+                              {(a.full_address || a.city) && (
+                                <span className="text-slate-400 font-normal font-sans text-[11px]">
+                                  • {a.full_address || a.city}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {/* Pair status pill */}
+                            <div className="mt-1">
+                              {pairInfo.status === 'admin' && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-200/70">
+                                  <ShieldCheck size={11} className="text-sky-600" />
+                                  רכז סשן בתפקיד
+                                </span>
+                              )}
+                              {pairInfo.status === 'instructor' && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200/70">
+                                  <GraduationCap size={11} className="text-indigo-600" />
+                                  מדריך סשן בתפקיד
+                                </span>
+                              )}
+                              {pairInfo.status === 'pair_both' && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200/70">
+                                  <HeartHandshake size={11} className="text-emerald-600" />
+                                  זוג עם {pairInfo.partner?.firstName} {pairInfo.partner?.lastName} (שניהם אישרו)
+                                </span>
+                              )}
+                              {pairInfo.status === 'pair_solo' && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200/70">
+                                  <UserCheck size={11} className="text-amber-600" />
+                                  מגיע/ה לבד ({pairInfo.partner?.firstName} לא אישר/ה)
+                                </span>
+                              )}
+                              {pairInfo.status === 'independent' && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200/70">
+                                  <User size={11} className="text-slate-500" />
+                                  גולש/ת עצמאי/ת
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        )}
-                        <div className="text-right">
-                          <p className="font-black text-[#002b44] text-base group-hover:text-[#007085] transition-colors">{a.firstName} {a.lastName}</p>
-                          <p className="text-[11px] font-black text-[#007085] uppercase tracking-[0.15em] opacity-80 mt-0.5">
-                            {a.role === 'Admin' ? 'רכז' : a.role === 'Staff' ? 'צוות עמותה' : a.role === 'Instructor' ? 'מדריך' : a.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
-                            {(a.full_address || a.city) && (
-                              <span className="text-slate-400 font-normal mr-2 font-sans text-[11px]">
-                                • {a.full_address || a.city}
-                              </span>
-                            )}
-                          </p>
+                        </div>
+
+                        <div className="w-8 h-8 rounded-full bg-[#007085]/10 text-[#007085] group-hover:bg-[#007085] group-hover:text-white flex items-center justify-center transition-colors flex-shrink-0 mr-2">
+                          <Phone size={14} />
                         </div>
                       </div>
-
-                      <div className="w-8 h-8 rounded-full bg-[#007085]/10 text-[#007085] group-hover:bg-[#007085] group-hover:text-white flex items-center justify-center transition-colors">
-                        <Phone size={14} />
-                      </div>
+                    );
+                  })}
+                  {displayedAttendees.length === 0 && (
+                    <div className="py-8 text-center text-slate-400 font-bold text-sm">
+                      לא נמצאו גולשים בסינון זה
                     </div>
-                  ))}
+                  )}
                 </div>
-                <button onClick={() => setShowAttendees(false)} className="w-full mt-5 py-3.5 bg-[#002b44] text-white rounded-2xl shadow-[0_12px_24px_-8px_rgba(0,43,68,0.4)] font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-95 hover:bg-[#003b5c]">סגור</button>
+                <button onClick={() => setShowAttendees(false)} className="w-full mt-4 py-3.5 bg-[#002b44] text-white rounded-2xl shadow-[0_12px_24px_-8px_rgba(0,43,68,0.4)] font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-95 hover:bg-[#003b5c]">סגור</button>
               </div>
            </div>
         </div>

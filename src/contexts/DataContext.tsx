@@ -20,7 +20,7 @@ import {
 } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../utils/dateUtils';
 import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore, SurfCall } from '../types';
-import { SUPER_ADMIN_EMAIL, isAdminUser, isAppShaperUser } from '../constants';
+import { SUPER_ADMIN_EMAIL, isAdminUser, isAppShaperUser, isSystemOrTestMember } from '../constants';
 import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageStats';
 import { storage } from '../utils/storage';
@@ -490,7 +490,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Initial Placeholder from Cache
     const cachedMembers = storage.get('cached_members_v3');
-    if (cachedMembers) setMembers(cachedMembers);
+    if (cachedMembers && Array.isArray(cachedMembers)) {
+      setMembers((cachedMembers as Member[]).filter(m => !isSystemOrTestMember(m)));
+    }
     
     const cachedHistory = storage.get('cached_history_v3');
     if (cachedHistory) setWeeklyHistory(cachedHistory);
@@ -564,10 +566,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     const unsubMembers = trackedOnSnapshot(query(collection(db, 'members'), limit(1000)), (snapshot) => {
-      const rawDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Member));
-      setMembers(rawDocs);
-      setIsDbEmpty(snapshot.empty);
-      storage.set('cached_members_v3', rawDocs, 2 / 60);
+      const cleanDocs = snapshot.docs
+        .map(d => ({ id: d.id, ...d.data() } as Member))
+        .filter(m => !isSystemOrTestMember(m));
+      setMembers(cleanDocs);
+      setIsDbEmpty(cleanDocs.length === 0);
+      storage.set('cached_members_v3', cleanDocs, 2 / 60);
     });
 
     const unsubHistory = trackedOnSnapshot(query(collection(db, 'weekly_history'), orderBy('date', 'desc'), limit(1000)), (snapshot) => {
@@ -1084,6 +1088,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const memberId = currentUser?.id || details.creatorMemberId || (details.creatorId !== authUid ? details.creatorId : undefined) || authUid;
     const creatorName = details.creatorName || (currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : 'חבר קהילה');
 
+    const isAppShaper = isAppShaperUser(currentUser);
+    const defaultAttendees = (details.attendees && details.attendees.length > 0) 
+      ? details.attendees 
+      : (isAppShaper ? [] : [memberId]);
+
     // CRITICAL: Firestore Security Rules enforce: request.resource.data.creatorId == request.auth.uid
     const payload = {
       ...details,
@@ -1091,7 +1100,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       creatorMemberId: memberId,
       creatorName,
       type: details.type || 'MEMBER',
-      attendees: details.attendees && details.attendees.length > 0 ? details.attendees : [memberId],
+      attendees: defaultAttendees,
       isArchived: details.isArchived ?? false
     };
 
@@ -1185,6 +1194,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const member = members.find(m => m.id === userId);
     if (member && !member.isActive) {
       showAlert("משתמש מושעה אינו יכול לאשר הגעה", "שגיאה");
+      return;
+    }
+    if (member && isAppShaperUser(member)) {
+      showAlert("משתמש בסטטוס אפ-שייפר הינו מנהל מערכת וירטואלי ואינו יכול להצטרף לאירועים", "שים לב");
       return;
     }
     const event = events.find(e => e.id === eventId);
@@ -1299,6 +1312,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!member || member.isActive === false || (member as any).status === 'suspended' || (member as any).status === 'left') {
       console.warn("toggleSessionAttendance: Member not eligible", member);
       showAlert("משתמש שאינו פעיל או שאינו קיים אינו יכול לאשר הגעה", "שגיאה");
+      return;
+    }
+    if (isAppShaperUser(member)) {
+      showAlert("משתמש בסטטוס אפ-שייפר הינו מנהל מערכת וירטואלי ואינו יכול להצטרף לסשנים", "שגיאה");
       return;
     }
     
@@ -1432,10 +1449,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // 3. Archive to weekly_history
       console.log("finalizeSession: Archiving to weekly_history...");
-      // Filter out Staff members from the attendees list for statistical purposes
+      // Filter out Staff and App-Shaper members from the attendees list for statistical purposes
       const attendeesWithoutStaff = currentAttendees.filter((uid: string) => {
         const member = members.find(m => m.id === uid);
-        return member && member.role !== 'Staff';
+        return member && member.role !== 'Staff' && !isAppShaperUser(member);
       });
       
       // Generate a deterministic ID based on the session date to prevent duplicate sessions 

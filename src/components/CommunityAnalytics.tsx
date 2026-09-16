@@ -17,6 +17,7 @@ import {
 import { motion } from 'motion/react';
 import { useData } from '../contexts/DataContext';
 import { parseDate } from '../utils/dateUtils';
+import { isAppShaperUser } from '../constants';
 import { EliteStatCard } from './UserAnalytics';
 import { ResponsiveContainer, Cell, PieChart, Pie, Tooltip } from 'recharts';
 import { calculateAge } from '../utils/dateUtils';
@@ -29,7 +30,7 @@ const CommunityAnalytics: React.FC = () => {
   const stats = useMemo(() => {
     if (!members.length) return null;
 
-    const communityMembers = members.filter(m => m.role !== 'Staff');
+    const communityMembers = members.filter(m => m.role !== 'Staff' && !isAppShaperUser(m));
     const activeMembers = communityMembers.filter(m => m.isActive);
     const totalMembers = communityMembers.length;
 

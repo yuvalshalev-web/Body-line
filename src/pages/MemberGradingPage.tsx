@@ -4,6 +4,7 @@ import { Search, User, UserCheck, Activity, Target, Zap, Waves, Compass, Brain, 
 import { useData } from '../contexts/DataContext';
 import MemberGradingModal from '../components/admin/MemberGradingModal';
 import { Member } from '../types';
+import { isAppShaperUser } from '../constants';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
@@ -14,7 +15,7 @@ const MemberGradingPage: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
   const filteredMembers = members.filter(m => 
-    m.role !== 'Instructor' && m.role !== 'Staff' && 
+    m.role !== 'Instructor' && m.role !== 'Staff' && !isAppShaperUser(m) && 
     (m.firstName.toLowerCase().includes(searchTerm.toLowerCase()) || 
      m.lastName.toLowerCase().includes(searchTerm.toLowerCase()))
   );

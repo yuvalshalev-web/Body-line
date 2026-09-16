@@ -4,6 +4,7 @@ import { Search, Filter, User, Mail, Phone, MapPin, Waves, Loader2, MessageCircl
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Member } from '../types';
+import { isSystemOrTestMember } from '../constants';
 import PlayerCard from '../components/PlayerCard';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 
@@ -46,7 +47,7 @@ const DirectoryPage: React.FC = () => {
     const memberIdentity = getRoleLabel(member);
     const matchesIdentity = selectedIdentity === 'הכל' || memberIdentity === selectedIdentity;
     
-    return matchesSearch && matchesIdentity && member.isActive !== false;
+    return matchesSearch && matchesIdentity && member.isActive !== false && !isSystemOrTestMember(member);
   });
 
   const roleOrder: Record<string, number> = { 

@@ -49,6 +49,7 @@ import {
 import { useData } from '../../contexts/DataContext';
 import { parseDate, formatDate } from '../../utils/dateUtils';
 import { Member } from '../../types';
+import { isAppShaperUser } from '../../constants';
 
 interface PairStats {
   id: string;
@@ -302,7 +303,7 @@ const PairsPersistence: React.FC = () => {
       pairedMemberIds.add(p.participant.id);
     });
 
-    const activeMembersList = members.filter(m => m.isActive !== false && m.role !== 'Staff');
+    const activeMembersList = members.filter(m => m.isActive !== false && m.role !== 'Staff' && !isAppShaperUser(m));
     const unpairedMembers = activeMembersList.filter(m => !pairedMemberIds.has(m.id));
 
     let pairedAttTotal = 0;

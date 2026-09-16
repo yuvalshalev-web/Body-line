@@ -1,15 +1,17 @@
 import { Member } from '../types';
+import { isAppShaperUser } from '../constants';
 
 /**
  * Body-Line Dynamic Context & Stats Helper
  * This function provides core logic for calculating statistics based on active members.
  */
 export const getBodyLineStats = (allMembers: Member[]) => {
-  // Filter for active members. Exclude suspended or left members.
+  // Filter for active members. Exclude suspended, left, or App-Shaper virtual members.
   const activeMembers = allMembers.filter(m => 
     m.isActive !== false && 
     (m as any).status !== 'suspended' && 
-    (m as any).status !== 'left'
+    (m as any).status !== 'left' &&
+    !isAppShaperUser(m)
   );
   const n = activeMembers.length;
 

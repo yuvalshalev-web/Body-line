@@ -34,6 +34,7 @@ import OperationalChartHeader from '../OperationalChartHeader';
 import { EliteStatCard } from '../UserAnalytics';
 import { calculateAge, parseDate } from '../../utils/dateUtils';
 import { Member } from '../../types';
+import { isAppShaperUser } from '../../constants';
 
 interface SemiCircleGaugeProps {
   value: number; // 0-100 (octo 8-week)
@@ -373,7 +374,7 @@ const TrendsDashboard: React.FC = () => {
   const stats = useMemo(() => {
     if (!members.length) return null;
 
-    const communityMembers = members.filter(m => m.role !== 'Staff');
+    const communityMembers = members.filter(m => m.role !== 'Staff' && !isAppShaperUser(m));
     const activeMembers = communityMembers.filter(m => m.isActive);
 
     const last8Sessions = weeklyHistory.slice(0, 8);
@@ -727,8 +728,7 @@ const TrendsDashboard: React.FC = () => {
     { id: 'other', label: 'אחר/לא צוין', color: '#718096' }
   ];
 
-  const isAppShaper = (m: Member) => m.role === 'Support' || (m.email || '').toLowerCase() === 'yuval.shalev@gmail.com';
-  const communityMembers = useMemo(() => members.filter(m => m.isActive && !isAppShaper(m) && m.role !== 'Staff'), [members]);
+  const communityMembers = useMemo(() => members.filter(m => m.isActive && !isAppShaperUser(m) && m.role !== 'Staff'), [members]);
 
   const chartData = useMemo(() => {
     if (!yearConfig) return [];
