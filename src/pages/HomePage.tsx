@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { SurfDashboard } from '../components/SurfDashboard';
 import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
+import { OnlineUsersCounter } from '../components/OnlineUsersCounter';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { getNextSessionDate } from '../services/rolloverService';
@@ -476,7 +477,7 @@ const HomePage: React.FC = () => {
           <div className="relative z-10 min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] flex flex-col items-center justify-between p-6 md:p-12 text-center">
              {/* Top Section: Quote */}
              <div className="w-full pt-4 md:pt-8 flex flex-col items-center">
-               <p className="text-[#121212] font-semibold italic text-sm md:text-2xl max-w-2xl mx-auto tracking-[0.08em] leading-relaxed mb-6 md:mb-10 drop-shadow-lg">
+               <p className="text-white/95 font-semibold italic text-sm md:text-2xl max-w-2xl mx-auto tracking-[0.08em] leading-relaxed mb-6 md:mb-10 drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
                  "A day will come that is like no other... and nothing that happens after will ever be the same."
                </p>
              </div>
@@ -485,18 +486,18 @@ const HomePage: React.FC = () => {
              <div className="w-full flex flex-col items-center pb-12 md:pb-20 relative z-20 mt-auto">
                <h1 className="text-[var(--surfer-yellow)] big-thursday-title" data-text="יום חמישי הגדול">יום חמישי הגדול</h1>
                
-               <div className="mt-8 md:mt-12 space-y-4 flex flex-col items-center">
-                 <p className="text-base md:text-xl font-bold text-[#121212] drop-shadow-md">נכנסים למים בעוד...</p>
-                 <div className="flex gap-2 md:gap-4 text-[#121212] font-black" dir="ltr">
+               <div className="mt-8 md:mt-12 space-y-4 md:space-y-6 flex flex-col items-center">
+                 <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-white drop-shadow-[0_3px_10px_rgba(0,0,0,0.85)] tracking-wide">נכנסים למים בעוד...</p>
+                 <div className="flex gap-2.5 sm:gap-3 md:gap-5 font-black" dir="ltr">
                    {[
                      { label: 'ימים', value: countdown.days },
                      { label: 'שעות', value: countdown.hours },
                      { label: 'דקות', value: countdown.minutes },
                      { label: 'שניות', value: countdown.seconds }
                    ].map((item, i) => (
-                     <div key={i} className="flex flex-col items-center bg-white/10 backdrop-blur-[15px] border border-white/20 px-3 py-2 md:px-5 md:py-3 rounded-2xl shadow-lg min-w-[60px] md:min-w-[80px]">
-                       <span className="text-2xl md:text-4xl font-black text-[var(--surfer-yellow)] font-heebo">{item.value}</span>
-                       <span className="text-[9px] md:text-[12px] uppercase font-bold tracking-tighter opacity-80 text-[#121212]">{item.label}</span>
+                     <div key={i} className="flex flex-col items-center bg-slate-900/50 backdrop-blur-xl border border-white/25 px-3.5 py-2.5 sm:px-4 sm:py-3 md:px-6 md:py-4 rounded-2xl md:rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.4)] min-w-[65px] sm:min-w-[72px] md:min-w-[95px] transition-transform duration-300 hover:scale-105">
+                       <span className="text-2xl sm:text-3xl md:text-5xl font-black text-[var(--surfer-yellow)] font-heebo drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">{item.value}</span>
+                       <span className="text-[10px] sm:text-xs md:text-sm uppercase font-black tracking-tight text-white/95 mt-0.5 md:mt-1 drop-shadow-sm">{item.label}</span>
                      </div>
                    ))}
                  </div>
@@ -538,6 +539,9 @@ const HomePage: React.FC = () => {
              )}
           </div>
         </section>
+
+        {/* Live Online Users Counter - Between Big Thursday Hero and Confirmed Attendees */}
+        <OnlineUsersCounter />
 
         {/* Confirmed Members Bar - Positioned below Hero, above AstroDecks */}
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
