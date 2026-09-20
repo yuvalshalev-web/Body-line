@@ -956,6 +956,7 @@ const AdminPage: React.FC = () => {
                         <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">משתמש</th>
                         <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">זהות</th>
                         <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">סטטוס</th>
+                        <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest">כניסה</th>
                         <th className="px-8 py-6 text-[12px] font-black text-[#000000]/60 uppercase tracking-widest text-center">עריכה</th>
                       </tr>
                     </thead>
@@ -1053,6 +1054,25 @@ const AdminPage: React.FC = () => {
                             }`}>
                               {member.isActive === false ? 'מושעה' : 'פעיל'}
                             </span>
+                          </td>
+                          <td className="px-8 py-6 whitespace-nowrap">
+                            {member.lastLoginAt ? (() => {
+                              const d = new Date(member.lastLoginAt);
+                              if (isNaN(d.getTime())) return <span className="text-[12px] text-slate-400 font-bold">—</span>;
+                              return (
+                                <div className="flex flex-col text-right">
+                                  <span className="text-[12px] font-black text-slate-800 flex items-center gap-1.5">
+                                    <Clock size={13} className="text-[#007085] shrink-0" />
+                                    {d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                  </span>
+                                  <span className="text-[11px] font-black text-slate-500 mr-4.5 font-mono">
+                                    {d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                              );
+                            })() : (
+                              <span className="text-[11px] font-bold text-slate-400 italic">טרם התחבר</span>
+                            )}
                           </td>
                           <td className="px-8 py-6">
                             <div className="flex items-center justify-center gap-2">

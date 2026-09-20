@@ -196,15 +196,17 @@ const LoginPage: React.FC = () => {
           return;
         }
 
+        const nowIso = new Date().toISOString();
         try {
           await updateDoc(doc(db, 'members', user.uid), {
-            loginCount: increment(1)
+            loginCount: increment(1),
+            lastLoginAt: nowIso
           });
         } catch (updateErr) {
           console.warn('Could not update login count:', updateErr);
         }
 
-        login({ ...memberData, loginCount: (memberData.loginCount || 0) + 1 });
+        login({ ...memberData, loginCount: (memberData.loginCount || 0) + 1, lastLoginAt: nowIso });
         navigate('/');
       } else {
         // Find by email fallback
@@ -213,7 +215,16 @@ const LoginPage: React.FC = () => {
         if (!emailSnapshot.empty) {
           const mDoc = emailSnapshot.docs[0];
           const mData = { ...mDoc.data(), id: mDoc.id } as Member;
-          login(mData);
+          const nowIso = new Date().toISOString();
+          try {
+            await updateDoc(doc(db, 'members', mDoc.id), {
+              loginCount: increment(1),
+              lastLoginAt: nowIso
+            });
+          } catch (e) {
+            console.warn('Could not update fallback login metrics:', e);
+          }
+          login({ ...mData, loginCount: (mData.loginCount || 0) + 1, lastLoginAt: nowIso });
           navigate('/');
         } else {
           setError('פרטי החבר לא נמצאו במערכת');
