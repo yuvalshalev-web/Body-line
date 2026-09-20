@@ -65,14 +65,15 @@ export const auth = (() => {
   }
 })();
 
-// Handle "(default)" database ID correctly with force long polling for maximum reliability across iframes and sandboxes
+// Handle "(default)" database ID correctly with auto long polling detection for maximum reliability across iframes and sandboxes
 export const db: Firestore = (() => {
   const dbId = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== '(default)'
     ? firebaseConfig.firestoreDatabaseId
     : undefined;
   try {
     return initializeFirestore(app, {
-      experimentalForceLongPolling: true,
+      experimentalAutoDetectLongPolling: true,
+      ignoreUndefinedProperties: true
     }, dbId);
   } catch (e) {
     console.warn("initializeFirestore already called or failed, falling back to getFirestore:", e);
@@ -449,25 +450,24 @@ export { writeBatch };
 async function testConnection() {
   if (typeof window === 'undefined') return;
   
-  console.log("Starting Firestore connection test...");
   try {
-    const { getDocFromServer } = await import('firebase/firestore');
-    // Using public site_data config doc to test connectivity
     const testDocRef = doc(db, 'site_data', 'config');
-    await getDocFromServer(testDocRef);
-    console.log("Firestore connection test: SUCCESS (Server reached)");
-    (window as any)._db_connected = true;
-    (window as any)._db_last_success = new Date().toISOString();
+    const snap = await getDoc(testDocRef);
+    if (snap.exists() || snap.metadata) {
+      (window as any)._db_connected = true;
+      (window as any)._db_last_success = new Date().toISOString();
+    }
   } catch (error: any) {
     const errMsg = error?.message || String(error);
     const errCode = error?.code || 'unknown';
     
     if (errCode === 'permission-denied') {
-      console.log("Firestore reached (permission verified)");
       (window as any)._db_connected = true;
+    } else if (errCode === 'unavailable' || errMsg.includes('offline')) {
+      // Offline mode is handled smoothly by SDK cache
+      (window as any)._db_connected = false;
     } else {
-      console.warn("Firestore connection test note:", { code: errCode, message: errMsg });
-      (window as any)._db_connected = true; // Still allow applet to query and use listeners
+      (window as any)._db_connected = true;
     }
   }
 }

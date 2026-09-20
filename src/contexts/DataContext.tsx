@@ -238,7 +238,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }>(() => {
     return { navPosition: 'bottom', weeklySessions: [{ dayOfWeek: 4, time: '07:00', isActive: false, isRecurring: true }] };
   });
-  const [coastalWeather, setCoastalWeather] = useState<any | null>(null);
+  const [coastalWeather, setCoastalWeather] = useState<any | null>(() => {
+    try {
+      const cached = safeLocalStorage.getItem('cached_coastal_weather');
+      return cached ? JSON.parse(cached) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [selectedStationId, setSelectedStationId] = useState<string>("178");
   const [seaStats, setSeaStats] = useState<any | null>(null);
   const siteConfigRef = useRef(siteConfig);
@@ -386,6 +393,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (!isMounted) return;
         console.log("DataContext - Coastal weather data received:", data);
         setCoastalWeather(data);
+        safeLocalStorage.setItem('cached_coastal_weather', JSON.stringify(data));
         setIsLoading(false);
 
         // Centralized Side Effects: Update stats and log history (Admins only for history)
