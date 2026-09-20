@@ -1,71 +1,214 @@
 
 /**
  * מעבד תמונות בצד הלקוח:
- * 1. בדיקת גודל (עד 5MB)
- * 2. שינוי גודל (Resize) לרוחב מקסימלי
- * 3. המרה ל-WebP
- * 4. כיווץ איכות
+ * 1. תמיכה בצילומי מובייל כבדים (עד 25MB)
+ * 2. שיטת טעינה מרובת-שלבים (URL.createObjectURL + ArrayBuffer + FileReader)
+ * 3. שינוי גודל (Resize) חכם תוך שמירה על יחס גובה-רוחב
+ * 4. המרה ל-WebP עם גיבוי מלא ל-JPEG (עבור דפדפני Safari ומובייל ישנים)
+ * 5. כיווץ איכות ללא דליפות זיכרון
  */
-export const processImage = async (
-  file: File, 
-  maxWidth = 800, 
-  quality = 0.6,
-  targetSizeKB = 50
-): Promise<{ blob: Blob; dataUrl: string }> => {
+
+/**
+ * טוען אלמנט תמונה בבטחה מתוך File או Blob בעזרת אסטרטגיות שונות
+ */
+const loadImageFromFile = async (file: File | Blob): Promise<{ img: HTMLImageElement; cleanup: () => void }> => {
+  // Strategy 1: URL.createObjectURL (Fastest, zero memory duplication)
+  if (typeof URL !== 'undefined' && URL.createObjectURL) {
+    try {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+
+      const loaded = await new Promise<boolean>((resolve) => {
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = objectUrl;
+      });
+
+      if (loaded && img.naturalWidth > 0 && img.naturalHeight > 0) {
+        return {
+          img,
+          cleanup: () => {
+            try {
+              URL.revokeObjectURL(objectUrl);
+            } catch {
+              // ignore
+            }
+          }
+        };
+      }
+      try {
+        URL.revokeObjectURL(objectUrl);
+      } catch {
+        // ignore
+      }
+    } catch (err) {
+      console.warn('URL.createObjectURL strategy failed, trying arrayBuffer...', err);
+    }
+  }
+
+  // Strategy 2: ArrayBuffer -> Blob -> URL.createObjectURL
+  if (file.arrayBuffer) {
+    try {
+      const buffer = await file.arrayBuffer();
+      const mimeType = file.type || 'image/jpeg';
+      const blob = new Blob([buffer], { type: mimeType });
+      const objectUrl = URL.createObjectURL(blob);
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+
+      const loaded = await new Promise<boolean>((resolve) => {
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = objectUrl;
+      });
+
+      if (loaded && img.naturalWidth > 0 && img.naturalHeight > 0) {
+        return {
+          img,
+          cleanup: () => {
+            try {
+              URL.revokeObjectURL(objectUrl);
+            } catch {
+              // ignore
+            }
+          }
+        };
+      }
+      try {
+        URL.revokeObjectURL(objectUrl);
+      } catch {
+        // ignore
+      }
+    } catch (err) {
+      console.warn('ArrayBuffer strategy failed, trying FileReader...', err);
+    }
+  }
+
+  // Strategy 3: FileReader.readAsDataURL
   return new Promise((resolve, reject) => {
-    // ולידציה בסיסית לגודל קובץ מקורי
-    if (file.size > 10 * 1024 * 1024) {
-       return reject(new Error('הקובץ גדול מדי. הגודל המקסימלי המותר הוא 10MB.'));
+    try {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result;
+        if (typeof result !== 'string') {
+          return reject(new Error('תוכן הקובץ אינו בפורמט תקין.'));
+        }
+        const img = new Image();
+        img.onload = () => {
+          if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+            resolve({ img, cleanup: () => {} });
+          } else {
+            reject(new Error('טעינת התמונה נכשלה. ממדי התמונה אינם תקינים.'));
+          }
+        };
+        img.onerror = () => reject(new Error('טעינת התמונה נכשלה. הקובץ עשוי להיות פגום.'));
+        img.src = result;
+      };
+      reader.onerror = () => reject(new Error('קריאת הקובץ נכשלה. נסה לבחור את התמונה מחדש.'));
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      reject(new Error(`קריאת הקובץ נכשלה: ${err?.message || 'שגיאה לא צפויה'}`));
+    }
+  });
+};
+
+export const processImage = async (
+  file: File | Blob, 
+  maxWidth = 1600, 
+  quality = 0.85,
+  targetSizeKB = 800
+): Promise<{ blob: Blob; dataUrl: string }> => {
+  // ולידציה בסיסית לגודל קובץ מקורי (עד 25MB)
+  if (file.size > 25 * 1024 * 1024) {
+    throw new Error('הקובץ גדול מדי. הגודל המקסימלי המותר הוא 25MB.');
+  }
+
+  const { img, cleanup } = await loadImageFromFile(file);
+
+  try {
+    const canvas = document.createElement('canvas');
+    let width = img.naturalWidth || img.width;
+    let height = img.naturalHeight || img.height;
+
+    if (width > maxWidth) {
+      height = Math.round((maxWidth / width) * height);
+      width = maxWidth;
     }
 
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
+    canvas.width = Math.max(1, width);
+    canvas.height = Math.max(1, height);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('לא ניתן ליצור הקשר Canvas לעיבוד התמונה.');
+    }
 
-        if (width > maxWidth) {
-          height = (maxWidth / width) * height;
-          width = maxWidth;
+    // High quality smoothing
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, width, height);
+
+    // Compress iteratively to target size with fallback between WebP and JPEG
+    let currentQuality = Math.min(1.0, Math.max(0.2, quality));
+    let bestBlob: Blob | null = null;
+    let bestDataUrl: string = '';
+    let mimeType = 'image/webp';
+
+    // Check if webp is supported on canvas
+    const testDataUrl = canvas.toDataURL('image/webp', 0.8);
+    if (!testDataUrl.startsWith('data:image/webp')) {
+      mimeType = 'image/jpeg';
+    }
+
+    // Try compress
+    for (let attempts = 0; attempts < 4; attempts++) {
+      try {
+        const dataUrl = canvas.toDataURL(mimeType, currentQuality);
+        // Create blob from dataURL for maximum cross-browser reliability
+        const byteString = atob(dataUrl.split(',')[1]);
+        const mimeString = dataUrl.split(',')[0].split(':')[1].split(';')[0];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
         }
+        const blob = new Blob([ab], { type: mimeString });
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return reject(new Error('לא ניתן ליצור הקשר Canvas.'));
+        bestBlob = blob;
+        bestDataUrl = dataUrl;
 
-        ctx.drawImage(img, 0, 0, width, height);
+        if (blob.size <= targetSizeKB * 1024 || currentQuality <= 0.3) {
+          break;
+        }
+        currentQuality = Math.max(0.25, currentQuality - 0.2);
+      } catch (e) {
+        console.warn('Canvas conversion attempt error:', e);
+        if (mimeType === 'image/webp') {
+          mimeType = 'image/jpeg';
+        } else {
+          break;
+        }
+      }
+    }
 
-        const compress = (q: number) => {
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                // If blob is still too large and quality is high enough, try again
-                if (blob.size > targetSizeKB * 1024 && q > 0.1) {
-                  compress(q - 0.1);
-                } else {
-                  const dataUrl = canvas.toDataURL('image/webp', q);
-                  resolve({ blob, dataUrl });
-                }
-              } else {
-                reject(new Error('עיבוד התמונה ל-Blob נכשל.'));
-              }
-            },
-            'image/webp',
-            q
-          );
-        };
+    if (bestBlob && bestDataUrl) {
+      return { blob: bestBlob, dataUrl: bestDataUrl };
+    }
 
-        compress(quality);
-      };
-      img.onerror = () => reject(new Error('טעינת התמונה נכשלה. הקובץ עשוי להיות פגום.'));
-    };
-    reader.onerror = () => reject(new Error('קריאת הקובץ נכשלה.'));
-  });
+    // Ultimate fallback: direct jpeg dataURL
+    const fallbackDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    const byteString = atob(fallbackDataUrl.split(',')[1]);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    const fallbackBlob = new Blob([ab], { type: 'image/jpeg' });
+
+    return { blob: fallbackBlob, dataUrl: fallbackDataUrl };
+  } finally {
+    cleanup();
+  }
 };
 
 /**
@@ -78,26 +221,32 @@ export const compressBase64Image = async (
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.src = base64;
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
+      let width = img.naturalWidth || img.width;
+      let height = img.naturalHeight || img.height;
 
       if (width > maxWidth) {
-        height = (maxWidth / width) * height;
+        height = Math.round((maxWidth / width) * height);
         width = maxWidth;
       }
 
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = Math.max(1, width);
+      canvas.height = Math.max(1, height);
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject(new Error('Canvas context failed'));
 
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, width, height);
-      // We use jpeg as it's universally compatible with Gemini and has better compression usually
-      resolve(canvas.toDataURL('image/jpeg', quality));
+      
+      try {
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      } catch {
+        resolve(base64);
+      }
     };
     img.onerror = () => reject(new Error('Image load failed'));
+    img.src = base64;
   });
 };

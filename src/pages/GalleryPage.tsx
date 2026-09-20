@@ -10,7 +10,7 @@ import { processImage } from '../utils/imageProcessor';
 import { analyzeImage } from '../services/geminiService';
 import { GalleryItem } from '../types';
 import { syncStorageOnUpload, syncStorageOnDelete } from '../utils/storageStats';
-import { isAdminUser } from '../constants';
+import { canDeleteGalleryItem } from '../constants';
 
 import { useRandomHeader } from '../hooks/useRandomHeader';
 
@@ -23,7 +23,7 @@ const GalleryPage: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,6 +48,7 @@ const GalleryPage: React.FC = () => {
     const stepsPerFile = 3;
     const totalSteps = files.length * stepsPerFile;
     let completedSteps = 0;
+    let successCount = 0;
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -55,33 +56,47 @@ const GalleryPage: React.FC = () => {
       
       try {
         setUploadStatus(`מבצע אופטימיזציה ${fileIndexText}...`);
-        const { blob, dataUrl } = await processImage(file, 1600, 0.9, 800);
+        const { blob, dataUrl } = await processImage(file, 1600, 0.85, 800);
         completedSteps++;
         setUploadProgress(Math.round((completedSteps / totalSteps) * 100));
 
-        setUploadStatus(`מנתח תמונה בעזרת AI ${fileIndexText}...`);
-        const aiCaption = await analyzeImage(dataUrl);
+        setUploadStatus(`מנתח תמונה ${fileIndexText}...`);
+        let aiCaption = '';
+        try {
+          aiCaption = await analyzeImage(dataUrl);
+          // Don't save error text as a caption
+          if (aiCaption.startsWith('שגיאה בניתוח')) {
+            aiCaption = '';
+          }
+        } catch (aiErr) {
+          console.warn("AI caption failed, continuing upload:", aiErr);
+        }
         completedSteps++;
         setUploadProgress(Math.round((completedSteps / totalSteps) * 100));
 
         setUploadStatus(`מעלה לענן ${fileIndexText}...`);
-        const fileName = `gallery_${Date.now()}_${Math.random().toString(36).substring(7)}.webp`;
+        const extension = blob.type === 'image/jpeg' ? 'jpg' : 'webp';
+        const fileName = `gallery_${Date.now()}_${Math.random().toString(36).substring(7)}.${extension}`;
         const storagePath = `gallery/${fileName}`;
         const storageRef = ref(getStorageInstance(), storagePath);
         
-        const snapshot = await uploadBytes(storageRef, blob);
+        const snapshot = await uploadBytes(storageRef, blob, {
+          contentType: blob.type || 'image/webp',
+          cacheControl: 'public,max-age=31536000'
+        });
         await syncStorageOnUpload(blob.size);
         const downloadUrl = await getDownloadURL(snapshot.ref);
         
         await addDoc(collection(getDb(), 'gallery'), {
           imageUrl: downloadUrl,
           storagePath: storagePath, 
-          uploaderId: currentUser.id,
-          uploaderName: `${currentUser.firstName} ${currentUser.lastName}`,
+          uploaderId: currentUser.id || currentUser.uid || '',
+          uploaderName: `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || 'חבר קהילה',
           caption: aiCaption,
           timestamp: serverTimestamp()
         });
 
+        successCount++;
         completedSteps++;
         setUploadProgress(Math.round((completedSteps / totalSteps) * 100));
       } catch (err: any) {
@@ -90,8 +105,8 @@ const GalleryPage: React.FC = () => {
       }
     }
 
-    if (!errorMsg) {
-      setUploadStatus('העלאה הושלמה בהצלחה!');
+    if (successCount > 0 && !errorMsg) {
+      setUploadStatus(`הועלו ${successCount} תמונות בהצלחה!`);
       setTimeout(() => {
         setIsUploading(false);
         setUploadProgress(0);
@@ -152,6 +167,7 @@ const GalleryPage: React.FC = () => {
           showError(err.message || 'המחיקה נכשלה. נסה שנית מאוחר יותר.');
         } finally {
           setDeletingId(null);
+          setSelectedItem(prev => (prev?.id === item.id ? null : prev));
         }
       }
     });
@@ -216,65 +232,112 @@ const GalleryPage: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-4">
-        {galleryItems.map((item) => (
-          <div key={item.id} 
-            className="luxury-card relative group aspect-square overflow-hidden cursor-zoom-in hover:scale-105 transition-all duration-500"
-            onClick={() => setSelectedImage(item.imageUrl)}
-          >
-            <img 
-              src={item.imageUrl} 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-              alt={item.uploaderName} 
-              loading="lazy" 
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-               <div className="flex items-center gap-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300 bg-white/20 backdrop-blur-[20px] border border-white/30 p-2 rounded-xl self-start">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white">
-                    <User size={16} />
-                  </div>
-                  <div>
-                    <p className="text-white font-black text-xs">{item.uploaderName}</p>
-                    <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest">רגע מהמים</p>
-                  </div>
-               </div>
-               
-               {(isAdminUser(currentUser) || currentUser?.id === item.uploaderId) && (
-                 <button 
-                   onClick={(e) => { 
-                     e.stopPropagation(); 
-                     handleDelete(item); 
-                   }}
-                   disabled={deletingId === item.id}
-                   className="absolute top-4 left-4 p-3 bg-rose-500 text-white rounded-xl shadow-lg hover:bg-rose-600 transition-all z-20 disabled:opacity-50 active:scale-90 flex items-center justify-center"
-                   title="מחיקת תמונה"
-                 >
-                   {deletingId === item.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
-                 </button>
-               )}
+        {galleryItems.map((item) => {
+          const userCanDelete = canDeleteGalleryItem(currentUser, item);
+
+          return (
+            <div key={item.id} 
+              className="luxury-card relative group aspect-square overflow-hidden cursor-zoom-in hover:scale-105 transition-all duration-500 rounded-3xl border border-white/20 shadow-lg"
+              onClick={() => setSelectedItem(item)}
+            >
+              <img 
+                src={item.imageUrl} 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                alt={item.uploaderName} 
+                loading="lazy" 
+              />
+
+              {/* Top Quick Action for Deletion (Visible on Mobile & Desktop if allowed) */}
+              {userCanDelete && (
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    handleDelete(item); 
+                  }}
+                  disabled={deletingId === item.id}
+                  className="absolute top-3 left-3 p-2.5 bg-rose-600/90 hover:bg-rose-600 text-white rounded-2xl shadow-xl backdrop-blur-md transition-all z-20 disabled:opacity-50 active:scale-90 flex items-center justify-center border border-white/20"
+                  title="מחיקת תמונה"
+                  aria-label="מחק תמונה מהגלריה"
+                >
+                  {deletingId === item.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                </button>
+              )}
+
+              {/* Hover overlay with uploader info & caption */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                 <div className="flex items-center gap-3 translate-y-3 group-hover:translate-y-0 transition-transform duration-300 bg-white/20 backdrop-blur-[20px] border border-white/30 p-2.5 rounded-2xl self-start max-w-[85%]">
+                    <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white shrink-0 shadow-inner">
+                      <User size={16} />
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-white font-black text-xs truncate">{item.uploaderName}</p>
+                      {item.caption ? (
+                        <p className="text-sky-200 text-[10px] font-bold line-clamp-1">{item.caption}</p>
+                      ) : (
+                        <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest">רגע מהמים</p>
+                      )}
+                    </div>
+                 </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {selectedImage && (
+      {selectedItem && (
         <div 
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-12 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300" 
-          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-12 bg-black/85 backdrop-blur-xl animate-in fade-in duration-300" 
+          onClick={() => setSelectedItem(null)}
         >
-           <button 
-             className="absolute top-8 left-8 p-3 bg-[var(--surfer-aqua-mist)]/20 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 text-white rounded-xl hover:bg-[var(--surfer-aqua-mist)]/40 transition-all z-[130] active:scale-90"
-             onClick={(e) => {
-               e.stopPropagation();
-               setSelectedImage(null);
-             }}
-           >
-             <X size={32} strokeWidth={3} />
-           </button>
-           <div className="relative max-w-5xl max-h-full bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_20px_50px_-10px_var(--surfer-deep-shadow)] rounded-3xl p-2" onClick={e => e.stopPropagation()}>
+           {/* Top Actions in Modal */}
+           <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-[130] pointer-events-none">
+             <div className="flex items-center gap-3 pointer-events-auto">
+               <button 
+                 className="p-3 bg-white/15 hover:bg-white/30 backdrop-blur-2xl border border-white/20 text-white rounded-2xl transition-all active:scale-95 shadow-xl flex items-center justify-center"
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   setSelectedItem(null);
+                 }}
+                 title="סגור תצוגה"
+               >
+                 <X size={26} strokeWidth={2.5} />
+               </button>
+
+               {canDeleteGalleryItem(currentUser, selectedItem) && (
+                 <button 
+                   className="px-4 py-3 bg-rose-600/90 hover:bg-rose-600 backdrop-blur-2xl border border-white/20 text-white font-black text-sm rounded-2xl transition-all active:scale-95 shadow-xl flex items-center gap-2"
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     handleDelete(selectedItem);
+                   }}
+                   disabled={deletingId === selectedItem.id}
+                   title="מחיקת תמונה זו"
+                 >
+                   {deletingId === selectedItem.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                   <span>מחק תמונה</span>
+                 </button>
+               )}
+             </div>
+
+             {/* Uploader pill in modal header */}
+             <div className="bg-slate-900/80 backdrop-blur-xl border border-white/20 px-4 py-2 rounded-2xl text-white flex items-center gap-2 pointer-events-auto shadow-lg max-w-[200px] sm:max-w-md">
+                <div className="w-6 h-6 rounded-full bg-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
+                  <User size={14} />
+                </div>
+                <div className="truncate">
+                  <span className="text-xs font-black block truncate">{selectedItem.uploaderName}</span>
+                  {selectedItem.caption && (
+                    <span className="text-[10px] text-sky-300 block truncate">{selectedItem.caption}</span>
+                  )}
+                </div>
+             </div>
+           </div>
+
+           <div className="relative max-w-5xl max-h-[85vh] bg-[var(--surfer-aqua-mist)]/10 backdrop-blur-[20px] border-t border-l border-white/30 border-r border-b border-white/10 shadow-[0_20px_50px_-10px_var(--surfer-deep-shadow)] rounded-3xl p-2 mt-12" onClick={e => e.stopPropagation()}>
              <img 
-               src={selectedImage} 
-               className="w-full h-full object-contain rounded-2xl animate-in zoom-in-95 duration-300" 
-               alt="Large view" 
+               src={selectedItem.imageUrl} 
+               className="w-full max-h-[75vh] object-contain rounded-2xl animate-in zoom-in-95 duration-300" 
+               alt={selectedItem.uploaderName} 
              />
            </div>
         </div>

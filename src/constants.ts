@@ -22,6 +22,42 @@ export const isAppShaperUser = (user: { role?: string; email?: string } | null |
   );
 };
 
+export const isPrivilegedGalleryManager = (user: { role?: string; email?: string } | null | undefined): boolean => {
+  if (!user) return false;
+  const email = user.email?.toLowerCase();
+  return (
+    user.role === 'Admin' ||     // רכז
+    user.role === 'Staff' ||     // צוות עמותה
+    user.role === 'Support' ||   // אפ-שייפר
+    email === SUPER_ADMIN_EMAIL.toLowerCase() ||
+    email === 'yuval@shalev.io'
+  );
+};
+
+export const canDeleteGalleryItem = (
+  user: { id?: string; uid?: string; role?: string; email?: string; firstName?: string; lastName?: string } | null | undefined,
+  item: { uploaderId?: string; uploaderName?: string } | null | undefined
+): boolean => {
+  if (!user || !item) return false;
+  // 1. רכז, צוות עמותה ואפ-שייפר יכולים למחוק כל תמונה בגלריה
+  if (isPrivilegedGalleryManager(user)) return true;
+
+  // 2. משתתף שהעלה תמונה יכול למחוק את התמונה שהוא העלה ורק אותה
+  if (item.uploaderId && (item.uploaderId === user.id || item.uploaderId === user.uid)) {
+    return true;
+  }
+  
+  // תאימות שמות אם הועלה ללא ID מזהה
+  if (item.uploaderName && user.firstName && user.lastName) {
+    const userFullName = `${user.firstName} ${user.lastName}`.trim().toLowerCase();
+    if (item.uploaderName.trim().toLowerCase() === userFullName) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 export const isSystemOrTestMember = (member: { email?: string; firstName?: string; lastName?: string; isSystem?: boolean } | null | undefined): boolean => {
   if (!member) return true;
   if (member.isSystem) return true;
