@@ -145,7 +145,7 @@ export const SurfCallsWidget: React.FC = () => {
         drag 
         dragConstraints={{ left: 0, right: typeof window !== "undefined" ? window.innerWidth - 80 : 0, top: typeof window !== "undefined" ? -(window.innerHeight - 80) : 0, bottom: 0 }} 
         dragMomentum={false} 
-        className="fixed bottom-24 left-6 z-50 cursor-grab active:cursor-grabbing"
+        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] left-[calc(1.5rem+env(safe-area-inset-left,0px))] z-50 cursor-grab active:cursor-grabbing"
         animate={{ 
           y: [0, -8, 0],
         }}

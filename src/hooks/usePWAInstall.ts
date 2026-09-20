@@ -4,14 +4,31 @@ export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showIOSGuide, setShowIOSGuide] = useState(false);
 
   useEffect(() => {
+    // Check if running on iOS device
+    const isIOSDevice = typeof window !== 'undefined' && (
+      /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    );
+    setIsIOS(isIOSDevice);
+
     // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+    if (isStandalone) {
       setIsInstalled(true);
+      setIsInstallable(false);
+      return;
     }
 
-    // Check if event was captured globally before React mounted
+    // On iOS Safari, beforeinstallprompt is not supported, but we can guide the user
+    if (isIOSDevice && !isStandalone) {
+      setIsInstallable(true);
+    }
+
+    // Check if event was captured globally before React mounted (Android / Desktop Chrome)
     if ((window as any).deferredPWAEvent) {
       console.log("PWA: Found global deferred event");
       setDeferredPrompt((window as any).deferredPWAEvent);
@@ -31,6 +48,7 @@ export function usePWAInstall() {
       setIsInstallable(false);
       setIsInstalled(true);
       setDeferredPrompt(null);
+      setShowIOSGuide(false);
       (window as any).deferredPWAEvent = null;
     };
 
@@ -44,6 +62,11 @@ export function usePWAInstall() {
   }, []);
 
   const promptInstall = async () => {
+    if (isIOS) {
+      setShowIOSGuide(true);
+      return;
+    }
+
     const promptEvent = deferredPrompt || (window as any).deferredPWAEvent;
     if (!promptEvent) {
       console.log("PWA: No deferred prompt available to trigger");
@@ -65,5 +88,6 @@ export function usePWAInstall() {
     setDeferredPrompt(null);
   };
 
-  return { isInstallable, isInstalled, promptInstall };
+  return { isInstallable, isInstalled, isIOS, showIOSGuide, setShowIOSGuide, promptInstall };
 }
+

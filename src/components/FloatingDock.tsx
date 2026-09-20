@@ -205,7 +205,7 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="fixed right-0 md:right-6 top-0 md:top-6 bottom-0 md:bottom-6 w-full md:w-[320px] luxury-card !bg-slate-900/95 !backdrop-blur-2xl p-6 flex flex-col gap-6 !rounded-none md:!rounded-[50px] overflow-hidden !border-white/10 z-[10001]"
+              className="fixed right-0 md:right-6 top-0 md:top-6 bottom-0 md:bottom-6 w-full md:w-[320px] luxury-card !bg-slate-900/95 !backdrop-blur-2xl p-6 pt-[calc(1.5rem+env(safe-area-inset-top,0px))] pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] flex flex-col gap-6 !rounded-none md:!rounded-[50px] overflow-hidden !border-white/10 z-[10001]"
               style={{ 
                 boxShadow: '0 0 80px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.1)'
               }}

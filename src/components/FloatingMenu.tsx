@@ -37,7 +37,7 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ scrollRef, onOpenDrawer, on
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-[10000] flex flex-col gap-4">
+    <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] right-[calc(1.5rem+env(safe-area-inset-right,0px))] z-[10000] flex flex-col gap-4">
       {/* Scroll to Top Button */}
       <AnimatePresence>
         {showScrollTop && (
