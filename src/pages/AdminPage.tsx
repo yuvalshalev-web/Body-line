@@ -45,6 +45,22 @@ import { SurfCallsAnalytics } from '../components/admin/SurfCallsAnalytics';
 
 
 
+const parseMemberLoginDate = (member: Member): Date | null => {
+  const raw = member.lastLoginAt || (member as any).lastLogin || (member as any).last_login || (member as any).lastActive || (member as any).lastSeen;
+  if (!raw) return null;
+  if (typeof raw === 'number') return new Date(raw);
+  if (typeof raw === 'string') {
+    const d = new Date(raw);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof raw === 'object') {
+    if (typeof raw.toDate === 'function') return raw.toDate();
+    if (typeof raw.seconds === 'number') return new Date(raw.seconds * 1000);
+    if (typeof raw._seconds === 'number') return new Date(raw._seconds * 1000);
+  }
+  return null;
+};
+
 const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) => {
   const startDate = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date(0) : new Date(0);
   startDate.setHours(0, 0, 0, 0);
@@ -1056,9 +1072,9 @@ const AdminPage: React.FC = () => {
                             </span>
                           </td>
                           <td className="px-8 py-6 whitespace-nowrap">
-                            {member.lastLoginAt ? (() => {
-                              const d = new Date(member.lastLoginAt);
-                              if (isNaN(d.getTime())) return <span className="text-[12px] text-slate-400 font-bold">—</span>;
+                            {(() => {
+                              const d = parseMemberLoginDate(member);
+                              if (!d) return <span className="text-[11px] font-bold text-slate-400 italic">טרם התחבר</span>;
                               return (
                                 <div className="flex flex-col text-right">
                                   <span className="text-[12px] font-black text-slate-800 flex items-center gap-1.5">
@@ -1070,9 +1086,7 @@ const AdminPage: React.FC = () => {
                                   </span>
                                 </div>
                               );
-                            })() : (
-                              <span className="text-[11px] font-bold text-slate-400 italic">טרם התחבר</span>
-                            )}
+                            })()}
                           </td>
                           <td className="px-8 py-6">
                             <div className="flex items-center justify-center gap-2">

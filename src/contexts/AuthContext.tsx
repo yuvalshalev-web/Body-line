@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { safeLocalStorage, safeSessionStorage } from '../utils/storage';
-import { doc, onSnapshot, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { getDb, auth, trackedGetDoc, trackedOnSnapshot } from '../services/firebase';
 import { Member } from '../types';
@@ -96,20 +96,51 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
-  const login = useCallback((user: Member) => {
+  const login = useCallback(async (user: Member) => {
     isLoggingOutRef.current = false;
     safeLocalStorage.removeItem('habal_zug_logged_out');
     safeLocalStorage.removeItem('habal_zug_pagehide_at');
+    
+    const nowIso = new Date().toISOString();
+    const updatedUser: Member = {
+      ...user,
+      lastLoginAt: user.lastLoginAt || nowIso,
+      loginCount: (user.loginCount || 0) + (user.lastLoginAt ? 0 : 1)
+    };
+
     // Save to sessionStorage ONLY so closing the PWA/tab terminates the session
     safeLocalStorage.removeItem('habal_zug_user');
-    safeSessionStorage.setItem('habal_zug_user', JSON.stringify(user));
+    safeSessionStorage.setItem('habal_zug_user', JSON.stringify(updatedUser));
 
-    setCurrentUser(user);
-    if (user) {
-      syncBiometricFromMemberDoc(user);
-      ensureFirebaseAuthSession(isAdminUser(user) ? 'Admin' : (user.role || 'Member')).catch(err => {
-        console.warn("Background Firebase Auth session sync note:", err);
-      });
+    setCurrentUser(updatedUser);
+    if (updatedUser) {
+      syncBiometricFromMemberDoc(updatedUser);
+      try {
+        await ensureFirebaseAuthSession(isAdminUser(updatedUser) ? 'Admin' : (updatedUser.role || 'Member'));
+        const db = getDb();
+        const targetId = updatedUser.id || (updatedUser as any).uid;
+        if (targetId) {
+          await updateDoc(doc(db, 'members', targetId), {
+            lastLoginAt: nowIso,
+            loginCount: increment(1)
+          });
+          console.log(`AuthContext: Recorded lastLoginAt (${nowIso}) for member ${targetId}`);
+        }
+      } catch (syncErr) {
+        console.warn("AuthContext: Could not direct sync lastLoginAt to Firestore:", syncErr);
+      }
+
+      // Secondary server-side sync for absolute reliability
+      try {
+        fetch('/api/auth/record-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            memberId: updatedUser.id || (updatedUser as any).uid,
+            email: updatedUser.email
+          })
+        }).catch(() => {});
+      } catch (_) {}
     }
   }, []);
 

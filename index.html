@@ -119,9 +119,26 @@
   </div>
   
   <script>
-    // Global Error Monitoring & Immediate Recovery
-    function triggerAutoRecovery(reason) {
-      console.warn("Triggering Auto Recovery:", reason);
+    // Global Error Monitoring & Graceful Handling
+    function isBenignError(str) {
+      if (!str) return true;
+      const s = String(str).toLowerCase();
+      return (
+        s.includes('firestore') ||
+        s.includes('could not reach cloud firestore') ||
+        s.includes('unavailable') ||
+        s.includes('internal assertion failed') ||
+        s.includes('ca9') ||
+        s.includes('b815') ||
+        s.includes('resizeobserver') ||
+        s.includes('play() failed') ||
+        s.includes('abort') ||
+        s.includes('offline')
+      );
+    }
+
+    function showRepairUI(reason) {
+      console.warn("Notice during load:", reason);
       const display = document.getElementById('boot-error-display');
       if (display) {
         display.innerText = reason;
@@ -131,32 +148,27 @@
       if (repairContainer) {
         repairContainer.style.display = 'flex';
       }
-      // Attempt clean recovery
-      setTimeout(() => {
-        repairApp();
-      }, 1000);
     }
 
     window.onerror = function(msg, url, line, col, error) {
-      const errorMsg = "BOOT ERROR: " + msg + " at " + url + ":" + line;
-      console.error(errorMsg);
-      triggerAutoRecovery(errorMsg);
+      const errorMsg = String(msg || error?.message || '');
+      if (isBenignError(errorMsg)) {
+        console.warn("Ignored non-critical runtime event:", errorMsg);
+        return true;
+      }
+      console.error("Runtime error at " + url + ":" + line, errorMsg);
       return false;
     };
 
     window.onunhandledrejection = function(event) {
-      const errorMsg = "BOOT PROMISE REJECTION: " + (event.reason ? (event.reason.message || event.reason) : "Unknown reason");
-      console.error(errorMsg);
-      triggerAutoRecovery(errorMsg);
-    };
-
-    window.addEventListener('error', function(event) {
-      if (event.target && (event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK')) {
-        const url = event.target.src || event.target.href || 'unknown';
-        console.error("BOOT RESOURCE LOAD ERROR: " + url);
-        triggerAutoRecovery("שגיאת טעינת משאב: " + url);
+      const reasonStr = String(event?.reason?.message || event?.reason || '');
+      if (isBenignError(reasonStr)) {
+        console.warn("Ignored non-critical promise rejection:", reasonStr);
+        event.preventDefault?.();
+        return;
       }
-    }, true);
+      console.warn("Unhandled promise rejection:", reasonStr);
+    };
 
     console.log("HTML Start - " + new Date().toISOString());
     const isInIframe = window.self !== window.top;
@@ -165,66 +177,24 @@
     
     // Complete self-repair logic
     function repairApp() {
-      console.warn("repairApp: Purging storage, unregistering SWs, clearing cache storage...");
+      console.warn("repairApp: Purging storage and reloading...");
       try {
         sessionStorage.clear();
         localStorage.removeItem('habal_zug_user');
         
-        // 1. Unregister all service workers
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(regs => {
-            for (let r of regs) {
-              r.unregister();
-            }
-          }).catch(e => console.warn(e));
-        }
-
-        // 2. Delete all caches in CacheStorage
         if ('caches' in window) {
           caches.keys().then(names => {
-            for (let name of names) {
-              caches.delete(name);
-            }
+            for (let name of names) caches.delete(name);
           }).catch(e => console.warn(e));
         }
 
-        // 3. Reload with cache-busting timestamp
         setTimeout(() => {
-          const cleanUrl = window.location.origin + window.location.pathname + '?ts=' + Date.now() + window.location.hash;
-          window.location.replace(cleanUrl);
-        }, 500);
+          window.location.reload(true);
+        }, 300);
       } catch(e) {
-        console.error("Repair failed:", e);
         window.location.reload(true);
       }
     }
-
-    // Auto-check: if app has not booted after 3.5 seconds, auto-heal
-    setTimeout(() => {
-      const status = document.documentElement.getAttribute('data-app-status');
-      if (status !== 'ready') {
-        const hasStart = document.documentElement.getAttribute('data-exec-start');
-        const hasBeforeRender = document.documentElement.getAttribute('data-exec-before-render');
-        
-        const repairContainer = document.getElementById('repair-container');
-        if (repairContainer) {
-          repairContainer.style.display = 'flex';
-          repairContainer.style.borderColor = '#3b82f6';
-        }
-        
-        if (!hasStart) {
-          console.warn("Bundle script never started executing. Outdated cache likely. Auto-recovering...");
-          const subtext = document.getElementById('boot-subtext');
-          if (subtext) subtext.innerText = "מטמון ישן זוהה. מרענן אוטומטית...";
-          setTimeout(repairApp, 800);
-        } else {
-          const infoMsg = `App stuck. start=${hasStart}, beforeRender=${hasBeforeRender}, status=${status}`;
-          console.error(infoMsg);
-          const subtext = document.getElementById('boot-subtext');
-          if (subtext) subtext.innerText = infoMsg;
-        }
-      }
-    }, 3500);
   </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>

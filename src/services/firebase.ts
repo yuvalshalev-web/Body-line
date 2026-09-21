@@ -5,7 +5,7 @@ import {
   limit, deleteDoc, writeBatch, doc, getDocFromServer, setDoc, updateDoc, onSnapshot,
   DocumentReference, UpdateData, WithFieldValue, DocumentData, Unsubscribe, 
   SnapshotListenOptions, FirestoreError, DocumentSnapshot, QueryConstraint, Firestore,
-  terminate, clearIndexedDbPersistence
+  terminate, clearIndexedDbPersistence, memoryLocalCache, setLogLevel
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { trackBandwidth } from '../utils/bandwidthTracker';
@@ -65,14 +65,19 @@ export const auth = (() => {
   }
 })();
 
-// Handle "(default)" database ID correctly with auto long polling detection for maximum reliability across iframes and sandboxes
+// Handle "(default)" database ID correctly with memory cache and force long polling for maximum reliability across iframes and sandboxes
 export const db: Firestore = (() => {
+  try {
+    setLogLevel('silent');
+  } catch (_) {}
+
   const dbId = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestoreDatabaseId !== '(default)'
     ? firebaseConfig.firestoreDatabaseId
     : undefined;
   try {
     return initializeFirestore(app, {
-      experimentalAutoDetectLongPolling: true,
+      localCache: memoryLocalCache(),
+      experimentalForceLongPolling: true,
       ignoreUndefinedProperties: true
     }, dbId);
   } catch (e) {

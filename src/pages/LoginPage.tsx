@@ -7,7 +7,7 @@ import { Member, JoinRequest } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { hashPassword, verifyPassword, calculateFbPassword } from '../utils/crypto';
-import { SUPER_ADMIN_EMAIL } from '../constants';
+import { SUPER_ADMIN_EMAIL, isAdminUser } from '../constants';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useAuth } from '../contexts/AuthContext';
@@ -168,17 +168,41 @@ const LoginPage: React.FC = () => {
         userCredential = await signInWithEmailAndPassword(auth, targetEmail, fbBridgingPassword);
       } catch (authErr: any) {
         // Fallback: search doc in members collection
+        let mDoc = null;
+        let mData: Member | null = null;
         const qEmail = query(collection(db, 'members'), where('email', '==', targetEmail), limit(1));
         const emailSnapshot = await trackedGetDocs(qEmail);
         if (!emailSnapshot.empty) {
-          const mDoc = emailSnapshot.docs[0];
-          const mData = { ...mDoc.data(), id: mDoc.id } as Member;
+          mDoc = emailSnapshot.docs[0];
+          mData = { ...mDoc.data(), id: mDoc.id } as Member;
+        } else {
+          try {
+            const allMembersSnap = await trackedGetDocs(query(collection(db, 'members'), limit(500)));
+            const found = allMembersSnap.docs.find(d => (d.data().email || '').toLowerCase().trim() === targetEmail);
+            if (found) {
+              mDoc = found;
+              mData = { ...found.data(), id: found.id } as Member;
+            }
+          } catch (e) {}
+        }
+
+        if (mDoc && mData) {
           if (mData.isActive === false) {
             setError('החשבון שלך כרגע בחופשה קצרה ⛱️⛺🛫🍹🌴\nלא ניתן להתחבר כרגע בגלל השעיה זמנית');
             setIsBiometricLoading(false);
             return;
           }
-          login(mData);
+          const nowIso = new Date().toISOString();
+          try {
+            await ensureFirebaseAuthSession('Admin');
+            await updateDoc(doc(db, 'members', mDoc.id), {
+              loginCount: increment(1),
+              lastLoginAt: nowIso
+            });
+          } catch (e) {
+            console.warn('Could not update fallback login metrics:', e);
+          }
+          login({ ...mData, loginCount: (mData.loginCount || 0) + 1, lastLoginAt: nowIso });
           navigate('/');
           return;
         }
@@ -265,8 +289,20 @@ const LoginPage: React.FC = () => {
         memberDocId = docSnap.id;
         memberData = { ...docSnap.data(), id: docSnap.id } as Member;
       } else {
+        // Fallback: case-insensitive match across all members
+        try {
+          const allMembersSnap = await trackedGetDocs(query(collection(db, 'members'), limit(500)));
+          const found = allMembersSnap.docs.find(d => (d.data().email || '').toLowerCase().trim() === normalizedEmail);
+          if (found) {
+            memberDocId = found.id;
+            memberData = { ...found.data(), id: found.id } as Member;
+          }
+        } catch (scanErr) {
+          console.warn('Scan members fallback note:', scanErr);
+        }
+
         // Fallback for Super Admin aliases
-        if (normalizedEmail === SUPER_ADMIN_EMAIL.toLowerCase() || normalizedEmail === 'yuval@shalev.io') {
+        if (!memberData && (normalizedEmail === SUPER_ADMIN_EMAIL.toLowerCase() || normalizedEmail === 'yuval@shalev.io')) {
           const adminDoc = await getDoc(doc(db, 'members', 'rjYRWiLhUEUw0647KxDVF3IIpVx2'));
           if (adminDoc.exists()) {
             memberDocId = adminDoc.id;
@@ -343,13 +379,16 @@ const LoginPage: React.FC = () => {
       }
 
       // Step 5: Update login metrics in Firestore
+      const nowIso = new Date().toISOString();
       try {
+        await ensureFirebaseAuthSession(isAdminUser(memberData) ? 'Admin' : (memberData.role || 'Member'));
         await updateDoc(doc(db, 'members', memberDocId), {
           loginCount: increment(1),
-          lastLoginAt: new Date().toISOString()
+          lastLoginAt: nowIso
         });
+        console.log(`LoginPage: Successfully recorded lastLoginAt (${nowIso}) for member ${memberDocId}`);
       } catch (updErr) {
-        console.warn('Could not update login metrics:', updErr);
+        console.warn('LoginPage: Could not update login metrics:', updErr);
       }
 
       // Step 6: Complete login session
@@ -358,7 +397,7 @@ const LoginPage: React.FC = () => {
         id: memberDocId,
         uid: memberData.uid || memberDocId,
         loginCount: (memberData.loginCount || 0) + 1,
-        lastLoginAt: new Date().toISOString()
+        lastLoginAt: nowIso
       };
 
       login(finalUser);
@@ -467,12 +506,14 @@ const LoginPage: React.FC = () => {
       if (finalDocId) {
         try {
           await ensureFirebaseAuthSession('Admin');
+          const nowIso = new Date().toISOString();
           await updateDoc(doc(db, 'members', finalDocId), {
             password: hashed,
             isTemporary: false,
             loginCount: increment(1),
-            lastPasswordChange: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            lastLoginAt: nowIso,
+            lastPasswordChange: nowIso,
+            updatedAt: nowIso
           });
           console.log('LoginPage: Client direct update to Firestore succeeded for:', finalDocId);
         } catch (clientErr: any) {

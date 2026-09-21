@@ -438,6 +438,69 @@ async function startServer() {
     }
   });
 
+  app.post("/api/auth/record-login", async (req, res) => {
+    const { memberId, email } = req.body;
+    if (!memberId && !email) {
+      return res.status(400).json({ error: "Missing memberId or email" });
+    }
+    try {
+      const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      const adminToken = await getAdminIdToken();
+      if (!adminToken) return res.status(500).json({ error: "Auth failed" });
+
+      let targetDocId = memberId;
+      if (!targetDocId && email) {
+        const normalizedEmail = String(email).toLowerCase().trim();
+        const queryUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents:runQuery`;
+        const queryRes = await fetch(queryUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+          body: JSON.stringify({
+            structuredQuery: {
+              from: [{ collectionId: 'members' }],
+              where: {
+                fieldFilter: {
+                  field: { fieldPath: 'email' },
+                  op: 'EQUAL',
+                  value: { stringValue: normalizedEmail }
+                }
+              },
+              limit: 1
+            }
+          })
+        });
+        const queryData = await queryRes.json();
+        if (Array.isArray(queryData) && queryData[0]?.document?.name) {
+          const parts = queryData[0].document.name.split('/');
+          targetDocId = parts[parts.length - 1];
+        }
+      }
+
+      if (!targetDocId) {
+        return res.status(404).json({ error: "Member not found" });
+      }
+
+      const nowIso = new Date().toISOString();
+      const patchUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/members/${targetDocId}?updateMask.fieldPaths=lastLoginAt`;
+      await fetch(patchUrl, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+        body: JSON.stringify({
+          fields: {
+            lastLoginAt: { stringValue: nowIso }
+          }
+        })
+      });
+
+      console.log(`Server: Recorded lastLoginAt (${nowIso}) for member ${targetDocId}`);
+      return res.json({ success: true, memberId: targetDocId, lastLoginAt: nowIso });
+    } catch (err: any) {
+      console.warn("Server record-login note:", err.message);
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
   // Dedicated endpoint for reliable member profile updates in Firestore
   function toFirestoreValue(val: any): any {
     if (val === null || val === undefined) return { nullValue: null };

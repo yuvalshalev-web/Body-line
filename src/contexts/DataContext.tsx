@@ -649,7 +649,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       unsubGlossary();
       unsubAttendees();
     };
-  }, [dbStatus, handleFirestoreError]);
+  }, [dbStatus]);
 
   // 4. Role & Auth-dependent Data Listeners
   useEffect(() => {
@@ -706,7 +706,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (unsubPerformance) unsubPerformance();
       if (unsubRequests) unsubRequests();
     };
-  }, [dbStatus, currentUser?.id, currentUser?.role, firebaseUser?.uid, handleFirestoreError]);
+  }, [dbStatus, currentUser?.id, currentUser?.role, firebaseUser?.uid]);
 
   const updateMember = useCallback(async (member: Member) => {
     const { id, ...data } = member;

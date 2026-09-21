@@ -1,6 +1,39 @@
 console.log("main.tsx: Execution started - " + new Date().toISOString());
 if (typeof window !== 'undefined') {
   document.documentElement.setAttribute('data-exec-start', 'true');
+
+  // Guard against internal Firestore assertion glitches or transient offline network blips
+  window.addEventListener('unhandledrejection', (event) => {
+    const reasonStr = String(event?.reason?.message || event?.reason?.stack || event?.reason || '');
+    if (
+      reasonStr.includes('FIRESTORE') || 
+      reasonStr.includes('INTERNAL ASSERTION FAILED') || 
+      reasonStr.includes('Could not reach Cloud Firestore backend') ||
+      reasonStr.includes('code=unavailable') ||
+      reasonStr.includes('ca9') ||
+      reasonStr.includes('b815')
+    ) {
+      console.warn('Intercepted transient Firestore internal assertion/network rejection:', reasonStr);
+      event.preventDefault();
+      event.stopImmediatePropagation?.();
+    }
+  }, true);
+
+  window.addEventListener('error', (event) => {
+    const msg = String(event?.message || event?.error?.message || event?.error?.stack || '');
+    if (
+      msg.includes('FIRESTORE') || 
+      msg.includes('INTERNAL ASSERTION FAILED') || 
+      msg.includes('Could not reach Cloud Firestore backend') ||
+      msg.includes('code=unavailable') ||
+      msg.includes('ca9') ||
+      msg.includes('b815')
+    ) {
+      console.warn('Intercepted transient Firestore error event:', msg);
+      event.preventDefault();
+      event.stopImmediatePropagation?.();
+    }
+  }, true);
 }
 
 import React from 'react';
