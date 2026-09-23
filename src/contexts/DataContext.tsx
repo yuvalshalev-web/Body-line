@@ -101,6 +101,7 @@ interface DataContextType {
       glowColor?: string;
     },
     weeklySessions?: { dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[];
+    sessionDurationMinutes?: number;
     seaState?: {
       waveHeight?: number | string;
       windSpeed?: number | string;
@@ -153,7 +154,8 @@ interface DataContextType {
     home_break: any,
     globalColor: string,
     h1Styles: any,
-    weeklySessions: { dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[]
+    weeklySessions: { dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[],
+    sessionDurationMinutes?: number
   }>) => Promise<void>;
   updateYearConfig: (config: { startDate: string; endDate: string }) => Promise<void>;
   archiveMember: (id: string) => Promise<void>;
@@ -235,8 +237,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       glowColor?: string;
     },
     weeklySessions?: { dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[];
+    sessionDurationMinutes?: number;
   }>(() => {
-    return { navPosition: 'bottom', weeklySessions: [{ dayOfWeek: 4, time: '07:00', isActive: false, isRecurring: true }] };
+    return { navPosition: 'bottom', weeklySessions: [{ dayOfWeek: 4, time: '07:00', isActive: false, isRecurring: true }], sessionDurationMinutes: 90 };
   });
   const [coastalWeather, setCoastalWeather] = useState<any | null>(() => {
     try {
@@ -1738,7 +1741,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     home_break: any,
     globalColor: string,
     h1Styles: any,
-    weeklySessions: { dayOfWeek: number, time: string, isActive?: boolean }[]
+    weeklySessions: { dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[],
+    sessionDurationMinutes?: number
   }>) => {
     setSiteConfig(prev => ({ ...prev, ...config }));
     const db = getDb();

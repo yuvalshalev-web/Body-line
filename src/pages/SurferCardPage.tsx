@@ -1,11 +1,10 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
-import { AthletePassport } from '../components/AthletePassport';
 import UserAnalytics from '../components/UserAnalytics';
 import { OceanJourney } from '../components/OceanJourney';
 import UserCategories from '../components/UserCategories';
-import { RankRoadmap } from '../components/RankRoadmap';
+import { SurferProgressionTracker } from '../components/SurferProgressionTracker';
 import { Trophy, Waves } from 'lucide-react';
 import { animate } from 'motion/react';
 import { calculateUserStats } from '../utils/analytics';
@@ -33,12 +32,19 @@ const SurferCardPage: React.FC = () => {
   const userData = useMemo(() => {
     if (!currentUser || isLoading || !members || members.length === 0) return null;
     try {
-      return calculateUserStats(currentUser.id, members, weeklyHistory, yearConfig, events);
+      return calculateUserStats(
+        currentUser.id, 
+        members, 
+        weeklyHistory, 
+        yearConfig, 
+        events, 
+        siteConfig?.sessionDurationMinutes || 90
+      );
     } catch (error) {
       console.error("Error calculating user stats:", error);
       return null;
     }
-  }, [currentUser, members, weeklyHistory, yearConfig, events, isLoading]);
+  }, [currentUser, members, weeklyHistory, yearConfig, events, siteConfig?.sessionDurationMinutes, isLoading]);
 
   if (isLoading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -71,11 +77,6 @@ const SurferCardPage: React.FC = () => {
       </div>
 
       {/* Diagnostic Info for Admin */}
-
-      {/* The Digital Athlete Wallet / Passport */}
-      <div className="mb-12">
-        <AthletePassport />
-      </div>
 
       {/* Motivation Title - Tangible Surfer UI Signature Banner */}
       <div className="max-w-6xl mx-auto mb-8 px-2" dir="rtl">
@@ -136,24 +137,18 @@ const SurferCardPage: React.FC = () => {
         </div>
       </div>
       
-      {/* Modern Coastal Bento Grid: Rank Roadmap & Ocean Journey */}
+      {/* Surfer Progression & Level Tracker (Merged with Club Vibe & Ranks) */}
       <div className="max-w-6xl mx-auto mb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-          {/* Right side (RTL) - Rank Roadmap Card */}
-          <div className="w-full flex flex-col">
-            <RankRoadmap 
-              name={`${userData?.firstName || ''} ${userData?.lastName || ''}`} 
-              sessions={userData?.totalSessions || 0} 
-              overallProgressPercent={userData?.overallProgressPercent || 0} 
-              noFrame
-            />
-          </div>
-          
-          {/* Left side (RTL) - Ocean Journey Alabaster Glass Card */}
-          <div className="w-full flex flex-col">
-            <OceanJourney compact noFrame />
-          </div>
-        </div>
+        <SurferProgressionTracker
+          userSessions={userData?.totalSessions || 0}
+          members={members || []}
+          weeklyHistory={weeklyHistory || []}
+        />
+      </div>
+      
+      {/* Ocean Journey - Marine Milestones */}
+      <div className="max-w-6xl mx-auto mb-12">
+        <OceanJourney compact={false} />
       </div>
 
       {/* Detailed Analytics below */}

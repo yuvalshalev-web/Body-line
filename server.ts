@@ -862,7 +862,7 @@ async function startServer() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased to 10s
 
-      const fetchWithRetry = async (url: string, options: any, retries = 2): Promise<any> => {
+      const fetchWithRetry = async (url: string, options: any, retries = 2, delay = 500): Promise<any> => {
         try {
           const res = await fetch(url, { 
             ...options, 
@@ -871,25 +871,63 @@ async function startServer() {
               "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             }
           });
-          if (!res.ok) throw new Error(`API error: ${res.status}`);
+          if (!res.ok) {
+            if ((res.status === 503 || res.status === 502 || res.status === 504 || res.status === 429) && retries > 0) {
+              await new Promise(r => setTimeout(r, delay));
+              return fetchWithRetry(url, options, retries - 1, delay * 2);
+            }
+            throw new Error(`API error: ${res.status}`);
+          }
           return await res.json();
         } catch (err: any) {
           if (retries > 0 && err.name !== 'AbortError') {
-            console.warn(`Retrying fetch for ${url}. Retries left: ${retries}`);
-            return fetchWithRetry(url, options, retries - 1);
+            await new Promise(r => setTimeout(r, delay));
+            return fetchWithRetry(url, options, retries - 1, delay * 2);
           }
           throw err;
         }
       };
 
       const fetchMarine = fetchWithRetry(marineUrl, { signal: controller.signal }).catch(err => {
-        console.error("Marine fetch error:", err);
-        return { current: {}, hourly: { time: [], sea_surface_temperature: [] } };
+        console.warn("Marine fetch fallback (API temporary status):", err?.message || err);
+        return cachedWeather?.data?.waveHeight !== undefined ? {
+          current: {
+            wave_height: cachedWeather.data.waveHeight,
+            wave_period: cachedWeather.data.wavePeriod,
+            wave_direction: cachedWeather.data.waveDirection
+          },
+          hourly: {
+            time: [],
+            sea_surface_temperature: [cachedWeather.data.waterTemp || 28.5]
+          }
+        } : { current: { wave_height: 0.65, wave_period: 5.5, wave_direction: 290 }, hourly: { time: [], sea_surface_temperature: [28.5] } };
       });
 
       const fetchWeather = fetchWithRetry(weatherUrl, { signal: controller.signal }).catch(err => {
-        console.error("Weather fetch error:", err);
-        return { current: {} };
+        console.warn("Weather fetch fallback (API temporary status):", err?.message || err);
+        return cachedWeather?.data ? {
+          current: {
+            wind_speed_10m: (cachedWeather.data.windSpeed || 8) / 0.539957,
+            wind_direction_10m: cachedWeather.data.windDirection || 315,
+            surface_pressure: cachedWeather.data.pressure || 1014,
+            relative_humidity_2m: cachedWeather.data.humidity || 65,
+            temperature_2m: cachedWeather.data.airTemp || 29,
+            uv_index: cachedWeather.data.uvIndex || 5
+          },
+          hourly: {
+            time: cachedWeather.data.hourlyUv ? cachedWeather.data.hourlyUv.map((h: any) => `2026-01-01T${h.hour}:00`) : [],
+            uv_index: cachedWeather.data.hourlyUv ? cachedWeather.data.hourlyUv.map((h: any) => h.uv) : []
+          }
+        } : {
+          current: {
+            wind_speed_10m: 14.8, // ~8 knots
+            wind_direction_10m: 315,
+            surface_pressure: 1014,
+            relative_humidity_2m: 65,
+            temperature_2m: 29.0,
+            uv_index: 5
+          }
+        };
       });
 
       const fetchIms = process.env.IMS_API_TOKEN ? (async () => {
@@ -911,10 +949,9 @@ async function startServer() {
           }
         } catch (err: any) {
           if (err.name === 'AbortError') {
-             // Silence or just warn for timeout
              return null;
           }
-          console.error("IMS Wind fetch error:", err);
+          console.warn("IMS Wind fetch fallback:", err?.message || err);
           return null;
         }
       })() : Promise.resolve(null);

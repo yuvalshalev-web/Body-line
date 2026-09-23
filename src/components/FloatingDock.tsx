@@ -19,6 +19,7 @@ import {
   HeartPulse,
   ClipboardList,
   UserCheck,
+  Award,
   X
 } from 'lucide-react';
 
@@ -32,7 +33,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: 'session', label: 'דף הבית', icon: Waves, path: '/', span: 'col-span-2 row-span-1' },
-  { id: 'progress', label: 'דשבורד', icon: Activity, path: '/surfer-card', span: 'col-span-1 row-span-2' },
+  { id: 'progress', label: 'דשבורד', icon: Activity, path: '/surfer-card', span: 'col-span-1 row-span-1' },
+  { id: 'passport', label: 'דרכון אקסטרים', icon: Award, path: '/passport', span: 'col-span-1 row-span-1' },
   { id: 'community', label: 'קהילה', icon: Users, path: '/directory', span: 'col-span-1 row-span-1' },
   { id: 'gallery', label: 'גלריה', icon: ImageIcon, path: '/gallery', span: 'col-span-1 row-span-1' },
   { id: 'events', label: 'אירועים', icon: Calendar, path: '/events', span: 'col-span-1 row-span-1' },

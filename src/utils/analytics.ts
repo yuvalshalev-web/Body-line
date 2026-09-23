@@ -18,6 +18,8 @@ export interface UserStats {
   gritScore: number;
   averageGrit: number;
   totalSessions: number;
+  waterHours: number;
+  sessionDurationMinutes: number;
   attendancePercent: number;
   isTop10: boolean;
   percentile: number;
@@ -40,7 +42,8 @@ export const calculateUserStats = (
   members: Member[], 
   weeklyHistory: any[], 
   yearConfig: { startDate: string; endDate: string } | null,
-  events: any[] = []
+  events: any[] = [],
+  sessionDurationMinutes: number = 90
 ): UserStats | null => {
   const member = members.find(m => m.id === userId);
   if (!member || isAppShaperUser(member)) return null;
@@ -237,6 +240,7 @@ export const calculateUserStats = (
   
   const activeWeeks = userSessionWeeks.size;
   const stabilityPercent = Math.min(100, Math.round((activeWeeks / totalWeeksPassed) * 100));
+  const waterHours = Math.round(totalSessions * ((sessionDurationMinutes || 90) / 60) * 10) / 10;
 
   return {
     userId,
@@ -252,6 +256,8 @@ export const calculateUserStats = (
     gritScore,
     averageGrit,
     totalSessions,
+    waterHours,
+    sessionDurationMinutes: sessionDurationMinutes || 90,
     attendancePercent,
     isTop10,
     percentile,

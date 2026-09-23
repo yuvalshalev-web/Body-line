@@ -3,7 +3,7 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { parseDate } from '../utils/dateUtils';
 import { motion, AnimatePresence } from 'motion/react';
-import { Lock, Sparkles, Waves, Check, Award, Compass, ShieldCheck } from 'lucide-react';
+import { Lock, Sparkles, Waves, Check, Award, Compass, ShieldCheck, Target, Trophy } from 'lucide-react';
 
 const getMilestones = (assets: any) => [
   { 
@@ -15,7 +15,7 @@ const getMilestones = (assets: any) => [
     desc: 'הצעד הראשון שלך במים. ברוך הבא לקהילת הגולשים!',
     accent: '#0284c7',
     badge: 'חבר קהילה',
-    criteria: 'מוענק לכל חבר מועדון'
+    criteria: 'מוענק אוטומטית לכל חבר מועדון פעיל'
   },
   { 
     id: 'penguin', 
@@ -26,7 +26,7 @@ const getMilestones = (assets: any) => [
     desc: 'לוחם חורף אמיתי. המים הקרים והסערות הם הבית שלך.',
     accent: '#0369a1',
     badge: 'אימוני חורף',
-    criteria: 'התמדה באימוני חורף קרים'
+    criteria: 'התמדה ורצף אימונים בתנאי ים וחורף קרים (טמפ\' מים מתחת ל-20°)'
   },
   { 
     id: 'manta_ray', 
@@ -34,10 +34,10 @@ const getMilestones = (assets: any) => [
     alt: 'מנטה ריי', 
     name: 'מנטה ריי', 
     title: 'גליידר קיץ',
-    desc: 'חותר באנרגיה גבוהה בחום הקיץ. קצב וסטייל טהור.',
+    desc: 'חותר באנרגיה גבוהה בחום הקיץ. קצב, גלישה וסטייל טהור.',
     accent: '#0891b2',
     badge: 'רצף קיץ',
-    criteria: 'רצף אימונים בחום הקיץ'
+    criteria: 'רצף סשנים בחודשי הקיץ החמים (טמפ\' מים מעל 27°)'
   },
   { 
     id: 'shark', 
@@ -48,7 +48,7 @@ const getMilestones = (assets: any) => [
     desc: 'טורף עקביות. מגיע לכל סשן, בכל עונה ובכל מצב ים.',
     accent: '#334155',
     badge: 'עקביות שיא',
-    criteria: 'נוכחות גבוהה ועקבית לאורך השנה'
+    criteria: 'התמדה לאורך כל 4 עונות השנה ברציפות (מעל 20 סשנים בשנה)'
   },
   { 
     id: 'orca', 
@@ -56,10 +56,10 @@ const getMilestones = (assets: any) => [
     alt: 'אורקה', 
     name: 'אורקה', 
     title: 'מאסטר חוף הבית',
-    desc: 'המאסטר האמיתי של הליין-אפ. השלמת את כל האתגרים!',
+    desc: 'המאסטר האמיתי של הליין-אפ. השלמת את כל האתגרים הימיים!',
     accent: '#0f172a',
     badge: 'מאסטר עליון',
-    criteria: 'טופ בכל קטגוריות המועדון'
+    criteria: 'הובלה וכיבוש כל תגי המועדון (פינגווין, מנטה ריי וכריש)'
   },
 ];
 
@@ -67,52 +67,52 @@ const VectorIllustration: React.FC<{ name: string; isUnlocked: boolean; isSelect
   name, 
   isUnlocked, 
   isSelected = false,
-  className = "w-8 h-8 sm:w-9 sm:h-9" 
+  className = "w-9 h-9 sm:w-11 sm:h-11" 
 }) => {
-  const color = isSelected ? '#00AFC2' : isUnlocked ? '#0284c7' : '#94a3b8';
+  const color = isUnlocked ? (isSelected ? '#0284c7' : '#0ea5e9') : '#94a3b8';
   
   if (name.includes('כוכב ים')) {
     return (
-      <svg viewBox="0 0 100 100" className={`${className} drop-shadow-xs`} fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 8 L61 36 L92 36 L66 55 L76 84 L50 66 L24 84 L34 55 L8 36 L39 36 Z" fill={color} fillOpacity={isUnlocked ? "0.9" : "0.35"} />
-        <circle cx="50" cy="48" r="5" fill="white" opacity="0.8" />
+      <svg viewBox="0 0 100 100" className={`${className} drop-shadow-sm`} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 8 L61 36 L92 36 L66 55 L76 84 L50 66 L24 84 L34 55 L8 36 L39 36 Z" fill={color} fillOpacity={isUnlocked ? "0.95" : "0.25"} />
+        <circle cx="50" cy="48" r="5" fill="white" opacity={isUnlocked ? "0.9" : "0.3"} />
       </svg>
     );
   }
   if (name.includes('פינגווין')) {
     return (
-      <svg viewBox="0 0 100 100" className={`${className} drop-shadow-xs`} fill="none" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="50" cy="62" rx="20" ry="28" fill={color} fillOpacity={isUnlocked ? "0.9" : "0.35"} />
-        <ellipse cx="50" cy="60" rx="12" ry="18" fill="white" opacity="0.6" />
-        <circle cx="50" cy="28" r="13" fill={color} fillOpacity={isUnlocked ? "0.9" : "0.35"} />
-        <path d="M47 31 L53 31 L50 36 Z" fill="#f59e0b" />
+      <svg viewBox="0 0 100 100" className={`${className} drop-shadow-sm`} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="62" rx="20" ry="28" fill={color} fillOpacity={isUnlocked ? "0.95" : "0.25"} />
+        <ellipse cx="50" cy="60" rx="12" ry="18" fill="white" opacity={isUnlocked ? "0.8" : "0.2"} />
+        <circle cx="50" cy="28" r="13" fill={color} fillOpacity={isUnlocked ? "0.95" : "0.25"} />
+        <path d="M47 31 L53 31 L50 36 Z" fill={isUnlocked ? "#f59e0b" : "#cbd5e1"} />
       </svg>
     );
   }
   if (name.includes('מנטה')) {
     return (
-      <svg viewBox="0 0 200 100" className={`${className} drop-shadow-xs`} fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 50 Q100 12 180 50 Q100 88 20 50 Z" fill={color} fillOpacity={isUnlocked ? "0.9" : "0.35"} />
-        <path d="M90 50 Q100 40 110 50" stroke="white" strokeWidth="2.5" opacity="0.7" />
-        <path d="M100 78 L100 105" stroke={color} strokeWidth="3" opacity={isUnlocked ? "0.8" : "0.3"} />
+      <svg viewBox="0 0 200 100" className={`${className} drop-shadow-sm`} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 50 Q100 12 180 50 Q100 88 20 50 Z" fill={color} fillOpacity={isUnlocked ? "0.95" : "0.25"} />
+        <path d="M90 50 Q100 40 110 50" stroke="white" strokeWidth="2.5" opacity={isUnlocked ? "0.8" : "0.3"} />
+        <path d="M100 78 L100 105" stroke={color} strokeWidth="3" opacity={isUnlocked ? "0.9" : "0.25"} />
       </svg>
     );
   }
   if (name.includes('כריש')) {
     return (
-      <svg viewBox="0 0 100 100" className={`${className} drop-shadow-xs`} fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 50 Q50 22 90 50 Q50 78 10 50 Z" fill={color} fillOpacity={isUnlocked ? "0.9" : "0.35"} />
-        <path d="M52 35 L70 18 L62 38 Z" fill={color} fillOpacity={isUnlocked ? "0.9" : "0.35"} />
-        <circle cx="75" cy="46" r="2.5" fill="white" />
+      <svg viewBox="0 0 100 100" className={`${className} drop-shadow-sm`} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 50 Q50 22 90 50 Q50 78 10 50 Z" fill={color} fillOpacity={isUnlocked ? "0.95" : "0.25"} />
+        <path d="M52 35 L70 18 L62 38 Z" fill={color} fillOpacity={isUnlocked ? "0.95" : "0.25"} />
+        <circle cx="75" cy="46" r="2.5" fill="white" opacity={isUnlocked ? "0.9" : "0.3"} />
       </svg>
     );
   }
   if (name.includes('אורקה')) {
     return (
-      <svg viewBox="0 0 100 100" className={`${className} drop-shadow-xs`} fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 58 Q50 20 90 58 Q50 88 10 58 Z" fill={color} fillOpacity={isUnlocked ? "0.9" : "0.35"} />
-        <path d="M42 38 L56 16 L52 42 Z" fill={color} fillOpacity={isUnlocked ? "0.9" : "0.35"} />
-        <ellipse cx="70" cy="50" rx="6" ry="3" fill="white" opacity="0.8" />
+      <svg viewBox="0 0 100 100" className={`${className} drop-shadow-sm`} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 58 Q50 20 90 58 Q50 88 10 58 Z" fill={color} fillOpacity={isUnlocked ? "0.95" : "0.25"} />
+        <path d="M42 38 L56 16 L52 42 Z" fill={color} fillOpacity={isUnlocked ? "0.95" : "0.25"} />
+        <ellipse cx="70" cy="50" rx="6" ry="3" fill="white" opacity={isUnlocked ? "0.9" : "0.3"} />
       </svg>
     );
   }
@@ -129,9 +129,9 @@ const AnimalAvatar: React.FC<{
   const [imgError, setImgError] = useState(false);
 
   const sizeClasses = {
-    sm: 'w-9 h-9 sm:w-10 sm:h-10',
-    md: 'w-14 h-14 sm:w-16 sm:h-16',
-    lg: 'w-20 h-20 sm:w-24 sm:h-24'
+    sm: 'w-10 h-10 sm:w-12 sm:h-12',
+    md: 'w-16 h-16 sm:w-20 sm:h-20',
+    lg: 'w-24 h-24 sm:w-28 sm:h-28'
   };
 
   if (src && !imgError) {
@@ -142,8 +142,8 @@ const AnimalAvatar: React.FC<{
           alt={name}
           onError={() => setImgError(true)}
           className={`w-full h-full object-contain transition-all duration-300 ${
-            !isUnlocked ? 'grayscale opacity-40 brightness-75' : 'drop-shadow-sm'
-          } ${isSelected ? 'scale-110' : ''}`}
+            !isUnlocked ? 'grayscale opacity-30 brightness-75 contrast-75' : 'drop-shadow-md'
+          } ${isSelected ? 'scale-105' : ''}`}
           referrerPolicy="no-referrer"
         />
       </div>
@@ -287,30 +287,40 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
   const progressPercent = (unlockedCount / totalCount) * 100;
 
   const content = (
-    <div className="relative w-full h-full rounded-2xl bg-gradient-to-br from-white/95 via-[#f8fafc]/90 to-[#f1f5f9]/90 border border-white/60 p-5 sm:p-7 backdrop-blur-xl shadow-lg flex flex-col justify-between" dir="rtl">
+    <div className="relative w-full h-full rounded-[2rem] bg-white/85 border border-slate-200/90 p-5 sm:p-7 md:p-8 backdrop-blur-xl shadow-sm flex flex-col justify-between" dir="rtl">
       
       {/* Header */}
       <div>
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-cyan-900/20 pb-3.5 mb-4">
-          <div className="text-center sm:text-right">
-            <h2 className="text-3xl sm:text-4xl md:text-[2.6rem] font-dana-yad font-bold text-[#092734]" style={{ fontFamily: 'var(--font-dana-yad)' }}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200/70 pb-5 mb-6">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-black text-[#008da5] uppercase tracking-wider mb-1">
+              <Award size={15} />
+              <span>תגי הישג והצטיינות ימית</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-dana-yad">
               איזו חיה ימית אתה?
             </h2>
-            <p className="text-sm sm:text-base text-cyan-950 font-dana-yad font-semibold mt-0.5">
-              מסע תגי ההישג הימיים של המועדון
+            <p className="text-xs sm:text-sm text-slate-500 font-bold mt-0.5">
+              גלה אילו תגים ימיים הרווחת בזכות התמדה, עונות השנה ותנאי הים
             </p>
           </div>
 
-          <div className="flex items-center gap-2 bg-[#00AFC2]/15 border border-[#00AFC2]/40 px-3.5 py-1.5 rounded-full shadow-xs">
-            <Award size={16} className="text-[#007b8a]" />
-            <span className="text-base font-bold text-slate-950 font-dana-yad">
-              {unlockedCount} מתוך {totalCount} תגים פתוחים
-            </span>
+          {/* Unlocked Summary Badge */}
+          <div className="flex items-center gap-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300/80 px-4 py-2 rounded-2xl shadow-2xs">
+            <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+              <Trophy size={16} />
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider block">אוסף התגים שלך</span>
+              <span className="text-sm font-black text-slate-900 font-dana-yad">
+                <strong className="text-emerald-700 font-mono text-base">{unlockedCount}</strong> מתוך {totalCount} תגים נכבשו!
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Interactive Animal Badge Strip (Uses DB Image with Vector Fallback) */}
-        <div className="grid grid-cols-5 gap-1.5 sm:gap-2 p-1.5 bg-slate-200/60 rounded-2xl border border-slate-300/70 mb-4">
+        {/* 5-ANIMAL INTERACTIVE BADGE STRIP - HIGH CONTRAST EARNED VS LOCKED */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           {milestones.map((milestone, idx) => {
             const isUnlocked = activeCategories.has(milestone.id);
             const isSelected = selectedIdx === idx;
@@ -318,24 +328,37 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
             return (
               <button
                 key={milestone.id}
+                type="button"
                 onClick={() => setSelectedIdx(idx)}
-                className={`relative py-2 px-1 rounded-xl flex flex-col items-center justify-center transition-all duration-300 outline-none ${
-                  isSelected 
-                    ? 'bg-white shadow-md ring-2 ring-[#00AFC2] scale-102 z-10' 
-                    : isUnlocked 
-                      ? 'bg-white/50 hover:bg-white/80 text-slate-800' 
-                      : 'bg-slate-100/50 hover:bg-slate-100/90 text-slate-400 opacity-60'
+                className={`relative p-3.5 sm:p-4 rounded-2xl flex flex-col items-center justify-between gap-2.5 transition-all duration-200 outline-none text-center cursor-pointer ${
+                  isUnlocked
+                    ? isSelected
+                      ? 'bg-gradient-to-b from-white to-emerald-50/80 border-2 border-emerald-500 shadow-md ring-2 ring-emerald-400/20 scale-[1.02] z-10'
+                      : 'bg-white hover:bg-emerald-50/40 border border-emerald-300/80 shadow-xs hover:shadow-sm'
+                    : isSelected
+                      ? 'bg-slate-100 border-2 border-slate-400 shadow-sm z-10'
+                      : 'bg-slate-100/50 hover:bg-slate-100 border border-dashed border-slate-300/90 opacity-60 hover:opacity-85'
                 }`}
               >
-                {/* Active Indicator Top Dot */}
-                {isSelected && (
-                  <motion.div 
-                    layoutId="activePill"
-                    className="absolute -top-1 w-2 h-2 rounded-full bg-[#00AFC2]"
-                  />
-                )}
+                {/* Clear Status Top Pill */}
+                <div className="w-full flex justify-center">
+                  {isUnlocked ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full shadow-2xs">
+                      <Check size={10} strokeWidth={3.5} />
+                      הרווחת!
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-full">
+                      <Lock size={9} />
+                      נעול
+                    </span>
+                  )}
+                </div>
 
-                <div className="h-10 sm:h-11 flex items-center justify-center mb-1">
+                {/* Animal Avatar on illuminated circular pedestal if unlocked */}
+                <div className={`p-2 rounded-2xl transition-all ${
+                  isUnlocked ? 'bg-gradient-to-br from-sky-50 to-emerald-50 shadow-inner' : 'bg-slate-200/40'
+                }`}>
                   <AnimalAvatar 
                     src={milestone.src} 
                     name={milestone.name} 
@@ -345,28 +368,23 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                   />
                 </div>
 
-                <span className={`text-xs sm:text-sm font-dana-yad font-bold truncate max-w-full ${
-                  isSelected ? 'text-[#121212] font-black' : isUnlocked ? 'text-[#121212]' : 'text-[#121212]/80'
-                }`}>
-                  {milestone.name}
-                </span>
-
-                {/* Status Indicator */}
-                <div className="mt-1 flex items-center justify-center min-h-[14px]">
-                  {isUnlocked ? (
-                    <div className="w-3.5 h-3.5 rounded-full bg-emerald-600 text-white flex items-center justify-center ring-2 ring-emerald-200 shadow-xs">
-                      <Check size={9} strokeWidth={3.5} />
-                    </div>
-                  ) : (
-                    <Lock size={11} className="text-slate-700" />
-                  )}
+                {/* Name & Badge */}
+                <div>
+                  <h4 className={`text-sm sm:text-base font-dana-yad font-bold leading-tight ${
+                    isUnlocked ? 'text-slate-900 font-black' : 'text-slate-500'
+                  }`}>
+                    {milestone.name}
+                  </h4>
+                  <span className="text-[10px] font-sans font-bold text-slate-400 block mt-0.5">
+                    {milestone.badge}
+                  </span>
                 </div>
               </button>
             );
           })}
         </div>
 
-        {/* Selected Milestone Showcase Card (Smooth Animated Transition & DB Image) */}
+        {/* Selected Milestone Showcase Card (Different Styling for Unlocked vs Locked) */}
         <AnimatePresence mode="wait">
           <motion.div
             key={selectedMilestone.id}
@@ -374,45 +392,49 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
-            className={`rounded-2xl p-4 sm:p-5 border transition-all duration-300 ${
+            className={`rounded-2xl p-5 sm:p-6 border transition-all duration-300 ${
               isSelectedUnlocked 
-                ? 'bg-gradient-to-br from-cyan-50/90 via-white to-sky-50/60 border-cyan-300 shadow-sm' 
-                : 'bg-slate-100/90 border-slate-300 shadow-xs'
+                ? 'bg-gradient-to-br from-emerald-50/90 via-white to-sky-50/70 border-emerald-300 shadow-sm' 
+                : 'bg-slate-50 border-dashed border-slate-300 shadow-xs'
             }`}
           >
             {/* Header info */}
-            <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-200/70">
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-sans font-bold px-2.5 py-0.5 rounded-full border ${
+                <span className={`text-xs font-black px-2.5 py-0.5 rounded-full ${
                   isSelectedUnlocked 
-                    ? 'bg-cyan-100 text-cyan-950 border-cyan-300' 
-                    : 'bg-slate-200 text-[#121212] border-slate-300'
+                    ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' 
+                    : 'bg-slate-200 text-slate-700'
                 }`}>
                   {selectedMilestone.badge}
                 </span>
-                <span className="text-sm font-sans font-bold text-[#121212]">
+                <span className="text-sm font-black text-slate-700 font-dana-yad">
                   • {selectedMilestone.title}
                 </span>
               </div>
 
               <div>
                 {isSelectedUnlocked ? (
-                  <span className="flex items-center gap-1 text-xs font-sans font-bold text-emerald-900 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full shadow-xs">
-                    <Check size={13} strokeWidth={3} />
-                    הרווחת!
+                  <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-3 py-1 rounded-full shadow-xs">
+                    <Check size={14} strokeWidth={3} />
+                    תג פתוח באוסף שלך!
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 text-xs font-sans font-bold text-[#121212] bg-slate-200 border border-slate-300 px-2 py-0.5 rounded-full">
-                    <Lock size={12} />
-                    נעול כרגע
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-100/90 border border-amber-300 px-3 py-1 rounded-full">
+                    <Target size={13} className="text-amber-600" />
+                    אתגר פתוח להשגה
                   </span>
                 )}
               </div>
             </div>
 
             {/* Content with Large Animal Image & Text */}
-            <div className="my-2 flex items-center gap-4">
-              <div className="shrink-0 p-2 rounded-xl bg-white/90 border border-slate-200/80 shadow-xs flex items-center justify-center">
+            <div className="my-2 flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-right">
+              <div className={`shrink-0 p-3 rounded-2xl flex items-center justify-center ${
+                isSelectedUnlocked 
+                  ? 'bg-white shadow-md border border-emerald-200 ring-4 ring-emerald-100/60' 
+                  : 'bg-slate-200/60 border border-slate-300 opacity-70'
+              }`}>
                 <AnimalAvatar 
                   src={selectedMilestone.src} 
                   name={selectedMilestone.name} 
@@ -422,41 +444,55 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                 />
               </div>
 
-              <div className="flex-1">
-                <h3 className="text-2xl sm:text-[1.75rem] font-bold font-dana-yad text-[#121212] mb-1">
-                  {selectedMilestone.name}
-                </h3>
-                <p className="text-base sm:text-lg font-dana-yad font-bold text-[#121212] leading-relaxed">
+              <div className="flex-1 space-y-1.5">
+                <div className="flex items-center justify-center sm:justify-start gap-2">
+                  <h3 className="text-2xl sm:text-3xl font-black font-dana-yad text-slate-900">
+                    {selectedMilestone.name}
+                  </h3>
+                  {isSelectedUnlocked && (
+                    <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md font-dana-yad">
+                      נכבש בהצלחה 🌊
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm sm:text-base font-dana-yad font-bold text-slate-700 leading-relaxed max-w-2xl">
                   {selectedMilestone.desc}
                 </p>
               </div>
             </div>
 
-            {/* Criteria Footer */}
-            <div className="pt-2.5 mt-2 border-t border-slate-200/80 flex items-center justify-between gap-2 text-sm sm:text-base font-dana-yad text-[#121212]">
-              <div className="flex items-center gap-1.5">
-                <Sparkles size={16} className={isSelectedUnlocked ? "text-[#00AFC2]" : "text-slate-600"} />
-                <span className="font-bold">{selectedMilestone.criteria}</span>
+            {/* Criteria Box */}
+            <div className={`mt-4 pt-3.5 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm font-dana-yad ${
+              isSelectedUnlocked ? 'border-emerald-200 text-emerald-900' : 'border-slate-200 text-slate-700'
+            }`}>
+              <div className="flex items-center gap-2">
+                <Sparkles size={16} className={isSelectedUnlocked ? "text-emerald-600" : "text-amber-600"} />
+                <span className="font-bold">
+                  {isSelectedUnlocked ? 'הקריטריון שהשגת:' : 'איך מרוויחים את התג?'} <strong className="text-slate-900">{selectedMilestone.criteria}</strong>
+                </span>
               </div>
-              <span className="text-xs font-sans font-bold text-[#121212]">
-                {selectedIdx + 1} מתוך 5
+              <span className="text-xs font-mono font-bold text-slate-400 self-end sm:self-auto">
+                תג {selectedIdx + 1} מתוך 5
               </span>
             </div>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Subtle Hint & Mini Track */}
-      <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between flex-wrap gap-2 text-xs sm:text-sm font-dana-yad text-[#121212] font-bold">
+      {/* Footer Track */}
+      <div className="mt-5 pt-4 border-t border-slate-200/70 flex items-center justify-between flex-wrap gap-2 text-xs sm:text-sm font-dana-yad text-slate-600 font-bold">
         <div className="flex items-center gap-1.5">
-          <Waves size={16} className="text-[#00AFC2]" />
-          <span>לחץ על כל חיה למעלה לחשיפת פרטי האתגר והקריטריונים</span>
+          <Waves size={16} className="text-sky-600" />
+          <span>לחץ על כל חיה למעלה לצפייה בקריטריון ובהישג המלא</span>
         </div>
-        <div className="w-24 h-1.5 bg-slate-200 rounded-full overflow-hidden" dir="ltr">
-          <div 
-            className="h-full bg-gradient-to-r from-[#00AFC2] to-sky-600 rounded-full transition-all duration-500"
-            style={{ width: `${progressPercent}%` }}
-          />
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono text-slate-500">{unlockedCount}/{totalCount}</span>
+          <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden" dir="ltr">
+            <div 
+              className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
         </div>
       </div>
 
@@ -473,3 +509,5 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
     </div>
   );
 };
+
+export default OceanJourney;

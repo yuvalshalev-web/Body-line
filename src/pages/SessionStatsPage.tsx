@@ -45,8 +45,9 @@ import {
 } from 'recharts';
 
 const SessionStatsPage: React.FC = () => {
-  const { members: allMembers, weeklyHistory, yearConfig, isLoading } = useData();
+  const { members: allMembers, weeklyHistory, yearConfig, siteConfig, isLoading } = useData();
   const members = useMemo(() => allMembers.filter(m => m.role !== 'Staff' && !isAppShaperUser(m)), [allMembers]);
+  const sessionDurationMinutes = siteConfig?.sessionDurationMinutes || 90;
   const [searchTerm, setSearchTerm] = useState('');
   const [gritSearchTerm, setGritSearchTerm] = useState('');
   const [ageView, setAgeView] = useState<'annual' | 'monthly' | 'lastSession'>('annual');
@@ -397,9 +398,9 @@ const SessionStatsPage: React.FC = () => {
     }));
 
     // 8. Sea Time Calculation
-    const totalSeaTimeMinutes = filteredSessions.reduce((acc, s) => acc + (s.participantsCount || 0) * 90, 0);
+    const totalSeaTimeMinutes = filteredSessions.reduce((acc, s) => acc + (s.participantsCount || 0) * sessionDurationMinutes, 0);
     const totalSeaTimeHours = Math.round(totalSeaTimeMinutes / 60);
-    const monthlySeaTimeMinutes = lastMonthSessions.reduce((acc, s) => acc + (s.participantsCount || 0) * 90, 0);
+    const monthlySeaTimeMinutes = lastMonthSessions.reduce((acc, s) => acc + (s.participantsCount || 0) * sessionDurationMinutes, 0);
     const monthlySeaTimeHours = Math.round(monthlySeaTimeMinutes / 60);
 
     // 9. Pulse Data (Full timeline from startDate to endDate)
@@ -596,7 +597,7 @@ const SessionStatsPage: React.FC = () => {
               </span>
               <span className="text-xl font-black text-slate-500 mt-1 uppercase tracking-tight">שעות גלישה מצטברות</span>
             </div>
-            <p className="text-[9px] text-slate-400 mt-4 font-bold relative z-10">* מבוסס על הערכה של 90 דק' גלישה למשתתף</p>
+            <p className="text-[9px] text-slate-400 mt-4 font-bold relative z-10">* מבוסס על הערכה של {sessionDurationMinutes} דק' גלישה למשתתף</p>
           </div>
         </div>
 

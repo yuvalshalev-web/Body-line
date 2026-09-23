@@ -116,7 +116,7 @@ const BadgeWithTooltip = ({ icon: Icon, text, tooltip, colorTheme }: { icon: any
 
 export const AthletePassport: React.FC = () => {
   const { currentUser } = useAuth();
-  const { members, weeklyHistory, yearConfig, events } = useData();
+  const { members, weeklyHistory, yearConfig, events, siteConfig } = useData();
   const [activeDiscipline, setActiveDiscipline] = useState('surfing');
   const [showImageModal, setShowImageModal] = useState<string | null>(null);
 
@@ -125,12 +125,19 @@ export const AthletePassport: React.FC = () => {
   const stats = useMemo(() => {
     if (!currentUser || members.length === 0) return null;
     try {
-      return calculateUserStats(currentUser.id, members, weeklyHistory, yearConfig, events);
+      return calculateUserStats(
+        currentUser.id, 
+        members, 
+        weeklyHistory, 
+        yearConfig, 
+        events, 
+        siteConfig?.sessionDurationMinutes || 90
+      );
     } catch (e) {
       console.error("AthletePassport: Failed to calculate stats", e);
       return null;
     }
-  }, [currentUser, members, weeklyHistory, yearConfig, events]);
+  }, [currentUser, members, weeklyHistory, yearConfig, events, siteConfig?.sessionDurationMinutes]);
 
   // Auto-switch to newly added discipline if applicable
   React.useEffect(() => {
@@ -206,9 +213,9 @@ export const AthletePassport: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
         <div className="text-center md:text-right">
           <h2 className="text-3xl md:text-4xl font-black text-[#121212] tracking-tight">
-            Athlete Passport
+            דרכון אקסטרים
           </h2>
-          <p className="text-[#121212] font-bold uppercase tracking-widest text-xs mt-1">Verified Action ID</p>
+          <p className="text-[#121212] font-bold uppercase tracking-widest text-xs mt-1">Extreme Athlete Passport • Verified Action ID</p>
         </div>
         
         {/* Apple Wallet Style Tabs */}

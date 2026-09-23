@@ -239,7 +239,7 @@ const ProfileCompletion = React.memo(({ percentage, onShowDetails }: { percentag
 const ProfilePage: React.FC = () => {
   const headerImage = useRandomHeader();
   const { currentUser, updateUser, firebaseUser } = useAuth();
-  const { updateMember } = useData();
+  const { updateMember, members, weeklyHistory } = useData();
   
   const [formData, setFormData] = useState<Member | null>(currentUser ? { ...currentUser } : null);
   const [isDirty, setIsDirty] = useState(false);
@@ -455,6 +455,15 @@ const ProfilePage: React.FC = () => {
   ]);
 
   const completionPercentage = completionDetails.percentage;
+
+  const userTotalSessions = useMemo(() => {
+    if (!formData?.id) return 0;
+    const historyCount = (weeklyHistory || []).filter(
+      s => !s.isEvent && (s.participantIds?.includes(formData.id) || (s.attendees && s.attendees.includes(formData.id)))
+    ).length;
+    const rawTotal = typeof formData.totalAttendance === 'number' ? formData.totalAttendance : 0;
+    return Math.max(rawTotal, historyCount);
+  }, [formData?.id, formData?.totalAttendance, weeklyHistory]);
 
   const handleFieldChange = useCallback((field: keyof Member, value: any) => {
     setFormData(prev => prev ? ({ ...prev, [field]: value }) : null);

@@ -9,7 +9,7 @@ import {
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
   PanelTop, ArrowUpCircle, ArrowDownCircle, User, Globe, Activity,
   Waves, AlertTriangle, Terminal, Link2, Eye, Key,
-  FileText, Map as MapIcon, Clock, Upload, BarChart2, Utensils
+  FileText, Map as MapIcon, Clock, Upload, BarChart2, Utensils, Timer, Hourglass
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -370,6 +370,16 @@ const AdminPage: React.FC = () => {
   const addressInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
   const selectedPlaceRef = useRef<any>(null);
+
+  // Session Duration State
+  const [sessionDurationInput, setSessionDurationInput] = useState<number>(siteConfig.sessionDurationMinutes || 90);
+  const [isSavingSessionDuration, setIsSavingSessionDuration] = useState(false);
+
+  useEffect(() => {
+    if (siteConfig.sessionDurationMinutes !== undefined) {
+      setSessionDurationInput(siteConfig.sessionDurationMinutes);
+    }
+  }, [siteConfig.sessionDurationMinutes]);
 
   useEffect(() => {
     if (activeTab !== 'ASSETS') return;
@@ -1949,6 +1959,258 @@ const AdminPage: React.FC = () => {
                       <p className="text-sm font-bold text-emerald-700">המיקום מוגדר ומסונכרן עם שירותי המפות</p>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+
+            {/* Session Duration Config Widget (בין חוף הבית לניהול מועדי הסשנים) */}
+            <div className="luxury-card p-8 space-y-8">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-sky-50 text-sky-500 rounded-2xl flex items-center justify-center shadow-sm border border-sky-100">
+                    <Timer size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800 tracking-tight">אורך הסשן (זמן מים)</h3>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">SESSION DURATION & SEA TIME MULTIPLIER</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-start sm:self-auto bg-slate-50 border border-slate-200/70 px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-600">
+                  <Hourglass size={14} className="text-sky-500" />
+                  <span>ערך פעיל: <strong className="text-slate-800 font-black">{siteConfig.sessionDurationMinutes || 90} דק'</strong> ({(Number(siteConfig.sessionDurationMinutes || 90) / 60).toFixed(1)} שעות)</span>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                  קביעת משך סשן גלישה בודד בדקות. נתון זה משמש כמקדם לחישוב צבירת שעות הגלישה האישיות של כל גולש, סך שעות המים של הקבוצה כולה, וכלל הסטטיסטיקות ומדדי ההתקדמות מול יעדי הקהילה.
+                </p>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-slate-50/70 rounded-3xl p-6 border border-slate-100">
+                  
+                  {/* Left (Interactive Number Controls & Stepper) */}
+                  <div className="lg:col-span-6 space-y-5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-slate-400 uppercase tracking-widest">משך סשן רצוי</span>
+                      <span className="text-xs font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-100">
+                        = {(sessionDurationInput / 60).toFixed(2).replace(/\.00$/, '')} שעות לסשן
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!isAppShaper && !isAdmin && currentUser?.role !== 'Instructor') {
+                            setShowReadOnlyNotice(true);
+                            return;
+                          }
+                          setSessionDurationInput(prev => Math.max(15, prev - 15));
+                        }}
+                        className="px-4 py-3 bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 text-slate-700 font-black text-xs rounded-xl shadow-sm transition-all active:scale-95"
+                        title="הפחת 15 דקות"
+                      >
+                        -15
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!isAppShaper && !isAdmin && currentUser?.role !== 'Instructor') {
+                            setShowReadOnlyNotice(true);
+                            return;
+                          }
+                          setSessionDurationInput(prev => Math.max(15, prev - 5));
+                        }}
+                        className="px-3.5 py-3 bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 text-slate-700 font-black text-xs rounded-xl shadow-sm transition-all active:scale-95"
+                        title="הפחת 5 דקות"
+                      >
+                        -5
+                      </button>
+
+                      <div className="relative flex-1">
+                        <input
+                          type="number"
+                          min="15"
+                          max="300"
+                          step="5"
+                          value={sessionDurationInput}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val)) {
+                              setSessionDurationInput(Math.min(360, Math.max(15, val)));
+                            }
+                          }}
+                          className="w-full text-center py-3.5 px-4 bg-white border-2 border-slate-200 focus:border-sky-500 rounded-2xl text-2xl font-black text-slate-800 outline-none transition-all shadow-inner tabular-nums"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400 uppercase">
+                          דקות
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!isAppShaper && !isAdmin && currentUser?.role !== 'Instructor') {
+                            setShowReadOnlyNotice(true);
+                            return;
+                          }
+                          setSessionDurationInput(prev => Math.min(300, prev + 5));
+                        }}
+                        className="px-3.5 py-3 bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 text-slate-700 font-black text-xs rounded-xl shadow-sm transition-all active:scale-95"
+                        title="הוסף 5 דקות"
+                      >
+                        +5
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!isAppShaper && !isAdmin && currentUser?.role !== 'Instructor') {
+                            setShowReadOnlyNotice(true);
+                            return;
+                          }
+                          setSessionDurationInput(prev => Math.min(300, prev + 15));
+                        }}
+                        className="px-4 py-3 bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 text-slate-700 font-black text-xs rounded-xl shadow-sm transition-all active:scale-95"
+                        title="הוסף 15 דקות"
+                      >
+                        +15
+                      </button>
+                    </div>
+
+                    {/* Quick Presets */}
+                    <div className="space-y-2">
+                      <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">בחירה מהירה:</span>
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        {[
+                          { min: 45, label: "45 דק'", hrs: "0.75 ש'" },
+                          { min: 60, label: "60 דק'", hrs: "שעה" },
+                          { min: 75, label: "75 דק'", hrs: "1.25 ש'" },
+                          { min: 90, label: "90 דק'", hrs: "1.5 ש'", isDefault: true },
+                          { min: 105, label: "105 דק'", hrs: "1.75 ש'" },
+                          { min: 120, label: "120 דק'", hrs: "שעתיים" }
+                        ].map((preset) => {
+                          const isSelected = sessionDurationInput === preset.min;
+                          return (
+                            <button
+                              key={preset.min}
+                              type="button"
+                              onClick={() => {
+                                if (!isAppShaper && !isAdmin && currentUser?.role !== 'Instructor') {
+                                  setShowReadOnlyNotice(true);
+                                  return;
+                                }
+                                setSessionDurationInput(preset.min);
+                              }}
+                              className={`py-2 px-2 rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center gap-0.5 border ${
+                                isSelected
+                                  ? 'bg-sky-500 text-white border-sky-500 shadow-md shadow-sky-500/30 scale-[1.03]'
+                                  : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 hover:border-slate-300'
+                              }`}
+                            >
+                              <span>{preset.label}</span>
+                              <span className={`text-[9px] font-medium opacity-80 ${isSelected ? 'text-sky-100' : 'text-slate-400'}`}>
+                                {preset.hrs}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right (Live System Impact Cards) */}
+                  <div className="lg:col-span-6 grid grid-cols-2 gap-3">
+                    <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-1">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סשן בודד</span>
+                      <p className="text-xl font-black text-slate-800 tabular-nums">
+                        {(sessionDurationInput / 60).toFixed(1)} <span className="text-xs font-bold text-slate-400">שעות</span>
+                      </p>
+                      <p className="text-[10px] text-slate-500 font-medium">זמן מים מצטבר לגולש</p>
+                    </div>
+
+                    <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-1">
+                      <span className="text-[10px] font-black text-sky-500 uppercase tracking-widest">שלב 1 (12 סשנים)</span>
+                      <p className="text-xl font-black text-sky-600 tabular-nums">
+                        {((12 * sessionDurationInput) / 60).toFixed(1)} <span className="text-xs font-bold text-sky-400">שעות</span>
+                      </p>
+                      <p className="text-[10px] text-slate-500 font-medium">מעבר מקצף לגלים</p>
+                    </div>
+
+                    <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-1">
+                      <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">שלב 3 (50 סשנים)</span>
+                      <p className="text-xl font-black text-indigo-600 tabular-nums">
+                        {((50 * sessionDurationInput) / 60).toFixed(1)} <span className="text-xs font-bold text-indigo-400">שעות</span>
+                      </p>
+                      <p className="text-[10px] text-slate-500 font-medium">רמת ניווט ושליטה</p>
+                    </div>
+
+                    <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-1">
+                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">100 סשנים קבוצתיים</span>
+                      <p className="text-xl font-black text-emerald-600 tabular-nums">
+                        {Math.round((100 * sessionDurationInput) / 60)} <span className="text-xs font-bold text-emerald-400">שעות</span>
+                      </p>
+                      <p className="text-[10px] text-slate-500 font-medium">צבירת ים קהילתית</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <div className="flex items-center justify-between gap-4 pt-2">
+                  <div className="text-xs text-slate-400 font-medium">
+                    {sessionDurationInput !== (siteConfig.sessionDurationMinutes || 90) ? (
+                      <span className="text-amber-600 font-bold flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                        ישנם שינויים שלא נשמרו (מ-{siteConfig.sessionDurationMinutes || 90} ל-{sessionDurationInput} דק')
+                      </span>
+                    ) : (
+                      <span className="text-emerald-600 font-bold flex items-center gap-1.5">
+                        <CheckCircle2 size={14} />
+                        ההגדרה שמורה ומסונכרנת
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={isSavingSessionDuration || sessionDurationInput === (siteConfig.sessionDurationMinutes || 90)}
+                    onClick={async () => {
+                      if (!isAppShaper && !isAdmin && currentUser?.role !== 'Instructor') {
+                        setShowReadOnlyNotice(true);
+                        return;
+                      }
+
+                      setIsSavingSessionDuration(true);
+                      try {
+                        await updateSiteConfig({ sessionDurationMinutes: sessionDurationInput });
+                        showSuccess(`אורך הסשן עודכן בהצלחה ל-${sessionDurationInput} דקות (${(sessionDurationInput / 60).toFixed(1)} שעות)`);
+                      } catch (err) {
+                        console.error('Failed to update session duration:', err);
+                        showError('שגיאה בעדכון אורך הסשן');
+                      } finally {
+                        setIsSavingSessionDuration(false);
+                      }
+                    }}
+                    className={`py-3.5 px-8 rounded-2xl font-black text-xs transition-all flex items-center gap-2 shadow-lg ${
+                      sessionDurationInput !== (siteConfig.sessionDurationMinutes || 90)
+                        ? 'bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white shadow-sky-500/25 active:scale-95 cursor-pointer'
+                        : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                    }`}
+                  >
+                    {isSavingSessionDuration ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        שומר...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} />
+                        שמור אורך סשן
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>

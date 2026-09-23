@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { collection, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, getDocs, serverTimestamp } from 'firebase/firestore';
 import { getDb } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { Users, Wifi, X, Smartphone, Monitor, ShieldCheck, Sparkles, Waves } from 'lucide-react';
+import { Wifi, X, Smartphone, Monitor, Waves } from 'lucide-react';
 
 export interface OnlineUser {
   id: string;
@@ -19,14 +19,15 @@ export interface OnlineUser {
 // Generate or retrieve unique session ID for current browser tab
 const getSessionId = (): string => {
   if (typeof window === 'undefined') return 'server_session';
-  let sid = sessionStorage.getItem('surf_presence_session_id');
-  if (!sid) {
-    sid = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    try {
+  let sid: string | null = null;
+  try {
+    sid = sessionStorage.getItem('surf_presence_session_id');
+    if (!sid) {
+      sid = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       sessionStorage.setItem('surf_presence_session_id', sid);
-    } catch {
-      // ignore
     }
+  } catch {
+    sid = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   }
   return sid;
 };
@@ -37,20 +38,22 @@ export const OnlineUsersCounter: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const sessionIdRef = useRef<string>(getSessionId());
 
-  // Heartbeat effect
+  // Heartbeat & Polling effect
   useEffect(() => {
+    let isMounted = true;
     const sessionId = sessionIdRef.current;
-    const db = getDb();
     const docId = currentUser?.id ? `user_${currentUser.id}` : sessionId;
 
     const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const platform = isMobile ? 'mobile' : 'desktop';
 
+    // 1. Send Heartbeat
     const sendHeartbeat = async () => {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
         return;
       }
       try {
+        const db = getDb();
         const presenceRef = doc(db, 'online_presence', docId);
         await setDoc(
           presenceRef,
@@ -70,56 +73,21 @@ export const OnlineUsersCounter: React.FC = () => {
           { merge: true }
         );
       } catch (err) {
-        console.warn('Presence heartbeat notice:', err);
+        // Silently swallow any transient offline / long-polling hiccups
       }
     };
 
-    // Immediate heartbeat on mount
-    sendHeartbeat();
-
-    // Regular interval every 40 seconds
-    const interval = setInterval(sendHeartbeat, 40000);
-
-    // Visibility change handler
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        sendHeartbeat();
-      }
-    };
-
-    // Before unload cleanup
-    const handleUnload = () => {
+    // 2. Fetch Active Users via periodic getDocs (avoids fragile watch stream assertion crashes)
+    const fetchOnlineUsers = async () => {
       try {
-        const presenceRef = doc(db, 'online_presence', docId);
-        // Note: deleteDoc on unload is best-effort
-        deleteDoc(presenceRef).catch(() => {});
-      } catch {
-        // ignore
-      }
-    };
+        const db = getDb();
+        const presenceCol = collection(db, 'online_presence');
+        const snapshot = await getDocs(presenceCol);
+        
+        if (!isMounted) return;
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('pagehide', handleUnload);
-    window.addEventListener('beforeunload', handleUnload);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('pagehide', handleUnload);
-      window.removeEventListener('beforeunload', handleUnload);
-    };
-  }, [currentUser]);
-
-  // Real-time listener for active presence
-  useEffect(() => {
-    const db = getDb();
-    const presenceCol = collection(db, 'online_presence');
-
-    const unsubscribe = onSnapshot(
-      presenceCol,
-      (snapshot) => {
         const now = Date.now();
-        const activeThreshold = 2.5 * 60 * 1000; // 2.5 minutes
+        const activeThreshold = 3 * 60 * 1000; // 3 minutes
         const list: OnlineUser[] = [];
         const seenMemberIds = new Set<string>();
 
@@ -127,9 +95,7 @@ export const OnlineUsersCounter: React.FC = () => {
           const data = docSnap.data();
           const lastSeen = data.lastSeen || 0;
 
-          // Only count users active in the last 2.5 minutes
           if (now - lastSeen < activeThreshold) {
-            // Deduplicate if member is logged in on multiple tabs
             const dedupeKey = data.memberId || docSnap.id;
             if (!seenMemberIds.has(dedupeKey)) {
               seenMemberIds.add(dedupeKey);
@@ -141,14 +107,15 @@ export const OnlineUsersCounter: React.FC = () => {
                 role: data.role || 'Member',
                 lastSeen: lastSeen,
                 platform: data.platform === 'mobile' ? 'mobile' : 'desktop',
-                isCurrentUser: data.memberId === currentUser?.id || docSnap.id === sessionIdRef.current
+                isCurrentUser: data.memberId === currentUser?.id || docSnap.id === sessionId
               });
             }
           }
         });
 
-        // Ensure current user is at least present in local list
-        if (list.length === 0) {
+        // Ensure current user is included
+        const hasCurrentUser = list.some(u => u.isCurrentUser || (currentUser?.id && u.memberId === currentUser.id));
+        if (!hasCurrentUser) {
           list.push({
             id: 'local_current',
             memberId: currentUser?.id || null,
@@ -156,12 +123,11 @@ export const OnlineUsersCounter: React.FC = () => {
             avatar: currentUser?.avatar || null,
             role: currentUser?.role || 'Member',
             lastSeen: now,
-            platform: typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+            platform,
             isCurrentUser: true
           });
         }
 
-        // Sort: current user first, then by recent activity
         list.sort((a, b) => {
           if (a.isCurrentUser) return -1;
           if (b.isCurrentUser) return 1;
@@ -169,29 +135,66 @@ export const OnlineUsersCounter: React.FC = () => {
         });
 
         setOnlineUsers(list);
-      },
-      (error) => {
-        console.warn('Presence listener notice:', error);
-        // Fallback: at least show 1 online user (current user)
-        setOnlineUsers([
-          {
+      } catch (err) {
+        // Fallback gracefully without crashing
+        if (!isMounted) return;
+        setOnlineUsers(prev => {
+          if (prev.length > 0) return prev;
+          return [{
             id: 'local_fallback',
             memberId: currentUser?.id || null,
-            name: currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : 'את/ה',
+            name: currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : 'את/ה (גולש/ת)',
             avatar: currentUser?.avatar || null,
             role: currentUser?.role || 'Member',
             lastSeen: Date.now(),
-            platform: 'mobile',
+            platform: isMobile ? 'mobile' : 'desktop',
             isCurrentUser: true
-          }
-        ]);
+          }];
+        });
       }
-    );
+    };
 
-    return () => unsubscribe();
-  }, [currentUser]);
+    const syncPresence = async () => {
+      await sendHeartbeat();
+      await fetchOnlineUsers();
+    };
 
-  const count = onlineUsers.length;
+    // Run initial sync
+    syncPresence();
+
+    // Regular interval every 30 seconds
+    const interval = setInterval(syncPresence, 30000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncPresence();
+      }
+    };
+
+    const handleUnload = () => {
+      try {
+        const db = getDb();
+        const presenceRef = doc(db, 'online_presence', docId);
+        deleteDoc(presenceRef).catch(() => {});
+      } catch {
+        // ignore
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handleUnload);
+    window.addEventListener('beforeunload', handleUnload);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handleUnload);
+      window.removeEventListener('beforeunload', handleUnload);
+    };
+  }, [currentUser?.id]);
+
+  const count = Math.max(1, onlineUsers.length);
 
   const getRoleBadge = (role?: string) => {
     switch (role) {
@@ -378,3 +381,5 @@ export const OnlineUsersCounter: React.FC = () => {
     </>
   );
 };
+
+export default OnlineUsersCounter;
