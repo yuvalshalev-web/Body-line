@@ -202,6 +202,53 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
           <UserCategories userId={userId} />
 
+          {/* Rope Partner / בן/בת זוג לחבל */}
+          {member.partnerId && (() => {
+            const partner = members.find(m => m.id === member.partnerId);
+            if (!partner) return null;
+            return (
+              <div className="w-full p-4 bg-gradient-to-br from-amber-50/90 via-orange-50/60 to-amber-100/70 border-2 border-amber-300/80 rounded-2xl mt-4 shadow-sm" dir="rtl">
+                <div className="text-amber-900 text-sm font-black mb-2.5 flex items-center gap-2 justify-center">
+                  <span className="text-2xl">🪢</span>
+                  <span>בן / בת זוג לחבל (שותף פעילות קבוע)</span>
+                </div>
+                <div className="flex items-center justify-between gap-3 bg-white/95 p-3 rounded-xl border border-amber-200 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-amber-100 border-2 border-amber-300 shrink-0 shadow-xs">
+                      {partner.avatar ? (
+                        <img src={partner.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-amber-700 font-black text-sm">
+                          {partner.firstName?.charAt(0) || '👤'}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <h4 className="font-black text-slate-800 text-sm">
+                        {partner.firstName} {partner.lastName}
+                      </h4>
+                      <p className="text-[11px] font-bold text-amber-800">
+                        {partner.role === 'Volunteer' ? 'מתנדב' : partner.role === 'Admin' ? 'רכז' : partner.role === 'Instructor' ? 'מדריך' : 'משתתף'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {partner.mobile && (
+                      <button
+                        onClick={() => openWhatsApp(partner.mobile!)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-xl shadow-xs transition-all text-xs font-black"
+                        title="שליחת וואטסאפ לבן/בת הזוג"
+                      >
+                        <MessageCircle size={15} />
+                        <span>וואטסאפ</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Availability Schedule Section */}
           {member.availabilitySchedule && member.availabilitySchedule !== 'always' && (
             <div className="w-full p-3.5 bg-amber-50/40 backdrop-blur-[20px] border border-amber-200/60 rounded-2xl mt-4" dir="rtl">

@@ -85,68 +85,77 @@ const DirectoryPage: React.FC = () => {
         exit={{ opacity: 0, scale: 0.9 }}
         transition={{ delay: index * 0.02 }}
         onClick={() => setSelectedMemberId(member.id)}
-        className="group luxury-card flex flex-col items-center text-center relative overflow-hidden cursor-pointer h-64 !scale-100 hover:!scale-105 transition-transform duration-500"
+        className="group luxury-card flex flex-col items-center text-center relative overflow-hidden cursor-pointer min-h-[17.5rem] h-auto !scale-100 hover:!scale-105 transition-transform duration-500"
       >
         <div className="grain-overlay opacity-[0.05]" />
-        {/* Avatar - Top Half */}
-        <div className="absolute top-0 left-0 w-full h-1/2 overflow-hidden">
-            {member.avatar ? (
-              <img 
-                src={member.avatar} 
-                alt={`${member.firstName} ${member.lastName}`}
-                className="w-full h-full object-cover feathered-edges"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300">
-                <User size={32} />
-              </div>
-            )}
+        {/* Avatar - Top Section */}
+        <div className="relative w-full h-36 overflow-hidden shrink-0">
+          {member.avatar ? (
+            <img 
+              src={member.avatar} 
+              alt={`${member.firstName} ${member.lastName}`}
+              className="w-full h-full object-cover feathered-edges"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300">
+              <User size={32} />
+            </div>
+          )}
         </div>
 
-        {/* Info - Bottom Half */}
-        <div className="absolute bottom-0 left-0 w-full p-3 sm:p-4 flex flex-col items-center justify-center h-1/2">
-          {/* App-Shaper Support Widget - Placed directly between Image and Name */}
-          {isAppShaper && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSupportModalMember(member);
-              }}
-              className="-mt-5 mb-1.5 z-30 flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-slate-700 via-blue-600 to-slate-500 text-white rounded-full text-[11px] font-black shadow-lg hover:scale-105 active:scale-95 transition-all border-2 border-white backdrop-blur-md cursor-pointer animate-pulse hover:animate-none"
-              title="תמיכה טכנית - App-Shaper"
-            >
-              <Headset size={13} className="text-white" />
-              <span>תמיכה טכנית</span>
-            </button>
-          )}
-
-          <h3 className="text-sm sm:text-base font-black text-slate-800 truncate w-full flex items-center justify-center gap-1">
-            {member.firstName} {member.lastName}
-          </h3>
-          <p className="text-[10px] sm:text-xs font-bold text-slate-400 truncate w-full">
-            {getRoleLabel(member)}
-          </p>
-
-          {/* Quick Actions */}
-          <div className="flex gap-2 mt-2">
-            {partner && (
-              <div 
-                className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-[var(--surfer-aqua-mist)]/20 to-indigo-500/10 border border-indigo-500/20 rounded-full text-xs font-bold text-indigo-700 shadow-sm hover:scale-105 transition-transform"
-                title={`חבל זוג עם ${partner.firstName}`}
+        {/* Info - Bottom Section */}
+        <div className="w-full p-3 sm:p-4 flex flex-col items-center justify-between flex-grow">
+          <div className="w-full flex flex-col items-center">
+            {/* App-Shaper Support Widget - Placed directly between Image and Name */}
+            {isAppShaper && (
+              <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSelectedMemberId(partner.id);
+                  setSupportModalMember(member);
                 }}
+                className="-mt-6 mb-2 z-30 flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-slate-700 via-blue-600 to-slate-500 text-white rounded-full text-[11px] font-black shadow-lg hover:scale-105 active:scale-95 transition-all border-2 border-white backdrop-blur-md cursor-pointer animate-pulse hover:animate-none"
+                title="תמיכה טכנית - App-Shaper"
               >
-                <Link2 size={12} className="text-indigo-500" />
-                <div className="w-4 h-4 rounded-full overflow-hidden bg-white border border-indigo-200">
-                  {partner.avatar ? <img src={partner.avatar} className="w-full h-full object-cover" /> : <User size={10} className="m-auto opacity-50 mt-0.5" />}
-                </div>
-                <span className="truncate max-w-[65px]">{partner.firstName}</span>
-              </div>
+                <Headset size={13} className="text-white" />
+                <span>תמיכה טכנית</span>
+              </button>
             )}
+
+            <h3 className="text-sm sm:text-base font-black text-slate-800 truncate w-full flex items-center justify-center gap-1">
+              {member.firstName} {member.lastName}
+            </h3>
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 truncate w-full">
+              {getRoleLabel(member)}
+            </p>
           </div>
+
+          {/* Partner Ribbon / Quick Action */}
+          {partner && (
+            <div 
+              className="w-full mt-2.5 px-2.5 py-1.5 bg-gradient-to-r from-amber-100/90 via-amber-50 to-amber-100/90 hover:from-amber-200/90 hover:to-amber-100 border-2 border-amber-300 rounded-xl text-xs font-bold text-amber-950 shadow-xs hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-between gap-2 group/partner cursor-pointer"
+              title={`בן/בת זוג לחבל (שותף פעילות קבוע): ${partner.firstName} ${partner.lastName}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedMemberId(partner.id);
+              }}
+            >
+              <div className="flex items-center gap-2 min-w-0 text-right">
+                <span className="text-2xl shrink-0 leading-none">🪢</span>
+                <div className="flex flex-col text-right leading-tight">
+                  <span className="text-[10px] text-amber-800 font-black">חבל זוג:</span>
+                  <span className="truncate text-amber-950 font-black text-xs">{partner.firstName} {partner.lastName ? `${partner.lastName.charAt(0)}.` : ''}</span>
+                </div>
+              </div>
+              <div className="w-6 h-6 rounded-full overflow-hidden bg-white border-2 border-amber-300 shrink-0 shadow-xs">
+                {partner.avatar ? (
+                  <img src={partner.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={13} className="m-auto text-amber-700 mt-0.5" />
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
     ) : (
@@ -165,7 +174,7 @@ const DirectoryPage: React.FC = () => {
             {member.avatar ? (
               <img 
                 src={member.avatar} 
-                alt=""
+                alt="" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
@@ -211,22 +220,20 @@ const DirectoryPage: React.FC = () => {
         <div className="flex gap-2 items-center">
           {partner && (
             <div 
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors"
-              title={`חבל זוג עם ${partner.firstName} ${partner.lastName}`}
+              className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-amber-100/90 via-amber-50 to-amber-100/90 hover:from-amber-200/90 hover:to-amber-100 border-2 border-amber-300 rounded-2xl transition-all cursor-pointer shadow-xs"
+              title={`בן/בת זוג לחבל (שותף פעילות קבוע): ${partner.firstName} ${partner.lastName}`}
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedMemberId(partner.id);
               }}
             >
-              <div className="flex flex-col text-left">
-                <span className="text-[9px] font-black tracking-widest text-indigo-400 uppercase leading-none">חבל זוג</span>
-                <span className="text-xs font-bold text-indigo-700 leading-tight">{partner.firstName} {partner.lastName}</span>
+              <span className="text-2xl leading-none">🪢</span>
+              <div className="flex flex-col text-right">
+                <span className="text-[10px] font-black text-amber-800 uppercase leading-none">בן/בת זוג לחבל</span>
+                <span className="text-xs font-black text-amber-950 leading-tight">{partner.firstName} {partner.lastName}</span>
               </div>
-              <div className="w-8 h-8 rounded-full overflow-hidden bg-white border-2 border-indigo-200 shrink-0 relative">
-                {partner.avatar ? <img src={partner.avatar} className="w-full h-full object-cover" /> : <User size={16} className="m-auto opacity-50 mt-1" />}
-                <div className="absolute -bottom-1 -right-1 bg-indigo-500 text-white p-0.5 rounded-full border-2 border-white">
-                  <Link2 size={10} />
-                </div>
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-white border-2 border-amber-300 shrink-0 shadow-xs relative">
+                {partner.avatar ? <img src={partner.avatar} className="w-full h-full object-cover" alt="" /> : <User size={18} className="m-auto text-amber-700 mt-1" />}
               </div>
             </div>
           )}
