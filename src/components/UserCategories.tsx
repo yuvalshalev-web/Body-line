@@ -97,18 +97,18 @@ const UserCategories: React.FC<UserCategoriesProps> = ({ userId }) => {
   if (categories.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-2.5 items-center mb-6" dir="rtl">
-      <span className="text-xs font-dana-yad font-bold text-[#121212] ml-1">
+    <div className="flex flex-wrap gap-2.5 items-center mb-6 font-yehuda" dir="rtl">
+      <span className="text-xs font-yehuda font-bold text-[#121212] ml-1">
         הישגים בשנת הפעילות:
       </span>
       {categories.map(cat => (
         <div 
           key={cat.name} 
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full ${cat.bg} ${cat.color} font-dana-yad font-bold text-xs sm:text-sm shadow-xs transition-transform hover:scale-102`}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full ${cat.bg} ${cat.color} font-yehuda font-bold text-xs sm:text-sm shadow-xs transition-transform hover:scale-102`}
         >
           <cat.icon size={14} className="opacity-80" />
           <span>{cat.name}</span>
-          <span className="text-[10px] font-sans font-normal opacity-70">({cat.title})</span>
+          <span className="text-[10px] font-yehuda font-normal opacity-70">({cat.title})</span>
           <Check size={12} className="text-emerald-600 mr-0.5" strokeWidth={3} />
         </div>
       ))}

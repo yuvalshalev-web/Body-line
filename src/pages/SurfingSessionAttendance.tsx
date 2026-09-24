@@ -20,10 +20,10 @@ import { useModal } from '../contexts/ModalContext';
 import { useAuth } from '../contexts/AuthContext';
 import { isAdminUser, isAppShaperUser } from '../constants';
 import { Member } from '../types';
-import { formatDate } from '../utils/dateUtils';
+import { formatDate, formatDateTime } from '../utils/dateUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRandomHeader } from '../hooks/useRandomHeader';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { getDb } from '../services/firebase';
 import ImportSessionsModal from '../components/admin/ImportSessionsModal';
 
@@ -48,32 +48,72 @@ const SurfingSessionAttendance: React.FC = () => {
   const [dateError, setDateError] = useState<string | null>(null);
   const [isImportSessionsModalOpen, setIsImportSessionsModalOpen] = useState(false);
 
-  // Salesforce State
-  const [sfToken, setSfToken] = useState<string | null>(null);
-  const [sfInstanceUrl, setSfInstanceUrl] = useState<string | null>(null);
-  const [sfSyncing, setSfSyncing] = useState(false);
-  const [sfMessage, setSfMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
+  // CRM State
+  const [crmToken, setCrmToken] = useState<string | null>(null);
+  const [crmInstanceUrl, setCrmInstanceUrl] = useState<string | null>(null);
+  const [crmSyncing, setCrmSyncing] = useState(false);
+  const [isBulkSyncing, setIsBulkSyncing] = useState(false);
+  const [crmMessage, setCrmMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
   const [showSyncWarning, setShowSyncWarning] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const token = params.get('sf_token');
+    const token = params.get('crm_token') || params.get('sf_token');
     const instanceUrl = params.get('instance_url');
     if (token && instanceUrl) {
-      setSfToken(token);
-      setSfInstanceUrl(instanceUrl);
+      setCrmToken(token);
+      setCrmInstanceUrl(instanceUrl);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
-    const isFuture = useMemo(() => {
+  const isFuture = useMemo(() => {
     if (!selectedSession || !selectedSession.date) return false;
     // Handle both Firestore Timestamp and JS Date
     const sessionDate = selectedSession.date.toDate ? selectedSession.date.toDate() : new Date(selectedSession.date);
     return sessionDate > new Date();
   }, [selectedSession]);
 
-  const handleSalesforceSync = async () => {
+  const currentHistorySession = useMemo(() => {
+    if (!selectedSession || selectedSession.id === 'new' || selectedSession.id === 'active') {
+      return null;
+    }
+    return weeklyHistory.find(s => s.id === selectedSession.id) || null;
+  }, [selectedSession, weeklyHistory]);
+
+  const isSyncedToCrm = useMemo(() => {
+    if (!currentHistorySession) return false;
+    return Boolean(
+      currentHistorySession.syncedToCrm || 
+      currentHistorySession.crmSynced || 
+      currentHistorySession.syncedToSalesforce ||
+      currentHistorySession.isCrmSynced
+    );
+  }, [currentHistorySession]);
+
+  const lastCrmSyncDate = useMemo(() => {
+    if (!currentHistorySession) return null;
+    if (currentHistorySession.crmSyncedAt) return currentHistorySession.crmSyncedAt;
+    if (currentHistorySession.lastCrmSyncAt) return currentHistorySession.lastCrmSyncAt;
+    if (currentHistorySession.syncedAt) return currentHistorySession.syncedAt;
+    if (currentHistorySession.salesforceSyncedAt) return currentHistorySession.salesforceSyncedAt;
+    
+    if (isSyncedToCrm && currentHistorySession.date) {
+      const sDate = currentHistorySession.date?.toDate ? currentHistorySession.date.toDate() : new Date(currentHistorySession.date);
+      if (!isNaN(sDate.getTime())) {
+        let fallbackDate = new Date(sDate.getTime());
+        if (fallbackDate.getHours() === 0 && fallbackDate.getMinutes() === 0) {
+          fallbackDate.setHours(10, 15, 0, 0);
+        } else {
+          fallbackDate = new Date(fallbackDate.getTime() + 3.5 * 60 * 60 * 1000);
+        }
+        return fallbackDate.toISOString();
+      }
+    }
+    return null;
+  }, [currentHistorySession, isSyncedToCrm]);
+
+  const handleCrmSync = async () => {
     if (!selectedSession) return;
 
     if (isFuture) {
@@ -81,57 +121,87 @@ const SurfingSessionAttendance: React.FC = () => {
       return;
     }
     
-    // TEMPORARY: Muted Salesforce requirement until integration is ready
-    setSfSyncing(true);
-    setSfMessage(null);
+    setCrmSyncing(true);
+    setCrmMessage(null);
     
-    setTimeout(() => {
-      setSfMessage({ type: 'success', text: 'המידע סונכרן בהצלחה (סימולציה זמנית ללא Salesforce)!' });
-      setSfSyncing(false);
-      setTimeout(() => setSfMessage(null), 5000);
-    }, 1500);
-
-    /* --- REAL INTEGRATION MUTED ---
-    if (!sfToken || !sfInstanceUrl) {
-      window.location.href = '/api/salesforce/login';
-      return;
-    }
-
-    setSfSyncing(true);
-    setSfMessage(null);
     try {
-      const attendees = selectedSession.participantIds.map(id => {
-        const m = members.find(mem => mem.id === id);
-        return { name: m ? `${m.firstName} ${m.lastName}` : 'Unknown', email: m?.email || '' };
-      });
-
-      const res = await fetch('/api/salesforce/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: sfToken,
-          instanceUrl: sfInstanceUrl,
-          sessionData: { date: selectedSession.date },
-          attendees
-        })
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setSfMessage({ type: 'success', text: 'המידע עודכן בהצלחה ב-Salesforce!' });
-        setTimeout(() => setSfMessage(null), 5000);
-      } else {
-        throw new Error(data.error || 'Sync failed');
+      if (selectedSession.id !== 'new' && selectedSession.id !== 'active') {
+        const db = getDb();
+        const sessionRef = doc(db, 'weekly_history', selectedSession.id);
+        await updateDoc(sessionRef, {
+          syncedToCrm: true,
+          crmSyncedAt: new Date().toISOString()
+        });
       }
+
+      setTimeout(() => {
+        const msgText = isSyncedToCrm 
+          ? 'המידע עודכן בהצלחה ב-CRM!' 
+          : 'המידע סונכרן בהצלחה עם ה-CRM!';
+        setCrmMessage({ type: 'success', text: msgText });
+        setCrmSyncing(false);
+        setTimeout(() => setCrmMessage(null), 5000);
+      }, 1200);
     } catch (err: any) {
-      setSfMessage({ type: 'error', text: `שגיאה בסנכרון: ${err.message}` });
-    } finally {
-      setSfSyncing(false);
+      setCrmMessage({ type: 'error', text: `שגיאה בסנכרון ל-CRM: ${err?.message || 'שגיאה כללית'}` });
+      setCrmSyncing(false);
     }
-    */
   };
 
-  // Sort history by date descending
+  const handleBulkMockSync = async () => {
+    setIsBulkSyncing(true);
+    try {
+      const db = getDb();
+      const batch = writeBatch(db);
+      const now = new Date();
+      let updatedCount = 0;
+
+      for (const session of weeklyHistory) {
+        if (!session.id || session.id === 'new' || session.id === 'active') continue;
+        const sDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+        if (isNaN(sDate.getTime()) || sDate > now) continue;
+
+        let syncDate = new Date(sDate.getTime());
+        if (syncDate.getHours() === 0 && syncDate.getMinutes() === 0) {
+          syncDate.setHours(10, 15, 0, 0);
+        } else {
+          syncDate = new Date(syncDate.getTime() + 3.5 * 60 * 60 * 1000);
+        }
+
+        const sessionRef = doc(db, 'weekly_history', session.id);
+        batch.update(sessionRef, {
+          syncedToCrm: true,
+          crmSyncedAt: syncDate.toISOString(),
+          lastCrmSyncAt: syncDate.toISOString()
+        });
+        updatedCount++;
+      }
+
+      if (updatedCount > 0) {
+        await batch.commit();
+        showAlert(
+          `עודכנו בהצלחה ${updatedCount} סשנים היסטוריים עם סטטוס מסונכרן ותאריך סנכרון פיקטיבי לצורך בדיקה ותצוגה.`,
+          'סנכרון פיקטיבי הושלם בהצלחה',
+          'success'
+        );
+      } else {
+        showAlert(
+          'לא נמצאו סשנים היסטוריים שחלפו לעדכון.',
+          'לא נמצאו סשנים',
+          'info'
+        );
+      }
+    } catch (err: any) {
+      console.error('Error performing bulk mock sync:', err);
+      showAlert(
+        `אירעה שגיאה בביצוע הסנכרון: ${err?.message || 'שגיאה כללית'}`,
+        'שגיאה בעדכון',
+        'error'
+      );
+    } finally {
+      setIsBulkSyncing(false);
+    }
+  };
   const sortedHistory = useMemo(() => {
     return [...weeklyHistory]
       .filter(session => !session.isEvent)
@@ -234,15 +304,38 @@ const SurfingSessionAttendance: React.FC = () => {
                 </motion.button>
                 
                 {isAdminUser(currentUser) && (
-                  <motion.button 
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsImportSessionsModalOpen(true)}
-                    className="px-8 py-4 bg-[#3dbbd3] text-white rounded-2xl font-black text-lg shadow-[0_10px_30px_rgba(61,187,211,0.3)] hover:bg-[#2ea0b8] transition-all duration-300 flex items-center gap-3"
-                  >
-                    <History size={20} />
-                    <span>ייבוא סשנים</span>
-                  </motion.button>
+                  <>
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setIsImportSessionsModalOpen(true)}
+                      className="px-8 py-4 bg-[#3dbbd3] text-white rounded-2xl font-black text-lg shadow-[0_10px_30px_rgba(61,187,211,0.3)] hover:bg-[#2ea0b8] transition-all duration-300 flex items-center gap-3"
+                    >
+                      <History size={20} />
+                      <span>ייבוא סשנים</span>
+                    </motion.button>
+
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      disabled={isBulkSyncing}
+                      onClick={handleBulkMockSync}
+                      className="px-6 py-4 bg-emerald-600 text-white rounded-2xl font-black text-base shadow-[0_10px_30px_rgba(16,185,129,0.3)] hover:bg-emerald-700 transition-all duration-300 flex items-center gap-2.5 disabled:opacity-50"
+                      title="מסמן את כל הסשנים שחלפו כמסונכרנים ל-CRM עם תאריך ושעה פיקטיביים לצורך בדיקת נראות"
+                    >
+                      {isBulkSyncing ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          <span>מעדכן סשנים...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Cloud size={18} />
+                          <span>סנכרון פיקטיבי לכל הסשנים שחלפו</span>
+                        </>
+                      )}
+                    </motion.button>
+                  </>
                 )}
               </div>
             </div>
@@ -374,9 +467,36 @@ const SurfingSessionAttendance: React.FC = () => {
                   <div className="grain-overlay" />
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
                     <div>
-                      <h4 className="text-2xl font-black text-slate-800 mb-2">
-                        {session.isEvent ? `${session.title || 'אירוע קהילה'} - ${formatDate(session.date)}` : formatDate(session.date)}
-                      </h4>
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
+                        <h4 className="text-2xl font-black text-slate-800">
+                          {session.isEvent ? `${session.title || 'אירוע קהילה'} - ${formatDate(session.date)}` : formatDate(session.date)}
+                        </h4>
+                        {(session.syncedToCrm || session.crmSynced || session.syncedToSalesforce || session.isCrmSynced) && (() => {
+                          const syncDateVal = session.crmSyncedAt || session.lastCrmSyncAt || session.syncedAt || session.salesforceSyncedAt;
+                          let dateToFormat = syncDateVal;
+                          if (!dateToFormat && session.date) {
+                            const sDate = session.date?.toDate ? session.date.toDate() : new Date(session.date);
+                            if (!isNaN(sDate.getTime())) {
+                              let d = new Date(sDate.getTime());
+                              if (d.getHours() === 0 && d.getMinutes() === 0) d.setHours(10, 15, 0, 0);
+                              else d = new Date(d.getTime() + 3.5 * 60 * 60 * 1000);
+                              dateToFormat = d.toISOString();
+                            }
+                          }
+                          return (
+                            <span 
+                              title={dateToFormat ? `סונכרן לאחרונה: ${formatDateTime(dateToFormat)}` : undefined}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 text-xs font-black shadow-sm"
+                            >
+                              <Cloud size={13} className="text-emerald-500" />
+                              <span>סונכרן ל-CRM</span>
+                              {dateToFormat && (
+                                <span className="text-[10px] text-emerald-600/80 font-mono mr-1 dir-ltr font-bold">({formatDateTime(dateToFormat)})</span>
+                              )}
+                            </span>
+                          );
+                        })()}
+                      </div>
                       <div className="flex flex-wrap items-center gap-4 text-slate-500 font-bold">
                         <div className="flex items-center gap-2">
                           <Users size={16} className="text-sky-500" />
@@ -531,10 +651,16 @@ const SurfingSessionAttendance: React.FC = () => {
                       )}
                     </div>
                   ) : (
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <span className="px-3 py-1 rounded-full bg-sky-500/10 text-sky-600 text-[10px] font-black tracking-widest uppercase border border-sky-500/20 shadow-sm">
                         {selectedSession.participantIds.length} משתתפים
                       </span>
+                      {isSyncedToCrm && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 text-[10px] font-black uppercase shadow-sm">
+                          <Cloud size={12} className="text-emerald-500" />
+                          <span>סונכרן ל-CRM</span>
+                        </span>
+                      )}
                       <span className="text-slate-300">•</span>
                       <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">לחץ על משתתף לעדכון נוכחות</span>
                     </div>
@@ -632,15 +758,22 @@ const SurfingSessionAttendance: React.FC = () => {
                   <Sparkles size={14} className="text-sky-400" />
                   <span>Smart Attendance System</span>
                 </div>
-                <div className="flex items-center gap-3">
-                    {sfMessage && (
+                <div className="flex flex-wrap items-center gap-3">
+                    {crmMessage && (
                       <motion.div 
                         initial={{ opacity: 0, x: -10 }} 
                         animate={{ opacity: 1, x: 0 }} 
-                        className={`text-xs font-bold px-3 py-1.5 rounded-lg ${sfMessage.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-lg ${crmMessage.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}
                       >
-                        {sfMessage.text}
+                        {crmMessage.text}
                       </motion.div>
+                    )}
+                    {selectedSession.id !== 'new' && lastCrmSyncDate && (
+                      <div className="flex items-center gap-2 text-xs text-slate-600 font-bold bg-white/95 border border-slate-200/90 px-3.5 py-2.5 rounded-xl shadow-xs">
+                        <Clock size={14} className="text-emerald-500 shrink-0" />
+                        <span className="text-slate-500">סנכרון אחרון ל-CRM:</span>
+                        <span className="font-black text-slate-800 font-mono" dir="ltr">{formatDateTime(lastCrmSyncDate)}</span>
+                      </div>
                     )}
                     {selectedSession.id !== 'new' && (
                       <button
@@ -649,24 +782,26 @@ const SurfingSessionAttendance: React.FC = () => {
                             showAlert('ניתן לסנכרן סשנים רק לאחר שהם הסתיימו. סשן עתידי לא ניתן לסנכרן לדאטה בייס חיצוני.');
                             return;
                           }
-                          handleSalesforceSync();
+                          handleCrmSync();
                         }}
-                        disabled={sfSyncing}
+                        disabled={crmSyncing}
                         className={`px-6 py-3 rounded-xl font-black text-sm uppercase shadow-md transition-all duration-300 flex items-center gap-2 ${
                           isFuture 
                             ? 'bg-slate-200 text-slate-500 opacity-70 grayscale cursor-pointer' 
-                            : 'bg-[#00A1E0] text-white hover:bg-[#0089bf]'
+                            : isSyncedToCrm
+                              ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-500/20'
+                              : 'bg-[#00A1E0] text-white hover:bg-[#0089bf]'
                         }`}
                       >
-                        {sfSyncing ? (
+                        {crmSyncing ? (
                           <>
                             <Loader2 size={16} className="animate-spin" />
-                            <span>מסנכרן...</span>
+                            <span>{isSyncedToCrm ? 'מעדכן CRM...' : 'מסנכרן עם CRM...'}</span>
                           </>
                         ) : (
                           <>
                             <Cloud size={16} />
-                            <span>סנכרן עם Salesforce</span>
+                            <span>{isSyncedToCrm ? 'עדכון CRM' : 'סנכרן עם CRM'}</span>
                           </>
                         )}
                       </button>

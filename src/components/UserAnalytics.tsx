@@ -98,7 +98,7 @@ export const EliteStatCard: React.FC<{
           {icon}
         </div>
 
-        <h3 className={`font-dana-yad font-bold tracking-tight leading-tight flex-1 text-center truncate px-1 ${
+        <h3 className={`font-yehuda font-bold tracking-tight leading-tight flex-1 text-center truncate px-1 ${
           highlight ? 'text-sm sm:text-base font-black text-amber-950' : 'text-xs sm:text-sm text-slate-950 font-bold'
         }`}>
           {label}
@@ -120,7 +120,7 @@ export const EliteStatCard: React.FC<{
             {!onInfoClick && showLocalTooltip && (
               <div 
                 onClick={(e) => e.stopPropagation()}
-                className="absolute bottom-full right-0 mb-2 bg-[#092734] text-white text-xs px-3.5 py-2.5 rounded-xl shadow-xl w-[220px] z-50 font-dana-yad font-medium leading-relaxed border border-cyan-500/30 text-right"
+                className="absolute bottom-full right-0 mb-2 bg-[#092734] text-white text-xs px-3.5 py-2.5 rounded-xl shadow-xl w-[220px] z-50 font-yehuda font-medium leading-relaxed border border-cyan-500/30 text-right"
               >
                 <div className="flex items-center justify-between gap-1 pb-1 mb-1 border-b border-white/15 text-cyan-300 font-bold">
                   <span>{label}</span>
@@ -177,10 +177,10 @@ export const EliteStatCard: React.FC<{
           
           <div className="absolute inset-0 flex items-center justify-center flex-col z-20" dir="ltr">
             <div className="flex items-baseline gap-0.5">
-              <span className="font-sans font-black text-[#121212] tabular-nums leading-none tracking-tight text-2xl sm:text-[1.7rem]">
+              <span className="font-yehuda font-black text-[#121212] tabular-nums leading-none tracking-tight text-2xl sm:text-[1.7rem]">
                 <AnimatedNumber value={value} />
               </span>
-              <span className="font-sans text-xs sm:text-sm font-black text-[#121212]">%</span>
+              <span className="font-yehuda text-xs sm:text-sm font-black text-[#121212]">%</span>
             </div>
           </div>
         </div>
@@ -189,11 +189,11 @@ export const EliteStatCard: React.FC<{
       {/* Bottom Row: Footer or Trend */}
       <div className="w-full pt-1 border-t border-slate-100 flex flex-col items-center justify-center gap-0.5">
         {footer ? (
-          <div className="text-xs sm:text-sm font-dana-yad font-bold text-[#121212] leading-tight truncate max-w-full">
+          <div className="text-xs sm:text-sm font-yehuda font-bold text-[#121212] leading-tight truncate max-w-full">
             {footer}
           </div>
         ) : trend ? (
-          <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-sans font-bold border ${
+          <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-yehuda font-bold border ${
             trend.direction === 'up' 
               ? 'bg-emerald-50 text-emerald-900 border-emerald-300 shadow-2xs' 
               : 'bg-rose-50 text-rose-900 border-rose-300 shadow-2xs'
@@ -203,10 +203,10 @@ export const EliteStatCard: React.FC<{
             ) : (
               <ArrowDownRight size={13} strokeWidth={2.5} className="text-rose-700" />
             )}
-            <span className="font-dana-yad">עלייה של {Math.abs(trend.value)}%</span>
+            <span className="font-yehuda">עלייה של {Math.abs(trend.value)}%</span>
           </div>
         ) : (
-          <span className="text-xs font-dana-yad font-bold text-[#121212]">בשנת הפעילות</span>
+          <span className="text-xs font-yehuda font-bold text-[#121212]">בשנת הפעילות</span>
         )}
       </div>
     </motion.div>
@@ -237,14 +237,14 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
 
   if (isLoading || !data) {
     return (
-      <div className="p-8 text-center font-dana-yad font-bold text-cyan-800 animate-pulse text-lg">
+      <div className="p-8 text-center font-yehuda font-bold text-cyan-800 animate-pulse text-lg">
         טוען את נתוני הגלישה שלך...
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-in slide-in-from-bottom-6 duration-500" dir="rtl">
+    <div className="space-y-6 animate-in slide-in-from-bottom-6 duration-500 font-yehuda" dir="rtl">
       
       {/* 1. Alabaster Metrics 2-Column Square Grid */}
       <div className="relative rounded-3xl bg-gradient-to-br from-white/95 via-[#f8fafc]/90 to-[#f1f5f9]/90 border border-white/60 p-4 sm:p-6 backdrop-blur-xl shadow-lg">
@@ -257,11 +257,11 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
         <div className="relative z-10 flex items-center justify-between gap-3 border-b border-slate-200/70 pb-3 mb-4">
           <div className="flex items-center gap-2">
             <Sparkles size={20} className="text-[#00AFC2]" />
-            <h3 className="text-xl sm:text-2xl font-dana-yad font-bold text-[#092734]">
+            <h3 className="text-xl sm:text-2xl font-yehuda font-bold text-[#092734]">
               מדדי ליבה והתמדה אישית
             </h3>
           </div>
-          <span className="text-sm font-dana-yad font-bold text-[#121212]">
+          <span className="text-sm font-yehuda font-bold text-[#121212]">
             מתעדכן אוטומטית לפי כל סשן
           </span>
         </div>
@@ -369,7 +369,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center shrink-0">
                 <Flame size={18} className="text-amber-500" />
               </div>
-              <h3 className="font-dana-yad font-bold text-slate-950 text-xs sm:text-sm flex-1 text-center truncate px-1">
+              <h3 className="font-yehuda font-bold text-slate-950 text-xs sm:text-sm flex-1 text-center truncate px-1">
                 שנת פעילות
               </h3>
               <div className="relative shrink-0 z-20">
@@ -392,17 +392,17 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
             </div>
 
             <div className="my-auto py-1 flex flex-col items-center justify-center">
-              <span className="text-3xl sm:text-4xl font-sans font-black text-cyan-950 leading-none tracking-tight">
+              <span className="text-3xl sm:text-4xl font-yehuda font-black text-cyan-950 leading-none tracking-tight">
                 {userSessions.length}
               </span>
-              <span className="text-xs sm:text-sm font-dana-yad font-bold text-cyan-900 mt-1">
+              <span className="text-xs sm:text-sm font-yehuda font-bold text-cyan-900 mt-1">
                 מספר הסשנים הכולל
               </span>
             </div>
 
-            <div className="w-full pt-1 border-t border-cyan-100 flex items-center justify-between text-xs font-dana-yad text-cyan-950 font-bold">
+            <div className="w-full pt-1 border-t border-cyan-100 flex items-center justify-between text-xs font-yehuda text-cyan-950 font-bold">
               <span>לתפוס גלים!</span>
-              <span className="text-[11px] font-sans text-[#121212] font-bold">חוף הבית</span>
+              <span className="text-[11px] font-yehuda text-[#121212] font-bold">חוף הבית</span>
             </div>
           </motion.div>
 
@@ -417,10 +417,10 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               <Compass size={22} />
             </div>
             <div className="text-center sm:text-right">
-              <h3 className="text-2xl sm:text-3xl font-dana-yad font-bold text-[#092734]">
+              <h3 className="text-2xl sm:text-3xl font-yehuda font-bold text-[#092734]">
                 רדאר הביצועים שלך
               </h3>
-              <p className="text-sm sm:text-base font-dana-yad font-bold text-[#121212] mt-0.5">
+              <p className="text-sm sm:text-base font-yehuda font-bold text-[#121212] mt-0.5">
                 מיפוי רב-ממדי של יכולות הגלישה וההתנהלות במים • לשימוש עתידי
               </p>
             </div>
@@ -432,7 +432,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
         </div>
 
         <div className="mt-4 p-3.5 bg-slate-100/90 rounded-2xl border border-slate-300/80 text-center">
-          <p className="text-sm sm:text-base font-dana-yad font-bold text-[#121212] leading-relaxed">
+          <p className="text-sm sm:text-base font-yehuda font-bold text-[#121212] leading-relaxed">
             המצפן מנתח את היכולות המקצועיות שלך בים. נתונים אלו יוזנו על ידי המדריכים לאחר הערכות תקופתיות.
           </p>
         </div>
@@ -453,10 +453,10 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               <Calendar size={20} />
             </div>
             <div className="text-right">
-              <h3 className="text-lg sm:text-xl font-dana-yad font-bold text-[#092734]">
+              <h3 className="text-lg sm:text-xl font-yehuda font-bold text-[#092734]">
                 יומן סשנים והיסטוריית אימונים
               </h3>
-              <p className="text-sm sm:text-base font-dana-yad font-bold text-[#121212]">
+              <p className="text-sm sm:text-base font-yehuda font-bold text-[#121212]">
                 {isHistoryOpen ? 'לחץ לסגירה' : `צפה ב-${userSessions.length} סשנים אחרונים`}
               </p>
             </div>
@@ -492,8 +492,8 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                       <div className="flex items-center gap-3 sm:gap-4">
                         <Waves size={18} className="text-[#00AFC2] shrink-0" />
                         <div className="flex flex-col">
-                          <span className="font-dana-yad font-bold text-[#121212] text-base sm:text-lg">{formattedDate}</span>
-                          <div className="flex flex-wrap gap-x-4 text-sm font-dana-yad font-bold text-[#121212] mt-0.5">
+                          <span className="font-yehuda font-bold text-[#121212] text-base sm:text-lg">{formattedDate}</span>
+                          <div className="flex flex-wrap gap-x-4 text-sm font-yehuda font-bold text-[#121212] mt-0.5">
                             <div>
                               מדריכים: {(() => {
                                 const instructors = (session.participantIds || [])
@@ -522,25 +522,25 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                               {(session.waveHeight !== undefined || session.seaState?.waveHeight !== undefined) && (
                                 <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-sky-50 border border-sky-300 text-[#121212] font-bold" title="גובה גלים">
                                   <Waves size={13} className="text-sky-700" />
-                                  <span className="text-xs font-sans font-bold" dir="ltr">{session.waveHeight ?? session.seaState?.waveHeight}m</span>
+                                  <span className="text-xs font-yehuda font-bold" dir="ltr">{session.waveHeight ?? session.seaState?.waveHeight}m</span>
                                 </div>
                               )}
                               {(session.windSpeed !== undefined || session.seaState?.windSpeed !== undefined) && (
                                 <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-cyan-50 border border-cyan-300 text-[#121212] font-bold" title="מהירות רוח">
                                   <Wind size={13} className="text-cyan-700" />
-                                  <span className="text-xs font-sans font-bold" dir="ltr">{session.windSpeed ?? session.seaState?.windSpeed}kts</span>
+                                  <span className="text-xs font-yehuda font-bold" dir="ltr">{session.windSpeed ?? session.seaState?.windSpeed}kts</span>
                                 </div>
                               )}
                               {(session.waterTemp !== undefined || session.seaState?.waterTemp !== undefined) && (
                                 <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-blue-50 border border-blue-300 text-[#121212] font-bold" title="טמפ׳ מים">
                                   <Thermometer size={13} className="text-blue-700" />
-                                  <span className="text-xs font-sans font-bold" dir="ltr">{session.waterTemp ?? session.seaState?.waterTemp}°C</span>
+                                  <span className="text-xs font-yehuda font-bold" dir="ltr">{session.waterTemp ?? session.seaState?.waterTemp}°C</span>
                                 </div>
                               )}
                               {(session.uvIndex !== undefined || session.seaState?.uvIndex !== undefined) && (
                                 <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-50 border border-amber-300 text-[#121212] font-bold" title="אינדקס קרינה">
                                   <Sun size={13} className="text-amber-700" />
-                                  <span className="text-xs font-sans font-bold" dir="ltr">{session.uvIndex ?? session.seaState?.uvIndex} UV</span>
+                                  <span className="text-xs font-yehuda font-bold" dir="ltr">{session.uvIndex ?? session.seaState?.uvIndex} UV</span>
                                 </div>
                               )}
                             </div>
@@ -549,7 +549,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 text-xs sm:text-sm font-dana-yad font-bold text-[#121212] bg-slate-100 px-3 py-1 rounded-full border border-slate-300">
+                        <div className="flex items-center gap-1 text-xs sm:text-sm font-yehuda font-bold text-[#121212] bg-slate-100 px-3 py-1 rounded-full border border-slate-300">
                           <Users size={14} className="text-[#121212]" />
                           <span>{session.participantIds?.length || 0} משתתפים</span>
                         </div>
@@ -560,7 +560,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                 })}
 
                 {userSessions.length === 0 && (
-                  <div className="py-10 text-center font-dana-yad font-bold text-[#121212] text-base">
+                  <div className="py-10 text-center font-yehuda font-bold text-[#121212] text-base">
                     אין סשנים לתצוגה
                   </div>
                 )}
@@ -568,7 +568,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
               
               {userSessions.length > 15 && (
                 <div className="p-3.5 bg-slate-100/80 text-center border-t border-slate-200/80">
-                  <span className="text-sm font-dana-yad font-bold text-[#121212] tracking-wide">
+                  <span className="text-sm font-yehuda font-bold text-[#121212] tracking-wide">
                     מציג 15 סשנים אחרונים
                   </span>
                 </div>
@@ -616,7 +616,7 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                   <div className="w-8 h-8 rounded-xl bg-[#00AFC2]/20 border border-[#00AFC2]/40 flex items-center justify-center text-[#00AFC2] shrink-0">
                     {activeInfoModal.icon || <Info size={16} />}
                   </div>
-                  <h4 className="text-lg font-dana-yad font-bold text-cyan-300">
+                  <h4 className="text-lg font-yehuda font-bold text-cyan-300">
                     {activeInfoModal.title}
                   </h4>
                 </div>
@@ -629,13 +629,13 @@ const UserAnalytics: React.FC<{ userId: string }> = ({ userId }) => {
                 </button>
               </div>
 
-              <p className="text-slate-100 font-dana-yad font-medium text-sm sm:text-base leading-relaxed py-1">
+              <p className="text-slate-100 font-yehuda font-medium text-sm sm:text-base leading-relaxed py-1">
                 {activeInfoModal.desc}
               </p>
 
               <button
                 onClick={() => setActiveInfoModal(null)}
-                className="mt-4 w-full py-2.5 rounded-xl bg-gradient-to-r from-[#00AFC2] to-[#0284c7] hover:brightness-110 active:scale-98 text-white font-dana-yad font-bold text-sm shadow-md transition-all cursor-pointer"
+                className="mt-4 w-full py-2.5 rounded-xl bg-gradient-to-r from-[#00AFC2] to-[#0284c7] hover:brightness-110 active:scale-98 text-white font-yehuda font-bold text-sm shadow-md transition-all cursor-pointer"
               >
                 הבנתי, תודה!
               </button>

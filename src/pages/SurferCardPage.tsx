@@ -149,10 +149,10 @@ const SurferCardPage: React.FC = () => {
               <Waves size={22} />
             </div>
             <div>
-              <h2 className="text-2xl sm:text-3xl font-dana-yad font-bold text-[#092734]">
+              <h2 className="text-2xl sm:text-3xl font-yehuda font-bold text-[#092734]">
                 נתוני התמדה והשתתפות
               </h2>
-              <p className="text-sm sm:text-base font-dana-yad font-bold text-[#121212] mt-0.5">
+              <p className="text-sm sm:text-base font-yehuda font-bold text-[#121212] mt-0.5">
                 מדדי עקביות, נחישות (Grit) וסטטיסטיקת אימונים אישית
               </p>
             </div>

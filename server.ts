@@ -1475,27 +1475,30 @@ async function startServer() {
     }
   });
 
-  // --- Salesforce Integration ---
-  app.get("/api/salesforce/login", (req, res) => {
-    const clientId = process.env.SALESFORCE_CLIENT_ID;
-    const redirectUri = process.env.SALESFORCE_REDIRECT_URI || 'http://localhost:3000/api/salesforce/callback';
+  // --- CRM Integration ---
+  const handleCrmLogin = (req: any, res: any) => {
+    const clientId = process.env.CRM_CLIENT_ID || process.env.SALESFORCE_CLIENT_ID;
+    const redirectUri = process.env.CRM_REDIRECT_URI || process.env.SALESFORCE_REDIRECT_URI || 'http://localhost:3000/api/crm/callback';
     
     if (!clientId) {
-      return res.status(500).json({ error: 'SALESFORCE_CLIENT_ID not configured in .env' });
+      return res.status(500).json({ error: 'CRM_CLIENT_ID not configured in .env' });
     }
     
     const url = `https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
     res.redirect(url);
-  });
+  };
 
-  app.get("/api/salesforce/callback", async (req, res) => {
+  app.get("/api/crm/login", handleCrmLogin);
+  app.get("/api/salesforce/login", handleCrmLogin);
+
+  const handleCrmCallback = async (req: any, res: any) => {
     const { code } = req.query;
-    const clientId = process.env.SALESFORCE_CLIENT_ID;
-    const clientSecret = process.env.SALESFORCE_CLIENT_SECRET;
-    const redirectUri = process.env.SALESFORCE_REDIRECT_URI || 'http://localhost:3000/api/salesforce/callback';
+    const clientId = process.env.CRM_CLIENT_ID || process.env.SALESFORCE_CLIENT_ID;
+    const clientSecret = process.env.CRM_CLIENT_SECRET || process.env.SALESFORCE_CLIENT_SECRET;
+    const redirectUri = process.env.CRM_REDIRECT_URI || process.env.SALESFORCE_REDIRECT_URI || 'http://localhost:3000/api/crm/callback';
 
     if (!clientId || !clientSecret) {
-      return res.status(500).send("Salesforce credentials not fully configured.");
+      return res.status(500).send("CRM credentials not fully configured.");
     }
 
     try {
@@ -1513,31 +1516,30 @@ async function startServer() {
       const tokenData = await tokenRes.json();
       
       if (tokenData.access_token) {
-        // Redirect back to app with token in hash or query param (for preview purposes)
-        res.redirect(`/attendance?sf_token=${tokenData.access_token}&instance_url=${encodeURIComponent(tokenData.instance_url)}`);
+        // Redirect back to app with token in hash or query param
+        res.redirect(`/attendance?crm_token=${tokenData.access_token}&instance_url=${encodeURIComponent(tokenData.instance_url)}`);
       } else {
         res.status(400).json(tokenData);
       }
     } catch (err) {
-      console.error("Salesforce OAuth failed:", err);
-      res.status(500).send("OAuth failed");
+      console.error("CRM OAuth failed:", err);
+      res.status(500).send("CRM OAuth failed");
     }
-  });
+  };
 
-  app.post("/api/salesforce/sync", async (req, res) => {
+  app.get("/api/crm/callback", handleCrmCallback);
+  app.get("/api/salesforce/callback", handleCrmCallback);
+
+  const handleCrmSync = async (req: any, res: any) => {
     const { token, instanceUrl, sessionData, attendees } = req.body;
     
     if (!token || !instanceUrl) {
-      return res.status(401).json({ error: 'Not authenticated with Salesforce' });
+      return res.status(401).json({ error: 'Not authenticated with CRM' });
     }
 
     try {
       const results = [];
-      // Example of syncing to a hypothetical "Session_Attendance__c" custom object
-      // Since the user said they don't know the fields yet, we make a generic/mock structure
-      // that will hit the real Salesforce API and return the response (which might be a 404 if object doesn't exist, which is fine and expected).
-      
-      for (const attendee of attendees) {
+      for (const attendee of attendees || []) {
         const sfRes = await fetch(`${instanceUrl}/services/data/v60.0/sobjects/Session_Attendance__c/`, {
           method: 'POST',
           headers: {
@@ -1547,7 +1549,7 @@ async function startServer() {
           body: JSON.stringify({
             Participant_Name__c: attendee.name,
             Participant_Email__c: attendee.email,
-            Session_Date__c: sessionData.date.split('T')[0],
+            Session_Date__c: sessionData?.date ? sessionData.date.split('T')[0] : new Date().toISOString().split('T')[0],
             Status__c: 'Attended'
           })
         });
@@ -1558,10 +1560,13 @@ async function startServer() {
       
       res.json({ success: true, results });
     } catch (err: any) {
-      console.error("Salesforce sync failed:", err);
+      console.error("CRM sync failed:", err);
       res.status(500).json({ error: err.message });
     }
-  });
+  };
+
+  app.post("/api/crm/sync", handleCrmSync);
+  app.post("/api/salesforce/sync", handleCrmSync);
 
   // Vercel status endpoint
   app.get("/api/vercel/status", async (req, res) => {
