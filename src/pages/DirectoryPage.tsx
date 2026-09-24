@@ -107,21 +107,6 @@ const DirectoryPage: React.FC = () => {
         {/* Info - Bottom Section */}
         <div className="w-full p-3 sm:p-4 flex flex-col items-center justify-between flex-grow">
           <div className="w-full flex flex-col items-center">
-            {/* App-Shaper Support Widget - Placed directly between Image and Name */}
-            {isAppShaper && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSupportModalMember(member);
-                }}
-                className="-mt-6 mb-2 z-30 flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-slate-700 via-blue-600 to-slate-500 text-white rounded-full text-[11px] font-black shadow-lg hover:scale-105 active:scale-95 transition-all border-2 border-white backdrop-blur-md cursor-pointer animate-pulse hover:animate-none"
-                title="תמיכה טכנית - App-Shaper"
-              >
-                <Headset size={13} className="text-white" />
-                <span>תמיכה טכנית</span>
-              </button>
-            )}
-
             <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight truncate w-full flex items-center justify-center gap-1">
               {member.firstName} {member.lastName}
             </h3>
@@ -130,8 +115,8 @@ const DirectoryPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Partner Ribbon / Quick Action */}
-          {partner && (
+          {/* Partner Ribbon OR App-Shaper Tech Support Button at the exact same bottom location */}
+          {partner ? (
             <div 
               className="w-full mt-2.5 px-2.5 py-1.5 bg-gradient-to-r from-amber-100/90 via-amber-50 to-amber-100/90 hover:from-amber-200/90 hover:to-amber-100 border-2 border-amber-300 rounded-xl text-xs font-bold text-amber-950 shadow-xs hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-between gap-2 group/partner cursor-pointer"
               title={`בן/בת זוג לחבל (שותף פעילות קבוע): ${partner.firstName} ${partner.lastName}`}
@@ -155,7 +140,19 @@ const DirectoryPage: React.FC = () => {
                 )}
               </div>
             </div>
-          )}
+          ) : isAppShaper ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSupportModalMember(member);
+              }}
+              className="w-full mt-2.5 px-3 py-2 bg-gradient-to-r from-slate-800 via-blue-600 to-slate-700 text-white rounded-xl text-xs font-black shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 border border-blue-400/30 cursor-pointer"
+              title="תמיכה טכנית - App-Shaper"
+            >
+              <Headset size={16} className="text-blue-200 shrink-0" />
+              <span className="tracking-wide">תמיכה טכנית</span>
+            </button>
+          ) : null}
         </div>
       </motion.div>
     ) : (
@@ -183,33 +180,10 @@ const DirectoryPage: React.FC = () => {
                 <User size={24} />
               </div>
             )}
-            {isAppShaper && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSupportModalMember(member);
-                }}
-                className="absolute -top-1 -right-1 z-30 p-1.5 bg-gradient-to-r from-slate-700 to-blue-600 text-white rounded-full shadow-md hover:scale-110 transition-all border border-white/80"
-                title="תמיכה טכנית - App-Shaper"
-              >
-                <Headset size={12} />
-              </button>
-            )}
           </div>
           <div>
             <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
               {member.firstName} {member.lastName}
-              {isAppShaper && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSupportModalMember(member);
-                  }}
-                  className="px-2.5 py-0.5 text-xs bg-gradient-to-r from-slate-700 via-blue-600 to-slate-500 text-white font-black rounded-full flex items-center gap-1 hover:brightness-110 transition-all cursor-pointer shadow-sm"
-                >
-                  <Headset size={12} /> תמיכה טכנית
-                </button>
-              )}
             </h3>
             <p className="text-xs sm:text-sm font-bold text-slate-500 mt-0.5">
               <span className="text-sky-700 font-black">{getRoleLabel(member)}</span> • {member.email}
@@ -218,7 +192,7 @@ const DirectoryPage: React.FC = () => {
         </div>
 
         <div className="flex gap-2 items-center">
-          {partner && (
+          {partner ? (
             <div 
               className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-amber-100/90 via-amber-50 to-amber-100/90 hover:from-amber-200/90 hover:to-amber-100 border-2 border-amber-300 rounded-2xl transition-all cursor-pointer shadow-xs"
               title={`בן/בת זוג לחבל (שותף פעילות קבוע): ${partner.firstName} ${partner.lastName}`}
@@ -236,7 +210,19 @@ const DirectoryPage: React.FC = () => {
                 {partner.avatar ? <img src={partner.avatar} className="w-full h-full object-cover" alt="" /> : <User size={18} className="m-auto text-amber-700 mt-1" />}
               </div>
             </div>
-          )}
+          ) : isAppShaper ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSupportModalMember(member);
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-slate-800 via-blue-600 to-slate-700 text-white rounded-2xl font-black text-xs shadow-md hover:brightness-110 active:scale-95 transition-all border border-blue-400/30 cursor-pointer"
+              title="תמיכה טכנית - App-Shaper"
+            >
+              <Headset size={16} className="text-blue-200" />
+              <span>תמיכה טכנית</span>
+            </button>
+          ) : null}
         </div>
       </motion.div>
     );
