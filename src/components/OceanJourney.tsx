@@ -3,7 +3,7 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { parseDate } from '../utils/dateUtils';
 import { motion, AnimatePresence } from 'motion/react';
-import { Lock, Sparkles, Waves, Check, Award, Compass, ShieldCheck, Target, Trophy } from 'lucide-react';
+import { Lock, Sparkles, Waves, Check, Award, Compass, ShieldCheck, Target, Trophy, X, ChevronLeft } from 'lucide-react';
 
 const getMilestones = (assets: any) => [
   { 
@@ -11,7 +11,7 @@ const getMilestones = (assets: any) => [
     src: assets?.starfish || assets?.starFish || '', 
     alt: 'כוכב ים', 
     name: 'כוכב ים', 
-    title: 'הצעד הראשון',
+    title: 'הצעד הראשון במים',
     desc: 'הצעד הראשון שלך במים. ברוך הבא לקהילת הגולשים!',
     accent: '#0284c7',
     badge: 'חבר קהילה',
@@ -22,7 +22,7 @@ const getMilestones = (assets: any) => [
     src: assets?.penguin || '', 
     alt: 'פינגווין', 
     name: 'פינגווין', 
-    title: 'לוחם חורף',
+    title: 'לוחם אימוני חורף',
     desc: 'לוחם חורף אמיתי. המים הקרים והסערות הם הבית שלך.',
     accent: '#0369a1',
     badge: 'אימוני חורף',
@@ -33,7 +33,7 @@ const getMilestones = (assets: any) => [
     src: assets?.mantaRay || assets?.manta_ray || '', 
     alt: 'מנטה ריי', 
     name: 'מנטה ריי', 
-    title: 'גליידר קיץ',
+    title: 'גליידר עונת הקיץ',
     desc: 'חותר באנרגיה גבוהה בחום הקיץ. קצב, גלישה וסטייל טהור.',
     accent: '#0891b2',
     badge: 'רצף קיץ',
@@ -44,7 +44,7 @@ const getMilestones = (assets: any) => [
     src: assets?.shark || '', 
     alt: 'כריש', 
     name: 'כריש', 
-    title: 'מכונת עקביות',
+    title: 'מכונת עקביות שנתית',
     desc: 'טורף עקביות. מגיע לכל סשן, בכל עונה ובכל מצב ים.',
     accent: '#334155',
     badge: 'עקביות שיא',
@@ -142,7 +142,7 @@ const AnimalAvatar: React.FC<{
           alt={name}
           onError={() => setImgError(true)}
           className={`w-full h-full object-contain transition-all duration-300 ${
-            !isUnlocked ? 'grayscale opacity-30 brightness-75 contrast-75' : 'drop-shadow-md'
+            !isUnlocked ? 'grayscale opacity-35 brightness-75 contrast-75' : 'drop-shadow-md'
           } ${isSelected ? 'scale-105' : ''}`}
           referrerPolicy="no-referrer"
         />
@@ -269,39 +269,37 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
     return active;
   }, [members, weeklyHistory, currentUser]);
 
-  // Find the highest unlocked milestone by default
-  const defaultSelectedIdx = useMemo(() => {
-    let best = 0;
-    milestones.forEach((m, idx) => {
-      if (activeCategories.has(m.id)) best = idx;
-    });
-    return best;
-  }, [milestones, activeCategories]);
+  // Selected milestone for modal inspection
+  const [inspectedIdx, setInspectedIdx] = useState<number>(0);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  const [selectedIdx, setSelectedIdx] = useState<number>(defaultSelectedIdx);
-
-  const selectedMilestone = milestones[selectedIdx];
-  const isSelectedUnlocked = activeCategories.has(selectedMilestone.id);
+  const inspectedMilestone = milestones[inspectedIdx];
+  const isInspectedUnlocked = activeCategories.has(inspectedMilestone.id);
   const unlockedCount = activeCategories.size;
   const totalCount = milestones.length;
   const progressPercent = (unlockedCount / totalCount) * 100;
 
+  const openMilestoneModal = (idx: number) => {
+    setInspectedIdx(idx);
+    setIsModalOpen(true);
+  };
+
   const content = (
-    <div className="relative w-full h-full rounded-[2rem] bg-white/85 border border-slate-200/90 p-5 sm:p-7 md:p-8 backdrop-blur-xl shadow-sm flex flex-col justify-between" dir="rtl">
+    <div className="relative w-full h-full rounded-[2rem] bg-white/85 border border-slate-200/90 p-5 sm:p-7 md:p-8 backdrop-blur-xl shadow-sm flex flex-col justify-between font-yehuda" dir="rtl">
       
       {/* Header */}
       <div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200/70 pb-5 mb-6">
           <div>
-            <div className="flex items-center gap-2 text-xs font-black text-[#008da5] uppercase tracking-wider mb-1">
+            <div className="flex items-center gap-2 text-xs font-black text-[#008da5] uppercase tracking-wider mb-1 font-yehuda">
               <Award size={15} />
               <span>תגי הישג והצטיינות ימית</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-dana-yad">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-yehuda">
               איזו חיה ימית אתה?
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 font-bold mt-0.5">
-              גלה אילו תגים ימיים הרווחת בזכות התמדה, עונות השנה ותנאי הים
+            <p className="text-xs sm:text-sm text-slate-500 font-bold mt-0.5 font-yehuda">
+              גלה אילו תגים ימיים הרווחת בזכות התמדה, עונות השנה ותנאי הים (לחץ על חיה לפירוט המלא)
             </p>
           </div>
 
@@ -311,182 +309,91 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
               <Trophy size={16} />
             </div>
             <div className="text-right">
-              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider block">אוסף התגים שלך</span>
-              <span className="text-sm font-black text-slate-900 font-dana-yad">
+              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider block font-yehuda">אוסף התגים שלך</span>
+              <span className="text-sm font-black text-slate-900 font-yehuda">
                 <strong className="text-emerald-700 font-mono text-base">{unlockedCount}</strong> מתוך {totalCount} תגים נכבשו!
               </span>
             </div>
           </div>
         </div>
 
-        {/* 5-ANIMAL INTERACTIVE BADGE STRIP - HIGH CONTRAST EARNED VS LOCKED */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+        {/* 5-ANIMAL INTERACTIVE CLICKABLE CARDS */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {milestones.map((milestone, idx) => {
             const isUnlocked = activeCategories.has(milestone.id);
-            const isSelected = selectedIdx === idx;
 
             return (
               <button
                 key={milestone.id}
                 type="button"
-                onClick={() => setSelectedIdx(idx)}
-                className={`relative p-3.5 sm:p-4 rounded-2xl flex flex-col items-center justify-between gap-2.5 transition-all duration-200 outline-none text-center cursor-pointer ${
+                onClick={() => openMilestoneModal(idx)}
+                className={`group relative p-4 rounded-2xl flex flex-col items-center justify-between gap-3 transition-all duration-200 outline-none text-center cursor-pointer hover:scale-[1.02] active:scale-95 hover:shadow-md ${
                   isUnlocked
-                    ? isSelected
-                      ? 'bg-gradient-to-b from-white to-emerald-50/80 border-2 border-emerald-500 shadow-md ring-2 ring-emerald-400/20 scale-[1.02] z-10'
-                      : 'bg-white hover:bg-emerald-50/40 border border-emerald-300/80 shadow-xs hover:shadow-sm'
-                    : isSelected
-                      ? 'bg-slate-100 border-2 border-slate-400 shadow-sm z-10'
-                      : 'bg-slate-100/50 hover:bg-slate-100 border border-dashed border-slate-300/90 opacity-60 hover:opacity-85'
+                    ? 'bg-gradient-to-b from-white to-emerald-50/70 border-2 border-emerald-400 shadow-xs text-slate-900'
+                    : 'bg-slate-50/70 hover:bg-white border-2 border-dashed border-slate-300 text-slate-600 opacity-75 hover:opacity-100'
                 }`}
               >
                 {/* Clear Status Top Pill */}
                 <div className="w-full flex justify-center">
                   {isUnlocked ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full shadow-2xs">
-                      <Check size={10} strokeWidth={3.5} />
-                      הרווחת!
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-900 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full shadow-2xs font-yehuda">
+                      <Check size={11} strokeWidth={3.5} />
+                      נכבש באוסף
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-full">
-                      <Lock size={9} />
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-full font-yehuda">
+                      <Lock size={10} />
                       נעול
                     </span>
                   )}
                 </div>
 
-                {/* Animal Avatar on illuminated circular pedestal if unlocked */}
-                <div className={`p-2 rounded-2xl transition-all ${
-                  isUnlocked ? 'bg-gradient-to-br from-sky-50 to-emerald-50 shadow-inner' : 'bg-slate-200/40'
+                {/* Animal Avatar */}
+                <div className={`p-2.5 rounded-2xl transition-transform group-hover:scale-110 duration-300 ${
+                  isUnlocked ? 'bg-gradient-to-br from-sky-50 to-emerald-50 shadow-inner ring-2 ring-emerald-200/60' : 'bg-slate-200/40'
                 }`}>
                   <AnimalAvatar 
                     src={milestone.src} 
                     name={milestone.name} 
                     isUnlocked={isUnlocked} 
-                    isSelected={isSelected} 
+                    isSelected={false} 
                     size="sm"
                   />
                 </div>
 
                 {/* Name & Badge */}
-                <div>
-                  <h4 className={`text-sm sm:text-base font-dana-yad font-bold leading-tight ${
-                    isUnlocked ? 'text-slate-900 font-black' : 'text-slate-500'
+                <div className="space-y-0.5">
+                  <h4 className={`text-sm sm:text-base font-bold leading-tight font-yehuda ${
+                    isUnlocked ? 'text-slate-900 font-black group-hover:text-emerald-800' : 'text-slate-600'
                   }`}>
                     {milestone.name}
                   </h4>
-                  <span className="text-[10px] font-sans font-bold text-slate-400 block mt-0.5">
+                  <span className="text-[11px] font-bold text-slate-400 block font-yehuda">
                     {milestone.badge}
                   </span>
+                </div>
+
+                {/* Action Cue */}
+                <div className={`w-full pt-2 border-t flex items-center justify-center gap-1 text-[11px] font-bold font-yehuda ${
+                  isUnlocked ? 'border-emerald-200/70 text-emerald-800' : 'border-slate-200 text-slate-500'
+                }`}>
+                  <span>צפה בפירוט</span>
+                  <ChevronLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
                 </div>
               </button>
             );
           })}
         </div>
-
-        {/* Selected Milestone Showcase Card (Different Styling for Unlocked vs Locked) */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={selectedMilestone.id}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2 }}
-            className={`rounded-2xl p-5 sm:p-6 border transition-all duration-300 ${
-              isSelectedUnlocked 
-                ? 'bg-gradient-to-br from-emerald-50/90 via-white to-sky-50/70 border-emerald-300 shadow-sm' 
-                : 'bg-slate-50 border-dashed border-slate-300 shadow-xs'
-            }`}
-          >
-            {/* Header info */}
-            <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-200/70">
-              <div className="flex items-center gap-2">
-                <span className={`text-xs font-black px-2.5 py-0.5 rounded-full ${
-                  isSelectedUnlocked 
-                    ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' 
-                    : 'bg-slate-200 text-slate-700'
-                }`}>
-                  {selectedMilestone.badge}
-                </span>
-                <span className="text-sm font-black text-slate-700 font-dana-yad">
-                  • {selectedMilestone.title}
-                </span>
-              </div>
-
-              <div>
-                {isSelectedUnlocked ? (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-3 py-1 rounded-full shadow-xs">
-                    <Check size={14} strokeWidth={3} />
-                    תג פתוח באוסף שלך!
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-100/90 border border-amber-300 px-3 py-1 rounded-full">
-                    <Target size={13} className="text-amber-600" />
-                    אתגר פתוח להשגה
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Content with Large Animal Image & Text */}
-            <div className="my-2 flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-right">
-              <div className={`shrink-0 p-3 rounded-2xl flex items-center justify-center ${
-                isSelectedUnlocked 
-                  ? 'bg-white shadow-md border border-emerald-200 ring-4 ring-emerald-100/60' 
-                  : 'bg-slate-200/60 border border-slate-300 opacity-70'
-              }`}>
-                <AnimalAvatar 
-                  src={selectedMilestone.src} 
-                  name={selectedMilestone.name} 
-                  isUnlocked={isSelectedUnlocked} 
-                  isSelected={true} 
-                  size="md"
-                />
-              </div>
-
-              <div className="flex-1 space-y-1.5">
-                <div className="flex items-center justify-center sm:justify-start gap-2">
-                  <h3 className="text-2xl sm:text-3xl font-black font-dana-yad text-slate-900">
-                    {selectedMilestone.name}
-                  </h3>
-                  {isSelectedUnlocked && (
-                    <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md font-dana-yad">
-                      נכבש בהצלחה 🌊
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm sm:text-base font-dana-yad font-bold text-slate-700 leading-relaxed max-w-2xl">
-                  {selectedMilestone.desc}
-                </p>
-              </div>
-            </div>
-
-            {/* Criteria Box */}
-            <div className={`mt-4 pt-3.5 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm font-dana-yad ${
-              isSelectedUnlocked ? 'border-emerald-200 text-emerald-900' : 'border-slate-200 text-slate-700'
-            }`}>
-              <div className="flex items-center gap-2">
-                <Sparkles size={16} className={isSelectedUnlocked ? "text-emerald-600" : "text-amber-600"} />
-                <span className="font-bold">
-                  {isSelectedUnlocked ? 'הקריטריון שהשגת:' : 'איך מרוויחים את התג?'} <strong className="text-slate-900">{selectedMilestone.criteria}</strong>
-                </span>
-              </div>
-              <span className="text-xs font-mono font-bold text-slate-400 self-end sm:self-auto">
-                תג {selectedIdx + 1} מתוך 5
-              </span>
-            </div>
-          </motion.div>
-        </AnimatePresence>
       </div>
 
       {/* Footer Track */}
-      <div className="mt-5 pt-4 border-t border-slate-200/70 flex items-center justify-between flex-wrap gap-2 text-xs sm:text-sm font-dana-yad text-slate-600 font-bold">
+      <div className="mt-5 pt-4 border-t border-slate-200/70 flex items-center justify-between flex-wrap gap-2 text-xs sm:text-sm font-yehuda text-slate-600 font-bold">
         <div className="flex items-center gap-1.5">
           <Waves size={16} className="text-sky-600" />
-          <span>לחץ על כל חיה למעלה לצפייה בקריטריון ובהישג המלא</span>
+          <span>לחץ על כל חיה ימית לצפייה בקריטריון הזכייה ובהישג המלא</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-slate-500">{unlockedCount}/{totalCount}</span>
+          <span className="text-xs font-mono text-slate-500 font-bold">{unlockedCount}/{totalCount}</span>
           <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden" dir="ltr">
             <div 
               className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full transition-all duration-500"
@@ -495,6 +402,170 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
           </div>
         </div>
       </div>
+
+      {/* ANIMAL DETAIL MODAL (OPENS UPON CLICKING AN ANIMAL) */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" dir="rtl">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsModalOpen(false)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="relative z-10 w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 max-h-[90vh] flex flex-col font-yehuda"
+            >
+              {/* Top Header */}
+              <div className="p-5 sm:p-6 bg-gradient-to-r from-[#002f4a] via-[#004e75] to-[#002b44] text-white flex items-center justify-between border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-sky-400/20 border border-sky-300/40 flex items-center justify-center text-sky-300 shadow-md">
+                    <Award size={22} />
+                  </div>
+                  <div>
+                    <span className="text-xs text-sky-300 font-bold">
+                      תג הישג ימי • {inspectedMilestone.badge}
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-black font-yehuda text-white">
+                      {inspectedMilestone.name} ({inspectedMilestone.title})
+                    </h3>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Quick Tabs inside modal */}
+              <div className="grid grid-cols-5 gap-1 p-2 bg-slate-100 border-b border-slate-200">
+                {milestones.map((m, idx) => {
+                  const isSelected = idx === inspectedIdx;
+                  const isMUnlocked = activeCategories.has(m.id);
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setInspectedIdx(idx)}
+                      className={`py-2 px-1 rounded-xl text-center text-xs font-bold transition-all ${
+                        isSelected
+                          ? 'bg-white text-slate-900 shadow-sm font-black ring-1 ring-slate-200'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                      }`}
+                    >
+                      <span className="truncate block">{m.name}</span>
+                      {isMUnlocked ? (
+                        <span className="text-[10px] text-emerald-600 font-black">✓ פתוח</span>
+                      ) : (
+                        <span className="text-[10px] text-slate-400">🔒 נעול</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-5 sm:p-7 overflow-y-auto space-y-5">
+                
+                {/* Status Bar */}
+                <div className={`flex items-center justify-between p-4 rounded-2xl border ${
+                  isInspectedUnlocked
+                    ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950'
+                    : 'bg-amber-50/70 border-amber-200 text-amber-950'
+                }`}>
+                  <div className="flex items-center gap-2.5">
+                    {isInspectedUnlocked ? (
+                      <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-black">
+                        <Check size={16} strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-black">
+                        <Lock size={15} />
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-xs font-black uppercase tracking-wider block">
+                        סטטוס תג אישי
+                      </span>
+                      <span className="text-sm sm:text-base font-black">
+                        {isInspectedUnlocked ? '🎉 התג נכבש ופתוח באוסף שלך!' : '🎯 אתגר ימי פתוח להשגה'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-white/80 border border-slate-200">
+                    תג {inspectedIdx + 1} מתוך 5
+                  </span>
+                </div>
+
+                {/* Big Avatar & Title Description */}
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-200 text-center sm:text-right">
+                  <div className={`shrink-0 p-3 rounded-2xl flex items-center justify-center ${
+                    isInspectedUnlocked 
+                      ? 'bg-white shadow-md border border-emerald-200 ring-4 ring-emerald-100/60' 
+                      : 'bg-slate-200/60 border border-slate-300 opacity-70'
+                  }`}>
+                    <AnimalAvatar 
+                      src={inspectedMilestone.src} 
+                      name={inspectedMilestone.name} 
+                      isUnlocked={isInspectedUnlocked} 
+                      isSelected={true} 
+                      size="md"
+                    />
+                  </div>
+
+                  <div className="flex-1 space-y-1.5">
+                    <h4 className="text-xl sm:text-2xl font-black text-slate-900">
+                      {inspectedMilestone.name} – {inspectedMilestone.title}
+                    </h4>
+                    <p className="text-sm sm:text-base font-bold text-slate-700 leading-relaxed">
+                      "{inspectedMilestone.desc}"
+                    </p>
+                  </div>
+                </div>
+
+                {/* Criteria Box */}
+                <div className="p-4 rounded-2xl bg-sky-50/80 border border-sky-200/80 space-y-1">
+                  <span className="text-xs font-black uppercase tracking-wider text-sky-900 flex items-center gap-1.5">
+                    <Sparkles size={15} className="text-sky-600" />
+                    {isInspectedUnlocked ? 'הקריטריון שנכבש בהצלחה:' : 'איך מרוויחים את התג בים?'}
+                  </span>
+                  <p className="text-sm sm:text-base font-bold text-slate-800 leading-relaxed">
+                    {inspectedMilestone.criteria}
+                  </p>
+                </div>
+
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">
+                  סה"כ תגים שנכבשו: <strong className="text-emerald-700 font-mono font-black">{unlockedCount}</strong> מתוך {totalCount}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-colors cursor-pointer"
+                >
+                  סגור
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

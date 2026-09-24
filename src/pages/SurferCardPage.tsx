@@ -5,7 +5,7 @@ import UserAnalytics from '../components/UserAnalytics';
 import { OceanJourney } from '../components/OceanJourney';
 import UserCategories from '../components/UserCategories';
 import { SurferProgressionTracker } from '../components/SurferProgressionTracker';
-import { Trophy, Waves } from 'lucide-react';
+import { Trophy, Waves, Flame, Sparkles, Compass } from 'lucide-react';
 import { animate } from 'motion/react';
 import { calculateUserStats } from '../utils/analytics';
 import { useRandomHeader } from '../hooks/useRandomHeader';
@@ -78,59 +78,49 @@ const SurferCardPage: React.FC = () => {
 
       {/* Diagnostic Info for Admin */}
 
-      {/* Motivation Title - Tangible Surfer UI Signature Banner */}
-      <div className="max-w-6xl mx-auto mb-8 px-2" dir="rtl">
-        <div className="relative overflow-hidden rounded-3xl p-5 sm:p-7 bg-gradient-to-r from-[#003b5c]/95 via-[#004e75]/95 to-[#002f4a]/95 border border-cyan-400/30 shadow-xl backdrop-blur-xl group">
+      {/* Club Iconic Slogan Banner - Light Coastal & Radiant Aesthetic */}
+      <div className="max-w-6xl mx-auto mb-10 px-2" dir="rtl">
+        <div className="relative overflow-hidden rounded-[2.5rem] py-10 sm:py-14 px-6 sm:px-14 bg-gradient-to-r from-white via-sky-50/70 to-amber-50/60 border-2 border-sky-200/90 shadow-[0_15px_45px_-12px_rgba(0,140,180,0.18)] backdrop-blur-xl group text-center">
           
-          {/* Subtle Ambient Waves & Light Flare in Background */}
-          <div className="absolute -right-16 -top-16 w-56 h-56 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700" />
-          <div className="absolute -left-16 -bottom-16 w-56 h-56 bg-amber-400/15 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent pointer-events-none" />
+          {/* Gentle Sun & Sea Ambient Flares */}
+          <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-80 h-80 bg-amber-200/30 rounded-full blur-[90px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-80 h-80 bg-sky-200/40 rounded-full blur-[90px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
           
-          {/* Subtle Animated Gold/Cyan Sweep */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
+          {/* Elegant Light Shimmer sweep */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5 text-center md:text-right">
+          {/* Slogan Pure Centerpiece with High-Contrast Typography & Quotation Frame */}
+          <div className="relative z-10 flex flex-col items-center justify-center">
             
-            {/* Right side: Icon Badge & High-End Typography */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
-              {/* Glowing Medal / Flame Icon Pod */}
-              <div className="relative shrink-0">
-                <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-amber-400 to-cyan-400 opacity-60 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-slate-900/90 to-[#002b44] border border-amber-300/40 flex items-center justify-center text-amber-300 shadow-inner">
-                  <Trophy size={28} className="drop-shadow-[0_2px_10px_rgba(251,191,36,0.5)] animate-pulse" />
-                </div>
-              </div>
+            {/* Stylized Quotation Watermark */}
+            <div className="relative inline-block">
+              <span className="absolute -top-5 -right-6 sm:-top-7 sm:-right-8 text-4xl sm:text-6xl text-amber-500/25 font-serif select-none pointer-events-none">
+                “
+              </span>
+              <span className="absolute -bottom-8 -left-6 sm:-bottom-10 sm:-left-8 text-4xl sm:text-6xl text-sky-500/25 font-serif select-none pointer-events-none">
+                ”
+              </span>
 
-              {/* Multi-layered High-Impact Title */}
-              <div className="flex flex-col">
-                <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-dana-yad font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 backdrop-blur-md shadow-xs">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
-                    פילוסופיית המועדון
-                  </span>
-                  <span className="text-xs font-dana-yad text-cyan-200/80 hidden sm:inline">• ערך הליבה ב-Body-Line</span>
-                </div>
+              <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-[4.5rem] font-black font-yehuda tracking-tight leading-[1.15] select-none drop-shadow-sm">
+                {/* Part 1: Deep Ocean Navy with Warm Grit */}
+                <span className="font-black font-[900] bg-gradient-to-r from-[#002f4a] via-[#004e75] to-[#006699] bg-clip-text text-transparent inline-block ml-3 sm:ml-4 font-yehuda">
+                  הגעת – ניצחת.
+                </span>
 
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black font-dana-yad tracking-tight leading-tight drop-shadow-md">
-                  <span className="bg-gradient-to-l from-amber-200 via-amber-300 to-yellow-400 bg-clip-text text-transparent font-extrabold ml-2">
-                    הגעת – ניצחת.
-                  </span>
-                  <span className="bg-gradient-to-l from-cyan-100 via-cyan-200 to-white bg-clip-text text-transparent font-bold">
-                    כל השאר בונוס
-                  </span>
-                </h2>
-              </div>
+                {/* Part 2: Electric Coastal Cyan Wave */}
+                <span className="font-black font-[900] bg-gradient-to-r from-[#0284c7] via-[#0092b8] to-[#0d9488] bg-clip-text text-transparent inline-block font-yehuda">
+                  כל השאר בונוס
+                </span>
+              </h2>
             </div>
 
-            {/* Left side: Tagline & Grit Indicator */}
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="px-4 py-2 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md flex items-center gap-2.5 shadow-sm">
-                <Waves size={18} className="text-[#3dbbd3]" />
-                <span className="text-xs sm:text-sm font-dana-yad font-bold text-cyan-100">
-                  הים תמיד מחכה לך
-                </span>
-              </div>
+            {/* Glowing Accent Wave Line Underneath */}
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <div className="w-12 sm:w-20 h-[2px] bg-gradient-to-r from-transparent to-amber-400/80 rounded-full" />
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)] animate-pulse" />
+              <div className="w-16 sm:w-24 h-[2px] bg-gradient-to-r from-amber-400 via-sky-400 to-transparent rounded-full" />
+              <div className="w-2.5 h-2.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.6)] animate-pulse" />
+              <div className="w-12 sm:w-20 h-[2px] bg-gradient-to-l from-transparent to-sky-400/80 rounded-full" />
             </div>
 
           </div>
