@@ -67,7 +67,7 @@ const VectorIllustration: React.FC<{ name: string; isUnlocked: boolean; isSelect
   name, 
   isUnlocked, 
   isSelected = false,
-  className = "w-9 h-9 sm:w-11 sm:h-11" 
+  className = "w-10 h-10 sm:w-12 sm:h-12" 
 }) => {
   const color = isUnlocked ? (isSelected ? '#0284c7' : '#0ea5e9') : '#94a3b8';
   
@@ -129,7 +129,7 @@ const AnimalAvatar: React.FC<{
   const [imgError, setImgError] = useState(false);
 
   const sizeClasses = {
-    sm: 'w-10 h-10 sm:w-12 sm:h-12',
+    sm: 'w-12 h-12 sm:w-14 sm:h-14',
     md: 'w-16 h-16 sm:w-20 sm:h-20',
     lg: 'w-24 h-24 sm:w-28 sm:h-28'
   };
@@ -285,40 +285,65 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
   };
 
   const content = (
-    <div className="relative w-full h-full rounded-[2rem] bg-white/85 border border-slate-200/90 p-5 sm:p-7 md:p-8 backdrop-blur-xl shadow-sm flex flex-col justify-between font-yehuda" dir="rtl">
+    <div className="relative w-full h-full rounded-[2.25rem] bg-white/75 backdrop-blur-2xl backdrop-saturate-150 border border-white/80 p-5 sm:p-7 md:p-8 shadow-[0_20px_50px_-15px_rgba(0,120,180,0.12),0_0_1px_1px_rgba(255,255,255,0.8)_inset] flex flex-col justify-between overflow-hidden font-yehuda text-right select-none before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white before:to-transparent before:pointer-events-none" dir="rtl">
       
-      {/* Header */}
-      <div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200/70 pb-5 mb-6">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-black text-[#008da5] uppercase tracking-wider mb-1 font-yehuda">
-              <Award size={15} />
-              <span>תגי הישג והצטיינות ימית</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-yehuda">
-              איזו חיה ימית אתה?
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 font-bold mt-0.5 font-yehuda">
-              גלה אילו תגים ימיים הרווחת בזכות התמדה, עונות השנה ותנאי הים (לחץ על חיה לפירוט המלא)
-            </p>
-          </div>
+      {/* Ambient Multi-chromatic Sea Glaze Flares */}
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-teal-200/50 via-cyan-200/40 to-blue-100/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-gradient-to-tr from-sky-200/40 via-emerald-100/30 to-amber-100/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-teal-100/30 rounded-full blur-2xl pointer-events-none" />
 
-          {/* Unlocked Summary Badge */}
-          <div className="flex items-center gap-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300/80 px-4 py-2 rounded-2xl shadow-2xs">
-            <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-              <Trophy size={16} />
+      {/* 1. TOP HEADER & SUMMARY BADGE */}
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200/70">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-black text-sky-800 uppercase tracking-wider mb-1 font-yehuda">
+            <Award size={15} className="text-sky-600" />
+            <span>תגי הישג והצטיינות ימית</span>
+            <span className="text-slate-300">|</span>
+            <span className="text-slate-500 font-yehuda font-bold">אוסף חיות הים</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3 font-yehuda">
+            <span>איזו חיה ימית אתה?</span>
+          </h2>
+        </div>
+
+        {/* User's Trophy Collection Glassmorphic Quick Badge */}
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-emerald-50/90 via-white/80 to-teal-50/80 backdrop-blur-md border border-emerald-300/80 rounded-2xl shadow-2xs hover:shadow-[0_8px_20px_-4px_rgba(16,185,129,0.2)] transition-all duration-300 text-right shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-xs">
+            <Trophy size={18} />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800">אוסף התגים שלך:</span>
+              <span className="text-sm font-black text-slate-900 font-yehuda">{unlockedCount} מתוך {totalCount} תגים</span>
             </div>
-            <div className="text-right">
-              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider block font-yehuda">אוסף התגים שלך</span>
-              <span className="text-sm font-black text-slate-900 font-yehuda">
-                <strong className="text-emerald-700 font-mono text-base">{unlockedCount}</strong> מתוך {totalCount} תגים נכבשו!
-              </span>
-            </div>
+            <span className="text-[11px] font-bold text-emerald-700 block font-yehuda">
+              {progressPercent === 100 ? '🎉 האוסף הושלם במלואו!' : `${Math.round(progressPercent)}% מהתגים נכבשו`}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. SECTION SUBTITLE BAR */}
+      <div className="relative z-10 mt-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
+          <div>
+            <span className="text-xs font-black text-sky-900 uppercase tracking-wider flex items-center gap-1.5 font-yehuda">
+              <Waves size={15} className="text-sky-600" />
+              <span>אוסף 5 התגים הימיים (לחץ על כל חיה לפירוט מלא)</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 font-yehuda">
+              התקדמות באוסף:
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full bg-slate-900 text-white font-mono font-bold text-xs shadow-xs">
+              {unlockedCount}/{totalCount}
+            </span>
           </div>
         </div>
 
-        {/* 5-ANIMAL INTERACTIVE CLICKABLE CARDS */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {/* 3. 5-ANIMAL GLASSMORPHIC CARDS */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 relative">
           {milestones.map((milestone, idx) => {
             const isUnlocked = activeCategories.has(milestone.id);
 
@@ -327,58 +352,75 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                 key={milestone.id}
                 type="button"
                 onClick={() => openMilestoneModal(idx)}
-                className={`group relative p-4 rounded-2xl flex flex-col items-center justify-between gap-3 transition-all duration-200 outline-none text-center cursor-pointer hover:scale-[1.02] active:scale-95 hover:shadow-md ${
+                className={`group relative p-4 sm:p-5 rounded-3xl text-right transition-all duration-300 cursor-pointer flex flex-col justify-between gap-3.5 active:scale-95 ${
                   isUnlocked
-                    ? 'bg-gradient-to-b from-white to-emerald-50/70 border-2 border-emerald-400 shadow-xs text-slate-900'
-                    : 'bg-slate-50/70 hover:bg-white border-2 border-dashed border-slate-300 text-slate-600 opacity-75 hover:opacity-100'
+                    ? 'bg-white/80 hover:bg-white/95 backdrop-blur-md border-2 border-emerald-400/90 shadow-[0_6px_20px_-6px_rgba(16,185,129,0.18)] hover:shadow-[0_10px_25px_-6px_rgba(16,185,129,0.28)] hover:-translate-y-1 text-slate-900 z-10'
+                    : 'bg-white/40 hover:bg-white/80 backdrop-blur-sm border-2 border-dashed border-slate-300/80 text-slate-600 hover:border-slate-400 opacity-75 hover:opacity-100 hover:-translate-y-0.5'
                 }`}
               >
-                {/* Clear Status Top Pill */}
-                <div className="w-full flex justify-center">
+                {/* Top Number Pill & Status Pill */}
+                <div className="flex items-center justify-between w-full">
+                  {/* Step Number Circle */}
+                  <div className={`w-7 h-7 rounded-xl font-mono font-black text-xs flex items-center justify-center shadow-xs transition-transform group-hover:scale-110 ${
+                    isUnlocked ? 'bg-emerald-600 text-white' : 'bg-slate-300 text-slate-700'
+                  }`}>
+                    0{idx + 1}
+                  </div>
+
+                  {/* Status Badge */}
                   {isUnlocked ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-900 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full shadow-2xs font-yehuda">
-                      <Check size={11} strokeWidth={3.5} />
-                      נכבש באוסף
+                    <span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-900 bg-emerald-100/90 backdrop-blur-xs border border-emerald-300 px-2.5 py-0.5 rounded-full shadow-2xs font-yehuda">
+                      <Check size={12} strokeWidth={3.5} />
+                      נכבש
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-full font-yehuda">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-200/90 px-2 py-0.5 rounded-full font-yehuda">
                       <Lock size={10} />
                       נעול
                     </span>
                   )}
                 </div>
 
-                {/* Animal Avatar */}
-                <div className={`p-2.5 rounded-2xl transition-transform group-hover:scale-110 duration-300 ${
-                  isUnlocked ? 'bg-gradient-to-br from-sky-50 to-emerald-50 shadow-inner ring-2 ring-emerald-200/60' : 'bg-slate-200/40'
-                }`}>
-                  <AnimalAvatar 
-                    src={milestone.src} 
-                    name={milestone.name} 
-                    isUnlocked={isUnlocked} 
-                    isSelected={false} 
-                    size="sm"
-                  />
+                {/* Animal Avatar Centerpiece */}
+                <div className="flex flex-col items-center justify-center py-1">
+                  <div className={`p-3 rounded-2xl transition-transform group-hover:scale-110 duration-300 ${
+                    isUnlocked ? 'bg-gradient-to-br from-sky-50 to-emerald-50 shadow-inner ring-2 ring-emerald-200/60' : 'bg-slate-200/40'
+                  }`}>
+                    <AnimalAvatar 
+                      src={milestone.src} 
+                      name={milestone.name} 
+                      isUnlocked={isUnlocked} 
+                      isSelected={false} 
+                      size="sm"
+                    />
+                  </div>
                 </div>
 
-                {/* Name & Badge */}
-                <div className="space-y-0.5">
-                  <h4 className={`text-sm sm:text-base font-bold leading-tight font-yehuda ${
-                    isUnlocked ? 'text-slate-900 font-black group-hover:text-emerald-800' : 'text-slate-600'
+                {/* Name & Badge Category */}
+                <div className="text-center space-y-0.5">
+                  <h3 className={`text-base sm:text-lg font-black leading-tight tracking-tight font-yehuda ${
+                    isUnlocked ? 'text-slate-900 group-hover:text-emerald-800' : 'text-slate-700'
                   }`}>
                     {milestone.name}
-                  </h4>
-                  <span className="text-[11px] font-bold text-slate-400 block font-yehuda">
+                  </h3>
+                  <p className="text-[11px] font-bold text-slate-400 font-yehuda">
                     {milestone.badge}
-                  </span>
+                  </p>
                 </div>
 
-                {/* Action Cue */}
-                <div className={`w-full pt-2 border-t flex items-center justify-center gap-1 text-[11px] font-bold font-yehuda ${
-                  isUnlocked ? 'border-emerald-200/70 text-emerald-800' : 'border-slate-200 text-slate-500'
+                {/* High-Visibility Interactive CTA Button */}
+                <div className={`w-full mt-2 py-2 px-2.5 sm:px-3 rounded-xl flex items-center justify-between text-xs font-black font-yehuda transition-all duration-300 shadow-xs border ${
+                  isUnlocked 
+                    ? 'bg-emerald-100/90 hover:bg-emerald-200 text-emerald-950 border-emerald-300/90 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 group-hover:shadow-md' 
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 group-hover:shadow-md'
                 }`}>
-                  <span>צפה בפירוט</span>
-                  <ChevronLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles size={13} className="opacity-80 group-hover:opacity-100" />
+                    <span>פתח פירוט</span>
+                  </span>
+                  <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:-translate-x-1 bg-black/5 group-hover:bg-white/20">
+                    <ChevronLeft size={15} strokeWidth={3} />
+                  </span>
                 </div>
               </button>
             );
@@ -386,14 +428,14 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
         </div>
       </div>
 
-      {/* Footer Track */}
-      <div className="mt-5 pt-4 border-t border-slate-200/70 flex items-center justify-between flex-wrap gap-2 text-xs sm:text-sm font-yehuda text-slate-600 font-bold">
+      {/* 4. FOOTER PROGRESS BAR TRACK */}
+      <div className="mt-6 pt-4 border-t border-slate-200/70 flex items-center justify-between flex-wrap gap-2 text-xs sm:text-sm font-yehuda text-slate-600 font-bold">
         <div className="flex items-center gap-1.5">
           <Waves size={16} className="text-sky-600" />
           <span>לחץ על כל חיה ימית לצפייה בקריטריון הזכייה ובהישג המלא</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-slate-500 font-bold">{unlockedCount}/{totalCount}</span>
+          <span className="text-xs font-mono text-slate-500 font-bold">{unlockedCount}/{totalCount} תגים</span>
           <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden" dir="ltr">
             <div 
               className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full transition-all duration-500"
@@ -403,7 +445,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
         </div>
       </div>
 
-      {/* ANIMAL DETAIL MODAL (OPENS UPON CLICKING AN ANIMAL) */}
+      {/* 5. ANIMAL DETAIL MODAL (GLASSMORPHIC BACKDROP & LUXURY DIALOG) */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" dir="rtl">
@@ -413,7 +455,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+              className="absolute inset-0 bg-slate-950/70 backdrop-blur-xl"
             />
 
             {/* Modal Box */}
@@ -422,16 +464,16 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="relative z-10 w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 max-h-[90vh] flex flex-col font-yehuda"
+              className="relative z-10 w-full max-w-2xl bg-white/95 backdrop-blur-2xl rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden border border-white/80 max-h-[90vh] flex flex-col font-yehuda"
             >
               {/* Top Header */}
-              <div className="p-5 sm:p-6 bg-gradient-to-r from-[#002f4a] via-[#004e75] to-[#002b44] text-white flex items-center justify-between border-b border-white/10">
+              <div className="p-5 sm:p-6 bg-gradient-to-r from-[#00283f] via-[#003e63] to-[#001f33] text-white flex items-center justify-between border-b border-white/10">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-sky-400/20 border border-sky-300/40 flex items-center justify-center text-sky-300 shadow-md">
                     <Award size={22} />
                   </div>
                   <div>
-                    <span className="text-xs text-sky-300 font-bold">
+                    <span className="text-xs text-sky-300 font-bold font-yehuda">
                       תג הישג ימי • {inspectedMilestone.badge}
                     </span>
                     <h3 className="text-xl sm:text-2xl font-black font-yehuda text-white">
@@ -450,7 +492,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
               </div>
 
               {/* Quick Tabs inside modal */}
-              <div className="grid grid-cols-5 gap-1 p-2 bg-slate-100 border-b border-slate-200">
+              <div className="grid grid-cols-5 gap-1 p-2 bg-slate-100/90 border-b border-slate-200">
                 {milestones.map((m, idx) => {
                   const isSelected = idx === inspectedIdx;
                   const isMUnlocked = activeCategories.has(m.id);
@@ -459,7 +501,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                       key={m.id}
                       type="button"
                       onClick={() => setInspectedIdx(idx)}
-                      className={`py-2 px-1 rounded-xl text-center text-xs font-bold transition-all ${
+                      className={`py-2 px-1 rounded-xl text-center text-xs font-bold transition-all font-yehuda ${
                         isSelected
                           ? 'bg-white text-slate-900 shadow-sm font-black ring-1 ring-slate-200'
                           : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
@@ -469,7 +511,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                       {isMUnlocked ? (
                         <span className="text-[10px] text-emerald-600 font-black">✓ פתוח</span>
                       ) : (
-                        <span className="text-[10px] text-slate-400">🔒 נעול</span>
+                        <span className="text-[10px] text-slate-400 font-bold">🔒 נעול</span>
                       )}
                     </button>
                   );
@@ -477,7 +519,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
               </div>
 
               {/* Modal Body */}
-              <div className="p-5 sm:p-7 overflow-y-auto space-y-5">
+              <div className="p-5 sm:p-7 overflow-y-auto space-y-5 font-yehuda">
                 
                 {/* Status Bar */}
                 <div className={`flex items-center justify-between p-4 rounded-2xl border ${
@@ -496,7 +538,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                       </div>
                     )}
                     <div>
-                      <span className="text-xs font-black uppercase tracking-wider block">
+                      <span className="text-xs font-black uppercase tracking-wider block opacity-75">
                         סטטוס תג אישי
                       </span>
                       <span className="text-sm sm:text-base font-black">
@@ -511,7 +553,7 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                 </div>
 
                 {/* Big Avatar & Title Description */}
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-200 text-center sm:text-right">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-5 rounded-2xl bg-slate-50/80 border border-slate-200 text-center sm:text-right">
                   <div className={`shrink-0 p-3 rounded-2xl flex items-center justify-center ${
                     isInspectedUnlocked 
                       ? 'bg-white shadow-md border border-emerald-200 ring-4 ring-emerald-100/60' 
@@ -527,10 +569,10 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
                   </div>
 
                   <div className="flex-1 space-y-1.5">
-                    <h4 className="text-xl sm:text-2xl font-black text-slate-900">
+                    <h4 className="text-xl sm:text-2xl font-black text-slate-900 font-yehuda">
                       {inspectedMilestone.name} – {inspectedMilestone.title}
                     </h4>
-                    <p className="text-sm sm:text-base font-bold text-slate-700 leading-relaxed">
+                    <p className="text-sm sm:text-base font-bold text-slate-700 leading-relaxed font-yehuda">
                       "{inspectedMilestone.desc}"
                     </p>
                   </div>
@@ -538,11 +580,11 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
 
                 {/* Criteria Box */}
                 <div className="p-4 rounded-2xl bg-sky-50/80 border border-sky-200/80 space-y-1">
-                  <span className="text-xs font-black uppercase tracking-wider text-sky-900 flex items-center gap-1.5">
+                  <span className="text-xs font-black uppercase tracking-wider text-sky-900 flex items-center gap-1.5 font-yehuda">
                     <Sparkles size={15} className="text-sky-600" />
                     {isInspectedUnlocked ? 'הקריטריון שנכבש בהצלחה:' : 'איך מרוויחים את התג בים?'}
                   </span>
-                  <p className="text-sm sm:text-base font-bold text-slate-800 leading-relaxed">
+                  <p className="text-sm sm:text-base font-bold text-slate-800 leading-relaxed font-yehuda">
                     {inspectedMilestone.criteria}
                   </p>
                 </div>
@@ -551,13 +593,13 @@ export const OceanJourney: React.FC<{ compact?: boolean, noFrame?: boolean }> = 
 
               {/* Modal Footer */}
               <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500">
+                <span className="text-xs font-bold text-slate-500 font-yehuda">
                   סה"כ תגים שנכבשו: <strong className="text-emerald-700 font-mono font-black">{unlockedCount}</strong> מתוך {totalCount}
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-colors cursor-pointer"
+                  className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-colors cursor-pointer font-yehuda"
                 >
                   סגור
                 </button>
