@@ -122,10 +122,10 @@ const DirectoryPage: React.FC = () => {
               </button>
             )}
 
-            <h3 className="text-sm sm:text-base font-black text-slate-800 truncate w-full flex items-center justify-center gap-1">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight truncate w-full flex items-center justify-center gap-1">
               {member.firstName} {member.lastName}
             </h3>
-            <p className="text-[10px] sm:text-xs font-bold text-slate-400 truncate w-full">
+            <p className="text-xs sm:text-sm font-black text-sky-600 truncate w-full mt-0.5">
               {getRoleLabel(member)}
             </p>
           </div>
@@ -170,7 +170,7 @@ const DirectoryPage: React.FC = () => {
         className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-4 cursor-pointer"
       >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 relative">
+          <div className="w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 relative">
             {member.avatar ? (
               <img 
                 src={member.avatar} 
@@ -180,7 +180,7 @@ const DirectoryPage: React.FC = () => {
               />
             ) : (
               <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300">
-                <User size={20} />
+                <User size={24} />
               </div>
             )}
             {isAppShaper && (
@@ -197,7 +197,7 @@ const DirectoryPage: React.FC = () => {
             )}
           </div>
           <div>
-            <h3 className="font-black text-slate-800 flex items-center gap-2">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
               {member.firstName} {member.lastName}
               {isAppShaper && (
                 <button
@@ -205,14 +205,14 @@ const DirectoryPage: React.FC = () => {
                     e.stopPropagation();
                     setSupportModalMember(member);
                   }}
-                  className="px-2.5 py-0.5 text-[10px] bg-gradient-to-r from-slate-700 via-blue-600 to-slate-500 text-white font-bold rounded-full flex items-center gap-1 hover:brightness-110 transition-all cursor-pointer shadow-sm"
+                  className="px-2.5 py-0.5 text-xs bg-gradient-to-r from-slate-700 via-blue-600 to-slate-500 text-white font-black rounded-full flex items-center gap-1 hover:brightness-110 transition-all cursor-pointer shadow-sm"
                 >
-                  <Headset size={10} /> תמיכה טכנית
+                  <Headset size={12} /> תמיכה טכנית
                 </button>
               )}
             </h3>
-            <p className="text-xs font-bold text-slate-400">
-              {getRoleLabel(member)} • {member.email}
+            <p className="text-xs sm:text-sm font-bold text-slate-500 mt-0.5">
+              <span className="text-sky-700 font-black">{getRoleLabel(member)}</span> • {member.email}
             </p>
           </div>
         </div>
