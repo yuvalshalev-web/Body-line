@@ -13,6 +13,7 @@ import {
   Globe,
   Hammer,
   Settings, 
+  Terminal,
   LogOut,
   User,
   LayoutDashboard,
@@ -124,6 +125,7 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
     ...(isAdmin ? [
       { id: 'admin-panel', label: 'ניהול', icon: LayoutDashboard, path: '/admin', span: 'col-span-1 row-span-1' },
       { id: 'system-settings', label: 'הגדרות מערכת', icon: Settings, path: '/system-settings', span: 'col-span-1 row-span-1' },
+      { id: 'engine-room', label: 'חדר מכונות', icon: Terminal, path: '/engine-room', span: 'col-span-1 row-span-1' },
     ] : []),
     ...(isAdmin || isInstructor ? [
       { id: 'community-pulse', label: 'דופק', icon: HeartPulse, path: '/admin-info', span: 'col-span-1 row-span-1' },

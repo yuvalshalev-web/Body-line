@@ -1069,17 +1069,19 @@ const AdminPage: React.FC = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="px-8 py-6">
-                            <span className={`px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest ${
+                          <td className="px-8 py-6 whitespace-nowrap min-w-[140px]">
+                            <span className={`px-4 py-1.5 rounded-full text-[12px] font-black uppercase tracking-widest inline-block text-center whitespace-nowrap min-w-[100px] ${
                               isAppShaper
                                 ? 'bg-amber-100 text-amber-800 border border-amber-300 shadow-sm'
                                 : member.role === 'Admin' 
-                                  ? 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)]' 
-                                  : member.role === 'Instructor'
-                                    ? 'bg-purple-50 text-purple-600'
-                                    : member.role === 'Volunteer'
-                                      ? 'bg-emerald-50 text-emerald-600'
-                                      : 'bg-[var(--surfer-aqua-mist)]/10 text-[#000000]'
+                                  ? 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)] border border-[var(--surfer-vibrant-cyan)]/25' 
+                                  : member.role === 'Staff'
+                                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                    : member.role === 'Instructor'
+                                      ? 'bg-purple-50 text-purple-600 border border-purple-200'
+                                      : member.role === 'Volunteer'
+                                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                                        : 'bg-sky-100 text-sky-800 border border-sky-200 shadow-xs'
                             }`}>
                               {isAppShaper ? 'אפ-שייפר' : member.role === 'Admin' ? 'רכז' : member.role === 'Staff' ? 'צוות עמותה' : member.role === 'Instructor' ? 'מדריך' : member.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}
                             </span>

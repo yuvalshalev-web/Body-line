@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Filter, User, Mail, Phone, MapPin, Waves, Loader2, MessageCircle, LayoutGrid, List, X, Users, Headset, Send, Link2 } from 'lucide-react';
+import { Search, Filter, User, Mail, Phone, MapPin, Waves, Loader2, MessageCircle, LayoutGrid, List, X, Users, Headset, Send, Link2, Star, Crown } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Member } from '../types';
@@ -115,44 +115,61 @@ const DirectoryPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Partner Ribbon OR App-Shaper Tech Support Button at the exact same bottom location */}
-          {partner ? (
-            <div 
-              className="w-full mt-2.5 px-2.5 py-1.5 bg-gradient-to-r from-amber-100/90 via-amber-50 to-amber-100/90 hover:from-amber-200/90 hover:to-amber-100 border-2 border-amber-300 rounded-xl text-xs font-bold text-amber-950 shadow-xs hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-between gap-2 group/partner cursor-pointer"
-              title={`בן/בת זוג לחבל (שותף פעילות קבוע): ${partner.firstName} ${partner.lastName}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedMemberId(partner.id);
-              }}
-            >
-              <div className="flex items-center gap-2 min-w-0 text-right">
-                <span className="text-2xl shrink-0 leading-none">🪢</span>
-                <div className="flex flex-col text-right leading-tight">
-                  <span className="text-[10px] text-amber-800 font-black">חבל זוג:</span>
-                  <span className="truncate text-amber-950 font-black text-xs">{partner.firstName} {partner.lastName ? `${partner.lastName.charAt(0)}.` : ''}</span>
+          <div className="w-full flex flex-col gap-2 mt-2.5">
+            {/* Show Actionable/Connected Badge */}
+            {partner ? (
+              <div 
+                className="w-full px-3 py-2 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-600/10 text-orange-900 rounded-xl text-xs font-black shadow-xs hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-between gap-2 group/partner cursor-pointer border border-orange-500/20"
+                title={`בן/בת זוג לחבל (שותף פעילות קבוע): ${partner.firstName} ${partner.lastName}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedMemberId(partner.id);
+                }}
+              >
+                <div className="flex items-center gap-2 min-w-0 text-right">
+                  <span className="text-xl shrink-0 leading-none">🪢</span>
+                  <div className="flex flex-col text-right leading-tight">
+                    <span className="text-[9px] text-orange-700 font-bold uppercase tracking-wide">חבל זוג:</span>
+                    <span className="truncate text-orange-950 font-black text-xs">{partner.firstName} {partner.lastName ? `${partner.lastName.charAt(0)}.` : ''}</span>
+                  </div>
+                </div>
+                <div className="w-6 h-6 rounded-full overflow-hidden bg-white border border-orange-500/20 shrink-0 shadow-xs relative">
+                  {partner.avatar ? (
+                    <img src={partner.avatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={13} className="m-auto text-orange-700 mt-0.5" />
+                  )}
                 </div>
               </div>
-              <div className="w-6 h-6 rounded-full overflow-hidden bg-white border-2 border-amber-300 shrink-0 shadow-xs">
-                {partner.avatar ? (
-                  <img src={partner.avatar} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <User size={13} className="m-auto text-amber-700 mt-0.5" />
-                )}
+            ) : isAppShaper ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSupportModalMember(member);
+                }}
+                className="w-full px-3 py-2 bg-gradient-to-r from-slate-800/10 via-blue-600/10 to-slate-700/10 text-blue-900 rounded-xl text-xs font-black shadow-xs hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 border border-blue-500/25 cursor-pointer animate-pulse"
+                title="תמיכה טכנית - App-Shaper"
+              >
+                <Headset size={15} className="text-blue-600 shrink-0" />
+                <span className="tracking-wide">תמיכה טכנית</span>
+              </button>
+            ) : member.role === 'Admin' ? (
+              <div className="w-full px-3 py-2 bg-gradient-to-r from-amber-500/10 to-orange-600/10 text-amber-900 rounded-xl text-xs font-black shadow-xs flex items-center justify-center gap-1.5 border border-amber-500/20 select-none">
+                <Crown size={14} className="text-amber-600 shrink-0" />
+                <span>רכז קהילה</span>
               </div>
-            </div>
-          ) : isAppShaper ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSupportModalMember(member);
-              }}
-              className="w-full mt-2.5 px-3 py-2 bg-gradient-to-r from-slate-800 via-blue-600 to-slate-700 text-white rounded-xl text-xs font-black shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 border border-blue-400/30 cursor-pointer"
-              title="תמיכה טכנית - App-Shaper"
-            >
-              <Headset size={16} className="text-blue-200 shrink-0" />
-              <span className="tracking-wide">תמיכה טכנית</span>
-            </button>
-          ) : null}
+            ) : member.role === 'Instructor' ? (
+              <div className="w-full px-3 py-2 bg-gradient-to-r from-purple-500/10 to-violet-600/10 text-purple-900 rounded-xl text-xs font-black shadow-xs flex items-center justify-center gap-1.5 border border-purple-500/20 select-none">
+                <Waves size={14} className="text-purple-600 shrink-0" />
+                <span>מדריך מוסמך</span>
+              </div>
+            ) : member.role === 'Staff' ? (
+              <div className="w-full px-3 py-2 bg-gradient-to-r from-indigo-500/10 to-blue-700/10 text-indigo-900 rounded-xl text-xs font-black shadow-xs flex items-center justify-center gap-1.5 border border-indigo-500/20 select-none">
+                <Crown size={14} className="text-indigo-600 shrink-0" />
+                <span>צוות עמותה</span>
+              </div>
+            ) : null}
+          </div>
         </div>
       </motion.div>
     ) : (
@@ -191,23 +208,24 @@ const DirectoryPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2.5 items-center flex-wrap">
+          {/* Show Actionable/Connected Badge */}
           {partner ? (
             <div 
-              className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-amber-100/90 via-amber-50 to-amber-100/90 hover:from-amber-200/90 hover:to-amber-100 border-2 border-amber-300 rounded-2xl transition-all cursor-pointer shadow-xs"
+              className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-600/10 text-orange-900 border border-orange-500/20 rounded-xl transition-all cursor-pointer shadow-xs hover:scale-[1.02] active:scale-95"
               title={`בן/בת זוג לחבל (שותף פעילות קבוע): ${partner.firstName} ${partner.lastName}`}
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedMemberId(partner.id);
               }}
             >
-              <span className="text-2xl leading-none">🪢</span>
+              <span className="text-xl leading-none">🪢</span>
               <div className="flex flex-col text-right">
-                <span className="text-[10px] font-black text-amber-800 uppercase leading-none">בן/בת זוג לחבל</span>
-                <span className="text-xs font-black text-amber-950 leading-tight">{partner.firstName} {partner.lastName}</span>
+                <span className="text-[9px] font-bold text-orange-700 uppercase tracking-wide leading-none font-sans">חבל זוג</span>
+                <span className="text-xs font-black text-orange-950 leading-normal mt-0.5">{partner.firstName} {partner.lastName}</span>
               </div>
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-white border-2 border-amber-300 shrink-0 shadow-xs relative">
-                {partner.avatar ? <img src={partner.avatar} className="w-full h-full object-cover" alt="" /> : <User size={18} className="m-auto text-amber-700 mt-1" />}
+              <div className="w-7 h-7 rounded-full overflow-hidden bg-white border border-orange-500/20 shrink-0 shadow-xs relative">
+                {partner.avatar ? <img src={partner.avatar} className="w-full h-full object-cover" alt="" /> : <User size={15} className="m-auto text-orange-700 mt-1" />}
               </div>
             </div>
           ) : isAppShaper ? (
@@ -216,12 +234,27 @@ const DirectoryPage: React.FC = () => {
                 e.stopPropagation();
                 setSupportModalMember(member);
               }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-slate-800 via-blue-600 to-slate-700 text-white rounded-2xl font-black text-xs shadow-md hover:brightness-110 active:scale-95 transition-all border border-blue-400/30 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-slate-800/10 via-blue-600/10 to-slate-700/10 text-blue-900 rounded-xl font-black text-xs shadow-xs hover:scale-[1.02] active:scale-95 transition-all border border-blue-500/25 cursor-pointer animate-pulse"
               title="תמיכה טכנית - App-Shaper"
             >
-              <Headset size={16} className="text-blue-200" />
+              <Headset size={14} className="text-blue-600" />
               <span>תמיכה טכנית</span>
             </button>
+          ) : member.role === 'Admin' ? (
+            <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500/10 to-orange-600/10 text-amber-900 rounded-xl text-xs font-black shadow-xs border border-amber-500/20 select-none">
+              <Crown size={14} className="text-amber-600" />
+              <span>רכז קהילה</span>
+            </div>
+          ) : member.role === 'Instructor' ? (
+            <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/10 to-violet-600/10 text-purple-900 rounded-xl text-xs font-black shadow-xs border border-purple-500/20 select-none">
+              <Waves size={14} className="text-purple-600" />
+              <span>מדריך מוסמך</span>
+            </div>
+          ) : member.role === 'Staff' ? (
+            <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500/10 to-blue-700/10 text-indigo-900 rounded-xl text-xs font-black shadow-xs border border-indigo-500/20 select-none">
+              <Crown size={14} className="text-indigo-600" />
+              <span>צוות עמותה</span>
+            </div>
           ) : null}
         </div>
       </motion.div>
