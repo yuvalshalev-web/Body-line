@@ -34,6 +34,8 @@ export interface Member {
   birthday?: string; // YYYY-MM-DD
   gender?: Gender;
   partnerId?: string; // ID of the paired member (חבל זוג)
+  assignedGroup?: 'קבוצה א\'' | 'קבוצה ב\'' | string; // Group assignment for pairs and coordinators
+  group?: 'קבוצה א\'' | 'קבוצה ב\'' | string; // Alias for assignedGroup
   weight?: number; // in kg
   height?: number; // in cm
   surfingLevel?: 'Learner' | 'Beginner' | 'Intermediate' | 'Advanced';

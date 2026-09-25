@@ -124,7 +124,7 @@ interface DataContextType {
   toggleDbStatus: () => void;
   updateMember: (member: Member) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
-  linkPair: (memberAId: string, memberBId: string) => Promise<void>;
+  linkPair: (memberAId: string, memberBId: string, group?: string) => Promise<void>;
   unlinkPair: (memberAId: string, memberBId?: string) => Promise<void>;
   toggleStatus: (id: string) => Promise<void>;
   toggleRole: (id: string, requesterEmail?: string) => Promise<void>;
@@ -715,17 +715,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const { id, ...data } = member;
     const db = getDb();
     
-    // Normalize email if present
+    // Normalize email if present and changed
+    const existing = members.find(m => m.id === id);
     if (data.email) {
       data.email = data.email.toLowerCase().trim();
       
-      // Check if email already exists for a different user
-      const q = query(collection(db, 'members'), where('email', '==', data.email), limit(2));
-      const snapshot = await trackedGetDocs(q);
-      
-      const existingWithEmail = snapshot.docs.find(doc => doc.id !== id);
-      if (existingWithEmail) {
-        throw new Error('משתמש עם אימייל זה כבר קיים במערכת.');
+      if (!existing || existing.email !== data.email) {
+        // Check if email already exists for a different user in memory first
+        const duplicateInMemory = members.find(m => m.id !== id && (m.email || '').toLowerCase().trim() === data.email);
+        if (duplicateInMemory) {
+          throw new Error('משתמש עם אימייל זה כבר קיים במערכת.');
+        }
       }
     }
 
@@ -734,7 +734,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     
     // Delta Checking: Only update if data actually changed
-    const existing = members.find(m => m.id === id);
     if (existing) {
       const hasChanged = Object.keys(data).some(key => {
         const newVal = (data as any)[key];
@@ -746,6 +745,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
     }
+
+    // Optimistically update React state immediately
+    setMembers(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
 
     try {
       await trackedSetDoc(doc(db, 'members', id), data, { merge: true });
@@ -768,7 +770,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [members, handleFirestoreError]);
 
-  const linkPair = useCallback(async (memberAId: string, memberBId: string) => {
+  const linkPair = useCallback(async (memberAId: string, memberBId: string, group?: string) => {
     const db = getDb();
     if (!db) return;
     try {
@@ -796,8 +798,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         batch.update(doc(db, 'members', memberB.partnerId), { partnerId: deleteField() });
       }
 
-      batch.update(doc(db, 'members', memberAId), { partnerId: memberBId });
-      batch.update(doc(db, 'members', memberBId), { partnerId: memberAId });
+      const updateDataA: any = { partnerId: memberBId };
+      const updateDataB: any = { partnerId: memberAId };
+
+      if (group) {
+        updateDataA.assignedGroup = group;
+        updateDataA.group = group;
+        updateDataB.assignedGroup = group;
+        updateDataB.group = group;
+      }
+
+      batch.update(doc(db, 'members', memberAId), updateDataA);
+      batch.update(doc(db, 'members', memberBId), updateDataB);
       
       await batch.commit();
     } catch (error) {
@@ -811,17 +823,33 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!db) return;
     try {
       const batch = writeBatch(db);
-      batch.update(doc(db, 'members', memberAId), { partnerId: deleteField() });
+      batch.update(doc(db, 'members', memberAId), { 
+        partnerId: deleteField(),
+        assignedGroup: deleteField(),
+        group: deleteField()
+      });
       
       if (memberBId) {
-        batch.update(doc(db, 'members', memberBId), { partnerId: deleteField() });
+        batch.update(doc(db, 'members', memberBId), { 
+          partnerId: deleteField(),
+          assignedGroup: deleteField(),
+          group: deleteField()
+        });
       } else {
         const other = members.find(m => m.partnerId === memberAId || (m.id === memberAId && m.partnerId));
         if (other && other.partnerId && other.partnerId !== memberAId) {
-          batch.update(doc(db, 'members', other.partnerId), { partnerId: deleteField() });
+          batch.update(doc(db, 'members', other.partnerId), { 
+            partnerId: deleteField(),
+            assignedGroup: deleteField(),
+            group: deleteField()
+          });
         }
         if (other && other.id !== memberAId) {
-          batch.update(doc(db, 'members', other.id), { partnerId: deleteField() });
+          batch.update(doc(db, 'members', other.id), { 
+            partnerId: deleteField(),
+            assignedGroup: deleteField(),
+            group: deleteField()
+          });
         }
       }
       

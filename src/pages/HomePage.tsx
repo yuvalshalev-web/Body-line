@@ -487,7 +487,7 @@ const HomePage: React.FC = () => {
                <h1 className="text-[var(--surfer-yellow)] big-thursday-title" data-text="יום חמישי הגדול">יום חמישי הגדול</h1>
                
                <div className="mt-8 md:mt-12 space-y-4 md:space-y-6 flex flex-col items-center">
-                 <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-white drop-shadow-[0_3px_10px_rgba(0,0,0,0.85)] tracking-wide">נכנסים למים בעוד...</p>
+                 <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-white drop-shadow-[0_3px_10px_rgba(0,0,0,0.85)] tracking-wide">נכנסים שוב למים בעוד...</p>
                  <div className="flex gap-2.5 sm:gap-3 md:gap-5 font-black" dir="ltr">
                    {[
                      { label: 'ימים', value: countdown.days },
