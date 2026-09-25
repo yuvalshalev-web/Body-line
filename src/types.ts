@@ -207,6 +207,12 @@ export interface AuthState {
   loading: boolean;
 }
 
+export interface YearConfig {
+  startDate: string;
+  endDate: string;
+  activityMode?: 'קבוצתית' | 'משותפת' | string;
+}
+
 export interface SurfCall {
   id: string;
   creatorId: string;

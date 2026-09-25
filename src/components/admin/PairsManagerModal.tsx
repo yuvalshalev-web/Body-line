@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, Search, Link2, Unlink, User, UserPlus, Users, ChevronDown, 
-  Check, AlertCircle, CheckCircle2, ShieldCheck, UserCheck, Layers, Info
+  Check, AlertCircle, CheckCircle2, ShieldCheck, UserCheck, Layers, Info, UserMinus, Phone, MessageCircle
 } from 'lucide-react';
 import { Member } from '../../types';
 import { useData } from '../../contexts/DataContext';
@@ -67,7 +67,14 @@ const CustomMemberSelect = ({
             </div>
             <div className="flex flex-col text-right">
               <span className="text-sm font-bold leading-tight">{selected.firstName} {selected.lastName}</span>
-              <span className="text-[10px] text-slate-500">{translateRole(selected.role)}</span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[10px] text-slate-500">{translateRole(selected.role)}</span>
+                {(selected.assignedGroup || selected.group) && (
+                  <span className="text-[9px] font-black px-1.5 py-0.2 bg-blue-50 text-blue-700 rounded">
+                    {selected.assignedGroup || selected.group}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ) : (
@@ -104,7 +111,14 @@ const CustomMemberSelect = ({
                       </div>
                       <div className="flex flex-col text-right">
                         <span className="text-sm font-bold text-slate-700">{option.firstName} {option.lastName}</span>
-                        <span className="text-[10px] text-slate-500">{translateRole(option.role)}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[10px] text-slate-500">{translateRole(option.role)}</span>
+                          {(option.assignedGroup || option.group) && (
+                            <span className="text-[9px] font-black px-1.5 py-0.2 bg-blue-50 text-blue-700 rounded">
+                              שיוך קיים: {option.assignedGroup || option.group}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     {value === option.id && <Check size={16} className="text-indigo-600" />}
@@ -133,10 +147,15 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
   const contextUnlinkPair = onUnlinkPair || dataContext.unlinkPair;
   const contextUpdateMember = onUpdateMember || dataContext.updateMember;
 
-  const [activeTab, setActiveTab] = useState<'PAIRS' | 'COORDINATORS' | 'STAFF_INFO'>('PAIRS');
+  const [activeTab, setActiveTab] = useState<'PAIRS' | 'COORDINATORS' | 'INDIVIDUALS' | 'STAFF_INFO'>('PAIRS');
   const [searchTerm, setSearchTerm] = useState('');
   const [groupFilter, setGroupFilter] = useState<'ALL' | 'GROUP_A' | 'GROUP_B' | 'NONE'>('ALL');
   
+  // Singles tab filters
+  const [singlesRoleFilter, setSinglesRoleFilter] = useState<'ALL' | 'VOLUNTEER' | 'MEMBER'>('ALL');
+  const [singlesGroupFilter, setSinglesGroupFilter] = useState<'ALL' | 'GROUP_A' | 'GROUP_B' | 'NONE'>('ALL');
+  const [singlesSearch, setSinglesSearch] = useState('');
+
   // Pair creation form state
   const [selectedMemberA, setSelectedMemberIdA] = useState<string>('');
   const [selectedMemberB, setSelectedMemberIdB] = useState<string>('');
@@ -147,18 +166,21 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
   const [pairToUnlink, setPairToUnlink] = useState<{ a: Member; b: Member } | null>(null);
   const [isUnlinking, setIsUnlinking] = useState(false);
   
-  // Coordinator group updating state
+  // Dynamic group updating state
   const [updatingCoordinatorId, setUpdatingCoordinatorId] = useState<string | null>(null);
+  const [updatingIndividualId, setUpdatingIndividualId] = useState<string | null>(null);
   const [updatingPairKey, setUpdatingPairKey] = useState<string | null>(null);
   const [coordinatorGroupOverrides, setCoordinatorGroupOverrides] = useState<Record<string, string>>({});
+  const [individualGroupOverrides, setIndividualGroupOverrides] = useState<Record<string, string>>({});
   
   // Group change confirmation popup state
   const [pendingGroupChange, setPendingGroupChange] = useState<{
-    type: 'COORDINATOR' | 'PAIR';
+    type: 'COORDINATOR' | 'PAIR' | 'INDIVIDUAL';
     targetName: string;
-    newGroup: 'קבוצה א\'' | 'קבוצה ב\'';
+    newGroup: 'קבוצה א\'' | 'קבוצה ב\'' | '';
     currentGroup?: string;
     coordinator?: Member;
+    individual?: Member;
     pair?: { a: Member; b: Member; group?: string };
   } | null>(null);
 
@@ -196,6 +218,11 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
     return activeMembers.filter(m => m.role === 'Admin');
   }, [activeMembers]);
 
+  // Singles / Unpaired Members (Volunteer or Member without partnerId)
+  const unpairedSingles = useMemo(() => {
+    return activeMembers.filter(m => !m.partnerId && (m.role === 'Volunteer' || m.role === 'Member'));
+  }, [activeMembers]);
+
   // Instructors and Staff (General / Non-grouped)
   const generalStaff = useMemo(() => {
     return activeMembers.filter(m => m.role === 'Instructor' || m.role === 'Staff');
@@ -224,7 +251,32 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
     });
   }, [pairs, searchTerm, groupFilter]);
 
-  // Handle Link Pair with Group Assignment
+  // Filtered singles list
+  const filteredSingles = useMemo(() => {
+    return unpairedSingles.filter(single => {
+      const fullName = `${single.firstName} ${single.lastName}`.toLowerCase();
+      const searchLower = singlesSearch.toLowerCase();
+      const matchesSearch = !singlesSearch || fullName.includes(searchLower) || (single.mobile || '').includes(searchLower);
+
+      if (!matchesSearch) return false;
+
+      if (singlesRoleFilter === 'VOLUNTEER' && single.role !== 'Volunteer') return false;
+      if (singlesRoleFilter === 'MEMBER' && single.role !== 'Member') return false;
+
+      const rawGroup = individualGroupOverrides[single.id] !== undefined
+        ? individualGroupOverrides[single.id]
+        : (single.assignedGroup || single.group || '');
+      const gType = getMemberGroupType(rawGroup);
+
+      if (singlesGroupFilter === 'GROUP_A') return gType === 'GROUP_A';
+      if (singlesGroupFilter === 'GROUP_B') return gType === 'GROUP_B';
+      if (singlesGroupFilter === 'NONE') return gType === 'NONE';
+
+      return true;
+    });
+  }, [unpairedSingles, singlesSearch, singlesRoleFilter, singlesGroupFilter, individualGroupOverrides]);
+
+  // Handle Link Pair with Group Assignment (Overriding individual groups to pair's chosen group)
   const handleLink = async () => {
     if (!selectedMemberA || !selectedMemberB || selectedMemberA === selectedMemberB) return;
     setIsLinking(true);
@@ -242,6 +294,14 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
           setIsLinking(false);
           return;
         }
+
+        // Clean any individual overrides
+        setIndividualGroupOverrides(prev => {
+          const next = { ...prev };
+          delete next[memberA.id];
+          delete next[memberB.id];
+          return next;
+        });
 
         if (contextLinkPair) {
           await contextLinkPair(memberA.id, memberB.id, selectedGroup);
@@ -341,6 +401,51 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
     });
   };
 
+  // Handle Individual Single Group Change
+  const handleIndividualGroupChange = async (individual: Member, newGroup: 'קבוצה א\'' | 'קבוצה ב\'' | '') => {
+    setIndividualGroupOverrides(prev => ({ ...prev, [individual.id]: newGroup }));
+    setUpdatingIndividualId(individual.id);
+    try {
+      if (contextUpdateMember) {
+        await contextUpdateMember({
+          ...individual,
+          assignedGroup: newGroup,
+          group: newGroup
+        });
+      }
+      showFeedback('success', `${translateRole(individual.role)} ${individual.firstName} ${individual.lastName} שוייך/ה ל-${newGroup || 'ללא שיוך'} בהצלחה!`);
+    } catch (err: any) {
+      console.error(err);
+      setIndividualGroupOverrides(prev => {
+        const next = { ...prev };
+        delete next[individual.id];
+        return next;
+      });
+      showFeedback('error', 'שגיאה בעדכון שיוך בודד');
+    } finally {
+      setUpdatingIndividualId(null);
+    }
+  };
+
+  // Request Individual Single Group Change with Confirmation Modal
+  const requestIndividualGroupChange = (individual: Member, targetGroup: 'קבוצה א\'' | 'קבוצה ב\'' | '') => {
+    const rawGroup = individualGroupOverrides[individual.id] !== undefined
+      ? individualGroupOverrides[individual.id]
+      : (individual.assignedGroup || individual.group || '');
+    const currentGType = getMemberGroupType(rawGroup);
+    const targetGType = getMemberGroupType(targetGroup);
+    if (targetGroup !== '' && currentGType === targetGType) return;
+    if (targetGroup === '' && currentGType === 'NONE') return;
+
+    setPendingGroupChange({
+      type: 'INDIVIDUAL',
+      targetName: `${translateRole(individual.role)} ${individual.firstName} ${individual.lastName}`,
+      newGroup: targetGroup,
+      currentGroup: currentGType === 'GROUP_A' ? 'קבוצה א\'' : currentGType === 'GROUP_B' ? 'קבוצה ב\'' : 'ללא שיוך',
+      individual
+    });
+  };
+
   // Handle Confirmation of Group Change
   const handleConfirmGroupChange = async () => {
     if (!pendingGroupChange) return;
@@ -351,6 +456,8 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
       await handleCoordinatorGroupChange(change.coordinator, change.newGroup);
     } else if (change.type === 'PAIR' && change.pair) {
       await handleChangePairGroup(change.pair, change.newGroup);
+    } else if (change.type === 'INDIVIDUAL' && change.individual) {
+      await handleIndividualGroupChange(change.individual, change.newGroup);
     }
   };
 
@@ -386,6 +493,9 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
   const pairsCountB = pairs.filter(p => getMemberGroupType(p.group) === 'GROUP_B').length;
   const coordsCountA = coordinators.filter(c => getMemberGroupType(coordinatorGroupOverrides[c.id] !== undefined ? coordinatorGroupOverrides[c.id] : (c.assignedGroup || c.group)) === 'GROUP_A').length;
   const coordsCountB = coordinators.filter(c => getMemberGroupType(coordinatorGroupOverrides[c.id] !== undefined ? coordinatorGroupOverrides[c.id] : (c.assignedGroup || c.group)) === 'GROUP_B').length;
+  const singlesCountA = unpairedSingles.filter(s => getMemberGroupType(individualGroupOverrides[s.id] !== undefined ? individualGroupOverrides[s.id] : (s.assignedGroup || s.group)) === 'GROUP_A').length;
+  const singlesCountB = unpairedSingles.filter(s => getMemberGroupType(individualGroupOverrides[s.id] !== undefined ? individualGroupOverrides[s.id] : (s.assignedGroup || s.group)) === 'GROUP_B').length;
+  const singlesCountNone = unpairedSingles.filter(s => getMemberGroupType(individualGroupOverrides[s.id] !== undefined ? individualGroupOverrides[s.id] : (s.assignedGroup || s.group)) === 'NONE').length;
 
   return (
     <AnimatePresence>
@@ -425,7 +535,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-slate-800">ניהול זוגות וקבוצות - חבל זוג</h2>
-                  <p className="text-xs sm:text-sm font-bold text-slate-500">חיבור חבל זוג (מתנדב ומשתתף) ושיוך לקבוצה א' או קבוצה ב'</p>
+                  <p className="text-xs sm:text-sm font-bold text-slate-500">חיבור חבל זוג, שיוך בודדים, ושיבוץ רכזים לקבוצה א' או קבוצה ב'</p>
                 </div>
               </div>
               <button 
@@ -438,11 +548,11 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex gap-2 mt-6">
+            <div className="flex flex-wrap gap-2 mt-6">
               <button
                 type="button"
                 onClick={() => setActiveTab('PAIRS')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all ${
                   activeTab === 'PAIRS'
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
                     : 'bg-white/80 text-slate-600 hover:bg-white border border-slate-200'
@@ -454,8 +564,21 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
 
               <button
                 type="button"
+                onClick={() => setActiveTab('INDIVIDUALS')}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all ${
+                  activeTab === 'INDIVIDUALS'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                    : 'bg-white/80 text-slate-600 hover:bg-white border border-slate-200'
+                }`}
+              >
+                <UserMinus size={16} />
+                <span>שיוך בודדים ({unpairedSingles.length})</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setActiveTab('COORDINATORS')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all ${
                   activeTab === 'COORDINATORS'
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
                     : 'bg-white/80 text-slate-600 hover:bg-white border border-slate-200'
@@ -468,7 +591,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('STAFF_INFO')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all ${
                   activeTab === 'STAFF_INFO'
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
                     : 'bg-white/80 text-slate-600 hover:bg-white border border-slate-200'
@@ -649,7 +772,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                                 </span>
                               )}
 
-                              {/* Quick Group Switcher Buttons */}
+                              {/* Quick Group Switcher Buttons with Modal Confirmation */}
                               <div className="flex items-center gap-1 bg-slate-50 p-0.5 rounded-lg border border-slate-100">
                                 <button
                                   type="button"
@@ -745,6 +868,222 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                   </div>
                 </div>
               </>
+            )}
+
+            {/* Singles Tab */}
+            {activeTab === 'INDIVIDUALS' && (
+              <div className="space-y-6">
+                {/* Info Card */}
+                <div className="bg-gradient-to-r from-amber-50 via-sky-50 to-indigo-50 p-5 rounded-2xl border border-amber-200/80 shadow-xs">
+                  <h3 className="text-base font-black text-slate-800 mb-1 flex items-center gap-2">
+                    <UserMinus size={20} className="text-amber-600" />
+                    שיוך בודדים (ללא בן/בת זוג) לקבוצות
+                  </h3>
+                  <p className="text-xs font-bold text-slate-600 leading-relaxed">
+                    כאן מופיעים מתנדבים ומשתתפים שאין להם כרגע חבל זוג (לדוגמה עקב השעיה, עזיבה או טרם שיבוץ). ניתן לשייך בודד ישירות לקבוצה א׳ או קבוצה ב׳. 
+                    בעת חיבור בודדים כזוג חדש, השיוך הקבוצתי שלהם יתעדכן לקבוצת הזוג החדש.
+                  </p>
+                  <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-amber-200/60 text-xs font-black">
+                    <span className="text-slate-700">סה״כ בודדים: {unpairedSingles.length}</span>
+                    <span className="text-blue-700">קבוצה א׳: {singlesCountA}</span>
+                    <span className="text-purple-700">קבוצה ב׳: {singlesCountB}</span>
+                    <span className="text-amber-800">ללא שיוך: {singlesCountNone}</span>
+                  </div>
+                </div>
+
+                {/* Filters Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                  <div className="flex flex-wrap gap-2">
+                    {/* Role Filter */}
+                    <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setSinglesRoleFilter('ALL')}
+                        className={`px-3 py-1.5 rounded-lg transition-colors ${singlesRoleFilter === 'ALL' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                      >
+                        כל התפקידים
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSinglesRoleFilter('VOLUNTEER')}
+                        className={`px-3 py-1.5 rounded-lg transition-colors ${singlesRoleFilter === 'VOLUNTEER' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-indigo-700'}`}
+                      >
+                        מתנדבים בלבד
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSinglesRoleFilter('MEMBER')}
+                        className={`px-3 py-1.5 rounded-lg transition-colors ${singlesRoleFilter === 'MEMBER' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-500 hover:text-emerald-700'}`}
+                      >
+                        משתתפים בלבד
+                      </button>
+                    </div>
+
+                    {/* Group Filter */}
+                    <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setSinglesGroupFilter('ALL')}
+                        className={`px-3 py-1.5 rounded-lg transition-colors ${singlesGroupFilter === 'ALL' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                      >
+                        כל הקבוצות
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSinglesGroupFilter('GROUP_A')}
+                        className={`px-3 py-1.5 rounded-lg transition-colors ${singlesGroupFilter === 'GROUP_A' ? 'bg-blue-600 text-white shadow-xs' : 'text-blue-700 hover:bg-blue-50'}`}
+                      >
+                        קבוצה א׳
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSinglesGroupFilter('GROUP_B')}
+                        className={`px-3 py-1.5 rounded-lg transition-colors ${singlesGroupFilter === 'GROUP_B' ? 'bg-purple-600 text-white shadow-xs' : 'text-purple-700 hover:bg-purple-50'}`}
+                      >
+                        קבוצה ב׳
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSinglesGroupFilter('NONE')}
+                        className={`px-3 py-1.5 rounded-lg transition-colors ${singlesGroupFilter === 'NONE' ? 'bg-amber-500 text-white shadow-xs' : 'text-amber-700 hover:bg-amber-50'}`}
+                      >
+                        ללא שיוך
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Search Input */}
+                  <div className="relative">
+                    <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="חיפוש לפי שם או טלפון..."
+                      value={singlesSearch}
+                      onChange={(e) => setSinglesSearch(e.target.value)}
+                      className="pl-4 pr-10 py-1.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 w-full sm:w-48 shadow-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Singles Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredSingles.map((single) => {
+                    const rawGroup = individualGroupOverrides[single.id] !== undefined
+                      ? individualGroupOverrides[single.id]
+                      : (single.assignedGroup || single.group || '');
+                    const gType = getMemberGroupType(rawGroup);
+                    const isGroupA = gType === 'GROUP_A';
+                    const isGroupB = gType === 'GROUP_B';
+                    const isUpdating = updatingIndividualId === single.id;
+
+                    return (
+                      <div key={single.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between gap-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-13 h-13 rounded-2xl overflow-hidden bg-slate-100 border-2 border-indigo-100 shrink-0">
+                              {single.avatar ? (
+                                <img src={single.avatar} className="w-full h-full object-cover" alt="" />
+                              ) : (
+                                <User size={22} className="m-auto mt-2.5 text-slate-400" />
+                              )}
+                            </div>
+                            <div className="flex flex-col text-right">
+                              <h4 className="font-black text-slate-800 text-base">
+                                {single.firstName} {single.lastName}
+                              </h4>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className={`text-[11px] font-black px-2 py-0.5 rounded-lg ${
+                                  single.role === 'Volunteer' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                }`}>
+                                  {translateRole(single.role)} (ללא בן זוג)
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Current Group Status Badge */}
+                          <div>
+                            {isGroupA ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 border border-blue-200 text-xs font-black rounded-lg">
+                                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                                קבוצה א׳
+                              </span>
+                            ) : isGroupB ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-800 border border-purple-200 text-xs font-black rounded-lg">
+                                <span className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
+                                קבוצה ב׳
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-black rounded-lg">
+                                טרם שוייך
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Exclusive Single Group Selection Buttons with Distinct Grayout */}
+                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                          <span className="text-xs font-bold text-slate-500">שיוך לקבוצה:</span>
+                          <div className="flex items-center gap-2 bg-slate-100/70 p-1.5 rounded-2xl border border-slate-200/80">
+                            <button
+                              type="button"
+                              disabled={isUpdating}
+                              onClick={() => requestIndividualGroupChange(single, 'קבוצה א\'')}
+                              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                                isGroupA
+                                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 scale-105 ring-2 ring-blue-400'
+                                  : isGroupB
+                                    ? 'bg-slate-100 text-slate-400 border border-slate-200/60 opacity-40 grayscale hover:opacity-90 hover:grayscale-0'
+                                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-blue-50 hover:text-blue-700'
+                              }`}
+                              title="שייך בודד לקבוצה א׳"
+                            >
+                              <span className={`w-2.5 h-2.5 rounded-full ${isGroupA ? 'bg-white ring-2 ring-white/30' : isGroupB ? 'bg-slate-300' : 'bg-blue-400'}`} />
+                              <span>קבוצה א׳</span>
+                              {isGroupA && <Check size={14} className="stroke-[3]" />}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isUpdating}
+                              onClick={() => requestIndividualGroupChange(single, 'קבוצה ב\'')}
+                              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                                isGroupB
+                                  ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 scale-105 ring-2 ring-purple-400'
+                                  : isGroupA
+                                    ? 'bg-slate-100 text-slate-400 border border-slate-200/60 opacity-40 grayscale hover:opacity-90 hover:grayscale-0'
+                                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-purple-50 hover:text-purple-700'
+                              }`}
+                              title="שייך בודד לקבוצה ב׳"
+                            >
+                              <span className={`w-2.5 h-2.5 rounded-full ${isGroupB ? 'bg-white ring-2 ring-white/30' : isGroupA ? 'bg-slate-300' : 'bg-purple-400'}`} />
+                              <span>קבוצה ב׳</span>
+                              {isGroupB && <Check size={14} className="stroke-[3]" />}
+                            </button>
+
+                            {(isGroupA || isGroupB) && (
+                              <button
+                                type="button"
+                                disabled={isUpdating}
+                                onClick={() => requestIndividualGroupChange(single, '')}
+                                className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors border border-transparent hover:border-rose-200"
+                                title="הסר שיוך קבוצה מבודד זה"
+                              >
+                                הסר שיוך
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {filteredSingles.length === 0 && (
+                    <div className="col-span-full py-12 text-center text-slate-400 bg-white border border-dashed border-slate-200 rounded-2xl">
+                      לא נמצאו בודדים התואמים לסינון או לחיפוש.
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             {activeTab === 'COORDINATORS' && (
@@ -961,6 +1300,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
               </motion.div>
             )}
           </AnimatePresence>
+
           {/* Dedicated In-App Confirmation Dialog for Group Change */}
           <AnimatePresence>
             {pendingGroupChange && (
@@ -982,7 +1322,9 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto border ${
                     getMemberGroupType(pendingGroupChange.newGroup) === 'GROUP_A'
                       ? 'bg-blue-50 text-blue-600 border-blue-200'
-                      : 'bg-purple-50 text-purple-600 border-purple-200'
+                      : pendingGroupChange.newGroup === ''
+                        ? 'bg-slate-50 text-slate-600 border-slate-200'
+                        : 'bg-purple-50 text-purple-600 border-purple-200'
                   }`}>
                     <Layers size={28} />
                   </div>
@@ -993,9 +1335,11 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                       <span className={`inline-flex items-center gap-1 font-black px-2 py-0.5 rounded-md text-xs mr-1 ${
                         getMemberGroupType(pendingGroupChange.newGroup) === 'GROUP_A'
                           ? 'bg-blue-100 text-blue-800'
-                          : 'bg-purple-100 text-purple-800'
+                          : pendingGroupChange.newGroup === ''
+                            ? 'bg-slate-200 text-slate-800'
+                            : 'bg-purple-100 text-purple-800'
                       }`}>
-                        {pendingGroupChange.newGroup}
+                        {pendingGroupChange.newGroup || 'ללא שיוך לקבוצה'}
                       </span>
                       ?
                     </p>
@@ -1014,7 +1358,9 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                       className={`flex-1 py-3 px-4 rounded-xl text-white font-black text-sm shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5 min-h-[44px] ${
                         getMemberGroupType(pendingGroupChange.newGroup) === 'GROUP_A'
                           ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/25'
-                          : 'bg-purple-600 hover:bg-purple-700 shadow-purple-600/25'
+                          : pendingGroupChange.newGroup === ''
+                            ? 'bg-slate-700 hover:bg-slate-800 shadow-slate-700/25'
+                            : 'bg-purple-600 hover:bg-purple-700 shadow-purple-600/25'
                       }`}
                     >
                       <Check size={16} className="stroke-[3]" />

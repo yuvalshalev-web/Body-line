@@ -19,7 +19,7 @@ import {
   FirestoreErrorInfo
 } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../utils/dateUtils';
-import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore, SurfCall } from '../types';
+import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore, SurfCall, YearConfig } from '../types';
 import { SUPER_ADMIN_EMAIL, isAdminUser, isAppShaperUser, isSystemOrTestMember } from '../constants';
 import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageStats';
@@ -113,7 +113,7 @@ interface DataContextType {
   selectedStationId: string;
   setSelectedStationId: (id: string) => void;
   seaStats: any | null;
-  yearConfig: { startDate: string; endDate: string } | null;
+  yearConfig: YearConfig | null;
   attendeeIds: string[];
   activeSessionDate: string;
   isLoading: boolean;
@@ -157,7 +157,7 @@ interface DataContextType {
     weeklySessions: { dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[],
     sessionDurationMinutes?: number
   }>) => Promise<void>;
-  updateYearConfig: (config: { startDate: string; endDate: string }) => Promise<void>;
+  updateYearConfig: (config: Partial<YearConfig>) => Promise<void>;
   archiveMember: (id: string) => Promise<void>;
   addMember: (member: Omit<Member, 'id'>) => Promise<void>;
   addPerformanceScore: (score: Omit<PerformanceScore, 'id'>) => Promise<void>;
@@ -257,7 +257,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     siteConfigRef.current = siteConfig;
   }, [siteConfig]);
 
-  const [yearConfig, setYearConfig] = useState<{ startDate: string; endDate: string } | null>(null);
+  const [yearConfig, setYearConfig] = useState<YearConfig | null>(null);
   const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
   const [isDbEmpty, setIsDbEmpty] = useState(false);
   const [conflictingAdmins, setConflictingAdmins] = useState<Member[]>([]);
@@ -561,7 +561,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     const unsubYearConfig = trackedOnSnapshot(doc(db, 'site_data', 'year_config'), (docSnap) => {
-      if (docSnap.exists()) setYearConfig(docSnap.data() as { startDate: string; endDate: string });
+      if (docSnap.exists()) setYearConfig(docSnap.data() as YearConfig);
     });
 
     const unsubQuotes = trackedOnSnapshot(collection(db, 'quotes'), (snapshot) => {
@@ -1785,8 +1785,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await batch.commit();
   }, []);
 
-  const updateYearConfig = useCallback(async (config: { startDate: string; endDate: string }) => {
-    await setDoc(doc(getDb(), 'site_data', 'year_config'), config);
+  const updateYearConfig = useCallback(async (config: Partial<YearConfig>) => {
+    await setDoc(doc(getDb(), 'site_data', 'year_config'), config, { merge: true });
   }, []);
 
   const archiveMember = useCallback(async (id: string) => {

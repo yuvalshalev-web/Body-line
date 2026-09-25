@@ -50,6 +50,8 @@ const SurfingSessionAttendance = lazyWithRetry(() => import('./pages/SurfingSess
 const SessionStatsPage = lazyWithRetry(() => import('./pages/SessionStatsPage'));
 const ShaperPage = lazyWithRetry(() => import('./pages/ShaperPage'));
 const MemberGradingPage = lazyWithRetry(() => import('./pages/MemberGradingPage'));
+const SystemSettingsPage = lazyWithRetry(() => import('./pages/SystemSettingsPage'));
+const EngineRoomPage = lazyWithRetry(() => import('./pages/EngineRoomPage'));
 
 const PageLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -350,7 +352,7 @@ const App: React.FC = () => {
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={`flex-1 overflow-y-auto pb-20 relative z-10 origin-right shadow-[0_50px_100px_rgba(0,0,0,0.3)] ${
-          ['/', '/events', '/gallery', '/directory', '/posts', '/admin', '/shaper', '/surfer-card', '/passport', '/athlete-passport', '/profile', '/world-news', '/admin-info', '/grading', '/attendance'].includes(location.pathname) ? 'luxury-bg' : 'luxury-bg'
+          ['/', '/events', '/gallery', '/directory', '/posts', '/admin', '/shaper', '/surfer-card', '/passport', '/athlete-passport', '/profile', '/world-news', '/admin-info', '/grading', '/attendance', '/system-settings', '/admin-settings', '/admin/settings', '/engine-room', '/admin/engine-room'].includes(location.pathname) ? 'luxury-bg' : 'luxury-bg'
         }`}
       >
         <ErrorBoundary>
@@ -376,6 +378,11 @@ const App: React.FC = () => {
               {isAdminUser(currentUser) && (
                 <>
                   <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/system-settings" element={<SystemSettingsPage />} />
+                  <Route path="/admin-settings" element={<SystemSettingsPage />} />
+                  <Route path="/admin/settings" element={<SystemSettingsPage />} />
+                  <Route path="/engine-room" element={<EngineRoomPage />} />
+                  <Route path="/admin/engine-room" element={<EngineRoomPage />} />
                   <Route path="/attendance" element={<SurfingSessionAttendance />} />
                 </>
               )}
