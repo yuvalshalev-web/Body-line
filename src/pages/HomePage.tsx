@@ -33,7 +33,7 @@ import {
   GraduationCap,
   Building2
 } from 'lucide-react';
-import { SurfDashboard } from '../components/SurfDashboard';
+import { SurfDashboard, surfSpots } from '../components/SurfDashboard';
 import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
 import { OnlineUsersCounter } from '../components/OnlineUsersCounter';
 import { useAuth } from '../contexts/AuthContext';
@@ -54,11 +54,20 @@ const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   </svg>
 );
 
+export const STATION_NAMES: Record<string, string> = {
+  "178": "חוף הילטון, תל אביב",
+  "26": "חוף בת גלים, חיפה",
+  "124": "חוף הקשתות, אשדוד",
+  "208": "חוף בר כוכבא, אשקלון",
+  "343": "חוף שבי ציון",
+  "46": "חוף המערבי, חדרה"
+};
+
 const HomePage: React.FC = () => {
   const { currentUser } = useAuth();
   const { 
     members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats,
-    connectionError, retryConnection, isLoading: isDataLoading
+    connectionError, retryConnection, isLoading: isDataLoading, selectedStationId, setSelectedStationId
   } = useData();
 
   const [heroImageError, setHeroImageError] = useState(false);
@@ -76,6 +85,7 @@ const HomePage: React.FC = () => {
 
   const [isAnalyzingForecast, setIsAnalyzingForecast] = useState(false);
   const [forecastAnalysis, setForecastAnalysis] = useState<string | null>(null);
+  const [selectedSpotId, setSelectedSpotId] = useState('herzliya-marina');
 
   const newsRef = useRef(news);
   useEffect(() => { newsRef.current = news; }, [news]);
@@ -260,6 +270,7 @@ const HomePage: React.FC = () => {
     if (!coastalWeather && !seaStats) return;
     setIsAnalyzingForecast(true);
     setForecastAnalysis(null);
+    const activeSpot = surfSpots.find(s => s.id === selectedSpotId) || surfSpots[7];
     try {
       const result = await getForecastAnalysis({
         waveHeight: coastalWeather?.waveHeight ?? 0.5,
@@ -268,7 +279,8 @@ const HomePage: React.FC = () => {
         windDir: coastalWeather?.windDir,
         swellDir: seaStats?.swellDir,
         period: seaStats?.period,
-        user: currentUser
+        user: currentUser,
+        beachName: activeSpot?.name || "הרצליה"
       });
       setForecastAnalysis(result);
     } catch (error) {
@@ -713,46 +725,135 @@ const HomePage: React.FC = () => {
       </div>
 
       <section className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-xl border border-white/20 shadow-lg shadow-[var(--surfer-yellow)]/10">
-              <Waves size={20} />
+        {/* New Beautiful Functional AI forecast and selector widget */}
+        <div className="luxury-card p-8 mb-8 relative overflow-hidden" dir="rtl">
+          <div className="grain-overlay" />
+          <div className="absolute -top-24 -left-24 w-72 h-72 bg-[#007085]/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
+          <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-[#002b44]/15 rounded-full blur-[100px] pointer-events-none" />
+
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 relative z-10">
+            {/* Header / Title reflecting the AI surf suitability functionality */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-[#007085]/10 text-[#007085] rounded-2xl border border-[#007085]/20 shadow-md">
+                  <Sparkles className="text-[#007085] animate-pulse" size={24} />
+                </div>
+                <h3 className="text-2xl md:text-3xl font-black text-[#002b44] tracking-tight font-yehuda">
+                  עוזר הגלישה AI: ניתוח מצב הים והתאמה לגלישה
+                </h3>
+              </div>
+              <p className="text-[#007085] text-sm md:text-base font-bold font-yehuda max-w-2xl leading-relaxed">
+                מערכת בינה מלאכותית מבוססת Gemini המנתחת נתוני גלים, רוחות וטמפרטורה בזמן אמת, ומספקת המלצה מקצועית ומותאמת אישית לכל חוף גלישה בישראל.
+              </p>
             </div>
-            <h3 className="text-2xl font-black text-[#000000] tracking-tight font-yehuda">מצב הים – עכשיו ושיאי השנה</h3>
+
+            {/* Selection and Query Controls - clean, premium and functional */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto shrink-0">
+              <div className="relative">
+                <select
+                  value={selectedSpotId}
+                  onChange={(e) => {
+                    const spotId = e.target.value;
+                    setSelectedSpotId(spotId);
+                    const spot = surfSpots.find(s => s.id === spotId);
+                    if (spot) {
+                      setSelectedStationId(spot.imsId);
+                    }
+                  }}
+                  className="w-full sm:w-auto bg-white/75 backdrop-blur-md border border-[#007085]/20 text-[#002b44] rounded-2xl px-6 py-4 text-base font-black outline-none focus:ring-2 focus:ring-[#007085] hover:border-[#007085]/40 transition-all shadow-sm appearance-none cursor-pointer pr-12 pl-6"
+                >
+                  {surfSpots.map((spot) => (
+                    <option key={spot.id} value={spot.id}>
+                      🌊 {spot.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute top-1/2 left-4 -translate-y-1/2 pointer-events-none text-[#007085]">
+                  <ChevronRight size={18} className="rotate-90" />
+                </div>
+              </div>
+
+              <button
+                onClick={handleForecastAnalysis}
+                disabled={isAnalyzingForecast}
+                className="relative group overflow-hidden flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-[#007085] via-[#00a3c4] to-[#007085] text-white rounded-2xl font-black text-base shadow-lg shadow-[#007085]/20 hover:shadow-[#007085]/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+              >
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                {isAnalyzingForecast ? (
+                  <Loader2 className="animate-spin text-white" size={20} />
+                ) : (
+                  <Sparkles className="text-white group-hover:animate-bounce" size={20} />
+                )}
+                <span>נתח חוף זה ב-AI</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleForecastAnalysis}
-              disabled={isAnalyzingForecast}
-              className="flex items-center gap-3 px-6 py-3 bg-white/50 backdrop-blur-xl border border-white/40 rounded-2xl font-black text-sm text-[#36454f] hover:bg-white/80 hover:text-[#222b33] transition-all shadow-lg active:scale-95 disabled:opacity-50"
-            >
-              {isAnalyzingForecast ? <Loader2 className="animate-spin text-[#36454f]" size={18} /> : <MessageSquareQuote className="text-[#36454f]" size={18} />}
-              <span>ניתוח מומחה AI (Gemini)</span>
-            </button>
-          </div>
+          {/* AI Output popup panel - designed with gorgeous clean look and extremely prominent close buttons */}
+          <AnimatePresence>
+            {forecastAnalysis && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.4 }}
+                className="overflow-hidden mt-8"
+              >
+                <div className="bg-slate-900/95 text-slate-100 p-8 rounded-[2rem] border-2 border-[#00a3c4]/40 shadow-2xl relative overflow-hidden">
+                  <div className="premium-sweep-fx" />
+                  
+                  {/* Close button at the top header */}
+                  <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4 relative z-10">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="text-[#00a3c4] animate-pulse" size={22} />
+                      <h4 className="text-lg md:text-xl font-black text-white">
+                        חוות דעת AI – חוף {surfSpots.find(s => s.id === selectedSpotId)?.name || "הרצליה"}
+                      </h4>
+                    </div>
+                    <button
+                      onClick={() => setForecastAnalysis(null)}
+                      className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-black text-sm rounded-full border border-rose-500/20 transition-all active:scale-95 cursor-pointer shadow-sm"
+                      title="סגור ניתוח"
+                    >
+                      <span>סגור</span>
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  <div className="absolute top-16 left-6 text-white/5">
+                    <Sparkles size={64} />
+                  </div>
+
+                  <div className="prose prose-invert prose-slate max-w-none relative z-10
+                    prose-p:text-slate-200 prose-p:leading-relaxed prose-p:font-bold prose-p:text-base md:prose-p:text-lg
+                    prose-strong:text-[#00a3c4] prose-strong:font-black
+                  ">
+                    <Markdown>{forecastAnalysis}</Markdown>
+                  </div>
+
+                  {/* Close button at the bottom for maximum visibility/accessibility */}
+                  <div className="mt-8 pt-4 border-t border-white/10 flex justify-end relative z-10">
+                    <button
+                      onClick={() => setForecastAnalysis(null)}
+                      className="flex items-center gap-2 px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white font-black text-sm rounded-xl border border-white/15 transition-all active:scale-95 cursor-pointer shadow-inner"
+                    >
+                      <span>סגור חלון המלצה</span>
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        <AnimatePresence>
-          {forecastAnalysis && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mb-8 bg-slate-900/90 text-slate-100 p-8 rounded-[2rem] border border-white/10 shadow-2xl relative overflow-hidden"
-            >
-              <div className="absolute top-4 right-4 text-white/10">
-                <Sparkles size={48} />
-              </div>
-              <div className="prose prose-invert prose-slate max-w-none 
-                prose-p:text-slate-200 prose-p:leading-relaxed prose-p:font-bold
-                prose-strong:text-[var(--surfer-cyan)] prose-strong:font-black
-              ">
-                <Markdown>{forecastAnalysis}</Markdown>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Existing SurfDashboard displays actual measurements */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="p-3 bg-[var(--surfer-yellow)]/20 text-[#FFD700] rounded-xl border border-white/20 shadow-lg shadow-[var(--surfer-yellow)]/10">
+            <Waves size={20} />
+          </div>
+          <h3 className="text-2xl font-black text-[#000000] tracking-tight font-yehuda">מצב הים המפורט עכשיו</h3>
+        </div>
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -762,7 +863,16 @@ const HomePage: React.FC = () => {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
           >
-            <SurfDashboard />
+            <SurfDashboard 
+              selectedSpotId={selectedSpotId}
+              setSelectedSpotId={(id) => {
+                setSelectedSpotId(id);
+                const spot = surfSpots.find(s => s.id === id);
+                if (spot) {
+                  setSelectedStationId(spot.imsId);
+                }
+              }}
+            />
           </motion.div>
         </AnimatePresence>
       </section>

@@ -20,7 +20,7 @@ import {
 import { useData } from '../contexts/DataContext';
 import { safeLocalStorage } from '../utils/storage';
 
-const surfSpots = [
+export const surfSpots = [
   { id: 'haifa-bat-galim', name: 'חיפה - בת גלים', lat: 32.83, lon: 34.98, imsId: "26", cameraUrl: "https://beachcam.co.il/batgalim.html" },
   { id: 'haifa-dado', name: 'חיפה - דדו', lat: 32.79, lon: 34.95, imsId: "26", cameraUrl: "https://beachcam.co.il/meridian.html" },
   { id: 'haifa-zvulun', name: 'חיפה - זבולון', lat: 32.82, lon: 34.97, imsId: "26", cameraUrl: "https://beachcam.co.il/krayot.html" },
@@ -44,9 +44,20 @@ const surfSpots = [
   { id: 'sdot-yam', name: 'שדות ים', lat: 32.49, lon: 34.89, imsId: "46", cameraUrl: "https://wind.co.il/%D7%9E%D7%96%D7%92-%D7%90%D7%95%D7%99%D7%A8/%D7%A9%D7%99%D7%93%D7%95%D7%A8-%D7%97%D7%99/" }
 ];
 
-export const SurfDashboard: React.FC = () => {
+interface SurfDashboardProps {
+  selectedSpotId?: string;
+  setSelectedSpotId?: (id: string) => void;
+}
+
+export const SurfDashboard: React.FC<SurfDashboardProps> = ({
+  selectedSpotId: controlledSpotId,
+  setSelectedSpotId: controlledSetSpotId
+}) => {
   const { coastalWeather, setSelectedStationId, isLoading: contextLoading } = useData();
-  const [selectedSpotId, setSelectedSpotId] = useState('herzliya-marina');
+  const [localSpotId, setLocalSpotId] = useState('herzliya-marina');
+  
+  const selectedSpotId = controlledSpotId !== undefined ? controlledSpotId : localSpotId;
+  const setSelectedSpotId = controlledSetSpotId !== undefined ? controlledSetSpotId : setLocalSpotId;
   
   const [forecastData, setForecastData] = useState<any[]>(() => {
     try {
@@ -484,29 +495,39 @@ export const SurfDashboard: React.FC = () => {
       {/* 🔮 Background Decoration (Already managed by luxury-bg) */}
       
       {/* 1. Global Spot Selector */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 luxury-card p-4 relative overflow-hidden transition-all">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6 luxury-card p-6 relative overflow-hidden transition-all">
         <div className="grain-overlay" />
-        <div className="flex items-center gap-3 relative z-10">
-          <div className="w-10 h-10 bg-sky-500/10 text-sky-500 rounded-xl flex items-center justify-center border border-sky-500/20 shadow-sm">
-            <MapPin size={20} />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 relative z-10 w-full md:w-auto">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-[#007085]/10 text-[#007085] rounded-2xl flex items-center justify-center border border-[#007085]/20 shadow-sm shrink-0">
+              <MapPin size={22} />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest leading-none mb-1">בחירת ספוט גלישה מועדף</p>
+              <h4 className="text-sm font-black text-[#002b44]">הצג נתונים בזמן אמת</h4>
+            </div>
           </div>
-          <div>
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">בחירת ספוט</p>
+          
+          <div className="relative shrink-0">
             <select
               value={selectedSpotId}
               onChange={(e) => setSelectedSpotId(e.target.value)}
-              className="bg-transparent text-lg font-black text-slate-800 border-none outline-none pr-0 cursor-pointer hover:text-sky-600 transition-colors"
-              style={{ direction: 'rtl' }}
+              className="w-full sm:w-auto bg-white/75 backdrop-blur-md border border-[#007085]/20 text-[#002b44] rounded-2xl px-6 py-4 text-base font-black outline-none focus:ring-2 focus:ring-[#007085] hover:border-[#007085]/40 transition-all shadow-sm appearance-none cursor-pointer pr-12 pl-6"
             >
               {surfSpots.map(spot => (
-                <option key={spot.id} value={spot.id} className="text-slate-900">{spot.name}</option>
+                <option key={spot.id} value={spot.id} className="text-slate-900">
+                  🌊 {spot.name}
+                </option>
               ))}
             </select>
+            <div className="absolute top-1/2 left-4 -translate-y-1/2 pointer-events-none text-[#007085]">
+              <ChevronRight size={18} className="rotate-90" />
+            </div>
           </div>
         </div>
         
         {coastalWeather && (
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-bold bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 shadow-inner relative z-10">
+          <div className="flex items-center gap-2 text-slate-500 text-xs font-bold bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 shadow-inner relative z-10 shrink-0 self-end md:self-center">
             <Clock size={14} />
             עודכן: {new Date(coastalWeather.timestamp).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
           </div>

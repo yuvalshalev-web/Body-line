@@ -142,11 +142,13 @@ export const getForecastAnalysis = async (data: {
   swellDir?: string;
   period?: number;
   user?: any;
+  beachName?: string;
 }): Promise<string> => {
   try {
     const ai = getAI();
-    let prompt = `You are a local surf guru who knows every sandbar and reef.
-    Analyze the following surf forecast and provide a short, expert advice for today:
+    let prompt = `You are a local surf guru who knows every sandbar and reef in Israel.
+    Analyze the surf forecast for the following beach and provide a short, expert advice for today:
+    ${data.beachName ? `- Beach Spot: ${data.beachName}` : ''}
     - Wave Height: ${data.waveHeight}m
     ${data.waterTemp ? `- Water Temp: ${data.waterTemp}°C` : ''}
     ${data.windSpeed ? `- Wind: ${data.windSpeed}kts ${data.windDir || ''}` : ''}
