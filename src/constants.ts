@@ -15,11 +15,7 @@ export const isAdminUser = (user: { role?: string; email?: string } | null | und
 
 export const isAppShaperUser = (user: { role?: string; email?: string } | null | undefined): boolean => {
   if (!user) return false;
-  const email = user.email?.toLowerCase();
-  return (
-    user.role === 'Support' ||
-    email === SUPER_ADMIN_EMAIL.toLowerCase()
-  );
+  return user.role === 'Support';
 };
 
 export const isPrivilegedGalleryManager = (user: { role?: string; email?: string } | null | undefined): boolean => {

@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
-import { SUPER_ADMIN_EMAIL, isAppShaperUser } from '../constants';
+import { SUPER_ADMIN_EMAIL, isAppShaperUser, isAdminUser } from '../constants';
 import { loadGoogleMaps, extractAddressData } from '../utils/googlePlaces';
 import { DayPicker } from '../components/DayPicker';
 import { TimePicker } from '../components/TimePicker';
@@ -32,7 +32,7 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
   } = useData();
 
   const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'Staff' || currentUser?.role === 'Support' || currentUser?.email?.toLowerCase() === 'yuval.shalev@gmail.com';
-  const isAppShaper = isAppShaperUser(currentUser);
+  const isAppShaper = isAppShaperUser(currentUser) || isAdminUser(currentUser);
   const [showReadOnlyNotice, setShowReadOnlyNotice] = useState(false);
 
   const checkAppShaper = () => {
@@ -641,9 +641,31 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto bg-slate-50 border border-slate-200/70 px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-600">
-            <Hourglass size={14} className="text-sky-500" />
-            <span>ערך פעיל: <strong className="text-slate-800 font-black">{siteConfig.sessionDurationMinutes || 90} דק'</strong> ({(Number(siteConfig.sessionDurationMinutes || 90) / 60).toFixed(1)} שעות)</span>
+          <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-6 md:p-8 border-2 border-[#00a3c4]/50 shadow-xl max-w-md w-full shrink-0 flex items-center justify-between gap-6 group">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#002b44]/50 via-slate-950 to-[#007085]/30 opacity-90" />
+            <div className="absolute -top-12 -left-12 w-24 h-24 bg-[#00a3c4]/20 rounded-full blur-2xl group-hover:scale-150 transition-all duration-700" />
+            
+            <div className="relative z-10 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="flex h-3 w-3 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span className="text-xs font-black tracking-widest uppercase text-emerald-400">נתון פעיל ומסונכרן</span>
+              </div>
+              <h4 className="text-sm font-bold text-slate-300">אורך סשן בשימוש מערכת</h4>
+              <p className="text-xs text-slate-400 font-medium leading-tight">כל חישובי השעות, המדדים וההתקדמות מבוססים על ערך זה</p>
+            </div>
+
+            <div className="relative z-10 text-right shrink-0 flex flex-col items-end">
+              <span className="text-4xl md:text-5xl font-black text-[#00a3c4] tracking-tight tabular-nums drop-shadow-[0_2px_10px_rgba(0,112,133,0.3)]">
+                {siteConfig.sessionDurationMinutes || 90}
+              </span>
+              <span className="text-xs font-black text-[#00a3c4] uppercase mt-1">דקות מים</span>
+              <span className="text-[10px] text-emerald-400 font-bold mt-1 bg-emerald-950/60 border border-emerald-500/20 px-2 py-0.5 rounded-md">
+                {(Number(siteConfig.sessionDurationMinutes || 90) / 60).toFixed(1)} שעות גלישה
+              </span>
+            </div>
           </div>
         </div>
 

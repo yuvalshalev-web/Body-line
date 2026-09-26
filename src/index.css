@@ -1597,16 +1597,70 @@ button.w-full, .btn.w-full {
 
 /* Navigation Modes */
 
-/* --- Surfer Action Hotspot System --- */
-@keyframes surfer-pulse {
-  0% { transform: scale(1); opacity: 0.9; box-shadow: 0 0 0 0 rgba(241, 209, 121, 0.9); }
-  70% { transform: scale(1.5); opacity: 0; box-shadow: 0 0 0 40px rgba(241, 209, 121, 0); }
-  100% { transform: scale(1); opacity: 0; box-shadow: 0 0 0 0 rgba(241, 209, 121, 0); }
+/* --- Surfer Action Hotspot System - 3D Frosted Glass (זכוכית חלבית תלת-מימדית) Ring with Pulsing Effect --- */
+@keyframes ring-pulse-expand {
+  0% {
+    transform: scale(0.98);
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+}
+
+@keyframes ring-breathe {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 
+      0 12px 28px -4px rgba(0, 0, 0, 0.35),
+      0 4px 12px rgba(0, 0, 0, 0.2),
+      0 0 16px rgba(255, 255, 255, 0.16),
+      inset 0 1.5px 2px rgba(255, 255, 255, 0.75),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.22),
+      inset 0 0 12px rgba(255, 255, 255, 0.12);
+  }
+  50% {
+    transform: scale(1.025);
+    box-shadow: 
+      0 18px 36px -4px rgba(0, 0, 0, 0.4),
+      0 6px 16px rgba(0, 0, 0, 0.25),
+      0 0 24px rgba(255, 255, 255, 0.28),
+      inset 0 2px 2.5px rgba(255, 255, 255, 0.85),
+      inset 0 -2.5px 5px rgba(0, 0, 0, 0.26),
+      inset 0 0 16px rgba(255, 255, 255, 0.18);
+  }
+}
+
+@keyframes ring-breathe-attending {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 
+      0 12px 28px -4px rgba(0, 0, 0, 0.35),
+      0 4px 12px rgba(0, 0, 0, 0.2),
+      0 0 20px rgba(255, 60, 110, 0.28),
+      inset 0 1.5px 2px rgba(255, 200, 220, 0.8),
+      inset 0 -2px 4px rgba(120, 10, 40, 0.25),
+      inset 0 0 12px rgba(255, 100, 140, 0.18);
+  }
+  50% {
+    transform: scale(1.025);
+    box-shadow: 
+      0 18px 36px -4px rgba(0, 0, 0, 0.4),
+      0 6px 16px rgba(0, 0, 0, 0.25),
+      0 0 28px rgba(255, 60, 110, 0.42),
+      inset 0 2px 2.5px rgba(255, 210, 230, 0.9),
+      inset 0 -2.5px 5px rgba(120, 10, 40, 0.3),
+      inset 0 0 16px rgba(255, 100, 140, 0.25);
+  }
 }
 
 .surfer-hotspot-container {
   position: absolute;
-  top: 40%; /* Moved down by 10% */
+  top: 48%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 30;
@@ -1614,21 +1668,23 @@ button.w-full, .btn.w-full {
   flex-direction: column;
   align-items: center;
   width: 100%;
+  perspective: 1000px;
 }
 
 @media (min-width: 768px) {
   .surfer-hotspot-container {
-    top: 43%;
+    top: 50%;
   }
 }
 
 .surfer-hotspot {
-  width: clamp(100px, 25vw, 140px) !important;
-  height: clamp(100px, 25vw, 140px) !important;
+  width: clamp(110px, 24vw, 150px) !important;
+  height: clamp(110px, 24vw, 150px) !important;
   aspect-ratio: 1 / 1 !important;
   padding: 0 !important;
-  background: transparent;
-  border: 2px solid transparent;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   cursor: pointer;
   position: relative;
   display: flex;
@@ -1639,43 +1695,111 @@ button.w-full, .btn.w-full {
   outline: none;
   -webkit-tap-highlight-color: transparent;
   overflow: visible;
+  transform-style: preserve-3d;
+}
+
+/* 3D Glass Convex Reflection / Light Bevel arc */
+.surfer-hotspot::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 15%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.08) 35%, rgba(255, 255, 255, 0) 65%);
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.surfer-hotspot.not-attending {
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 
+    0 12px 28px -4px rgba(0, 0, 0, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.75),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.22),
+    inset 0 0 12px rgba(255, 255, 255, 0.12);
+  animation: ring-breathe 3.5s ease-in-out infinite;
+}
+
+.surfer-hotspot.attending {
+  border: 1.5px solid rgba(255, 120, 150, 0.6);
+  background: linear-gradient(145deg, rgba(255, 60, 110, 0.14) 0%, rgba(255, 255, 255, 0.03) 100%);
+  box-shadow: 
+    0 12px 28px -4px rgba(0, 0, 0, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1.5px 2px rgba(255, 200, 220, 0.8),
+    inset 0 -2px 4px rgba(120, 10, 40, 0.25),
+    inset 0 0 12px rgba(255, 100, 140, 0.18);
+  animation: ring-breathe-attending 3.5s ease-in-out infinite;
 }
 
 .surfer-hotspot:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
-  border-color: var(--surfer-yellow);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%);
+  transform: translateY(-2px) scale(1.06);
+}
+
+.surfer-hotspot.attending:hover {
+  background: linear-gradient(145deg, rgba(255, 60, 110, 0.2) 0%, rgba(255, 255, 255, 0.06) 100%);
 }
 
 .surfer-hotspot:active {
-  transform: scale(0.92);
+  transform: translateY(1px) scale(0.95);
 }
 
+.pulse-halo-primary {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50% !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  animation: ring-pulse-expand 2.8s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.pulse-halo-secondary {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50% !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  animation: ring-pulse-expand 2.8s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+  animation-delay: 1.4s;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.surfer-hotspot.attending .pulse-halo-primary {
+  border-color: rgba(255, 75, 120, 0.5);
+}
+
+.surfer-hotspot.attending .pulse-halo-secondary {
+  border-color: rgba(255, 75, 120, 0.25);
+}
+
+/* Fallback for legacy class */
 .pulse-halo {
   position: absolute;
   inset: -4px;
-  transform: translateY(30%);
   border-radius: 50% !important;
-  border: 2px solid var(--surfer-yellow);
-  animation: surfer-pulse 3s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  animation: ring-pulse-expand 2.8s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
   pointer-events: none;
   z-index: -1;
 }
 
 .secondary-label {
-  margin-top: 16px;
-  font-size: 21px; /* Increased by 50% from 14px */
-  font-weight: 900;
+  margin-top: 22px;
+  font-family: var(--font-heebo), "Heebo", "Assistant", sans-serif;
+  font-size: 21px;
+  font-weight: 900 !important;
   color: white;
   opacity: 1;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 0.5px;
   pointer-events: none;
-  text-shadow: 0 4px 12px rgba(0,0,0,0.9);
-  
-  /* Ensure it doesn't wrap on small screens */
+  text-shadow: 0 4px 14px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 0, 0, 0.8);
   white-space: nowrap;
   display: inline-block;
+  -webkit-font-smoothing: antialiased;
 }
 
 

@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Users, 
   Image as ImageIcon, 
@@ -63,11 +63,26 @@ export const STATION_NAMES: Record<string, string> = {
   "46": "חוף המערבי, חדרה"
 };
 
+export const getScheduledGroupForSession = (sessionDateStr: string, startDateStr?: string): 'קבוצה א\'' | 'קבוצה ב\'' => {
+  if (!sessionDateStr) return 'קבוצה א\'';
+  const startDate = startDateStr ? new Date(startDateStr) : new Date(new Date(sessionDateStr).getFullYear(), 8, 1); // default to Sep 1st
+  const sessionDate = new Date(sessionDateStr);
+  
+  const diffMs = sessionDate.getTime() - startDate.getTime();
+  if (diffMs < 0) return 'קבוצה א\'';
+  
+  const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+  const diffWeeks = Math.floor(diffMs / msPerWeek);
+  
+  return diffWeeks % 2 === 0 ? 'קבוצה א\'' : 'קבוצה ב\'';
+};
+
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { 
     members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats,
-    connectionError, retryConnection, isLoading: isDataLoading, selectedStationId, setSelectedStationId
+    connectionError, retryConnection, isLoading: isDataLoading, selectedStationId, setSelectedStationId, yearConfig
   } = useData();
 
   const [heroImageError, setHeroImageError] = useState(false);
@@ -266,6 +281,13 @@ const HomePage: React.FC = () => {
     return attendees;
   }, [attendees, attendeesFilter, pairStats.duoMemberIds]);
 
+  const scheduledGroup = useMemo(() => {
+    if (yearConfig?.activityMode !== 'קבוצתית') return null;
+    return getScheduledGroupForSession(activeSessionDate, yearConfig?.startDate);
+  }, [activeSessionDate, yearConfig]);
+
+  const userGroup = currentUser?.assignedGroup || currentUser?.group;
+
   const handleForecastAnalysis = async () => {
     if (!coastalWeather && !seaStats) return;
     setIsAnalyzingForecast(true);
@@ -402,9 +424,20 @@ const HomePage: React.FC = () => {
   }, [activeSessionDate, siteConfig?.weeklySessions]);
 
   const handleToggle = async () => {
-    if (!currentUser || isCurrentUserAppShaper) return;
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    if (isCurrentUserAppShaper) {
+      alert("משתמש בסטטוס אפ-שייפר הינו מנהל מערכת וירטואלי ואינו יכול להשתתף בסשנים");
+      return;
+    }
     setIsProcessing(true);
-    try { await toggleSessionAttendance(currentUser.id); } finally { setIsProcessing(false); }
+    try { 
+      await toggleSessionAttendance(currentUser.id); 
+    } finally { 
+      setIsProcessing(false); 
+    }
   };
 
   const activeEventsCount = useMemo(() => {
@@ -486,19 +519,58 @@ const HomePage: React.FC = () => {
             )}
             <div className="absolute inset-0 bg-black/20" />
           </div>
-          <div className="relative z-10 min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] flex flex-col items-center justify-between p-6 md:p-12 text-center">
-             {/* Top Section: Quote */}
-             <div className="w-full pt-4 md:pt-8 flex flex-col items-center">
-               <p className="text-white/95 font-semibold italic text-sm md:text-2xl max-w-2xl mx-auto tracking-[0.08em] leading-relaxed mb-6 md:mb-10 drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
+
+          {/* Surfer Action Hotspot - The almost transparent ring with pulse effect */}
+          <div className="surfer-hotspot-container pointer-events-none">
+            <button
+              type="button"
+              onClick={handleToggle}
+              disabled={isProcessing}
+              className={`surfer-hotspot pointer-events-auto ${isUserAttending ? 'attending' : 'not-attending'}`}
+              aria-label={isUserAttending ? 'ביטול אישור הגעה' : 'אישור הגעה לסשן'}
+              title={isUserAttending ? 'לחץ על הגולש לביטול הגעה' : 'לחץ על הגולש לאישור הגעה'}
+              style={{
+                color: isUserAttending ? '#FF2D60' : 'rgba(255, 255, 255, 0.9)'
+              }}
+            >
+              {/* Almost transparent concentric pulsing rings */}
+              <div className="pulse-halo-primary" />
+              <div className="pulse-halo-secondary" />
+
+              {isProcessing && (
+                <Loader2 className="animate-spin text-white drop-shadow-lg" size={36} />
+              )}
+            </button>
+            <motion.span 
+              className="secondary-label w-max mt-6 pointer-events-auto font-heebo font-black tracking-wide font-bold"
+              style={{
+                color: isUserAttending ? '#FF2D60' : '#A2FF00',
+                fontWeight: 900
+              }}
+              animate={{ opacity: [1, 0.45, 1], scale: [1, 1.02, 1] }}
+              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              {isUserAttending ? (
+                <strong className="font-black font-heebo text-[22px] md:text-[24px]">לחץ על הגולש לביטול הגעה</strong>
+              ) : (
+                <span className="font-black font-heebo text-[22px] md:text-[24px]">לחץ על הגולש לאישור הגעה</span>
+              )}
+            </motion.span>
+          </div>
+
+          <div className="relative z-10 min-h-[650px] md:min-h-[900px] lg:min-h-[1200px] flex flex-col items-center justify-between p-6 md:p-12 text-center pointer-events-none">
+             {/* Top Section: Quote & Event Title (Positioned above the RSVP ring) */}
+             <div className="w-full pt-4 md:pt-8 flex flex-col items-center pointer-events-auto">
+               <p className="text-white/95 font-semibold italic text-sm md:text-2xl max-w-2xl mx-auto tracking-[0.08em] leading-relaxed mb-4 md:mb-6 drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
                  "A day will come that is like no other... and nothing that happens after will ever be the same."
                </p>
+               <h1 className="text-[var(--surfer-yellow)] big-thursday-title" data-text="יום חמישי הגדול">יום חמישי הגדול</h1>
              </div>
              
-             {/* Lower Third Section: Title & Countdown */}
-             <div className="w-full flex flex-col items-center pb-12 md:pb-20 relative z-20 mt-auto">
-               <h1 className="text-[var(--surfer-yellow)] big-thursday-title" data-text="יום חמישי הגדול">יום חמישי הגדול</h1>
-               
-               <div className="mt-8 md:mt-12 space-y-4 md:space-y-6 flex flex-col items-center">
+             {/* Lower Third Section: Countdown & Group Rotation */}
+             <div className="w-full flex flex-col items-center pb-12 md:pb-20 relative z-20 mt-auto pointer-events-auto">
+               {/* Countdown */}
+               <div className="space-y-4 md:space-y-6 flex flex-col items-center">
                  <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-white drop-shadow-[0_3px_10px_rgba(0,0,0,0.85)] tracking-wide">נכנסים שוב למים בעוד...</p>
                  <div className="flex gap-2.5 sm:gap-3 md:gap-5 font-black" dir="ltr">
                    {[
@@ -514,41 +586,29 @@ const HomePage: React.FC = () => {
                    ))}
                  </div>
                </div>
+
+                {/* Group Notice - Positioned cleanly under the timer */}
+                {scheduledGroup && (
+                  <div className="mt-5 sm:mt-6 flex flex-col items-center gap-1.5">
+                    <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-900/70 backdrop-blur-md border border-white/20 rounded-full text-white/95 text-xs sm:text-sm font-yehuda shadow-lg">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#00a3c4] animate-pulse shrink-0" />
+                      <span>
+                        הסשן הקרוב מיועד לקבוצה <span className="font-black text-[#00a3c4] px-1">[ {scheduledGroup} ]</span>
+                      </span>
+                      {userGroup && (
+                        <span className="text-white/60 text-xs border-r border-white/20 pr-2 mr-1">
+                          הקבוצה שלך: <strong className={userGroup === scheduledGroup ? 'text-[#00a3c4]' : 'text-white'}>{userGroup}</strong>{userGroup === scheduledGroup ? ' ⭐' : ''}
+                        </span>
+                      )}
+                    </div>
+                    {userGroup && userGroup !== scheduledGroup && (
+                      <p className="text-[11px] font-bold text-amber-300 font-yehuda drop-shadow-sm">
+                        הסשן מיועד לקבוצה {scheduledGroup}, אך הרישום פתוח באישור רכז!
+                      </p>
+                    )}
+                  </div>
+                )}
              </div>
-             
-             {/* Hotspot */}
-             {isCurrentUserAppShaper ? (
-               <div className="surfer-hotspot-container pointer-events-none">
-                 <div className="bg-[#002b44]/80 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl shadow-xl text-center max-w-xs">
-                   <span className="text-xs font-black text-amber-300">משתמש וירטואלי (אפ-שייפר)</span>
-                   <p className="text-[11px] text-white/90 mt-0.5 leading-snug">ניהול מערכת בלבד • ללא השתתפות בסשנים ואירועים</p>
-                 </div>
-               </div>
-             ) : (
-               <div className="surfer-hotspot-container">
-                 <button 
-                   onClick={handleToggle}
-                   disabled={isProcessing}
-                   className="surfer-hotspot"
-                   aria-label={isUserAttending ? "בטל הגעה" : "אני מגיע/ה"}
-                 >
-                   <div className="pulse-halo"></div>
-                   {isProcessing ? (
-                     <Loader2 className="animate-spin text-white/50" size={32} />
-                   ) : (
-                      null
-                   )}
-                 </button>
-                 <motion.span 
-                   className="secondary-label w-max mt-6"
-                   style={{ color: isUserAttending ? '#FF2D60' : '#A2FF00' }}
-                   animate={{ opacity: [1, 0.4, 1], scale: [1, 1.02, 1] }}
-                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                 >
-                   {isUserAttending ? 'לחץ על הגולש לביטול הגעה' : 'לחץ על הגולש לאישור הגעה'}
-                 </motion.span>
-               </div>
-             )}
           </div>
         </section>
 
