@@ -35,6 +35,25 @@ class ErrorBoundary extends React.Component<Props, State> {
     console.error('Info:', errorInfo);
     console.groupEnd();
     
+    // Automatically recover if Vite dependency re-bundling caused a React instance/hook mismatch
+    const isHookOrChunkMismatch = 
+      (error?.message?.includes('Cannot read properties of null') && (error?.message?.includes('useState') || error?.message?.includes('useMemo') || error?.message?.includes('useEffect'))) ||
+      error?.message?.includes('Invalid hook call') ||
+      error?.message?.includes('dynamically imported module') ||
+      error?.message?.includes('Failed to fetch dynamically imported module');
+
+    if (isHookOrChunkMismatch) {
+      const reloadKey = 'react_chunk_mismatch_reload';
+      const lastReload = parseInt(sessionStorage.getItem(reloadKey) || '0', 10);
+      const now = Date.now();
+      if (now - lastReload > 8000) {
+        sessionStorage.setItem(reloadKey, String(now));
+        console.warn('ErrorBoundary: Detected React chunk mismatch. Refreshing browser to synchronize modules...');
+        window.location.reload();
+        return;
+      }
+    }
+
     // Attempt to notify system logs
     try {
       addLog(`App Crash: ${error.message}`, 'Critical', 'Frontend', error.stack);

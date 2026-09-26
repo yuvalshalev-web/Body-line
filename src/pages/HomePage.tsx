@@ -7,6 +7,7 @@ import {
   Calendar, 
   Waves,
   Loader2,
+  Fingerprint,
   Video,
   Quote,
   BookOpen,
@@ -46,6 +47,7 @@ import { SURF_DICTIONARY } from '../data/surfDictionary';
 import { motion, AnimatePresence } from 'motion/react';
 import { getForecastAnalysis } from '../services/geminiService';
 import Markdown from 'react-markdown';
+import { BiometricFingerprint } from '../components/BiometricFingerprint';
 
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -287,6 +289,17 @@ const HomePage: React.FC = () => {
   }, [activeSessionDate, yearConfig]);
 
   const userGroup = currentUser?.assignedGroup || currentUser?.group;
+
+  const isUserInScheduledGroup = useMemo(() => {
+    if (!userGroup || !scheduledGroup) return false;
+    if (userGroup === scheduledGroup) return true;
+    const normUser = String(userGroup).replace(/['"]/g, '').trim();
+    const normSched = String(scheduledGroup).replace(/['"]/g, '').trim();
+    if (normUser === normSched) return true;
+    if (normUser.endsWith('א') && normSched.endsWith('א')) return true;
+    if (normUser.endsWith('ב') && normSched.endsWith('ב')) return true;
+    return false;
+  }, [userGroup, scheduledGroup]);
 
   const handleForecastAnalysis = async () => {
     if (!coastalWeather && !seaStats) return;
@@ -537,7 +550,13 @@ const HomePage: React.FC = () => {
               <div className="pulse-halo-primary" />
               <div className="pulse-halo-secondary" />
 
-              {isProcessing && (
+              {/* Biometric fingerprint texture for instant touch affordance */}
+              {!isProcessing ? (
+                <BiometricFingerprint 
+                  className="fingerprint-texture"
+                  strokeWidth={2.5}
+                />
+              ) : (
                 <Loader2 className="animate-spin text-white drop-shadow-lg" size={36} />
               )}
             </button>
@@ -589,23 +608,27 @@ const HomePage: React.FC = () => {
 
                 {/* Group Notice - Positioned cleanly under the timer */}
                 {scheduledGroup && (
-                  <div className="mt-5 sm:mt-6 flex flex-col items-center gap-1.5">
-                    <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-900/70 backdrop-blur-md border border-white/20 rounded-full text-white/95 text-xs sm:text-sm font-yehuda shadow-lg">
+                  <div className="mt-5 sm:mt-6 flex flex-col items-center">
+                    <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-900/75 backdrop-blur-md border border-white/20 rounded-full text-white/95 text-xs sm:text-sm font-heebo shadow-lg">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#00a3c4] animate-pulse shrink-0" />
                       <span>
-                        הסשן הקרוב מיועד לקבוצה <span className="font-black text-[#00a3c4] px-1">[ {scheduledGroup} ]</span>
+                        {userGroup ? (
+                          isUserInScheduledGroup ? (
+                            <>
+                              שים לב: הסשן הקרוב מיועד לקבוצה שלך <strong className="font-bold text-[#00a3c4]">({scheduledGroup})</strong>
+                            </>
+                          ) : (
+                            <>
+                              שים לב: הסשן הקרוב מיועד לקבוצה השנייה <strong className="font-bold text-[#00a3c4]">({scheduledGroup})</strong>
+                            </>
+                          )
+                        ) : (
+                          <>
+                            שים לב: הסשן הקרוב מיועד לקבוצה <strong className="font-bold text-[#00a3c4]">({scheduledGroup})</strong>
+                          </>
+                        )}
                       </span>
-                      {userGroup && (
-                        <span className="text-white/60 text-xs border-r border-white/20 pr-2 mr-1">
-                          הקבוצה שלך: <strong className={userGroup === scheduledGroup ? 'text-[#00a3c4]' : 'text-white'}>{userGroup}</strong>{userGroup === scheduledGroup ? ' ⭐' : ''}
-                        </span>
-                      )}
                     </div>
-                    {userGroup && userGroup !== scheduledGroup && (
-                      <p className="text-[11px] font-bold text-amber-300 font-yehuda drop-shadow-sm">
-                        הסשן מיועד לקבוצה {scheduledGroup}, אך הרישום פתוח באישור רכז!
-                      </p>
-                    )}
                   </div>
                 )}
              </div>
