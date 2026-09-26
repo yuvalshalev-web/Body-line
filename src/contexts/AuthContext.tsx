@@ -104,8 +104,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const nowIso = new Date().toISOString();
     const updatedUser: Member = {
       ...user,
-      lastLoginAt: user.lastLoginAt || nowIso,
-      loginCount: (user.loginCount || 0) + (user.lastLoginAt ? 0 : 1)
+      lastLoginAt: nowIso,
+      loginCount: (user.loginCount || 0) + 1
     };
 
     // Save to sessionStorage ONLY so closing the PWA/tab terminates the session
@@ -290,6 +290,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     safeSessionStorage.removeItem('habal_zug_user');
                   } else {
                     if (isLoggingOutRef.current || safeLocalStorage.getItem('habal_zug_logged_out') === 'true') return;
+
+                    // Automatically refresh lastLoginAt if the member last checked in over 4 hours ago
+                    const lastLoginMs = latest.lastLoginAt ? new Date(latest.lastLoginAt).getTime() : 0;
+                    const nowMs = Date.now();
+                    if (!lastLoginMs || nowMs - lastLoginMs > 4 * 60 * 60 * 1000) {
+                      const nowIso = new Date().toISOString();
+                      latest.lastLoginAt = nowIso;
+                      latest.loginCount = (latest.loginCount || 0) + 1;
+                      fetch('/api/auth/record-login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ memberId: latest.id, email: latest.email })
+                      }).catch(() => {});
+                    }
+
                     setCurrentUser(latest);
                     safeSessionStorage.setItem('habal_zug_user', JSON.stringify(latest));
                   }

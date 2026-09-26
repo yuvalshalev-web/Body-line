@@ -543,7 +543,7 @@ const HomePage: React.FC = () => {
               aria-label={isUserAttending ? 'ביטול אישור הגעה' : 'אישור הגעה לסשן'}
               title={isUserAttending ? 'לחץ על הגולש לביטול הגעה' : 'לחץ על הגולש לאישור הגעה'}
               style={{
-                color: isUserAttending ? '#38BDF8' : 'rgba(255, 255, 255, 0.9)'
+                color: isUserAttending ? '#FAF5EC' : 'rgba(255, 255, 255, 0.9)'
               }}
             >
               {/* Almost transparent concentric pulsing rings */}
@@ -563,7 +563,7 @@ const HomePage: React.FC = () => {
             <motion.span 
               className="secondary-label w-max mt-6 pointer-events-auto font-heebo font-black tracking-wide font-bold"
               style={{
-                color: isUserAttending ? '#38BDF8' : '#A2FF00',
+                color: isUserAttending ? '#FAF5EC' : '#A2FF00',
                 fontWeight: 900
               }}
               animate={{ opacity: [1, 0.45, 1], scale: [1, 1.02, 1] }}
