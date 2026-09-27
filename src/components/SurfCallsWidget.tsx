@@ -203,14 +203,19 @@ export const SurfCallsWidget: React.FC = () => {
         <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/40 backdrop-blur-sm sm:items-center sm:justify-center p-4">
           <div className="bg-white w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
             {/* Header */}
-            <div className="p-6 bg-gradient-to-br from-sky-50 to-blue-50 border-b border-sky-100 flex items-center justify-between shrink-0">
-              <h2 className="text-2xl font-black text-sky-900 flex items-center gap-2">
-                <span className="text-xl" style={{ lineHeight: 1 }}>🏄‍♂️</span>
-                מי בא לגלוש?
-              </h2>
-              <button onClick={() => setIsOpen(false)} className="p-2 text-sky-400 hover:text-sky-600 bg-white rounded-full shadow-sm">
-                <X size={20} />
-              </button>
+            <div className="p-6 bg-gradient-to-br from-sky-50 to-blue-50 border-b border-sky-100 shrink-0 flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-sky-900 flex items-center gap-2">
+                  <span className="text-xl" style={{ lineHeight: 1 }}>🏄‍♂️</span>
+                  מי בא לגלוש?
+                </h2>
+                <button onClick={() => setIsOpen(false)} className="p-2 text-sky-400 hover:text-sky-600 bg-white rounded-full shadow-sm">
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="text-sm text-sky-950 mt-3 font-semibold leading-relaxed bg-sky-500/10 p-3.5 rounded-2xl border border-sky-100/50">
+                יוצאים לסשן ולא רוצים לגלוש לבד? כאן תוכלו לפרסם הזמנה מהירה לגלישה, לתאם חוף ושעה, ולהזמין חברים מהקהילה להצטרף אליכם למים – תיאום ספונטני מהיר ופשוט מהרגע להרגע!
+              </p>
             </div>
 
             {/* Content */}
