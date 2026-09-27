@@ -3,13 +3,10 @@ export const SUPER_ADMIN_EMAIL = 'yuval.shalev@gmail.com';
 
 export const isAdminUser = (user: { role?: string; email?: string } | null | undefined): boolean => {
   if (!user) return false;
-  const email = user.email?.toLowerCase();
   return (
     user.role === 'Admin' ||
     user.role === 'Staff' ||
-    user.role === 'Support' ||
-    email === SUPER_ADMIN_EMAIL.toLowerCase() ||
-    email === 'yuval@shalev.io'
+    user.role === 'Support'
   );
 };
 
@@ -20,13 +17,10 @@ export const isAppShaperUser = (user: { role?: string; email?: string } | null |
 
 export const isPrivilegedGalleryManager = (user: { role?: string; email?: string } | null | undefined): boolean => {
   if (!user) return false;
-  const email = user.email?.toLowerCase();
   return (
     user.role === 'Admin' ||     // רכז
     user.role === 'Staff' ||     // צוות עמותה
-    user.role === 'Support' ||   // אפ-שייפר
-    email === SUPER_ADMIN_EMAIL.toLowerCase() ||
-    email === 'yuval@shalev.io'
+    user.role === 'Support'      // אפ-שייפר
   );
 };
 
@@ -79,4 +73,22 @@ export const RANKS = [
   { level:3, id:"line-upist",     he:"ליין-אפיסט", min:15,  max:30,  accent:"#F4A261", perks:["יודע מה זה ליין-אפ","מנסה לעשות סיבובים","לא נופל (לפעמים)"],       desc:"אתה יושב בליין-אפ. הגלים הגדולים כבר שלך." },
   { level:4, id:"show-upist",     he:"שואו-אפיסט", min:30,  max:35,  accent:"#E76F51", perks:["עושה פוזות למצלמה","תופס גלים בלי לחשוב","מתחיל לעוף באוויר"],     desc:"כולם מסתכלים. אתה הגל." },
   { level:5, id:"kelly-slater",   he:"קלי סלייטר", min:35,  max:null,accent:"#9B5DE5", perks:["הים הוא הסלון שלך","מבלה יותר במים מאשר ביבשה","קלי סלייטר מתקשר להתייעץ"],            desc:"מעל 35 סשן. אתה לא גולש על הים — אתה הים." },
+];
+
+export interface Community {
+  id: string;
+  name: string;
+}
+
+export const AVAILABLE_COMMUNITIES: Community[] = [
+  { id: 'herzliya', name: 'הרצליה' },
+  { id: 'herzliya_adults', name: 'הרצליה - בוגרים' },
+  { id: 'tel_baruch', name: 'תל ברוך' },
+  { id: 'tel_baruch_adults', name: 'תל ברוך - בוגרים' },
+  { id: 'ashdod', name: 'אשדוד' },
+  { id: 'ashdod_adults', name: 'אשדוד - בוגרים' },
+  { id: 'ashkelon', name: 'אשקלון' },
+  { id: 'ashkelon_adults', name: 'אשקלון - בוגרים' },
+  { id: 'kiryat_yam', name: 'קריית ים' },
+  { id: 'kiryat_yam_adults', name: 'קריית ים - בוגרים' }
 ];

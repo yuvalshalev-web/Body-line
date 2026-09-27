@@ -7,7 +7,7 @@ import { Member, JoinRequest } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { hashPassword, verifyPassword, calculateFbPassword } from '../utils/crypto';
-import { SUPER_ADMIN_EMAIL, isAdminUser } from '../constants';
+import { SUPER_ADMIN_EMAIL, isAdminUser, AVAILABLE_COMMUNITIES } from '../constants';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useAuth } from '../contexts/AuthContext';
@@ -45,6 +45,8 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isGroupMenuOpen, setIsGroupMenuOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(groups[0]);
+  const [selectedCommunityId, setSelectedCommunityId] = useState<string>('herzliya');
+  const [isCommunityMenuOpen, setIsCommunityMenuOpen] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [showSeaWaterAlert, setShowSeaWaterAlert] = useState(false);
   const [resetSuccessMessage, setResetSuccessMessage] = useState('');
@@ -192,6 +194,14 @@ const LoginPage: React.FC = () => {
             setIsBiometricLoading(false);
             return;
           }
+          
+          const userCommunities = mData.communities || (mData.role === 'Staff' || mData.role === 'Support' ? AVAILABLE_COMMUNITIES.map(c => c.id) : ['herzliya']);
+          if (!userCommunities.includes(selectedCommunityId)) {
+            setError('אינך שייך לקהילה שבחרת, אנא שנה את בחירתך');
+            setIsBiometricLoading(false);
+            return;
+          }
+
           const nowIso = new Date().toISOString();
           try {
             await ensureFirebaseAuthSession('Admin');
@@ -202,7 +212,7 @@ const LoginPage: React.FC = () => {
           } catch (e) {
             console.warn('Could not update fallback login metrics:', e);
           }
-          login({ ...mData, loginCount: (mData.loginCount || 0) + 1, lastLoginAt: nowIso });
+          login({ ...mData, loginCount: (mData.loginCount || 0) + 1, lastLoginAt: nowIso }, selectedCommunityId);
           navigate('/');
           return;
         }
@@ -220,6 +230,14 @@ const LoginPage: React.FC = () => {
           return;
         }
 
+        const userCommunities = memberData.communities || (memberData.role === 'Staff' || memberData.role === 'Support' ? AVAILABLE_COMMUNITIES.map(c => c.id) : ['herzliya']);
+        if (!userCommunities.includes(selectedCommunityId)) {
+          setError('אינך שייך לקהילה שבחרת, אנא שנה את בחירתך');
+          await auth.signOut();
+          setIsBiometricLoading(false);
+          return;
+        }
+
         const nowIso = new Date().toISOString();
         try {
           await updateDoc(doc(db, 'members', user.uid), {
@@ -230,7 +248,7 @@ const LoginPage: React.FC = () => {
           console.warn('Could not update login count:', updateErr);
         }
 
-        login({ ...memberData, loginCount: (memberData.loginCount || 0) + 1, lastLoginAt: nowIso });
+        login({ ...memberData, loginCount: (memberData.loginCount || 0) + 1, lastLoginAt: nowIso }, selectedCommunityId);
         navigate('/');
       } else {
         // Find by email fallback
@@ -239,6 +257,14 @@ const LoginPage: React.FC = () => {
         if (!emailSnapshot.empty) {
           const mDoc = emailSnapshot.docs[0];
           const mData = { ...mDoc.data(), id: mDoc.id } as Member;
+          
+          const userCommunities = mData.communities || (mData.role === 'Staff' || mData.role === 'Support' ? AVAILABLE_COMMUNITIES.map(c => c.id) : ['herzliya']);
+          if (!userCommunities.includes(selectedCommunityId)) {
+            setError('אינך שייך לקהילה שבחרת, אנא שנה את בחירתך');
+            setIsBiometricLoading(false);
+            return;
+          }
+
           const nowIso = new Date().toISOString();
           try {
             await updateDoc(doc(db, 'members', mDoc.id), {
@@ -248,7 +274,7 @@ const LoginPage: React.FC = () => {
           } catch (e) {
             console.warn('Could not update fallback login metrics:', e);
           }
-          login({ ...mData, loginCount: (mData.loginCount || 0) + 1, lastLoginAt: nowIso });
+          login({ ...mData, loginCount: (mData.loginCount || 0) + 1, lastLoginAt: nowIso }, selectedCommunityId);
           navigate('/');
         } else {
           setError('פרטי החבר לא נמצאו במערכת');
@@ -266,12 +292,6 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-
-    if (!selectedGroup.startsWith("הרצליה")) {
-      setError('הגישה לקבוצת ' + selectedGroup + ' טרם נפתחה במערכת.');
-      setIsLoading(false);
-      return;
-    }
 
     const normalizedEmail = email.toLowerCase().trim();
     const db = getDb();
@@ -370,6 +390,14 @@ const LoginPage: React.FC = () => {
         return;
       }
 
+      // Community check
+      const userCommunities = memberData.communities || (memberData.role === 'Staff' || memberData.role === 'Support' ? AVAILABLE_COMMUNITIES.map(c => c.id) : ['herzliya']);
+      if (!userCommunities.includes(selectedCommunityId)) {
+        setError('אינך שייך לקהילה שבחרת, אנא שנה את בחירתך');
+        setIsLoading(false);
+        return;
+      }
+
       // Step 4: Handle temporary password reset (strict check for true)
       if (Boolean(memberData.isTemporary) === true) {
         setTempUser({ id: memberDocId, data: memberData });
@@ -400,7 +428,7 @@ const LoginPage: React.FC = () => {
         lastLoginAt: nowIso
       };
 
-      login(finalUser);
+      login(finalUser, selectedCommunityId);
       navigate('/');
     } catch (err: any) {
       console.error('LoginPage: Login error:', err);
@@ -559,7 +587,7 @@ const LoginPage: React.FC = () => {
         lastLoginAt: new Date().toISOString()
       } as Member;
 
-      login(finalUser);
+      login(finalUser, selectedCommunityId);
       navigate('/');
     } catch (err: any) {
       console.error('Password reset submit error:', err);
@@ -760,45 +788,44 @@ const LoginPage: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Location Selection Dropdown */}
+                {/* Community Selection Dropdown */}
                 <div className="relative w-full">
+                  <label className="text-[11px] font-black text-cyan-400/80 uppercase tracking-widest block pr-2 mb-1.5 text-right">בחירת קהילת כניסה</label>
                   <button 
                     type="button"
-                    onClick={() => setIsGroupMenuOpen(!isGroupMenuOpen)}
+                    onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
                     className="w-full h-12 bg-[#091519]/60 border border-white/10 rounded-2xl text-white font-medium text-base outline-none text-right flex items-center justify-between px-4 hover:border-[#00AFC2]/40 hover:bg-[#091519]/80 transition-all duration-300 shadow-inner"
                   >
-                    <span className="flex-1 text-right">{selectedGroup}</span>
-                    <ChevronDown size={18} className={`text-[#00AFC2]/55 transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
+                    <span className="flex-1 text-right">
+                      {AVAILABLE_COMMUNITIES.find(c => c.id === selectedCommunityId)?.name || 'הרצליה'}
+                    </span>
+                    <ChevronDown size={18} className={`text-[#00AFC2]/55 transition-transform duration-300 ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   <AnimatePresence>
-                    {isGroupMenuOpen && (
+                    {isCommunityMenuOpen && (
                       <motion.div 
                         initial={{ opacity: 0, scale: 0.95, y: 5 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 5 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-[#091519] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden py-1"
+                        className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-[#091519]/95 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-60 py-1.5 custom-scrollbar"
                       >
-                        {groups.map((group) => (
+                        {AVAILABLE_COMMUNITIES.map((c) => (
                           <button
-                            key={group}
+                            key={c.id}
                             type="button"
                             onClick={() => {
-                              setSelectedGroup(group);
-                              setIsGroupMenuOpen(false);
-                              if (!group.startsWith("הרצליה")) {
-                                setError('הגישה לקבוצת ' + group + ' טרם נפתחה במערכת.');
-                              } else {
-                                setError('');
-                              }
+                              setSelectedCommunityId(c.id);
+                              setIsCommunityMenuOpen(false);
+                              setError('');
                             }}
                             className={`w-full px-4 py-3 text-right font-medium text-sm transition-all flex items-center justify-between hover:bg-white/5 ${
-                              selectedGroup === group ? 'text-[#00AFC2] bg-white/5' : 'text-white/70'
+                              selectedCommunityId === c.id ? 'text-[#00AFC2] bg-white/5' : 'text-white/70'
                             }`}
                           >
-                            <span>{group}</span>
-                            {selectedGroup === group && <CheckCircle2 size={16} className="text-[#00AFC2]" />}
+                            <span>{c.name}</span>
+                            {selectedCommunityId === c.id && <CheckCircle2 size={16} className="text-[#00AFC2]" />}
                           </button>
                         ))}
                       </motion.div>

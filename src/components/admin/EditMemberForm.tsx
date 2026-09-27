@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { 
   X, Camera, UserCircle, ChevronLeft, Save, Archive, Loader2, Cake, Phone, Mail, AlertCircle, 
   ChevronDown, Instagram, Facebook, Music2, Linkedin, Twitter, Globe, Key, Check, HeartPulse,
-  Award, Search, Sparkles, User, RefreshCw, UtensilsCrossed, Clock, MessageCircle
+  Award, Search, Sparkles, User, RefreshCw, UtensilsCrossed, Clock, MessageCircle, ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Member } from '../../types';
@@ -14,7 +14,7 @@ import { processImage } from '../../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../../utils/validation';
 import { useModal } from '../../contexts/ModalContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { SUPER_ADMIN_EMAIL } from '../../constants';
+import { SUPER_ADMIN_EMAIL, AVAILABLE_COMMUNITIES } from '../../constants';
 import { hashPassword } from '../../utils/crypto';
 import { sendPasswordResetEmail, updatePassword } from 'firebase/auth';
 import { auth } from '../../services/firebase';
@@ -61,6 +61,8 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
   const [editingMember, setEditingMember] = useState<Member>(member);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
+  const [isCommunityDropdownOpen, setIsCommunityDropdownOpen] = useState(false);
+  const [communitySearchQuery, setCommunitySearchQuery] = useState('');
   const [isCertDropdownOpen, setIsCertDropdownOpen] = useState(false);
   const [certSearch, setCertSearch] = useState('');
   const [showRoleWarning, setShowRoleWarning] = useState(false);
@@ -162,6 +164,15 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
     if (!isPlaceSelected && addressInputRef.current?.value) {
       showError('יש לבחור כתובת מתוך רשימת ההצעות של גוגל בלבד');
       addressInputRef.current?.focus();
+      return;
+    }
+
+    const role = editingMember.role || 'Member';
+    const isStaffOrSupport = role === 'Staff' || role === 'Support';
+    const communities = editingMember.communities || [];
+
+    if (!isStaffOrSupport && communities.length === 0) {
+      showError('חובה לשייך את המשתמש לפחות לקבוצת קהילה אחת');
       return;
     }
 
@@ -412,7 +423,15 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
                       onClick={() => {
                         if (readOnly) return;
                         if (r.id === 'Admin' && !isSuperAdmin) return;
-                        setEditingMember({ ...editingMember, role: r.id as any });
+                        const isStaffOrSupport = r.id === 'Staff' || r.id === 'Support';
+                        const communitiesVal = isStaffOrSupport
+                          ? AVAILABLE_COMMUNITIES.map(c => c.id)
+                          : (editingMember.communities && editingMember.communities.length > 0 ? editingMember.communities : ['herzliya']);
+                        setEditingMember({ 
+                          ...editingMember, 
+                          role: r.id as any,
+                          communities: communitiesVal
+                        });
                       }}
                       className={`relative py-3.5 text-[13px] font-black text-center flex items-center justify-center transition-all duration-500 outline-none group ${
                         editingMember.role === r.id ? 'text-white' : 'text-slate-400 hover:text-slate-600'
@@ -490,6 +509,118 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">
                     סטטוס מחושב אוטומטית לפי ביצועים ונוכחות
                   </p>
+                </div>
+
+                {/* Communities Selector (Multi-Select Dropdown) */}
+                <div className="space-y-4 pt-6 border-t border-slate-100 flex flex-col items-center w-full">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] block">שיוך לקבוצות קהילה</label>
+                  
+                  <div className="w-full max-w-[600px] relative">
+                    {editingMember.role === 'Staff' || editingMember.role === 'Support' ? (
+                      <div className="w-full p-4 bg-sky-100/50 border border-sky-200/60 rounded-2xl text-xs text-sky-800 font-black flex items-center justify-between select-none">
+                        <span className="flex items-center gap-2">
+                          <ShieldCheck size={16} className="text-sky-700 shrink-0" />
+                          <span>כל הקהילות ({AVAILABLE_COMMUNITIES.length} קבוצות - משוייך אוטומטית)</span>
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          disabled={readOnly}
+                          onClick={() => setIsCommunityDropdownOpen(!isCommunityDropdownOpen)}
+                          className="w-full p-6 luxury-card font-black text-sm outline-none transition-all flex items-center justify-between group hover:bg-white/80"
+                        >
+                          <span className="text-[#000000] text-right flex-1 truncate max-w-[90%]">
+                            {(!editingMember.communities || editingMember.communities.length === 0) ? (
+                              <span className="text-slate-400 font-bold">בחר קבוצות קהילה...</span>
+                            ) : editingMember.communities.length > 3 ? (
+                              `נבחרו ${editingMember.communities.length} קבוצות קהילה`
+                            ) : (
+                              AVAILABLE_COMMUNITIES
+                                .filter(c => editingMember.communities?.includes(c.id))
+                                .map(c => c.name)
+                                .join(', ')
+                            )}
+                          </span>
+                          <ChevronDown size={18} className={`text-[#00426a] transition-transform duration-300 ${isCommunityDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        <AnimatePresence>
+                          {isCommunityDropdownOpen && (
+                            <>
+                              <div className="fixed inset-0 z-[160]" onClick={() => {
+                                setIsCommunityDropdownOpen(false);
+                                setCommunitySearchQuery('');
+                              }} />
+                              <motion.div
+                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-md border border-slate-200/80 !rounded-2xl shadow-2xl z-[170] overflow-hidden p-3 space-y-2 flex flex-col text-right"
+                              >
+                                {/* Search box inside dropdown */}
+                                <div className="relative shrink-0">
+                                  <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                  <input
+                                    type="text"
+                                    placeholder="חפש קבוצה..."
+                                    value={communitySearchQuery}
+                                    onChange={e => setCommunitySearchQuery(e.target.value)}
+                                    className="w-full pl-3 pr-9 py-2.5 bg-slate-100 rounded-xl text-xs font-bold outline-none focus:bg-slate-200/80 text-right text-slate-800"
+                                  />
+                                </div>
+
+                                {/* Scrollable list */}
+                                <div className="max-h-60 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                                  {AVAILABLE_COMMUNITIES
+                                    .filter(c => c.name.includes(communitySearchQuery) || c.id.includes(communitySearchQuery))
+                                    .map((c) => {
+                                      const isChecked = (editingMember.communities || []).includes(c.id);
+                                      return (
+                                        <button
+                                          key={c.id}
+                                          type="button"
+                                          onClick={() => {
+                                            const current = editingMember.communities || [];
+                                            let updated;
+                                            if (current.includes(c.id)) {
+                                              updated = current.filter(id => id !== c.id);
+                                            } else {
+                                              updated = [...current, c.id];
+                                            }
+                                            setEditingMember({ ...editingMember, communities: updated });
+                                          }}
+                                          className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-bold text-xs transition-all text-right select-none ${
+                                            isChecked
+                                              ? 'bg-sky-500/10 text-sky-950 font-black'
+                                              : 'text-slate-700 hover:bg-slate-100'
+                                          }`}
+                                        >
+                                          <span className="truncate">{c.name}</span>
+                                          <div className={`w-4 h-4 rounded flex items-center justify-center border transition-all shrink-0 ${
+                                            isChecked
+                                              ? 'bg-sky-500 border-sky-500 text-white'
+                                              : 'border-slate-300 bg-white'
+                                          }`}>
+                                            {isChecked && <Check size={11} strokeWidth={3} />}
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  {AVAILABLE_COMMUNITIES.filter(c => c.name.includes(communitySearchQuery)).length === 0 && (
+                                    <div className="text-center py-4 text-slate-400 text-xs">
+                                      לא נמצאו קבוצות מתאימות
+                                    </div>
+                                  )}
+                                </div>
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

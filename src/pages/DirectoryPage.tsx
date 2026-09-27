@@ -10,7 +10,7 @@ import { useRandomHeader } from '../hooks/useRandomHeader';
 
 const DirectoryPage: React.FC = () => {
   const { members, isLoading } = useData();
-  const { currentUser } = useAuth();
+  const { currentUser, currentCommunityId } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIdentity, setSelectedIdentity] = useState<string>('הכל');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -38,6 +38,15 @@ const DirectoryPage: React.FC = () => {
   const headerImage = useRandomHeader();
 
   const filteredMembers = members.filter(member => {
+    // 1. Community isolation filter
+    const activeCommunity = currentCommunityId || 'herzliya';
+    const isStaffOrSupport = member.role === 'Staff' || member.role === 'Support';
+    const memberCommunities = member.communities || [];
+    const belongsToCurrentCommunity = isStaffOrSupport || memberCommunities.includes(activeCommunity);
+
+    if (!belongsToCurrentCommunity) return false;
+
+    // 2. Standard search & identity checks
     const memberEmail = member.email || '';
     const matchesSearch = 
       `${member.firstName} ${member.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||

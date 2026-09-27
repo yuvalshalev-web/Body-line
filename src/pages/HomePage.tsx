@@ -81,11 +81,20 @@ export const getScheduledGroupForSession = (sessionDateStr: string, startDateStr
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, currentCommunityId } = useAuth();
   const { 
-    members, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats,
+    members: rawMembers, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats,
     connectionError, retryConnection, isLoading: isDataLoading, selectedStationId, setSelectedStationId, yearConfig
   } = useData();
+
+  const members = useMemo(() => {
+    const activeCommunity = currentCommunityId || 'herzliya';
+    return rawMembers.filter(member => {
+      const isStaffOrSupport = member.role === 'Staff' || member.role === 'Support';
+      const memberCommunities = member.communities || [];
+      return isStaffOrSupport || memberCommunities.includes(activeCommunity);
+    });
+  }, [rawMembers, currentCommunityId]);
 
   const [heroImageError, setHeroImageError] = useState(false);
 

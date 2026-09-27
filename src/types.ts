@@ -69,6 +69,7 @@ export interface Member {
   biometricDevice?: string;
   lastLoginAt?: string;
   updatedAt?: string;
+  communities?: string[]; // list of community group IDs, e.g., ['herzliya']
 }
 
 export interface PerformanceScore {

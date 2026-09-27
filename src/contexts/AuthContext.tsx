@@ -11,10 +11,11 @@ import { isAdminUser } from '../constants';
 
 interface AuthContextType {
   currentUser: Member | null;
+  currentCommunityId: string | null;
   firebaseUser: User | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (user: Member) => void;
+  login: (user: Member, communityId: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: Member) => void;
 }
@@ -23,6 +24,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const isLoggingOutRef = React.useRef(safeLocalStorage.getItem('habal_zug_logged_out') === 'true');
+  const [currentCommunityId, setCurrentCommunityId] = useState<string | null>(() => {
+    return safeSessionStorage.getItem('habal_zug_community') || null;
+  });
   const [currentUser, setCurrentUser] = useState<Member | null>(() => {
     // Purge any legacy localStorage session to enforce strict session-only authentication
     safeLocalStorage.removeItem('habal_zug_user');
@@ -96,7 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
-  const login = useCallback(async (user: Member) => {
+  const login = useCallback(async (user: Member, communityId: string) => {
     isLoggingOutRef.current = false;
     safeLocalStorage.removeItem('habal_zug_logged_out');
     safeLocalStorage.removeItem('habal_zug_pagehide_at');
@@ -111,8 +115,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Save to sessionStorage ONLY so closing the PWA/tab terminates the session
     safeLocalStorage.removeItem('habal_zug_user');
     safeSessionStorage.setItem('habal_zug_user', JSON.stringify(updatedUser));
+    safeSessionStorage.setItem('habal_zug_community', communityId);
 
     setCurrentUser(updatedUser);
+    setCurrentCommunityId(communityId);
     if (updatedUser) {
       syncBiometricFromMemberDoc(updatedUser);
       try {
@@ -151,12 +157,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // 1. Permanently record persistent logged out state across sessions
     safeLocalStorage.setItem('habal_zug_logged_out', 'true');
     safeSessionStorage.removeItem('habal_zug_user');
+    safeSessionStorage.removeItem('habal_zug_community');
     safeLocalStorage.removeItem('habal_zug_user');
     safeLocalStorage.removeItem('habal_zug_pagehide_at');
     safeLocalStorage.removeItem('admin_stats_initialized');
 
     // 2. Immediately clear React user state so the UI transitions to logged-out state instantly
     setCurrentUser(null);
+    setCurrentCommunityId(null);
     setFirebaseUser(null);
 
     // 3. Terminate Firebase Auth session and reset session promises
@@ -168,10 +176,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // 4. Double check storage and state are completely clean
       safeLocalStorage.setItem('habal_zug_logged_out', 'true');
       safeSessionStorage.removeItem('habal_zug_user');
+      safeSessionStorage.removeItem('habal_zug_community');
       safeLocalStorage.removeItem('habal_zug_user');
       safeLocalStorage.removeItem('habal_zug_pagehide_at');
       safeLocalStorage.removeItem('admin_stats_initialized');
       setCurrentUser(null);
+      setCurrentCommunityId(null);
       setFirebaseUser(null);
       setLoading(false);
     }
@@ -375,13 +385,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const value = React.useMemo(() => ({ 
     currentUser, 
+    currentCommunityId,
     firebaseUser,
     isAuthenticated: !!currentUser, 
     loading,
     login, 
     logout, 
     updateUser 
-  }), [currentUser, firebaseUser, loading, login, logout, updateUser]);
+  }), [currentUser, currentCommunityId, firebaseUser, loading, login, logout, updateUser]);
 
   return (
     <AuthContext.Provider value={value}>

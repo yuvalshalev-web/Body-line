@@ -46,6 +46,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { AVAILABLE_COMMUNITIES } from '../constants';
 import { Member } from '../types';
 import { DietaryPreferencesSection } from '../components/DietaryPreferencesSection';
 import { AvailabilityPreferenceSection } from '../components/AvailabilityPreferenceSection';
@@ -245,6 +246,8 @@ const ProfilePage: React.FC = () => {
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
+  const [isCommunityDropdownOpen, setIsCommunityDropdownOpen] = useState(false);
+  const [communitySearchQuery, setCommunitySearchQuery] = useState('');
   const [isCertDropdownOpen, setIsCertDropdownOpen] = useState(false);
   const [certSearch, setCertSearch] = useState('');
   const [isGeneratingBio, setIsGeneratingBio] = useState(false);
@@ -511,6 +514,16 @@ const ProfilePage: React.FC = () => {
       setToast({ msg: 'יש לבחור כתובת מתוך רשימת ההצעות של גוגל בלבד', type: 'error' });
       setTimeout(() => setToast(null), 3000);
       addressInputRef.current?.focus();
+      return;
+    }
+
+    const role = formData.role || 'Member';
+    const isStaffOrSupport = role === 'Staff' || role === 'Support';
+    const communities = formData.communities || [];
+
+    if (!isStaffOrSupport && communities.length === 0) {
+      setToast({ msg: 'חובה לשייך את המשתמש לפחות לקבוצת קהילה אחת', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
       return;
     }
 
@@ -847,6 +860,149 @@ const ProfilePage: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-16 relative z-10">
             <div className="lg:col-span-7 space-y-12 md:space-y-16">
+              {/* Community Association Section */}
+              <section className="space-y-6 md:space-y-8">
+                <SectionHeader 
+                  icon={ShieldCheck} 
+                  title="שיוך לקבוצות קהילה" 
+                  subtitle="Community Associations"
+                  colorClass="text-sky-600" 
+                  bgColorClass="bg-sky-100" 
+                />
+                
+                <div className="space-y-4">
+                  {currentUser?.role === 'Staff' || currentUser?.role === 'Support' || currentUser?.role === 'Admin' ? (
+                    <div className="relative">
+                      {formData?.role === 'Staff' || formData?.role === 'Support' ? (
+                        <div className="w-full p-5 bg-sky-100/50 border border-sky-200/60 rounded-[1.25rem] text-xs text-sky-800 font-black flex items-center justify-between select-none">
+                          <span className="flex items-center gap-2">
+                            <ShieldCheck size={16} className="text-sky-700 shrink-0" />
+                            <span>כל הקהילות ({AVAILABLE_COMMUNITIES.length} קבוצות - משוייך אוטומטית כאיש צוות)</span>
+                          </span>
+                        </div>
+                      ) : (
+                        <>
+                          <button 
+                            type="button"
+                            onClick={() => setIsCommunityDropdownOpen(!isCommunityDropdownOpen)}
+                            className="w-full pr-6 pl-12 py-4 md:py-5 bg-white/70 border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.02)] rounded-[1.25rem] font-bold text-sm outline-none focus:bg-white focus:border-sky-200 transition-all flex items-center justify-between group/btn text-[#0f172a]"
+                          >
+                            <span className="truncate text-right flex-1">
+                              {(!formData?.communities || formData.communities.length === 0) ? (
+                                <span className="text-slate-400 font-bold">בחר קבוצות קהילה...</span>
+                              ) : formData.communities.length > 3 ? (
+                                `נבחרו ${formData.communities.length} קבוצות קהילה`
+                              ) : (
+                                AVAILABLE_COMMUNITIES
+                                  .filter(c => formData.communities?.includes(c.id))
+                                  .map(c => c.name)
+                                  .join(', ')
+                              )}
+                            </span>
+                            <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 ${isCommunityDropdownOpen ? 'rotate-180' : ''}`} />
+                          </button>
+
+                          <AnimatePresence>
+                            {isCommunityDropdownOpen && (
+                              <>
+                                <div className="fixed inset-0 z-[60]" onClick={() => {
+                                  setIsCommunityDropdownOpen(false);
+                                  setCommunitySearchQuery('');
+                                }} />
+                                <motion.div 
+                                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                  className="absolute top-full left-0 right-0 mt-3 bg-white/95 border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-[70] overflow-hidden p-4 rounded-[1.5rem]"
+                                >
+                                  {/* Search box inside dropdown */}
+                                  <div className="relative mb-3">
+                                    <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    <input
+                                      type="text"
+                                      placeholder="חפש קבוצה..."
+                                      value={communitySearchQuery}
+                                      onChange={e => setCommunitySearchQuery(e.target.value)}
+                                      className="w-full pl-3 pr-9 py-2 bg-slate-100 rounded-xl text-xs font-bold outline-none focus:bg-slate-200/80 text-right text-slate-800"
+                                    />
+                                  </div>
+
+                                  <div className="max-h-48 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                                    {AVAILABLE_COMMUNITIES
+                                      .filter(c => c.name.includes(communitySearchQuery) || c.id.includes(communitySearchQuery))
+                                      .map((c) => {
+                                        const isChecked = (formData?.communities || []).includes(c.id);
+                                        return (
+                                          <button
+                                            key={c.id}
+                                            type="button"
+                                            onClick={() => {
+                                              if (!formData) return;
+                                              const current = formData.communities || [];
+                                              let updated;
+                                              if (current.includes(c.id)) {
+                                                updated = current.filter(id => id !== c.id);
+                                              } else {
+                                                updated = [...current, c.id];
+                                              }
+                                              setFormData({ ...formData, communities: updated });
+                                              setIsDirty(true);
+                                            }}
+                                            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl font-bold text-xs transition-all text-right select-none ${
+                                              isChecked
+                                                ? 'bg-sky-500/10 text-sky-950 font-black'
+                                                : 'text-slate-700 hover:bg-slate-100'
+                                            }`}
+                                          >
+                                            <span className="truncate">{c.name}</span>
+                                            <div className={`w-4 h-4 rounded flex items-center justify-center border transition-all shrink-0 ${
+                                              isChecked
+                                                ? 'bg-sky-500 border-sky-500 text-white'
+                                                : 'border-slate-300 bg-white'
+                                            }`}>
+                                              {isChecked && <Check size={11} strokeWidth={3} />}
+                                            </div>
+                                          </button>
+                                        );
+                                      })}
+                                  </div>
+                                </motion.div>
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    /* Read-Only mode for regular members/volunteers/instructors */
+                    <div className="bg-slate-50/80 backdrop-blur-md rounded-[1.25rem] border border-slate-200/40 p-5 space-y-3">
+                      <p className="text-xs font-bold text-slate-500">הקבוצות אליהן אתה משוייך:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(!formData?.communities || formData.communities.length === 0) ? (
+                          <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200/50">
+                            אין שיוך קבוצתי פעיל
+                          </span>
+                        ) : (
+                          AVAILABLE_COMMUNITIES
+                            .filter(c => formData.communities?.includes(c.id))
+                            .map(c => (
+                              <span 
+                                key={c.id}
+                                className="px-3.5 py-1.5 rounded-full text-xs font-black bg-sky-50 text-sky-800 border border-sky-200/60 shadow-xs"
+                              >
+                                {c.name}
+                              </span>
+                            ))
+                        )}
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-400 pt-1.5 border-t border-slate-100">
+                        🔒 שיוך לקהילה נקבע על ידי רכזי העמותה בלבד ואינו ניתן לשינוי עצמי.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </section>
+
               <section className="space-y-6 md:space-y-8">
                 <SectionHeader 
                   icon={Award} 

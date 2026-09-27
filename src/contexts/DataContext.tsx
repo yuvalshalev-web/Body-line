@@ -175,7 +175,7 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { currentUser, firebaseUser } = useAuth();
+  const { currentUser, firebaseUser, currentCommunityId } = useAuth();
   const { showAlert } = useModal();
   const [members, setMembers] = useState<Member[]>([]);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
@@ -268,10 +268,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!isAdminUser(currentUser)) return;
     try {
       const db = getDb();
-      const activeSessionRef = doc(db, 'site_data', 'active_session');
+      const activeCommunity = currentCommunityId || 'herzliya';
+      const activeSessionRef = doc(db, 'site_data', `active_session_${activeCommunity}`);
       const snap = await trackedGetDoc(activeSessionRef);
       if (!snap.exists()) {
-        console.log("DataContext: Seeding missing active_session doc");
+        console.log(`DataContext: Seeding missing active_session_${activeCommunity} doc`);
         await trackedSetDoc(activeSessionRef, {
           attendees: [],
           date: getNextSessionDate(siteConfigRef.current?.weeklySessions),
@@ -281,7 +282,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       console.error("DataContext: Failed to seed active_session", err);
     }
-  }, [currentUser]);
+  }, [currentUser, currentCommunityId]);
 
   useEffect(() => {
     if (isAdminUser(currentUser) && !isLoading) {
@@ -578,7 +579,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const unsubMembers = trackedOnSnapshot(query(collection(db, 'members'), limit(1000)), (snapshot) => {
       const cleanDocs = snapshot.docs
-        .map(d => ({ id: d.id, ...d.data() } as Member))
+        .map(d => {
+          const data = d.data();
+          const role = data.role || 'Member';
+          const isStaffOrSupport = role === 'Staff' || role === 'Support';
+          const communities = data.communities || (isStaffOrSupport ? ['herzliya', 'tel_aviv', 'haifa', 'ashdod'] : ['herzliya']);
+          return {
+            id: d.id,
+            ...data,
+            communities
+          } as Member;
+        })
         .filter(m => !isSystemOrTestMember(m));
       setMembers(cleanDocs);
       setIsDbEmpty(cleanDocs.length === 0);
@@ -611,24 +622,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
     });
 
-    const unsubAttendees = trackedOnSnapshot(doc(db, 'site_data', 'active_session'), async (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data() as any;
-        setAttendeeIds(data.attendees || []);
-        
-        if (data.date && new Date(data.date) < new Date()) {
-          if (finalizeSessionRef.current) finalizeSessionRef.current();
-        } else {
-          setActiveSessionDate(data.date || getNextSessionDate(siteConfigRef.current?.weeklySessions));
-        }
-        setConnectionError(null);
-      }
-      setIsLoading(false);
-    }, (err) => {
-      setConnectionError(err.code);
-      setIsLoading(false);
-    });
-
     // Safety timeout to ensure loading spinner dismisses
     const publicDataTimeout = setTimeout(() => {
       setIsLoading(false);
@@ -650,9 +643,51 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       unsubQuotes();
       unsubExercises();
       unsubGlossary();
-      unsubAttendees();
     };
   }, [dbStatus]);
+
+  // Community-specific Active Session Listener
+  useEffect(() => {
+    if (dbStatus === 'OFFLINE') return;
+    const db = getDb();
+    const activeCommunity = currentCommunityId || 'herzliya';
+    const activeSessionDocName = `active_session_${activeCommunity}`;
+
+    const unsubAttendees = trackedOnSnapshot(doc(db, 'site_data', activeSessionDocName), async (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data() as any;
+        setAttendeeIds(data.attendees || []);
+        
+        if (data.date && new Date(data.date) < new Date()) {
+          if (finalizeSessionRef.current) finalizeSessionRef.current();
+        } else {
+          setActiveSessionDate(data.date || getNextSessionDate(siteConfigRef.current?.weeklySessions));
+        }
+        setConnectionError(null);
+      } else {
+        // Seed initial empty active session for this community if it doesn't exist yet!
+        const nextSessionDate = getNextSessionDate(siteConfigRef.current?.weeklySessions);
+        try {
+          await setDoc(doc(db, 'site_data', activeSessionDocName), {
+            date: nextSessionDate,
+            attendees: []
+          }, { merge: true });
+        } catch (e) {
+          console.warn("Failed to seed active session for community", activeCommunity, e);
+        }
+        setAttendeeIds([]);
+        setActiveSessionDate(nextSessionDate);
+      }
+      setIsLoading(false);
+    }, (err) => {
+      setConnectionError(err.code);
+      setIsLoading(false);
+    });
+
+    return () => {
+      unsubAttendees();
+    };
+  }, [dbStatus, currentCommunityId]);
 
   // 4. Role & Auth-dependent Data Listeners
   useEffect(() => {
@@ -871,7 +906,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const db = getDb();
     const batch = writeBatch(db);
     const memberRef = doc(db, 'members', id);
-    const activeSessionRef = doc(db, 'site_data', 'active_session');
+    const activeCommunity = currentCommunityId || 'herzliya';
+    const activeSessionRef = doc(db, 'site_data', `active_session_${activeCommunity}`);
     
     const nextIsActive = !member.isActive;
     const updateData: any = { isActive: nextIsActive };
@@ -885,7 +921,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     batch.update(memberRef, updateData);
     await batch.commit();
-  }, [members]);
+  }, [members, currentCommunityId]);
 
   const toggleRole = useCallback(async (id: string, requesterEmail?: string) => {
     const member = members.find(m => m.id === id);
@@ -1362,7 +1398,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const isCurrentlyAttending = attendeeIds.includes(userId);
       console.log("toggleSessionAttendance: isCurrentlyAttending =", isCurrentlyAttending);
       
-      const activeSessionRef = doc(getDb(), 'site_data', 'active_session');
+      const activeCommunity = currentCommunityId || 'herzliya';
+      const activeSessionRef = doc(getDb(), 'site_data', `active_session_${activeCommunity}`);
       
       // We MUST ONLY update the 'attendees' field to comply with Firestore rules for non-admins
       if (isCurrentlyAttending) {
@@ -1381,7 +1418,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error("toggleSessionAttendance: Error", error);
       showAlert(`שגיאה בעדכון הגעה: ${error.message || 'שגיאת הרשאה או חיבור'}`, "שגיאה");
     }
-  }, [members, attendeeIds, showAlert]);
+  }, [members, attendeeIds, showAlert, currentCommunityId]);
 
   const updateHistory = useCallback(async (id: string, participantIds: string[]) => {
     const db = getDb();
@@ -1475,7 +1512,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // 2. Get current active session data
       console.log("finalizeSession: Getting active session data...");
-      const activeSessionRef = doc(db, 'site_data', 'active_session');
+      const activeCommunity = currentCommunityId || 'herzliya';
+      const activeSessionRef = doc(db, 'site_data', `active_session_${activeCommunity}`);
       const activeSnap = await getDoc(activeSessionRef);
       if (!activeSnap.exists()) {
         console.error("finalizeSession: Active session document not found!");
@@ -1497,12 +1535,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Generate a deterministic ID based on the session date to prevent duplicate sessions 
       // in case of Race Conditions from multiple clients triggering rollover simultaneously.
       const sessionDateStr = currentDate || new Date().toISOString();
-      const deterministicId = new Date(sessionDateStr).toISOString().split('T')[0]; // e.g., "2026-03-19"
+      const deterministicId = `${activeCommunity}_${new Date(sessionDateStr).toISOString().split('T')[0]}`;
       
       const historyDocRef = doc(db, 'weekly_history', deterministicId);
       
       await setDoc(historyDocRef, {
         date: sessionDateStr,
+        communityId: activeCommunity,
         participantIds: attendeesWithoutStaff,
         participantsCount: attendeesWithoutStaff.length,
         status: 'finalized',
@@ -1779,11 +1818,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     if (config.weeklySessions) {
       const nextSessionDate = getNextSessionDate(config.weeklySessions);
-      batch.set(doc(db, 'site_data', 'active_session'), { date: nextSessionDate }, { merge: true });
+      const activeCommunity = currentCommunityId || 'herzliya';
+      batch.set(doc(db, 'site_data', `active_session_${activeCommunity}`), { date: nextSessionDate }, { merge: true });
     }
     
     await batch.commit();
-  }, []);
+  }, [currentCommunityId]);
 
   const updateYearConfig = useCallback(async (config: Partial<YearConfig>) => {
     await setDoc(doc(getDb(), 'site_data', 'year_config'), config, { merge: true });
