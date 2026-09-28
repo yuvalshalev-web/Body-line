@@ -683,36 +683,34 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#020b14] via-[#041624] to-[#020d18] flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden font-sans tracking-tight" dir="rtl">
-      {/* Background System: Direction B - Deep Ocean High-End Marine Club */}
-      <div className="fixed inset-0 z-0">
+    <div className="min-h-screen bg-[#0284c7] flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden font-sans tracking-tight" dir="rtl">
+      {/* Background System: Single Unified Serene Ocean Color (No second background color) */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <motion.img 
           initial={{ scale: 1.05, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+          animate={{ scale: 1, opacity: 0.18 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
           src={currentBg} 
-          className="w-full h-full object-cover opacity-50 pointer-events-none saturate-[1.1] brightness-[0.85] contrast-[1.1]" 
+          className="w-full h-full object-cover saturate-[1.1] brightness-[1.05] mix-blend-overlay pointer-events-none" 
           alt="Background" 
         />
-        {/* Deep Ocean Midnight & Electric Teal Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#010912]/85 via-[#031525]/75 to-[#020b14]/95 backdrop-blur-[2px]"></div>
-        
-        {/* Subtle Arctic & Electric Cyan Ambient Lighting (Direction B: Clean, Athletic, Premium Marine) */}
-        <div className="absolute top-[-15%] right-[-10%] w-[60vw] h-[60vh] rounded-full bg-[radial-gradient(circle_at_center,rgba(0,175,194,0.18)_0%,rgba(6,182,212,0.08)_40%,transparent_70%)] blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-[-15%] left-[-10%] w-[65vw] h-[65vh] rounded-full bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.16)_0%,rgba(14,165,233,0.08)_45%,transparent_70%)] blur-[100px] pointer-events-none" />
-        <div className="absolute top-[35%] left-[20%] w-[40vw] h-[40vh] rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_0%,transparent_60%)] blur-[80px] pointer-events-none" />
+        {/* Clean, 100% Uniform Ocean Daylight Wash - completely consistent from top to bottom */}
+        <div className="absolute inset-0 bg-[#0284c7]/40 backdrop-blur-[1px]"></div>
       </div>
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md animate-in fade-in slide-in-from-bottom-8 duration-700">
-        
-        {/* Glassmorphic Glowing Beach Container - Direction B: Sleek Yacht Club Obsidian & Iced Glass */}
-        <div className="bg-slate-950/75 backdrop-blur-2xl border border-white/15 p-7 sm:p-9 rounded-[32px] shadow-[0_25px_80px_rgba(0,10,24,0.7),0_0_50px_rgba(0,175,194,0.12)] relative overflow-hidden">
+        {/* Frosted Crystalline Glassmorphism Card */}
+        <div className="bg-white/80 backdrop-blur-2xl backdrop-saturate-[180%] border border-white/90 p-7 sm:p-9 rounded-[36px] shadow-[0_24px_70px_rgba(2,44,67,0.22),inset_0_2px_3px_rgba(255,255,255,0.95)] relative overflow-hidden">
           
-          {/* Radiant Top Marine Electric Accent Strip */}
-          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-400 via-[#00AFC2] to-blue-500 shadow-[0_0_15px_rgba(0,175,194,0.5)]" />
+          {/* Top Radiant Aqua & Turquoise Wave Shimmer */}
+          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-300 via-[#00AFC2] to-sky-400 shadow-[0_2px_14px_rgba(0,175,194,0.5)]" />
+
+          {/* Internal ambient soft light glows behind the glass */}
+          <div className="absolute -top-12 -left-12 w-48 h-48 bg-teal-300/15 rounded-full blur-3xl pointer-events-none -z-0" />
+          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-sky-300/15 rounded-full blur-3xl pointer-events-none -z-0" />
 
           {/* Header / Logo */}
-          <div className="text-center mb-6 flex flex-col justify-center items-center relative">
+          <div className="text-center mb-6 flex flex-col justify-center items-center relative z-10">
             {isDataLoading ? (
               <div className="h-24 flex items-center justify-center">
                 <Loader2 className="animate-spin text-[#00AFC2]" size={32} />
@@ -724,27 +722,27 @@ const LoginPage: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="flex flex-col gap-3 items-center w-full relative"
               >
-                {/* Clean aquatic glow behind the logo */}
-                <div className="absolute -inset-10 bg-gradient-to-tr from-[#00AFC2]/20 via-blue-500/10 to-transparent rounded-full blur-[35px] pointer-events-none -z-10 animate-pulse duration-[6000ms]" />
+                {/* Radiant halo behind the logo with warm sun & sea turquoise reflections */}
+                <div className="absolute -inset-10 bg-gradient-to-tr from-[#00AFC2]/25 via-amber-200/20 to-sky-300/20 rounded-full blur-[35px] pointer-events-none -z-10 animate-pulse duration-[6000ms]" />
                 
                 {logoUrl ? (
                   <img 
                     src={logoUrl} 
-                    className="h-20 sm:h-24 w-auto object-contain drop-shadow-[0_8px_25px_rgba(0,175,194,0.35)] hover:scale-105 transition-transform duration-500" 
+                    className="h-20 sm:h-24 w-auto object-contain drop-shadow-[0_4px_16px_rgba(0,175,194,0.3)] hover:scale-105 transition-transform duration-500" 
                     alt="Habal Zug Logo" 
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#00AFC2] via-[#008da0] to-[#004266] flex items-center justify-center text-white rounded-2xl shrink-0 shadow-[0_8px_25px_rgba(0,175,194,0.4)] mb-1">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#00AFC2] via-[#008da0] to-[#004266] flex items-center justify-center text-white rounded-2xl shrink-0 shadow-[0_6px_20px_rgba(0,175,194,0.35)] mb-1">
                     <Waves size={32} />
                   </div>
                 )}
 
                 <div className="space-y-1">
-                  <h1 className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-cyan-200 text-xl sm:text-2xl font-black tracking-tight drop-shadow-[0_2px_15px_rgba(0,175,194,0.25)]">
+                  <h1 className="text-slate-900 text-xl sm:text-2xl font-black tracking-tight drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
                     קהילת חבל זוג — מחוברים תמיד, מכל מקום
                   </h1>
-                  <p className="text-cyan-200/90 text-xs sm:text-sm font-medium flex items-center justify-center gap-1.5">
+                  <p className="text-[#007f96] text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5">
                     <span>איזה כיף שחזרת!</span>
                     <span>🌊</span>
                   </p>
@@ -755,14 +753,14 @@ const LoginPage: React.FC = () => {
 
           {/* Segmented Mode Switcher: Member Login vs Join Request */}
           {mode !== 'RESET_TEMP_PASSWORD' && (
-            <div className="flex p-1 bg-black/50 border border-white/10 rounded-2xl mb-5 shadow-inner">
+            <div className="flex p-1.5 bg-slate-900/[0.05] backdrop-blur-xl border border-white/80 rounded-2xl mb-5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.03)] relative z-10">
               <button
                 type="button"
                 onClick={() => { setMode('LOGIN'); setError(''); }}
                 className={`flex-1 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-1.5 ${
                   mode === 'LOGIN'
-                    ? 'bg-gradient-to-r from-[#00AFC2] to-blue-600 text-white shadow-[0_4px_20px_rgba(0,175,194,0.35)]'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-[#00AFC2] to-teal-500 text-white shadow-[0_4px_16px_rgba(0,175,194,0.35),inset_0_1px_1.5px_rgba(255,255,255,0.4)]'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
                 }`}
               >
                 <LogIn size={15} />
@@ -773,8 +771,8 @@ const LoginPage: React.FC = () => {
                 onClick={() => { setMode('JOIN'); setError(''); }}
                 className={`flex-1 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-1.5 ${
                   mode === 'JOIN'
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-[0_4px_20px_rgba(37,99,235,0.35)]'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-teal-500 to-sky-600 text-white shadow-[0_4px_16px_rgba(14,165,233,0.35),inset_0_1px_1.5px_rgba(255,255,255,0.4)]'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
                 }`}
               >
                 <UserPlus size={15} />
@@ -789,11 +787,11 @@ const LoginPage: React.FC = () => {
                 <div className="relative group">
                   <input 
                     type="email" required value={email} onChange={e => setEmail(e.target.value)} 
-                    className="w-full h-12 bg-slate-950/70 border border-white/15 rounded-2xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/35 text-right focus:border-cyan-400 focus:bg-slate-950/90 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 shadow-inner"
+                    className="w-full h-12 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-base outline-none pr-4 pl-10 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
                     placeholder="דוא״ל"
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <Mail size={18} className="text-cyan-400/60 group-focus-within:text-cyan-300 transition-colors" />
+                    <Mail size={18} className="text-[#00AFC2] group-focus-within:text-cyan-700 transition-colors" />
                   </div>
                 </div>
 
@@ -801,13 +799,13 @@ const LoginPage: React.FC = () => {
                   <input 
                     type={showPassword ? "text" : "password"} 
                     required value={password} onChange={e => setPassword(e.target.value)} 
-                    className="w-full h-12 bg-slate-950/70 border border-white/15 rounded-2xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/35 text-right focus:border-cyan-400 focus:bg-slate-950/90 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 shadow-inner"
+                    className="w-full h-12 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-base outline-none pr-4 pl-10 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
                     placeholder="סיסמה"
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400/60 hover:text-cyan-300 transition-colors p-1"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors p-1"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -815,27 +813,27 @@ const LoginPage: React.FC = () => {
 
                 {/* Group Selection Dropdown */}
                 <div className="relative w-full">
-                  <label className="text-[11px] font-bold text-cyan-300/90 block pr-1 mb-1 text-right">קבוצת פעילות</label>
+                  <label className="text-[11px] font-bold text-slate-700 block pr-1 mb-1 text-right">קבוצת פעילות</label>
                   <button 
                     type="button"
                     onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
-                    className="w-full h-12 bg-slate-950/70 border border-white/15 rounded-2xl text-white font-medium text-base outline-none text-right flex items-center justify-between px-4 hover:border-cyan-400/50 hover:bg-slate-950/90 transition-all duration-300 shadow-inner"
+                    className="w-full h-12 bg-white/60 hover:bg-white/80 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-800 font-semibold text-base outline-none text-right flex items-center justify-between px-4 hover:border-[#00AFC2]/60 focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
                   >
                     <span className="flex-1 text-right flex items-center gap-2">
-                      <MapPin size={16} className="text-cyan-400/80 shrink-0" />
+                      <MapPin size={16} className="text-[#00AFC2] shrink-0" />
                       <span>{AVAILABLE_COMMUNITIES.find(c => c.id === selectedCommunityId)?.name || 'קבוצת הרצליה'}</span>
                     </span>
-                    <ChevronDown size={18} className={`text-cyan-400/70 transition-transform duration-300 ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={18} className={`text-[#00AFC2] transition-transform duration-300 ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   <AnimatePresence>
                     {isCommunityMenuOpen && (
-                      <motion.div 
+                       <motion.div 
                         initial={{ opacity: 0, scale: 0.95, y: 5 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 5 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-[#05131d]/98 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-60 py-1.5 custom-scrollbar"
+                        className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-white/95 backdrop-blur-2xl border border-white/90 rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-60 py-1.5 custom-scrollbar"
                       >
                         {AVAILABLE_COMMUNITIES.map((c) => (
                           <button
@@ -846,15 +844,15 @@ const LoginPage: React.FC = () => {
                               setIsCommunityMenuOpen(false);
                               setError('');
                             }}
-                            className={`w-full px-4 py-3 text-right font-medium text-sm transition-all flex items-center justify-between hover:bg-white/10 ${
-                              selectedCommunityId === c.id ? 'text-cyan-300 bg-cyan-500/10 font-bold' : 'text-white/80'
+                            className={`w-full px-4 py-3 text-right font-medium text-sm transition-all flex items-center justify-between hover:bg-cyan-50/80 ${
+                              selectedCommunityId === c.id ? 'text-[#008ba3] bg-cyan-50 font-bold' : 'text-slate-700'
                             }`}
                           >
                             <span className="flex items-center gap-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#00AFC2]" />
                               <span>{c.name}</span>
                             </span>
-                            {selectedCommunityId === c.id && <CheckCircle2 size={16} className="text-cyan-400" />}
+                            {selectedCommunityId === c.id && <CheckCircle2 size={16} className="text-[#00AFC2]" />}
                           </button>
                         ))}
                       </motion.div>
@@ -869,9 +867,9 @@ const LoginPage: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="p-3.5 bg-rose-500/15 border-l-2 border-rose-500 text-rose-300 text-sm font-bold flex items-start gap-3 backdrop-blur-md rounded-xl"
+                    className="p-3.5 bg-rose-50/90 border-r-4 border-rose-500 text-rose-700 text-sm font-bold flex items-start gap-3 rounded-xl shadow-sm backdrop-blur-md"
                   >
-                    <AlertCircle size={18} className="shrink-0 mt-0.5 text-rose-400" />
+                    <AlertCircle size={18} className="shrink-0 mt-0.5 text-rose-500" />
                     <span className="leading-tight">{error}</span>
                   </motion.div>
                 )}
@@ -881,9 +879,9 @@ const LoginPage: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="p-3.5 bg-cyan-500/15 border-l-2 border-cyan-400 text-cyan-300 text-sm font-bold flex items-center gap-3 backdrop-blur-md rounded-xl"
+                    className="p-3.5 bg-emerald-50/90 border-r-4 border-emerald-500 text-emerald-800 text-sm font-bold flex items-center gap-3 rounded-xl shadow-sm backdrop-blur-md"
                   >
-                    <CheckCircle2 size={18} className="shrink-0 text-cyan-400" />
+                    <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
                     <span>{resetSuccessMessage}</span>
                   </motion.div>
                 )}
@@ -893,7 +891,7 @@ const LoginPage: React.FC = () => {
                 <button 
                   type="submit" 
                   disabled={isLoading || isBiometricLoading} 
-                  className="w-full h-12 bg-gradient-to-r from-[#00AFC2] via-cyan-500 to-blue-600 hover:from-[#00c5db] hover:via-cyan-400 hover:to-blue-500 text-white shadow-[0_4px_25px_rgba(0,175,194,0.4)] hover:shadow-[0_8px_35px_rgba(0,175,194,0.6)] rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-black text-base tracking-wide"
+                  className="w-full h-12 bg-gradient-to-r from-[#00AFC2] via-teal-500 to-sky-500 hover:brightness-105 text-white shadow-[0_8px_22px_rgba(0,175,194,0.38),inset_0_1.5px_2px_rgba(255,255,255,0.6)] active:shadow-[0_2px_8px_rgba(0,175,194,0.4)] border-b-[3px] border-[#008ba3] active:border-b-0 active:translate-y-[2px] rounded-2xl flex items-center justify-center transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-black text-base tracking-wide"
                 >
                   {isLoading ? (
                     <Loader2 className="animate-spin text-white mx-auto" size={20} />
@@ -908,14 +906,15 @@ const LoginPage: React.FC = () => {
                 {hasBiometrics && (
                   <div className="w-full flex flex-col items-center pt-1">
                     <div className="w-full flex items-center gap-3 my-1.5">
-                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/25 to-transparent" />
-                      <span className="text-[11px] font-bold text-cyan-300/70 tracking-wider">או כניסה מהירה בנגיעה</span>
-                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/25 to-transparent" />
+                      <div className="flex-1 h-px bg-slate-300/60" />
+                      <span className="text-[11px] font-bold text-slate-500 tracking-wider">או כניסה מהירה בנגיעה</span>
+                      <div className="flex-1 h-px bg-slate-300/60" />
                     </div>
                     <BiometricCircularButton
                       onClick={handleBiometricLogin}
                       isLoading={isBiometricLoading}
                       disabled={isLoading}
+                      theme="light"
                       userName={enrolledBioUsers.length > 0 ? (enrolledBioUsers[0].userName || enrolledBioUsers[0].userEmail) : undefined}
                     />
                   </div>
@@ -931,11 +930,11 @@ const LoginPage: React.FC = () => {
               className="space-y-5 relative z-10"
             >
               <div className="text-center mb-6 flex flex-col items-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#00AFC2]/20 to-blue-500/20 text-cyan-300 rounded-2xl flex items-center justify-center mb-3 border border-cyan-500/30 shadow-[0_4px_20px_rgba(0,175,194,0.2)]">
-                  <RotateCcw size={30} className="animate-spin-slow text-cyan-400" />
+                <div className="w-16 h-16 bg-cyan-50 text-[#00AFC2] rounded-2xl flex items-center justify-center mb-3 border border-cyan-200 shadow-sm">
+                  <RotateCcw size={30} className="animate-spin-slow text-[#00AFC2]" />
                 </div>
-                <h3 className="text-white text-2xl font-black tracking-tight">החלפת סיסמה זמנית</h3>
-                <p className="text-cyan-100/70 text-xs sm:text-sm font-medium mt-1">הסיסמה שקיבלת היא זמנית. נא לבחור סיסמה אישית קבועה.</p>
+                <h3 className="text-slate-900 text-2xl font-black tracking-tight">החלפת סיסמה זמנית</h3>
+                <p className="text-slate-600 text-xs sm:text-sm font-medium mt-1">הסיסמה שקיבלת היא זמנית. נא לבחור סיסמה אישית קבועה.</p>
               </div>
 
               <div className="space-y-3.5">
@@ -945,7 +944,7 @@ const LoginPage: React.FC = () => {
                     required 
                     value={newPassword} 
                     onChange={e => setNewPassword(e.target.value)} 
-                    className="w-full h-12 bg-slate-950/70 border border-white/15 rounded-2xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/35 text-right focus:border-cyan-400 focus:bg-slate-950/90 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 shadow-inner"
+                    className="w-full h-12 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-base outline-none pr-4 pl-10 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
                     placeholder="סיסמה חדשה"
                   />
                 </div>
@@ -955,13 +954,13 @@ const LoginPage: React.FC = () => {
                     required 
                     value={confirmPassword} 
                     onChange={e => setConfirmPassword(e.target.value)} 
-                    className="w-full h-12 bg-slate-950/70 border border-white/15 rounded-2xl text-white font-medium text-base outline-none pr-4 pl-10 placeholder-white/35 text-right focus:border-cyan-400 focus:bg-slate-950/90 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 shadow-inner"
+                    className="w-full h-12 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-base outline-none pr-4 pl-10 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
                     placeholder="אימות סיסמה"
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400/60 hover:text-cyan-300 transition-colors p-1"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors p-1"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -974,9 +973,9 @@ const LoginPage: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="p-3.5 bg-rose-500/15 border-l-2 border-rose-500 text-rose-300 text-sm font-bold flex items-start gap-3 backdrop-blur-md rounded-xl"
+                    className="p-3.5 bg-rose-50/90 border-r-4 border-rose-500 text-rose-700 text-sm font-bold flex items-start gap-3 rounded-xl shadow-sm backdrop-blur-md"
                   >
-                    <AlertCircle size={18} className="shrink-0 mt-0.5 text-rose-400" />
+                    <AlertCircle size={18} className="shrink-0 mt-0.5 text-rose-500" />
                     <span className="leading-tight">{error}</span>
                   </motion.div>
                 )}
@@ -986,7 +985,7 @@ const LoginPage: React.FC = () => {
                 <button 
                   type="submit" 
                   disabled={isLoading} 
-                  className="w-full h-12 bg-gradient-to-r from-[#00AFC2] via-cyan-500 to-blue-600 hover:from-[#00c5db] hover:via-cyan-400 hover:to-blue-500 text-white shadow-[0_4px_25px_rgba(0,175,194,0.4)] hover:shadow-[0_8px_35px_rgba(0,175,194,0.6)] rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-black text-base tracking-wide"
+                  className="w-full h-12 bg-gradient-to-r from-[#00AFC2] via-teal-500 to-sky-500 hover:brightness-105 text-white shadow-[0_8px_22px_rgba(0,175,194,0.38),inset_0_1.5px_2px_rgba(255,255,255,0.6)] active:shadow-[0_2px_8px_rgba(0,175,194,0.4)] border-b-[3px] border-[#008ba3] active:border-b-0 active:translate-y-[2px] rounded-2xl flex items-center justify-center transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-black text-base tracking-wide"
                 >
                   {isLoading ? (
                     <Loader2 className="animate-spin text-white mx-auto" size={20} />
@@ -1002,7 +1001,7 @@ const LoginPage: React.FC = () => {
               <button 
                 type="button" 
                 onClick={() => setMode('LOGIN')} 
-                className="w-full text-cyan-200/60 hover:text-white font-medium text-sm transition-colors mt-3 hover:underline underline-offset-4 text-center block"
+                className="w-full text-[#008ba3] hover:text-[#005f70] font-bold text-sm transition-colors mt-3 hover:underline underline-offset-4 text-center block"
               >
                 חזרה להתחברות
               </button>
@@ -1017,13 +1016,13 @@ const LoginPage: React.FC = () => {
             >
               {success ? (
                 <div className="py-10 text-center space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-[#00AFC2]/20 to-blue-500/20 text-cyan-300 rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-500/30 shadow-[0_4px_20px_rgba(0,175,194,0.3)] animate-bounce">
-                    <CheckCircle2 size={40} className="text-cyan-400" />
+                  <div className="w-20 h-20 bg-cyan-50 text-[#00AFC2] rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-200 shadow-sm animate-bounce">
+                    <CheckCircle2 size={40} className="text-[#00AFC2]" />
                   </div>
-                  <h3 className="text-2xl font-black text-white tracking-tight">הבקשה נשלחה בהצלחה! 🎉</h3>
-                  <p className="text-cyan-100/70 text-sm font-medium leading-relaxed">צוות המועדון יחזור אליך בהקדם כדי לחבר אותך לפעילות הבאה בים.</p>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">הבקשה נשלחה בהצלחה! 🎉</h3>
+                  <p className="text-slate-600 text-sm font-medium leading-relaxed">צוות המועדון יחזור אליך בהקדם כדי לחבר אותך לפעילות הבאה בים.</p>
                   <div className="pt-4">
-                    <button type="button" onClick={resetToLogin} className="w-full h-12 bg-white/10 hover:bg-white/15 text-white rounded-2xl transition-all font-bold border border-white/15">
+                    <button type="button" onClick={resetToLogin} className="w-full h-12 bg-[#00AFC2] hover:bg-[#009bb0] text-white rounded-2xl transition-all font-bold shadow-md">
                       חזור לדף ההתחברות
                     </button>
                   </div>
@@ -1032,45 +1031,45 @@ const LoginPage: React.FC = () => {
                 <>
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <div className="text-right">
-                      <h3 className="text-white text-lg font-black tracking-tight flex items-center gap-1.5">
-                        <Sparkles size={16} className="text-cyan-400" />
+                      <h3 className="text-slate-900 text-lg font-black tracking-tight flex items-center gap-1.5">
+                        <Sparkles size={16} className="text-[#00AFC2]" />
                         <span>הצטרפות לקהילת חבל זוג</span>
                       </h3>
-                      <p className="text-cyan-100/60 text-xs">נשמח לראות אותך איתנו במים!</p>
+                      <p className="text-slate-500 text-xs">נשמח לראות אותך איתנו במים!</p>
                     </div>
-                    <button type="button" onClick={resetToLogin} className="w-9 h-9 border border-white/15 hover:border-cyan-400/50 rounded-xl flex items-center justify-center text-white/60 hover:bg-slate-950/60 hover:text-white transition-all shrink-0">
+                    <button type="button" onClick={resetToLogin} className="w-9 h-9 border border-white/90 hover:border-[#00AFC2] rounded-xl flex items-center justify-center text-slate-500 hover:bg-white/80 hover:text-slate-900 transition-all shrink-0 shadow-sm">
                       <ArrowRight size={16} />
                     </button>
                   </div>
                   
                   <div className="flex flex-col items-center gap-2 mb-2">
                     <div className="relative group/avatar cursor-pointer">
-                      <div className="w-18 h-18 sm:w-20 sm:h-20 overflow-hidden border-2 border-white/20 bg-slate-950/70 rounded-full flex items-center justify-center group-hover/avatar:border-cyan-400 transition-all duration-300 shadow-inner">
+                      <div className="w-18 h-18 sm:w-20 sm:h-20 overflow-hidden border-2 border-white/90 bg-white/70 backdrop-blur-md rounded-full flex items-center justify-center group-hover/avatar:border-[#00AFC2] transition-all duration-300 shadow-sm">
                         <div className="w-full h-full flex items-center justify-center">
                           {isProcessingImage ? (
-                            <Loader2 className="animate-spin text-cyan-400" size={24} />
+                            <Loader2 className="animate-spin text-[#00AFC2]" size={24} />
                           ) : joinAvatar ? (
                             <img src={joinAvatar} className="w-full h-full object-cover" alt="" loading="lazy" />
                           ) : (
-                            <User size={32} className="text-white/30 group-hover/avatar:text-cyan-300 transition-colors" />
+                            <User size={32} className="text-slate-400 group-hover/avatar:text-[#00AFC2] transition-colors" />
                           )}
                         </div>
                       </div>
-                      <label className="absolute -bottom-1 -left-1 w-7 h-7 bg-gradient-to-r from-[#00AFC2] to-blue-600 text-white rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:scale-110 transition-all border border-white/20">
+                      <label className="absolute -bottom-1 -left-1 w-7 h-7 bg-gradient-to-r from-[#00AFC2] to-cyan-600 text-white rounded-full flex items-center justify-center cursor-pointer shadow-md hover:scale-110 transition-all border border-white">
                         <Camera size={13} />
                         <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} disabled={isProcessingImage} />
                       </label>
                     </div>
-                    <span className="text-[11px] text-cyan-200/60 font-medium">תמונת פרופיל (מומלץ)</span>
+                    <span className="text-[11px] text-slate-500 font-medium">תמונת פרופיל (מומלץ)</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full h-11 bg-slate-950/70 border border-white/15 rounded-2xl text-white font-medium text-sm outline-none px-3.5 placeholder-white/35 text-right focus:border-cyan-400 focus:bg-slate-950/90 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 shadow-inner" />
-                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full h-11 bg-slate-950/70 border border-white/15 rounded-2xl text-white font-medium text-sm outline-none px-3.5 placeholder-white/35 text-right focus:border-cyan-400 focus:bg-slate-950/90 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 shadow-inner" />
+                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full h-11 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-sm outline-none px-3.5 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]" />
+                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full h-11 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-sm outline-none px-3.5 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]" />
                   </div>
                   
-                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="דוא״ל" className="w-full h-11 bg-slate-950/70 border border-white/15 rounded-2xl text-white font-medium text-sm outline-none px-3.5 placeholder-white/35 text-right focus:border-cyan-400 focus:bg-slate-950/90 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 shadow-inner" />
-                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד (למשל 0501234567)" className="w-full h-11 bg-slate-950/70 border border-white/15 rounded-2xl text-white font-medium text-sm outline-none px-3.5 placeholder-white/35 text-right focus:border-cyan-400 focus:bg-slate-950/90 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 shadow-inner focus:text-left direction-ltr text-left" dir="ltr" />
+                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="דוא״ל" className="w-full h-11 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-sm outline-none px-3.5 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]" />
+                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד (למשל 0501234567)" className="w-full h-11 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-sm outline-none px-3.5 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)] focus:text-left direction-ltr text-left" dir="ltr" />
                   
                   <div className="relative group">
                     <input 
@@ -1080,9 +1079,9 @@ const LoginPage: React.FC = () => {
                       value={joinAddress} 
                       onChange={e => setJoinAddress(e.target.value)} 
                       placeholder="כתובת מגורים (עיר ורחוב)" 
-                      className="w-full h-11 bg-slate-950/70 border border-white/15 rounded-2xl text-white font-medium text-sm outline-none px-3.5 placeholder-white/35 text-right focus:border-cyan-400 focus:bg-slate-950/90 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 shadow-inner" 
+                      className="w-full h-11 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-sm outline-none px-3.5 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]" 
                     />
-                    <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400/60 group-focus-within:text-cyan-300 transition-colors" />
+                    <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#00AFC2] transition-colors" />
                   </div>
 
                   {/* Group Choice for New Applicant */}
@@ -1090,13 +1089,13 @@ const LoginPage: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => setIsGroupMenuOpen(!isGroupMenuOpen)}
-                      className="w-full h-11 bg-slate-950/70 border border-white/15 rounded-2xl text-white font-medium text-sm outline-none text-right flex items-center justify-between px-3.5 hover:border-cyan-400/50 hover:bg-slate-950/90 transition-all duration-300 shadow-inner"
+                      className="w-full h-11 bg-white/60 hover:bg-white/80 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-800 font-medium text-sm outline-none text-right flex items-center justify-between px-3.5 hover:border-[#00AFC2]/60 focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
                     >
                       <span className="flex-1 text-right flex items-center gap-1.5">
-                        <span className="text-white/40 text-xs">קבוצה מבוקשת:</span>
-                        <span className="text-cyan-300 font-bold">{selectedGroup}</span>
+                        <span className="text-slate-400 text-xs">קבוצה מבוקשת:</span>
+                        <span className="text-[#008ba3] font-bold">{selectedGroup}</span>
                       </span>
-                      <ChevronDown size={16} className={`text-cyan-400/70 transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown size={16} className={`text-[#00AFC2] transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     <AnimatePresence>
@@ -1108,7 +1107,7 @@ const LoginPage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 5 }}
                             transition={{ duration: 0.15 }}
-                            className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-[#05131d]/98 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl z-[70] overflow-y-auto max-h-48 py-1.5 custom-scrollbar"
+                            className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-white/95 backdrop-blur-2xl border border-white/90 rounded-2xl shadow-2xl z-[70] overflow-y-auto max-h-48 py-1.5 custom-scrollbar"
                           >
                             {groups.map((g) => (
                               <button
@@ -1118,12 +1117,12 @@ const LoginPage: React.FC = () => {
                                   setSelectedGroup(g);
                                   setIsGroupMenuOpen(false);
                                 }}
-                                className={`w-full px-3.5 py-2.5 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between hover:bg-white/10 ${
-                                  selectedGroup === g ? 'text-cyan-300 bg-cyan-500/10 font-bold' : 'text-white/80'
+                                className={`w-full px-3.5 py-2.5 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between hover:bg-cyan-50/80 ${
+                                  selectedGroup === g ? 'text-[#008ba3] bg-cyan-50 font-bold' : 'text-slate-700'
                                 }`}
                               >
                                 <span>{g}</span>
-                                {selectedGroup === g && <CheckCircle2 size={15} className="text-cyan-400" />}
+                                {selectedGroup === g && <CheckCircle2 size={15} className="text-[#00AFC2]" />}
                               </button>
                             ))}
                           </motion.div>
@@ -1136,10 +1135,10 @@ const LoginPage: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => setIsGenderMenuOpen(!isGenderMenuOpen)}
-                      className="w-full h-11 bg-slate-950/70 border border-white/15 rounded-2xl text-white font-medium text-sm outline-none text-right flex items-center justify-between px-3.5 hover:border-cyan-400/50 hover:bg-slate-950/90 transition-all duration-300 shadow-inner"
+                      className="w-full h-11 bg-white/60 hover:bg-white/80 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-800 font-medium text-sm outline-none text-right flex items-center justify-between px-3.5 hover:border-[#00AFC2]/60 focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
                     >
-                      <span className={`flex-1 text-right ${joinGender ? 'text-white' : 'text-white/35'}`}>{joinGender || 'מגדר (בחירה)'}</span>
-                      <ChevronDown size={16} className={`text-cyan-400/70 transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
+                      <span className={`flex-1 text-right ${joinGender ? 'text-slate-800 font-medium' : 'text-slate-400'}`}>{joinGender || 'מגדר (בחירה)'}</span>
+                      <ChevronDown size={16} className={`text-[#00AFC2] transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     <AnimatePresence>
@@ -1151,7 +1150,7 @@ const LoginPage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 5 }}
                             transition={{ duration: 0.15 }}
-                            className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-[#05131d]/98 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl z-[70] overflow-hidden py-1"
+                            className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-white/95 backdrop-blur-2xl border border-white/90 rounded-2xl shadow-2xl z-[70] overflow-hidden py-1"
                           >
                             {(['זכר', 'נקבה', 'לא בינארי', 'מעדיפ/ה לא לציין'] as const).map((g) => (
                               <button
@@ -1161,12 +1160,12 @@ const LoginPage: React.FC = () => {
                                   setJoinGender(g);
                                   setIsGenderMenuOpen(false);
                                 }}
-                                className={`w-full px-3.5 py-2.5 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between hover:bg-white/10 ${
-                                  joinGender === g ? 'text-cyan-300 bg-cyan-500/10 font-bold' : 'text-white/80'
+                                className={`w-full px-3.5 py-2.5 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between hover:bg-cyan-50/80 ${
+                                  joinGender === g ? 'text-[#008ba3] bg-cyan-50 font-bold' : 'text-slate-700'
                                 }`}
                               >
                                 <span>{g}</span>
-                                {joinGender === g && <CheckCircle2 size={15} className="text-cyan-400" />}
+                                {joinGender === g && <CheckCircle2 size={15} className="text-[#00AFC2]" />}
                               </button>
                             ))}
                           </motion.div>
@@ -1181,9 +1180,9 @@ const LoginPage: React.FC = () => {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="p-3 bg-rose-500/15 border-l-2 border-rose-500 text-rose-300 text-xs sm:text-sm font-bold flex items-start gap-2.5 backdrop-blur-md rounded-xl"
+                        className="p-3 bg-rose-50/90 border-r-4 border-rose-500 text-rose-700 text-xs sm:text-sm font-bold flex items-start gap-2.5 rounded-xl shadow-sm backdrop-blur-md"
                       >
-                        <AlertCircle size={16} className="shrink-0 mt-0.5 text-rose-400" />
+                        <AlertCircle size={16} className="shrink-0 mt-0.5 text-rose-500" />
                         <span className="leading-tight">{error || mobileError}</span>
                       </motion.div>
                     )}
@@ -1193,7 +1192,7 @@ const LoginPage: React.FC = () => {
                     <button 
                       type="submit" 
                       disabled={isLoading || isProcessingImage} 
-                      className="w-full h-12 bg-gradient-to-r from-blue-600 via-cyan-600 to-[#00AFC2] hover:from-blue-500 hover:to-[#00c5db] text-white shadow-[0_4px_25px_rgba(14,165,233,0.35)] hover:shadow-[0_8px_35px_rgba(14,165,233,0.55)] rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed font-black text-base tracking-wide"
+                      className="w-full h-12 bg-gradient-to-r from-teal-500 via-[#00AFC2] to-sky-600 hover:brightness-105 text-white shadow-[0_8px_22px_rgba(20,184,166,0.38),inset_0_1.5px_2px_rgba(255,255,255,0.6)] active:shadow-[0_2px_8px_rgba(20,184,166,0.4)] border-b-[3px] border-[#008ba3] active:border-b-0 active:translate-y-[2px] rounded-2xl flex items-center justify-center transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-black text-base tracking-wide"
                     >
                       {isLoading ? (
                         <Loader2 className="animate-spin text-white mx-auto" size={20} />
@@ -1211,37 +1210,37 @@ const LoginPage: React.FC = () => {
           )}
         </div>
 
-        {/* Elevated Partner Logos Capsule at the bottom - Direction B: Sleek Deep Marine Bar */}
-        <div className="mt-8 flex items-center justify-center gap-8 py-3.5 px-8 bg-slate-950/65 backdrop-blur-2xl border border-white/15 rounded-3xl shadow-[0_10px_35px_rgba(0,0,0,0.5)] animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
+        {/* Elevated Partner Logos Capsule at the bottom - Pure Liquid Frosted Glass Pill */}
+        <div className="mt-8 flex items-center justify-center gap-8 py-3.5 px-8 bg-white/70 backdrop-blur-2xl border border-white/80 rounded-3xl shadow-[0_12px_40px_rgba(2,44,67,0.2),inset_0_1.5px_2px_rgba(255,255,255,0.95)] animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
           <a 
             href="https://www.atalef.com" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="group transition-all duration-500 hover:scale-105 opacity-80 hover:opacity-100 flex items-center"
+            className="group transition-all duration-500 hover:scale-105 opacity-90 hover:opacity-100 flex items-center"
             title="עמותת העטלף"
           >
             {siteAssets?.atalefLogo && (
               <img 
                 src={siteAssets.atalefLogo} 
                 alt="עמותת העטלף" 
-                className="h-16 sm:h-20 w-auto transition-all duration-500 drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)]" 
+                className="h-16 sm:h-20 w-auto transition-all duration-500 drop-shadow-sm" 
                 referrerPolicy="no-referrer"
               />
             )}
           </a>
-          <div className="w-px h-8 bg-white/15" />
+          <div className="w-px h-8 bg-slate-300/80" />
           <a 
             href="https://www.reefseacenter.com" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="group transition-all duration-500 hover:scale-105 opacity-80 hover:opacity-100 flex items-center"
+            className="group transition-all duration-500 hover:scale-105 opacity-90 hover:opacity-100 flex items-center"
             title="מרכז ימי ריף"
           >
             {siteAssets?.reefLogo && (
               <img 
                 src={siteAssets.reefLogo} 
                 alt="מועדון ריף" 
-                className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover bg-white transition-all duration-500 shadow-md ring-2 ring-white/20" 
+                className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover bg-white transition-all duration-500 shadow-md ring-2 ring-white/80" 
                 referrerPolicy="no-referrer"
               />
             )}
