@@ -31,10 +31,10 @@ const translateRole = (role?: string) => {
 export const getMemberGroupType = (g?: string): 'GROUP_A' | 'GROUP_B' | 'NONE' => {
   if (!g) return 'NONE';
   const str = String(g).trim();
-  if (str.includes('א') || str.includes('A') || str.toLowerCase().includes('group a')) {
+  if (str.includes('סבב א') || str.includes('קבוצה א') || str.includes('א') || str.includes('A') || str.toLowerCase().includes('group a')) {
     return 'GROUP_A';
   }
-  if (str.includes('קבוצה ב') || str.includes('ב\'') || str.includes('ב') || str.includes('B') || str.toLowerCase().includes('group b')) {
+  if (str.includes('סבב ב') || str.includes('קבוצה ב') || str.includes('ב') || str.includes('B') || str.toLowerCase().includes('group b')) {
     return 'GROUP_B';
   }
   return 'NONE';
@@ -159,7 +159,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
   // Pair creation form state
   const [selectedMemberA, setSelectedMemberIdA] = useState<string>('');
   const [selectedMemberB, setSelectedMemberIdB] = useState<string>('');
-  const [selectedGroup, setSelectedGroup] = useState<'קבוצה א\'' | 'קבוצה ב\''>('קבוצה א\'');
+  const [selectedGroup, setSelectedGroup] = useState<'סבב א\'' | 'סבב ב\''>('סבב א\'');
   const [isLinking, setIsLinking] = useState(false);
   
   // Pair unlinking state
@@ -177,7 +177,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
   const [pendingGroupChange, setPendingGroupChange] = useState<{
     type: 'COORDINATOR' | 'PAIR' | 'INDIVIDUAL';
     targetName: string;
-    newGroup: 'קבוצה א\'' | 'קבוצה ב\'' | '';
+    newGroup: 'סבב א\'' | 'סבב ב\'' | 'קבוצה א\'' | 'קבוצה ב\'' | '';
     currentGroup?: string;
     coordinator?: Member;
     individual?: Member;
@@ -322,8 +322,8 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
     }
   };
 
-  // Handle Changing an Existing Pair's Group
-  const handleChangePairGroup = async (pair: { a: Member; b: Member; group?: string }, newGroup: 'קבוצה א\'' | 'קבוצה ב\'' | '') => {
+  // Handle Changing an Existing Pair's Group / Round
+  const handleChangePairGroup = async (pair: { a: Member; b: Member; group?: string }, newGroup: 'סבב א\'' | 'סבב ב\'' | 'קבוצה א\'' | 'קבוצה ב\'' | '') => {
     const pairKey = `${pair.a.id}-${pair.b.id}`;
     setUpdatingPairKey(pairKey);
     try {
@@ -331,17 +331,17 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
         await contextUpdateMember({ ...pair.a, assignedGroup: newGroup, group: newGroup });
         await contextUpdateMember({ ...pair.b, assignedGroup: newGroup, group: newGroup });
       }
-      showFeedback('success', `הזוג ${pair.a.firstName} ו${pair.b.firstName} עודכן ל-${newGroup || 'ללא קבוצה'}`);
+      showFeedback('success', `הזוג ${pair.a.firstName} ו${pair.b.firstName} עודכן ל-${newGroup || 'ללא סבב'}`);
     } catch (err: any) {
       console.error(err);
-      showFeedback('error', 'שגיאה בעדכון קבוצת הזוג');
+      showFeedback('error', 'שגיאה בעדכון סבב הזוג');
     } finally {
       setUpdatingPairKey(null);
     }
   };
 
   // Request Pair Group Change with Confirmation Modal
-  const requestPairGroupChange = (pair: { a: Member; b: Member; group?: string }, targetGroup: 'קבוצה א\'' | 'קבוצה ב\'') => {
+  const requestPairGroupChange = (pair: { a: Member; b: Member; group?: string }, targetGroup: 'סבב א\'' | 'סבב ב\'') => {
     const currentGType = getMemberGroupType(pair.group);
     const targetGType = getMemberGroupType(targetGroup);
     if (currentGType === targetGType) return;
@@ -350,13 +350,13 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
       type: 'PAIR',
       targetName: `הזוג ${pair.a.firstName} ו${pair.b.firstName}`,
       newGroup: targetGroup,
-      currentGroup: currentGType === 'GROUP_A' ? 'קבוצה א\'' : currentGType === 'GROUP_B' ? 'קבוצה ב\'' : 'ללא שיוך',
+      currentGroup: currentGType === 'GROUP_A' ? 'סבב א\'' : currentGType === 'GROUP_B' ? 'סבב ב\'' : 'ללא שיוך',
       pair
     });
   };
 
   // Handle Coordinator Group Change
-  const handleCoordinatorGroupChange = async (coordinator: Member, newGroup: 'קבוצה א\'' | 'קבוצה ב\'' | '') => {
+  const handleCoordinatorGroupChange = async (coordinator: Member, newGroup: 'סבב א\'' | 'סבב ב\'' | 'קבוצה א\'' | 'קבוצה ב\'' | '') => {
     // Optimistic UI update immediately
     setCoordinatorGroupOverrides(prev => ({ ...prev, [coordinator.id]: newGroup }));
     setUpdatingCoordinatorId(coordinator.id);
@@ -368,7 +368,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
           group: newGroup
         });
       }
-      showFeedback('success', `הרכז ${coordinator.firstName} ${coordinator.lastName} שוייך ל-${newGroup || 'ללא קבוצה'} בהצלחה!`);
+      showFeedback('success', `הרכז ${coordinator.firstName} ${coordinator.lastName} שוייך ל-${newGroup || 'ללא סבב'} בהצלחה!`);
     } catch (err: any) {
       console.error(err);
       // Revert optimistic update on error
@@ -377,14 +377,14 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
         delete next[coordinator.id];
         return next;
       });
-      showFeedback('error', 'שגיאה בעדכון קבוצת הרכז');
+      showFeedback('error', 'שגיאה בעדכון סבב הרכז');
     } finally {
       setUpdatingCoordinatorId(null);
     }
   };
 
   // Request Coordinator Group Change with Confirmation Modal
-  const requestCoordinatorGroupChange = (coordinator: Member, targetGroup: 'קבוצה א\'' | 'קבוצה ב\'') => {
+  const requestCoordinatorGroupChange = (coordinator: Member, targetGroup: 'סבב א\'' | 'סבב ב\'') => {
     const rawGroup = coordinatorGroupOverrides[coordinator.id] !== undefined
       ? coordinatorGroupOverrides[coordinator.id]
       : (coordinator.assignedGroup || coordinator.group || '');
@@ -396,13 +396,13 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
       type: 'COORDINATOR',
       targetName: `הרכז/ת ${coordinator.firstName} ${coordinator.lastName}`,
       newGroup: targetGroup,
-      currentGroup: currentGType === 'GROUP_A' ? 'קבוצה א\'' : currentGType === 'GROUP_B' ? 'קבוצה ב\'' : 'ללא שיוך',
+      currentGroup: currentGType === 'GROUP_A' ? 'סבב א\'' : currentGType === 'GROUP_B' ? 'סבב ב\'' : 'ללא שיוך',
       coordinator
     });
   };
 
   // Handle Individual Single Group Change
-  const handleIndividualGroupChange = async (individual: Member, newGroup: 'קבוצה א\'' | 'קבוצה ב\'' | '') => {
+  const handleIndividualGroupChange = async (individual: Member, newGroup: 'סבב א\'' | 'סבב ב\'' | 'קבוצה א\'' | 'קבוצה ב\'' | '') => {
     setIndividualGroupOverrides(prev => ({ ...prev, [individual.id]: newGroup }));
     setUpdatingIndividualId(individual.id);
     try {
@@ -428,7 +428,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
   };
 
   // Request Individual Single Group Change with Confirmation Modal
-  const requestIndividualGroupChange = (individual: Member, targetGroup: 'קבוצה א\'' | 'קבוצה ב\'' | '') => {
+  const requestIndividualGroupChange = (individual: Member, targetGroup: 'סבב א\'' | 'סבב ב\'' | '') => {
     const rawGroup = individualGroupOverrides[individual.id] !== undefined
       ? individualGroupOverrides[individual.id]
       : (individual.assignedGroup || individual.group || '');
@@ -441,7 +441,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
       type: 'INDIVIDUAL',
       targetName: `${translateRole(individual.role)} ${individual.firstName} ${individual.lastName}`,
       newGroup: targetGroup,
-      currentGroup: currentGType === 'GROUP_A' ? 'קבוצה א\'' : currentGType === 'GROUP_B' ? 'קבוצה ב\'' : 'ללא שיוך',
+      currentGroup: currentGType === 'GROUP_A' ? 'סבב א\'' : currentGType === 'GROUP_B' ? 'סבב ב\'' : 'ללא שיוך',
       individual
     });
   };
@@ -534,8 +534,8 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                   <Link2 size={24} />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black text-slate-800">ניהול זוגות וקבוצות - חבל זוג</h2>
-                  <p className="text-xs sm:text-sm font-bold text-slate-500">חיבור חבל זוג, שיוך בודדים, ושיבוץ רכזים לקבוצה א' או קבוצה ב'</p>
+                  <h2 className="text-2xl font-black text-slate-800">ניהול זוגות וסבבים - חבל זוג</h2>
+                  <p className="text-xs sm:text-sm font-bold text-slate-500">חיבור חבל זוג, שיוך בודדים, ושיבוץ רכזים לסבב א' או סבב ב'</p>
                 </div>
               </div>
               <button 
@@ -640,31 +640,31 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                       />
                     </div>
 
-                    {/* Group Selector */}
+                    {/* Round Selector */}
                     <div className="md:col-span-3 w-full">
-                      <label className="block text-xs font-bold text-slate-500 mb-2">שיוך לקבוצה</label>
+                      <label className="block text-xs font-bold text-slate-500 mb-2">שיוך לסבב</label>
                       <div className="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-xl">
                         <button
                           type="button"
-                          onClick={() => setSelectedGroup('קבוצה א\'')}
+                          onClick={() => setSelectedGroup('סבב א\'')}
                           className={`py-2 px-2 rounded-lg font-black text-xs transition-all flex items-center justify-center gap-1 ${
-                            selectedGroup === 'קבוצה א\''
+                            selectedGroup === 'סבב א\''
                               ? 'bg-blue-600 text-white shadow-xs'
                               : 'text-slate-600 hover:text-slate-900'
                           }`}
                         >
-                          <span>קבוצה א׳</span>
+                          <span>סבב א׳</span>
                         </button>
                         <button
                           type="button"
-                          onClick={() => setSelectedGroup('קבוצה ב\'')}
+                          onClick={() => setSelectedGroup('סבב ב\'')}
                           className={`py-2 px-2 rounded-lg font-black text-xs transition-all flex items-center justify-center gap-1 ${
-                            selectedGroup === 'קבוצה ב\''
+                            selectedGroup === 'סבב ב\''
                               ? 'bg-purple-600 text-white shadow-xs'
                               : 'text-slate-600 hover:text-slate-900'
                           }`}
                         >
-                          <span>קבוצה ב׳</span>
+                          <span>סבב ב׳</span>
                         </button>
                       </div>
                     </div>
@@ -716,7 +716,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                           className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 ${groupFilter === 'GROUP_A' ? 'bg-blue-600 text-white' : 'text-blue-700 hover:bg-blue-50'}`}
                         >
                           <span className="w-2 h-2 rounded-full bg-blue-400" />
-                          קבוצה א׳ ({pairsCountA})
+                          סבב א׳ ({pairsCountA})
                         </button>
                         <button
                           type="button"
@@ -724,7 +724,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                           className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 ${groupFilter === 'GROUP_B' ? 'bg-purple-600 text-white' : 'text-purple-700 hover:bg-purple-50'}`}
                         >
                           <span className="w-2 h-2 rounded-full bg-purple-400" />
-                          קבוצה ב׳ ({pairsCountB})
+                          סבב ב׳ ({pairsCountB})
                         </button>
                       </div>
 
@@ -759,16 +759,16 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                               {getMemberGroupType(currentGroup) === 'GROUP_A' ? (
                                 <span className="px-2.5 py-1 bg-blue-100 text-blue-800 border border-blue-200 text-xs font-black rounded-lg flex items-center gap-1">
                                   <span className="w-2 h-2 rounded-full bg-blue-500" />
-                                  קבוצה א׳
+                                  סבב א׳
                                 </span>
                               ) : getMemberGroupType(currentGroup) === 'GROUP_B' ? (
                                 <span className="px-2.5 py-1 bg-purple-100 text-purple-800 border border-purple-200 text-xs font-black rounded-lg flex items-center gap-1">
                                   <span className="w-2 h-2 rounded-full bg-purple-500" />
-                                  קבוצה ב׳
+                                  סבב ב׳
                                 </span>
                               ) : (
                                 <span className="px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold rounded-lg">
-                                  ללא קבוצה
+                                  ללא סבב
                                 </span>
                               )}
 
@@ -777,26 +777,26 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                                 <button
                                   type="button"
                                   disabled={isUpdatingGroup}
-                                  onClick={() => requestPairGroupChange(pair, 'קבוצה א\'')}
+                                  onClick={() => requestPairGroupChange(pair, 'סבב א\'')}
                                   className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${
                                     getMemberGroupType(currentGroup) === 'GROUP_A'
                                       ? 'bg-blue-600 text-white'
                                       : 'text-slate-500 hover:text-blue-700 hover:bg-blue-50'
                                   }`}
-                                  title="העבר זוג לקבוצה א׳"
+                                  title="העבר זוג לסבב א׳"
                                 >
                                   א׳
                                 </button>
                                 <button
                                   type="button"
                                   disabled={isUpdatingGroup}
-                                  onClick={() => requestPairGroupChange(pair, 'קבוצה ב\'')}
+                                  onClick={() => requestPairGroupChange(pair, 'סבב ב\'')}
                                   className={`px-2 py-0.5 rounded text-[10px] font-black transition-all ${
                                     getMemberGroupType(currentGroup) === 'GROUP_B'
                                       ? 'bg-purple-600 text-white'
                                       : 'text-slate-500 hover:text-purple-700 hover:bg-purple-50'
                                   }`}
-                                  title="העבר זוג לקבוצה ב׳"
+                                  title="העבר זוג לסבב ב׳"
                                 >
                                   ב׳
                                 </button>
@@ -877,16 +877,16 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                 <div className="bg-gradient-to-r from-amber-50 via-sky-50 to-indigo-50 p-5 rounded-2xl border border-amber-200/80 shadow-xs">
                   <h3 className="text-base font-black text-slate-800 mb-1 flex items-center gap-2">
                     <UserMinus size={20} className="text-amber-600" />
-                    שיוך בודדים (ללא בן/בת זוג) לקבוצות
+                    שיוך בודדים (ללא בן/בת זוג) לסבבים
                   </h3>
                   <p className="text-xs font-bold text-slate-600 leading-relaxed">
-                    כאן מופיעים מתנדבים ומשתתפים שאין להם כרגע חבל זוג (לדוגמה עקב השעיה, עזיבה או טרם שיבוץ). ניתן לשייך בודד ישירות לקבוצה א׳ או קבוצה ב׳. 
-                    בעת חיבור בודדים כזוג חדש, השיוך הקבוצתי שלהם יתעדכן לקבוצת הזוג החדש.
+                    כאן מופיעים מתנדבים ומשתתפים שאין להם כרגע חבל זוג (לדוגמה עקב השעיה, עזיבה או טרם שיבוץ). ניתן לשייך בודד ישירות לסבב א׳ או סבב ב׳. 
+                    בעת חיבור בודדים כזוג חדש, השיוך יתעדכן לסבב של הזוג החדש.
                   </p>
                   <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-amber-200/60 text-xs font-black">
                     <span className="text-slate-700">סה״כ בודדים: {unpairedSingles.length}</span>
-                    <span className="text-blue-700">קבוצה א׳: {singlesCountA}</span>
-                    <span className="text-purple-700">קבוצה ב׳: {singlesCountB}</span>
+                    <span className="text-blue-700">סבב א׳: {singlesCountA}</span>
+                    <span className="text-purple-700">סבב ב׳: {singlesCountB}</span>
                     <span className="text-amber-800">ללא שיוך: {singlesCountNone}</span>
                   </div>
                 </div>
@@ -919,28 +919,28 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                       </button>
                     </div>
 
-                    {/* Group Filter */}
+                    {/* Group / Round Filter */}
                     <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
                       <button
                         type="button"
                         onClick={() => setSinglesGroupFilter('ALL')}
                         className={`px-3 py-1.5 rounded-lg transition-colors ${singlesGroupFilter === 'ALL' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
                       >
-                        כל הקבוצות
+                        כל הסבבים
                       </button>
                       <button
                         type="button"
                         onClick={() => setSinglesGroupFilter('GROUP_A')}
                         className={`px-3 py-1.5 rounded-lg transition-colors ${singlesGroupFilter === 'GROUP_A' ? 'bg-blue-600 text-white shadow-xs' : 'text-blue-700 hover:bg-blue-50'}`}
                       >
-                        קבוצה א׳
+                        סבב א׳
                       </button>
                       <button
                         type="button"
                         onClick={() => setSinglesGroupFilter('GROUP_B')}
                         className={`px-3 py-1.5 rounded-lg transition-colors ${singlesGroupFilter === 'GROUP_B' ? 'bg-purple-600 text-white shadow-xs' : 'text-purple-700 hover:bg-purple-50'}`}
                       >
-                        קבוצה ב׳
+                        סבב ב׳
                       </button>
                       <button
                         type="button"
@@ -1001,34 +1001,34 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                             </div>
                           </div>
 
-                          {/* Current Group Status Badge */}
+                          {/* Current Round Status Badge */}
                           <div>
                             {isGroupA ? (
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 border border-blue-200 text-xs font-black rounded-lg">
                                 <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                                קבוצה א׳
+                                סבב א׳
                               </span>
                             ) : isGroupB ? (
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-800 border border-purple-200 text-xs font-black rounded-lg">
                                 <span className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
-                                קבוצה ב׳
+                                סבב ב׳
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-black rounded-lg">
-                                טרם שוייך
+                                ללא סבב
                               </span>
                             )}
                           </div>
                         </div>
 
-                        {/* Exclusive Single Group Selection Buttons with Distinct Grayout */}
+                        {/* Exclusive Single Round Selection Buttons with Distinct Grayout */}
                         <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                          <span className="text-xs font-bold text-slate-500">שיוך לקבוצה:</span>
+                          <span className="text-xs font-bold text-slate-500">שיוך לסבב:</span>
                           <div className="flex items-center gap-2 bg-slate-100/70 p-1.5 rounded-2xl border border-slate-200/80">
                             <button
                               type="button"
                               disabled={isUpdating}
-                              onClick={() => requestIndividualGroupChange(single, 'קבוצה א\'')}
+                              onClick={() => requestIndividualGroupChange(single, 'סבב א\'')}
                               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
                                 isGroupA
                                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 scale-105 ring-2 ring-blue-400'
@@ -1036,16 +1036,16 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                                     ? 'bg-slate-100 text-slate-400 border border-slate-200/60 opacity-40 grayscale hover:opacity-90 hover:grayscale-0'
                                     : 'bg-white text-slate-700 border border-slate-200 hover:bg-blue-50 hover:text-blue-700'
                               }`}
-                              title="שייך בודד לקבוצה א׳"
+                              title="שייך בודד לסבב א׳"
                             >
                               <span className={`w-2.5 h-2.5 rounded-full ${isGroupA ? 'bg-white ring-2 ring-white/30' : isGroupB ? 'bg-slate-300' : 'bg-blue-400'}`} />
-                              <span>קבוצה א׳</span>
+                              <span>סבב א׳</span>
                               {isGroupA && <Check size={14} className="stroke-[3]" />}
                             </button>
                             <button
                               type="button"
                               disabled={isUpdating}
-                              onClick={() => requestIndividualGroupChange(single, 'קבוצה ב\'')}
+                              onClick={() => requestIndividualGroupChange(single, 'סבב ב\'')}
                               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
                                 isGroupB
                                   ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 scale-105 ring-2 ring-purple-400'
@@ -1053,10 +1053,10 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                                     ? 'bg-slate-100 text-slate-400 border border-slate-200/60 opacity-40 grayscale hover:opacity-90 hover:grayscale-0'
                                     : 'bg-white text-slate-700 border border-slate-200 hover:bg-purple-50 hover:text-purple-700'
                               }`}
-                              title="שייך בודד לקבוצה ב׳"
+                              title="שייך בודד לסבב ב׳"
                             >
                               <span className={`w-2.5 h-2.5 rounded-full ${isGroupB ? 'bg-white ring-2 ring-white/30' : isGroupA ? 'bg-slate-300' : 'bg-purple-400'}`} />
-                              <span>קבוצה ב׳</span>
+                              <span>סבב ב׳</span>
                               {isGroupB && <Check size={14} className="stroke-[3]" />}
                             </button>
 
@@ -1091,10 +1091,10 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                 <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 p-5 rounded-2xl border border-blue-100">
                   <h3 className="text-base font-black text-slate-800 mb-1 flex items-center gap-2">
                     <ShieldCheck size={20} className="text-blue-600" />
-                    שיוך רכזים לקבוצות פעילות (בחירה יחידה)
+                    שיוך רכזים לסבבי פעילות (בחירה יחידה)
                   </h3>
                   <p className="text-xs font-bold text-slate-600">
-                    רכז (Admin) מוביל קבוצה ומשוייך <strong>בלעדית לקבוצה אחת בלבד</strong> – קבוצה א׳ או קבוצה ב׳. לא ניתן לשייך רכז ליותר מקבוצה אחת.
+                    רכז (Admin) מוביל סבב ומשוייך <strong>בלעדית לסבב אחד בלבד</strong> – סבב א׳ או סבב ב׳. לא ניתן לשייך רכז ליותר מסבב אחד.
                   </p>
                 </div>
 
@@ -1127,30 +1127,30 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                               {isGroupA ? (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 border border-blue-200 text-xs font-black rounded-lg">
                                   <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                                  רכז קבוצה א׳
+                                  רכז סבב א׳
                                 </span>
                               ) : isGroupB ? (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-800 border border-purple-200 text-xs font-black rounded-lg">
                                   <span className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
-                                  רכז קבוצה ב׳
+                                  רכז סבב ב׳
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black rounded-lg">
-                                  טרם שוייך לקבוצה
+                                  טרם שוייך לסבב
                                 </span>
                               )}
                             </div>
                           </div>
                         </div>
 
-                        {/* Exclusive Single Group Selection Buttons with Distinct Grayout */}
+                        {/* Exclusive Single Round Selection Buttons with Distinct Grayout */}
                         <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                          <span className="text-xs font-bold text-slate-500">שיוך לקבוצה:</span>
+                          <span className="text-xs font-bold text-slate-500">שיוך לסבב:</span>
                           <div className="flex gap-2 bg-slate-100/70 p-1.5 rounded-2xl border border-slate-200/80">
                             <button
                               type="button"
                               disabled={isUpdating}
-                              onClick={() => requestCoordinatorGroupChange(coordinator, 'קבוצה א\'')}
+                              onClick={() => requestCoordinatorGroupChange(coordinator, 'סבב א\'')}
                               className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
                                 isGroupA
                                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 scale-105 ring-2 ring-blue-400'
@@ -1158,16 +1158,16 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                                     ? 'bg-slate-100 text-slate-400 border border-slate-200/60 opacity-40 grayscale hover:opacity-90 hover:grayscale-0'
                                     : 'bg-white text-slate-700 border border-slate-200 hover:bg-blue-50 hover:text-blue-700'
                               }`}
-                              title="שייך רכז בלעדית לקבוצה א׳"
+                              title="שייך רכז בלעדית לסבב א׳"
                             >
                               <span className={`w-2.5 h-2.5 rounded-full ${isGroupA ? 'bg-white ring-2 ring-white/30' : isGroupB ? 'bg-slate-300' : 'bg-blue-400'}`} />
-                              <span>קבוצה א׳</span>
+                              <span>סבב א׳</span>
                               {isGroupA && <Check size={14} className="stroke-[3]" />}
                             </button>
                             <button
                               type="button"
                               disabled={isUpdating}
-                              onClick={() => requestCoordinatorGroupChange(coordinator, 'קבוצה ב\'')}
+                              onClick={() => requestCoordinatorGroupChange(coordinator, 'סבב ב\'')}
                               className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
                                 isGroupB
                                   ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 scale-105 ring-2 ring-purple-400'
@@ -1175,10 +1175,10 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                                     ? 'bg-slate-100 text-slate-400 border border-slate-200/60 opacity-40 grayscale hover:opacity-90 hover:grayscale-0'
                                     : 'bg-white text-slate-700 border border-slate-200 hover:bg-purple-50 hover:text-purple-700'
                               }`}
-                              title="שייך רכז בלעדית לקבוצה ב׳"
+                              title="שייך רכז בלעדית לסבב ב׳"
                             >
                               <span className={`w-2.5 h-2.5 rounded-full ${isGroupB ? 'bg-white ring-2 ring-white/30' : isGroupA ? 'bg-slate-300' : 'bg-purple-400'}`} />
-                              <span>קבוצה ב׳</span>
+                              <span>סבב ב׳</span>
                               {isGroupB && <Check size={14} className="stroke-[3]" />}
                             </button>
                           </div>

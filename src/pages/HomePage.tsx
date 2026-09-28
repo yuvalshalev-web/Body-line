@@ -65,18 +65,18 @@ export const STATION_NAMES: Record<string, string> = {
   "46": "חוף המערבי, חדרה"
 };
 
-export const getScheduledGroupForSession = (sessionDateStr: string, startDateStr?: string): 'קבוצה א\'' | 'קבוצה ב\'' => {
-  if (!sessionDateStr) return 'קבוצה א\'';
+export const getScheduledGroupForSession = (sessionDateStr: string, startDateStr?: string): 'סבב א\'' | 'סבב ב\'' => {
+  if (!sessionDateStr) return 'סבב א\'';
   const startDate = startDateStr ? new Date(startDateStr) : new Date(new Date(sessionDateStr).getFullYear(), 8, 1); // default to Sep 1st
   const sessionDate = new Date(sessionDateStr);
   
   const diffMs = sessionDate.getTime() - startDate.getTime();
-  if (diffMs < 0) return 'קבוצה א\'';
+  if (diffMs < 0) return 'סבב א\'';
   
   const msPerWeek = 7 * 24 * 60 * 60 * 1000;
   const diffWeeks = Math.floor(diffMs / msPerWeek);
   
-  return diffWeeks % 2 === 0 ? 'קבוצה א\'' : 'קבוצה ב\'';
+  return diffWeeks % 2 === 0 ? 'סבב א\'' : 'סבב ב\'';
 };
 
 const HomePage: React.FC = () => {
@@ -293,7 +293,7 @@ const HomePage: React.FC = () => {
   }, [attendees, attendeesFilter, pairStats.duoMemberIds]);
 
   const scheduledGroup = useMemo(() => {
-    if (yearConfig?.activityMode !== 'קבוצתית') return null;
+    if (yearConfig?.activityMode !== 'קבוצתית' && yearConfig?.activityMode !== 'סבבים') return null;
     return getScheduledGroupForSession(activeSessionDate, yearConfig?.startDate);
   }, [activeSessionDate, yearConfig]);
 
@@ -615,8 +615,8 @@ const HomePage: React.FC = () => {
                  </div>
                </div>
 
-                {/* Group Notice - Positioned cleanly under the timer */}
-                {scheduledGroup && (
+                {/* Group Rotation / Round Notice - Positioned cleanly under the timer */}
+                {scheduledGroup ? (
                   <div className="mt-5 sm:mt-6 flex flex-col items-center">
                     <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-900/75 backdrop-blur-md border border-white/20 rounded-full text-white/95 text-xs sm:text-sm font-heebo shadow-lg">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#00a3c4] animate-pulse shrink-0" />
@@ -624,22 +624,31 @@ const HomePage: React.FC = () => {
                         {userGroup ? (
                           isUserInScheduledGroup ? (
                             <>
-                              שים לב: הסשן הקרוב מיועד לקבוצה שלך <strong className="font-bold text-[#00a3c4]">({scheduledGroup})</strong>
+                              שים לב: הסשן הקרוב מיועד לסבב שלך <strong className="font-bold text-[#00a3c4]">({scheduledGroup})</strong>
                             </>
                           ) : (
                             <>
-                              שים לב: הסשן הקרוב מיועד לקבוצה השנייה <strong className="font-bold text-[#00a3c4]">({scheduledGroup})</strong>
+                              שים לב: הסשן הקרוב מיועד לסבב השני <strong className="font-bold text-[#00a3c4]">({scheduledGroup})</strong>
                             </>
                           )
                         ) : (
                           <>
-                            שים לב: הסשן הקרוב מיועד לקבוצה <strong className="font-bold text-[#00a3c4]">({scheduledGroup})</strong>
+                            שים לב: הסשן הקרוב מיועד ל-<strong className="font-bold text-[#00a3c4]">{scheduledGroup}</strong>
                           </>
                         )}
                       </span>
                     </div>
                   </div>
-                )}
+                ) : (yearConfig?.activityMode === 'משותפת' || yearConfig?.activityMode === 'מאוחד') ? (
+                  <div className="mt-5 sm:mt-6 flex flex-col items-center">
+                    <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-900/75 backdrop-blur-md border border-emerald-500/30 rounded-full text-white/95 text-xs sm:text-sm font-heebo shadow-lg">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                      <span>
+                        השבוע: <strong className="font-bold text-emerald-300">איחוד קבוצתי!</strong> (סבב מאוחד – כל חברי הקבוצה יחד במים)
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
              </div>
           </div>
         </section>

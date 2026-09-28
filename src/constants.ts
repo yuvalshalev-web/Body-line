@@ -80,15 +80,16 @@ export interface Community {
   name: string;
 }
 
+// 10 הקבוצות המקומיות הפועלות במסגרת קהילת חבל זוג
 export const AVAILABLE_COMMUNITIES: Community[] = [
-  { id: 'herzliya', name: 'הרצליה' },
-  { id: 'herzliya_adults', name: 'הרצליה - בוגרים' },
-  { id: 'tel_baruch', name: 'תל ברוך' },
-  { id: 'tel_baruch_adults', name: 'תל ברוך - בוגרים' },
-  { id: 'ashdod', name: 'אשדוד' },
-  { id: 'ashdod_adults', name: 'אשדוד - בוגרים' },
-  { id: 'ashkelon', name: 'אשקלון' },
-  { id: 'ashkelon_adults', name: 'אשקלון - בוגרים' },
-  { id: 'kiryat_yam', name: 'קריית ים' },
-  { id: 'kiryat_yam_adults', name: 'קריית ים - בוגרים' }
+  { id: 'herzliya', name: 'קבוצת הרצליה' },
+  { id: 'herzliya_adults', name: 'קבוצת הרצליה - בוגרים' },
+  { id: 'tel_baruch', name: 'קבוצת תל ברוך' },
+  { id: 'tel_baruch_adults', name: 'קבוצת תל ברוך - בוגרים' },
+  { id: 'ashdod', name: 'קבוצת אשדוד' },
+  { id: 'ashdod_adults', name: 'קבוצת אשדוד - בוגרים' },
+  { id: 'ashkelon', name: 'קבוצת אשקלון' },
+  { id: 'ashkelon_adults', name: 'קבוצת אשקלון - בוגרים' },
+  { id: 'kiryat_yam', name: 'קבוצת קריית ים' },
+  { id: 'kiryat_yam_adults', name: 'קבוצת קריית ים - בוגרים' }
 ];

@@ -207,7 +207,7 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
 
   // Year Config State
   const [isEditingYear, setIsEditingYear] = useState(false);
-  const [yearForm, setYearForm] = useState<{ startDate: string; endDate: string; activityMode: 'קבוצתית' | 'משותפת' }>({
+  const [yearForm, setYearForm] = useState<{ startDate: string; endDate: string; activityMode: 'קבוצתית' | 'משותפת' | 'סבבים' | 'מאוחד' }>({
     startDate: '',
     endDate: '',
     activityMode: 'משותפת'
@@ -219,7 +219,7 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
       setYearForm({ 
         startDate: yearConfig.startDate || '', 
         endDate: yearConfig.endDate || '',
-        activityMode: (yearConfig.activityMode as 'קבוצתית' | 'משותפת') || 'משותפת'
+        activityMode: (yearConfig.activityMode as any) || 'משותפת'
       });
     }
   }, [yearConfig]);
@@ -440,16 +440,16 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
                   <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מצב פעילות שנתי</p>
                     <p className="text-sm font-black text-slate-800">
-                      {yearConfig?.activityMode === 'קבוצתית' ? 'פעילות קבוצתית (קבוצה א׳ / ב׳)' : 'פעילות משותפת (כל החברים)'}
+                      {yearConfig?.activityMode === 'קבוצתית' || yearConfig?.activityMode === 'סבבים' ? 'חלוקה לסבבים (סבב א׳ ו-סבב ב׳ לסירוגין)' : 'איחוד קבוצתי (סשן מאוחד לכלל חברי הקבוצה)'}
                     </p>
                   </div>
                 </div>
                 <span className={`text-[11px] font-black px-3 py-1 rounded-full border shadow-xs transition-colors ${
-                  yearConfig?.activityMode === 'קבוצתית'
+                  yearConfig?.activityMode === 'קבוצתית' || yearConfig?.activityMode === 'סבבים'
                     ? 'bg-blue-500 text-white border-blue-600 shadow-blue-500/20'
                     : 'bg-emerald-500 text-white border-emerald-600 shadow-emerald-500/20'
                 }`}>
-                  {yearConfig?.activityMode === 'קבוצתית' ? 'קבוצתית' : 'משותפת'}
+                  {yearConfig?.activityMode === 'קבוצתית' || yearConfig?.activityMode === 'סבבים' ? 'סבבים (א׳/ב׳)' : 'איחוד קבוצתי'}
                 </span>
               </div>
 
@@ -461,19 +461,19 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
                     if (!checkAppShaper()) return;
                     try {
                       await updateYearConfig({ activityMode: 'קבוצתית' });
-                      showSuccess('מצב הפעילות עודכן ל: קבוצתית');
+                      showSuccess('מצב הפעילות עודכן ל: סבבים (סבב א׳ ו-סבב ב׳ לסירוגין)');
                     } catch (e) {
                       showError('שגיאה בעדכון מצב הפעילות');
                     }
                   }}
                   className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all duration-200 flex items-center justify-center gap-2 relative z-10 cursor-pointer ${
-                    yearConfig?.activityMode === 'קבוצתית'
+                    yearConfig?.activityMode === 'קבוצתית' || yearConfig?.activityMode === 'סבבים'
                       ? 'bg-white text-blue-700 shadow-md ring-1 ring-black/5 font-black scale-[1.01]'
                       : 'text-slate-600 hover:text-slate-900 font-bold hover:bg-white/40'
                   }`}
                 >
-                  <Users size={16} className={yearConfig?.activityMode === 'קבוצתית' ? 'text-blue-600' : 'text-slate-400'} />
-                  <span>קבוצתית</span>
+                  <Users size={16} className={yearConfig?.activityMode === 'קבוצתית' || yearConfig?.activityMode === 'סבבים' ? 'text-blue-600' : 'text-slate-400'} />
+                  <span>סבבים (א׳/ב׳)</span>
                 </button>
 
                 <button
@@ -482,19 +482,19 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
                     if (!checkAppShaper()) return;
                     try {
                       await updateYearConfig({ activityMode: 'משותפת' });
-                      showSuccess('מצב הפעילות עודכן ל: משותפת');
+                      showSuccess('מצב הפעילות עודכן ל: איחוד קבוצתי (סשן מאוחד)');
                     } catch (e) {
                       showError('שגיאה בעדכון מצב הפעילות');
                     }
                   }}
                   className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all duration-200 flex items-center justify-center gap-2 relative z-10 cursor-pointer ${
-                    yearConfig?.activityMode !== 'קבוצתית'
+                    yearConfig?.activityMode !== 'קבוצתית' && yearConfig?.activityMode !== 'סבבים'
                       ? 'bg-white text-emerald-700 shadow-md ring-1 ring-black/5 font-black scale-[1.01]'
                       : 'text-slate-600 hover:text-slate-900 font-bold hover:bg-white/40'
                   }`}
                 >
-                  <Activity size={16} className={yearConfig?.activityMode !== 'קבוצתית' ? 'text-emerald-600' : 'text-slate-400'} />
-                  <span>משותפת</span>
+                  <Activity size={16} className={yearConfig?.activityMode !== 'קבוצתית' && yearConfig?.activityMode !== 'סבבים' ? 'text-emerald-600' : 'text-slate-400'} />
+                  <span>איחוד קבוצתי</span>
                 </button>
               </div>
             </div>
@@ -1285,25 +1285,25 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
                     type="button"
                     onClick={() => setYearForm(prev => ({ ...prev, activityMode: 'קבוצתית' }))}
                     className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      yearForm.activityMode === 'קבוצתית'
+                      yearForm.activityMode === 'קבוצתית' || yearForm.activityMode === 'סבבים'
                         ? 'bg-white text-blue-700 shadow-sm font-black'
                         : 'text-slate-600 hover:text-slate-900 font-bold'
                     }`}
                   >
                     <Users size={15} />
-                    <span>פעילות קבוצתית</span>
+                    <span>רוטציית סבבים (א׳/ב׳)</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setYearForm(prev => ({ ...prev, activityMode: 'משותפת' }))}
                     className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      yearForm.activityMode !== 'קבוצתית'
+                      yearForm.activityMode !== 'קבוצתית' && yearForm.activityMode !== 'סבבים'
                         ? 'bg-white text-emerald-700 shadow-sm font-black'
                         : 'text-slate-600 hover:text-slate-900 font-bold'
                     }`}
                   >
                     <Activity size={15} />
-                    <span>פעילות משותפת</span>
+                    <span>איחוד קבוצתי (סשן מאוחד)</span>
                   </button>
                 </div>
               </div>

@@ -34,8 +34,8 @@ export interface Member {
   birthday?: string; // YYYY-MM-DD
   gender?: Gender;
   partnerId?: string; // ID of the paired member (חבל זוג)
-  assignedGroup?: 'קבוצה א\'' | 'קבוצה ב\'' | string; // Group assignment for pairs and coordinators
-  group?: 'קבוצה א\'' | 'קבוצה ב\'' | string; // Alias for assignedGroup
+  assignedGroup?: 'סבב א\'' | 'סבב ב\'' | 'מאוחד' | 'קבוצה א\'' | 'קבוצה ב\'' | string; // סבב הפעילות הדו-שבועי (סבב א' / סבב ב' / מאוחד)
+  group?: 'סבב א\'' | 'סבב ב\'' | 'מאוחד' | 'קבוצה א\'' | 'קבוצה ב\'' | string; // כינוי ל-assignedGroup
   weight?: number; // in kg
   height?: number; // in cm
   surfingLevel?: 'Learner' | 'Beginner' | 'Intermediate' | 'Advanced';
@@ -211,7 +211,7 @@ export interface AuthState {
 export interface YearConfig {
   startDate: string;
   endDate: string;
-  activityMode?: 'קבוצתית' | 'משותפת' | string;
+  activityMode?: 'סבבים' | 'מאוחד' | 'קבוצתית' | 'משותפת' | string;
 }
 
 export interface SurfCall {

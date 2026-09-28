@@ -788,9 +788,9 @@ const LoginPage: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Community Selection Dropdown */}
+                {/* Group Selection Dropdown */}
                 <div className="relative w-full">
-                  <label className="text-[11px] font-black text-cyan-400/80 uppercase tracking-widest block pr-2 mb-1.5 text-right">בחירת קהילת כניסה</label>
+                  <label className="text-[11px] font-black text-cyan-400/80 uppercase tracking-widest block pr-2 mb-1.5 text-right">בחירת קבוצה בקהילת חבל זוג</label>
                   <button 
                     type="button"
                     onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
