@@ -558,6 +558,54 @@ const AdminHelpPage: React.FC = () => {
         </div>
       </section>
 
+      {/* 9. ארכיטקטורת ריבוי קהילות, מידור נתונים ופרטיות */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b-2 border-[#121212]/10 pb-3">
+          <div className="p-2 bg-sky-500/10 text-sky-700 rounded-xl">
+            <ShieldCheck size={22} />
+          </div>
+          <h2 className="text-2xl font-black text-[#121212]">🌐 ארכיטקטורת ריבוי קהילות ומידור נתונים</h2>
+        </div>
+
+        <div className="admin-info-card p-8 rounded-3xl border border-white/20 space-y-6">
+          <p className="text-sm md:text-base text-[#121212]/90 font-bold leading-relaxed">
+            המערכת פועלת במודל Multi-Tenant מתקדם עם 10 קהילות פעילות (הרצליה, הרצליה - בוגרים, תל ברוך, אשדוד, אשקלון, קריית ים וסניפי הבוגרים שלהן). כל סניף פועל כיחידה מבודדת ועצמאית:
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white/50 p-5 rounded-2xl border border-[#121212]/10 space-y-2">
+              <h4 className="font-black text-sm text-sky-900 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-sky-500" />
+                מידור סשנים פעילים (Active Session)
+              </h4>
+              <p className="text-xs text-[#121212]/80 font-bold leading-relaxed">
+                לכל קהילה קיים מסמך סשן פעיל משלה ב-Firestore (`active_session_communityId`). אישורי הגעה של חברים מתועדים אך ורק בסניף הפעיל שבו הם נמצאים ואינם דולפים לסניפים אחרים.
+              </p>
+            </div>
+
+            <div className="bg-white/50 p-5 rounded-2xl border border-[#121212]/10 space-y-2">
+              <h4 className="font-black text-sm text-emerald-900 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                מדדים אישיים מול קהילתיים
+              </h4>
+              <p className="text-xs text-[#121212]/80 font-bold leading-relaxed">
+                מדדי ההתמדה וה-Grit של הגולש מצטברים ורציפים בכל הקהילות שבהן הוא פעיל. לעומת זאת, אחוזוני גיל, ממוצעי מרחק ונפח גלשנים מחושבים אך ורק מול חברי הסניף הספציפי.
+              </p>
+            </div>
+
+            <div className="bg-white/50 p-5 rounded-2xl border border-[#121212]/10 space-y-2">
+              <h4 className="font-black text-sm text-indigo-900 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                ספר חברים מבודד (Directory)
+              </h4>
+              <p className="text-xs text-[#121212]/80 font-bold leading-relaxed">
+                דף הקהילה וספר הכתובות מסננים ומציגים אך ורק את חברי הסניף הנבחר. צוות העמותה ואפ-שייפר משויכים לכל הקהילות ומפקחים על כלל הפעילות ברחבי הארץ.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Admin Tip */}
       <div className="p-6 admin-info-card border-r-8 border-sky-600 rounded-3xl text-center text-[#121212] font-black text-base shadow-md bg-white/70">
         💡 <strong>טיפ לרכזים ומדריכים:</strong> כל הנתונים, המגמות וההתפלגויות המוצגים בלשוניות "דופק הקהילה", "התמדה קבוצתית", "התמדה זוגית" ו"התמדה עונתית" נשענים על אלגוריתמים אלו. היעזרו במדריך זה להסברת הנתונים לחברים.

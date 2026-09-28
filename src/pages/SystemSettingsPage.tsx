@@ -1075,7 +1075,7 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
       {/* Documentation Guides */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <button 
-          onClick={() => setMarkdownConfig({ isOpen: true, path: '/README.md', title: 'מדריך למשתמש (User Guide)' })}
+          onClick={() => navigate('/about')}
           className="w-full luxury-card p-8 group hover:scale-[1.01] transition-all text-right flex items-center gap-6 relative overflow-hidden cursor-pointer"
         >
           <div className="absolute -right-8 -top-8 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
@@ -1085,8 +1085,11 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
             <FileText size={32} />
           </div>
           <div className="relative z-10">
-            <h4 className="text-xl font-black text-slate-800 mb-1">מדריך למשתמש</h4>
-            <p className="text-xs text-slate-500 font-bold leading-relaxed opacity-80">צפייה בקובץ README.md לקבלת מידע טכני ותפעולי על הפרויקט</p>
+            <h4 className="text-xl font-black text-slate-800 mb-1 flex items-center gap-2">
+              <span>מדריך למשתמש ואודות</span>
+              <span className="text-[10px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full font-black">חדש</span>
+            </h4>
+            <p className="text-xs text-slate-500 font-bold leading-relaxed opacity-80">מעבר לדף "אודות" המסחרי – מדריך משתמש אינטראקטיבי, רשת הקהילות ואמנת פרטיות</p>
           </div>
         </button>
 

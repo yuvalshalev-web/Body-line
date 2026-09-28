@@ -52,6 +52,7 @@ const ShaperPage = lazyWithRetry(() => import('./pages/ShaperPage'));
 const MemberGradingPage = lazyWithRetry(() => import('./pages/MemberGradingPage'));
 const SystemSettingsPage = lazyWithRetry(() => import('./pages/SystemSettingsPage'));
 const EngineRoomPage = lazyWithRetry(() => import('./pages/EngineRoomPage'));
+const AboutPage = lazyWithRetry(() => import('./pages/AboutPage'));
 
 const PageLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -352,7 +353,7 @@ const App: React.FC = () => {
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={`flex-1 overflow-y-auto pb-20 relative z-10 origin-right shadow-[0_50px_100px_rgba(0,0,0,0.3)] ${
-          ['/', '/events', '/gallery', '/directory', '/posts', '/admin', '/shaper', '/surfer-card', '/passport', '/athlete-passport', '/profile', '/world-news', '/admin-info', '/grading', '/attendance', '/system-settings', '/admin-settings', '/admin/settings', '/engine-room', '/admin/engine-room'].includes(location.pathname) ? 'luxury-bg' : 'luxury-bg'
+          ['/', '/events', '/gallery', '/directory', '/posts', '/admin', '/shaper', '/surfer-card', '/passport', '/athlete-passport', '/profile', '/world-news', '/admin-info', '/grading', '/attendance', '/system-settings', '/admin-settings', '/admin/settings', '/engine-room', '/admin/engine-room', '/about', '/guide'].includes(location.pathname) ? 'luxury-bg' : 'luxury-bg'
         }`}
       >
         <ErrorBoundary>
@@ -369,6 +370,8 @@ const App: React.FC = () => {
               <Route path="/athlete-passport" element={<Navigate to="/passport" replace />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/shaper" element={<ShaperPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/guide" element={<Navigate to="/about" replace />} />
               {(isAdminUser(currentUser) || currentUser.role === 'Instructor') && (
                 <>
                   <Route path="/admin-info" element={<AdminInfoPage />} />
