@@ -395,10 +395,15 @@ const App: React.FC = () => {
         </ErrorBoundary>
       </motion.main>
       
-      <FloatingMenu onLogout={handleLogout} scrollRef={mainRef} onOpenDrawer={() => {
-        console.log("Opening Drawer...");
-        setIsDrawerOpen(true);
-      }} />
+      <FloatingMenu 
+        isOpen={isDrawerOpen}
+        onToggleDrawer={() => setIsDrawerOpen(prev => !prev)}
+        onLogout={handleLogout} 
+        scrollRef={mainRef} 
+        onOpenDrawer={() => {
+          setIsDrawerOpen(true);
+        }} 
+      />
       
       {/* PWA Update & Install Banners */}
       <PWAUpdateNotification />

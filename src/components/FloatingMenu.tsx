@@ -6,9 +6,11 @@ interface FloatingMenuProps {
   scrollRef: React.RefObject<HTMLElement>;
   onLogout: () => void;
   onOpenDrawer: () => void;
+  isOpen?: boolean;
+  onToggleDrawer?: () => void;
 }
 
-const FloatingMenu: React.FC<FloatingMenuProps> = ({ scrollRef, onOpenDrawer, onLogout }) => {
+const FloatingMenu: React.FC<FloatingMenuProps> = ({ scrollRef, onOpenDrawer, onLogout, isOpen, onToggleDrawer }) => {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
@@ -60,7 +62,7 @@ const FloatingMenu: React.FC<FloatingMenuProps> = ({ scrollRef, onOpenDrawer, on
       <motion.button
         initial={{ opacity: 0, scale: 0.8, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        onClick={onOpenDrawer}
+        onClick={onToggleDrawer || onOpenDrawer}
         className="w-16 h-16 bg-gradient-to-br from-slate-900/80 to-[#004266]/80 backdrop-blur-3xl border border-white/20 rounded-[24px] flex items-center justify-center text-white shadow-[0_25px_60px_rgba(0,0,0,0.5)] hover:shadow-[0_30px_70px_rgba(0,0,0,0.6)] transition-all duration-500 relative group overflow-hidden"
         whileHover={{ scale: 1.05, y: -5 }}
         whileTap={{ scale: 0.95 }}

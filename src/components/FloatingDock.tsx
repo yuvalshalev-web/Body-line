@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, Variants } from 'motion/react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence, useMotionValue, Variants } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isAdminUser } from '../constants';
 import { 
@@ -23,7 +23,9 @@ import {
   Award,
   Info,
   ShieldCheck,
-  X
+  X,
+  ChevronRight,
+  Minimize2
 } from 'lucide-react';
 
 interface NavItem {
@@ -132,6 +134,43 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
   const [greeting, setGreeting] = useState('שלום');
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const diffX = e.touches[0].clientX - touchStartX.current;
+    const diffY = e.touches[0].clientY - touchStartY.current;
+
+    // Swiping right by more than 45px where horizontal drag dominates
+    if (diffX > 45 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
+      onClose();
+      touchStartX.current = null;
+      touchStartY.current = null;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   useEffect(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) setGreeting('בוקר טוב');
@@ -169,26 +208,29 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
 
   const containerVariants: Variants = {
     hidden: { 
-      x: '100%', 
+      x: '105%', 
       opacity: 0,
+      scale: 0.94,
     },
     visible: { 
       x: 0, 
       opacity: 1,
+      scale: 1,
       transition: { 
         type: "spring", 
-        stiffness: 300, 
-        damping: 30, 
-        staggerChildren: 0.05, 
-        delayChildren: 0.2 
+        stiffness: 340, 
+        damping: 32, 
+        staggerChildren: 0.04, 
+        delayChildren: 0.12 
       }
     },
     exit: { 
-      x: '100%', 
+      x: '105%', 
       opacity: 0,
+      scale: 0.88,
       transition: { 
         type: "spring", 
-        stiffness: 300, 
+        stiffness: 340, 
         damping: 30 
       }
     }
@@ -203,9 +245,6 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
       transition: { type: "spring", stiffness: 300, damping: 24 }
     }
   };
-
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
 
   return (
     <>
@@ -222,7 +261,7 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Backdrop Overlay */}
+            {/* Backdrop Overlay - Tapping outside anywhere dismisses immediately */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -237,49 +276,99 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="fixed right-0 md:right-6 top-0 md:top-6 bottom-0 md:bottom-6 w-full md:w-[320px] luxury-card !bg-slate-900/95 !backdrop-blur-2xl p-6 pt-[calc(1.5rem+env(safe-area-inset-top,0px))] pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] flex flex-col gap-6 !rounded-none md:!rounded-[50px] overflow-hidden !border-white/10 z-[10001]"
+              drag="x"
+              dragDirectionLock
+              dragConstraints={{ left: 0, right: 350 }}
+              dragElastic={{ left: 0.05, right: 0.6 }}
+              onDragEnd={(_e, info) => {
+                if (info.offset.x > 50 || info.velocity.x > 200) {
+                  onClose();
+                }
+              }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="fixed right-0 md:right-6 top-0 md:top-6 bottom-0 md:bottom-6 w-[86vw] sm:w-[350px] md:w-[340px] luxury-card !bg-slate-900/95 !backdrop-blur-2xl p-4 sm:p-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] flex flex-col gap-3.5 !rounded-l-[32px] !rounded-r-none md:!rounded-[44px] overflow-hidden !border-white/10 z-[10001]"
               style={{ 
-                boxShadow: '0 0 80px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.1)'
+                transformOrigin: 'bottom right',
+                boxShadow: '0 0 80px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.15)'
               }}
               dir="rtl"
             >
               <div className="grain-overlay opacity-10" />
               <div className="premium-sweep-fx opacity-20" />
+
+              {/* Edge Swipe Pull Tab (left outer edge in RTL) */}
+              <motion.div
+                onClick={onClose}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+                className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-7 h-28 bg-slate-900/95 border-y border-l border-cyan-400/40 rounded-l-2xl flex flex-col items-center justify-center gap-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.6)] cursor-pointer hover:bg-slate-800 transition-colors group z-20"
+                title="החלקה ימינה או לחיצה לצמצום התפריט חזרה לאייקון"
+              >
+                <ChevronRight size={16} className="text-cyan-400 group-hover:translate-x-0.5 transition-transform" />
+                <div className="w-1 h-8 bg-cyan-400/50 rounded-full group-hover:bg-cyan-300 transition-colors" />
+              </motion.div>
             
-            {/* Header / Profile Section */}
-            <motion.div 
-              variants={itemVariants}
-              className="relative z-10 flex items-center gap-4 bg-white/5 p-4 rounded-3xl border border-white/10 backdrop-blur-md shadow-lg"
-            >
-                <div className="relative w-14 h-14 rounded-full overflow-hidden bg-white/10 border-2 border-white/20 shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.2)]">
-                  {currentUser?.avatar ? (
-                    <img 
-                      src={currentUser.avatar} 
-                      alt="Profile" 
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <User size={24} className="text-white/70 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                  )}
+              {/* Header / Profile Section */}
+              <motion.div 
+                variants={itemVariants}
+                className="relative z-10 flex items-center justify-between gap-3 bg-white/5 p-3 rounded-2xl border border-white/10 backdrop-blur-md shadow-lg"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden bg-white/10 border-2 border-white/20 shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                    {currentUser?.avatar ? (
+                      <img 
+                        src={currentUser.avatar} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <User size={22} className="text-white/70 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                    )}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[11px] text-white/60 font-medium tracking-wider">{greeting},</span>
+                    <h3 className="text-base font-black text-white tracking-tight truncate">
+                      {currentUser?.firstName || 'גולש'}
+                    </h3>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-white/60 font-medium tracking-wider">{greeting},</span>
-                  <h3 className="text-lg font-black text-white tracking-tight leading-tight">
-                    {currentUser?.firstName || 'גולש'}
-                  </h3>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button 
+                    onClick={onClose}
+                    aria-label="צמצם תפריט"
+                    title="צמצם לאייקון (החלקה ימינה)"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-cyan-500/15 hover:bg-cyan-500/25 active:scale-95 border border-cyan-400/30 text-cyan-300 text-xs font-black transition-all cursor-pointer shadow-sm group"
+                  >
+                    <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                    <span>צמצם</span>
+                  </button>
+                  <button 
+                    onClick={onClose}
+                    aria-label="סגור"
+                    className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/15 active:scale-90 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+                  >
+                    <X size={15} strokeWidth={2.5} />
+                  </button>
                 </div>
-                
-                <button 
-                  onClick={onClose}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/70 hover:bg-white/20 hover:text-white transition-colors"
-                >
-                  <X size={16} strokeWidth={2.5} />
-                </button>
+              </motion.div>
+
+              {/* Swipe Right Indicator Chip */}
+              <motion.div 
+                variants={itemVariants}
+                onClick={onClose}
+                className="relative z-10 flex items-center justify-center gap-1.5 py-1 px-3 rounded-full bg-slate-800/70 hover:bg-slate-800 border border-white/5 text-[10px] font-bold text-cyan-300/90 shadow-sm cursor-pointer transition-colors"
+                title="לחץ או החלק ימינה לצמצום התפריט"
+              >
+                <ChevronRight size={12} className="animate-pulse text-cyan-400" />
+                <span>החלקה ימינה מצמצמת חזרה לאייקון</span>
               </motion.div>
 
               {/* Bento Grid Navigation */}
-              <div className="flex-1 overflow-y-auto no-scrollbar relative z-10 -mx-2 px-2 pb-4 space-y-4">
+              <div className="flex-1 overflow-y-auto no-scrollbar relative z-10 -mx-1 px-1 pb-2 space-y-4">
                 {/* General Community Menu */}
                 <div className="space-y-2">
                   <div className="px-2 flex items-center justify-between text-[11px] font-black tracking-wider text-slate-400 uppercase">
@@ -290,7 +379,7 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
                     <span className="text-[9px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">חברים</span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3" style={{ gridAutoRows: 'minmax(110px, auto)' }}>
+                  <div className="grid grid-cols-2 gap-2.5" style={{ gridAutoRows: 'minmax(105px, auto)' }}>
                     {navItems.map((item) => (
                       <BentoCard 
                         key={item.id} 
@@ -319,7 +408,7 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3" style={{ gridAutoRows: 'minmax(110px, auto)' }}>
+                    <div className="grid grid-cols-2 gap-2.5" style={{ gridAutoRows: 'minmax(105px, auto)' }}>
                       {adminNavItems.map((item) => (
                         <BentoCard 
                           key={item.id} 
@@ -337,11 +426,22 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
                 )}
               </div>
 
-              {/* Footer Section - Logout */}
+              {/* Footer Section - Quick Collapse back to Icon & Logout */}
               <motion.div 
                 variants={itemVariants}
-                className="relative z-10"
+                className="relative z-10 grid grid-cols-2 gap-2 pt-1"
               >
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onClose}
+                  className="flex items-center justify-center gap-1.5 p-3 rounded-2xl bg-white/10 text-white/90 hover:bg-white/20 hover:text-white border border-white/15 transition-all text-xs font-black shadow-lg cursor-pointer group"
+                  title="צמצום התפריט חזרה לאייקון"
+                >
+                  <ChevronRight size={16} className="text-cyan-400 group-hover:translate-x-0.5 transition-transform" />
+                  <span>צמצם לאייקון</span>
+                </motion.button>
+
                 <motion.button
                   id="main-menu-logout-btn"
                   whileHover={{ scale: 1.02, y: -2 }}
@@ -355,12 +455,10 @@ export const FloatingDrawer: React.FC<FloatingDrawerProps> = ({ isOpen, onClose,
                       console.error("Logout error in FloatingDock:", err);
                     }
                   }}
-                  className="flex items-center justify-center gap-3 p-4 rounded-3xl w-full bg-rose-500/20 text-rose-200 hover:bg-rose-500/30 hover:text-white border border-rose-500/30 transition-all group shadow-lg cursor-pointer"
+                  className="flex items-center justify-center gap-1.5 p-3 rounded-2xl bg-rose-500/20 text-rose-200 hover:bg-rose-500/30 hover:text-white border border-rose-500/30 transition-all text-xs font-black shadow-lg cursor-pointer group"
                 >
-                  <LogOut size={20} strokeWidth={2} className="group-hover:-translate-x-1 transition-transform" />
-                  <span className="font-bold tracking-wide">
-                    התנתקות
-                  </span>
+                  <LogOut size={16} strokeWidth={2} className="group-hover:-translate-x-0.5 transition-transform" />
+                  <span>התנתקות</span>
                 </motion.button>
               </motion.div>
             </motion.nav>
