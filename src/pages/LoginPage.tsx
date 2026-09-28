@@ -19,6 +19,7 @@ import { processImage } from '../utils/imageProcessor';
 import { loadGoogleMaps } from '../utils/googlePlaces';
 import { isBiometricAvailable, authenticateWithBiometrics, getEnrolledBiometricUsers } from '../utils/biometrics';
 import { BiometricCircularButton } from '../components/BiometricCircularButton';
+import epicSurfBg from '../assets/images/surfer_epic_barrel_blue_1790609131375.jpg';
 import emailjs from '@emailjs/browser';
 
 const groups = [
@@ -122,8 +123,25 @@ const LoginPage: React.FC = () => {
     }
   }, [googleReady]);
 
-  const headerImage = useRandomHeader();
-  const currentBg = siteAssets?.loginBg || headerImage;
+  const [atalefError, setAtalefError] = useState(false);
+  const [reefError, setReefError] = useState(false);
+  const [bgSrc, setBgSrc] = useState<string>(epicSurfBg);
+
+  useEffect(() => {
+    if (siteAssets?.loginBg && typeof siteAssets.loginBg === 'string' && siteAssets.loginBg.trim() !== '') {
+      const img = new Image();
+      img.src = siteAssets.loginBg;
+      img.onload = () => {
+        setBgSrc(siteAssets.loginBg);
+      };
+      img.onerror = () => {
+        setBgSrc(epicSurfBg);
+      };
+    } else {
+      setBgSrc(epicSurfBg);
+    }
+  }, [siteAssets?.loginBg]);
+
   const logoUrl = siteAssets?.habalZugLogo;
 
   const handleWrongPassword = () => {
@@ -203,15 +221,6 @@ const LoginPage: React.FC = () => {
           }
 
           const nowIso = new Date().toISOString();
-          try {
-            await ensureFirebaseAuthSession('Admin');
-            await updateDoc(doc(db, 'members', mDoc.id), {
-              loginCount: increment(1),
-              lastLoginAt: nowIso
-            });
-          } catch (e) {
-            console.warn('Could not update fallback login metrics:', e);
-          }
           login({ ...mData, loginCount: (mData.loginCount || 0) + 1, lastLoginAt: nowIso }, selectedCommunityId);
           navigate('/');
           return;
@@ -239,15 +248,6 @@ const LoginPage: React.FC = () => {
         }
 
         const nowIso = new Date().toISOString();
-        try {
-          await updateDoc(doc(db, 'members', user.uid), {
-            loginCount: increment(1),
-            lastLoginAt: nowIso
-          });
-        } catch (updateErr) {
-          console.warn('Could not update login count:', updateErr);
-        }
-
         login({ ...memberData, loginCount: (memberData.loginCount || 0) + 1, lastLoginAt: nowIso }, selectedCommunityId);
         navigate('/');
       } else {
@@ -266,14 +266,6 @@ const LoginPage: React.FC = () => {
           }
 
           const nowIso = new Date().toISOString();
-          try {
-            await updateDoc(doc(db, 'members', mDoc.id), {
-              loginCount: increment(1),
-              lastLoginAt: nowIso
-            });
-          } catch (e) {
-            console.warn('Could not update fallback login metrics:', e);
-          }
           login({ ...mData, loginCount: (mData.loginCount || 0) + 1, lastLoginAt: nowIso }, selectedCommunityId);
           navigate('/');
         } else {
@@ -406,20 +398,8 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      // Step 5: Update login metrics in Firestore
+      // Step 5: Complete login session
       const nowIso = new Date().toISOString();
-      try {
-        await ensureFirebaseAuthSession(isAdminUser(memberData) ? 'Admin' : (memberData.role || 'Member'));
-        await updateDoc(doc(db, 'members', memberDocId), {
-          loginCount: increment(1),
-          lastLoginAt: nowIso
-        });
-        console.log(`LoginPage: Successfully recorded lastLoginAt (${nowIso}) for member ${memberDocId}`);
-      } catch (updErr) {
-        console.warn('LoginPage: Could not update login metrics:', updErr);
-      }
-
-      // Step 6: Complete login session
       const finalUser: Member = {
         ...memberData,
         id: memberDocId,
@@ -683,66 +663,61 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0284c7] flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden font-sans tracking-tight" dir="rtl">
-      {/* Background System: Single Unified Serene Ocean Color (No second background color) */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <motion.img 
-          initial={{ scale: 1.05, opacity: 0 }}
-          animate={{ scale: 1, opacity: 0.18 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-          src={currentBg} 
-          className="w-full h-full object-cover saturate-[1.1] brightness-[1.05] mix-blend-overlay pointer-events-none" 
-          alt="Background" 
+    <div className="min-h-screen bg-[#011422] flex flex-col items-center justify-center p-2.5 sm:p-8 relative overflow-hidden font-sans tracking-tight" dir="rtl">
+      {/* Background System: Real, Majestic Pacific Surf Barrel - High Visibility, Vivid & Luminous */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden select-none">
+        <img 
+          src={bgSrc} 
+          className="w-full h-full object-cover saturate-[1.2] contrast-[1.05] brightness-[1.0] pointer-events-none select-none" 
+          alt="" 
+          role="presentation"
+          aria-hidden="true"
         />
-        {/* Clean, 100% Uniform Ocean Daylight Wash - completely consistent from top to bottom */}
-        <div className="absolute inset-0 bg-[#0284c7]/40 backdrop-blur-[1px]"></div>
+        
+        {/* Soft, Transparent Atmospheric Vignette - keeps image clear and vivid across the entire viewport */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#011422]/15 via-transparent to-[#011422]/25 pointer-events-none" />
       </div>
 
-      <div className="relative z-10 w-full max-w-sm sm:max-w-md animate-in fade-in slide-in-from-bottom-8 duration-700">
-        {/* Frosted Crystalline Glassmorphism Card */}
-        <div className="bg-white/80 backdrop-blur-2xl backdrop-saturate-[180%] border border-white/90 p-7 sm:p-9 rounded-[36px] shadow-[0_24px_70px_rgba(2,44,67,0.22),inset_0_2px_3px_rgba(255,255,255,0.95)] relative overflow-hidden">
+      <div className="relative z-10 w-full max-w-sm sm:max-w-md my-auto flex flex-col justify-center">
+        {/* Crystalline High-Transparency Sea-Glass Card - Background shines through beautifully (10% opacity) */}
+        <div className="bg-white/10 backdrop-blur-2xl border border-white/30 p-3.5 sm:p-6 md:p-8 rounded-[28px] shadow-[0_20px_60px_rgba(0,18,36,0.35),0_2px_4px_rgba(0,0,0,0.02),inset_0_1.5px_2px_rgba(255,255,255,0.5)] relative max-h-[96vh] sm:max-h-none overflow-y-auto custom-scrollbar">
           
-          {/* Top Radiant Aqua & Turquoise Wave Shimmer */}
-          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-300 via-[#00AFC2] to-sky-400 shadow-[0_2px_14px_rgba(0,175,194,0.5)]" />
-
-          {/* Internal ambient soft light glows behind the glass */}
-          <div className="absolute -top-12 -left-12 w-48 h-48 bg-teal-300/15 rounded-full blur-3xl pointer-events-none -z-0" />
-          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-sky-300/15 rounded-full blur-3xl pointer-events-none -z-0" />
+          {/* Top Aqua & Turquoise Surf Shimmer */}
+          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-400 via-[#00AFC2] to-sky-400" />
 
           {/* Header / Logo */}
-          <div className="text-center mb-6 flex flex-col justify-center items-center relative z-10">
+          <div className="text-center mb-2 sm:mb-4 flex flex-col justify-center items-center relative z-10">
             {isDataLoading ? (
-              <div className="h-24 flex items-center justify-center">
-                <Loader2 className="animate-spin text-[#00AFC2]" size={32} />
+              <div className="h-14 sm:h-24 flex items-center justify-center">
+                <Loader2 className="animate-spin text-[#00AFC2]" size={26} />
               </div>
             ) : (
               <motion.div 
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="flex flex-col gap-3 items-center w-full relative"
+                className="flex flex-col gap-1.5 sm:gap-2 items-center w-full relative"
               >
-                {/* Radiant halo behind the logo with warm sun & sea turquoise reflections */}
-                <div className="absolute -inset-10 bg-gradient-to-tr from-[#00AFC2]/25 via-amber-200/20 to-sky-300/20 rounded-full blur-[35px] pointer-events-none -z-10 animate-pulse duration-[6000ms]" />
-                
-                {logoUrl ? (
+                {logoUrl && !logoError ? (
                   <img 
                     src={logoUrl} 
-                    className="h-20 sm:h-24 w-auto object-contain drop-shadow-[0_4px_16px_rgba(0,175,194,0.3)] hover:scale-105 transition-transform duration-500" 
+                    onError={() => setLogoError(true)}
+                    className="h-25 sm:h-55 w-auto object-contain drop-shadow-[0_4px_16px_rgba(0,175,194,0.3)] hover:scale-105 transition-transform duration-500" 
                     alt="Habal Zug Logo" 
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#00AFC2] via-[#008da0] to-[#004266] flex items-center justify-center text-white rounded-2xl shrink-0 shadow-[0_6px_20px_rgba(0,175,194,0.35)] mb-1">
-                    <Waves size={32} />
+                  <div className="w-16 h-16 sm:h-24 sm:w-24 bg-gradient-to-br from-[#00AFC2] via-[#008da0] to-[#004266] flex items-center justify-center text-white rounded-xl sm:rounded-2xl shrink-0 shadow-[0_6px_20px_rgba(0,175,194,0.35)] mb-1">
+                    <Waves size={30} className="sm:hidden" />
+                    <Waves size={48} className="hidden sm:block" />
                   </div>
                 )}
 
-                <div className="space-y-1">
-                  <h1 className="text-slate-900 text-xl sm:text-2xl font-black tracking-tight drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
+                <div className="space-y-1.5 sm:space-y-2.5">
+                  <h1 className="text-slate-900 text-[20px] sm:text-3xl md:text-4xl font-black tracking-tight drop-shadow-[0_1.5px_2.5px_rgba(255,255,255,0.95)] leading-tight">
                     קהילת חבל זוג — מחוברים תמיד, מכל מקום
                   </h1>
-                  <p className="text-[#007f96] text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5">
+                  <p className="text-white text-[15px] sm:text-lg md:text-xl font-black flex items-center justify-center gap-1.5 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.45)] mt-1">
                     <span>איזה כיף שחזרת!</span>
                     <span>🌊</span>
                   </p>
@@ -753,45 +728,45 @@ const LoginPage: React.FC = () => {
 
           {/* Segmented Mode Switcher: Member Login vs Join Request */}
           {mode !== 'RESET_TEMP_PASSWORD' && (
-            <div className="flex p-1.5 bg-slate-900/[0.05] backdrop-blur-xl border border-white/80 rounded-2xl mb-5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.03)] relative z-10">
+            <div className="flex p-1 bg-slate-900/[0.05] backdrop-blur-xl border border-white/80 rounded-xl sm:rounded-2xl mb-2 sm:mb-3.5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.03)] relative z-10">
               <button
                 type="button"
                 onClick={() => { setMode('LOGIN'); setError(''); }}
-                className={`flex-1 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm transition-all duration-300 flex items-center justify-center gap-1 sm:gap-1.5 ${
                   mode === 'LOGIN'
                     ? 'bg-gradient-to-r from-[#00AFC2] to-teal-500 text-white shadow-[0_4px_16px_rgba(0,175,194,0.35),inset_0_1px_1.5px_rgba(255,255,255,0.4)]'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
                 }`}
               >
-                <LogIn size={15} />
+                <LogIn size={13} className="sm:w-[15px] sm:h-[15px]" />
                 <span>כניסת חברים</span>
               </button>
               <button
                 type="button"
                 onClick={() => { setMode('JOIN'); setError(''); }}
-                className={`flex-1 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm transition-all duration-300 flex items-center justify-center gap-1 sm:gap-1.5 ${
                   mode === 'JOIN'
                     ? 'bg-gradient-to-r from-teal-500 to-sky-600 text-white shadow-[0_4px_16px_rgba(14,165,233,0.35),inset_0_1px_1.5px_rgba(255,255,255,0.4)]'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
                 }`}
               >
-                <UserPlus size={15} />
+                <UserPlus size={13} className="sm:w-[15px] sm:h-[15px]" />
                 <span>הצטרפות לקהילה</span>
               </button>
             </div>
           )}
 
           {mode === 'LOGIN' ? (
-            <form onSubmit={handleLoginSubmit} className="space-y-5 relative z-10">
-              <div className="space-y-3.5">
+            <form onSubmit={handleLoginSubmit} className="space-y-4 sm:space-y-5 relative z-10">
+              <div className="space-y-3.5 sm:space-y-4">
                 <div className="relative group">
                   <input 
                     type="email" required value={email} onChange={e => setEmail(e.target.value)} 
-                    className="w-full h-12 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-base outline-none pr-4 pl-10 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
+                    className="w-full h-12 sm:h-13 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-xl sm:rounded-2xl text-slate-900 font-medium text-sm sm:text-base outline-none pr-4 pl-10 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
                     placeholder="דוא״ל"
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <Mail size={18} className="text-[#00AFC2] group-focus-within:text-cyan-700 transition-colors" />
+                    <Mail size={16} className="text-[#00AFC2] group-focus-within:text-cyan-700 transition-colors sm:w-[18px] sm:h-[18px]" />
                   </div>
                 </div>
 
@@ -799,7 +774,7 @@ const LoginPage: React.FC = () => {
                   <input 
                     type={showPassword ? "text" : "password"} 
                     required value={password} onChange={e => setPassword(e.target.value)} 
-                    className="w-full h-12 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-base outline-none pr-4 pl-10 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
+                    className="w-full h-12 sm:h-13 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-xl sm:rounded-2xl text-slate-900 font-medium text-sm sm:text-base outline-none pr-4 pl-10 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
                     placeholder="סיסמה"
                   />
                   <button 
@@ -807,23 +782,23 @@ const LoginPage: React.FC = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors p-1"
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <EyeOff size={16} className="sm:w-[18px] sm:h-[18px]" /> : <Eye size={16} className="sm:w-[18px] sm:h-[18px]" />}
                   </button>
                 </div>
 
                 {/* Group Selection Dropdown */}
                 <div className="relative w-full">
-                  <label className="text-[11px] font-bold text-slate-700 block pr-1 mb-1 text-right">קבוצת פעילות</label>
+                  <label className="text-[10px] sm:text-[11px] font-bold text-slate-700 block pr-1 mb-1.5 text-right">קבוצת פעילות</label>
                   <button 
                     type="button"
                     onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
-                    className="w-full h-12 bg-white/60 hover:bg-white/80 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-800 font-semibold text-base outline-none text-right flex items-center justify-between px-4 hover:border-[#00AFC2]/60 focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
+                    className="w-full h-12 sm:h-13 bg-white/60 hover:bg-white/80 backdrop-blur-xl border border-white/90 rounded-xl sm:rounded-2xl text-slate-800 font-semibold text-sm sm:text-base outline-none text-right flex items-center justify-between px-4 hover:border-[#00AFC2]/60 focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
                   >
-                    <span className="flex-1 text-right flex items-center gap-2">
-                      <MapPin size={16} className="text-[#00AFC2] shrink-0" />
+                    <span className="flex-1 text-right flex items-center gap-1.5 sm:gap-2">
+                      <MapPin size={14} className="text-[#00AFC2] shrink-0 sm:w-[16px] sm:h-[16px]" />
                       <span>{AVAILABLE_COMMUNITIES.find(c => c.id === selectedCommunityId)?.name || 'קבוצת הרצליה'}</span>
                     </span>
-                    <ChevronDown size={18} className={`text-[#00AFC2] transition-transform duration-300 ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={16} className={`text-[#00AFC2] transition-transform duration-300 sm:w-[18px] sm:h-[18px] ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   <AnimatePresence>
@@ -833,7 +808,7 @@ const LoginPage: React.FC = () => {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 5 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-white/95 backdrop-blur-2xl border border-white/90 rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-60 py-1.5 custom-scrollbar"
+                        className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-white/95 backdrop-blur-2xl border border-white/90 rounded-xl sm:rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-48 sm:max-h-60 py-1.5 custom-scrollbar"
                       >
                         {AVAILABLE_COMMUNITIES.map((c) => (
                           <button
@@ -844,7 +819,7 @@ const LoginPage: React.FC = () => {
                               setIsCommunityMenuOpen(false);
                               setError('');
                             }}
-                            className={`w-full px-4 py-3 text-right font-medium text-sm transition-all flex items-center justify-between hover:bg-cyan-50/80 ${
+                            className={`w-full px-4 py-2.5 sm:py-3 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between hover:bg-cyan-50/80 ${
                               selectedCommunityId === c.id ? 'text-[#008ba3] bg-cyan-50 font-bold' : 'text-slate-700'
                             }`}
                           >
@@ -887,28 +862,28 @@ const LoginPage: React.FC = () => {
                 )}
               </AnimatePresence>
 
-              <div className="pt-1 flex flex-col items-center gap-3.5">
+              <div className="pt-2 flex flex-col items-center gap-3 sm:gap-4.5">
                 <button 
                   type="submit" 
                   disabled={isLoading || isBiometricLoading} 
-                  className="w-full h-12 bg-gradient-to-r from-[#00AFC2] via-teal-500 to-sky-500 hover:brightness-105 text-white shadow-[0_8px_22px_rgba(0,175,194,0.38),inset_0_1.5px_2px_rgba(255,255,255,0.6)] active:shadow-[0_2px_8px_rgba(0,175,194,0.4)] border-b-[3px] border-[#008ba3] active:border-b-0 active:translate-y-[2px] rounded-2xl flex items-center justify-center transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-black text-base tracking-wide"
+                  className="w-full h-11.5 sm:h-12.5 bg-gradient-to-r from-[#00AFC2] via-teal-500 to-sky-500 hover:brightness-105 text-white shadow-[0_8px_22px_rgba(0,175,194,0.38),inset_0_1.5px_2px_rgba(255,255,255,0.6)] active:shadow-[0_2px_8px_rgba(0,175,194,0.4)] border-b-[3px] border-[#008ba3] active:border-b-0 active:translate-y-[2px] rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-black text-sm sm:text-base tracking-wide"
                 >
                   {isLoading ? (
-                    <Loader2 className="animate-spin text-white mx-auto" size={20} />
+                    <Loader2 className="animate-spin text-white mx-auto" size={18} />
                   ) : (
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-1.5 sm:gap-2">
                       <span>התחבר</span>
-                      <ArrowRight size={18} className="rotate-180" />
+                      <ArrowRight size={16} className="rotate-180 sm:w-[18px] sm:h-[18px]" />
                     </span>
                   )}
                 </button>
 
                 {hasBiometrics && (
-                  <div className="w-full flex flex-col items-center pt-1">
-                    <div className="w-full flex items-center gap-3 my-1.5">
-                      <div className="flex-1 h-px bg-slate-300/60" />
-                      <span className="text-[11px] font-bold text-slate-500 tracking-wider">או כניסה מהירה בנגיעה</span>
-                      <div className="flex-1 h-px bg-slate-300/60" />
+                  <div className="w-full flex flex-col items-center pt-2.5">
+                    <div className="w-full flex items-center gap-3 my-3 sm:my-3.5">
+                      <div className="flex-1 h-px bg-white/25" />
+                      <span className="text-xs sm:text-sm font-black text-white tracking-wider drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)]">או כניסה מהירה בנגיעה</span>
+                      <div className="flex-1 h-px bg-white/25" />
                     </div>
                     <BiometricCircularButton
                       onClick={handleBiometricLogin}
@@ -1208,43 +1183,47 @@ const LoginPage: React.FC = () => {
               )}
             </motion.form>
           )}
-        </div>
-
-        {/* Elevated Partner Logos Capsule at the bottom - Pure Liquid Frosted Glass Pill */}
-        <div className="mt-8 flex items-center justify-center gap-8 py-3.5 px-8 bg-white/70 backdrop-blur-2xl border border-white/80 rounded-3xl shadow-[0_12px_40px_rgba(2,44,67,0.2),inset_0_1.5px_2px_rgba(255,255,255,0.95)] animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
-          <a 
-            href="https://www.atalef.com" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="group transition-all duration-500 hover:scale-105 opacity-90 hover:opacity-100 flex items-center"
-            title="עמותת העטלף"
-          >
-            {siteAssets?.atalefLogo && (
-              <img 
-                src={siteAssets.atalefLogo} 
-                alt="עמותת העטלף" 
-                className="h-16 sm:h-20 w-auto transition-all duration-500 drop-shadow-sm" 
-                referrerPolicy="no-referrer"
-              />
-            )}
-          </a>
-          <div className="w-px h-8 bg-slate-300/80" />
-          <a 
-            href="https://www.reefseacenter.com" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="group transition-all duration-500 hover:scale-105 opacity-90 hover:opacity-100 flex items-center"
-            title="מרכז ימי ריף"
-          >
-            {siteAssets?.reefLogo && (
-              <img 
-                src={siteAssets.reefLogo} 
-                alt="מועדון ריף" 
-                className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover bg-white transition-all duration-500 shadow-md ring-2 ring-white/80" 
-                referrerPolicy="no-referrer"
-              />
-            )}
-          </a>
+          {/* Subtle elegant divider */}
+          <div className="my-1 border-t border-white/10 w-full" />
+          
+          {/* Integrated Partner Logos - Highly compact to eliminate dead space */}
+          <div className="flex items-center justify-center gap-3.5 sm:gap-5 pb-0">
+            <a 
+              href="https://www.atalef.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="group transition-all duration-500 hover:scale-105 opacity-95 hover:opacity-100 flex items-center"
+              title="עמותת העטלף"
+            >
+              {siteAssets?.atalefLogo && !atalefError && (
+                <img 
+                  src={siteAssets.atalefLogo} 
+                  onError={() => setAtalefError(true)}
+                  alt="עמותת העטלף" 
+                  className="h-12 sm:h-16 w-auto transition-all duration-500" 
+                  referrerPolicy="no-referrer"
+                />
+              )}
+            </a>
+            <div className="w-px h-5 sm:h-8 bg-white/20" />
+            <a 
+              href="https://www.reefseacenter.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="group transition-all duration-500 hover:scale-105 opacity-95 hover:opacity-100 flex items-center"
+              title="מרכז ימי ריף"
+            >
+              {siteAssets?.reefLogo && !reefError && (
+                <img 
+                  src={siteAssets.reefLogo} 
+                  onError={() => setReefError(true)}
+                  alt="מועדון ריף" 
+                  className="h-8 w-8 sm:h-11 sm:w-11 rounded-full object-cover bg-white transition-all duration-500 shadow-sm ring-1 ring-white/60" 
+                  referrerPolicy="no-referrer"
+                />
+              )}
+            </a>
+          </div>
         </div>
       </div>
       {/* Forgot Password Modal */}
