@@ -33,11 +33,59 @@ const groups = [
   "תל אביב", "תל אביב - ותיקים"
 ];
 
+/**
+ * Calculates Israel's astronomical sunrise and sunset times (approx. Lat: 32.08, Lng: 34.78)
+ * for the current day of the year, including daylight saving offset.
+ */
+function getIsraelSunriseSunset(date: Date = new Date()) {
+  const latitude = 32.0853; 
+  const longitude = 34.7818;
+  
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date.getTime() - start.getTime();
+  const oneDay = 1000 * 60 * 60 * 24;
+  const dayOfYear = Math.floor(diff / oneDay);
+  
+  // Solar declination approximation
+  const declination = 23.45 * Math.sin((2 * Math.PI / 365) * (dayOfYear - 80));
+  
+  const latRad = (latitude * Math.PI) / 180;
+  const decRad = (declination * Math.PI) / 180;
+  
+  let cosH = -Math.tan(latRad) * Math.sin(decRad) / (Math.cos(latRad) * Math.cos(decRad));
+  cosH = Math.max(-1, Math.min(1, cosH));
+  
+  const H = Math.acos(cosH) * (180 / Math.PI); // Hour angle in degrees
+  
+  // Israel Daylight Saving Time Check
+  const year = date.getFullYear();
+  const march31 = new Date(year, 2, 31);
+  const marchFridayOffset = (march31.getDay() + 2) % 7; 
+  const dstStart = new Date(year, 2, 31 - marchFridayOffset, 2, 0, 0);
+  
+  const oct31 = new Date(year, 9, 31);
+  const octSundayOffset = oct31.getDay(); 
+  const dstEnd = new Date(year, 9, 31 - octSundayOffset, 2, 0, 0);
+  
+  const isDST = date >= dstStart && date < dstEnd;
+  const localNoon = isDST ? 12.65 : 11.65; // Approx local solar noon UTC offset
+  
+  const sunriseHour = localNoon - (H / 15);
+  const sunsetHour = localNoon + (H / 15);
+  
+  return {
+    sunrise: sunriseHour, // e.g. 5.65 (05:39 AM)
+    sunset: sunsetHour    // e.g. 19.35 (07:21 PM)
+  };
+}
+
 const LoginPage: React.FC = () => {
   console.log("LoginPage rendering");
   const [loginTheme, setLoginTheme] = useState<'dark' | 'light'>(() => {
-    const hour = new Date().getHours();
-    return (hour >= 6 && hour < 18) ? 'light' : 'dark';
+    const now = new Date();
+    const currentHourDecimal = now.getHours() + now.getMinutes() / 60;
+    const { sunrise, sunset } = getIsraelSunriseSunset(now);
+    return (currentHourDecimal >= sunrise && currentHourDecimal < sunset) ? 'light' : 'dark';
   });
   const [mode, setMode] = useState<'LOGIN' | 'JOIN' | 'RESET_TEMP_PASSWORD'>('LOGIN');
   const { login, currentUser } = useAuth();
@@ -76,6 +124,32 @@ const LoginPage: React.FC = () => {
     }).catch(() => {
       setHasBiometrics(true);
     });
+  }, []);
+
+  // Automated background scheduler for sunrise/sunset theme changes, with a precise trigger at 00:01 and periodic checks
+  useEffect(() => {
+    const updateThemeAutomatically = () => {
+      const now = new Date();
+      const currentHourDecimal = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+      const { sunrise, sunset } = getIsraelSunriseSunset(now);
+      
+      const targetTheme = (currentHourDecimal >= sunrise && currentHourDecimal < sunset) ? 'light' : 'dark';
+      
+      setLoginTheme(prev => {
+        if (prev !== targetTheme) {
+          console.log(`Auto-Theme transition triggered! Time: ${now.toLocaleTimeString()}, Sunrise: ${sunrise.toFixed(2)}, Sunset: ${sunset.toFixed(2)}, Selected Theme: ${targetTheme}`);
+          return targetTheme;
+        }
+        return prev;
+      });
+    };
+
+    // Run once on mount
+    updateThemeAutomatically();
+
+    // Check time and transition status every 30 seconds, naturally catching the 00:01 crossing and sunrise/sunset boundaries
+    const interval = setInterval(updateThemeAutomatically, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const [email, setEmail] = useState('');
@@ -809,20 +883,12 @@ const LoginPage: React.FC = () => {
                 <div className="relative group">
                   <input 
                     type="email" required value={email} onChange={e => setEmail(e.target.value)} 
-                    className={`w-full h-11 backdrop-blur-xl border rounded-lg font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all ${
-                      isDarkTheme
-                        ? 'bg-[#faf8f5]/12 border-white/25 text-[#fbf5df] vintage-cream-input placeholder-[#fbf5df]/75 focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]'
-                        : 'bg-[#002b44]/5 border-[#002b44]/20 text-[#002b44] dark-blue-input placeholder-[#002b44]/65 focus:border-[#002b44]/45 focus:bg-white/40 focus:ring-2 focus:ring-[#007085]/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.06),_inset_0_1px_1px_0_rgba(255,255,255,0.45)]'
-                    }`}
+                    className="w-full h-11 rounded-lg font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all vintage-glass-input"
                     placeholder="דוא״ל"
-                    style={{ color: isDarkTheme ? '#fbf5df' : '#002b44' }}
+                    style={{ color: '#fbf5df' }}
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <Mail size={14} className={`transition-colors ${
-                      isDarkTheme 
-                        ? 'text-[#fbf5df]/60 group-focus-within:text-[#fbf5df]' 
-                        : 'text-[#002b44]/60 group-focus-within:text-[#002b44]'
-                    }`} />
+                    <Mail size={14} className="text-[#fbf5df]/60 group-focus-within:text-[#fbf5df] transition-colors" />
                   </div>
                 </div>
 
@@ -830,20 +896,14 @@ const LoginPage: React.FC = () => {
                   <input 
                     type={showPassword ? "text" : "password"} 
                     required value={password} onChange={e => setPassword(e.target.value)} 
-                    className={`w-full h-11 backdrop-blur-xl border rounded-lg font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all ${
-                      isDarkTheme
-                        ? 'bg-[#faf8f5]/12 border-white/25 text-[#fbf5df] vintage-cream-input placeholder-[#fbf5df]/75 focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]'
-                        : 'bg-[#002b44]/5 border-[#002b44]/20 text-[#002b44] dark-blue-input placeholder-[#002b44]/65 focus:border-[#002b44]/45 focus:bg-white/40 focus:ring-2 focus:ring-[#007085]/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.06),_inset_0_1px_1px_0_rgba(255,255,255,0.45)]'
-                    }`}
+                    className="w-full h-11 rounded-lg font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all vintage-glass-input"
                     placeholder="סיסמה"
-                    style={{ color: isDarkTheme ? '#fbf5df' : '#002b44' }}
+                    style={{ color: '#fbf5df' }}
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors p-1 ${
-                      isDarkTheme ? 'text-[#fbf5df]/60 hover:text-[#fbf5df]' : 'text-[#002b44]/60 hover:text-[#002b44]'
-                    }`}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#fbf5df]/60 hover:text-[#fbf5df] transition-colors p-1"
                   >
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -851,23 +911,17 @@ const LoginPage: React.FC = () => {
 
                 {/* Group Selection Dropdown */}
                 <div className="relative w-full">
-                  <label className={`text-[10px] font-mono uppercase tracking-widest block pr-1 mb-0.5 text-right transition-colors duration-500 ${
-                    isDarkTheme ? 'text-[#fbf5df]/60' : 'text-[#002b44]/60'
-                  }`}>קבוצת פעילות</label>
+                  <label className="text-[10px] font-sans font-bold uppercase tracking-widest block pr-1 mb-0.5 text-right text-[#fbf5df]/70">קבוצת פעילות</label>
                   <button 
                     type="button"
                     onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
-                    className={`w-full h-11 backdrop-blur-xl border rounded-lg text-sm font-semibold outline-none text-right flex items-center justify-between px-3.5 transition-all ${
-                      isDarkTheme
-                        ? 'bg-[#faf8f5]/12 border-white/25 text-[#fbf5df] hover:bg-[#faf8f5]/18 focus:border-white/50 focus:ring-2 focus:ring-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]'
-                        : 'bg-[#002b44]/5 border-[#002b44]/20 text-[#002b44] hover:bg-white/40 focus:border-[#002b44]/45 focus:ring-2 focus:ring-[#007085]/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.06),_inset_0_1px_1px_0_rgba(255,255,255,0.45)]'
-                    }`}
+                    className="w-full h-11 rounded-lg text-sm font-semibold outline-none text-right flex items-center justify-between px-3.5 transition-all vintage-glass-input cursor-pointer"
                   >
                     <span className="flex-1 text-right flex items-center gap-1.5">
-                      <MapPin size={13} className={`shrink-0 ${isDarkTheme ? 'text-[#fbf5df]/60' : 'text-[#002b44]/60'}`} />
-                      <span>{AVAILABLE_COMMUNITIES.find(c => c.id === selectedCommunityId)?.name || 'קבוצת הרצליה'}</span>
+                      <MapPin size={13} className="shrink-0 text-[#fbf5df]/70" />
+                      <span className="text-[#fbf5df]">{AVAILABLE_COMMUNITIES.find(c => c.id === selectedCommunityId)?.name || 'קבוצת הרצליה'}</span>
                     </span>
-                    <ChevronDown size={14} className={`transition-transform duration-300 ${isDarkTheme ? 'text-[#fbf5df]/60' : 'text-[#002b44]/60'} ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`text-[#fbf5df]/70 transition-transform duration-300 ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   <AnimatePresence>
@@ -877,9 +931,7 @@ const LoginPage: React.FC = () => {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.98, y: 3 }}
                         transition={{ duration: 0.12 }}
-                        className={`absolute top-[calc(100%+0.25rem)] left-0 right-0 border rounded-lg shadow-lg z-50 overflow-y-auto max-h-44 py-1 custom-scrollbar ${
-                          isDarkTheme ? 'bg-[#0d1520] border-white/10 text-white' : 'bg-white border-slate-200 text-slate-800'
-                        }`}
+                        className="absolute top-[calc(100%+0.25rem)] left-0 right-0 bg-[#0d1520]/95 backdrop-blur-xl border border-white/10 text-white rounded-lg shadow-lg z-50 overflow-y-auto max-h-44 py-1 custom-scrollbar"
                       >
                         {AVAILABLE_COMMUNITIES.map((c) => (
                           <button
@@ -890,17 +942,15 @@ const LoginPage: React.FC = () => {
                               setIsCommunityMenuOpen(false);
                               setError('');
                             }}
-                            className={`w-full px-3.5 py-2 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between ${
-                              isDarkTheme
-                                ? (selectedCommunityId === c.id ? 'text-[#fbf5df] bg-white/10 font-bold' : 'text-slate-300 hover:bg-white/5')
-                                : (selectedCommunityId === c.id ? 'text-[#002b44] bg-slate-50 font-bold' : 'text-slate-600 hover:bg-slate-50')
+                            className={`w-full px-3.5 py-2 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between hover:bg-white/10 ${
+                              selectedCommunityId === c.id ? 'text-[#fbf5df] bg-white/10 font-bold' : 'text-slate-300'
                             }`}
                           >
                             <span className="flex items-center gap-2">
-                              <span className={`w-1.5 h-1.5 rounded-full ${isDarkTheme ? 'bg-[#fbf5df]/60' : 'bg-slate-400'}`} />
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#fbf5df]/70" />
                               <span>{c.name}</span>
                             </span>
-                            {selectedCommunityId === c.id && <CheckCircle2 size={14} className={isDarkTheme ? 'text-[#fbf5df]' : 'text-slate-700'} />}
+                            {selectedCommunityId === c.id && <CheckCircle2 size={14} className="text-[#fbf5df]" />}
                           </button>
                         ))}
                       </motion.div>
@@ -996,8 +1046,9 @@ const LoginPage: React.FC = () => {
                     required 
                     value={newPassword} 
                     onChange={e => setNewPassword(e.target.value)} 
-                    className="w-full h-11 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-sans text-sm outline-none pr-3.5 pl-9 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]"
+                    className="w-full h-11 rounded-lg font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all vintage-glass-input"
                     placeholder="סיסמה חדשה"
+                    style={{ color: '#fbf5df' }}
                   />
                 </div>
                 <div className="relative group">
@@ -1006,8 +1057,9 @@ const LoginPage: React.FC = () => {
                     required 
                     value={confirmPassword} 
                     onChange={e => setConfirmPassword(e.target.value)} 
-                    className="w-full h-11 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-sans text-sm outline-none pr-3.5 pl-9 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]"
+                    className="w-full h-11 rounded-lg font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all vintage-glass-input"
                     placeholder="אימות סיסמה"
+                    style={{ color: '#fbf5df' }}
                   />
                   <button 
                     type="button"
@@ -1112,12 +1164,12 @@ const LoginPage: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-medium text-xs outline-none px-3 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]" style={{ color: '#fbf5df' }} />
-                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-medium text-xs outline-none px-3 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]" style={{ color: '#fbf5df' }} />
+                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full h-10 rounded-lg text-xs font-medium outline-none px-3 text-right transition-all vintage-glass-input" style={{ color: '#fbf5df' }} />
+                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full h-10 rounded-lg text-xs font-medium outline-none px-3 text-right transition-all vintage-glass-input" style={{ color: '#fbf5df' }} />
                   </div>
                   
-                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="דוא״ל" className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-medium text-xs outline-none px-3 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]" style={{ color: '#fbf5df' }} />
-                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-medium text-xs outline-none px-3 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)] focus:text-left direction-ltr text-left" dir="ltr" style={{ color: '#fbf5df' }} />
+                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="דוא״ל" className="w-full h-10 rounded-lg text-xs font-medium outline-none px-3 text-right transition-all vintage-glass-input" style={{ color: '#fbf5df' }} />
+                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full h-10 rounded-lg text-xs font-medium outline-none px-3 text-right transition-all vintage-glass-input focus:text-left direction-ltr text-left" dir="ltr" style={{ color: '#fbf5df' }} />
                   
                   <div className="relative group">
                     <input 
@@ -1127,7 +1179,7 @@ const LoginPage: React.FC = () => {
                       value={joinAddress} 
                       onChange={e => setJoinAddress(e.target.value)} 
                       placeholder="כתובת מגורים (עיר ורחוב)" 
-                      className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-medium text-xs outline-none px-3 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]" 
+                      className="w-full h-10 rounded-lg text-xs font-medium outline-none px-3 text-right transition-all vintage-glass-input" 
                       style={{ color: '#fbf5df' }}
                     />
                     <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#fbf5df]/60 transition-colors" />
@@ -1138,7 +1190,7 @@ const LoginPage: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => setIsGroupMenuOpen(!isGroupMenuOpen)}
-                      className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] font-medium text-xs outline-none text-right flex items-center justify-between px-3 hover:bg-[#faf8f5]/18 focus:border-white/50 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]"
+                      className="w-full h-10 rounded-lg text-xs font-medium outline-none text-right flex items-center justify-between px-3 transition-all vintage-glass-input cursor-pointer"
                     >
                       <span className="flex-1 text-right flex items-center gap-1.5">
                         <span className="text-[#fbf5df]/60 text-[10px] font-mono uppercase">קבוצה מבוקשת:</span>
@@ -1156,7 +1208,7 @@ const LoginPage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.98, y: 3 }}
                             transition={{ duration: 0.12 }}
-                            className="absolute top-[calc(100%+0.25rem)] left-0 right-0 bg-[#0d1520] border border-[#faf8f5]/20 rounded-lg shadow-2xl z-[70] overflow-y-auto max-h-44 py-1 custom-scrollbar"
+                            className="absolute top-[calc(100%+0.25rem)] left-0 right-0 bg-[#0d1520]/95 backdrop-blur-xl border border-[#faf8f5]/20 rounded-lg shadow-2xl z-[70] overflow-y-auto max-h-44 py-1 custom-scrollbar"
                           >
                             {groups.map((g) => (
                               <button
@@ -1184,7 +1236,7 @@ const LoginPage: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => setIsGenderMenuOpen(!isGenderMenuOpen)}
-                      className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] font-medium text-xs outline-none text-right flex items-center justify-between px-3 hover:bg-[#faf8f5]/18 focus:border-white/50 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]"
+                      className="w-full h-10 rounded-lg text-xs font-medium outline-none text-right flex items-center justify-between px-3 transition-all vintage-glass-input cursor-pointer"
                     >
                       <span className={`flex-1 text-right ${joinGender ? 'text-[#fbf5df] font-medium' : 'text-[#fbf5df]/50'}`}>{joinGender || 'מגדר (בחירה)'}</span>
                       <ChevronDown size={14} className={`text-[#fbf5df]/60 transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
@@ -1199,7 +1251,7 @@ const LoginPage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.98, y: 3 }}
                             transition={{ duration: 0.12 }}
-                            className="absolute top-[calc(100%+0.25rem)] left-0 right-0 bg-[#121c26] border border-slate-700 rounded-lg shadow-2xl z-[70] overflow-hidden py-1"
+                            className="absolute top-[calc(100%+0.25rem)] left-0 right-0 bg-[#121c26]/95 backdrop-blur-xl border border-slate-700 rounded-lg shadow-2xl z-[70] overflow-hidden py-1"
                           >
                             {(['זכר', 'נקבה', 'לא בינארי', 'מעדיפ/ה לא לציין'] as const).map((g) => (
                               <button
@@ -1210,11 +1262,11 @@ const LoginPage: React.FC = () => {
                                   setIsGenderMenuOpen(false);
                                 }}
                                 className={`w-full px-3 py-1.5 text-right font-medium text-xs transition-all flex items-center justify-between hover:bg-[#1a2735] ${
-                                  joinGender === g ? 'text-cyan-400 bg-[#162332] font-bold' : 'text-slate-300'
+                                  joinGender === g ? 'text-[#fbf5df] bg-[#162332] font-bold' : 'text-slate-300'
                                 }`}
                               >
                                 <span>{g}</span>
-                                {joinGender === g && <CheckCircle2 size={13} className="text-cyan-400" />}
+                                {joinGender === g && <CheckCircle2 size={13} className="text-[#fbf5df]" />}
                               </button>
                             ))}
                           </motion.div>

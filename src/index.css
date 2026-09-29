@@ -3146,8 +3146,43 @@ body .neo-glass-button {
 }
 
 /* Force all text inputs to use modern charcoal text */
-input[type="text"]:not(.text-white), input[type="date"]:not(.text-white), input[type="time"]:not(.text-white), input[type="url"]:not(.text-white), input[type="email"]:not(.text-white), input[type="password"]:not(.text-white), input[type="number"]:not(.text-white), input[type="tel"]:not(.text-white), textarea:not(.text-white) {
+input[type="text"]:not(.text-white):not(.vintage-glass-input), input[type="date"]:not(.text-white):not(.vintage-glass-input), input[type="time"]:not(.text-white):not(.vintage-glass-input), input[type="url"]:not(.text-white):not(.vintage-glass-input), input[type="email"]:not(.text-white):not(.vintage-glass-input), input[type="password"]:not(.text-white):not(.vintage-glass-input), input[type="number"]:not(.text-white):not(.vintage-glass-input), input[type="tel"]:not(.text-white):not(.vintage-glass-input), textarea:not(.text-white):not(.vintage-glass-input) {
     color: #1e293b;
+}
+
+/* Premium universal glassmorphism styling for vintage cream input boxes */
+.vintage-glass-input,
+input.vintage-glass-input,
+textarea.vintage-glass-input,
+button.vintage-glass-input {
+    background-color: rgba(3, 12, 20, 0.45) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border: 1px solid rgba(251, 245, 223, 0.22) !important;
+    color: #fbf5df !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.vintage-glass-input::placeholder {
+    color: rgba(251, 245, 223, 0.70) !important;
+}
+
+.vintage-glass-input:focus,
+input.vintage-glass-input:focus,
+textarea.vintage-glass-input:focus {
+    background-color: rgba(3, 12, 20, 0.65) !important;
+    border-color: rgba(251, 245, 223, 0.55) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), 0 0 0 3px rgba(251, 245, 223, 0.15), inset 0 1px 1px 0 rgba(255, 255, 255, 0.12) !important;
+    outline: none !important;
+}
+
+.vintage-glass-input:-webkit-autofill,
+.vintage-glass-input:-webkit-autofill:hover, 
+.vintage-glass-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #fbf5df !important;
+    -webkit-box-shadow: 0 0 0px 1000px rgba(3, 12, 20, 0.8) inset !important;
+    transition: background-color 5000s ease-in-out 0s !important;
 }
 
 /* Force vintage cream color on login and specified inputs during typing */
