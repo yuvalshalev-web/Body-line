@@ -780,15 +780,17 @@ const LoginPage: React.FC = () => {
       <div className="fixed inset-0 w-full h-full z-0 pointer-events-none overflow-hidden select-none">
         <img 
           src={isDarkTheme ? cadBlueprintBg : davinciLightBg} 
-          className="absolute inset-0 w-full h-full object-cover opacity-80 min-w-full min-h-full transition-all duration-500" 
+          className={`absolute inset-0 w-full h-full object-cover min-w-full min-h-full transition-all duration-500 ${
+            isDarkTheme ? 'opacity-[0.45]' : 'opacity-[0.35]'
+          }`} 
           alt="Surfboard Design Blueprint Wallpaper" 
           referrerPolicy="no-referrer"
         />
-        {/* Soft, Transparent Drafting Vignette overlay */}
-        <div className={`absolute inset-0 transition-colors duration-500 pointer-events-none ${
+        {/* Soft, Transparent Drafting Vignette for subtle softening without losing the beautiful blueprint detail */}
+        <div className={`absolute inset-0 transition-all duration-500 pointer-events-none ${
           isDarkTheme 
-            ? 'bg-gradient-to-b from-[#030c14]/10 via-transparent to-[#030c14]/20'
-            : 'bg-gradient-to-b from-[#faf8f5]/20 via-transparent to-[#faf8f5]/30'
+            ? 'bg-gradient-to-b from-[#030c14]/25 via-transparent to-[#030c14]/30'
+            : 'bg-gradient-to-b from-[#faf8f5]/20 via-transparent to-[#faf8f5]/25'
         }`} />
       </div>
 

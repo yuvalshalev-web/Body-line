@@ -24,41 +24,6 @@ export const BiometricCircularButton: React.FC<BiometricCircularButtonProps> = (
   return (
     <div className="flex flex-col items-center justify-center my-0.5 select-none">
       <div className="relative flex items-center justify-center">
-        {/* High-fidelity layered concentric pulsing aura rings for supreme visual awareness */}
-        {!isLoading && !disabled && (
-          <>
-            <motion.div
-              className={`absolute inset-0 rounded-full border pointer-events-none w-20 h-20 -m-1 ${
-                isDark ? 'border-[#fbf5df]/30 bg-[#fbf5df]/8' : 'border-[#002b44]/25 bg-[#002b44]/8'
-              }`}
-              animate={{
-                scale: [0.80, 1.50],
-                opacity: [0.75, 0],
-              }}
-              transition={{
-                duration: 2.4,
-                repeat: Infinity,
-                ease: "easeOut"
-              }}
-            />
-            <motion.div
-              className={`absolute inset-0 rounded-full border pointer-events-none w-20 h-20 -m-1 ${
-                isDark ? 'border-[#fbf5df]/18 bg-[#fbf5df]/4' : 'border-[#002b44]/12 bg-[#002b44]/4'
-              }`}
-              animate={{
-                scale: [0.80, 1.50],
-                opacity: [0.75, 0],
-              }}
-              transition={{
-                duration: 2.4,
-                delay: 1.2,
-                repeat: Infinity,
-                ease: "easeOut"
-              }}
-            />
-          </>
-        )}
-
         {/* Compact Central Touch / Fingerprint Button - Completely transparent and borderless */}
         <motion.button
           type="button"
