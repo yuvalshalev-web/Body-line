@@ -3147,7 +3147,21 @@ body .neo-glass-button {
 
 /* Force all text inputs to use modern charcoal text */
 input[type="text"]:not(.text-white), input[type="date"]:not(.text-white), input[type="time"]:not(.text-white), input[type="url"]:not(.text-white), input[type="email"]:not(.text-white), input[type="password"]:not(.text-white), input[type="number"]:not(.text-white), input[type="tel"]:not(.text-white), textarea:not(.text-white) {
-    color: #1e293b !important;
+    color: #1e293b;
+}
+
+/* Force vintage cream color on login and specified inputs during typing */
+.vintage-cream-input, 
+input.vintage-cream-input,
+textarea.vintage-cream-input {
+    color: #fbf5df !important;
+}
+
+/* Force dark blue color on specified inputs during typing */
+.dark-blue-input,
+input.dark-blue-input,
+textarea.dark-blue-input {
+    color: #002b44 !important;
 }
 /* Google Places Autocomplete Fix */
 .pac-container {

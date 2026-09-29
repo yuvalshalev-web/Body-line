@@ -24,14 +24,25 @@ export const BiometricCircularButton: React.FC<BiometricCircularButtonProps> = (
   return (
     <div className="flex flex-col items-center justify-center my-0.5 select-none">
       <div className="relative flex items-center justify-center">
-        {/* Subtle Ambient Glow - Highly reduced for light theme to prevent ellipse look */}
-        <div 
-          className={`absolute w-16 h-16 rounded-full transition-all duration-500 pointer-events-none bg-white/5 blur-sm ${
-            isHovered || isLoading ? 'scale-105 opacity-100' : 'scale-95 opacity-30'
-          }`} 
-        />
+        {/* Subtle, glowing, expanding pulsing aura ring behind the fingerprint */}
+        {!isLoading && !disabled && (
+          <motion.div
+            className={`absolute inset-0 rounded-full border pointer-events-none w-20 h-20 -m-1 ${
+              isDark ? 'border-[#fbf5df]/20 bg-[#fbf5df]/5' : 'border-[#002b44]/15 bg-[#002b44]/5'
+            }`}
+            animate={{
+              scale: [0.85, 1.45],
+              opacity: [0.65, 0],
+            }}
+            transition={{
+              duration: 2.8,
+              repeat: Infinity,
+              ease: "easeOut"
+            }}
+          />
+        )}
 
-        {/* Compact Central Touch / Fingerprint Button */}
+        {/* Compact Central Touch / Fingerprint Button - Completely transparent and borderless */}
         <motion.button
           type="button"
           onClick={onClick}
@@ -40,24 +51,32 @@ export const BiometricCircularButton: React.FC<BiometricCircularButtonProps> = (
           onMouseLeave={() => setIsHovered(false)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className={`relative z-10 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer group disabled:opacity-60 disabled:cursor-not-allowed ${
-            isDark
-              ? 'w-14 h-14 rounded-full shadow-md bg-gradient-to-b from-slate-800/90 via-slate-900/95 to-slate-950 border border-amber-400/40 hover:border-amber-400 shadow-[0_4px_18px_rgba(245,158,11,0.25)] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)]'
-              : 'w-22 h-22 bg-white/5 hover:bg-white/10 border-0 shadow-none rounded-full'
-          }`}
+          className="relative z-10 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer group disabled:opacity-60 disabled:cursor-not-allowed bg-transparent border-0 p-1 focus:outline-none"
           title="התחברות בטביעת אצבע / Face ID"
         >
           {isLoading ? (
-            <Loader2 className={`animate-spin ${isDark ? 'text-amber-400' : 'text-white'}`} size={26} />
+            <Loader2 className={`animate-spin ${isDark ? 'text-[#fbf5df]' : 'text-[#002b44]'}`} size={20} />
           ) : (
-            <BiometricFingerprint
-              strokeWidth={2.4}
-              className={`transition-all duration-300 group-hover:scale-102 ${
-                isDark 
-                  ? 'w-7 h-8 text-amber-300 group-hover:text-white drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]' 
-                  : 'w-18 h-21 text-white drop-shadow-[0_2px_8px_rgba(255,255,255,0.4)] hover:drop-shadow-[0_4px_12px_rgba(255,255,255,0.6)]'
-              }`}
-            />
+            <motion.div
+              animate={{
+                scale: [1, 1.04, 1],
+                opacity: [0.85, 1, 0.85],
+              }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <BiometricFingerprint
+                strokeWidth={2.3}
+                className={`w-18 h-22 transition-all duration-300 ${
+                  isDark 
+                    ? 'text-[#fbf5df] group-hover:text-white drop-shadow-[0_0_12px_rgba(251,245,223,0.55)]' 
+                    : 'text-[#002b44] group-hover:text-[#001220] drop-shadow-[0_0_12px_rgba(0,43,68,0.25)]'
+                }`}
+              />
+            </motion.div>
           )}
         </motion.button>
       </div>

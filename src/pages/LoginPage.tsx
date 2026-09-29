@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, increment, addDoc, limit, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
-import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, ChevronDown, MapPin, CheckCircle2, UserPlus, Mail, RotateCcw, X, UserCheck, Sparkles, Waves, User, Terminal, Fingerprint, ShieldCheck } from 'lucide-react';
+import { LogIn, Loader2, ArrowRight, Camera, Eye, EyeOff, Phone, AlertCircle, ChevronDown, MapPin, CheckCircle2, UserPlus, Mail, RotateCcw, X, UserCheck, Sparkles, Waves, User, Terminal, Fingerprint, ShieldCheck, Sun, Moon } from 'lucide-react';
 import { getDb, trackedGetDocs, auth, handleFirestoreError, OperationType } from '../services/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword, getAuth } from 'firebase/auth';
 import { Member, JoinRequest } from '../types';
@@ -20,6 +20,8 @@ import { loadGoogleMaps } from '../utils/googlePlaces';
 import { isBiometricAvailable, authenticateWithBiometrics, getEnrolledBiometricUsers } from '../utils/biometrics';
 import { BiometricCircularButton } from '../components/BiometricCircularButton';
 import epicSurfBg from '../assets/images/surfer_epic_barrel_blue_1790609131375.jpg';
+import cadBlueprintBg from '../assets/images/surfboard_autocad_blueprint_1790665770207.jpg';
+import davinciLightBg from '../assets/images/davinci_light_blueprint_1790672610109.jpg';
 import emailjs from '@emailjs/browser';
 
 const groups = [
@@ -33,6 +35,10 @@ const groups = [
 
 const LoginPage: React.FC = () => {
   console.log("LoginPage rendering");
+  const [loginTheme, setLoginTheme] = useState<'dark' | 'light'>(() => {
+    const hour = new Date().getHours();
+    return (hour >= 6 && hour < 18) ? 'light' : 'dark';
+  });
   const [mode, setMode] = useState<'LOGIN' | 'JOIN' | 'RESET_TEMP_PASSWORD'>('LOGIN');
   const { login, currentUser } = useAuth();
   const { siteAssets, isLoading: isDataLoading, isDbEmpty, seedInitialAdmin } = useData();
@@ -662,111 +668,161 @@ const LoginPage: React.FC = () => {
     if (joinEmail) setEmail(joinEmail);
   };
 
+  const isDarkTheme = loginTheme === 'dark';
+  const currentHour = new Date().getHours();
+  const autoTheme = (currentHour >= 6 && currentHour < 18) ? 'light' : 'dark';
+  const isAutoThemeActive = loginTheme === autoTheme;
+
   return (
-    <div className="min-h-screen bg-[#011422] flex flex-col items-center justify-center p-2.5 sm:p-8 relative overflow-hidden font-sans tracking-tight" dir="rtl">
-      {/* Background System: Real, Majestic Pacific Surf Barrel - High Visibility, Vivid & Luminous */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden select-none">
+    <div className={`h-screen w-screen flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 relative overflow-hidden font-sans tracking-tight transition-colors duration-500 ${isDarkTheme ? 'bg-[#030c14]' : 'bg-[#faf8f5]'}`} dir="rtl">
+      {/* Floating Theme Switcher Toggle */}
+      <button
+        type="button"
+        onClick={() => setLoginTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+        className={`absolute top-4 left-4 z-50 p-2.5 rounded-full backdrop-blur-xl border flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 shadow-md cursor-pointer ${
+          isDarkTheme 
+            ? 'bg-white/10 border-white/20 text-[#fbf5df]' 
+            : 'bg-[#002b44]/10 border-[#002b44]/20 text-[#002b44]'
+        }`}
+        title={isDarkTheme ? "החלף למראה בהיר (DaVinci)" : "החלף למראה כהה (CAD)"}
+      >
+        {isAutoThemeActive && (
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" title="סנכרון אוטומטי (יום/לילה) פעיל" />
+        )}
+        {isDarkTheme ? (
+          <>
+            <Sun size={14} className="text-amber-300 shrink-0" />
+            <span className="text-[10px] font-bold font-mono">תצוגה בהירה (DaVinci)</span>
+          </>
+        ) : (
+          <>
+            <Moon size={14} className="text-[#002b44] shrink-0" />
+            <span className="text-[10px] font-bold font-mono">תצוגה כהה (CAD)</span>
+          </>
+        )}
+      </button>
+
+      {/* Background System: Authentic High-Fidelity CAD Drafting Sheet Blueprint */}
+      <div className="fixed inset-0 w-full h-full z-0 pointer-events-none overflow-hidden select-none">
         <img 
-          src={bgSrc} 
-          className="w-full h-full object-cover saturate-[1.2] contrast-[1.05] brightness-[1.0] pointer-events-none select-none" 
-          alt="" 
-          role="presentation"
-          aria-hidden="true"
+          src={isDarkTheme ? cadBlueprintBg : davinciLightBg} 
+          className="absolute inset-0 w-full h-full object-cover opacity-80 min-w-full min-h-full transition-all duration-500" 
+          alt="Surfboard Design Blueprint Wallpaper" 
+          referrerPolicy="no-referrer"
         />
-        
-        {/* Soft, Transparent Atmospheric Vignette - keeps image clear and vivid across the entire viewport */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#011422]/15 via-transparent to-[#011422]/25 pointer-events-none" />
+        {/* Soft, Transparent Drafting Vignette overlay */}
+        <div className={`absolute inset-0 transition-colors duration-500 pointer-events-none ${
+          isDarkTheme 
+            ? 'bg-gradient-to-b from-[#030c14]/10 via-transparent to-[#030c14]/20'
+            : 'bg-gradient-to-b from-[#faf8f5]/20 via-transparent to-[#faf8f5]/30'
+        }`} />
       </div>
 
-      <div className="relative z-10 w-full max-w-sm sm:max-w-md my-auto flex flex-col justify-center">
-        {/* Crystalline High-Transparency Sea-Glass Card - Background shines through beautifully (10% opacity) */}
-        <div className="bg-white/10 backdrop-blur-2xl border border-white/30 p-3.5 sm:p-6 md:p-8 rounded-[28px] shadow-[0_20px_60px_rgba(0,18,36,0.35),0_2px_4px_rgba(0,0,0,0.02),inset_0_1.5px_2px_rgba(255,255,255,0.5)] relative max-h-[96vh] sm:max-h-none overflow-y-auto custom-scrollbar">
-          
-          {/* Top Aqua & Turquoise Surf Shimmer */}
-          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-400 via-[#00AFC2] to-sky-400" />
+      <div className="relative z-10 w-full max-w-sm sm:max-w-md my-auto flex flex-col justify-between p-4 sm:p-6 md:p-8 max-h-[98vh] sm:max-h-none overflow-hidden gap-3 sm:gap-4.5">
 
           {/* Header / Logo */}
-          <div className="text-center mb-2 sm:mb-4 flex flex-col justify-center items-center relative z-10">
+          <div className="text-center mb-2 sm:mb-3 flex items-center justify-center relative z-10 gap-4">
             {isDataLoading ? (
-              <div className="h-14 sm:h-24 flex items-center justify-center">
-                <Loader2 className="animate-spin text-[#00AFC2]" size={26} />
+              <div className="h-14 sm:h-20 flex items-center justify-center">
+                <Loader2 className="animate-spin text-slate-500" size={24} />
               </div>
             ) : (
               <motion.div 
-                initial={{ y: 10, opacity: 0 }}
+                initial={{ y: 5, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="flex flex-col gap-1.5 sm:gap-2 items-center w-full relative"
+                transition={{ duration: 0.4 }}
+                className="flex flex-col gap-1 sm:gap-1.5 items-center w-full relative"
               >
                 {logoUrl && !logoError ? (
                   <img 
                     src={logoUrl} 
                     onError={() => setLogoError(true)}
-                    className="h-25 sm:h-55 w-auto object-contain drop-shadow-[0_4px_16px_rgba(0,175,194,0.3)] hover:scale-105 transition-transform duration-500" 
+                    className="h-32 sm:h-52 w-auto object-contain transition-transform duration-500 hover:scale-103" 
                     alt="Habal Zug Logo" 
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-16 h-16 sm:h-24 sm:w-24 bg-gradient-to-br from-[#00AFC2] via-[#008da0] to-[#004266] flex items-center justify-center text-white rounded-xl sm:rounded-2xl shrink-0 shadow-[0_6px_20px_rgba(0,175,194,0.35)] mb-1">
-                    <Waves size={30} className="sm:hidden" />
-                    <Waves size={48} className="hidden sm:block" />
+                  <div className={`w-12 h-12 sm:h-18 sm:w-18 border flex items-center justify-center rounded-lg shrink-0 mb-1 ${
+                    isDarkTheme ? 'border-white/20 bg-slate-800 text-white' : 'border-slate-300 bg-slate-50 text-slate-700'
+                  }`}>
+                    <Waves size={30} strokeWidth={1.5} />
                   </div>
                 )}
 
-                <div className="space-y-1.5 sm:space-y-2.5">
-                  <h1 className="text-slate-900 text-[20px] sm:text-3xl md:text-4xl font-black tracking-tight drop-shadow-[0_1.5px_2.5px_rgba(255,255,255,0.95)] leading-tight">
-                    קהילת חבל זוג — מחוברים תמיד, מכל מקום
+                <div className="space-y-2 sm:space-y-3 mt-3 w-full text-center">
+                  <h1 className={`text-3xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight font-sans drop-shadow-[0_4px_8px_rgba(0,0,0,0.55)] transition-colors duration-500 ${
+                    isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'
+                  }`}>
+                    קהילת חבל זוג
                   </h1>
-                  <p className="text-white text-[15px] sm:text-lg md:text-xl font-black flex items-center justify-center gap-1.5 drop-shadow-[0_1.5px_4px_rgba(0,0,0,0.45)] mt-1">
+                  <p className={`font-bold text-xl sm:text-3xl md:text-4xl leading-snug transition-colors duration-500 ${
+                    isDarkTheme ? 'text-[#fbf5df]/90' : 'text-[#002b44]/90'
+                  }`}>
+                    מחוברים תמיד, מכל מקום
+                  </p>
+                  <p className={`font-bold text-lg sm:text-2xl flex items-center justify-center gap-2 mt-2 transition-colors duration-500 ${
+                    isDarkTheme ? 'text-[#fbf5df]/75' : 'text-[#002b44]/75'
+                  }`}>
                     <span>איזה כיף שחזרת!</span>
-                    <span>🌊</span>
+                    <span className="text-2xl sm:text-3xl select-none animate-bounce">🌊</span>
                   </p>
                 </div>
               </motion.div>
             )}
           </div>
 
-          {/* Segmented Mode Switcher: Member Login vs Join Request */}
+          {/* Segmented Technical Mode Switcher: Member Login vs Join Request */}
           {mode !== 'RESET_TEMP_PASSWORD' && (
-            <div className="flex p-1 bg-slate-900/[0.05] backdrop-blur-xl border border-white/80 rounded-xl sm:rounded-2xl mb-2 sm:mb-3.5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.03)] relative z-10">
+            <div className={`flex p-0.5 border rounded-lg mb-2.5 relative z-10 transition-colors duration-500 ${
+              isDarkTheme ? 'bg-[#030c14]/40 border-white/20' : 'bg-slate-200/80 border-slate-300'
+            }`}>
               <button
                 type="button"
                 onClick={() => { setMode('LOGIN'); setError(''); }}
-                className={`flex-1 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm transition-all duration-300 flex items-center justify-center gap-1 sm:gap-1.5 ${
+                className={`flex-1 py-1.5 rounded-md font-mono text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 ${
                   mode === 'LOGIN'
-                    ? 'bg-gradient-to-r from-[#00AFC2] to-teal-500 text-white shadow-[0_4px_16px_rgba(0,175,194,0.35),inset_0_1px_1.5px_rgba(255,255,255,0.4)]'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
+                    ? (isDarkTheme ? 'bg-[#fbf5df] text-[#030c14] font-semibold' : 'bg-[#002b44] text-white font-semibold')
+                    : (isDarkTheme ? 'text-[#fbf5df]/60 hover:text-[#fbf5df]' : 'text-slate-600 hover:text-[#002b44]')
                 }`}
               >
-                <LogIn size={13} className="sm:w-[15px] sm:h-[15px]" />
+                <LogIn size={11} strokeWidth={2} />
                 <span>כניסת חברים</span>
               </button>
               <button
                 type="button"
                 onClick={() => { setMode('JOIN'); setError(''); }}
-                className={`flex-1 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm transition-all duration-300 flex items-center justify-center gap-1 sm:gap-1.5 ${
+                className={`flex-1 py-1.5 rounded-md font-mono text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 ${
                   mode === 'JOIN'
-                    ? 'bg-gradient-to-r from-teal-500 to-sky-600 text-white shadow-[0_4px_16px_rgba(14,165,233,0.35),inset_0_1px_1.5px_rgba(255,255,255,0.4)]'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
+                    ? (isDarkTheme ? 'bg-[#fbf5df] text-[#030c14] font-semibold' : 'bg-[#002b44] text-white font-semibold')
+                    : (isDarkTheme ? 'text-[#fbf5df]/60 hover:text-[#fbf5df]' : 'text-slate-600 hover:text-[#002b44]')
                 }`}
               >
-                <UserPlus size={13} className="sm:w-[15px] sm:h-[15px]" />
-                <span>הצטרפות לקהילה</span>
+                <UserPlus size={11} strokeWidth={2} />
+                <span>הצטרפות</span>
               </button>
             </div>
           )}
 
           {mode === 'LOGIN' ? (
-            <form onSubmit={handleLoginSubmit} className="space-y-4 sm:space-y-5 relative z-10">
-              <div className="space-y-3.5 sm:space-y-4">
+            <form onSubmit={handleLoginSubmit} className="space-y-2.5 sm:space-y-3 relative z-10">
+              <div className="space-y-2">
                 <div className="relative group">
                   <input 
                     type="email" required value={email} onChange={e => setEmail(e.target.value)} 
-                    className="w-full h-12 sm:h-13 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-xl sm:rounded-2xl text-slate-900 font-medium text-sm sm:text-base outline-none pr-4 pl-10 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
+                    className={`w-full h-11 backdrop-blur-xl border rounded-lg font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all ${
+                      isDarkTheme
+                        ? 'bg-[#faf8f5]/12 border-white/25 text-[#fbf5df] vintage-cream-input placeholder-[#fbf5df]/75 focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]'
+                        : 'bg-[#002b44]/5 border-[#002b44]/20 text-[#002b44] dark-blue-input placeholder-[#002b44]/65 focus:border-[#002b44]/45 focus:bg-white/40 focus:ring-2 focus:ring-[#007085]/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.06),_inset_0_1px_1px_0_rgba(255,255,255,0.45)]'
+                    }`}
                     placeholder="דוא״ל"
+                    style={{ color: isDarkTheme ? '#fbf5df' : '#002b44' }}
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <Mail size={16} className="text-[#00AFC2] group-focus-within:text-cyan-700 transition-colors sm:w-[18px] sm:h-[18px]" />
+                    <Mail size={14} className={`transition-colors ${
+                      isDarkTheme 
+                        ? 'text-[#fbf5df]/60 group-focus-within:text-[#fbf5df]' 
+                        : 'text-[#002b44]/60 group-focus-within:text-[#002b44]'
+                    }`} />
                   </div>
                 </div>
 
@@ -774,41 +830,56 @@ const LoginPage: React.FC = () => {
                   <input 
                     type={showPassword ? "text" : "password"} 
                     required value={password} onChange={e => setPassword(e.target.value)} 
-                    className="w-full h-12 sm:h-13 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-xl sm:rounded-2xl text-slate-900 font-medium text-sm sm:text-base outline-none pr-4 pl-10 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
+                    className={`w-full h-11 backdrop-blur-xl border rounded-lg font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all ${
+                      isDarkTheme
+                        ? 'bg-[#faf8f5]/12 border-white/25 text-[#fbf5df] vintage-cream-input placeholder-[#fbf5df]/75 focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]'
+                        : 'bg-[#002b44]/5 border-[#002b44]/20 text-[#002b44] dark-blue-input placeholder-[#002b44]/65 focus:border-[#002b44]/45 focus:bg-white/40 focus:ring-2 focus:ring-[#007085]/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.06),_inset_0_1px_1px_0_rgba(255,255,255,0.45)]'
+                    }`}
                     placeholder="סיסמה"
+                    style={{ color: isDarkTheme ? '#fbf5df' : '#002b44' }}
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors p-1"
+                    className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors p-1 ${
+                      isDarkTheme ? 'text-[#fbf5df]/60 hover:text-[#fbf5df]' : 'text-[#002b44]/60 hover:text-[#002b44]'
+                    }`}
                   >
-                    {showPassword ? <EyeOff size={16} className="sm:w-[18px] sm:h-[18px]" /> : <Eye size={16} className="sm:w-[18px] sm:h-[18px]" />}
+                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
 
                 {/* Group Selection Dropdown */}
                 <div className="relative w-full">
-                  <label className="text-[10px] sm:text-[11px] font-bold text-slate-700 block pr-1 mb-1.5 text-right">קבוצת פעילות</label>
+                  <label className={`text-[10px] font-mono uppercase tracking-widest block pr-1 mb-0.5 text-right transition-colors duration-500 ${
+                    isDarkTheme ? 'text-[#fbf5df]/60' : 'text-[#002b44]/60'
+                  }`}>קבוצת פעילות</label>
                   <button 
                     type="button"
                     onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
-                    className="w-full h-12 sm:h-13 bg-white/60 hover:bg-white/80 backdrop-blur-xl border border-white/90 rounded-xl sm:rounded-2xl text-slate-800 font-semibold text-sm sm:text-base outline-none text-right flex items-center justify-between px-4 hover:border-[#00AFC2]/60 focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
+                    className={`w-full h-11 backdrop-blur-xl border rounded-lg text-sm font-semibold outline-none text-right flex items-center justify-between px-3.5 transition-all ${
+                      isDarkTheme
+                        ? 'bg-[#faf8f5]/12 border-white/25 text-[#fbf5df] hover:bg-[#faf8f5]/18 focus:border-white/50 focus:ring-2 focus:ring-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]'
+                        : 'bg-[#002b44]/5 border-[#002b44]/20 text-[#002b44] hover:bg-white/40 focus:border-[#002b44]/45 focus:ring-2 focus:ring-[#007085]/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.06),_inset_0_1px_1px_0_rgba(255,255,255,0.45)]'
+                    }`}
                   >
-                    <span className="flex-1 text-right flex items-center gap-1.5 sm:gap-2">
-                      <MapPin size={14} className="text-[#00AFC2] shrink-0 sm:w-[16px] sm:h-[16px]" />
+                    <span className="flex-1 text-right flex items-center gap-1.5">
+                      <MapPin size={13} className={`shrink-0 ${isDarkTheme ? 'text-[#fbf5df]/60' : 'text-[#002b44]/60'}`} />
                       <span>{AVAILABLE_COMMUNITIES.find(c => c.id === selectedCommunityId)?.name || 'קבוצת הרצליה'}</span>
                     </span>
-                    <ChevronDown size={16} className={`text-[#00AFC2] transition-transform duration-300 sm:w-[18px] sm:h-[18px] ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`transition-transform duration-300 ${isDarkTheme ? 'text-[#fbf5df]/60' : 'text-[#002b44]/60'} ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   <AnimatePresence>
                     {isCommunityMenuOpen && (
                        <motion.div 
-                        initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                        initial={{ opacity: 0, scale: 0.98, y: 3 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-white/95 backdrop-blur-2xl border border-white/90 rounded-xl sm:rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-48 sm:max-h-60 py-1.5 custom-scrollbar"
+                        exit={{ opacity: 0, scale: 0.98, y: 3 }}
+                        transition={{ duration: 0.12 }}
+                        className={`absolute top-[calc(100%+0.25rem)] left-0 right-0 border rounded-lg shadow-lg z-50 overflow-y-auto max-h-44 py-1 custom-scrollbar ${
+                          isDarkTheme ? 'bg-[#0d1520] border-white/10 text-white' : 'bg-white border-slate-200 text-slate-800'
+                        }`}
                       >
                         {AVAILABLE_COMMUNITIES.map((c) => (
                           <button
@@ -819,15 +890,17 @@ const LoginPage: React.FC = () => {
                               setIsCommunityMenuOpen(false);
                               setError('');
                             }}
-                            className={`w-full px-4 py-2.5 sm:py-3 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between hover:bg-cyan-50/80 ${
-                              selectedCommunityId === c.id ? 'text-[#008ba3] bg-cyan-50 font-bold' : 'text-slate-700'
+                            className={`w-full px-3.5 py-2 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between ${
+                              isDarkTheme
+                                ? (selectedCommunityId === c.id ? 'text-[#fbf5df] bg-white/10 font-bold' : 'text-slate-300 hover:bg-white/5')
+                                : (selectedCommunityId === c.id ? 'text-[#002b44] bg-slate-50 font-bold' : 'text-slate-600 hover:bg-slate-50')
                             }`}
                           >
                             <span className="flex items-center gap-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#00AFC2]" />
+                              <span className={`w-1.5 h-1.5 rounded-full ${isDarkTheme ? 'bg-[#fbf5df]/60' : 'bg-slate-400'}`} />
                               <span>{c.name}</span>
                             </span>
-                            {selectedCommunityId === c.id && <CheckCircle2 size={16} className="text-[#00AFC2]" />}
+                            {selectedCommunityId === c.id && <CheckCircle2 size={14} className={isDarkTheme ? 'text-[#fbf5df]' : 'text-slate-700'} />}
                           </button>
                         ))}
                       </motion.div>
@@ -839,57 +912,61 @@ const LoginPage: React.FC = () => {
               <AnimatePresence mode="popLayout">
                 {error && (
                   <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="p-3.5 bg-rose-50/90 border-r-4 border-rose-500 text-rose-700 text-sm font-bold flex items-start gap-3 rounded-xl shadow-sm backdrop-blur-md"
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    className="p-3 bg-red-50 border-r-2 border-red-500 text-red-700 text-xs sm:text-sm font-bold flex items-start gap-2.5 rounded-lg shadow-sm"
                   >
-                    <AlertCircle size={18} className="shrink-0 mt-0.5 text-rose-500" />
+                    <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-500" />
                     <span className="leading-tight">{error}</span>
                   </motion.div>
                 )}
                 
                 {resetSuccessMessage && (
                   <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="p-3.5 bg-emerald-50/90 border-r-4 border-emerald-500 text-emerald-800 text-sm font-bold flex items-center gap-3 rounded-xl shadow-sm backdrop-blur-md"
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    className="p-3 bg-emerald-50 border-r-2 border-emerald-500 text-emerald-800 text-xs sm:text-sm font-bold flex items-center gap-2.5 rounded-lg shadow-sm"
                   >
-                    <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
+                    <CheckCircle2 size={15} className="shrink-0 text-emerald-600" />
                     <span>{resetSuccessMessage}</span>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              <div className="pt-2 flex flex-col items-center gap-3 sm:gap-4.5">
+              <div className="pt-0.5 flex flex-col items-center gap-1.5 sm:gap-2">
                 <button 
                   type="submit" 
                   disabled={isLoading || isBiometricLoading} 
-                  className="w-full h-11.5 sm:h-12.5 bg-gradient-to-r from-[#00AFC2] via-teal-500 to-sky-500 hover:brightness-105 text-white shadow-[0_8px_22px_rgba(0,175,194,0.38),inset_0_1.5px_2px_rgba(255,255,255,0.6)] active:shadow-[0_2px_8px_rgba(0,175,194,0.4)] border-b-[3px] border-[#008ba3] active:border-b-0 active:translate-y-[2px] rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-black text-sm sm:text-base tracking-wide"
+                  className={`w-full h-11 shadow-sm rounded-lg flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm tracking-wide border-0 ${
+                    isDarkTheme 
+                      ? 'bg-[#fbf5df] text-[#030c14] hover:bg-[#fffde8]' 
+                      : 'bg-[#002b44] text-white hover:bg-[#001c2e]'
+                  }`}
                 >
                   {isLoading ? (
-                    <Loader2 className="animate-spin text-white mx-auto" size={18} />
+                    <Loader2 className={`animate-spin mx-auto ${isDarkTheme ? 'text-[#030c14]' : 'text-white'}`} size={16} />
                   ) : (
-                    <span className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="flex items-center gap-1.5">
                       <span>התחבר</span>
-                      <ArrowRight size={16} className="rotate-180 sm:w-[18px] sm:h-[18px]" />
+                      <ArrowRight size={14} className="rotate-180" />
                     </span>
                   )}
                 </button>
 
                 {hasBiometrics && (
-                  <div className="w-full flex flex-col items-center pt-2.5">
-                    <div className="w-full flex items-center gap-3 my-3 sm:my-3.5">
-                      <div className="flex-1 h-px bg-white/25" />
-                      <span className="text-xs sm:text-sm font-black text-white tracking-wider drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)]">או כניסה מהירה בנגיעה</span>
-                      <div className="flex-1 h-px bg-white/25" />
+                  <div className="w-full flex flex-col items-center pt-0.5">
+                    <div className="w-full flex items-center gap-2.5 my-1">
+                      <div className={`flex-1 h-px ${isDarkTheme ? 'bg-[#fbf5df]/15' : 'bg-[#002b44]/15'}`} />
+                      <span className={`text-xs font-mono uppercase tracking-widest font-semibold transition-colors duration-500 ${isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'}`}>SEC_BIOMETRIC_AUTH // אימות ביומטרי</span>
+                      <div className={`flex-1 h-px ${isDarkTheme ? 'bg-[#fbf5df]/15' : 'bg-[#002b44]/15'}`} />
                     </div>
                     <BiometricCircularButton
                       onClick={handleBiometricLogin}
                       isLoading={isBiometricLoading}
                       disabled={isLoading}
-                      theme="light"
+                      theme={loginTheme}
                       userName={enrolledBioUsers.length > 0 ? (enrolledBioUsers[0].userName || enrolledBioUsers[0].userEmail) : undefined}
                     />
                   </div>
@@ -898,28 +975,28 @@ const LoginPage: React.FC = () => {
             </form>
           ) : mode === 'RESET_TEMP_PASSWORD' ? (
             <motion.form 
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              exit={{ opacity: 0, scale: 0.98 }}
               onSubmit={handleResetPasswordSubmit} 
-              className="space-y-5 relative z-10"
+              className="space-y-3 relative z-10"
             >
-              <div className="text-center mb-6 flex flex-col items-center">
-                <div className="w-16 h-16 bg-cyan-50 text-[#00AFC2] rounded-2xl flex items-center justify-center mb-3 border border-cyan-200 shadow-sm">
-                  <RotateCcw size={30} className="animate-spin-slow text-[#00AFC2]" />
+              <div className="text-center mb-3.5 flex flex-col items-center">
+                <div className="w-12 h-12 bg-slate-50 text-slate-700 rounded-lg flex items-center justify-center mb-2 border border-slate-200 shadow-sm">
+                  <RotateCcw size={22} className="text-slate-600" />
                 </div>
-                <h3 className="text-slate-900 text-2xl font-black tracking-tight">החלפת סיסמה זמנית</h3>
-                <p className="text-slate-600 text-xs sm:text-sm font-medium mt-1">הסיסמה שקיבלת היא זמנית. נא לבחור סיסמה אישית קבועה.</p>
+                <h3 className="text-slate-800 text-lg font-bold tracking-tight">החלפת סיסמה זמנית</h3>
+                <p className="text-slate-500 text-xs mt-0.5">הסיסמה שקיבלת היא זמנית. נא לבחור סיסמה אישית קבועה.</p>
               </div>
 
-              <div className="space-y-3.5">
+              <div className="space-y-2">
                 <div className="relative group">
                   <input 
                     type={showPassword ? "text" : "password"} 
                     required 
                     value={newPassword} 
                     onChange={e => setNewPassword(e.target.value)} 
-                    className="w-full h-12 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-base outline-none pr-4 pl-10 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
+                    className="w-full h-11 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-sans text-sm outline-none pr-3.5 pl-9 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]"
                     placeholder="סיסמה חדשה"
                   />
                 </div>
@@ -929,15 +1006,15 @@ const LoginPage: React.FC = () => {
                     required 
                     value={confirmPassword} 
                     onChange={e => setConfirmPassword(e.target.value)} 
-                    className="w-full h-12 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-base outline-none pr-4 pl-10 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
+                    className="w-full h-11 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-sans text-sm outline-none pr-3.5 pl-9 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]"
                     placeholder="אימות סיסמה"
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors p-1"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#fbf5df]/60 hover:text-[#fbf5df] transition-colors p-1"
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
               </div>
@@ -945,28 +1022,28 @@ const LoginPage: React.FC = () => {
               <AnimatePresence mode="popLayout">
                 {error && (
                   <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="p-3.5 bg-rose-50/90 border-r-4 border-rose-500 text-rose-700 text-sm font-bold flex items-start gap-3 rounded-xl shadow-sm backdrop-blur-md"
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    className="p-3 bg-red-50 border-r-2 border-red-500 text-red-700 text-xs sm:text-sm font-bold flex items-start gap-2.5 rounded-lg shadow-sm"
                   >
-                    <AlertCircle size={18} className="shrink-0 mt-0.5 text-rose-500" />
+                    <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-500" />
                     <span className="leading-tight">{error}</span>
                   </motion.div>
                 )}
               </AnimatePresence>
               
-              <div className="pt-2">
+              <div className="pt-1">
                 <button 
                   type="submit" 
                   disabled={isLoading} 
-                  className="w-full h-12 bg-gradient-to-r from-[#00AFC2] via-teal-500 to-sky-500 hover:brightness-105 text-white shadow-[0_8px_22px_rgba(0,175,194,0.38),inset_0_1.5px_2px_rgba(255,255,255,0.6)] active:shadow-[0_2px_8px_rgba(0,175,194,0.4)] border-b-[3px] border-[#008ba3] active:border-b-0 active:translate-y-[2px] rounded-2xl flex items-center justify-center transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-black text-base tracking-wide"
+                  className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white shadow-sm rounded-lg flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm tracking-wide border-0"
                 >
                   {isLoading ? (
-                    <Loader2 className="animate-spin text-white mx-auto" size={20} />
+                    <Loader2 className="animate-spin text-white mx-auto" size={16} />
                   ) : (
-                    <div className="flex items-center justify-center gap-2">
-                      <CheckCircle2 size={18} />
+                    <div className="flex items-center justify-center gap-1.5">
+                      <CheckCircle2 size={15} />
                       <span>עדכן סיסמה והתחבר</span>
                     </div>
                   )}
@@ -976,75 +1053,71 @@ const LoginPage: React.FC = () => {
               <button 
                 type="button" 
                 onClick={() => setMode('LOGIN')} 
-                className="w-full text-[#008ba3] hover:text-[#005f70] font-bold text-sm transition-colors mt-3 hover:underline underline-offset-4 text-center block"
+                className="w-full text-slate-500 hover:text-slate-800 font-mono text-[10px] uppercase tracking-wider transition-colors mt-2 text-center block"
               >
-                חזרה להתחברות
+                חזרה להתחברות // BACK_TO_LOGIN
               </button>
             </motion.form>
           ) : (
             <motion.form 
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              exit={{ opacity: 0, scale: 0.98 }}
               onSubmit={handleJoinSubmit} 
-              className="space-y-4 relative z-10"
+              className="space-y-2.5 relative z-10"
             >
               {success ? (
-                <div className="py-10 text-center space-y-4">
-                  <div className="w-20 h-20 bg-cyan-50 text-[#00AFC2] rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-200 shadow-sm animate-bounce">
-                    <CheckCircle2 size={40} className="text-[#00AFC2]" />
+                <div className="py-6 text-center space-y-3">
+                  <div className="w-14 h-14 bg-slate-50 text-slate-700 rounded-full flex items-center justify-center mx-auto mb-2 border border-slate-200 shadow-inner">
+                    <CheckCircle2 size={28} className="text-slate-600" />
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">הבקשה נשלחה בהצלחה! 🎉</h3>
-                  <p className="text-slate-600 text-sm font-medium leading-relaxed">צוות המועדון יחזור אליך בהקדם כדי לחבר אותך לפעילות הבאה בים.</p>
-                  <div className="pt-4">
-                    <button type="button" onClick={resetToLogin} className="w-full h-12 bg-[#00AFC2] hover:bg-[#009bb0] text-white rounded-2xl transition-all font-bold shadow-md">
+                  <h3 className="text-lg font-bold text-slate-800 tracking-tight">הבקשה נשלחה בהצלחה! 🎉</h3>
+                  <p className="text-slate-500 text-xs leading-relaxed">צוות המועדון יחזור אליך בהקדם כדי לחבר אותך לפעילות הבאה בים.</p>
+                  <div className="pt-2">
+                    <button type="button" onClick={resetToLogin} className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white rounded-lg transition-all font-bold shadow-sm">
                       חזור לדף ההתחברות
                     </button>
                   </div>
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center justify-between gap-3 mb-1">
                     <div className="text-right">
-                      <h3 className="text-slate-900 text-lg font-black tracking-tight flex items-center gap-1.5">
-                        <Sparkles size={16} className="text-[#00AFC2]" />
-                        <span>הצטרפות לקהילת חבל זוג</span>
-                      </h3>
-                      <p className="text-slate-500 text-xs">נשמח לראות אותך איתנו במים!</p>
+                      <h3 className="text-white text-base font-bold tracking-tight">הצטרפות לקהילה</h3>
+                      <p className="text-cyan-400 font-mono text-[9px] uppercase tracking-wider">HZ-JOIN_FORM // קהילת חבל זוג</p>
                     </div>
-                    <button type="button" onClick={resetToLogin} className="w-9 h-9 border border-white/90 hover:border-[#00AFC2] rounded-xl flex items-center justify-center text-slate-500 hover:bg-white/80 hover:text-slate-900 transition-all shrink-0 shadow-sm">
-                      <ArrowRight size={16} />
+                    <button type="button" onClick={resetToLogin} className="w-8 h-8 border border-slate-700 hover:border-slate-500 rounded-lg flex items-center justify-center text-slate-400 hover:bg-[#121c26] hover:text-white transition-all shrink-0">
+                      <ArrowRight size={14} />
                     </button>
                   </div>
                   
-                  <div className="flex flex-col items-center gap-2 mb-2">
+                  <div className="flex flex-col items-center gap-1 mb-1">
                     <div className="relative group/avatar cursor-pointer">
-                      <div className="w-18 h-18 sm:w-20 sm:h-20 overflow-hidden border-2 border-white/90 bg-white/70 backdrop-blur-md rounded-full flex items-center justify-center group-hover/avatar:border-[#00AFC2] transition-all duration-300 shadow-sm">
+                      <div className="w-14 h-14 overflow-hidden border border-slate-700 bg-[#121c26] rounded-full flex items-center justify-center group-hover/avatar:border-slate-500 transition-all duration-300">
                         <div className="w-full h-full flex items-center justify-center">
                           {isProcessingImage ? (
-                            <Loader2 className="animate-spin text-[#00AFC2]" size={24} />
+                            <Loader2 className="animate-spin text-slate-500" size={16} />
                           ) : joinAvatar ? (
                             <img src={joinAvatar} className="w-full h-full object-cover" alt="" loading="lazy" />
                           ) : (
-                            <User size={32} className="text-slate-400 group-hover/avatar:text-[#00AFC2] transition-colors" />
+                            <User size={22} className="text-slate-500 group-hover/avatar:text-cyan-400 transition-colors" />
                           )}
                         </div>
                       </div>
-                      <label className="absolute -bottom-1 -left-1 w-7 h-7 bg-gradient-to-r from-[#00AFC2] to-cyan-600 text-white rounded-full flex items-center justify-center cursor-pointer shadow-md hover:scale-110 transition-all border border-white">
-                        <Camera size={13} />
+                      <label className="absolute -bottom-1 -left-1 w-5.5 h-5.5 bg-slate-800 text-white rounded-full flex items-center justify-center cursor-pointer shadow-md hover:scale-110 transition-all border border-white">
+                        <Camera size={10} />
                         <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} disabled={isProcessingImage} />
                       </label>
                     </div>
-                    <span className="text-[11px] text-slate-500 font-medium">תמונת פרופיל (מומלץ)</span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full h-11 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-sm outline-none px-3.5 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]" />
-                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full h-11 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-sm outline-none px-3.5 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-medium text-xs outline-none px-3 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]" style={{ color: '#fbf5df' }} />
+                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-medium text-xs outline-none px-3 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]" style={{ color: '#fbf5df' }} />
                   </div>
                   
-                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="דוא״ל" className="w-full h-11 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-sm outline-none px-3.5 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]" />
-                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד (למשל 0501234567)" className="w-full h-11 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-sm outline-none px-3.5 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)] focus:text-left direction-ltr text-left" dir="ltr" />
+                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="דוא״ל" className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-medium text-xs outline-none px-3 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]" style={{ color: '#fbf5df' }} />
+                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-medium text-xs outline-none px-3 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)] focus:text-left direction-ltr text-left" dir="ltr" style={{ color: '#fbf5df' }} />
                   
                   <div className="relative group">
                     <input 
@@ -1054,9 +1127,10 @@ const LoginPage: React.FC = () => {
                       value={joinAddress} 
                       onChange={e => setJoinAddress(e.target.value)} 
                       placeholder="כתובת מגורים (עיר ורחוב)" 
-                      className="w-full h-11 bg-white/60 hover:bg-white/80 focus:bg-white/95 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-900 font-medium text-sm outline-none px-3.5 placeholder-slate-400 text-right focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]" 
+                      className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] vintage-cream-input font-medium text-xs outline-none px-3 placeholder-[#fbf5df]/75 text-right focus:border-white/50 focus:bg-[#faf8f5]/18 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]" 
+                      style={{ color: '#fbf5df' }}
                     />
-                    <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#00AFC2] transition-colors" />
+                    <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#fbf5df]/60 transition-colors" />
                   </div>
 
                   {/* Group Choice for New Applicant */}
@@ -1064,13 +1138,13 @@ const LoginPage: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => setIsGroupMenuOpen(!isGroupMenuOpen)}
-                      className="w-full h-11 bg-white/60 hover:bg-white/80 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-800 font-medium text-sm outline-none text-right flex items-center justify-between px-3.5 hover:border-[#00AFC2]/60 focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
+                      className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] font-medium text-xs outline-none text-right flex items-center justify-between px-3 hover:bg-[#faf8f5]/18 focus:border-white/50 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]"
                     >
                       <span className="flex-1 text-right flex items-center gap-1.5">
-                        <span className="text-slate-400 text-xs">קבוצה מבוקשת:</span>
-                        <span className="text-[#008ba3] font-bold">{selectedGroup}</span>
+                        <span className="text-[#fbf5df]/60 text-[10px] font-mono uppercase">קבוצה מבוקשת:</span>
+                        <span className="text-[#fbf5df] font-bold">{selectedGroup}</span>
                       </span>
-                      <ChevronDown size={16} className={`text-[#00AFC2] transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown size={14} className={`text-[#fbf5df]/60 transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     <AnimatePresence>
@@ -1078,11 +1152,11 @@ const LoginPage: React.FC = () => {
                         <>
                           <div className="fixed inset-0 z-[60]" onClick={() => setIsGroupMenuOpen(false)} />
                           <motion.div 
-                            initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                            initial={{ opacity: 0, scale: 0.98, y: 3 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-white/95 backdrop-blur-2xl border border-white/90 rounded-2xl shadow-2xl z-[70] overflow-y-auto max-h-48 py-1.5 custom-scrollbar"
+                            exit={{ opacity: 0, scale: 0.98, y: 3 }}
+                            transition={{ duration: 0.12 }}
+                            className="absolute top-[calc(100%+0.25rem)] left-0 right-0 bg-[#0d1520] border border-[#faf8f5]/20 rounded-lg shadow-2xl z-[70] overflow-y-auto max-h-44 py-1 custom-scrollbar"
                           >
                             {groups.map((g) => (
                               <button
@@ -1092,12 +1166,12 @@ const LoginPage: React.FC = () => {
                                   setSelectedGroup(g);
                                   setIsGroupMenuOpen(false);
                                 }}
-                                className={`w-full px-3.5 py-2.5 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between hover:bg-cyan-50/80 ${
-                                  selectedGroup === g ? 'text-[#008ba3] bg-cyan-50 font-bold' : 'text-slate-700'
+                                className={`w-full px-3 py-1.5 text-right font-medium text-xs transition-all flex items-center justify-between hover:bg-[#faf8f5]/10 ${
+                                  selectedGroup === g ? 'text-[#faf8f5] bg-[#faf8f5]/5 font-bold' : 'text-[#faf8f5]/70'
                                 }`}
                               >
                                 <span>{g}</span>
-                                {selectedGroup === g && <CheckCircle2 size={15} className="text-[#00AFC2]" />}
+                                {selectedGroup === g && <CheckCircle2 size={13} className="text-[#faf8f5]" />}
                               </button>
                             ))}
                           </motion.div>
@@ -1110,10 +1184,10 @@ const LoginPage: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => setIsGenderMenuOpen(!isGenderMenuOpen)}
-                      className="w-full h-11 bg-white/60 hover:bg-white/80 backdrop-blur-xl border border-white/90 rounded-2xl text-slate-800 font-medium text-sm outline-none text-right flex items-center justify-between px-3.5 hover:border-[#00AFC2]/60 focus:border-[#00AFC2] focus:ring-4 focus:ring-[#00AFC2]/15 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,40,70,0.03),0_2px_8px_rgba(0,175,194,0.05)]"
+                      className="w-full h-10 bg-[#faf8f5]/12 backdrop-blur-xl border border-white/25 rounded-lg text-[#fbf5df] font-medium text-xs outline-none text-right flex items-center justify-between px-3 hover:bg-[#faf8f5]/18 focus:border-white/50 focus:ring-2 focus:ring-white/10 transition-all shadow-[0_8px_32px_0_rgba(0,0,0,0.37),_inset_0_1px_1px_0_rgba(255,255,255,0.15)]"
                     >
-                      <span className={`flex-1 text-right ${joinGender ? 'text-slate-800 font-medium' : 'text-slate-400'}`}>{joinGender || 'מגדר (בחירה)'}</span>
-                      <ChevronDown size={16} className={`text-[#00AFC2] transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
+                      <span className={`flex-1 text-right ${joinGender ? 'text-[#fbf5df] font-medium' : 'text-[#fbf5df]/50'}`}>{joinGender || 'מגדר (בחירה)'}</span>
+                      <ChevronDown size={14} className={`text-[#fbf5df]/60 transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     <AnimatePresence>
@@ -1121,11 +1195,11 @@ const LoginPage: React.FC = () => {
                         <>
                           <div className="fixed inset-0 z-[60]" onClick={() => setIsGenderMenuOpen(false)} />
                           <motion.div 
-                            initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                            initial={{ opacity: 0, scale: 0.98, y: 3 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute top-[calc(100%+0.5rem)] left-0 right-0 bg-white/95 backdrop-blur-2xl border border-white/90 rounded-2xl shadow-2xl z-[70] overflow-hidden py-1"
+                            exit={{ opacity: 0, scale: 0.98, y: 3 }}
+                            transition={{ duration: 0.12 }}
+                            className="absolute top-[calc(100%+0.25rem)] left-0 right-0 bg-[#121c26] border border-slate-700 rounded-lg shadow-2xl z-[70] overflow-hidden py-1"
                           >
                             {(['זכר', 'נקבה', 'לא בינארי', 'מעדיפ/ה לא לציין'] as const).map((g) => (
                               <button
@@ -1135,12 +1209,12 @@ const LoginPage: React.FC = () => {
                                   setJoinGender(g);
                                   setIsGenderMenuOpen(false);
                                 }}
-                                className={`w-full px-3.5 py-2.5 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between hover:bg-cyan-50/80 ${
-                                  joinGender === g ? 'text-[#008ba3] bg-cyan-50 font-bold' : 'text-slate-700'
+                                className={`w-full px-3 py-1.5 text-right font-medium text-xs transition-all flex items-center justify-between hover:bg-[#1a2735] ${
+                                  joinGender === g ? 'text-cyan-400 bg-[#162332] font-bold' : 'text-slate-300'
                                 }`}
                               >
                                 <span>{g}</span>
-                                {joinGender === g && <CheckCircle2 size={15} className="text-[#00AFC2]" />}
+                                {joinGender === g && <CheckCircle2 size={13} className="text-cyan-400" />}
                               </button>
                             ))}
                           </motion.div>
@@ -1152,29 +1226,29 @@ const LoginPage: React.FC = () => {
                   <AnimatePresence mode="popLayout">
                     {(error || mobileError) && (
                       <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
+                        initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="p-3 bg-rose-50/90 border-r-4 border-rose-500 text-rose-700 text-xs sm:text-sm font-bold flex items-start gap-2.5 rounded-xl shadow-sm backdrop-blur-md"
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        className="p-2.5 bg-red-50 border-r-2 border-red-500 text-red-700 text-xs font-bold flex items-start gap-2 rounded-lg shadow-sm"
                       >
-                        <AlertCircle size={16} className="shrink-0 mt-0.5 text-rose-500" />
+                        <AlertCircle size={14} className="shrink-0 mt-0.5 text-red-500" />
                         <span className="leading-tight">{error || mobileError}</span>
                       </motion.div>
                     )}
                   </AnimatePresence>
                   
-                  <div className="pt-2">
+                  <div className="pt-1">
                     <button 
                       type="submit" 
                       disabled={isLoading || isProcessingImage} 
-                      className="w-full h-12 bg-gradient-to-r from-teal-500 via-[#00AFC2] to-sky-600 hover:brightness-105 text-white shadow-[0_8px_22px_rgba(20,184,166,0.38),inset_0_1.5px_2px_rgba(255,255,255,0.6)] active:shadow-[0_2px_8px_rgba(20,184,166,0.4)] border-b-[3px] border-[#008ba3] active:border-b-0 active:translate-y-[2px] rounded-2xl flex items-center justify-center transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-black text-base tracking-wide"
+                      className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white shadow-sm rounded-lg flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm tracking-wide border-0"
                     >
                       {isLoading ? (
-                        <Loader2 className="animate-spin text-white mx-auto" size={20} />
+                        <Loader2 className="animate-spin text-white mx-auto" size={16} />
                       ) : (
-                        <div className="flex items-center justify-center gap-2">
-                          <span>שלח בקשת הצטרפות למועדון</span>
-                          <ArrowRight size={18} className="rotate-180" />
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span>שלח בקשת הצטרפות</span>
+                          <ArrowRight size={14} className="rotate-180" />
                         </div>
                       )}
                     </button>
@@ -1184,15 +1258,15 @@ const LoginPage: React.FC = () => {
             </motion.form>
           )}
           {/* Subtle elegant divider */}
-          <div className="my-1 border-t border-white/10 w-full" />
+          <div className="my-2 border-t border-slate-800 w-full" />
           
-          {/* Integrated Partner Logos - Highly compact to eliminate dead space */}
-          <div className="flex items-center justify-center gap-3.5 sm:gap-5 pb-0">
+          {/* Integrated Partner Logos - Highly compact CAD footer style */}
+          <div className="flex items-center justify-center gap-3.5 sm:gap-5 pb-0.5 relative -translate-y-[20%] sm:-translate-y-[25%]">
             <a 
               href="https://www.atalef.com" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="group transition-all duration-500 hover:scale-105 opacity-95 hover:opacity-100 flex items-center"
+              className="group transition-all duration-500 hover:scale-103 opacity-90 hover:opacity-100 flex items-center"
               title="עמותת העטלף"
             >
               {siteAssets?.atalefLogo && !atalefError && (
@@ -1200,17 +1274,17 @@ const LoginPage: React.FC = () => {
                   src={siteAssets.atalefLogo} 
                   onError={() => setAtalefError(true)}
                   alt="עמותת העטלף" 
-                  className="h-12 sm:h-16 w-auto transition-all duration-500" 
+                  className="h-20 sm:h-28 w-auto transition-all duration-500 group-hover:opacity-100" 
                   referrerPolicy="no-referrer"
                 />
               )}
             </a>
-            <div className="w-px h-5 sm:h-8 bg-white/20" />
+            <div className="w-px h-10 sm:h-16 bg-slate-800" />
             <a 
               href="https://www.reefseacenter.com" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="group transition-all duration-500 hover:scale-105 opacity-95 hover:opacity-100 flex items-center"
+              className="group transition-all duration-500 hover:scale-103 opacity-90 hover:opacity-100 flex items-center"
               title="מרכז ימי ריף"
             >
               {siteAssets?.reefLogo && !reefError && (
@@ -1218,47 +1292,47 @@ const LoginPage: React.FC = () => {
                   src={siteAssets.reefLogo} 
                   onError={() => setReefError(true)}
                   alt="מועדון ריף" 
-                  className="h-8 w-8 sm:h-11 sm:w-11 rounded-full object-cover bg-white transition-all duration-500 shadow-sm ring-1 ring-white/60" 
+                  className="h-14 w-14 sm:h-18 sm:w-18 rounded-full object-cover bg-white transition-all duration-500 shadow-sm border border-slate-800 group-hover:opacity-100" 
                   referrerPolicy="no-referrer"
                 />
               )}
             </a>
           </div>
-        </div>
       </div>
-      {/* Forgot Password Modal */}
+      
+      {/* Forgot Password Modal - Redesigned to CAD Minimal Style */}
       <AnimatePresence>
         {showSeaWaterAlert && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
           >
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              initial={{ scale: 0.98, opacity: 0, y: 5 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="bg-[#121214] border border-white/[0.08] p-8 max-w-sm w-full rounded-2xl relative overflow-hidden"
+              exit={{ scale: 0.98, opacity: 0, y: 5 }}
+              className="bg-white border border-slate-200 p-6 max-w-sm w-full rounded-xl relative shadow-xl text-center"
             >
-              <div className="w-16 h-16 bg-white/10 text-white flex items-center justify-center mx-auto mb-6 rounded-2xl">
-                <RotateCcw size={32} />
+              <div className="w-12 h-12 bg-slate-50 border border-slate-200 text-slate-700 flex items-center justify-center mx-auto mb-4 rounded-full">
+                <RotateCcw size={20} />
               </div>
 
-              <div className="relative z-10 text-center">
-                <h3 className="text-xl font-semibold text-white mb-2 tracking-tight">שכחת סיסמה?</h3>
-                <p className="text-white/50 text-sm leading-relaxed mb-8">
+              <div className="relative z-10">
+                <h3 className="text-base font-bold text-slate-800 mb-1">שכחת סיסמה?</h3>
+                <p className="text-slate-500 text-xs leading-relaxed mb-6">
                   נראה שהתבלבלת בסיסמה 3 פעמים. האם תרצה שנשלח לך סיסמה זמנית לאימייל כדי שתוכל להתחבר?
                 </p>
                 
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2">
                   <button
                     type="button"
                     onClick={handleResetPassword}
                     disabled={isLoading}
-                    className="w-full h-12 bg-white text-black hover:bg-white/90 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                    className="w-full h-10.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
                   >
-                    {isLoading ? <Loader2 className="animate-spin text-black" size={18} /> : <Mail size={18} />}
+                    {isLoading ? <Loader2 className="animate-spin text-white" size={14} /> : <Mail size={14} />}
                     <span>כן, שלחו לי למייל</span>
                   </button>
                   <button
@@ -1268,7 +1342,7 @@ const LoginPage: React.FC = () => {
                       setFailedAttempts(0);
                     }}
                     disabled={isLoading}
-                    className="w-full h-12 bg-transparent hover:bg-white/5 text-white/60 hover:text-white rounded-xl font-medium text-sm transition-all"
+                    className="w-full h-10 bg-transparent hover:bg-slate-50 text-slate-500 rounded-lg font-medium text-xs transition-all"
                   >
                     לא, אני אנסה שוב
                   </button>
@@ -1278,49 +1352,50 @@ const LoginPage: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Biometric Guide Modal */}
+
+      {/* Biometric Guide Modal - Redesigned to CAD Minimal Style */}
       <AnimatePresence>
         {showBioGuideModal && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
           >
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              initial={{ scale: 0.98, opacity: 0, y: 5 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="bg-[#0f1d24] border border-[#00AFC2]/30 p-8 max-w-sm w-full rounded-3xl relative overflow-hidden shadow-[0_20px_50px_rgba(0,175,194,0.25)] text-center"
+              exit={{ scale: 0.98, opacity: 0, y: 5 }}
+              className="bg-white border border-slate-200 p-6 max-w-sm w-full rounded-xl relative shadow-xl text-center"
             >
-              <div className="w-16 h-16 bg-[#00AFC2]/15 text-[#00AFC2] flex items-center justify-center mx-auto mb-5 rounded-2xl border border-[#00AFC2]/30 shadow-inner">
-                <Fingerprint size={34} className="animate-pulse" />
+              <div className="w-12 h-12 bg-slate-50 text-slate-700 flex items-center justify-center mx-auto mb-4 rounded-full border border-slate-200">
+                <Fingerprint size={22} className="text-slate-600" />
               </div>
 
-              <h3 className="text-xl font-bold text-white mb-2">הפעלת כניסה מהירה</h3>
-              <p className="text-white/70 text-sm leading-relaxed mb-6">
+              <h3 className="text-base font-bold text-slate-800 mb-1">הפעלת כניסה מהירה</h3>
+              <p className="text-slate-500 text-xs leading-relaxed mb-5">
                 כדי להשתמש בטביעת אצבע או Face ID:
               </p>
 
-              <div className="bg-black/30 border border-white/10 rounded-2xl p-4 text-right mb-6 space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#00AFC2]/20 text-[#00AFC2] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">1</div>
-                  <p className="text-xs text-white/90 font-medium">התחבר תחילה עם מספר הטלפון / אימייל והסיסמה שלך.</p>
+              <div className="bg-slate-50 border border-slate-200/60 rounded-lg p-3.5 text-right mb-5 space-y-2.5">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-slate-200 text-slate-800 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</div>
+                  <p className="text-[11px] text-slate-600 font-medium">התחבר תחילה עם מספר הטלפון / אימייל והסיסמה שלך.</p>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#00AFC2]/20 text-[#00AFC2] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">2</div>
-                  <p className="text-xs text-white/90 font-medium">היכנס לדף הפרופיל שלך ולחץ על <span className="text-[#00AFC2] font-bold">"הפעל כניסה בטביעת אצבע"</span>.</p>
+                <div className="flex items-start gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-slate-200 text-slate-800 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</div>
+                  <p className="text-[11px] text-slate-600 font-medium">היכנס לדף הפרופיל שלך ולחץ על <span className="text-slate-800 font-bold">"הפעל כניסה בטביעת אצבע"</span>.</p>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#00AFC2]/20 text-[#00AFC2] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">3</div>
-                  <p className="text-xs text-white/90 font-medium">החל מהפעם הבאה, הכניסה תתבצע בנגיעה אחת בלבד!</p>
+                <div className="flex items-start gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-slate-200 text-slate-800 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</div>
+                  <p className="text-[11px] text-slate-600 font-medium">החל מהפעם הבאה, הכניסה תתבצע בנגיעה אחת בלבד!</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => setShowBioGuideModal(false)}
-                className="w-full h-12 bg-gradient-to-r from-[#00AFC2] to-[#00709b] hover:from-[#00c3d9] hover:to-[#0089bd] text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center shadow-lg active:scale-[0.98]"
+                className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold text-xs transition-all flex items-center justify-center shadow-sm"
               >
                 הבנתי, תודה!
               </button>
