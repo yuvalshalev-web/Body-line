@@ -749,11 +749,11 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className={`h-screen w-screen flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 relative overflow-hidden font-sans tracking-tight transition-colors duration-500 ${isDarkTheme ? 'bg-[#030c14]' : 'bg-[#faf8f5]'}`} dir="rtl">
-      {/* Floating Theme Switcher Toggle */}
+      {/* Floating Theme Switcher Toggle - Compact Circle to prevent logo overlap */}
       <button
         type="button"
         onClick={() => setLoginTheme(prev => prev === 'dark' ? 'light' : 'dark')}
-        className={`absolute top-4 left-4 z-50 p-2.5 rounded-full backdrop-blur-xl border flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 shadow-md cursor-pointer ${
+        className={`absolute top-4 left-4 z-50 w-10 h-10 rounded-full backdrop-blur-xl border flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 shadow-md cursor-pointer ${
           isDarkTheme 
             ? 'bg-white/10 border-white/20 text-[#fbf5df]' 
             : 'bg-[#002b44]/10 border-[#002b44]/20 text-[#002b44]'
@@ -761,18 +761,12 @@ const LoginPage: React.FC = () => {
         title={isDarkTheme ? "החלף למראה בהיר (DaVinci)" : "החלף למראה כהה (CAD)"}
       >
         {isAutoThemeActive && (
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" title="סנכרון אוטומטי (יום/לילה) פעיל" />
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="סנכרון אוטומטי (יום/לילה) פעיל" />
         )}
         {isDarkTheme ? (
-          <>
-            <Sun size={14} className="text-amber-300 shrink-0" />
-            <span className="text-[10px] font-bold font-mono">תצוגה בהירה (DaVinci)</span>
-          </>
+          <Sun size={18} className="text-amber-300 shrink-0" />
         ) : (
-          <>
-            <Moon size={14} className="text-[#002b44] shrink-0" />
-            <span className="text-[10px] font-bold font-mono">תצוגה כהה (CAD)</span>
-          </>
+          <Moon size={18} className="text-[#002b44] shrink-0" />
         )}
       </button>
 
@@ -826,17 +820,17 @@ const LoginPage: React.FC = () => {
                 )}
 
                 <div className="space-y-2 sm:space-y-3 mt-3 w-full text-center">
-                  <h1 className={`text-3xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight font-sans drop-shadow-[0_4px_8px_rgba(0,0,0,0.55)] transition-colors duration-500 ${
+                  <h1 className={`text-[2.06rem] sm:text-[3.3rem] md:text-[4.125rem] font-black tracking-tight leading-tight font-sans drop-shadow-[0_4px_8px_rgba(0,0,0,0.55)] transition-colors duration-500 ${
                     isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'
                   }`}>
                     קהילת חבל זוג
                   </h1>
-                  <p className={`font-bold text-xl sm:text-3xl md:text-4xl leading-snug transition-colors duration-500 ${
+                  <p className={`font-sans font-bold text-[1.375rem] sm:text-[2.06rem] md:text-[2.475rem] leading-snug transition-colors duration-500 ${
                     isDarkTheme ? 'text-[#fbf5df]/90' : 'text-[#002b44]/90'
                   }`}>
                     מחוברים תמיד, מכל מקום
                   </p>
-                  <p className={`font-bold text-lg sm:text-2xl flex items-center justify-center gap-2 mt-2 transition-colors duration-500 ${
+                  <p className={`font-sans font-bold text-[1.2375rem] sm:text-[1.65rem] flex items-center justify-center gap-2 mt-2 transition-colors duration-500 ${
                     isDarkTheme ? 'text-[#fbf5df]/75' : 'text-[#002b44]/75'
                   }`}>
                     <span>איזה כיף שחזרת!</span>
@@ -847,37 +841,7 @@ const LoginPage: React.FC = () => {
             )}
           </div>
 
-          {/* Segmented Technical Mode Switcher: Member Login vs Join Request */}
-          {mode !== 'RESET_TEMP_PASSWORD' && (
-            <div className={`flex p-0.5 border rounded-lg mb-2.5 relative z-10 transition-colors duration-500 ${
-              isDarkTheme ? 'bg-[#030c14]/40 border-white/20' : 'bg-slate-200/80 border-slate-300'
-            }`}>
-              <button
-                type="button"
-                onClick={() => { setMode('LOGIN'); setError(''); }}
-                className={`flex-1 py-1.5 rounded-md font-mono text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 ${
-                  mode === 'LOGIN'
-                    ? (isDarkTheme ? 'bg-[#fbf5df] text-[#030c14] font-semibold' : 'bg-[#002b44] text-white font-semibold')
-                    : (isDarkTheme ? 'text-[#fbf5df]/60 hover:text-[#fbf5df]' : 'text-slate-600 hover:text-[#002b44]')
-                }`}
-              >
-                <LogIn size={11} strokeWidth={2} />
-                <span>כניסת חברים</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setMode('JOIN'); setError(''); }}
-                className={`flex-1 py-1.5 rounded-md font-mono text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 ${
-                  mode === 'JOIN'
-                    ? (isDarkTheme ? 'bg-[#fbf5df] text-[#030c14] font-semibold' : 'bg-[#002b44] text-white font-semibold')
-                    : (isDarkTheme ? 'text-[#fbf5df]/60 hover:text-[#fbf5df]' : 'text-slate-600 hover:text-[#002b44]')
-                }`}
-              >
-                <UserPlus size={11} strokeWidth={2} />
-                <span>הצטרפות</span>
-              </button>
-            </div>
-          )}
+
 
           {mode === 'LOGIN' ? (
             <form onSubmit={handleLoginSubmit} className="space-y-2.5 sm:space-y-3 relative z-10">
@@ -1023,6 +987,21 @@ const LoginPage: React.FC = () => {
                     />
                   </div>
                 )}
+
+                {/* Subtle & Non-centralized Join Request Link */}
+                <div className="text-center pt-3 sm:pt-4">
+                  <button
+                    type="button"
+                    onClick={() => { setMode('JOIN'); setError(''); }}
+                    className={`text-xs sm:text-sm font-bold hover:underline transition-all focus:outline-none cursor-pointer tracking-wide ${
+                      isDarkTheme 
+                        ? 'text-[#fbf5df]/85 hover:text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.3)]' 
+                        : 'text-[#002b44]/85 hover:text-[#001220]'
+                    }`}
+                  >
+                    חדש בקהילה? שלח בקשת הצטרפות 🌊
+                  </button>
+                </div>
               </div>
             </form>
           ) : mode === 'RESET_TEMP_PASSWORD' ? (
