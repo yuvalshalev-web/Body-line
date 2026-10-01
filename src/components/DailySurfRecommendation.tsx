@@ -234,7 +234,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
           <Sparkles className="text-[#007085]" size={24} />
         </div>
         <div>
-          <h3 className="text-2xl font-black text-[#002b44] tracking-tight">התאמה אישית לפי מדדי גוף, רמת גלישה ומצב הים</h3>
+          <h3 className="text-2xl font-black text-[#002b44] tracking-tight">התאמה אישית של גלשן ולבוש לפי רמת הגלישה ומצב הים</h3>
           <p className="text-[#007085] text-sm font-bold tracking-widest uppercase">המלצת ציוד יומית</p>
         </div>
       </div>
@@ -277,14 +277,14 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
           >
             <div className="relative">
               <div className="space-y-8 transition-all duration-500">
-                <div className="luxury-card p-10 flex flex-col lg:flex-row items-center gap-12 shadow-2xl relative overflow-hidden">
+                 <div className="luxury-card p-5 sm:p-10 flex flex-col lg:flex-row items-center gap-6 lg:gap-12 shadow-2xl relative overflow-hidden">
                   <div className="grain-overlay" />
                   <div className="premium-sweep-fx" />
                   
-                  <div className="flex-1 text-center lg:text-right space-y-8 relative z-10">
+                  <div className="flex-1 text-center lg:text-right space-y-5 lg:space-y-8 relative z-10">
                     <div>
                       <h4 className="text-5xl font-black text-[#002b44] mb-3 tracking-tighter font-yehuda">{boardType}</h4>
-                      <div className="h-1.5 w-24 bg-[#007085] rounded-full mx-auto lg:mx-0 mb-8" />
+                      <div className="h-1.5 w-24 bg-[#007085] rounded-full mx-auto lg:mx-0 mb-4 lg:mb-8" />
                     </div>
                     
                     {recVol > 0 && recLenInches > 0 && (
@@ -304,49 +304,54 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                       <p className="text-[#002b44]/90 text-xl leading-relaxed font-bold font-yehuda">{explanation}</p>
                       
                       {catalogItem && (
-                        <div className="bg-white/30 backdrop-blur-md p-8 rounded-3xl border border-white/40 space-y-6 text-right shadow-inner">
-                          <div className="flex flex-wrap justify-between items-center gap-4">
-                            <p className="text-xs text-[#007085] uppercase tracking-[0.3em] font-black">על סוג הגלשן:</p>
-                            <div className="flex gap-3">
-                              <span className="text-[11px] bg-[#007085] text-white px-4 py-1.5 rounded-full font-black shadow-sm">אורך: {catalogItem.lengthRange}</span>
-                              <span className="text-[11px] bg-[#007085] text-white px-4 py-1.5 rounded-full font-black shadow-sm">נפח: {catalogItem.volumeRange}</span>
-                            </div>
-                          </div>
-                          <p className="text-[#002b44]/80 text-base leading-relaxed font-medium">{catalogItem.description}</p>
-                          <div className="pt-6 border-t border-[#007085]/10">
-                            <p className="text-[11px] text-[#007085] font-black uppercase tracking-widest mb-2">השורה התחתונה:</p>
+                        <div className="bg-white/30 backdrop-blur-md p-5 sm:p-8 rounded-3xl border border-white/40 space-y-4 sm:space-y-6 text-right shadow-inner">
+                          {/* השורה התחתונה: now positioned prominently on top */}
+                          <div className="pb-4 border-b border-[#007085]/10">
+                            <p className="text-[11px] text-[#007085] font-black uppercase tracking-widest mb-1.5">השורה התחתונה:</p>
                             <p className="text-[#002b44] text-lg leading-relaxed font-black italic font-yehuda">"{catalogItem.bottomLine}"</p>
+                          </div>
+
+                          {/* על סוג הגלשן: positioned below */}
+                          <div className="space-y-4 pt-1">
+                            <div className="flex flex-wrap justify-between items-center gap-4">
+                              <p className="text-xs text-[#007085] uppercase tracking-[0.3em] font-black">על סוג הגלשן:</p>
+                              <div className="flex gap-3">
+                                <span className="text-[11px] bg-[#007085] text-white px-4 py-1.5 rounded-full font-black shadow-sm">אורך: {catalogItem.lengthRange}</span>
+                                <span className="text-[11px] bg-[#007085] text-white px-4 py-1.5 rounded-full font-black shadow-sm">נפח: {catalogItem.volumeRange}</span>
+                              </div>
+                            </div>
+                            <p className="text-[#002b44]/80 text-base leading-relaxed font-medium">{catalogItem.description}</p>
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
                   
-                  <div className="flex flex-row justify-center items-end gap-6 sm:gap-16 lg:gap-12 shrink-0 w-full lg:w-auto pt-6 pb-2 lg:py-12 relative z-10">
+                  <div className="flex flex-row justify-center items-end gap-4 sm:gap-12 lg:gap-8 shrink-0 w-full lg:w-auto -mt-10 sm:mt-0 pt-2 pb-1 lg:py-6 relative z-10">
                     {wetsuit && (
-                      <div className="flex flex-col items-center gap-3 sm:gap-6 w-1/2 sm:w-[220px] group">
-                        <div className="relative h-[220px] sm:h-[340px] w-full flex items-end justify-center transition-all duration-500 group-hover:scale-105">
-                          <div className="absolute inset-0 bg-blue-500/10 blur-[80px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="flex flex-col items-center gap-2 sm:gap-4 w-[120px] sm:w-[170px] group shrink-0">
+                        <div className="relative h-[120px] sm:h-[170px] w-full flex items-end justify-center transition-all duration-500 group-hover:scale-105">
+                          <div className="absolute inset-0 bg-blue-500/5 blur-[40px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                           <div className="w-full h-full flex items-end justify-center">
                             <WetsuitSVG thickness={wetsuit.thickness} alignBottom={true} />
                           </div>
                         </div>
-                        <div className="text-center space-y-1">
-                          <p className="text-[9px] sm:text-[11px] font-black text-[#007085] uppercase tracking-[0.2em] opacity-60">ביגוד מומלץ</p>
-                          <p className="text-sm sm:text-2xl font-black text-[#002b44] tracking-tighter font-yehuda leading-tight">{wetsuit.label}</p>
+                        <div className="text-center space-y-0.5">
+                          <p className="text-[9px] sm:text-[11px] font-black text-[#007085] uppercase tracking-[0.15em] opacity-60">ביגוד מומלץ</p>
+                          <p className="text-xs sm:text-lg font-black text-[#002b44] tracking-tighter font-yehuda leading-tight">{wetsuit.label}</p>
                         </div>
                       </div>
                     )}
                     {boardType !== 'ללא גלשן' && (
-                      <div className="flex flex-col items-center gap-3 sm:gap-6 w-1/2 sm:w-[220px] group">
+                      <div className="flex flex-col items-center gap-2 sm:gap-4 w-[220px] sm:w-[340px] group shrink-0">
                         <div className="relative h-[220px] sm:h-[340px] w-full flex items-end justify-center transition-all duration-500 group-hover:scale-105">
                           <div className="absolute inset-0 bg-orange-500/10 blur-[80px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                           <div className="w-full h-full flex items-end justify-center">
                             <ExactSurfboard type={boardKey} isSelected={true} />
                           </div>
                         </div>
-                        <div className="text-center space-y-1">
-                          <p className="text-[9px] sm:text-[11px] font-black text-[#007085] uppercase tracking-[0.2em] opacity-60">גלשן מומלץ</p>
+                        <div className="text-center space-y-0.5">
+                          <p className="text-[9px] sm:text-[11px] font-black text-[#007085] uppercase tracking-[0.15em] opacity-60">גלשן מומלץ</p>
                           <p className="text-sm sm:text-2xl font-black text-[#002b44] tracking-tighter font-yehuda leading-tight">{boardType}</p>
                         </div>
                       </div>
@@ -359,7 +364,7 @@ export const DailySurfRecommendation: React.FC<DailySurfRecommendationProps> = (
                     <div>
                       <h4 className="text-base sm:text-lg font-black text-[#002b44] tracking-tight mb-2 flex items-center gap-2">
                         <Sparkles size={18} className="text-[#007085]" />
-                        התאמת הגלשן שלך להיום
+                        מידת התאמת הגלשן האישי שלך למצב הים היום
                       </h4>
                       <p className="text-sm font-bold text-[#002b44]/90 leading-relaxed">{matchText}</p>
                     </div>

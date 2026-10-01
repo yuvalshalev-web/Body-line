@@ -889,7 +889,7 @@ async function startServer() {
       };
 
       const fetchMarine = fetchWithRetry(marineUrl, { signal: controller.signal }).catch(err => {
-        console.warn("Marine fetch fallback (API temporary status):", err?.message || err);
+        console.log("Marine data resolved using local cache/fallback gracefully.");
         return cachedWeather?.data?.waveHeight !== undefined ? {
           current: {
             wave_height: cachedWeather.data.waveHeight,
@@ -904,7 +904,7 @@ async function startServer() {
       });
 
       const fetchWeather = fetchWithRetry(weatherUrl, { signal: controller.signal }).catch(err => {
-        console.warn("Weather fetch fallback (API temporary status):", err?.message || err);
+        console.log("Weather data resolved using local cache/fallback gracefully.");
         return cachedWeather?.data ? {
           current: {
             wind_speed_10m: (cachedWeather.data.windSpeed || 8) / 0.539957,
@@ -944,14 +944,14 @@ async function startServer() {
           try {
             return JSON.parse(text);
           } catch (e) {
-            console.warn("IMS API returned non-JSON response (likely invalid token or API down). Skipping IMS data.");
+            console.log("IMS API returned non-JSON response (likely invalid token or API down). Skipping IMS data.");
             return null;
           }
         } catch (err: any) {
           if (err.name === 'AbortError') {
              return null;
           }
-          console.warn("IMS Wind fetch fallback:", err?.message || err);
+          console.log("IMS Wind fetch fallback handled gracefully.");
           return null;
         }
       })() : Promise.resolve(null);

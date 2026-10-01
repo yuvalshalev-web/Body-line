@@ -5,7 +5,7 @@ import { getDb, trackedGetDocs, auth, handleFirestoreError, OperationType } from
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword, getAuth } from 'firebase/auth';
 import { Member, JoinRequest } from '../types';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import { hashPassword, verifyPassword, calculateFbPassword } from '../utils/crypto';
 import { SUPER_ADMIN_EMAIL, isAdminUser, AVAILABLE_COMMUNITIES } from '../constants';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
@@ -109,6 +109,94 @@ const LoginPage: React.FC = () => {
   const [isBiometricLoading, setIsBiometricLoading] = useState(false);
   const [enrolledBioUsers, setEnrolledBioUsers] = useState<any[]>([]);
   const [showBioGuideModal, setShowBioGuideModal] = useState(false);
+
+  const [sliderValue, setSliderValue] = useState(0);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const sliderContainerRef = useRef<HTMLDivElement>(null);
+
+  const animateSliderBack = () => {
+    setIsResetting(true);
+    let current = sliderValue;
+    const interval = setInterval(() => {
+      current = Math.max(0, current - 8);
+      setSliderValue(current);
+      if (current === 0) {
+        clearInterval(interval);
+        setIsResetting(false);
+      }
+    }, 16);
+  };
+
+  const handleDragStart = (clientX: number) => {
+    if (isLoading || isBiometricLoading || isResetting) return;
+    setIsDragging(true);
+    updateSliderValue(clientX);
+  };
+
+  const handleDragMove = (clientX: number) => {
+    if (!isDragging || isResetting) return;
+    updateSliderValue(clientX);
+  };
+
+  const handleDragEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    
+    if (sliderValue >= 80) {
+      setSliderValue(100);
+      document.getElementById('login-submit-btn')?.click();
+      
+      setTimeout(() => {
+        animateSliderBack();
+      }, 2000);
+    } else {
+      animateSliderBack();
+    }
+  };
+
+  const updateSliderValue = (clientX: number) => {
+    if (!sliderContainerRef.current) return;
+    const rect = sliderContainerRef.current.getBoundingClientRect();
+    const relativeX = clientX - rect.left;
+    const percentage = (relativeX / rect.width) * 100;
+    const clamped = Math.max(0, Math.min(100, percentage));
+    setSliderValue(clamped);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      handleDragMove(e.clientX);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        handleDragMove(e.touches[0].clientX);
+      }
+    };
+
+    const handleMouseUp = () => {
+      handleDragEnd();
+    };
+
+    const handleTouchEnd = () => {
+      handleDragEnd();
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isDragging, sliderValue]);
 
   // Check if biometric login is available on this device and fetch enrolled users
   useEffect(() => {
@@ -844,7 +932,7 @@ const LoginPage: React.FC = () => {
 
 
           {mode === 'LOGIN' ? (
-            <form onSubmit={handleLoginSubmit} className="space-y-2.5 sm:space-y-3 relative z-10">
+            <form id="login-form" onSubmit={handleLoginSubmit} className="space-y-2.5 sm:space-y-3 relative z-10">
               <div className="space-y-2">
                 <div className="relative group">
                   <input 
@@ -952,24 +1040,74 @@ const LoginPage: React.FC = () => {
               </AnimatePresence>
 
               <div className="pt-0.5 flex flex-col items-center gap-1.5 sm:gap-2">
-                <button 
-                  type="submit" 
-                  disabled={isLoading || isBiometricLoading} 
-                  className={`w-full h-11 shadow-sm rounded-lg flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm tracking-wide border-0 ${
-                    isDarkTheme 
-                      ? 'bg-[#fbf5df] text-[#030c14] hover:bg-[#fffde8]' 
-                      : 'bg-[#002b44] text-white hover:bg-[#001c2e]'
-                  }`}
-                >
-                  {isLoading ? (
-                    <Loader2 className={`animate-spin mx-auto ${isDarkTheme ? 'text-[#030c14]' : 'text-white'}`} size={16} />
-                  ) : (
-                    <span className="flex items-center gap-1.5">
-                      <span>התחבר</span>
-                      <ArrowRight size={14} className="rotate-180" />
-                    </span>
-                  )}
-                </button>
+                {/* Hidden submit button to preserve HTML5 Enter key form submission */}
+                <button type="submit" id="login-submit-btn" className="hidden" />
+
+                <div className="w-full flex flex-col items-center pt-1.5">
+                  <div 
+                    ref={sliderContainerRef}
+                    onMouseDown={(e) => handleDragStart(e.clientX)}
+                    onTouchStart={(e) => {
+                      if (e.touches.length > 0) {
+                        handleDragStart(e.touches[0].clientX);
+                      }
+                    }}
+                    className={`relative w-64 h-12 rounded-full p-1 transition-all duration-500 shadow-[inset_0_3px_6px_rgba(0,0,0,0.3)] flex items-center justify-between overflow-hidden select-none cursor-grab active:cursor-grabbing ${
+                      isDarkTheme 
+                        ? 'bg-black/55 border border-white/10' 
+                        : 'bg-[#faf8f5]/55 border border-[#002b44]/20'
+                    }`}
+                  >
+                    {isLoading || isBiometricLoading ? (
+                      <div className="flex items-center justify-center gap-2.5 mx-auto">
+                        <Loader2 className={`animate-spin ${isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'}`} size={16} />
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${
+                          isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'
+                        }`}>מתחבר לים...</span>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Glowing progress trail bar (reactive to custom drag) */}
+                        <div 
+                          className={`absolute left-1 top-1 bottom-1 rounded-full pointer-events-none ${
+                            isDarkTheme ? 'bg-[#fbf5df]/20 blur-xs' : 'bg-[#3dbbd3]/20 blur-xs'
+                          }`}
+                          style={{ 
+                            width: `${40 + (sliderValue / 100) * 208}px`,
+                            transition: isResetting ? 'width 0.25s cubic-bezier(0.16, 1, 0.3, 1)' : 'none'
+                          }}
+                        />
+
+                        {/* Slide action text (opacity reactive to custom drag) */}
+                        <span 
+                          className={`absolute inset-0 flex items-center justify-center text-[10px] font-black uppercase tracking-widest pointer-events-none select-none transition-opacity duration-200 ${
+                            isDarkTheme ? 'text-[#fbf5df]/60' : 'text-[#002b44]/60'
+                          }`}
+                          style={{ opacity: Math.max(0, 1 - (sliderValue / 60)) }}
+                        >
+                          החלק ימינה להתחברות 🌊
+                        </span>
+
+                        {/* Interactive 3D Drag Pebble - Driven smoothly by custom touch engine */}
+                        <div
+                          style={{ 
+                            left: `${4 + (sliderValue / 100) * 208}px`,
+                            transition: isResetting ? 'left 0.25s cubic-bezier(0.16, 1, 0.3, 1)' : 'none'
+                          }}
+                          className={`absolute w-10 h-10 rounded-full flex items-center justify-center pointer-events-none z-10 hover:scale-105 active:scale-95 ${
+                            isDarkTheme
+                              ? 'bg-gradient-to-br from-[#fffde8] via-[#ebd6ac] to-[#8d714d] border border-[#fbf5df]/40 shadow-[2px_3px_8px_rgba(0,0,0,0.5),inset_1px_2px_1.5px_rgba(255,255,255,0.75)]'
+                              : 'bg-gradient-to-br from-[#e0f2fe] via-[#3dbbd3] to-[#0071a1] border border-white/40 shadow-[2px_3px_8px_rgba(0,113,161,0.35),inset_1px_2px_1.5px_rgba(255,255,255,0.85)]'
+                          }`}
+                        >
+                          {/* Inner premium 3D ring highlight */}
+                          <span className="absolute inset-0.5 rounded-full border border-white/20 pointer-events-none" />
+                          <ArrowRight size={14} className="text-[#030c14] drop-shadow-sm font-black" />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
 
                 {hasBiometrics && (
                   <div className="w-full flex flex-col items-center pt-0.5">
@@ -1070,12 +1208,20 @@ const LoginPage: React.FC = () => {
                 <button 
                   type="submit" 
                   disabled={isLoading} 
-                  className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white shadow-sm rounded-lg flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm tracking-wide border-0"
+                  className={`w-full h-11 rounded-full flex items-center justify-center transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-black text-sm tracking-widest relative overflow-hidden group shadow-lg border-0 ${
+                    isDarkTheme 
+                      ? 'bg-gradient-to-r from-[#ebd6ac] via-[#fbf5df] to-[#ebd6ac] text-[#030c14] hover:-translate-y-0.5 shadow-[0_4px_15px_rgba(251,245,223,0.15)] hover:shadow-[0_8px_25px_rgba(251,245,223,0.35)]' 
+                      : 'bg-gradient-to-r from-[#0071a1] via-[#3dbbd3] to-[#0071a1] text-white hover:-translate-y-0.5 shadow-[0_4px_15px_rgba(0,113,161,0.25)] hover:shadow-[0_8px_25px_rgba(0,113,161,0.45)]'
+                  }`}
                 >
+                  {/* Premium Wow Shimmer & Border highlight */}
+                  <span className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
+                  <span className="absolute inset-0 rounded-full border border-white/10 pointer-events-none" />
+
                   {isLoading ? (
-                    <Loader2 className="animate-spin text-white mx-auto" size={16} />
+                    <Loader2 className={`animate-spin mx-auto ${isDarkTheme ? 'text-[#030c14]' : 'text-[#fbf5df]'}`} size={16} />
                   ) : (
-                    <div className="flex items-center justify-center gap-1.5">
+                    <div className="flex items-center justify-center gap-1.5 relative z-10 transition-transform duration-300 group-hover:scale-[1.02]">
                       <CheckCircle2 size={15} />
                       <span>עדכן סיסמה והתחבר</span>
                     </div>
@@ -1274,14 +1420,22 @@ const LoginPage: React.FC = () => {
                     <button 
                       type="submit" 
                       disabled={isLoading || isProcessingImage} 
-                      className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white shadow-sm rounded-lg flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm tracking-wide border-0"
+                      className={`w-full h-11 rounded-full flex items-center justify-center transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-black text-sm tracking-widest relative overflow-hidden group shadow-lg border-0 ${
+                        isDarkTheme 
+                          ? 'bg-gradient-to-r from-[#ebd6ac] via-[#fbf5df] to-[#ebd6ac] text-[#030c14] hover:-translate-y-0.5 shadow-[0_4px_15px_rgba(251,245,223,0.15)] hover:shadow-[0_8px_25px_rgba(251,245,223,0.35)]' 
+                          : 'bg-gradient-to-r from-[#0071a1] via-[#3dbbd3] to-[#0071a1] text-white hover:-translate-y-0.5 shadow-[0_4px_15px_rgba(0,113,161,0.25)] hover:shadow-[0_8px_25px_rgba(0,113,161,0.45)]'
+                      }`}
                     >
+                      {/* Premium Wow Shimmer & Border highlight */}
+                      <span className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
+                      <span className="absolute inset-0 rounded-full border border-white/10 pointer-events-none" />
+
                       {isLoading ? (
-                        <Loader2 className="animate-spin text-white mx-auto" size={16} />
+                        <Loader2 className={`animate-spin mx-auto ${isDarkTheme ? 'text-[#030c14]' : 'text-white'}`} size={16} />
                       ) : (
-                        <div className="flex items-center justify-center gap-1.5">
+                        <div className="flex items-center justify-center gap-1.5 relative z-10 transition-transform duration-300 group-hover:scale-[1.02]">
                           <span>שלח בקשת הצטרפות</span>
-                          <ArrowRight size={14} className="rotate-180" />
+                          <ArrowRight size={14} className="rotate-180 transition-transform duration-300 group-hover:-translate-x-1" />
                         </div>
                       )}
                     </button>
