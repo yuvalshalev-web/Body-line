@@ -876,7 +876,7 @@ const LoginPage: React.FC = () => {
         }`} />
       </div>
 
-      <div className="relative z-10 w-full max-w-sm sm:max-w-md my-auto flex flex-col justify-between p-4 sm:p-6 md:p-8 max-h-[98vh] sm:max-h-none overflow-hidden gap-3 sm:gap-4.5">
+      <div className="relative z-10 w-full max-w-sm sm:max-w-md my-auto flex flex-col justify-between p-3.5 sm:p-6 md:p-8 max-h-[98vh] sm:max-h-none overflow-hidden gap-2 sm:gap-4.5">
 
           {/* Header / Logo */}
           <div className="text-center mb-2 sm:mb-3 flex items-center justify-center relative z-10 gap-4">
@@ -889,40 +889,40 @@ const LoginPage: React.FC = () => {
                 initial={{ y: 5, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4 }}
-                className="flex flex-col gap-1 sm:gap-1.5 items-center w-full relative"
+                className="flex flex-col gap-0.5 sm:gap-1.5 items-center w-full relative"
               >
                 {logoUrl && !logoError ? (
                   <img 
                     src={logoUrl} 
                     onError={() => setLogoError(true)}
-                    className="h-32 sm:h-52 w-auto object-contain transition-transform duration-500 hover:scale-103" 
+                    className="h-20 sm:h-52 w-auto object-contain transition-transform duration-500 hover:scale-103" 
                     alt="Habal Zug Logo" 
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className={`w-12 h-12 sm:h-18 sm:w-18 border flex items-center justify-center rounded-lg shrink-0 mb-1 ${
+                  <div className={`w-10 h-10 sm:h-18 sm:w-18 border flex items-center justify-center rounded-lg shrink-0 mb-0.5 ${
                     isDarkTheme ? 'border-white/20 bg-slate-800 text-white' : 'border-slate-300 bg-slate-50 text-slate-700'
                   }`}>
-                    <Waves size={30} strokeWidth={1.5} />
+                    <Waves size={24} strokeWidth={1.5} />
                   </div>
                 )}
 
-                <div className="space-y-2 sm:space-y-3 mt-3 w-full text-center">
-                  <h1 className={`text-[2.06rem] sm:text-[3.3rem] md:text-[4.125rem] font-black tracking-tight leading-tight font-sans drop-shadow-[0_4px_8px_rgba(0,0,0,0.55)] transition-colors duration-500 ${
+                <div className="space-y-1 sm:space-y-3 mt-1.5 w-full text-center">
+                  <h1 className={`text-2xl sm:text-[3.3rem] md:text-[4.125rem] font-black tracking-tight leading-tight font-sans drop-shadow-[0_4px_8px_rgba(0,0,0,0.55)] transition-colors duration-500 ${
                     isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'
                   }`}>
                     קהילת חבל זוג
                   </h1>
-                  <p className={`font-sans font-bold text-[1.375rem] sm:text-[2.06rem] md:text-[2.475rem] leading-snug transition-colors duration-500 ${
+                  <p className={`font-sans font-bold text-base sm:text-[2.06rem] md:text-[2.475rem] leading-snug transition-colors duration-500 ${
                     isDarkTheme ? 'text-[#fbf5df]/90' : 'text-[#002b44]/90'
                   }`}>
                     מחוברים תמיד, מכל מקום
                   </p>
-                  <p className={`font-sans font-bold text-[1.2375rem] sm:text-[1.65rem] flex items-center justify-center gap-2 mt-2 transition-colors duration-500 ${
+                  <p className={`font-sans font-bold text-xs sm:text-[1.65rem] flex items-center justify-center gap-1.5 mt-0.5 transition-colors duration-500 ${
                     isDarkTheme ? 'text-[#fbf5df]/75' : 'text-[#002b44]/75'
                   }`}>
                     <span>איזה כיף שחזרת!</span>
-                    <span className="text-2xl sm:text-3xl select-none animate-bounce">🌊</span>
+                    <span className="text-xl sm:text-3xl select-none animate-bounce">🌊</span>
                   </p>
                 </div>
               </motion.div>
@@ -932,8 +932,8 @@ const LoginPage: React.FC = () => {
 
 
           {mode === 'LOGIN' ? (
-            <form id="login-form" onSubmit={handleLoginSubmit} className="space-y-2.5 sm:space-y-3 relative z-10">
-              <div className="space-y-2">
+            <form id="login-form" onSubmit={handleLoginSubmit} className="space-y-2 sm:space-y-3 relative z-10">
+              <div className="space-y-1.5">
                 <div className="relative group">
                   <input 
                     type="email" required value={email} onChange={e => setEmail(e.target.value)} 
@@ -1445,10 +1445,10 @@ const LoginPage: React.FC = () => {
             </motion.form>
           )}
           {/* Subtle elegant divider */}
-          <div className="my-2 border-t border-slate-800 w-full" />
+          <div className="my-1 border-t border-slate-800/40 w-full" />
           
           {/* Integrated Partner Logos - Highly compact CAD footer style */}
-          <div className="flex items-center justify-center gap-3.5 sm:gap-5 pb-0.5 relative -translate-y-[20%] sm:-translate-y-[25%]">
+          <div className="flex items-center justify-center gap-3 sm:gap-5 pb-0 relative">
             <a 
               href="https://www.atalef.com" 
               target="_blank" 
@@ -1461,12 +1461,12 @@ const LoginPage: React.FC = () => {
                   src={siteAssets.atalefLogo} 
                   onError={() => setAtalefError(true)}
                   alt="עמותת העטלף" 
-                  className="h-20 sm:h-28 w-auto transition-all duration-500 group-hover:opacity-100" 
+                  className="h-12 sm:h-28 w-auto transition-all duration-500 group-hover:opacity-100" 
                   referrerPolicy="no-referrer"
                 />
               )}
             </a>
-            <div className="w-px h-10 sm:h-16 bg-slate-800" />
+            <div className="w-px h-6 sm:h-16 bg-slate-800/60" />
             <a 
               href="https://www.reefseacenter.com" 
               target="_blank" 
@@ -1479,7 +1479,7 @@ const LoginPage: React.FC = () => {
                   src={siteAssets.reefLogo} 
                   onError={() => setReefError(true)}
                   alt="מועדון ריף" 
-                  className="h-14 w-14 sm:h-18 sm:w-18 rounded-full object-cover bg-white transition-all duration-500 shadow-sm border border-slate-800 group-hover:opacity-100" 
+                  className="h-10 w-10 sm:h-18 sm:w-18 rounded-full object-cover bg-white transition-all duration-500 shadow-sm border border-slate-800 group-hover:opacity-100" 
                   referrerPolicy="no-referrer"
                 />
               )}
