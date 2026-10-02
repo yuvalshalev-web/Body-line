@@ -43,6 +43,7 @@ import MemberGradingPage from './MemberGradingPage';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { calculateUserStats } from '../utils/analytics';
 import { calculateAge, parseDate } from '../utils/dateUtils';
+import { formatBirthdayWhatsAppMessage, openWhatsAppWithMessage } from '../utils/whatsapp';
 import { SurfCallsAnalytics } from '../components/admin/SurfCallsAnalytics';
 
 
@@ -887,6 +888,92 @@ const AdminPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
+              );
+            })()}
+
+            {/* Today's Birthdays Special Board */}
+            {(() => {
+              const now = new Date();
+              const currentMonth = now.getMonth();
+              const currentDate = now.getDate();
+
+              const bdays = members.filter(m => {
+                if (m.isActive === false) return false;
+                const bdayStr = m.birthday || (m as any).birthDate;
+                if (!bdayStr) return false;
+                const d = parseDate(bdayStr);
+                if (!d) return false;
+                return d.getMonth() === currentMonth && d.getDate() === currentDate;
+              });
+
+              if (bdays.length === 0) return null;
+
+              return (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-md mt-6"
+                >
+                  <div className="absolute -left-16 -top-16 w-36 h-36 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+                  <div className="absolute -right-16 -bottom-16 w-36 h-36 bg-orange-400/10 rounded-full blur-2xl pointer-events-none" />
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+                    <div className="flex items-center gap-4.5">
+                      <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-md animate-bounce shrink-0">
+                        <Cake size={28} />
+                      </div>
+                      <div className="text-right">
+                        <h4 className="text-xl font-black text-amber-950 tracking-tight flex items-center gap-2">
+                          חוגגים יום הולדת היום! 🎂🏄‍♂️🤙
+                        </h4>
+                        <p className="text-xs font-bold text-amber-800/80 mt-1">
+                          יש לנו {bdays.length === 1 ? 'חבר קהילה אחד שחוגג' : `${bdays.length} חברי קהילה שחוגגים`} היום יום הולדת. שלחו להם ברכת גולשים אישית וחמה בוואטסאפ!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 relative z-10">
+                    {bdays.map((m) => {
+                      const age = calculateAge(m.birthday || (m as any).birthDate);
+                      const ageText = age !== null ? ` (בן ${age})` : '';
+                      return (
+                        <div 
+                          key={m.id} 
+                          className="bg-white/95 backdrop-blur-md border border-amber-200/50 rounded-2xl p-4 flex flex-col justify-between gap-4 shadow-sm hover:border-amber-300 transition-all hover:translate-y-[-2px]"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 font-black text-xs uppercase shrink-0 overflow-hidden">
+                              {m.avatar ? (
+                                <img src={m.avatar} className="w-full h-full rounded-full object-cover" alt="" />
+                              ) : (
+                                `${m.firstName?.[0] || ''}${m.lastName?.[0] || ''}`
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <p className="font-black text-slate-800 text-sm">{m.firstName} {m.lastName}</p>
+                              <p className="text-[10px] text-amber-700 font-bold mt-0.5">
+                                {m.role === 'Admin' ? 'רכז' : m.role === 'Instructor' ? 'מדריך' : m.role === 'Volunteer' ? 'מתנדב' : 'משתתף'}{ageText}
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const greeting = formatBirthdayWhatsAppMessage(m.firstName, m.gender);
+                              openWhatsAppWithMessage(m.mobile, greeting);
+                            }}
+                            className="w-full h-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer border-0"
+                          >
+                            <MessageCircle size={14} />
+                            <span>שליחת ברכת גולשים בוואטסאפ 🤙</span>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
               );
             })()}
 
