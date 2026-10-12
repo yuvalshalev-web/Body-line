@@ -26,6 +26,7 @@ import { useRandomHeader } from '../hooks/useRandomHeader';
 import { addDoc, collection, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { getDb } from '../services/firebase';
 import ImportSessionsModal from '../components/admin/ImportSessionsModal';
+import CommunityExecutiveSnapshot from '../components/admin/CommunityExecutiveSnapshot';
 
 const SurfingSessionAttendance: React.FC = () => {
   const { 
@@ -43,10 +44,12 @@ const SurfingSessionAttendance: React.FC = () => {
   const { showAlert } = useModal();
   
   const headerImage = useRandomHeader();
-  const [selectedSession, setSelectedSession] = useState<{ id: string | 'active', date: any, participantIds: string[] } | null>(null);
+  const [selectedSession, setSelectedSession] = useState<{ id: string | 'active', date: any, participantIds: string[], durationMinutes?: number } | null>(null);
+  const [durationInput, setDurationInput] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [dateError, setDateError] = useState<string | null>(null);
   const [isImportSessionsModalOpen, setIsImportSessionsModalOpen] = useState(false);
+  const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState(false);
 
   // CRM State
   const [crmToken, setCrmToken] = useState<string | null>(null);
@@ -294,13 +297,25 @@ const SurfingSessionAttendance: React.FC = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => {
-                    setSelectedSession({ id: 'new', date: new Date().toISOString(), participantIds: [] });
+                    const defaultDur = siteConfig?.sessionDurationMinutes || 90;
+                    setSelectedSession({ id: 'new', date: new Date().toISOString(), participantIds: [], durationMinutes: defaultDur });
+                    setDurationInput(String(defaultDur));
                     setDateError(null);
                   }}
                   className="px-8 py-4 bg-[#00426a] text-white rounded-2xl font-black text-lg shadow-[0_10px_30px_rgba(0,66,106,0.3)] hover:bg-[#003354] transition-all duration-300 flex items-center gap-3"
                 >
                   <Sparkles size={20} />
                   <span>הוסף סשן ידנית</span>
+                </motion.button>
+
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setIsSnapshotModalOpen(true)}
+                  className="px-6 py-4 bg-gradient-to-r from-sky-600 to-indigo-600 text-white rounded-2xl font-black text-lg shadow-[0_10px_30px_rgba(14,165,233,0.3)] hover:opacity-95 transition-all duration-300 flex items-center gap-2.5"
+                >
+                  <Sparkles size={20} />
+                  <span>תמונת מצב קהילה</span>
                 </motion.button>
                 
                 {isAdminUser(currentUser) && (
@@ -363,7 +378,16 @@ const SurfingSessionAttendance: React.FC = () => {
               </div>
 
               <div 
-                onClick={() => setSelectedSession({ id: 'active', date: activeSessionDate, participantIds: attendeeIds })}
+                onClick={() => {
+                  const dur = siteConfig?.sessionDurationMinutes || 90;
+                  setSelectedSession({ 
+                    id: 'active', 
+                    date: activeSessionDate, 
+                    participantIds: attendeeIds,
+                    durationMinutes: dur 
+                  });
+                  setDurationInput(String(dur));
+                }}
                 className="group cursor-pointer luxury-card p-10 hover:-translate-y-2 relative overflow-hidden transition-all duration-700"
               >
                 <div className="grain-overlay" />
@@ -460,7 +484,14 @@ const SurfingSessionAttendance: React.FC = () => {
 
                 <div 
                   onClick={() => {
-                    setSelectedSession({ id: session.id, date: session.date, participantIds: session.participantIds || [] });
+                    const dur = session.durationMinutes || siteConfig?.sessionDurationMinutes || 90;
+                    setSelectedSession({ 
+                      id: session.id, 
+                      date: session.date, 
+                      participantIds: session.participantIds || [],
+                      durationMinutes: dur
+                    });
+                    setDurationInput(String(dur));
                   }}
                   className="group cursor-pointer luxury-card p-8 hover:-translate-y-1 relative overflow-hidden transition-all duration-500"
                 >
@@ -501,6 +532,11 @@ const SurfingSessionAttendance: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <Users size={16} className="text-sky-500" />
                           <span>{session.participantIds?.length || 0} משתתפים</span>
+                        </div>
+                        <span className="opacity-20 text-lg">|</span>
+                        <div className="flex items-center gap-2 text-slate-500" title="אורך הסשן">
+                          <Clock size={16} className="text-amber-500" />
+                          <span>{session.durationMinutes || siteConfig?.sessionDurationMinutes || 90} דקות</span>
                         </div>
                         <span className="opacity-20 text-lg">|</span>
                         <div className="flex flex-col gap-0.5 text-slate-400 text-[10px] uppercase font-black tracking-widest">
@@ -649,6 +685,30 @@ const SurfingSessionAttendance: React.FC = () => {
                           {dateError}
                         </motion.span>
                       )}
+                      <div className="flex items-center gap-2 mt-3 text-xs font-bold text-slate-600 bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 w-fit">
+                        <Clock size={14} className="text-slate-400 shrink-0" />
+                        <span>אורך סשן (בדקות):</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="90"
+                          className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-0.5 text-center font-black focus:outline-none focus:border-sky-500 text-slate-800"
+                          value={durationInput}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/[^0-9]/g, '');
+                            setDurationInput(raw);
+                            const parsed = parseInt(raw, 10);
+                            setSelectedSession(prev => prev ? { ...prev, durationMinutes: isNaN(parsed) ? undefined : parsed } : null);
+                          }}
+                          onBlur={() => {
+                            const parsed = parseInt(durationInput, 10);
+                            const val = (!isNaN(parsed) && parsed > 0) ? parsed : (siteConfig?.sessionDurationMinutes || 90);
+                            setDurationInput(String(val));
+                            setSelectedSession(prev => prev ? { ...prev, durationMinutes: val } : null);
+                          }}
+                        />
+                      </div>
                     </div>
                   ) : (
                     <div className="flex flex-wrap items-center gap-3">
@@ -663,6 +723,46 @@ const SurfingSessionAttendance: React.FC = () => {
                       )}
                       <span className="text-slate-300">•</span>
                       <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">לחץ על משתתף לעדכון נוכחות</span>
+                      {selectedSession.id !== 'new' && selectedSession.id !== 'active' && (
+                        <>
+                          <span className="text-slate-300">•</span>
+                          <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200/60 px-3 py-1 rounded-xl text-xs font-bold text-slate-700 shadow-xs">
+                            <Clock size={13} className="text-amber-500 shrink-0 animate-pulse" />
+                            <span>אורך סשן ספציפי:</span>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              placeholder="90"
+                              className="w-16 bg-white border border-slate-200/90 rounded-lg px-2 py-0.5 text-center text-xs font-black focus:outline-none focus:border-sky-500 text-slate-800"
+                              value={durationInput}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/[^0-9]/g, '');
+                                setDurationInput(raw);
+                                const parsed = parseInt(raw, 10);
+                                setSelectedSession(prev => prev ? { ...prev, durationMinutes: isNaN(parsed) ? undefined : parsed } : null);
+                              }}
+                              onBlur={async () => {
+                                const parsed = parseInt(durationInput, 10);
+                                const val = (!isNaN(parsed) && parsed > 0) ? parsed : (siteConfig?.sessionDurationMinutes || 90);
+                                setDurationInput(String(val));
+                                setSelectedSession(prev => prev ? { ...prev, durationMinutes: val } : null);
+                                const db = getDb();
+                                const sessionRef = doc(db, 'weekly_history', selectedSession.id);
+                                await updateDoc(sessionRef, {
+                                  durationMinutes: val
+                                });
+                              }}
+                              onKeyDown={async (e) => {
+                                if (e.key === 'Enter') {
+                                  (e.target as HTMLInputElement).blur();
+                                }
+                              }}
+                            />
+                            <span>דקות</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -818,7 +918,8 @@ const SurfingSessionAttendance: React.FC = () => {
                           participantIds: selectedSession.participantIds,
                           participantsCount: selectedSession.participantIds.length,
                           status: status,
-                          seaState: coastalWeather || null
+                          seaState: coastalWeather || null,
+                          durationMinutes: selectedSession.durationMinutes || siteConfig?.sessionDurationMinutes || 90
                         });
                         setSelectedSession(null);
                         setDateError(null);
@@ -895,6 +996,13 @@ const SurfingSessionAttendance: React.FC = () => {
         isOpen={isImportSessionsModalOpen}
         onClose={() => setIsImportSessionsModalOpen(false)}
       />
+
+      {isSnapshotModalOpen && (
+        <CommunityExecutiveSnapshot
+          isModal
+          onClose={() => setIsSnapshotModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

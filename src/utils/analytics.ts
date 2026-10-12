@@ -240,7 +240,15 @@ export const calculateUserStats = (
   
   const activeWeeks = userSessionWeeks.size;
   const stabilityPercent = Math.min(100, Math.round((activeWeeks / totalWeeksPassed) * 100));
-  const waterHours = Math.round(totalSessions * ((sessionDurationMinutes || 90) / 60) * 10) / 10;
+  
+  // Calculate precise cumulative water hours based on custom/edited individual session durations
+  let totalDurationMinutes = 0;
+  (weeklyHistory || []).forEach(s => {
+    if (!s.isEvent && (s.participantIds || []).includes(userId)) {
+      totalDurationMinutes += s.durationMinutes || sessionDurationMinutes || 90;
+    }
+  });
+  const waterHours = Math.round((totalDurationMinutes / 60) * 10) / 10;
 
   return {
     userId,

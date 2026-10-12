@@ -12,10 +12,12 @@ import GlassNavigationBar from '../components/GlassNavigationBar';
 import AdminHelpPage from '../components/admin/AdminHelpPage';
 import SeasonalPersistence from '../components/admin/SeasonalPersistence';
 import PairsPersistence from '../components/admin/PairsPersistence';
+import CommunityExecutiveSnapshot from '../components/admin/CommunityExecutiveSnapshot';
+import { Sparkles } from 'lucide-react';
 
 import { useRandomHeader } from '../hooks/useRandomHeader';
 
-type Tab = 'community' | 'trends' | 'pairs' | 'attendance' | 'help' | 'seasonal';
+type Tab = 'snapshot' | 'community' | 'trends' | 'pairs' | 'attendance' | 'help' | 'seasonal';
 
 const SnorkelIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   <svg 
@@ -39,9 +41,10 @@ const AdminInfoPage: React.FC = () => {
   const headerImage = useRandomHeader();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>('community');
+  const [activeTab, setActiveTab] = useState<Tab>('snapshot');
 
   const tabs = [
+    { id: 'snapshot', label: 'תמונת מצב (Snapshot)', icon: <Sparkles size={20} /> },
     { id: 'community', label: 'דופק הקהילה', icon: <TrendingUp size={20} /> },
     { id: 'trends', label: 'התמדה קבוצתית', icon: <Activity size={20} /> },
     { id: 'pairs', label: 'התמדה זוגית', icon: <HeartHandshake size={20} /> },
@@ -97,6 +100,7 @@ const AdminInfoPage: React.FC = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
+            {activeTab === 'snapshot' && <CommunityExecutiveSnapshot />}
             {activeTab === 'community' && (
               <div className="space-y-12">
                 <CommunityAnalytics />

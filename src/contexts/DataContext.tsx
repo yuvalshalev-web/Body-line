@@ -659,7 +659,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setAttendeeIds(data.attendees || []);
         
         if (data.date && new Date(data.date) < new Date()) {
-          if (finalizeSessionRef.current) finalizeSessionRef.current();
+          if (finalizeSessionRef.current) {
+            finalizeSessionRef.current().catch((err) => {
+              console.warn("Auto rollover error:", err);
+            });
+          }
         } else {
           setActiveSessionDate(data.date || getNextSessionDate(siteConfigRef.current?.weeklySessions));
         }
@@ -1575,7 +1579,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const hasChanges = JSON.stringify(updatedWeeklySessions) !== JSON.stringify(currentWeeklySessions);
         if (hasChanges) {
           console.log("finalizeSession: Disabling one-time session...");
-          await updateDoc(doc(db, 'site_data', 'config'), { weeklySessions: updatedWeeklySessions });
+          await setDoc(doc(db, 'site_data', 'config'), { weeklySessions: updatedWeeklySessions }, { merge: true });
           currentWeeklySessions = updatedWeeklySessions;
           updatedFields += 1;
         }

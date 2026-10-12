@@ -26,6 +26,7 @@ import { useData } from '../contexts/DataContext';
 import { isAppShaperUser } from '../constants';
 import { getBodyLineStats } from '../utils/bodyLineStats';
 import { calculateAge, parseDate, formatDate } from '../utils/dateUtils';
+import CommunityExecutiveSnapshot from '../components/admin/CommunityExecutiveSnapshot';
 import { 
   BarChart, 
   Bar, 
@@ -52,6 +53,7 @@ const SessionStatsPage: React.FC = () => {
   const [gritSearchTerm, setGritSearchTerm] = useState('');
   const [ageView, setAgeView] = useState<'annual' | 'monthly' | 'lastSession'>('annual');
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  const [isSnapshotOpen, setIsSnapshotOpen] = useState(false);
 
   // Helper to count Thursdays between two dates
   const countThursdays = (start: string | Date, end: string | Date) => {
@@ -110,7 +112,7 @@ const SessionStatsPage: React.FC = () => {
     });
 
     // Group by week (Thursday) to merge participantIds
-    const sessionsByDate = new Map<string, { date: Date, participantIds: Set<string>, participantsCount: number }>();
+    const sessionsByDate = new Map<string, { date: Date, participantIds: Set<string>, participantsCount: number, durationMinutes?: number }>();
     validSessions.forEach(session => {
       const sessionDate = parseDate(session.date);
       if (!sessionDate) return;
@@ -124,7 +126,17 @@ const SessionStatsPage: React.FC = () => {
       
       const dateKey = thursdayDate.toDateString();
       if (!sessionsByDate.has(dateKey)) {
-        sessionsByDate.set(dateKey, { date: thursdayDate, participantIds: new Set<string>(), participantsCount: 0 });
+        sessionsByDate.set(dateKey, { 
+          date: thursdayDate, 
+          participantIds: new Set<string>(), 
+          participantsCount: 0,
+          durationMinutes: session.durationMinutes
+        });
+      } else {
+        const merged = sessionsByDate.get(dateKey)!;
+        if (session.durationMinutes) {
+          merged.durationMinutes = session.durationMinutes;
+        }
       }
       const merged = sessionsByDate.get(dateKey)!;
       (session.participantIds || []).forEach((id: string) => merged.participantIds.add(id));
@@ -135,7 +147,8 @@ const SessionStatsPage: React.FC = () => {
       .map(s => ({
         date: s.date,
         participantIds: Array.from(s.participantIds),
-        participantsCount: s.participantsCount
+        participantsCount: s.participantsCount,
+        durationMinutes: s.durationMinutes
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
@@ -398,9 +411,9 @@ const SessionStatsPage: React.FC = () => {
     }));
 
     // 8. Sea Time Calculation
-    const totalSeaTimeMinutes = filteredSessions.reduce((acc, s) => acc + (s.participantsCount || 0) * sessionDurationMinutes, 0);
+    const totalSeaTimeMinutes = filteredSessions.reduce((acc, s) => acc + (s.participantsCount || 0) * (s.durationMinutes || sessionDurationMinutes), 0);
     const totalSeaTimeHours = Math.round(totalSeaTimeMinutes / 60);
-    const monthlySeaTimeMinutes = lastMonthSessions.reduce((acc, s) => acc + (s.participantsCount || 0) * sessionDurationMinutes, 0);
+    const monthlySeaTimeMinutes = lastMonthSessions.reduce((acc, s) => acc + (s.participantsCount || 0) * (s.durationMinutes || sessionDurationMinutes), 0);
     const monthlySeaTimeHours = Math.round(monthlySeaTimeMinutes / 60);
 
     // 9. Pulse Data (Full timeline from startDate to endDate)
@@ -585,6 +598,28 @@ const SessionStatsPage: React.FC = () => {
     <div className="max-w-7xl mx-auto font-yehuda pb-20 relative luxury-bg mt-8 rounded-[3rem] overflow-hidden px-4 md:px-0 pt-8" dir="rtl">
       <div className="grain-overlay" />
       
+      {/* Top Coordinator Snapshot Action Bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 px-8">
+        <div>
+          <h2 className="text-xl font-black text-slate-800">סטטיסטיקות סשנים ושעות ים</h2>
+          <p className="text-xs text-slate-500 font-bold">ניתוח מעמיק, מגמות עונתיות והתמדה רב-שנתית</p>
+        </div>
+        <button
+          onClick={() => setIsSnapshotOpen(true)}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-black text-sm shadow-lg shadow-sky-500/20 transition-all active:scale-95 cursor-pointer"
+        >
+          <Sparkles className="w-4 h-4 text-cyan-200" />
+          <span>תמונת מצב קהילתית (Snapshot)</span>
+        </button>
+      </div>
+
+      {isSnapshotOpen && (
+        <CommunityExecutiveSnapshot 
+          isModal 
+          onClose={() => setIsSnapshotOpen(false)} 
+        />
+      )}
+
       {/* Sea-Time & Progress Bar Row */}
       <div className="flex flex-col md:flex-row gap-8 items-center justify-center mb-12 w-full px-8">
         <div className="relative group">
