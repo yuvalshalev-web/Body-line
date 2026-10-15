@@ -209,10 +209,52 @@ export interface AuthState {
 }
 
 export interface YearConfig {
+  name?: string; // כינוי / שם המחזור הגלובלי (למשל: "מחזור ז'")
   startDate: string;
   endDate: string;
   activityMode?: 'סבבים' | 'מאוחד' | 'קבוצתית' | 'משותפת' | string;
+  branchCohorts?: Record<string, string>; // מיפוי מחזור פעיל לפי סניף, למשל: { herzliya: "מחזור ז׳", ashkelon: "מחזור ג׳", ... }
 }
+
+export type GroupType = 'cohort' | 'alumni' | 'special';
+
+export type GroupMemberRole = 
+  | 'participant' // משתתף
+  | 'volunteer'   // מתנדב
+  | 'instructor'  // מדריך
+  | 'coordinator' // רכז
+  | 'staff';      // צוות עמותה
+
+export type MembershipStatus = 
+  | 'active'     // פעיל בקבוצה
+  | 'completed'  // סיים בהצלחה
+  | 'graduated'  // בוגר
+  | 'paused';    // מושהה
+
+export interface CommunityGroup {
+  id: string;
+  name: string;              // לדוגמה: "מחזור ז׳", "קבוצת בוגרים", "מחזור ו׳"
+  type: GroupType;           // cohort = מחזור שנת חבל זוג, alumni = קבוצת בוגרים
+  isActive: boolean;         // האם הקבוצה פעילה כעת
+  isCurrentCohort?: boolean; // האם זהו המחזור השנתי הפעיל כעת
+  startDate?: string;        // תאריך תחילת תקופת חבל זוג
+  endDate?: string;          // תאריך סיום תקופת חבל זוג
+  description?: string;
+  createdAt: string;
+}
+
+export interface GroupMembership {
+  id: string;
+  personId: string;          // מזהה המשתמש (Member.id)
+  groupId: string;           // מזהה הקבוצה (CommunityGroup.id)
+  communityId?: string;      // מזהה קהילה/סניף (למשל: herzliya, tel_baruch וכו')
+  role: GroupMemberRole;     // התפקיד באותה קבוצה
+  status: MembershipStatus;  // סטטוס השייכות לקבוצה
+  joinedAt: string;          // תאריך הצטרפות לקבוצה
+  completedAt?: string;      // תאריך סיום המחזור
+  notes?: string;
+}
+
 
 export interface SurfCall {
   id: string;

@@ -4,13 +4,13 @@ import {
   Settings, Terminal, Calendar, MapPin, Globe, Timer, Hourglass, 
   Clock, Plus, Trash2, Edit2, CheckCircle2, ShieldAlert, AlertTriangle, 
   FileText, Map as MapIcon, Users, Check, X, Loader2, Save, Eye,
-  Layers, Activity, ArrowRight
+  Layers, Activity, ArrowRight, ChevronLeft
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
-import { SUPER_ADMIN_EMAIL, isAppShaperUser, isAdminUser } from '../constants';
+import { SUPER_ADMIN_EMAIL, isAppShaperUser, isAdminUser, BASE_COMMUNITY_BRANCHES, DEFAULT_BRANCH_COHORTS, getBranchCohortName } from '../constants';
 import { loadGoogleMaps, extractAddressData } from '../utils/googlePlaces';
 import { DayPicker } from '../components/DayPicker';
 import { TimePicker } from '../components/TimePicker';
@@ -31,16 +31,19 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
     conflictingAdmins, updateMember, deleteMember, members 
   } = useData();
 
-  const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'Staff' || currentUser?.role === 'Support' || currentUser?.email?.toLowerCase() === 'yuval.shalev@gmail.com';
-  const isAppShaper = isAppShaperUser(currentUser) || isAdminUser(currentUser);
+  // רכז או אפ-שייפר מורשים לשנות את כל הפרמטרים של "שנת חבל זוג" והגדרות המערכת
+  const isCoordinator = currentUser?.role === 'Admin' || currentUser?.role === 'Staff';
+  const isAppShaper = isAppShaperUser(currentUser) || currentUser?.role === 'Support' || currentUser?.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+  const isAdmin = isCoordinator || isAppShaper || isAdminUser(currentUser) || currentUser?.email?.toLowerCase() === 'yuval.shalev@gmail.com';
+  const canManageSystem = true; // רכז ואפ-שייפר מורשים לנהל את כל פרמטרי המערכת ושנת חבל זוג
   const [showReadOnlyNotice, setShowReadOnlyNotice] = useState(false);
 
   const checkAppShaper = () => {
-    if (!isAppShaper) {
-      setShowReadOnlyNotice(true);
-      return false;
+    if (canManageSystem) {
+      return true;
     }
-    return true;
+    setShowReadOnlyNotice(true);
+    return false;
   };
 
   // Conflict email editing
@@ -207,22 +210,57 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
 
   // Year Config State
   const [isEditingYear, setIsEditingYear] = useState(false);
-  const [yearForm, setYearForm] = useState<{ startDate: string; endDate: string; activityMode: 'קבוצתית' | 'משותפת' | 'סבבים' | 'מאוחד' }>({
+  const [yearForm, setYearForm] = useState<{ 
+    name: string; 
+    startDate: string; 
+    endDate: string; 
+    activityMode: 'קבוצתית' | 'משותפת' | 'סבבים' | 'מאוחד';
+    branchCohorts: Record<string, string>;
+  }>({
+    name: '',
     startDate: '',
     endDate: '',
-    activityMode: 'משותפת'
+    activityMode: 'משותפת',
+    branchCohorts: { ...DEFAULT_BRANCH_COHORTS }
   });
   const [isSavingYear, setIsSavingYear] = useState(false);
+  const [isDirtyYear, setIsDirtyYear] = useState(false);
 
   useEffect(() => {
     if (yearConfig) {
       setYearForm({ 
+        name: yearConfig.name || '',
         startDate: yearConfig.startDate || '', 
         endDate: yearConfig.endDate || '',
-        activityMode: (yearConfig.activityMode as any) || 'משותפת'
+        activityMode: (yearConfig.activityMode as any) || 'משותפת',
+        branchCohorts: yearConfig.branchCohorts 
+          ? { ...DEFAULT_BRANCH_COHORTS, ...yearConfig.branchCohorts } 
+          : { ...DEFAULT_BRANCH_COHORTS }
       });
+      setIsDirtyYear(false);
     }
   }, [yearConfig]);
+
+  const handleSaveYearConfig = async () => {
+    setIsSavingYear(true);
+    try {
+      await updateYearConfig({
+        name: yearForm.name.trim() || 'מחזור ז׳',
+        startDate: yearForm.startDate,
+        endDate: yearForm.endDate,
+        activityMode: yearForm.activityMode,
+        branchCohorts: yearForm.branchCohorts
+      });
+      setIsDirtyYear(false);
+      setIsEditingYear(false);
+      showSuccess('כל הפרמטרים של שנת חבל זוג עודכנו בהצלחה!');
+    } catch (err) {
+      console.error(err);
+      showError('שגיאה בעדכון הגדרות שנת חבל זוג');
+    } finally {
+      setIsSavingYear(false);
+    }
+  };
 
   // Weekly Sessions State
   const [weeklySessions, setWeeklySessions] = useState<{ dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[]>(
@@ -380,50 +418,142 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Year Config Widget */}
-        <div className="luxury-card p-8 space-y-8">
-          <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
-            <div className="w-12 h-12 bg-sky-50 text-sky-500 rounded-2xl flex items-center justify-center shadow-sm border border-sky-100">
-              <Calendar size={24} />
+        <div className="luxury-card p-6 sm:p-8 space-y-6 sm:space-y-8 border-sky-100 shadow-md relative overflow-hidden">
+          {/* Subtle decorative glow */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-sky-200/20 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-5 gap-3">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center shadow-xs border border-sky-100 shrink-0">
+                <Calendar size={24} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-black text-slate-800 tracking-tight">שנת חבל זוג</h3>
+                  <span className="text-xs font-black px-2.5 py-0.5 rounded-lg bg-sky-100 text-sky-700 border border-sky-200">
+                    {yearForm.name || yearConfig?.name || 'מחזור ז׳'}
+                  </span>
+                </div>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                  COHORT & CYCLE CONFIG • פתוח לעריכת רכז ואפ-שייפר
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-black text-slate-800 tracking-tight">הגדרת שנת פעילות</h3>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">YEAR CYCLE CONFIG</p>
+            
+            <div className="flex items-center gap-2 self-start sm:self-center">
+              <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 flex items-center gap-1.5 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>רכז / אפ-שייפר מורשה עריכה</span>
+              </span>
             </div>
           </div>
 
-          <div className="space-y-8">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">תחילת שנה</p>
-                <p className="text-xl font-black text-slate-700 tabular-nums">{formatDate(yearConfig?.startDate || '---')}</p>
+          <div className="space-y-6">
+            {/* Top 3 Primary Parameters - Directly Editable */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              {/* Parameter 1: General Cohort Name */}
+              <div className="p-4 bg-slate-50 hover:bg-slate-50/90 rounded-2xl border border-slate-200/80 transition-all focus-within:ring-2 focus-within:ring-sky-500/20 focus-within:border-sky-400 focus-within:bg-white shadow-2xs">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                    <Edit2 size={11} className="text-sky-500" />
+                    <span>שם המחזור הראשי</span>
+                  </label>
+                  <span className="text-[9px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">עריכה ישירה</span>
+                </div>
+                <input 
+                  type="text"
+                  value={yearForm.name}
+                  placeholder="לדוגמה: מחזור ז׳"
+                  onChange={e => {
+                    setYearForm(prev => ({ ...prev, name: e.target.value }));
+                    setIsDirtyYear(true);
+                  }}
+                  className="w-full bg-white px-3 py-2 border border-slate-200 rounded-xl font-black text-slate-800 text-sm outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all shadow-2xs"
+                />
+                <p className="text-[10px] text-slate-400 font-medium mt-1 truncate">כינוי שנת הפעילות הראשית</p>
               </div>
-              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">סיום שנה</p>
-                <p className="text-xl font-black text-slate-700 tabular-nums">{formatDate(yearConfig?.endDate || '---')}</p>
+
+              {/* Parameter 2: Start Date */}
+              <div className="p-4 bg-slate-50 hover:bg-slate-50/90 rounded-2xl border border-slate-200/80 transition-all focus-within:ring-2 focus-within:ring-sky-500/20 focus-within:border-sky-400 focus-within:bg-white shadow-2xs">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                    <Calendar size={11} className="text-sky-500" />
+                    <span>תחילת שנת חבל זוג</span>
+                  </label>
+                  <span className="text-[9px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">תאריך פתיחה</span>
+                </div>
+                <input 
+                  type="date"
+                  value={yearForm.startDate}
+                  onChange={e => {
+                    setYearForm(prev => ({ ...prev, startDate: e.target.value }));
+                    setIsDirtyYear(true);
+                  }}
+                  onClick={e => {
+                    try {
+                      (e.currentTarget as any).showPicker?.();
+                    } catch(err) {}
+                  }}
+                  className="w-full bg-white px-3 py-2 border border-slate-200 rounded-xl font-black text-slate-800 text-sm outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all cursor-pointer shadow-2xs"
+                />
+                <p className="text-[10px] text-slate-400 font-medium mt-1">
+                  {formatDate(yearForm.startDate || yearConfig?.startDate || '---')}
+                </p>
+              </div>
+
+              {/* Parameter 3: End Date */}
+              <div className="p-4 bg-slate-50 hover:bg-slate-50/90 rounded-2xl border border-slate-200/80 transition-all focus-within:ring-2 focus-within:ring-sky-500/20 focus-within:border-sky-400 focus-within:bg-white shadow-2xs">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                    <Calendar size={11} className="text-sky-500" />
+                    <span>סיום שנת חבל זוג</span>
+                  </label>
+                  <span className="text-[9px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">תאריך סיום</span>
+                </div>
+                <input 
+                  type="date"
+                  value={yearForm.endDate}
+                  onChange={e => {
+                    setYearForm(prev => ({ ...prev, endDate: e.target.value }));
+                    setIsDirtyYear(true);
+                  }}
+                  onClick={e => {
+                    try {
+                      (e.currentTarget as any).showPicker?.();
+                    } catch(err) {}
+                  }}
+                  className="w-full bg-white px-3 py-2 border border-slate-200 rounded-xl font-black text-slate-800 text-sm outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all cursor-pointer shadow-2xs"
+                />
+                <p className="text-[10px] text-slate-400 font-medium mt-1">
+                  {formatDate(yearForm.endDate || yearConfig?.endDate || '---')}
+                </p>
               </div>
             </div>
 
-            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-              <div className="flex justify-between items-center mb-4">
+            {/* Current Week & Annual Progress Banner */}
+            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-xs font-black text-slate-500 uppercase tracking-widest">שבוע נוכחי</span>
                 </div>
-                <span className="text-3xl font-black text-slate-800 tabular-nums">{calculateWeeks(yearConfig?.startDate || '')}</span>
+                <span className="text-2xl sm:text-3xl font-black text-slate-800 tabular-nums">
+                  {calculateWeeks(yearForm.startDate || yearConfig?.startDate || '')}
+                </span>
               </div>
               
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <div className="flex justify-between items-center px-1">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">התקדמות שנתית</span>
                   <span className="text-[10px] font-black text-sky-600 uppercase tracking-widest">
-                    {Math.round((calculateWeeks(yearConfig?.startDate || '') / 52) * 100)}%
+                    {Math.round((calculateWeeks(yearForm.startDate || yearConfig?.startDate || '') / 52) * 100)}%
                   </span>
                 </div>
-                <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(100, (calculateWeeks(yearConfig?.startDate || '') / 52) * 100)}%` }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    animate={{ width: `${Math.min(100, (calculateWeeks(yearForm.startDate || yearConfig?.startDate || '') / 52) * 100)}%` }}
+                    transition={{ duration: 1.2, ease: "easeOut" }}
                     className="h-full bg-sky-500 rounded-full"
                   />
                 </div>
@@ -431,7 +561,7 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
             </div>
 
             {/* Activity Mode Toggle Switch */}
-            <div className="p-5 bg-gradient-to-br from-slate-50 to-indigo-50/40 rounded-2xl border border-slate-200/80 shadow-sm space-y-3.5">
+            <div className="p-5 bg-gradient-to-br from-slate-50 to-indigo-50/40 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100/80 flex items-center justify-center font-black">
@@ -440,16 +570,16 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
                   <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מצב פעילות שנתי</p>
                     <p className="text-sm font-black text-slate-800">
-                      {yearConfig?.activityMode === 'קבוצתית' || yearConfig?.activityMode === 'סבבים' ? 'חלוקה לסבבים (סבב א׳ ו-סבב ב׳ לסירוגין)' : 'איחוד קבוצתי (סשן מאוחד לכלל חברי הקבוצה)'}
+                      {yearForm.activityMode === 'קבוצתית' || yearForm.activityMode === 'סבבים' ? 'חלוקה לסבבים (סבב א׳ ו-סבב ב׳ לסירוגין)' : 'איחוד קבוצתי (סשן מאוחד לכלל חברי הקבוצה)'}
                     </p>
                   </div>
                 </div>
-                <span className={`text-[11px] font-black px-3 py-1 rounded-full border shadow-xs transition-colors ${
-                  yearConfig?.activityMode === 'קבוצתית' || yearConfig?.activityMode === 'סבבים'
-                    ? 'bg-blue-500 text-white border-blue-600 shadow-blue-500/20'
-                    : 'bg-emerald-500 text-white border-emerald-600 shadow-emerald-500/20'
+                <span className={`text-[11px] font-black px-3 py-1 rounded-full border shadow-2xs transition-colors ${
+                  yearForm.activityMode === 'קבוצתית' || yearForm.activityMode === 'סבבים'
+                    ? 'bg-blue-500 text-white border-blue-600'
+                    : 'bg-emerald-500 text-white border-emerald-600'
                 }`}>
-                  {yearConfig?.activityMode === 'קבוצתית' || yearConfig?.activityMode === 'סבבים' ? 'סבבים (א׳/ב׳)' : 'איחוד קבוצתי'}
+                  {yearForm.activityMode === 'קבוצתית' || yearForm.activityMode === 'סבבים' ? 'סבבים (א׳/ב׳)' : 'איחוד קבוצתי'}
                 </span>
               </div>
 
@@ -457,58 +587,148 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
               <div className="relative bg-slate-200/90 p-1.5 rounded-2xl flex items-center border border-slate-300/60 select-none">
                 <button
                   type="button"
-                  onClick={async () => {
-                    if (!checkAppShaper()) return;
-                    try {
-                      await updateYearConfig({ activityMode: 'קבוצתית' });
-                      showSuccess('מצב הפעילות עודכן ל: סבבים (סבב א׳ ו-סבב ב׳ לסירוגין)');
-                    } catch (e) {
-                      showError('שגיאה בעדכון מצב הפעילות');
-                    }
+                  onClick={() => {
+                    setYearForm(prev => ({ ...prev, activityMode: 'קבוצתית' }));
+                    setIsDirtyYear(true);
                   }}
                   className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all duration-200 flex items-center justify-center gap-2 relative z-10 cursor-pointer ${
-                    yearConfig?.activityMode === 'קבוצתית' || yearConfig?.activityMode === 'סבבים'
+                    yearForm.activityMode === 'קבוצתית' || yearForm.activityMode === 'סבבים'
                       ? 'bg-white text-blue-700 shadow-md ring-1 ring-black/5 font-black scale-[1.01]'
                       : 'text-slate-600 hover:text-slate-900 font-bold hover:bg-white/40'
                   }`}
                 >
-                  <Users size={16} className={yearConfig?.activityMode === 'קבוצתית' || yearConfig?.activityMode === 'סבבים' ? 'text-blue-600' : 'text-slate-400'} />
+                  <Users size={16} className={yearForm.activityMode === 'קבוצתית' || yearForm.activityMode === 'סבבים' ? 'text-blue-600' : 'text-slate-400'} />
                   <span>סבבים (א׳/ב׳)</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={async () => {
-                    if (!checkAppShaper()) return;
-                    try {
-                      await updateYearConfig({ activityMode: 'משותפת' });
-                      showSuccess('מצב הפעילות עודכן ל: איחוד קבוצתי (סשן מאוחד)');
-                    } catch (e) {
-                      showError('שגיאה בעדכון מצב הפעילות');
-                    }
+                  onClick={() => {
+                    setYearForm(prev => ({ ...prev, activityMode: 'משותפת' }));
+                    setIsDirtyYear(true);
                   }}
                   className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all duration-200 flex items-center justify-center gap-2 relative z-10 cursor-pointer ${
-                    yearConfig?.activityMode !== 'קבוצתית' && yearConfig?.activityMode !== 'סבבים'
+                    yearForm.activityMode !== 'קבוצתית' && yearForm.activityMode !== 'סבבים'
                       ? 'bg-white text-emerald-700 shadow-md ring-1 ring-black/5 font-black scale-[1.01]'
                       : 'text-slate-600 hover:text-slate-900 font-bold hover:bg-white/40'
                   }`}
                 >
-                  <Activity size={16} className={yearConfig?.activityMode !== 'קבוצתית' && yearConfig?.activityMode !== 'סבבים' ? 'text-emerald-600' : 'text-slate-400'} />
+                  <Activity size={16} className={yearForm.activityMode !== 'קבוצתית' && yearForm.activityMode !== 'סבבים' ? 'text-emerald-600' : 'text-slate-400'} />
                   <span>איחוד קבוצתי</span>
                 </button>
               </div>
             </div>
 
-            <button 
-              onClick={() => {
-                if (!checkAppShaper()) return;
-                setIsEditingYear(true);
-              }}
-              className="w-full py-4 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white rounded-2xl font-black text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 backdrop-blur-sm border border-white/20 active:scale-95 cursor-pointer"
-            >
-              <Edit2 size={18} />
-              ערוך הגדרות שנה
-            </button>
+            {/* Geographic Branch Cohorts - Editable per Branch */}
+            <div className="p-5 bg-gradient-to-br from-slate-50 to-sky-50/40 rounded-2xl border border-slate-200/90 space-y-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <MapPin size={15} className="text-sky-600" />
+                    <span className="text-xs font-black text-slate-800">מחזור פעיל לפי סניף / מיקום גיאוגרפי:</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                    בכל מיקום גיאוגרפי המחזור הנוכחי מותאם עצמאית (למשל: בהרצליה <strong>מחזור ז׳</strong>, באשקלון <strong>מחזור ג׳</strong>)
+                  </p>
+                </div>
+                <span className="text-[10px] font-bold text-sky-700 bg-sky-100/80 border border-sky-200 px-2 py-0.5 rounded-lg w-fit">
+                  5 סניפים מקומיים
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                {BASE_COMMUNITY_BRANCHES.map(branch => {
+                  const currentValue = yearForm.branchCohorts[branch.id] !== undefined
+                    ? yearForm.branchCohorts[branch.id]
+                    : (DEFAULT_BRANCH_COHORTS[branch.id] || 'מחזור פעיל');
+                  return (
+                    <div 
+                      key={branch.id} 
+                      className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs text-right space-y-1.5 focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-black text-slate-800">{branch.baseName}</p>
+                        <span className="text-[9px] font-bold text-slate-400">סניף</span>
+                      </div>
+                      <input 
+                        type="text"
+                        value={currentValue}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setYearForm(prev => ({
+                            ...prev,
+                            branchCohorts: {
+                              ...prev.branchCohorts,
+                              [branch.id]: val
+                            }
+                          }));
+                          setIsDirtyYear(true);
+                        }}
+                        placeholder={DEFAULT_BRANCH_COHORTS[branch.id] || 'מחזור פעיל'}
+                        className="w-full p-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-xs font-black text-sky-800 text-center outline-none focus:border-sky-400 transition-all shadow-2xs"
+                      />
+                      <p className="text-[9px] text-slate-400 font-medium text-center truncate">
+                        {branch.baseName} - {currentValue.trim() || 'מחזור פעיל'}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Action Bar for Shnat Hevel Zug */}
+            <div className="space-y-2.5 pt-2">
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={handleSaveYearConfig}
+                  disabled={isSavingYear}
+                  className="flex-1 py-4 bg-gradient-to-r from-sky-500 via-sky-600 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white rounded-2xl font-black text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 border border-white/20 active:scale-98 cursor-pointer disabled:opacity-50"
+                >
+                  {isSavingYear ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                  <span>שמור שינויים בשנת חבל זוג</span>
+                  {isDirtyYear && (
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-300 animate-ping mr-1" />
+                  )}
+                </button>
+
+                {isDirtyYear && (
+                  <button
+                    onClick={() => {
+                      if (yearConfig) {
+                        setYearForm({
+                          name: yearConfig.name || '',
+                          startDate: yearConfig.startDate || '',
+                          endDate: yearConfig.endDate || '',
+                          activityMode: (yearConfig.activityMode as any) || 'משותפת',
+                          branchCohorts: yearConfig.branchCohorts 
+                            ? { ...DEFAULT_BRANCH_COHORTS, ...yearConfig.branchCohorts } 
+                            : { ...DEFAULT_BRANCH_COHORTS }
+                        });
+                        setIsDirtyYear(false);
+                      }
+                    }}
+                    className="py-4 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black text-xs transition-all cursor-pointer"
+                    title="בטל שינויים ושחזר ערכים שמורים"
+                  >
+                    ביטול שינויים
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-bold text-slate-500">
+                  {isDirtyYear ? '⚠️ ישנם שינויים שלא נשמרו — לחץ על "שמור שינויים" להחלה' : '✓ כל הפרמטרים מסונכרנים'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingYear(true)}
+                  className="text-xs font-bold text-sky-600 hover:text-sky-800 flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <span>אשף הגדרות מורחב / גלגול מחזור (Rollover)</span>
+                  <ChevronLeft size={14} />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1235,52 +1455,75 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
             className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden relative"
             onClick={e => e.stopPropagation()}
           >
-            <div className="bg-rose-500 p-8 text-white text-center relative">
-              <ShieldAlert size={48} className="mx-auto mb-4" />
-              <h3 className="text-2xl font-bold mb-1">אזהרת מערכת קריטית</h3>
-              <p className="text-rose-100 font-medium">שינוי הגדרות זמן ליבה</p>
+            <div className="bg-gradient-to-r from-sky-600 via-indigo-600 to-indigo-700 p-6 sm:p-7 text-white text-center relative">
+              <Calendar size={42} className="mx-auto mb-2 text-white/90" />
+              <h3 className="text-xl sm:text-2xl font-black mb-1">הגדרת שנת חבל זוג ומחזור פעילות</h3>
+              <p className="text-sky-100 text-xs sm:text-sm font-semibold">קביעת שם המחזור, טווח תאריכי הפעילות ומצב הסבבים</p>
             </div>
 
-            <div className="p-8 space-y-6">
-              <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 text-rose-700 text-center font-bold leading-relaxed text-sm">
-                ⚠️ שים לב: שינוי התאריכים ישבש את תפקוד האתר ואת הדוחות. נגיעה מותרת רק בחירום.
+            <div className="p-6 sm:p-8 space-y-6">
+              <div className="bg-sky-50/80 p-4 rounded-xl border border-sky-100 text-sky-950 text-right leading-relaxed text-xs space-y-1">
+                <p className="font-bold text-sky-900 flex items-center gap-1.5">
+                  <span>🌊</span>
+                  <span>שנת חבל זוג היא תקופת פעילות מוגדרת בין תאריכים עבור המחזור הפעיל (ולא שנה קלנדרית מלאה).</span>
+                </p>
+                <p className="text-slate-600">
+                  הרכז או האפ-שייפר יכולים לעדכן את שם המחזור הנוכחי (למשל: <strong>"מחזור ז׳"</strong>) או לפתוח מחזור חדש ע״י קביעת שם וטווח תאריכים עדכני.
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pr-1">תאריך התחלה חדש</label>
+              {/* Cohort Name and Dates Input Group */}
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center justify-between pr-1">
+                    <span>שם המחזור / כינוי שנת חבל זוג</span>
+                    <span className="text-[11px] text-slate-400 font-normal">לדוגמה: מחזור ז׳</span>
+                  </label>
                   <input 
-                    type="date" 
-                    value={yearForm.startDate}
-                    onChange={e => setYearForm(prev => ({ ...prev, startDate: e.target.value }))}
-                    onClick={(e) => {
-                      try {
-                        (e.currentTarget as any).showPicker?.();
-                      } catch(err) {}
-                    }}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 ring-sky-500/20 focus:bg-white transition-all cursor-pointer text-slate-700"
+                    type="text" 
+                    placeholder="הזן שם למחזור הנוכחי (למשל: מחזור ז׳)"
+                    value={yearForm.name}
+                    onChange={e => setYearForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-black outline-none focus:ring-2 ring-sky-500/20 focus:border-sky-400 focus:bg-white transition-all text-slate-800 text-sm shadow-xs"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pr-1">תאריך סיום חדש</label>
-                  <input 
-                    type="date" 
-                    value={yearForm.endDate}
-                    onChange={e => setYearForm(prev => ({ ...prev, endDate: e.target.value }))}
-                    onClick={(e) => {
-                      try {
-                        (e.currentTarget as any).showPicker?.();
-                      } catch(err) {}
-                    }}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 ring-sky-500/20 focus:bg-white transition-all cursor-pointer text-slate-700"
-                  />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black text-slate-700 uppercase tracking-wider pr-1">תאריך תחילת תקופה</label>
+                    <input 
+                      type="date" 
+                      value={yearForm.startDate}
+                      onChange={e => setYearForm(prev => ({ ...prev, startDate: e.target.value }))}
+                      onClick={(e) => {
+                        try {
+                          (e.currentTarget as any).showPicker?.();
+                        } catch(err) {}
+                      }}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 ring-sky-500/20 focus:border-sky-400 focus:bg-white transition-all cursor-pointer text-slate-700 text-sm shadow-xs"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black text-slate-700 uppercase tracking-wider pr-1">תאריך סיום תקופה</label>
+                    <input 
+                      type="date" 
+                      value={yearForm.endDate}
+                      onChange={e => setYearForm(prev => ({ ...prev, endDate: e.target.value }))}
+                      onClick={(e) => {
+                        try {
+                          (e.currentTarget as any).showPicker?.();
+                        } catch(err) {}
+                      }}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 ring-sky-500/20 focus:border-sky-400 focus:bg-white transition-all cursor-pointer text-slate-700 text-sm shadow-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Activity Mode in Modal */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pr-1">מצב פעילות שנתי</label>
-                <div className="bg-slate-100 p-1 rounded-xl flex items-center border border-slate-200">
+                <label className="text-xs font-black text-slate-700 uppercase tracking-wider pr-1">מצב פעילות שנתי</label>
+                <div className="bg-slate-100 p-1.5 rounded-xl flex items-center border border-slate-200">
                   <button
                     type="button"
                     onClick={() => setYearForm(prev => ({ ...prev, activityMode: 'קבוצתית' }))}
@@ -1308,26 +1551,52 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
                 </div>
               </div>
 
+              {/* Geographic Branch Cohorts Customization */}
+              <div className="space-y-3 pt-3 border-t border-slate-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <label className="text-xs font-black text-slate-700 uppercase tracking-wider pr-1 flex items-center gap-1.5">
+                    <MapPin size={14} className="text-sky-500" />
+                    <span>מחזור פעיל לפי סניף / מיקום גיאוגרפי</span>
+                  </label>
+                  <span className="text-[11px] text-slate-400 font-medium">הגדרת מחזור ייחודי עבור כל סניף</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {BASE_COMMUNITY_BRANCHES.map(branch => (
+                    <div key={branch.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                      <div className="flex items-center justify-between pr-1">
+                        <span className="text-xs font-black text-slate-700">{branch.baseName}</span>
+                        <span className="text-[10px] text-slate-400 font-bold">סניף פעיל</span>
+                      </div>
+                      <input 
+                        type="text"
+                        value={yearForm.branchCohorts[branch.id] || ''}
+                        placeholder={`ברירת מחדל: ${DEFAULT_BRANCH_COHORTS[branch.id] || 'מחזור פעיל'}`}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setYearForm(prev => ({
+                            ...prev,
+                            branchCohorts: {
+                              ...prev.branchCohorts,
+                              [branch.id]: val
+                            }
+                          }));
+                        }}
+                        className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-xs font-black outline-none focus:ring-2 ring-sky-500/20 focus:border-sky-400 text-slate-800 shadow-2xs"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex flex-col gap-3 pt-2">
                 <button 
-                  onClick={async () => {
-                    if (!checkAppShaper()) return;
-                    setIsSavingYear(true);
-                    try {
-                      await updateYearConfig(yearForm);
-                      setIsEditingYear(false);
-                      showSuccess('הגדרות השנה עודכנו בהצלחה');
-                    } catch (err) {
-                      showError('שגיאה בעדכון הגדרות השנה');
-                    } finally {
-                      setIsSavingYear(false);
-                    }
-                  }}
+                  onClick={handleSaveYearConfig}
                   disabled={isSavingYear}
-                  className="w-full py-4 bg-rose-500 text-white rounded-xl font-bold text-base shadow-sm hover:bg-rose-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                  className="w-full py-4 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white rounded-xl font-black text-base shadow-lg shadow-sky-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer active:scale-98"
                 >
                   {isSavingYear ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                  אני מבין את ההשלכות - שמור שינויים
+                  שמור הגדרות שנת חבל זוג
                 </button>
                 <button 
                   onClick={() => setIsEditingYear(false)}

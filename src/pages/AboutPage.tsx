@@ -25,10 +25,13 @@ import {
   Flame,
   Calendar,
   Layers,
-  MapPin
+  MapPin,
+  GraduationCap,
+  RefreshCw
 } from 'lucide-react';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 import { AVAILABLE_COMMUNITIES } from '../constants';
 
 type TabType = 'guide' | 'social' | 'stats' | 'communities' | 'tech' | 'security' | 'vision';
@@ -53,12 +56,29 @@ const GUIDE_ITEMS: GuideItem[] = [
     summary: 'הבנת 4 דרגי הפעילות של עמותת חבל זוג: מקהילת העמותה הכוללת ועד לצמד האישי במים.',
     steps: [
       '1. קהילת חבל זוג (Macro): קהילת העמותה הכוללת – כלל הגולשים, המתנדבים, הרכזים והקבוצות הפועלים תחת העמותה בכל הארץ.',
-      '2. קבוצה (Meso): קבוצת גלישה ספציפית הפועלת במועדון או מיקום גיאוגרפי מוגדר (למשל: קבוצת הרצליה, קבוצת הרצליה - בוגרים, קבוצת אשדוד, קבוצת תל ברוך).',
+      '2. קבוצה (Meso): קבוצת גלישה ספציפית הפועלת במועדון או מיקום גיאוגרפי מוגדר (למשל: הרצליה - מחזור ז׳, הרצליה - בוגרים, תל ברוך - מחזור ז׳, תל ברוך - בוגרים).',
       '3. סבב (Micro - סבב א\' / סבב ב\'): החלוקה הפנימית של הקבוצה שפועלת במחזוריות של אחת לשבועיים לסירוגין. שבוע אחד סבב א\' במים, שבוע שני סבב ב\'. כאשר מתבצע איחוד לפעילות משותפת – המצב מוגדר כ-"איחוד קבוצתי" או "סבב מאוחד".',
       '4. חבל זוג (Atomic): החיבור הבינאישי המחייב בין מתנדב למשתתף בתוך הסבב (צמד Buddy) התומכים זה בזה במים ומחוצה להם.'
     ],
-    tips: 'הפרדה זו מונעת בלבול: אתה חבר בקהילת חבל זוג, משויך לקבוצת הרצליה, גולש בסבב א׳ ומתואם עם חבל הזוג שלך!',
+    tips: 'הפרדה זו מונעת בלבול: אתה חבר בקהילת חבל זוג, משויך לקבוצת הרצליה - מחזור ז׳, גולש בסבב א׳ ומתואם עם חבל הזוג שלך!',
     badge: 'הגדרות יסוד'
+  },
+  {
+    id: 'shnat-hevel-zug-cohorts',
+    category: 'core',
+    categoryLabel: 'מבנה וטרמינולוגיה',
+    title: 'שנת חבל זוג, מחזורי פעילות וקבוצת בוגרים – הארכיטקטורה הקהילתית',
+    summary: 'ההפרדה הלוגית בין ישות האדם הקבועה, שנת חבל הזוג (מחזור פעיל), וקבוצת הבוגרים העצמאית.',
+    steps: [
+      '1. שנת חבל זוג (מחזור x): תקופת פעילות מוגדרת בין תאריכים עבור המחזור הפעיל (למשל: "מחזור ז׳"). אינה שנה קלנדרית מלאה, אלא עונת הפעילות הרשמית של הקהילה.',
+      '2. ישות אדם (Person / Member): פרטי האדם, היסטוריית הגלישה המצטברת, שעות הים והישגיו שמורים לצמיתות ואינם מתאפסים במעבר בין מחזורים.',
+      '3. קבוצת בוגרים (Alumni Group): קבוצה נפרדת ועצמאית המיועדת למשתתפים ולמתנדבים שסיימו והשלימו מחזור פעילות קודם, וממשיכים בפעילות גלישה קהילתית עצמאית.',
+      '4. מעבר משתתף למתנדב: משתתף שסיים בהצלחה מחזור פעילות קודם זכאי להירשם כמתנדב מלווה במחזור הבא.',
+      '5. שיוך רב-קבוצתי לסגל: מדריכים, רכזים וצוות עמותה יכולים להיות משוייכים במקביל לכל קבוצה ומחזור ללא הגבלה (למשל: פעילים במחזור ז׳ ובקבוצת הבוגרים בו-זמנית).',
+      '6. גלגול מחזור (Rollover): בסיום שנת חבל זוג, הרכז/אפ-שייפר מבצע סיום מחזור שמקדם אוטומטית את המסיימים לבוגרים, משמר את כל נתוני ההיסטוריה וה-KPIs, ופותח דף חלק למחזור החדש.'
+    ],
+    tips: 'ארכיטקטורה זו שומרת על הקשר הרציף עם כל בוגר לאורך שנים, לצד חוויית "דף חלק" והתחלה חדשה לכל מחזור נכנס!',
+    badge: 'ארכיטקטורת ליבה'
   },
   {
     id: 'login-community',
@@ -68,11 +88,11 @@ const GUIDE_ITEMS: GuideItem[] = [
     summary: 'הזדהות מהירה באמצעות אימייל, סיסמה או טביעת אצבע ביומטרית עם שיוך מאובטח לקבוצה.',
     steps: [
       'הזן את כתובת הדוא״ל והסיסמה שלך (או לחץ על לחצן הזיהוי הביומטרי).',
-      'בחר בדרופדאון את הקבוצה שאליה אתה מעוניין להתחבר בסשן הנוכחי (למשל: קבוצת הרצליה, קבוצת תל ברוך).',
-      'המערכת מוודאת שאתה משויך לקבוצה שנבחרה בקהילת חבל זוג. אם יש אישור – האפליקציה תיפתח מיידית בהקשר המבודד של הקבוצה.',
-      'שים לב: במידה ואינך משויך לקבוצה שנבחרה, הכניסה תיחסם כדי למנוע זליגת מידע ופרטיות.'
+      'בחר בדרופדאון את הקבוצה שאליה אתה מעוניין להתחבר בסשן הנוכחי (למשל: הרצליה - מחזור ז׳ או הרצליה - בוגרים).',
+      'המערכת מוודאת שאתה משויך לקבוצה שנבחרה בקהילת חבל זוג. אם יש אישור – האפליקציה תיפתח מיידית בהקשר המבודד והפרטי של הקבוצה.',
+      'מידור ופרטיות: במידה ואינך משויך לקבוצה שנבחרה, הכניסה תיחסם כדי להבטיח פרטיות מלאה ומניעת זליגת מידע בין קבוצות.'
     ],
-    tips: 'אם אתה שייך למספר קבוצות (למשל הרצליה ובוגרים), תוכל לעבור ביניהן בקלות על ידי התנתקות ובחירה מחדש של הקבוצה בדף הכניסה.'
+    tips: 'אם אתה שייך למספר קבוצות (למשל הרצליה - מחזור ז׳ וקבוצת בוגרים), תוכל לעבור ביניהן בקלות על ידי התנתקות ובחירה מחדש של הקבוצה בדף הכניסה (או שימוש בסלקטור המהיר למנהלים בדף הקהילה).'
   },
   {
     id: 'whos-coming',
@@ -234,6 +254,8 @@ export const AboutPage: React.FC = () => {
   const navigate = useNavigate();
   const headerImage = useRandomHeader();
   const { currentCommunityId } = useAuth();
+  const { availableCommunities: ctxCommunities, yearConfig } = useData();
+  const availableCommunities = ctxCommunities || AVAILABLE_COMMUNITIES;
   
   const [activeTab, setActiveTab] = useState<TabType>('guide');
   const [searchQuery, setSearchQuery] = useState('');
@@ -241,8 +263,8 @@ export const AboutPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const currentCommunity = useMemo(() => {
-    return AVAILABLE_COMMUNITIES.find(c => c.id === currentCommunityId) || AVAILABLE_COMMUNITIES[0];
-  }, [currentCommunityId]);
+    return availableCommunities.find(c => c.id === currentCommunityId) || availableCommunities[0];
+  }, [availableCommunities, currentCommunityId]);
 
   const filteredGuides = useMemo(() => {
     return GUIDE_ITEMS.filter(item => {
@@ -307,7 +329,7 @@ export const AboutPage: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-white/10">
             <div className="p-3 bg-white/5 rounded-xl border border-white/5">
               <span className="text-[10px] text-slate-400 font-bold block">סניפים פעילים</span>
-              <span className="text-xl font-black text-cyan-300">{AVAILABLE_COMMUNITIES.length} קהילות</span>
+              <span className="text-xl font-black text-cyan-300">{availableCommunities.length} קהילות</span>
             </div>
             <div className="p-3 bg-white/5 rounded-xl border border-white/5">
               <span className="text-[10px] text-slate-400 font-bold block">מודל פרטיות</span>
@@ -834,7 +856,7 @@ export const AboutPage: React.FC = () => {
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4">
-                {AVAILABLE_COMMUNITIES.map((c, index) => {
+                {availableCommunities.map((c, index) => {
                   const isCurrent = c.id === currentCommunityId;
                   return (
                     <div 
@@ -935,6 +957,62 @@ export const AboutPage: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Cohorts & Operating Cycles Architecture Card */}
+            <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200/80 shadow-sm space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <GraduationCap size={20} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">ארכיטקטורת מחזורים, שנת חבל זוג וקבוצת בוגרים</h3>
+                  <p className="text-xs font-bold text-slate-500">הפרדה מבנית רב-שנתית: ישות אדם, מחזורי פעילות ושימור נתונים</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-3">
+                  <div className="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-black">
+                    <Compass size={16} />
+                  </div>
+                  <h4 className="text-base font-black text-slate-900">הפרדת ישות אדם משיוך למחזור</h4>
+                  <p className="text-xs font-bold text-slate-600 leading-relaxed">
+                    ישות החבר (Person / User) היא עוגן קבוע במערכת: פרטי הזיהוי, היסטוריית הגלישה המצטברת ושעות הים נשמרים ברצף לאורך שנים. השיוך למחזור או לקבוצת בוגרים מנוהל כשכבת חברות עצמאית (GroupMembership).
+                  </p>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-3">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black">
+                    <GraduationCap size={16} />
+                  </div>
+                  <h4 className="text-base font-black text-slate-900">קבוצת בוגרים עצמאית</h4>
+                  <p className="text-xs font-bold text-slate-600 leading-relaxed">
+                    כל משתתף או מתנדב שהשלים מחזור פעילות קודם עובר אוטומטית למעמד ״בוגר״ וממשיך לפעול בקבוצת בוגרים עצמאית. משתתף בוגר רשאי גם להתקדם ולהפוך למתנדב מלווה במחזור הבא.
+                  </p>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-3">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black">
+                    <RefreshCw size={16} />
+                  </div>
+                  <h4 className="text-base font-black text-slate-900">מנגנון גלגול מחזור (Rollover)</h4>
+                  <p className="text-xs font-bold text-slate-600 leading-relaxed">
+                    בסיום עונת הפעילות, המערכת מאפשרת לרכז/אפ-שייפר לחתום את שנת חבל הזוג, לשמר את כל הסטטיסטיקות והאירועים להשוואת KPIs עתידית, ולפתוח דף חלק מלא למחזור החדש הנכנס.
+                  </p>
+                </div>
+              </div>
+
+              {/* Real system status banner */}
+              <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5 text-indigo-950 font-bold">
+                  <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px]">✓</span>
+                  <span>סטטוס מחזורים עדכני: שנת חבל זוג פעילה: <strong>{yearConfig?.name || 'מחזור ז׳'}</strong> ({yearConfig?.startDate ? new Date(yearConfig.startDate).toLocaleDateString('he-IL') : '17/09/2026'} עד {yearConfig?.endDate ? new Date(yearConfig.endDate).toLocaleDateString('he-IL') : '31/07/2027'}) | קבוצות הבוגרים ממודרות ופעילות</span>
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 font-black text-[11px] self-start sm:self-auto">
+                  דף חלק פעיל
+                </span>
+              </div>
+            </div>
           </div>
         )}
 
@@ -980,6 +1058,16 @@ export const AboutPage: React.FC = () => {
                   </h4>
                   <p className="text-xs font-bold text-slate-600 leading-relaxed">
                     סיסמאות משתמשים עוברות גיבוב מוצפן (SHA-256) ואינן נשמרות כטקסט קריא. ההזדהות הביומטרית פועלת ישירות מול שבב האבטחה המקומי של המכשיר שלך ואינה מעבירה טביעות אצבע לרשת.
+                  </p>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                  <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <GraduationCap size={16} className="text-emerald-600" />
+                    <span>ניהול מחזורים, שנת חבל זוג והרשאות שיוך</span>
+                  </h4>
+                  <p className="text-xs font-bold text-slate-600 leading-relaxed">
+                    הקמת שנת חבל זוג חדשה, קביעת שמות מחזורים, שיוך חברים לקבוצות וביצוע גלגול מחזור (Rollover) מוגבלים באופן קשיח לרכזים ולאפ-שייפרים בלבד. חוקי הזכאות לקבוצת בוגרים נאכפים ישירות ברמת הנתונים ומסד הנתונים כדי למנוע שיוכים בלתי מורשים.
                   </p>
                 </div>
               </div>

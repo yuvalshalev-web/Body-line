@@ -297,11 +297,18 @@ export const AdminRolloverReport: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 shadow-sm">
-          <div className="flex items-center gap-2 text-slate-500 mb-2">
-            <Calendar size={18} />
-            <span className="text-sm font-bold">תקופת פעילות נוכחית</span>
+          <div className="flex items-center justify-between text-slate-500 mb-2">
+            <div className="flex items-center gap-2">
+              <Calendar size={18} />
+              <span className="text-sm font-bold">שנת חבל זוג (מחזור נוכחי)</span>
+            </div>
+            {yearConfig?.name && (
+              <span className="text-xs font-black px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 border border-indigo-200">
+                {yearConfig.name}
+              </span>
+            )}
           </div>
-          <p className="text-lg font-black text-slate-800">
+          <p className="text-base font-black text-slate-800">
             {yearConfig?.startDate ? new Date(yearConfig.startDate).toLocaleDateString('he-IL') : 'לא מוגדר'} - 
             {yearConfig?.endDate ? new Date(yearConfig.endDate).toLocaleDateString('he-IL') : 'לא מוגדר'}
           </p>

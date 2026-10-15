@@ -11,7 +11,8 @@ import {
   MapPin, 
   Sparkles, 
   MessageCircle, 
-  Target
+  Target,
+  Clock
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { Member } from '../../types';
@@ -104,6 +105,12 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
     const total = last8Sessions.reduce((sum, s) => sum + (s.participantIds?.length || 0), 0);
     return Math.round((total / last8Sessions.length) * 10) / 10;
   }, [last8Sessions]);
+
+  // Average sea hours per active community member (Depth of Impact)
+  const avgHoursPerMember = useMemo(() => {
+    if (members.length === 0) return 0;
+    return Math.round((totalSeaHours / members.length) * 10) / 10;
+  }, [totalSeaHours, members.length]);
 
   // Age Cohorts & Attendance / Persistence
   const ageCohortData = useMemo(() => {
@@ -410,9 +417,10 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
     text += `📊 *מדדי מפתח וביצועים:*\n`;
     text += `• גולשי קהילה פעילים: ${members.length} (+ ${staffMembers.length} אנשי סגל וצוות | ${allMembers.length} סה״כ רשומים)\n`;
     text += `• שעות ים מצטברות העונה: ${Math.round(totalSeaHours)} שעות\n`;
+    text += `• ממוצע שעות ים לחבר פעיל: ${avgHoursPerMember} שעות (עומק אימפקט)\n`;
     text += `• ממוצע נוכחות לסשן: ${avgAttendees} גולשים\n\n`;
 
-    text += `🎯 *תכנון מול ביצוע (שנת חבל זוג):*\n`;
+    text += `🎯 *תכנון מול ביצוע (שנת חבל זוג${yearConfig?.name ? ` - ${yearConfig.name}` : ''}):*\n`;
     text += `• סשנים שבוצעו: ${yearlyPlanStats.executedCount} מתוך ${yearlyPlanStats.plannedToDate} מתוכננים עד כה (${yearlyPlanStats.pacePercent}% קצב ביצוע)\n`;
     text += `• יעד שנתי כולל: ${yearlyPlanStats.totalYearPlanned} סשנים (${yearlyPlanStats.annualCompletionPercent}% השלמה שנתית)\n\n`;
 
@@ -514,7 +522,7 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
       </div>
 
       {/* Row 1: High-level Vital Signs KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
         {/* Active Surfers */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
@@ -525,15 +533,15 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
           </div>
           <div className="mt-3">
             <div className="text-2xl sm:text-3xl font-black text-slate-900">{members.length}</div>
-            <div className="text-xs text-slate-500 mt-1 flex items-center gap-1.5 flex-wrap">
-              <span>+ {staffMembers.length} אנשי סגל וצוות</span>
+            <div className="text-xs text-slate-500 mt-1 flex items-center gap-1 flex-wrap">
+              <span>+ {staffMembers.length} סגל</span>
               <span className="text-slate-300">•</span>
-              <span>{allMembers.length} סה״כ רשומים</span>
+              <span>{allMembers.length} רשומים</span>
             </div>
           </div>
         </div>
 
-        {/* Sea Hours */}
+        {/* Total Sea Hours */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <span className="text-xs sm:text-sm font-bold text-slate-500">שעות ים קהילתיות</span>
@@ -545,6 +553,25 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
             <div className="text-2xl sm:text-3xl font-black text-cyan-700">{Math.round(totalSeaHours)}</div>
             <div className="text-xs text-slate-500 mt-1">
               שעות מים מצטברות העונה
+            </div>
+          </div>
+        </div>
+
+        {/* Avg Sea Hours Per Member (Depth of Impact) */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <span className="text-xs sm:text-sm font-bold text-slate-500">ממוצע שעות לחבר</span>
+            <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+              <Clock className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl sm:text-3xl font-black text-teal-700">{avgHoursPerMember}</span>
+              <span className="text-xs sm:text-sm font-bold text-teal-600">שעות</span>
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              מדד עומק אימפקט והשתתפות
             </div>
           </div>
         </div>
@@ -566,23 +593,60 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
         </div>
 
         {/* Shnat Hevel Zug: Plan vs Actual Execution */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <span className="text-xs sm:text-sm font-bold text-slate-500">ביצוע מול תכנון (שנתי)</span>
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-md transition-all relative overflow-hidden group col-span-2 sm:col-span-1">
+          {/* Subtle decorative glass backdrop gradient */}
+          <div className="absolute -top-12 -left-12 w-28 h-28 bg-gradient-to-br from-indigo-400/10 via-purple-300/10 to-transparent rounded-full blur-xl pointer-events-none" />
+
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm font-bold text-slate-600">שנת חבל זוג - ביצוע מול תכנון</span>
+              {yearConfig?.name && (
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-indigo-100/80 text-indigo-700 border border-indigo-200/60 shadow-xs">
+                  {yearConfig.name}
+                </span>
+              )}
+            </div>
+            <div className="w-9 h-9 rounded-xl bg-indigo-50/80 text-indigo-600 flex items-center justify-center border border-indigo-100/60 shadow-xs backdrop-blur-xs">
               <Target className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-3">
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl sm:text-3xl font-black text-indigo-700">{yearlyPlanStats.executedCount}</span>
-              <span className="text-sm font-black text-slate-400">/ {yearlyPlanStats.plannedToDate}</span>
-              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 mr-auto">
-                {yearlyPlanStats.pacePercent}% ביצוע
-              </span>
+
+          <div className="mt-3 relative z-10">
+            <div className="flex items-baseline justify-between gap-1 mb-2">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl sm:text-3xl font-black text-indigo-700 tracking-tight">{yearlyPlanStats.executedCount}</span>
+                <span className="text-xs sm:text-sm font-bold text-slate-400">/ {yearlyPlanStats.plannedToDate} יעד</span>
+              </div>
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50/90 text-indigo-700 border border-indigo-200/80 shadow-xs backdrop-blur-md">
+                <span className="text-xs font-black tracking-tight">{yearlyPlanStats.pacePercent}%</span>
+              </div>
             </div>
-            <div className="text-xs text-slate-500 mt-1">
-              מתוכננים בשנה: {yearlyPlanStats.totalYearPlanned} סשנים
+
+            {/* Glassmorphic Progress Bar - Progresses Right-to-Left (dir="rtl") */}
+            <div 
+              dir="rtl" 
+              className="relative w-full h-3 rounded-full bg-slate-100/80 backdrop-blur-md p-0.5 border border-slate-200/60 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.06)] overflow-hidden"
+              title={`קצב ביצוע: ${yearlyPlanStats.pacePercent}% (${yearlyPlanStats.executedCount} מתוך ${yearlyPlanStats.plannedToDate} עד כה)`}
+            >
+              {/* Subtle glass reflection highlight on the track */}
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-b from-white/70 to-transparent pointer-events-none rounded-full" />
+
+              {/* Progress Fill: Anchored to right, expands to left */}
+              <div
+                className="h-full rounded-full bg-gradient-to-l from-indigo-600 via-indigo-500 to-sky-400 shadow-[0_1px_4px_rgba(99,102,241,0.35)] relative overflow-hidden transition-all duration-700 ease-out"
+                style={{ width: `${Math.min(100, Math.max(0, yearlyPlanStats.pacePercent))}%` }}
+              >
+                {/* Frosted glass gloss line */}
+                <div className="absolute inset-x-0 top-0 h-0.5 bg-white/60 rounded-full" />
+                {/* Light shimmer gradient */}
+                <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-black/10" />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2 font-medium">
+              <span>עד כה: {yearlyPlanStats.plannedToDate}</span>
+              <span className="text-slate-400">•</span>
+              <span>שנתי: {yearlyPlanStats.totalYearPlanned}</span>
             </div>
           </div>
         </div>

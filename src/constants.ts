@@ -78,18 +78,85 @@ export const RANKS = [
 export interface Community {
   id: string;
   name: string;
+  baseName?: string;
+  isAdults?: boolean;
 }
 
-// 10 הקבוצות המקומיות הפועלות במסגרת קהילת חבל זוג
-export const AVAILABLE_COMMUNITIES: Community[] = [
-  { id: 'herzliya', name: 'קבוצת הרצליה' },
-  { id: 'herzliya_adults', name: 'קבוצת הרצליה - בוגרים' },
-  { id: 'tel_baruch', name: 'קבוצת תל ברוך' },
-  { id: 'tel_baruch_adults', name: 'קבוצת תל ברוך - בוגרים' },
-  { id: 'ashdod', name: 'קבוצת אשדוד' },
-  { id: 'ashdod_adults', name: 'קבוצת אשדוד - בוגרים' },
-  { id: 'ashkelon', name: 'קבוצת אשקלון' },
-  { id: 'ashkelon_adults', name: 'קבוצת אשקלון - בוגרים' },
-  { id: 'kiryat_yam', name: 'קבוצת קריית ים' },
-  { id: 'kiryat_yam_adults', name: 'קבוצת קריית ים - בוגרים' }
+// 5 סניפי הפעילות הפיזיים של עמותת חבל זוג
+export const BASE_COMMUNITY_BRANCHES = [
+  { id: 'herzliya', baseName: 'הרצליה' },
+  { id: 'tel_baruch', baseName: 'תל ברוך' },
+  { id: 'ashdod', baseName: 'אשדוד' },
+  { id: 'ashkelon', baseName: 'אשקלון' },
+  { id: 'kiryat_yam', baseName: 'קריית ים' }
 ];
+
+// ברירות מחדל למחזור פעיל לפי סניף גיאוגרפי (למשל: בהרצליה מחזור ז׳, באשקלון מחזור ג׳)
+export const DEFAULT_BRANCH_COHORTS: Record<string, string> = {
+  herzliya: "מחזור ז׳",
+  tel_baruch: "מחזור ז׳",
+  ashdod: "מחזור ד׳",
+  ashkelon: "מחזור ג׳",
+  kiryat_yam: "מחזור ב׳"
+};
+
+/**
+ * מחזיר את שם המחזור הפעיל עבור סניף ספציפי
+ */
+export function getBranchCohortName(
+  branchId: string,
+  branchCohorts?: Record<string, string> | null,
+  globalFallback?: string
+): string {
+  const cleanBranchId = branchId.replace('_adults', '');
+  if (branchCohorts && branchCohorts[cleanBranchId] && branchCohorts[cleanBranchId].trim()) {
+    return branchCohorts[cleanBranchId].trim();
+  }
+  if (DEFAULT_BRANCH_COHORTS[cleanBranchId]) {
+    return DEFAULT_BRANCH_COHORTS[cleanBranchId];
+  }
+  return (globalFallback && globalFallback.trim()) ? globalFallback.trim() : "מחזור פעיל";
+}
+
+/**
+ * בונה את רשימת 10 הקבוצות המקומיות באופן דינמי על בסיס המחזור הפעיל הספציפי
+ * לכל מיקום גיאוגרפי (סניף). לדוגמה: הרצליה - מחזור ז', אשקלון - מחזור ג'.
+ */
+export function getAvailableCommunities(
+  branchCohortsOrGlobalName?: string | Record<string, string> | null,
+  globalFallbackName?: string
+): Community[] {
+  const isMap = typeof branchCohortsOrGlobalName === 'object' && branchCohortsOrGlobalName !== null;
+  const branchMap: Record<string, string> = isMap ? (branchCohortsOrGlobalName as Record<string, string>) : {};
+  const globalFallback = (typeof branchCohortsOrGlobalName === 'string' && branchCohortsOrGlobalName.trim()) 
+    ? branchCohortsOrGlobalName.trim() 
+    : (globalFallbackName?.trim() || "מחזור ז׳");
+
+  const list: Community[] = [];
+
+  for (const branch of BASE_COMMUNITY_BRANCHES) {
+    const branchCohort = getBranchCohortName(branch.id, branchMap, globalFallback);
+
+    // 1. קבוצת המחזור הפעיל לסניף
+    list.push({
+      id: branch.id,
+      name: `${branch.baseName} - ${branchCohort}`,
+      baseName: branch.baseName,
+      isAdults: false
+    });
+
+    // 2. קבוצת הבוגרים לסניף
+    list.push({
+      id: `${branch.id}_adults`,
+      name: `${branch.baseName} - בוגרים`,
+      baseName: branch.baseName,
+      isAdults: true
+    });
+  }
+
+  return list;
+}
+
+// רשימת ברירת מחדל (הרצליה - מחזור ז׳, אשקלון - מחזור ג׳ וכו׳) לתאימות מלאה
+export const AVAILABLE_COMMUNITIES: Community[] = getAvailableCommunities(DEFAULT_BRANCH_COHORTS);
+

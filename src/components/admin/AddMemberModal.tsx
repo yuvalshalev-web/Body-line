@@ -23,7 +23,7 @@ interface AddMemberModalProps {
   setNewMemberData: React.Dispatch<React.SetStateAction<Partial<Member>>>;
   isSaving: boolean;
   setIsSaving: React.Dispatch<React.SetStateAction<boolean>>;
-  addMember: (member: Member) => Promise<void>;
+  addMember: (member: any) => Promise<any>;
 }
 
 const CERTIFICATION_OPTIONS = [
@@ -89,7 +89,8 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
   setIsSaving, 
   addMember 
 }) => {
-  const { members } = useData();
+  const { members, availableCommunities: ctxCommunities } = useData();
+  const availableCommunities = ctxCommunities || AVAILABLE_COMMUNITIES;
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [isGeneratingBio, setIsGeneratingBio] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -726,7 +727,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                                             onClick={() => {
                                               const isStaffOrSupport = r === 'Staff' || r === 'Support';
                                               const communitiesVal = isStaffOrSupport
-                                                ? AVAILABLE_COMMUNITIES.map(c => c.id)
+                                                ? availableCommunities.map(c => c.id)
                                                 : (newMemberData.communities && newMemberData.communities.length > 0 ? newMemberData.communities : ['herzliya']);
                                               setNewMemberData(prev => ({ 
                                                 ...prev, 
@@ -816,7 +817,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                                   <div className="w-full p-4 bg-sky-100/50 border border-sky-200/60 rounded-2xl text-xs text-sky-800 font-black flex items-center justify-between select-none">
                                     <span className="flex items-center gap-2">
                                       <ShieldCheck size={16} className="text-sky-700 shrink-0" />
-                                      <span>כל הקהילות ({AVAILABLE_COMMUNITIES.length} קבוצות - משוייך אוטומטית)</span>
+                                      <span>כל הקהילות ({availableCommunities.length} קבוצות - משוייך אוטומטית)</span>
                                     </span>
                                   </div>
                                 ) : (
@@ -832,7 +833,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                                         ) : newMemberData.communities.length > 3 ? (
                                           `נבחרו ${newMemberData.communities.length} קבוצות קהילה`
                                         ) : (
-                                          AVAILABLE_COMMUNITIES
+                                          availableCommunities
                                             .filter(c => newMemberData.communities?.includes(c.id))
                                             .map(c => c.name)
                                             .join(', ')
@@ -868,7 +869,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
 
                                             {/* Scrollable list */}
                                             <div className="max-h-60 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                                              {AVAILABLE_COMMUNITIES
+                                              {availableCommunities
                                                 .filter(c => c.name.includes(communitySearchQuery) || c.id.includes(communitySearchQuery))
                                                 .map((c) => {
                                                   const isChecked = (newMemberData.communities || []).includes(c.id);
@@ -906,7 +907,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                                                     </button>
                                                   );
                                                 })}
-                                              {AVAILABLE_COMMUNITIES.filter(c => c.name.includes(communitySearchQuery)).length === 0 && (
+                                              {availableCommunities.filter(c => c.name.includes(communitySearchQuery)).length === 0 && (
                                                 <div className="text-center py-4 text-slate-400 text-xs">
                                                   לא נמצאו קבוצות מתאימות
                                                 </div>

@@ -6,7 +6,7 @@ const getAI = () => {
   if (!aiInstance) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey || apiKey === "REPLACE_WITH_YOUR_GEMINI_API_KEY" || apiKey.trim() === "") {
-      throw new Error("Gemini API key is not configured. Please set GEMINI_API_KEY in the app settings.");
+      return null;
     }
     aiInstance = new GoogleGenAI({ apiKey });
   }
@@ -20,24 +20,53 @@ const stripBase64Prefix = (base64: string) => {
   return base64;
 };
 
+// Fallback bio generator when AI service is unavailable or credits are depleted
+export const fallbackBioGenerator = (name: string, role: string, currentBio?: string): string => {
+  const trimmed = currentBio?.trim();
+  if (trimmed && trimmed.length > 5 && !trimmed.includes('שגיאה')) {
+    return trimmed;
+  }
+
+  const cleanName = name?.trim() || 'חבר/ת קהילה';
+  switch (role) {
+    case 'Volunteer':
+      return `${cleanName} - מתנדב/ת מסור/ה בעמותת חבל זוג, פעיל/ה בליווי חברים במים ובקידום רוח הנתינה וההעצמה בים.`;
+    case 'Instructor':
+      return `${cleanName} - מדריך/ת גלישה וספורט ימי מוסמך/ת בעמותת חבל זוג, מוביל/ה חברים בביטחון, מקצועיות ואהבת הים.`;
+    case 'Admin':
+      return `${cleanName} - רכז/ת מוביל/ה בעמותת חבל זוג, פועל/ת למען חיבורים משמעותיים, ניהול הפעילות והעצמת הקהילה.`;
+    case 'Staff':
+      return `${cleanName} - חבר/ת צוות עמותת חבל זוג, מחויב/ת לקידום חזון העמותה, ליווי הפעילות וחיזוק החוסן הקהילתי.`;
+    case 'Support':
+      return `${cleanName} - אפ-שייפר ומוביל/ת טכנולוגי/ת בקהילה, תורם/ת מניסיונו/ה המקצועי לקידום הפרויקט והחברים.`;
+    case 'Member':
+    default:
+      return `${cleanName} - משתתף/ת פעיל/ה בקהילת חבל זוג, שואף/ת להתמיד, ללמוד ולהתפתח יחד על הגלים ובקהילה.`;
+  }
+};
+
 // Analyze image and provide a poetic caption using Gemini Flash
 export const analyzeImage = async (base64Image: string): Promise<string> => {
   try {
     const ai = getAI();
+    if (!ai) {
+      return "רגע מיוחד של חיבור, חברות ועוצמה במימי חבל זוג.";
+    }
+
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.8-flash",
       contents: [{
         parts: [
           { inlineData: { mimeType: "image/jpeg", data: stripBase64Prefix(base64Image) } },
-          { text: "Analyze this image and provide a one-sentence, poetic caption for a community photo gallery." }
+          { text: "Analyze this image and provide a one-sentence, poetic Hebrew caption for a community surf photo gallery." }
         ]
       }]
     });
 
-    return response.text || "A beautiful moment captured and shared.";
+    return response.text?.trim() || "רגע מיוחד של חיבור, חברות ועוצמה במימי חבל זוג.";
   } catch (error: any) {
-    console.error("AI Analysis (analyzeImage) failed:", error);
-    return `שגיאה בניתוח התמונה: ${error.message || 'שגיאה לא ידועה'}`;
+    console.warn("AI Analysis (analyzeImage) notice - using fallback caption:", error?.message || error);
+    return "רגע מיוחד של חיבור, חברות ועוצמה במימי חבל זוג.";
   }
 };
 
@@ -45,21 +74,29 @@ export const analyzeImage = async (base64Image: string): Promise<string> => {
 export const generateBio = async (name: string, role: string, currentBio?: string): Promise<string> => {
   try {
     const ai = getAI();
-    const prompt = `Rewrite the following community member's bio to be more professional, engaging, and concise. 
+    if (!ai) {
+      return fallbackBioGenerator(name, role, currentBio);
+    }
+
+    const prompt = `Rewrite the following community member's bio in Hebrew to be inspiring, professional, engaging, and concise (one single punchy sentence).
     Name: ${name}
-    Role: ${role}
+    Role in Surfing Community: ${role}
     ${currentBio ? `Current Bio: ${currentBio}` : ''}
-    Return only the rewritten bio text, one single sentence.`;
+    Return only the rewritten bio text in Hebrew, one single sentence. No quotation marks.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.8-flash",
       contents: [{ parts: [{ text: prompt }] }]
     });
 
-    return response.text || "Dedicated community member contributing to our shared goals.";
+    const generated = response.text?.trim();
+    if (generated && generated.length > 5 && !generated.toLowerCase().includes('error')) {
+      return generated;
+    }
+    return fallbackBioGenerator(name, role, currentBio);
   } catch (error: any) {
-    console.error("AI Analysis (generateBio) failed:", error);
-    return "שגיאה ביצירת הביוגרפיה.";
+    console.warn("AI Analysis (generateBio) notice - using tailored fallback bio:", error?.message || error);
+    return fallbackBioGenerator(name, role, currentBio);
   }
 };
 
@@ -72,8 +109,12 @@ export const getShaperConsultation = async (data: {
   currentBoard?: { volume?: number; length?: string };
   recommendedBoard: { volume: number; length: string; type: string };
 }): Promise<string> => {
+  const fallbackConsultation = `לפי נתוני הגוף והכושר שלך, הבחירה המיטבית עבורך היא גלשן **${data.recommendedBoard.type}** באורך **${data.recommendedBoard.length}** בנפח של **${data.recommendedBoard.volume} ליטר**. שילוב זה יבטיח לך כושר ציפה מעולה, תפיסת גלים קלה ותמרון מדויק במים.`;
+
   try {
     const ai = getAI();
+    if (!ai) return fallbackConsultation;
+
     const prompt = `You are an expert surfboard shaper with 30 years of experience. 
     Provide a professional, encouraging, and highly technical (yet accessible) consultation for a surfer with the following data:
     - Weight: ${data.weight}kg
@@ -88,14 +129,14 @@ export const getShaperConsultation = async (data: {
     Maximum 4-5 sentences.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.8-flash",
       contents: [{ parts: [{ text: prompt }] }]
     });
 
-    return response.text || "הגלשן המומלץ ייתן לך את הציפה והיציבות הדרושים להתקדמות מהירה במים.";
+    return response.text?.trim() || fallbackConsultation;
   } catch (error: any) {
-    console.error("AI Analysis (getShaperConsultation) failed:", error);
-    return "שגיאה בקבלת ייעוץ שייפר.";
+    console.warn("AI Analysis (getShaperConsultation) notice - using fallback:", error?.message || error);
+    return fallbackConsultation;
   }
 };
 
@@ -107,8 +148,12 @@ export const getCoachAnalysis = async (data: {
   streak: number;
   sessionsToNextRank: number;
 }): Promise<string> => {
+  const fallbackCoach = `כל הכבוד **${data.name}**! עם **${data.totalSessions}** כניסות למים ורצף מרשים של **${data.streak}** סשנים, הים הפך לבית השני שלך. עוד **${data.sessionsToNextRank}** כניסות לדרגה הבאה — המשך להתמיד, הים תמיד מתגמל נוכחות והתמדה!`;
+
   try {
     const ai = getAI();
+    if (!ai) return fallbackCoach;
+
     const prompt = `You are a legendary surfing coach with a focus on community and persistence.
     Provide a short, powerful, and motivational analysis for a surfer with the following stats:
     - Name: ${data.name}
@@ -122,14 +167,14 @@ export const getCoachAnalysis = async (data: {
     Maximum 3-4 sentences.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.8-flash",
       contents: [{ parts: [{ text: prompt }] }]
     });
 
-    return response.text || "המשך להתמיד, הים מעריך את המאמץ שלך.";
+    return response.text?.trim() || fallbackCoach;
   } catch (error: any) {
-    console.error("AI Analysis (getCoachAnalysis) failed:", error);
-    return "שגיאה בקבלת ניתוח מאמן.";
+    console.warn("AI Analysis (getCoachAnalysis) notice - using fallback:", error?.message || error);
+    return fallbackCoach;
   }
 };
 
@@ -144,8 +189,23 @@ export const getForecastAnalysis = async (data: {
   user?: any;
   beachName?: string;
 }): Promise<string> => {
+  const height = data.waveHeight;
+  const spot = data.beachName || 'החוף';
+  let fallbackForecast = '';
+  if (height < 0.2) {
+    fallbackForecast = `הים שטוח היום ב${spot} (${height} מ׳). מומלץ מאוד לצאת לאימון חתירה מרגיע על **סאפ (SUP)** לשמירה על כושר ומיקוד.`;
+  } else if (height <= 0.6) {
+    fallbackForecast = `תנאי ים רגועים ומזמינים ב${spot} בגובה של כ-**${height} מ׳**. גלים אידיאליים לאימון טכניקה על **סופטבורד** או **פאן בורד**.`;
+  } else if (height <= 1.2) {
+    fallbackForecast = `תנאים קלאסיים ומצוינים ב${spot}! גלים בגובה של כ-**${height} מ׳** עם פוטנציאל מעולה לגלישה זורמת ומהנה. צאו למים!`;
+  } else {
+    fallbackForecast = `ים עוצמתי ומאתגר ב${spot} בגובה **${height} מ׳**. מתאים לגולשים מנוסים המצוידים ב**שורטבורד**. הקפידו על כללי הבטיחות!`;
+  }
+
   try {
     const ai = getAI();
+    if (!ai) return fallbackForecast;
+
     let prompt = `You are a local surf guru who knows every sandbar and reef in Israel.
     Analyze the surf forecast for the following beach and provide a short, expert advice for today:
     ${data.beachName ? `- Beach Spot: ${data.beachName}` : ''}
@@ -170,17 +230,17 @@ export const getForecastAnalysis = async (data: {
     prompt += `
     Keep the tone like a salty local surfer who's seen it all but is friendly.
     Return the response in Hebrew, formatted with markdown (bold text).
-    Maximum 4 sentences.`;
+    Maximum 3-4 sentences.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.8-flash",
       contents: [{ parts: [{ text: prompt }] }]
     });
 
-    return response.text || "הים נראה טוב היום, צא למים ותהנה.";
+    return response.text?.trim() || fallbackForecast;
   } catch (error: any) {
-    console.error("AI Analysis (getForecastAnalysis) failed:", error);
-    return "שגיאה בניתוח התחזית.";
+    console.warn("AI Analysis (getForecastAnalysis) notice - using fallback:", error?.message || error);
+    return fallbackForecast;
   }
 };
 
@@ -188,6 +248,10 @@ export const getForecastAnalysis = async (data: {
 export const verifyLicense = async (base64Image: string): Promise<any> => {
   try {
     const ai = getAI();
+    if (!ai) {
+      return { error: "שירות פיענוח המסמכים האוטומטי אינו זמין כעת. באפשרותך למלא את פרטי התעודה ידנית." };
+    }
+
     const prompt = `Act as a Document Verification Expert. Your task is to analyze an uploaded image of any sports license or certification (Diving, Surfing, Paragliding, etc.) and extract ALL relevant data for a community management app.
 
 ### TASK:
@@ -213,14 +277,14 @@ export const verifyLicense = async (base64Image: string): Promise<any> => {
 - "school_number": ID of the training facility.
 - "instructor": Name or ID of the instructor.
 - "is_valid": true/false based on the expiration check.
-- "metadata": A detailed flat key-value object containing EVERY OTHER piece of text data found on the card. For Diving licenses, prioritize: Date of Birth, Nationality, Specialized certs (Nitrox, Deep, etc.), Blood type, and Medical dates.
+- "metadata": A detailed flat key-value object containing EVERY OTHER piece of text data found on the card.
 - "confidence_score": numeric value of confidence (0-1).
 
 ### OUTPUT FORMAT:
 Return ONLY a raw JSON object. Do not include conversational text or markdown code blocks.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.8-flash",
       contents: [{
         parts: [
           { inlineData: { mimeType: "image/jpeg", data: stripBase64Prefix(base64Image) } },
@@ -246,10 +310,7 @@ Return ONLY a raw JSON object. Do not include conversational text or markdown co
             confidence_score: { type: Type.NUMBER },
             metadata: { 
               type: Type.OBJECT,
-              properties: {
-                // Since Gemini doesn't always handle dynamic keys in schema well, 
-                // we'll keep it as a general object and rely on the AI's understanding
-              }
+              properties: {}
             }
           },
           required: ["full_name", "type", "organization", "license_id", "is_valid"]
@@ -260,10 +321,7 @@ Return ONLY a raw JSON object. Do not include conversational text or markdown co
     const result = response.text || "{}";
     return JSON.parse(result);
   } catch (error: any) {
-    console.error("AI Analysis (verifyLicense) failed:", error);
-    if (error.message?.includes('API key not valid') || error.message?.includes('unauthorized')) {
-      return { error: "מפתח ה-API של Gemini אינו תקין או שאינו מורשה. אנא וודא שהגדרת את GEMINI_API_KEY כראוי בהגדרות היישום." };
-    }
-    return { error: error.message || "Failed to process document" };
+    console.warn("AI Analysis (verifyLicense) notice:", error?.message || error);
+    return { error: "לא ניתן היה לפענח את התעודה אוטומטית כרגע. באפשרותך להזין את פרטי התעודה ידנית בטופס." };
   }
 };

@@ -40,7 +40,7 @@ const SurfingSessionAttendance: React.FC = () => {
     coastalWeather,
     siteConfig
   } = useData();
-  const { currentUser } = useAuth();
+  const { currentUser, currentCommunityId } = useAuth();
   const { showAlert } = useModal();
   
   const headerImage = useRandomHeader();
@@ -215,7 +215,15 @@ const SurfingSessionAttendance: React.FC = () => {
       });
   }, [weeklyHistory]);
 
-  const activeMembers = useMemo(() => members.filter(m => m.isActive !== false && !isAppShaperUser(m)), [members]);
+  const activeMembers = useMemo(() => {
+    const activeCommunity = currentCommunityId || 'herzliya';
+    return members.filter(m => {
+      if (m.isActive === false || isAppShaperUser(m)) return false;
+      const isStaffOrSupport = m.role === 'Staff' || m.role === 'Support';
+      const memberCommunities = m.communities || [];
+      return isStaffOrSupport || memberCommunities.includes(activeCommunity);
+    });
+  }, [members, currentCommunityId]);
 
   const filteredMembers = useMemo(() => {
     if (!searchTerm) return activeMembers;

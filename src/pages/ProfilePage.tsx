@@ -240,7 +240,8 @@ const ProfileCompletion = React.memo(({ percentage, onShowDetails }: { percentag
 const ProfilePage: React.FC = () => {
   const headerImage = useRandomHeader();
   const { currentUser, updateUser, firebaseUser } = useAuth();
-  const { updateMember, members, weeklyHistory } = useData();
+  const { updateMember, members, weeklyHistory, availableCommunities: ctxCommunities } = useData();
+  const availableCommunities = ctxCommunities || AVAILABLE_COMMUNITIES;
   
   const [formData, setFormData] = useState<Member | null>(currentUser ? { ...currentUser } : null);
   const [isDirty, setIsDirty] = useState(false);
@@ -877,7 +878,7 @@ const ProfilePage: React.FC = () => {
                         <div className="w-full p-5 bg-sky-100/50 border border-sky-200/60 rounded-[1.25rem] text-xs text-sky-800 font-black flex items-center justify-between select-none">
                           <span className="flex items-center gap-2">
                             <ShieldCheck size={16} className="text-sky-700 shrink-0" />
-                            <span>כל הקהילות ({AVAILABLE_COMMUNITIES.length} קבוצות - משוייך אוטומטית כאיש צוות)</span>
+                            <span>כל הקהילות ({availableCommunities.length} קבוצות - משוייך אוטומטית כאיש צוות)</span>
                           </span>
                         </div>
                       ) : (
@@ -893,7 +894,7 @@ const ProfilePage: React.FC = () => {
                               ) : formData.communities.length > 3 ? (
                                 `נבחרו ${formData.communities.length} קבוצות קהילה`
                               ) : (
-                                AVAILABLE_COMMUNITIES
+                                availableCommunities
                                   .filter(c => formData.communities?.includes(c.id))
                                   .map(c => c.name)
                                   .join(', ')
@@ -928,7 +929,7 @@ const ProfilePage: React.FC = () => {
                                   </div>
 
                                   <div className="max-h-48 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                                    {AVAILABLE_COMMUNITIES
+                                    {availableCommunities
                                       .filter(c => c.name.includes(communitySearchQuery) || c.id.includes(communitySearchQuery))
                                       .map((c) => {
                                         const isChecked = (formData?.communities || []).includes(c.id);
@@ -983,7 +984,7 @@ const ProfilePage: React.FC = () => {
                             אין שיוך קבוצתי פעיל
                           </span>
                         ) : (
-                          AVAILABLE_COMMUNITIES
+                          availableCommunities
                             .filter(c => formData.communities?.includes(c.id))
                             .map(c => (
                               <span 

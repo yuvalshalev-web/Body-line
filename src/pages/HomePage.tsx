@@ -83,18 +83,39 @@ const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, currentCommunityId } = useAuth();
   const { 
-    members: rawMembers, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats,
+    members: rawMembers, memberships, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats,
     connectionError, retryConnection, isLoading: isDataLoading, selectedStationId, setSelectedStationId, yearConfig
   } = useData();
 
   const members = useMemo(() => {
     const activeCommunity = currentCommunityId || 'herzliya';
+    const isAlumniCommunity = activeCommunity.endsWith('_adults');
+
     return rawMembers.filter(member => {
       const isStaffOrSupport = member.role === 'Staff' || member.role === 'Support';
       const memberCommunities = member.communities || [];
-      return isStaffOrSupport || memberCommunities.includes(activeCommunity);
+      const belongs = isStaffOrSupport || memberCommunities.includes(activeCommunity);
+      if (!belongs) return false;
+
+      if (!isAlumniCommunity) {
+        const isAlumniOnly = memberships.some(m => 
+          m.personId === member.id && 
+          (m.groupId === 'group_alumni' || m.groupId === 'cohort_vav') && 
+          m.status === 'graduated'
+        ) && !memberships.some(m => 
+          m.personId === member.id && 
+          m.groupId === 'cohort_active' && 
+          m.status === 'active'
+        );
+
+        if (isAlumniOnly && !isStaffOrSupport) {
+          return false;
+        }
+      }
+
+      return true;
     });
-  }, [rawMembers, currentCommunityId]);
+  }, [rawMembers, memberships, currentCommunityId]);
 
   const [heroImageError, setHeroImageError] = useState(false);
 

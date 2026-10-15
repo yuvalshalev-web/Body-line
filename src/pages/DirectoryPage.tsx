@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useDeferredValue } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Filter, User, Mail, Phone, MapPin, Waves, Loader2, MessageCircle, LayoutGrid, List, X, Users, Headset, Send, Link2, Star, Crown } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Member } from '../types';
-import { isSystemOrTestMember } from '../constants';
+import { isSystemOrTestMember, AVAILABLE_COMMUNITIES, isAdminUser, getBranchCohortName } from '../constants';
 import PlayerCard from '../components/PlayerCard';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 
 const DirectoryPage: React.FC = () => {
-  const { members, isLoading } = useData();
-  const { currentUser, currentCommunityId } = useAuth();
+  const { members, isLoading, groups, memberships, yearConfig, availableCommunities: ctxCommunities } = useData();
+  const { currentUser, currentCommunityId, switchCommunity } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIdentity, setSelectedIdentity] = useState<string>('הכל');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -37,49 +37,93 @@ const DirectoryPage: React.FC = () => {
 
   const headerImage = useRandomHeader();
 
-  const filteredMembers = members.filter(member => {
-    // 1. Community isolation filter
-    const activeCommunity = currentCommunityId || 'herzliya';
-    const isStaffOrSupport = member.role === 'Staff' || member.role === 'Support';
-    const memberCommunities = member.communities || [];
-    const belongsToCurrentCommunity = isStaffOrSupport || memberCommunities.includes(activeCommunity);
+  const availableCommunities = ctxCommunities || AVAILABLE_COMMUNITIES;
+  const activeCommunity = currentCommunityId || 'herzliya';
+  const isAlumniCommunity = activeCommunity.endsWith('_adults');
+  const activeCommunityObj = availableCommunities.find(c => c.id === activeCommunity) || availableCommunities[0];
 
-    if (!belongsToCurrentCommunity) return false;
+  const deferredSearchTerm = useDeferredValue(searchTerm);
 
-    // 2. Standard search & identity checks
-    const memberEmail = member.email || '';
-    const matchesSearch = 
-      `${member.firstName} ${member.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      memberEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (member.mobile && member.mobile.includes(searchTerm));
-    
-    const memberIdentity = getRoleLabel(member);
-    const matchesIdentity = selectedIdentity === 'הכל' || memberIdentity === selectedIdentity;
-    
-    return matchesSearch && matchesIdentity && member.isActive !== false && !isSystemOrTestMember(member);
-  });
+  const sortedMembers = useMemo(() => {
+    const term = deferredSearchTerm.trim().toLowerCase();
+    const activeComm = currentCommunityId || 'herzliya';
 
-  const roleOrder: Record<string, number> = { 
-    'רכז': 1, 
-    'אפ-שייפר': 2, 
-    'מדריך': 3, 
-    'מתנדב': 4, 
-    'משתתף': 5,
-    'צוות עמותה': 6
-  };
+    const roleOrder: Record<string, number> = { 
+      'רכז': 1, 
+      'אפ-שייפר': 2, 
+      'מדריך': 3, 
+      'מתנדב': 4, 
+      'משתתף': 5,
+      'צוות עמותה': 6
+    };
 
-  const sortedMembers = [...filteredMembers].sort((a, b) => {
-    const roleA = getRoleLabel(a);
-    const roleB = getRoleLabel(b);
-    const orderA = roleOrder[roleA] ?? 99;
-    const orderB = roleOrder[roleB] ?? 99;
-    if (orderA !== orderB) {
-      return orderA - orderB;
-    }
-    const nameA = `${a.firstName || ''} ${a.lastName || ''}`.trim();
-    const nameB = `${b.firstName || ''} ${b.lastName || ''}`.trim();
-    return nameA.localeCompare(nameB, 'he');
-  });
+    return members.filter(member => {
+      // 1. Strict Community Isolation
+      const isStaffOrSupport = member.role === 'Staff' || member.role === 'Support';
+      const memberCommunities = member.communities || [];
+
+      // Privileged staff/support are visible to guide the group; regular members/volunteers must belong to this community
+      const belongsToCurrentCommunity = isStaffOrSupport || memberCommunities.includes(activeComm);
+      if (!belongsToCurrentCommunity) return false;
+
+      // 2. Strict Cohort Isolation (Separation of Active Cohort מחזור ז׳ from Alumni בוגרים)
+      if (!isAlumniCommunity) {
+        const isAlumniOnly = memberships.some(m => 
+          m.personId === member.id && 
+          (m.groupId === 'group_alumni' || m.groupId === 'cohort_vav') && 
+          m.status === 'graduated'
+        ) && !memberships.some(m => 
+          m.personId === member.id && 
+          m.groupId === 'cohort_active' && 
+          m.status === 'active'
+        );
+
+        if (isAlumniOnly && !isStaffOrSupport) {
+          return false;
+        }
+      } else {
+        const isActiveCohortOnly = memberships.some(m => 
+          m.personId === member.id && 
+          m.groupId === 'cohort_active' && 
+          m.status === 'active'
+        ) && !memberships.some(m => 
+          m.personId === member.id && 
+          m.groupId === 'group_alumni'
+        );
+
+        if (isActiveCohortOnly && !isStaffOrSupport) {
+          return false;
+        }
+      }
+
+      // 3. Search & Identity checks
+      if (term) {
+        const memberEmail = (member.email || '').toLowerCase();
+        const memberFullName = `${member.firstName || ''} ${member.lastName || ''}`.toLowerCase();
+        const matchesSearch = 
+          memberFullName.includes(term) ||
+          memberEmail.includes(term) ||
+          (member.mobile && member.mobile.includes(term));
+        if (!matchesSearch) return false;
+      }
+      
+      const memberIdentity = getRoleLabel(member);
+      const matchesIdentity = selectedIdentity === 'הכל' || memberIdentity === selectedIdentity;
+      
+      return matchesIdentity && member.isActive !== false && !isSystemOrTestMember(member);
+    }).sort((a, b) => {
+      const roleA = getRoleLabel(a);
+      const roleB = getRoleLabel(b);
+      const orderA = roleOrder[roleA] ?? 99;
+      const orderB = roleOrder[roleB] ?? 99;
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      const nameA = `${a.firstName || ''} ${a.lastName || ''}`.trim();
+      const nameB = `${b.firstName || ''} ${b.lastName || ''}`.trim();
+      return nameA.localeCompare(nameB, 'he');
+    });
+  }, [members, deferredSearchTerm, selectedIdentity, currentCommunityId, isAlumniCommunity, memberships]);
 
   const renderMember = (member: Member, index: number, isGrid: boolean) => {
     const isAppShaper = isAppShaperMember(member);
@@ -119,9 +163,22 @@ const DirectoryPage: React.FC = () => {
             <h3 className="text-base sm:text-lg font-black text-slate-900 tracking-tight truncate w-full flex items-center justify-center gap-1">
               {member.firstName} {member.lastName}
             </h3>
-            <p className="text-xs sm:text-sm font-black text-sky-600 truncate w-full mt-0.5">
-              {getRoleLabel(member)}
-            </p>
+            <div className="flex items-center justify-center gap-1.5 flex-wrap mt-0.5">
+              <p className="text-xs sm:text-sm font-black text-sky-600 truncate">
+                {getRoleLabel(member)}
+              </p>
+              {(() => {
+                const isAlumni = memberships.some(m => m.personId === member.id && (groups.find(g => g.id === m.groupId)?.type === 'alumni' || m.groupId === 'group_alumni'));
+                if (isAlumni) {
+                  return (
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs">
+                      🎓 בוגר
+                    </span>
+                  );
+                }
+                return null;
+              })()}
+            </div>
           </div>
 
           <div className="w-full flex flex-col gap-2 mt-2.5">
@@ -344,7 +401,7 @@ const DirectoryPage: React.FC = () => {
               <span className="surfer-title text-[#121212]">נבחרת הכוכבים</span>
             </h1>
             <p className="header-subtitle max-w-2xl mx-auto text-[#121212]">
-              הכירו את הקהילה שלנו • {members.length} משתתפים רשומים 🏄‍♂️
+              {activeCommunityObj.name} • {sortedMembers.length} חברים רשומים בקבוצה 🏄‍♂️
             </p>
           </div>
         </div>
@@ -384,6 +441,45 @@ const DirectoryPage: React.FC = () => {
                   <List size={20} />
                 </button>
               </div>
+            </div>
+
+            {/* Community Isolation Banner & Quick Switcher */}
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200/70 shadow-xs">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="text-xs font-black text-slate-500 uppercase tracking-widest">קבוצה פעילה:</span>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black shadow-2xs ${
+                  isAlumniCommunity
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-sky-600 text-white'
+                }`}>
+                  <span>{isAlumniCommunity ? '🎓' : '🌊'}</span>
+                  <span>{activeCommunityObj.baseName || activeCommunityObj.name.split(' - ')[0]}</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/20">
+                    {isAlumniCommunity ? 'בוגרים' : getBranchCohortName(activeCommunity, yearConfig?.branchCohorts, yearConfig?.name)}
+                  </span>
+                </span>
+                <span className="text-xs font-black text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200/50">
+                  {sortedMembers.length} חברים בקבוצה
+                </span>
+              </div>
+
+              {/* Quick Branch & Cohort Switcher for Admins, Staff and Instructors */}
+              {(isAdminUser(currentUser) || currentUser?.role === 'Staff' || currentUser?.role === 'Support' || currentUser?.role === 'Instructor') && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-slate-500">מעבר בין קבוצות:</span>
+                  <select
+                    value={activeCommunity}
+                    onChange={(e) => switchCommunity(e.target.value)}
+                    className="text-xs font-black bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-800 outline-none shadow-xs cursor-pointer hover:border-sky-500 transition-all"
+                  >
+                    {availableCommunities.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
@@ -568,7 +664,7 @@ const DirectoryPage: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {filteredMembers.length === 0 && (
+      {sortedMembers.length === 0 && (
         <div className="text-center py-20 space-y-4 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
           <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto text-slate-400">
             <Search size={32} />

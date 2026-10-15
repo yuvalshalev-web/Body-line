@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { Member } from '../../types';
 import { getAvailabilityLabel, AvailabilitySchedule } from '../../constants/availability';
-import * as XLSX from 'xlsx';
 
 interface DietaryReportModalProps {
   isOpen: boolean;
@@ -196,7 +195,8 @@ export const DietaryReportModal: React.FC<DietaryReportModalProps> = ({
   }, [members, filterType, searchTerm]);
 
   // Export full report to Excel
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
+    const XLSX = await import('xlsx');
     const exportData = members.map((m, index) => {
       const d = checkMemberAttributes(m);
       const memberAny = m as any;

@@ -1,6 +1,4 @@
-import { PairsManagerModal } from "../components/admin/PairsManagerModal";
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, lazy, Suspense } from 'react';
 import GlassNavigationBar from '../components/GlassNavigationBar';
 import { 
   Users, Archive, Mic, Image as ImageIcon, Calendar, Settings, UserCheck, ShieldAlert, Search, 
@@ -9,7 +7,7 @@ import {
   Loader2, X, UserX, RotateCcw, MessageCircle, Plus, RefreshCw, Pencil, Save, Newspaper, ChevronDown, Cake,
   PanelTop, ArrowUpCircle, ArrowDownCircle, User, Globe, Activity,
   Waves, AlertTriangle, Terminal, Link2, Eye, Key,
-  FileText, Map as MapIcon, Clock, Upload, BarChart2, Utensils, Timer, Hourglass, Layers
+  FileText, Map as MapIcon, Clock, Upload, BarChart2, Utensils, Timer, Hourglass, Layers, GraduationCap
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -17,7 +15,7 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
 import { JoinRequest, Member } from '../types';
-import { SUPER_ADMIN_EMAIL, isAppShaperUser } from '../constants';
+import { SUPER_ADMIN_EMAIL, isAppShaperUser, AVAILABLE_COMMUNITIES } from '../constants';
 import { ReadOnlyNoticeModal } from '../components/admin/ReadOnlyNoticeModal';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getStorageInstance } from '../services/firebase';
@@ -32,14 +30,16 @@ import AddMemberModal from '../components/admin/AddMemberModal';
 import { QuickResetPasswordModal } from '../components/admin/QuickResetPasswordModal';
 import ImportMembersModal from '../components/admin/ImportMembersModal';
 import { PostEditor } from '../components/admin/PostEditor';
-import { DietaryReportModal } from '../components/admin/DietaryReportModal';
-import { AdminRolloverReport } from './AdminRolloverReport';
-import { AdminAssets } from './AdminAssets';
-import SystemSettingsPage from './SystemSettingsPage';
-import EngineRoomPage from './EngineRoomPage';
-import SystemMonitor from '../components/SystemMonitor';
 import { MarkdownViewer } from '../components/admin/MarkdownViewer';
-import MemberGradingPage from './MemberGradingPage';
+
+// Lazy loaded heavy subpages and modals to optimize bundle size and page responsiveness
+const PairsManagerModal = lazy(() => import("../components/admin/PairsManagerModal").then(m => ({ default: m.PairsManagerModal })));
+const DietaryReportModal = lazy(() => import('../components/admin/DietaryReportModal').then(m => ({ default: m.DietaryReportModal })));
+const CohortsManagement = lazy(() => import('../components/admin/CohortsManagement').then(m => ({ default: m.CohortsManagement })));
+const AdminRolloverReport = lazy(() => import('./AdminRolloverReport').then(m => ({ default: m.AdminRolloverReport })));
+const AdminAssets = lazy(() => import('./AdminAssets').then(m => ({ default: m.AdminAssets })));
+const SystemSettingsPage = lazy(() => import('./SystemSettingsPage'));
+const EngineRoomPage = lazy(() => import('./EngineRoomPage'));
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { calculateUserStats } from '../utils/analytics';
 import { calculateAge, parseDate } from '../utils/dateUtils';
@@ -64,7 +64,7 @@ const parseMemberLoginDate = (member: Member): Date | null => {
   return null;
 };
 
-const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) => {
+const EventStatistics = React.memo(({ events, members, yearConfig, weeklyHistory }: any) => {
   const startDate = yearConfig?.startDate ? parseDate(yearConfig.startDate) || new Date(0) : new Date(0);
   startDate.setHours(0, 0, 0, 0);
   const endDate = yearConfig?.endDate ? parseDate(yearConfig.endDate) || new Date() : new Date();
@@ -207,7 +207,7 @@ const EventStatistics = ({ events, members, yearConfig, weeklyHistory }: any) =>
       </div>
     </div>
   );
-};
+});
 
 const AdminPage: React.FC = () => {
   const headerImage = useRandomHeader();
@@ -216,16 +216,21 @@ const AdminPage: React.FC = () => {
   const { showAlert, showConfirm, showSuccess, showError } = useModal();
   const { 
     joinRequests, siteAssets, siteConfig, updateSiteConfig, approveRequest, rejectRequest, members, galleryItems, events, deleteEvent, archiveEvent, updateEvent, addEvent, toggleRole, toggleStatus, updateSiteAssets, updateMember, deleteMember, archiveMember, addMember,
-    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, weeklyHistory, linkPair, unlinkPair
+    yearConfig, updateYearConfig, news, deleteNews, addNews, updateNews, deleteGalleryItems, addGalleryItem, conflictingAdmins, weeklyHistory, linkPair, unlinkPair,
+    groups, memberships, availableCommunities: ctxCommunities
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'USERS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ROLLOVER' | 'SETTINGS' | 'ENGINE_ROOM' | 'ASSETS' | 'SURF_CALLS'>('USERS');
+  const availableCommunities = ctxCommunities || AVAILABLE_COMMUNITIES;
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'USERS' | 'COHORTS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ROLLOVER' | 'SETTINGS' | 'ENGINE_ROOM' | 'ASSETS' | 'SURF_CALLS'>('USERS');
+  const [userGroupFilter, setUserGroupFilter] = useState<'ALL' | 'ACTIVE_COHORT' | 'ALUMNI'>('ALL');
+  const [userCommunityFilter, setUserCommunityFilter] = useState<string>('ALL');
   const [newSessionDay, setNewSessionDay] = useState(0);
   const [newSessionTime, setNewSessionTime] = useState('07:00');
   const [sessionToDelete, setSessionToDelete] = useState<number | null>(null);
 
   const adminTabs = [
     { id: 'USERS', label: 'משתמשים', icon: <Users size={20} /> },
+    { id: 'COHORTS', label: 'מחזורים ובוגרים', icon: <GraduationCap size={20} /> },
     { id: 'POSTS', label: 'פוסטים', icon: <Newspaper size={20} /> },
     { id: 'GALLERY', label: 'גלריה', icon: <ImageIcon size={20} /> },
     { id: 'EVENTS', label: 'אירועים', icon: <Calendar size={20} /> },
@@ -283,7 +288,8 @@ const AdminPage: React.FC = () => {
     facebookUrl: '',
     linkedinUrl: '',
     twitterUrl: '',
-    password: ''
+    password: '',
+    communities: ['herzliya']
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
@@ -571,11 +577,129 @@ const AdminPage: React.FC = () => {
 
 
 
-  const filteredRequests = joinRequests.filter(req => 
-    (req.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (req.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (req.email || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRequests = useMemo(() => {
+    const s = searchTerm.toLowerCase().trim();
+    if (!s) return joinRequests;
+    return joinRequests.filter(req => 
+      (req.firstName || '').toLowerCase().includes(s) || 
+      (req.lastName || '').toLowerCase().includes(s) || 
+      (req.email || '').toLowerCase().includes(s)
+    );
+  }, [joinRequests, searchTerm]);
+
+  const memberSummaryStats = useMemo(() => {
+    const isAppShaper = (m: any) => m.role === 'Support' || (m.email || '').toLowerCase() === 'yuval.shalev@gmail.com';
+    let communityTotal = 0;
+    let communityActive = 0;
+    let communitySuspended = 0;
+    let appShapersTotal = 0;
+    let staffTotal = 0;
+    let coordinators = 0;
+    let instructors = 0;
+    let volunteers = 0;
+    let participants = 0;
+
+    for (const m of members) {
+      if (isAppShaper(m)) {
+        appShapersTotal++;
+        continue;
+      }
+      if (m.role === 'Staff') {
+        staffTotal++;
+        continue;
+      }
+      communityTotal++;
+      if (m.isActive !== false) communityActive++;
+      else communitySuspended++;
+
+      if (m.role === 'Admin') coordinators++;
+      else if (m.role === 'Instructor') instructors++;
+      else if (m.role === 'Volunteer') volunteers++;
+      else if (m.role === 'Member') participants++;
+    }
+
+    return {
+      communityTotal,
+      communityActive,
+      communitySuspended,
+      appShapersTotal,
+      staffTotal,
+      coordinators,
+      instructors,
+      volunteers,
+      participants
+    };
+  }, [members]);
+
+  const todayBirthdays = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+
+    return members.filter(m => {
+      if (m.isActive === false) return false;
+      const bdayStr = m.birthday || (m as any).birthDate;
+      if (!bdayStr) return false;
+      const d = parseDate(bdayStr);
+      if (!d) return false;
+      return d.getMonth() === currentMonth && d.getDate() === currentDate;
+    });
+  }, [members]);
+
+  const filteredAndSortedAdminMembers = useMemo(() => {
+    const search = userSearchTerm.toLowerCase().trim();
+    const activeCohortId = groups.find(g => g.isCurrentCohort || g.id === 'cohort_active')?.id || 'cohort_active';
+    const alumniGroupId = groups.find(g => g.type === 'alumni' || g.id === 'group_alumni')?.id || 'group_alumni';
+
+    return members.filter(member => {
+      const name = `${member.firstName || ''} ${member.lastName || ''}`.toLowerCase();
+      const email = (member.email || '').toLowerCase();
+      const phone = member.mobile || '';
+
+      const matchesSearch = !search || name.includes(search) || email.includes(search) || phone.includes(search);
+      if (!matchesSearch) return false;
+
+      const isAppShaper = member.role === 'Support' || email === 'yuval.shalev@gmail.com';
+      let matchesRole = true;
+      if (userRoleFilter === 'Support') matchesRole = isAppShaper;
+      else if (userRoleFilter === 'Admin') matchesRole = member.role === 'Admin' && !isAppShaper;
+      else if (userRoleFilter === 'Instructor') matchesRole = member.role === 'Instructor';
+      else if (userRoleFilter === 'Volunteer') matchesRole = member.role === 'Volunteer';
+      else if (userRoleFilter === 'Member') matchesRole = member.role === 'Member' && !isAppShaper;
+      if (!matchesRole) return false;
+
+      let matchesGroup = true;
+      if (userGroupFilter === 'ACTIVE_COHORT') {
+        const hasMembership = memberships.some(m => m.personId === member.id && m.groupId === activeCohortId && m.status === 'active');
+        const hasActiveCohortComm = (member.communities || []).some(c => !c.endsWith('_adults'));
+        matchesGroup = hasMembership || hasActiveCohortComm;
+      } else if (userGroupFilter === 'ALUMNI') {
+        const hasMembership = memberships.some(m => m.personId === member.id && m.groupId === alumniGroupId && m.status !== 'paused');
+        const hasAlumniComm = (member.communities || []).some(c => c.endsWith('_adults'));
+        matchesGroup = hasMembership || hasAlumniComm;
+      }
+      if (!matchesGroup) return false;
+
+      let matchesCommunity = true;
+      if (userCommunityFilter !== 'ALL') {
+        const hasCommMembership = memberships.some(m => m.personId === member.id && m.communityId === userCommunityFilter);
+        matchesCommunity = (member.communities || []).includes(userCommunityFilter) || hasCommMembership || isAppShaper || member.role === 'Staff';
+      }
+
+      return matchesCommunity;
+    }).sort((a, b) => {
+      const aLast = a.lastName || '';
+      const bLast = b.lastName || '';
+      const aFirst = a.firstName || '';
+      const bFirst = b.firstName || '';
+      if (aLast || bLast) {
+        const lastCompare = aLast.localeCompare(bLast, 'he');
+        if (lastCompare !== 0) return lastCompare;
+        return aFirst.localeCompare(bFirst, 'he');
+      }
+      return aFirst.localeCompare(bFirst, 'he');
+    });
+  }, [members, userSearchTerm, userRoleFilter, userGroupFilter, userCommunityFilter, groups, memberships]);
 
   const handleApprove = async (id: string) => {
     setIsProcessing(id);
@@ -826,21 +950,7 @@ const AdminPage: React.FC = () => {
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             {/* Members Summary Card */}
             {(() => {
-              const isAppShaper = (m: any) => m.role === 'Support' || (m.email || '').toLowerCase() === 'yuval.shalev@gmail.com';
-              const communityMembers = members.filter(m => !isAppShaper(m) && m.role !== 'Staff');
-              const appShapers = members.filter(m => isAppShaper(m));
-              const staffMembers = members.filter(m => m.role === 'Staff');
-              const stats = {
-                communityTotal: communityMembers.length,
-                communityActive: communityMembers.filter(m => m.isActive !== false).length,
-                communitySuspended: communityMembers.filter(m => m.isActive === false).length,
-                appShapersTotal: appShapers.length,
-                staffTotal: staffMembers.length,
-                coordinators: communityMembers.filter(m => m.role === 'Admin').length,
-                instructors: communityMembers.filter(m => m.role === 'Instructor').length,
-                volunteers: communityMembers.filter(m => m.role === 'Volunteer').length,
-                participants: communityMembers.filter(m => m.role === 'Member').length,
-              };
+              const stats = memberSummaryStats;
               return (
                 <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
                   <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
@@ -892,24 +1002,8 @@ const AdminPage: React.FC = () => {
             })()}
 
             {/* Today's Birthdays Special Board */}
-            {(() => {
-              const now = new Date();
-              const currentMonth = now.getMonth();
-              const currentDate = now.getDate();
-
-              const bdays = members.filter(m => {
-                if (m.isActive === false) return false;
-                const bdayStr = m.birthday || (m as any).birthDate;
-                if (!bdayStr) return false;
-                const d = parseDate(bdayStr);
-                if (!d) return false;
-                return d.getMonth() === currentMonth && d.getDate() === currentDate;
-              });
-
-              if (bdays.length === 0) return null;
-
-              return (
-                <motion.div 
+            {todayBirthdays.length > 0 && (
+              <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-md mt-6"
@@ -927,14 +1021,14 @@ const AdminPage: React.FC = () => {
                           חוגגים יום הולדת היום! 🎂🏄‍♂️🤙
                         </h4>
                         <p className="text-xs font-bold text-amber-800/80 mt-1">
-                          יש לנו {bdays.length === 1 ? 'חבר קהילה אחד שחוגג' : `${bdays.length} חברי קהילה שחוגגים`} היום יום הולדת. שלחו להם ברכת גולשים אישית וחמה בוואטסאפ!
+                          יש לנו {todayBirthdays.length === 1 ? 'חבר קהילה אחד שחוגג' : `${todayBirthdays.length} חברי קהילה שחוגגים`} היום יום הולדת. שלחו להם ברכת גולשים אישית וחמה בוואטסאפ!
                         </p>
                       </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 relative z-10">
-                    {bdays.map((m) => {
+                    {todayBirthdays.map((m) => {
                       const age = calculateAge(m.birthday || (m as any).birthDate);
                       const ageText = age !== null ? ` (בן ${age})` : '';
                       return (
@@ -974,8 +1068,7 @@ const AdminPage: React.FC = () => {
                     })}
                   </div>
                 </motion.div>
-              );
-            })()}
+              )}
 
             <div className="flex flex-wrap justify-center mt-6 gap-4">
               <button 
@@ -1049,7 +1142,62 @@ const AdminPage: React.FC = () => {
                       className="w-full pr-11 pl-4 py-2.5 bg-white/80 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--surfer-vibrant-cyan)] transition-all"
                     />
                   </div>
-                  <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                  <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    {/* Cohort & Alumni Filter Group */}
+                    <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setUserGroupFilter('ALL')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                          userGroupFilter === 'ALL'
+                            ? 'bg-slate-800 text-white shadow-xs'
+                            : 'bg-white/60 text-slate-600 hover:bg-white border border-slate-200/50'
+                        }`}
+                      >
+                        כל המחזורים
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUserGroupFilter('ACTIVE_COHORT')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
+                          userGroupFilter === 'ACTIVE_COHORT'
+                            ? 'bg-sky-600 text-white shadow-xs'
+                            : 'bg-white/60 text-sky-700 hover:bg-white border border-slate-200/50'
+                        }`}
+                      >
+                        <span>🌊</span>
+                        <span>מחזור פעיל ({yearConfig?.name || 'ז׳'})</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUserGroupFilter('ALUMNI')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
+                          userGroupFilter === 'ALUMNI'
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'bg-white/60 text-indigo-700 hover:bg-white border border-slate-200/50'
+                        }`}
+                      >
+                        <span>🎓</span>
+                        <span>קבוצת בוגרים</span>
+                      </button>
+                    </div>
+
+                    {/* Community / Branch Filter Dropdown */}
+                    <div className="relative">
+                      <select
+                        value={userCommunityFilter}
+                        onChange={(e) => setUserCommunityFilter(e.target.value)}
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-white/90 border border-slate-200 text-slate-700 outline-none cursor-pointer focus:ring-2 focus:ring-sky-500/20 shadow-2xs hover:bg-white transition-all"
+                      >
+                        <option value="ALL">כל הקבוצות / הסניפים</option>
+                        {availableCommunities.map(c => (
+                          <option key={c.id} value={c.id}>
+                            {c.isAdults ? '🎓 ' : '🌊 '}{c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     {[
                       { id: 'ALL', label: 'הכל' },
                       { id: 'Admin', label: 'רכזים' },
@@ -1086,35 +1234,7 @@ const AdminPage: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--surfer-aqua-mist)]/10">
-                      {members.filter(member => {
-                        const name = `${member.firstName || ''} ${member.lastName || ''}`.toLowerCase();
-                        const email = (member.email || '').toLowerCase();
-                        const phone = member.mobile || '';
-                        const search = userSearchTerm.toLowerCase().trim();
-
-                        const matchesSearch = !search || name.includes(search) || email.includes(search) || phone.includes(search);
-
-                        const isAppShaper = member.role === 'Support' || email === 'yuval.shalev@gmail.com';
-                        let matchesRole = true;
-                        if (userRoleFilter === 'Support') matchesRole = isAppShaper;
-                        else if (userRoleFilter === 'Admin') matchesRole = member.role === 'Admin' && !isAppShaper;
-                        else if (userRoleFilter === 'Instructor') matchesRole = member.role === 'Instructor';
-                        else if (userRoleFilter === 'Volunteer') matchesRole = member.role === 'Volunteer';
-                        else if (userRoleFilter === 'Member') matchesRole = member.role === 'Member' && !isAppShaper;
-
-                        return matchesSearch && matchesRole;
-                      }).sort((a, b) => {
-                        const aLast = a.lastName || '';
-                        const bLast = b.lastName || '';
-                        const aFirst = a.firstName || '';
-                        const bFirst = b.firstName || '';
-                        if (aLast || bLast) {
-                          const lastCompare = aLast.localeCompare(bLast, 'he');
-                          if (lastCompare !== 0) return lastCompare;
-                          return aFirst.localeCompare(bFirst, 'he');
-                        }
-                        return aFirst.localeCompare(bFirst, 'he');
-                      }).map(member => {
+                      {filteredAndSortedAdminMembers.map(member => {
                         const isAppShaper = member.role === 'Support' || (member.email || '').toLowerCase() === 'yuval.shalev@gmail.com';
                         return (
                         <tr key={member.id} className={`hover:bg-[var(--surfer-aqua-mist)]/10 transition-all group ${member.isActive === false ? 'grayscale opacity-60' : ''}`}>
@@ -1153,6 +1273,49 @@ const AdminPage: React.FC = () => {
                                   {member.firstName} {member.lastName}
                                 </h4>
                                 <p className="text-[12px] text-[#000000]/70 font-black truncate max-w-[150px]">{member.email}</p>
+                                {(() => {
+                                  const badges: { key: string; label: string; isAlumni: boolean }[] = [];
+                                  const seen = new Set<string>();
+
+                                  (member.communities || []).forEach(commId => {
+                                    const commObj = availableCommunities.find(c => c.id === commId);
+                                    const isAlumni = commId.endsWith('_adults');
+                                    const label = commObj?.name || commId;
+                                    if (!seen.has(label)) {
+                                      seen.add(label);
+                                      badges.push({ key: `comm_${commId}`, label, isAlumni });
+                                    }
+                                  });
+
+                                  memberships.filter(m => m.personId === member.id && m.status === 'active').forEach(um => {
+                                    const g = groups.find(grp => grp.id === um.groupId);
+                                    const isAlumni = g?.type === 'alumni';
+                                    const label = g?.name || 'קבוצה';
+                                    if (!seen.has(label)) {
+                                      seen.add(label);
+                                      badges.push({ key: `mem_${um.id}`, label, isAlumni: !!isAlumni });
+                                    }
+                                  });
+
+                                  if (badges.length === 0) return null;
+
+                                  return (
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {badges.map(b => (
+                                        <span 
+                                          key={b.key} 
+                                          className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border ${
+                                            b.isAlumni 
+                                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+                                              : 'bg-sky-50 text-sky-700 border-sky-200'
+                                          }`}
+                                        >
+                                          {b.isAlumni ? '🎓 ' : '🌊 '}{b.label}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             </div>
                           </td>
@@ -1241,19 +1404,35 @@ const AdminPage: React.FC = () => {
               isOpen={isImportModalOpen}
               onClose={() => setIsImportModalOpen(false)}
             />
-            <DietaryReportModal
-              isOpen={isDietaryModalOpen}
-              onClose={() => setIsDietaryModalOpen(false)}
-              members={members}
-            />
-            <PairsManagerModal
-              isOpen={isPairsModalOpen}
-              onClose={() => setIsPairsModalOpen(false)}
-              members={members}
-              onUpdateMember={updateMember}
-              onLinkPair={linkPair}
-              onUnlinkPair={unlinkPair}
-            />
+            {isDietaryModalOpen && (
+              <Suspense fallback={null}>
+                <DietaryReportModal
+                  isOpen={isDietaryModalOpen}
+                  onClose={() => setIsDietaryModalOpen(false)}
+                  members={members}
+                />
+              </Suspense>
+            )}
+            {isPairsModalOpen && (
+              <Suspense fallback={null}>
+                <PairsManagerModal
+                  isOpen={isPairsModalOpen}
+                  onClose={() => setIsPairsModalOpen(false)}
+                  members={members}
+                  onUpdateMember={updateMember}
+                  onLinkPair={linkPair}
+                  onUnlinkPair={unlinkPair}
+                />
+              </Suspense>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'COHORTS' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Suspense fallback={<div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--surfer-vibrant-cyan)]" /></div>}>
+              <CohortsManagement />
+            </Suspense>
           </div>
         )}
 
@@ -1616,7 +1795,9 @@ const AdminPage: React.FC = () => {
         )}
 
         {activeTab === 'ROLLOVER' && (
-          <AdminRolloverReport />
+          <Suspense fallback={<div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--surfer-vibrant-cyan)]" /></div>}>
+            <AdminRolloverReport />
+          </Suspense>
         )}
 
         
@@ -1628,19 +1809,25 @@ const AdminPage: React.FC = () => {
 
         {activeTab === 'SETTINGS' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <SystemSettingsPage embedded={true} />
+            <Suspense fallback={<div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--surfer-vibrant-cyan)]" /></div>}>
+              <SystemSettingsPage embedded={true} />
+            </Suspense>
           </div>
         )}
 
         {activeTab === 'ENGINE_ROOM' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <EngineRoomPage embedded={true} />
+            <Suspense fallback={<div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--surfer-vibrant-cyan)]" /></div>}>
+              <EngineRoomPage embedded={true} />
+            </Suspense>
           </div>
         )}
 
         {activeTab === 'ASSETS' && (
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <AdminAssets />
+            <Suspense fallback={<div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--surfer-vibrant-cyan)]" /></div>}>
+              <AdminAssets />
+            </Suspense>
           </div>
         )}
 

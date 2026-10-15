@@ -7,7 +7,7 @@ import { Member, JoinRequest } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import { hashPassword, verifyPassword, calculateFbPassword } from '../utils/crypto';
-import { SUPER_ADMIN_EMAIL, isAdminUser, AVAILABLE_COMMUNITIES } from '../constants';
+import { SUPER_ADMIN_EMAIL, isAdminUser, AVAILABLE_COMMUNITIES, getAvailableCommunities, getBranchCohortName } from '../constants';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useAuth } from '../contexts/AuthContext';
@@ -24,14 +24,7 @@ import cadBlueprintBg from '../assets/images/surfboard_autocad_blueprint_1790665
 import davinciLightBg from '../assets/images/davinci_light_blueprint_1790672610109.jpg';
 import emailjs from '@emailjs/browser';
 
-const groups = [
-  "הרצליה", "הרצליה - ותיקים",
-  "אשדוד", "אשדוד - ותיקים",
-  "אשקלון", "אשקלון - ותיקים",
-  "כינרת", "כינרת - ותיקים",
-  "קריות", "קריות - ותיקים",
-  "תל אביב", "תל אביב - ותיקים"
-];
+const DEFAULT_GROUPS = getAvailableCommunities().map(c => c.name);
 
 /**
  * Calculates Israel's astronomical sunrise and sunset times (approx. Lat: 32.08, Lng: 34.78)
@@ -79,6 +72,22 @@ function getIsraelSunriseSunset(date: Date = new Date()) {
   };
 }
 
+const checkCommunityAccess = (memberData: { role?: string; communities?: string[] }, communityId: string): boolean => {
+  const isPrivileged = 
+    memberData.role === 'Staff' || 
+    memberData.role === 'Support' || 
+    memberData.role === 'Admin' || 
+    memberData.role === 'Instructor';
+
+  if (isPrivileged) return true;
+
+  const userCommunities = (memberData.communities && memberData.communities.length > 0)
+    ? memberData.communities
+    : ['herzliya_adults'];
+
+  return userCommunities.includes(communityId);
+};
+
 const LoginPage: React.FC = () => {
   console.log("LoginPage rendering");
   const [loginTheme, setLoginTheme] = useState<'dark' | 'light'>(() => {
@@ -89,8 +98,11 @@ const LoginPage: React.FC = () => {
   });
   const [mode, setMode] = useState<'LOGIN' | 'JOIN' | 'RESET_TEMP_PASSWORD'>('LOGIN');
   const { login, currentUser } = useAuth();
-  const { siteAssets, isLoading: isDataLoading, isDbEmpty, seedInitialAdmin } = useData();
+  const { siteAssets, isLoading: isDataLoading, isDbEmpty, seedInitialAdmin, yearConfig, availableCommunities: ctxCommunities } = useData();
   const navigate = useNavigate();
+
+  const availableCommunities = ctxCommunities || getAvailableCommunities(yearConfig?.branchCohorts, yearConfig?.name);
+  const groups = React.useMemo(() => availableCommunities.map(c => c.name), [availableCommunities]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
@@ -99,8 +111,11 @@ const LoginPage: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isGroupMenuOpen, setIsGroupMenuOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState(groups[0]);
+  const [selectedGroup, setSelectedGroup] = useState(DEFAULT_GROUPS[0]);
   const [selectedCommunityId, setSelectedCommunityId] = useState<string>('herzliya');
+  const selectedCommunityCohort = selectedCommunityId?.endsWith('_adults')
+    ? 'בוגרים'
+    : getBranchCohortName(selectedCommunityId || 'herzliya', yearConfig?.branchCohorts, yearConfig?.name);
   const [isCommunityMenuOpen, setIsCommunityMenuOpen] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [showSeaWaterAlert, setShowSeaWaterAlert] = useState(false);
@@ -381,9 +396,8 @@ const LoginPage: React.FC = () => {
             return;
           }
           
-          const userCommunities = mData.communities || (mData.role === 'Staff' || mData.role === 'Support' ? AVAILABLE_COMMUNITIES.map(c => c.id) : ['herzliya']);
-          if (!userCommunities.includes(selectedCommunityId)) {
-            setError('אינך שייך לקבוצה שבחרת, אנא שנה את בחירתך');
+          if (!checkCommunityAccess(mData, selectedCommunityId)) {
+            setError('אינך שייך לקבוצה שבחרת, אנא בחר את הקבוצה המתאימה (לדוגמה: הרצליה - בוגרים)');
             setIsBiometricLoading(false);
             return;
           }
@@ -407,9 +421,8 @@ const LoginPage: React.FC = () => {
           return;
         }
 
-        const userCommunities = memberData.communities || (memberData.role === 'Staff' || memberData.role === 'Support' ? AVAILABLE_COMMUNITIES.map(c => c.id) : ['herzliya']);
-        if (!userCommunities.includes(selectedCommunityId)) {
-          setError('אינך שייך לקבוצה שבחרת, אנא שנה את בחירתך');
+        if (!checkCommunityAccess(memberData, selectedCommunityId)) {
+          setError('אינך שייך לקבוצה שבחרת, אנא בחר את הקבוצה המתאימה (לדוגמה: הרצליה - בוגרים)');
           await auth.signOut();
           setIsBiometricLoading(false);
           return;
@@ -426,9 +439,8 @@ const LoginPage: React.FC = () => {
           const mDoc = emailSnapshot.docs[0];
           const mData = { ...mDoc.data(), id: mDoc.id } as Member;
           
-          const userCommunities = mData.communities || (mData.role === 'Staff' || mData.role === 'Support' ? AVAILABLE_COMMUNITIES.map(c => c.id) : ['herzliya']);
-          if (!userCommunities.includes(selectedCommunityId)) {
-            setError('אינך שייך לקבוצה שבחרת, אנא שנה את בחירתך');
+          if (!checkCommunityAccess(mData, selectedCommunityId)) {
+            setError('אינך שייך לקבוצה שבחרת, אנא בחר את הקבוצה המתאימה (לדוגמה: הרצליה - בוגרים)');
             setIsBiometricLoading(false);
             return;
           }
@@ -551,9 +563,8 @@ const LoginPage: React.FC = () => {
       }
 
       // Community check
-      const userCommunities = memberData.communities || (memberData.role === 'Staff' || memberData.role === 'Support' ? AVAILABLE_COMMUNITIES.map(c => c.id) : ['herzliya']);
-      if (!userCommunities.includes(selectedCommunityId)) {
-        setError('אינך שייך לקבוצה שבחרת, אנא שנה את בחירתך');
+      if (!checkCommunityAccess(memberData, selectedCommunityId)) {
+        setError('אינך שייך לקבוצה שבחרת, אנא בחר את הקבוצה המתאימה (לדוגמה: הרצליה - בוגרים)');
         setIsLoading(false);
         return;
       }
@@ -965,49 +976,81 @@ const LoginPage: React.FC = () => {
 
                 {/* Group Selection Dropdown */}
                 <div className="relative w-full">
-                  <label className="text-[10px] font-sans font-bold uppercase tracking-widest block pr-1 mb-0.5 text-right text-[#fbf5df]/70">קבוצת פעילות</label>
+                  <label className="text-[10px] font-sans font-bold uppercase tracking-widest block pr-1 mb-0.5 text-right text-[#fbf5df]/70">
+                    קבוצת פעילות (מחזור פעיל / בוגרים)
+                  </label>
                   <button 
                     type="button"
                     onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
                     className="w-full h-11 rounded-lg text-sm font-semibold outline-none text-right flex items-center justify-between px-3.5 transition-all vintage-glass-input cursor-pointer"
                   >
-                    <span className="flex-1 text-right flex items-center gap-1.5">
-                      <MapPin size={13} className="shrink-0 text-[#fbf5df]/70" />
-                      <span className="text-[#fbf5df]">{AVAILABLE_COMMUNITIES.find(c => c.id === selectedCommunityId)?.name || 'קבוצת הרצליה'}</span>
+                    <span className="flex-1 text-right flex items-center gap-2 truncate">
+                      <MapPin size={14} className="shrink-0 text-cyan-400" />
+                      <span className="text-[#fbf5df] font-bold">
+                        {availableCommunities.find(c => c.id === selectedCommunityId)?.baseName || "הרצליה"}
+                      </span>
+                      {selectedCommunityId?.endsWith('_adults') ? (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                          בוגרים
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
+                          {selectedCommunityCohort}
+                        </span>
+                      )}
                     </span>
                     <ChevronDown size={14} className={`text-[#fbf5df]/70 transition-transform duration-300 ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   <AnimatePresence>
                     {isCommunityMenuOpen && (
-                       <motion.div 
-                        initial={{ opacity: 0, scale: 0.98, y: 3 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.98, y: 3 }}
-                        transition={{ duration: 0.12 }}
-                        className="absolute top-[calc(100%+0.25rem)] left-0 right-0 bg-[#0d1520]/95 backdrop-blur-xl border border-white/10 text-white rounded-lg shadow-lg z-50 overflow-y-auto max-h-44 py-1 custom-scrollbar"
-                      >
-                        {AVAILABLE_COMMUNITIES.map((c) => (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedCommunityId(c.id);
-                              setIsCommunityMenuOpen(false);
-                              setError('');
-                            }}
-                            className={`w-full px-3.5 py-2 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between hover:bg-white/10 ${
-                              selectedCommunityId === c.id ? 'text-[#fbf5df] bg-white/10 font-bold' : 'text-slate-300'
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#fbf5df]/70" />
-                              <span>{c.name}</span>
-                            </span>
-                            {selectedCommunityId === c.id && <CheckCircle2 size={14} className="text-[#fbf5df]" />}
-                          </button>
-                        ))}
-                      </motion.div>
+                      <>
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => setIsCommunityMenuOpen(false)} 
+                        />
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.98, y: 3 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.98, y: 3 }}
+                          transition={{ duration: 0.12 }}
+                          className="absolute top-[calc(100%+0.25rem)] left-0 right-0 bg-[#0d1520]/95 backdrop-blur-xl border border-white/10 text-white rounded-lg shadow-2xl z-50 overflow-y-auto max-h-56 py-1.5 custom-scrollbar divide-y divide-white/5"
+                        >
+                          {availableCommunities.map((c) => {
+                            const isAdults = c.id.endsWith('_adults');
+                            const isSelected = selectedCommunityId === c.id;
+                            const itemCohort = isAdults ? 'בוגרים' : getBranchCohortName(c.id, yearConfig?.branchCohorts, yearConfig?.name);
+                            const cityName = c.baseName || c.name.split(' - ')[0];
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedCommunityId(c.id);
+                                  setIsCommunityMenuOpen(false);
+                                  setError('');
+                                }}
+                                className={`w-full px-3.5 py-2.5 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between hover:bg-white/10 cursor-pointer ${
+                                  isSelected ? 'text-[#fbf5df] bg-white/10 font-black' : 'text-slate-300'
+                                }`}
+                              >
+                                <span className="flex items-center gap-2">
+                                  <span className="text-sm">{isAdults ? '🎓' : '🌊'}</span>
+                                  <span className="font-bold">{cityName}</span>
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                    isAdults 
+                                      ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/20' 
+                                      : 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/20'
+                                  }`}>
+                                    {itemCohort}
+                                  </span>
+                                </span>
+                                {isSelected && <CheckCircle2 size={15} className="text-cyan-400" />}
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      </>
                     )}
                   </AnimatePresence>
                 </div>

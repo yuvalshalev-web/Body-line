@@ -14,6 +14,7 @@ import { processImage } from '../../utils/imageProcessor';
 import { validateMobileNumber, formatMobileNumber } from '../../utils/validation';
 import { useModal } from '../../contexts/ModalContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useData } from '../../contexts/DataContext';
 import { SUPER_ADMIN_EMAIL, AVAILABLE_COMMUNITIES } from '../../constants';
 import { hashPassword } from '../../utils/crypto';
 import { sendPasswordResetEmail, updatePassword } from 'firebase/auth';
@@ -58,6 +59,8 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
 }) => {
   const { showSuccess, showError, showConfirm } = useModal();
   const { currentUser, updateUser } = useAuth();
+  const { availableCommunities: ctxCommunities } = useData();
+  const availableCommunities = ctxCommunities || AVAILABLE_COMMUNITIES;
   const [editingMember, setEditingMember] = useState<Member>(member);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
@@ -425,7 +428,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
                         if (r.id === 'Admin' && !isSuperAdmin) return;
                         const isStaffOrSupport = r.id === 'Staff' || r.id === 'Support';
                         const communitiesVal = isStaffOrSupport
-                          ? AVAILABLE_COMMUNITIES.map(c => c.id)
+                          ? availableCommunities.map(c => c.id)
                           : (editingMember.communities && editingMember.communities.length > 0 ? editingMember.communities : ['herzliya']);
                         setEditingMember({ 
                           ...editingMember, 
@@ -520,7 +523,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
                       <div className="w-full p-4 bg-sky-100/50 border border-sky-200/60 rounded-2xl text-xs text-sky-800 font-black flex items-center justify-between select-none">
                         <span className="flex items-center gap-2">
                           <ShieldCheck size={16} className="text-sky-700 shrink-0" />
-                          <span>כל הקהילות ({AVAILABLE_COMMUNITIES.length} קבוצות - משוייך אוטומטית)</span>
+                          <span>כל הקהילות ({availableCommunities.length} קבוצות - משוייך אוטומטית)</span>
                         </span>
                       </div>
                     ) : (
@@ -537,7 +540,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
                             ) : editingMember.communities.length > 3 ? (
                               `נבחרו ${editingMember.communities.length} קבוצות קהילה`
                             ) : (
-                              AVAILABLE_COMMUNITIES
+                              availableCommunities
                                 .filter(c => editingMember.communities?.includes(c.id))
                                 .map(c => c.name)
                                 .join(', ')
@@ -573,7 +576,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
 
                                 {/* Scrollable list */}
                                 <div className="max-h-60 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                                  {AVAILABLE_COMMUNITIES
+                                  {availableCommunities
                                     .filter(c => c.name.includes(communitySearchQuery) || c.id.includes(communitySearchQuery))
                                     .map((c) => {
                                       const isChecked = (editingMember.communities || []).includes(c.id);
@@ -608,7 +611,7 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
                                         </button>
                                       );
                                     })}
-                                  {AVAILABLE_COMMUNITIES.filter(c => c.name.includes(communitySearchQuery)).length === 0 && (
+                                  {availableCommunities.filter(c => c.name.includes(communitySearchQuery)).length === 0 && (
                                     <div className="text-center py-4 text-slate-400 text-xs">
                                       לא נמצאו קבוצות מתאימות
                                     </div>

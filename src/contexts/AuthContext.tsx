@@ -17,6 +17,7 @@ interface AuthContextType {
   loading: boolean;
   login: (user: Member, communityId: string) => Promise<void>;
   logout: () => Promise<void>;
+  switchCommunity: (communityId: string) => void;
   updateUser: (user: Member) => void;
 }
 
@@ -25,7 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const isLoggingOutRef = React.useRef(safeLocalStorage.getItem('habal_zug_logged_out') === 'true');
   const [currentCommunityId, setCurrentCommunityId] = useState<string | null>(() => {
-    return safeSessionStorage.getItem('habal_zug_community') || null;
+    return safeSessionStorage.getItem('habal_zug_community') || 'herzliya';
   });
   const [currentUser, setCurrentUser] = useState<Member | null>(() => {
     // Purge any legacy localStorage session to enforce strict session-only authentication
@@ -383,6 +384,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => unsub();
   }, [currentUser?.id, logout]);
 
+  const switchCommunity = useCallback((communityId: string) => {
+    safeSessionStorage.setItem('habal_zug_community', communityId);
+    setCurrentCommunityId(communityId);
+  }, []);
+
   const value = React.useMemo(() => ({ 
     currentUser, 
     currentCommunityId,
@@ -391,8 +397,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loading,
     login, 
     logout, 
+    switchCommunity,
     updateUser 
-  }), [currentUser, currentCommunityId, firebaseUser, loading, login, logout, updateUser]);
+  }), [currentUser, currentCommunityId, firebaseUser, loading, login, logout, switchCommunity, updateUser]);
 
   return (
     <AuthContext.Provider value={value}>

@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, FileText, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import { Event, Member } from '../../types';
 import { useData } from '../../contexts/DataContext';
 import { useModal } from '../../contexts/ModalContext';
@@ -133,6 +132,7 @@ export default function ImportSessionsModal({ isOpen, onClose }: ImportSessionsM
       reader.onload = async (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const XLSX = await import('xlsx');
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];

@@ -19,8 +19,8 @@ import {
   FirestoreErrorInfo
 } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../utils/dateUtils';
-import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore, SurfCall, YearConfig } from '../types';
-import { SUPER_ADMIN_EMAIL, isAdminUser, isAppShaperUser, isSystemOrTestMember } from '../constants';
+import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore, SurfCall, YearConfig, CommunityGroup, GroupMembership, GroupMemberRole } from '../types';
+import { SUPER_ADMIN_EMAIL, isAdminUser, isAppShaperUser, isSystemOrTestMember, AVAILABLE_COMMUNITIES, Community, getAvailableCommunities } from '../constants';
 import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageStats';
 import { storage } from '../utils/storage';
@@ -114,6 +114,7 @@ interface DataContextType {
   setSelectedStationId: (id: string) => void;
   seaStats: any | null;
   yearConfig: YearConfig | null;
+  availableCommunities: Community[];
   attendeeIds: string[];
   activeSessionDate: string;
   isLoading: boolean;
@@ -159,7 +160,7 @@ interface DataContextType {
   }>) => Promise<void>;
   updateYearConfig: (config: Partial<YearConfig>) => Promise<void>;
   archiveMember: (id: string) => Promise<void>;
-  addMember: (member: Omit<Member, 'id'>) => Promise<void>;
+  addMember: (member: Omit<Member, 'id'>) => Promise<string | undefined>;
   addPerformanceScore: (score: Omit<PerformanceScore, 'id'>) => Promise<void>;
   updatePerformanceScore: (score: PerformanceScore) => Promise<void>;
   isDbEmpty: boolean;
@@ -170,6 +171,15 @@ interface DataContextType {
   toggleSurfCallAttendance: (callId: string, userId: string, userName: string, avatar?: string) => Promise<void>;
   archiveSurfCall: (callId: string) => Promise<void>;
   addSurfCallComment: (callId: string, userId: string, userName: string, avatar: string | undefined, text: string) => Promise<void>;
+  groups: CommunityGroup[];
+  memberships: GroupMembership[];
+  addGroup: (data: Partial<CommunityGroup>) => Promise<string>;
+  updateGroup: (id: string, data: Partial<CommunityGroup>) => Promise<void>;
+  deleteGroup: (id: string) => Promise<void>;
+  addMembership: (data: Omit<GroupMembership, 'id'>) => Promise<string>;
+  updateMembership: (id: string, data: Partial<GroupMembership>) => Promise<void>;
+  removeMembership: (id: string) => Promise<void>;
+  graduateCohort: (params: { currentCohortId: string; closingCohortName?: string; nextCohortName: string; nextStartDate: string; nextEndDate: string }) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -258,6 +268,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [siteConfig]);
 
   const [yearConfig, setYearConfig] = useState<YearConfig | null>(null);
+  const availableCommunities = React.useMemo(() => {
+    return getAvailableCommunities(yearConfig?.branchCohorts || null, yearConfig?.name);
+  }, [yearConfig?.branchCohorts, yearConfig?.name]);
+  const [groups, setGroups] = useState<CommunityGroup[]>([]);
+  const [memberships, setMemberships] = useState<GroupMembership[]>([]);
   const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
   const [isDbEmpty, setIsDbEmpty] = useState(false);
   const [conflictingAdmins, setConflictingAdmins] = useState<Member[]>([]);
@@ -582,8 +597,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .map(d => {
           const data = d.data();
           const role = data.role || 'Member';
-          const isStaffOrSupport = role === 'Staff' || role === 'Support';
-          const communities = data.communities || (isStaffOrSupport ? ['herzliya', 'tel_aviv', 'haifa', 'ashdod'] : ['herzliya']);
+          const isPrivileged = role === 'Staff' || role === 'Support' || role === 'Admin' || role === 'Instructor';
+          const allCommunityIds = AVAILABLE_COMMUNITIES.map(c => c.id);
+          const communities = (data.communities && data.communities.length > 0)
+            ? data.communities
+            : (isPrivileged ? allCommunityIds : ['herzliya']);
           return {
             id: d.id,
             ...data,
@@ -622,6 +640,41 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setGalleryItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GalleryItem)));
     });
 
+    const unsubGroups = trackedOnSnapshot(query(collection(db, 'community_groups')), (snapshot) => {
+      const gList = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as CommunityGroup));
+      setGroups(gList);
+      if (snapshot.empty) {
+        // Automatically seed default active cohort and alumni group
+        const defaultActiveCohort: CommunityGroup = {
+          id: 'cohort_active',
+          name: 'מחזור ז׳',
+          type: 'cohort',
+          isActive: true,
+          isCurrentCohort: true,
+          startDate: '2026-09-17',
+          endDate: '2027-07-31',
+          description: 'מחזור פעיל - שנת חבל זוג (מחזור ז׳)',
+          createdAt: new Date().toISOString()
+        };
+        const defaultAlumni: CommunityGroup = {
+          id: 'group_alumni',
+          name: 'קבוצת בוגרים',
+          type: 'alumni',
+          isActive: true,
+          isCurrentCohort: false,
+          description: 'קבוצת הבוגרים והמתנדבים שסיימו מחזורי פעילות קודמים',
+          createdAt: new Date().toISOString()
+        };
+        setDoc(doc(db, 'community_groups', 'cohort_active'), defaultActiveCohort).catch(console.warn);
+        setDoc(doc(db, 'community_groups', 'group_alumni'), defaultAlumni).catch(console.warn);
+      }
+    });
+
+    const unsubMemberships = trackedOnSnapshot(query(collection(db, 'group_memberships')), (snapshot) => {
+      const mList = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as GroupMembership));
+      setMemberships(mList);
+    });
+
     // Safety timeout to ensure loading spinner dismisses
     const publicDataTimeout = setTimeout(() => {
       setIsLoading(false);
@@ -633,6 +686,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       unsubAssets();
       unsubConfig();
       unsubYearConfig();
+      unsubGroups();
+      unsubMemberships();
       unsubMembers();
       unsubHistory();
       unsubSurfCalls();
@@ -786,7 +841,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     // Optimistically update React state immediately
-    setMembers(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
+    setMembers(prev => {
+      const updated = prev.map(m => m.id === id ? { ...m, ...data } : m);
+      storage.set('cached_members_v3', updated, 2 / 60);
+      return updated;
+    });
 
     try {
       await trackedSetDoc(doc(db, 'members', id), data, { merge: true });
@@ -1830,8 +1889,159 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [currentCommunityId]);
 
   const updateYearConfig = useCallback(async (config: Partial<YearConfig>) => {
-    await setDoc(doc(getDb(), 'site_data', 'year_config'), config, { merge: true });
+    const db = getDb();
+    await setDoc(doc(db, 'site_data', 'year_config'), config, { merge: true });
+    if (config.name || config.startDate || config.endDate) {
+      try {
+        const activeCohort = groups.find(g => g.isCurrentCohort || g.id === 'cohort_active');
+        if (activeCohort) {
+          await updateDoc(doc(db, 'community_groups', activeCohort.id), {
+            ...(config.name ? { name: config.name } : {}),
+            ...(config.startDate ? { startDate: config.startDate } : {}),
+            ...(config.endDate ? { endDate: config.endDate } : {})
+          });
+        }
+      } catch (err) {
+        console.warn('Could not sync active cohort group name:', err);
+      }
+    }
+  }, [groups]);
+
+  const addGroup = useCallback(async (data: Partial<CommunityGroup>) => {
+    const db = getDb();
+    const docId = data.id || `group_${Date.now()}`;
+    const newGroup: CommunityGroup = {
+      id: docId,
+      name: data.name || 'מחזור חדש',
+      type: data.type || 'cohort',
+      isActive: data.isActive !== undefined ? data.isActive : true,
+      isCurrentCohort: data.isCurrentCohort || false,
+      startDate: data.startDate || '',
+      endDate: data.endDate || '',
+      description: data.description || '',
+      createdAt: new Date().toISOString(),
+      ...data
+    };
+    await setDoc(doc(db, 'community_groups', docId), newGroup);
+    return docId;
   }, []);
+
+  const updateGroup = useCallback(async (id: string, data: Partial<CommunityGroup>) => {
+    const db = getDb();
+    await updateDoc(doc(db, 'community_groups', id), data);
+  }, []);
+
+  const deleteGroup = useCallback(async (id: string) => {
+    const db = getDb();
+    await deleteDoc(doc(db, 'community_groups', id));
+  }, []);
+
+  const addMembership = useCallback(async (data: Omit<GroupMembership, 'id'>) => {
+    const db = getDb();
+    const docRef = await addDoc(collection(db, 'group_memberships'), data);
+    return docRef.id;
+  }, []);
+
+  const updateMembership = useCallback(async (id: string, data: Partial<GroupMembership>) => {
+    const db = getDb();
+    await updateDoc(doc(db, 'group_memberships', id), data);
+  }, []);
+
+  const removeMembership = useCallback(async (id: string) => {
+    const db = getDb();
+    await deleteDoc(doc(db, 'group_memberships', id));
+  }, []);
+
+  const graduateCohort = useCallback(async (params: {
+    currentCohortId: string;
+    closingCohortName?: string;
+    nextCohortName: string;
+    nextStartDate: string;
+    nextEndDate: string;
+  }) => {
+    const db = getDb();
+    const batch = writeBatch(db);
+
+    // 1. Mark current cohort as not active and not current, update its name and completion time if provided
+    const currentCohortRef = doc(db, 'community_groups', params.currentCohortId);
+    batch.update(currentCohortRef, {
+      isActive: false,
+      isCurrentCohort: false,
+      ...(params.closingCohortName ? { name: params.closingCohortName } : {}),
+      completedAt: new Date().toISOString()
+    });
+
+    // 2. Query memberships for this cohort
+    const currentCohortMemberships = memberships.filter(m => m.groupId === params.currentCohortId && m.status === 'active');
+
+    // Ensure alumni group exists
+    const alumniGroup = groups.find(g => g.type === 'alumni' || g.id === 'group_alumni');
+    const alumniGroupId = alumniGroup ? alumniGroup.id : 'group_alumni';
+
+    // 3. Update participant and volunteer memberships to completed, and add to alumni
+    for (const mem of currentCohortMemberships) {
+      const memRef = doc(db, 'group_memberships', mem.id);
+      batch.update(memRef, {
+        status: 'completed',
+        completedAt: new Date().toISOString()
+      });
+
+      // If participant or volunteer, automatically enroll into Alumni Group
+      if (mem.role === 'participant' || mem.role === 'volunteer') {
+        const alreadyInAlumni = memberships.some(m => m.groupId === alumniGroupId && m.personId === mem.personId);
+        if (!alreadyInAlumni) {
+          const newAlumniRef = doc(collection(db, 'group_memberships'));
+          batch.set(newAlumniRef, {
+            personId: mem.personId,
+            groupId: alumniGroupId,
+            role: mem.role,
+            status: 'graduated',
+            joinedAt: new Date().toISOString()
+          });
+        }
+      }
+    }
+
+    // 4. Create new cohort
+    const newCohortId = `cohort_${Date.now()}`;
+    const newCohortRef = doc(db, 'community_groups', newCohortId);
+    batch.set(newCohortRef, {
+      id: newCohortId,
+      name: params.nextCohortName,
+      type: 'cohort',
+      isActive: true,
+      isCurrentCohort: true,
+      startDate: params.nextStartDate,
+      endDate: params.nextEndDate,
+      description: `מחזור פעיל - ${params.nextCohortName}`,
+      createdAt: new Date().toISOString()
+    });
+
+    // 5. Carry over staff, instructors, coordinators to the new cohort
+    const staffMemberships = currentCohortMemberships.filter(m => 
+      m.role === 'coordinator' || m.role === 'staff' || m.role === 'instructor'
+    );
+    for (const sm of staffMemberships) {
+      const newStaffMemRef = doc(collection(db, 'group_memberships'));
+      batch.set(newStaffMemRef, {
+        personId: sm.personId,
+        groupId: newCohortId,
+        role: sm.role,
+        status: 'active',
+        joinedAt: new Date().toISOString()
+      });
+    }
+
+    // 6. Update year_config in site_data
+    const yearConfigRef = doc(db, 'site_data', 'year_config');
+    batch.set(yearConfigRef, {
+      name: params.nextCohortName,
+      startDate: params.nextStartDate,
+      endDate: params.nextEndDate
+    }, { merge: true });
+
+    await batch.commit();
+  }, [groups, memberships]);
 
   const archiveMember = useCallback(async (id: string) => {
     if (hasQuotaError || dbStatus === 'OFFLINE') throw new Error('Database is currently unavailable or quota exceeded.');
@@ -1881,7 +2091,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error('משתמש עם אימייל זה כבר קיים במערכת.');
       }
 
-      await addDoc(membersRef, {
+      const newDocRef = await addDoc(membersRef, {
         ...memberData,
         email: normalizedEmail,
         joinedAt: memberData.joinedAt || getCurrentDateFormatted(),
@@ -1889,10 +2099,66 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         loginCount: 0,
         totalAttendance: 0
       });
+
+      const assignedCommunities = (memberData.communities && memberData.communities.length > 0)
+        ? memberData.communities 
+        : ['herzliya'];
+
+      const newMemberObj: Member = {
+        id: newDocRef.id,
+        ...memberData,
+        email: normalizedEmail,
+        joinedAt: memberData.joinedAt || getCurrentDateFormatted(),
+        isActive: memberData.isActive !== undefined ? memberData.isActive : true,
+        loginCount: 0,
+        totalAttendance: 0,
+        communities: assignedCommunities
+      } as Member;
+
+      // Optimistically update React state and cache immediately so the user appears instantly!
+      setMembers(prev => {
+        const filtered = prev.filter(m => m.id !== newDocRef.id && m.email !== normalizedEmail);
+        const updated = [newMemberObj, ...filtered];
+        storage.set('cached_members_v3', updated, 2 / 60);
+        return updated;
+      });
+
+      // Synchronize group_memberships for each assigned community
+      try {
+        const activeCohortId = groups.find(g => g.isCurrentCohort || g.id === 'cohort_active')?.id || 'cohort_active';
+        const alumniGroupId = groups.find(g => g.type === 'alumni' || g.id === 'group_alumni')?.id || 'group_alumni';
+        const memRole = memberData.role === 'Volunteer' ? 'volunteer' : memberData.role === 'Instructor' ? 'instructor' : memberData.role === 'Staff' ? 'coordinator' : 'participant';
+
+        const membershipsRef = collection(db, 'group_memberships');
+        const newMembershipsList: GroupMembership[] = [];
+        for (const commId of assignedCommunities) {
+          const isAdults = commId.endsWith('_adults');
+          const targetGroupId = isAdults ? alumniGroupId : activeCohortId;
+          const membershipData: Omit<GroupMembership, 'id'> = {
+            personId: newDocRef.id,
+            groupId: targetGroupId,
+            communityId: commId,
+            role: memRole as any,
+            status: isAdults ? 'graduated' : 'active',
+            joinedAt: new Date().toISOString(),
+            notes: `שיוך אוטומטי - ${commId}`
+          };
+          const memRef = await addDoc(membershipsRef, membershipData);
+          newMembershipsList.push({ id: memRef.id, ...membershipData });
+        }
+
+        // Optimistically update memberships state immediately
+        if (newMembershipsList.length > 0) {
+          setMemberships(prev => [...prev, ...newMembershipsList]);
+        }
+      } catch (memErr) {
+        console.warn('Could not auto-add group membership in addMember:', memErr);
+      }
+      return newDocRef.id;
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, path);
     }
-  }, [hasQuotaError, dbStatus, handleFirestoreError]);
+  }, [hasQuotaError, dbStatus, handleFirestoreError, groups]);
 
   const addPerformanceScore = useCallback(async (score: Omit<PerformanceScore, 'id'>) => {
     const db = getDb();
@@ -1969,7 +2235,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const contextValue = React.useMemo(() => ({ 
-      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, connectionError, retryConnection: () => {
+      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, availableCommunities, attendeeIds, activeSessionDate, isLoading, hasQuotaError, connectionError, retryConnection: () => {
         setRetryCount(prev => prev + 1);
         setIsLoading(true);
         setConnectionError(null);
@@ -1983,15 +2249,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     addSurfCallComment, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, getSiteAssetsBackups, restoreSiteAssetsBackup, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
-      isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets
+      isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets,
+      groups, memberships, addGroup, updateGroup, deleteGroup, addMembership, updateMembership, removeMembership, graduateCohort
     }), [
-      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, attendeeIds, activeSessionDate, isLoading, hasQuotaError, connectionError, dbStatus, toggleDbStatus,
+      members, joinRequests, events, news, podcasts, galleryItems, glossary, exercises, quotes, performanceScores, weeklyHistory, siteAssets, siteConfig, coastalWeather, selectedStationId, setSelectedStationId, seaStats, yearConfig, availableCommunities, attendeeIds, activeSessionDate, isLoading, hasQuotaError, connectionError, dbStatus, toggleDbStatus,
       updateMember, deleteMember, linkPair, unlinkPair, toggleStatus, toggleRole, approveRequest, rejectRequest,
       addEvent, deleteEvent, archiveEvent, updateEvent, toggleEventAttendance, addNews, updateNews, deleteNews, addPodcast, updatePodcast, deletePodcast, deleteGalleryItems, addGalleryItem, toggleSessionAttendance, updateHistory,
       finalizeSession, updateSiteAssets, getSiteAssetsBackups, restoreSiteAssetsBackup, updateSiteConfig, updateYearConfig, archiveMember, addMember,
       addPerformanceScore, updatePerformanceScore,
       isDbEmpty, conflictingAdmins, seedInitialAdmin, seedInitialAssets,
-      surfCalls, addSurfCall, toggleSurfCallAttendance, archiveSurfCall, addSurfCallComment
+      surfCalls, addSurfCall, toggleSurfCallAttendance, archiveSurfCall, addSurfCallComment,
+      groups, memberships, addGroup, updateGroup, deleteGroup, addMembership, updateMembership, removeMembership, graduateCohort
     ]);
 
   return (

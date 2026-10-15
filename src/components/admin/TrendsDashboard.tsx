@@ -891,6 +891,7 @@ const TrendsDashboard: React.FC = () => {
 
         {yearConfig && (
           <OperationalChartHeader 
+            cohortName={yearConfig.name}
             startDate={(parseDate(yearConfig.startDate) || new Date(0)).toLocaleDateString('he-IL')}
             endDate={(parseDate(yearConfig.endDate) || new Date()).toLocaleDateString('he-IL')}
             currentMonth={currentStats?.currentMonth}

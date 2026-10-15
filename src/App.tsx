@@ -20,19 +20,27 @@ import ProfilePage from './pages/ProfilePage';
 // Helper to handle dynamic import failures gracefully (e.g. after server updates or module cache clearing)
 const lazyWithRetry = (componentImport: () => Promise<any>) =>
   lazy(async () => {
-    const pageHasBeenReloaded = JSON.parse(
-      window.sessionStorage.getItem('page_reload_retry') || 'false'
-    );
     try {
-      const component = await componentImport();
-      window.sessionStorage.setItem('page_reload_retry', 'false');
-      return component;
-    } catch (error) {
-      if (!pageHasBeenReloaded) {
-        window.sessionStorage.setItem('page_reload_retry', 'true');
-        window.location.reload();
+      return await componentImport();
+    } catch (firstError: any) {
+      // First retry after a short delay (deals with Vite HMR/re-bundling race conditions)
+      try {
+        await new Promise(res => setTimeout(res, 500));
+        return await componentImport();
+      } catch (retryError: any) {
+        console.warn('Module dynamic import failed on retry, attempting recovery:', retryError?.message || retryError);
+        const lastReloadKey = 'vite_chunk_retry_timestamp';
+        const lastReload = parseInt(sessionStorage.getItem(lastReloadKey) || '0', 10);
+        const now = Date.now();
+
+        if (now - lastReload > 6000) {
+          sessionStorage.setItem(lastReloadKey, String(now));
+          window.location.reload();
+          // Keep promise pending while page reloads to prevent ErrorBoundary flash
+          return new Promise(() => {});
+        }
+        throw retryError;
       }
-      throw error;
     }
   });
 

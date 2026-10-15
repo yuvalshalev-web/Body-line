@@ -30,33 +30,34 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.group('🛑 ErrorBoundary caught an error');
-    console.error('Error:', error);
-    console.error('Info:', errorInfo);
-    console.groupEnd();
-    
-    // Automatically recover if Vite dependency re-bundling caused a React instance/hook mismatch
+    // Automatically recover if Vite dependency re-bundling or stale cache caused a module / chunk mismatch
     const isHookOrChunkMismatch = 
       (error?.message?.includes('Cannot read properties of null') && (error?.message?.includes('useState') || error?.message?.includes('useMemo') || error?.message?.includes('useEffect'))) ||
       error?.message?.includes('Invalid hook call') ||
       error?.message?.includes('dynamically imported module') ||
-      error?.message?.includes('Failed to fetch dynamically imported module');
+      error?.message?.includes('Failed to fetch dynamically imported module') ||
+      error?.name === 'ChunkLoadError';
 
     if (isHookOrChunkMismatch) {
+      console.warn('ErrorBoundary: Detected React chunk or module mismatch. Refreshing browser to synchronize modules...', error?.message);
       const reloadKey = 'react_chunk_mismatch_reload';
       const lastReload = parseInt(sessionStorage.getItem(reloadKey) || '0', 10);
       const now = Date.now();
-      if (now - lastReload > 8000) {
+      if (now - lastReload > 6000) {
         sessionStorage.setItem(reloadKey, String(now));
-        console.warn('ErrorBoundary: Detected React chunk mismatch. Refreshing browser to synchronize modules...');
         window.location.reload();
         return;
       }
+    } else {
+      console.group('🛑 ErrorBoundary caught an error');
+      console.error('Error:', error);
+      console.error('Info:', errorInfo);
+      console.groupEnd();
     }
 
     // Attempt to notify system logs
     try {
-      addLog(`App Crash: ${error.message}`, 'Critical', 'Frontend', error.stack);
+      addLog(`App Error: ${error.message}`, 'Critical', 'Frontend', error.stack);
     } catch (e) {
       console.warn('ErrorBoundary: Failed to log error to systemLogs', e);
     }
