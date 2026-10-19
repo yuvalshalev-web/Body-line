@@ -146,6 +146,40 @@ export const CohortsManagement: React.FC = () => {
 
     // Synthesize for members who have community assignments but no explicit row in memberships
     members.forEach(member => {
+      const isMultiGroup = 
+        member.role === 'Staff' || 
+        member.role === 'Admin' || 
+        member.role === 'Instructor' || 
+        member.role === 'Support' || 
+        (member.communities || []).length >= 5 || 
+        (member.communities || []).includes('all');
+
+      if (isMultiGroup) {
+        // Multi-group user: do not create duplicate rows for every group. Create a single entry tagged as 'מולטי־קבוצתי'.
+        const alreadyExists = memberships.some(m => m.personId === member.id);
+        if (!alreadyExists) {
+          const memRole = member.role === 'Volunteer' ? 'volunteer' : member.role === 'Instructor' ? 'instructor' : member.role === 'Staff' ? 'coordinator' : 'coordinator';
+          list.push({
+            id: `synth_multi_${member.id}`,
+            personId: member.id,
+            groupId: 'all',
+            communityId: 'all',
+            communityName: 'מולטי־קבוצתי',
+            role: memRole as any,
+            status: 'active',
+            joinedAt: member.joinedAt || new Date().toISOString(),
+            notes: 'חבר ובעל הרשאת גישה לכלל הקבוצות והסניפים',
+            personName: `${member.firstName || ''} ${member.lastName || ''}`.trim() || 'משתמש',
+            personEmail: member.email || '',
+            personAvatar: member.avatar,
+            groupName: 'כלל הקבוצות (מולטי־קבוצתי)',
+            groupType: 'cohort' as any,
+            isGroupActive: true
+          });
+        }
+        return;
+      }
+
       const memCommunities = (member.communities && member.communities.length > 0)
         ? member.communities
         : ['herzliya'];
@@ -208,8 +242,8 @@ export const CohortsManagement: React.FC = () => {
   // Filtered memberships
   const filteredMemberships = useMemo(() => {
     return enrichedMemberships.filter(m => {
-      const matchesGroup = selectedGroupId === 'all' || m.groupId === selectedGroupId;
-      const matchesCommunity = selectedCommunityFilter === 'all' || m.communityId === selectedCommunityFilter;
+      const matchesGroup = selectedGroupId === 'all' || m.groupId === selectedGroupId || m.groupId === 'all';
+      const matchesCommunity = selectedCommunityFilter === 'all' || m.communityId === selectedCommunityFilter || m.communityId === 'all';
       const searchLower = searchTerm.toLowerCase().trim();
       const matchesSearch = !searchLower ||
         m.personName.toLowerCase().includes(searchLower) ||
@@ -617,14 +651,21 @@ export const CohortsManagement: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-700 whitespace-nowrap">
-                      <span className={`px-2.5 py-1 rounded-lg text-[11px] font-black inline-flex items-center gap-1.5 border ${
-                        mem.communityId?.endsWith('_adults')
-                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                          : 'bg-sky-50 text-sky-800 border-sky-200'
-                      }`}>
-                        <span>{mem.communityId?.endsWith('_adults') ? '🎓' : '🌊'}</span>
-                        <span>{mem.communityName || 'הרצליה'}</span>
-                      </span>
+                      {mem.communityId === 'all' || mem.communityName === 'מולטי־קבוצתי' ? (
+                        <span className="px-2.5 py-1 rounded-lg text-[11px] font-black inline-flex items-center gap-1.5 border bg-gradient-to-r from-indigo-50 to-sky-50 text-indigo-700 border-indigo-200/90 shadow-2xs">
+                          <span>🌐</span>
+                          <span>מולטי־קבוצתי</span>
+                        </span>
+                      ) : (
+                        <span className={`px-2.5 py-1 rounded-lg text-[11px] font-black inline-flex items-center gap-1.5 border ${
+                          mem.communityId?.endsWith('_adults')
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            : 'bg-sky-50 text-sky-800 border-sky-200'
+                        }`}>
+                          <span>{mem.communityId?.endsWith('_adults') ? '🎓' : '🌊'}</span>
+                          <span>{mem.communityName || 'הרצליה'}</span>
+                        </span>
+                      )}
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-700">
                       <span className="flex items-center gap-1.5">

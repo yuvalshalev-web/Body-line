@@ -665,7 +665,7 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
                           setIsDirtyYear(true);
                         }}
                         placeholder={DEFAULT_BRANCH_COHORTS[branch.id] || 'מחזור פעיל'}
-                        className="w-full p-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-xs font-black text-sky-800 text-center outline-none focus:border-sky-400 transition-all shadow-2xs"
+                        className="w-full p-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-[11px] font-black text-slate-800 text-center outline-none focus:border-slate-400 transition-all shadow-2xs placeholder:text-slate-400 placeholder:font-normal"
                       />
                       <p className="text-[9px] text-slate-400 font-medium text-center truncate">
                         {branch.baseName} - {currentValue.trim() || 'מחזור פעיל'}

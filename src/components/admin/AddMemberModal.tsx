@@ -816,8 +816,8 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                                 {newMemberData.role === 'Staff' || newMemberData.role === 'Support' ? (
                                   <div className="w-full p-4 bg-sky-100/50 border border-sky-200/60 rounded-2xl text-xs text-sky-800 font-black flex items-center justify-between select-none">
                                     <span className="flex items-center gap-2">
-                                      <ShieldCheck size={16} className="text-sky-700 shrink-0" />
-                                      <span>כל הקהילות ({availableCommunities.length} קבוצות - משוייך אוטומטית)</span>
+                                      <span>🌐</span>
+                                      <span>מולטי־קבוצתי (משוייך אוטומטית לכלל הסניפים)</span>
                                     </span>
                                   </div>
                                 ) : (
@@ -830,6 +830,8 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                                       <span className="text-[#000000] text-right flex-1 truncate max-w-[90%]">
                                         {(!newMemberData.communities || newMemberData.communities.length === 0) ? (
                                           <span className="text-slate-400 font-bold">בחר קבוצות קהילה...</span>
+                                        ) : newMemberData.communities.length >= 5 ? (
+                                          '🌐 מולטי־קבוצתי'
                                         ) : newMemberData.communities.length > 3 ? (
                                           `נבחרו ${newMemberData.communities.length} קבוצות קהילה`
                                         ) : (

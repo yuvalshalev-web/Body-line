@@ -519,11 +519,14 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] block">שיוך לקבוצות קהילה</label>
                   
                   <div className="w-full max-w-[600px] relative">
-                    {editingMember.role === 'Staff' || editingMember.role === 'Support' ? (
-                      <div className="w-full p-4 bg-sky-100/50 border border-sky-200/60 rounded-2xl text-xs text-sky-800 font-black flex items-center justify-between select-none">
+                    {editingMember.role === 'Staff' || editingMember.role === 'Support' || (editingMember.communities && editingMember.communities.length >= 5) || editingMember.communities?.includes('all') ? (
+                      <div className="w-full p-4 bg-gradient-to-r from-indigo-50/90 to-sky-50/90 border border-indigo-200/90 rounded-2xl text-xs text-indigo-900 font-black flex items-center justify-between select-none shadow-2xs">
                         <span className="flex items-center gap-2">
-                          <ShieldCheck size={16} className="text-sky-700 shrink-0" />
-                          <span>כל הקהילות ({availableCommunities.length} קבוצות - משוייך אוטומטית)</span>
+                          <span>🌐</span>
+                          <span>מולטי־קבוצתי (גישה והשתייכות לכלל הקבוצות והסניפים)</span>
+                        </span>
+                        <span className="text-[10px] font-bold text-indigo-700 bg-white/80 px-2 py-0.5 rounded-md border border-indigo-200/60">
+                          כל הסניפים
                         </span>
                       </div>
                     ) : (
@@ -537,6 +540,8 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
                           <span className="text-[#000000] text-right flex-1 truncate max-w-[90%]">
                             {(!editingMember.communities || editingMember.communities.length === 0) ? (
                               <span className="text-slate-400 font-bold">בחר קבוצות קהילה...</span>
+                            ) : editingMember.communities.length >= 5 ? (
+                              '🌐 מולטי־קבוצתי'
                             ) : editingMember.communities.length > 3 ? (
                               `נבחרו ${editingMember.communities.length} קבוצות קהילה`
                             ) : (

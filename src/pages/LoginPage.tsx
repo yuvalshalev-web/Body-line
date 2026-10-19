@@ -984,20 +984,15 @@ const LoginPage: React.FC = () => {
                     onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
                     className="w-full h-11 rounded-lg text-sm font-semibold outline-none text-right flex items-center justify-between px-3.5 transition-all vintage-glass-input cursor-pointer"
                   >
-                    <span className="flex-1 text-right flex items-center gap-2 truncate">
+                    <span className="flex-1 text-right flex items-center gap-1.5 truncate">
                       <MapPin size={14} className="shrink-0 text-cyan-400" />
                       <span className="text-[#fbf5df] font-bold">
                         {availableCommunities.find(c => c.id === selectedCommunityId)?.baseName || "הרצליה"}
                       </span>
-                      {selectedCommunityId?.endsWith('_adults') ? (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-                          בוגרים
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
-                          {selectedCommunityCohort}
-                        </span>
-                      )}
+                      <span className="text-[#fbf5df] font-bold">-</span>
+                      <span className="text-[#fbf5df] font-bold">
+                        {selectedCommunityCohort}
+                      </span>
                     </span>
                     <ChevronDown size={14} className={`text-[#fbf5df]/70 transition-transform duration-300 ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -1034,14 +1029,11 @@ const LoginPage: React.FC = () => {
                                   isSelected ? 'text-[#fbf5df] bg-white/10 font-black' : 'text-slate-300'
                                 }`}
                               >
-                                <span className="flex items-center gap-2">
+                                <span className="flex items-center gap-1.5">
                                   <span className="text-sm">{isAdults ? '🎓' : '🌊'}</span>
-                                  <span className="font-bold">{cityName}</span>
-                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                                    isAdults 
-                                      ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/20' 
-                                      : 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/20'
-                                  }`}>
+                                  <span className="text-[#fbf5df] font-bold">{cityName}</span>
+                                  <span className="text-[#fbf5df] font-bold">-</span>
+                                  <span className="text-[#fbf5df] font-bold">
                                     {itemCohort}
                                   </span>
                                 </span>

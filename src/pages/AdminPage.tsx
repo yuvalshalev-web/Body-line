@@ -1281,8 +1281,10 @@ const AdminPage: React.FC = () => {
                                     member.role === 'Staff' || 
                                     member.role === 'Instructor' || 
                                     member.role === 'Admin' || 
-                                    (member.communities || []).length >= (availableCommunities.length || 10) ||
-                                    (member.communities || []).length >= 6;
+                                    member.role === 'Support' ||
+                                    (member.communities || []).includes('all') ||
+                                    (member.communities || []).length >= 5 ||
+                                    (member.communities || []).length >= (availableCommunities.length || 10);
 
                                   if (isMultiGroupUser) {
                                     return (
@@ -1306,8 +1308,8 @@ const AdminPage: React.FC = () => {
                                     const isAlumni = commId.endsWith('_adults');
                                     const label = commObj?.name || commId;
                                     if (!seen.has(label)) {
-                                      seen.add(label);
-                                      badges.push({ key: `comm_${commId}`, label, isAlumni });
+                                       seen.add(label);
+                                       badges.push({ key: `comm_${commId}`, label, isAlumni });
                                     }
                                   });
 
@@ -1316,12 +1318,12 @@ const AdminPage: React.FC = () => {
                                     const isAlumni = g?.type === 'alumni';
                                     const label = g?.name || 'קבוצה';
                                     if (!seen.has(label)) {
-                                      seen.add(label);
-                                      badges.push({ key: `mem_${um.id}`, label, isAlumni: !!isAlumni });
+                                       seen.add(label);
+                                       badges.push({ key: `mem_${um.id}`, label, isAlumni: !!isAlumni });
                                     }
                                   });
 
-                                  if (badges.length >= 6) {
+                                  if (badges.length >= 4) {
                                     return (
                                       <div className="flex flex-wrap gap-1 mt-1">
                                         <span 
