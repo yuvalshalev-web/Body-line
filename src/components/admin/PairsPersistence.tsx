@@ -47,6 +47,7 @@ import {
   Pie
 } from 'recharts';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { parseDate, formatDate } from '../../utils/dateUtils';
 import { Member } from '../../types';
 import { isAppShaperUser } from '../../constants';
@@ -94,7 +95,24 @@ const getSeasonIndex = (date: Date) => {
 };
 
 const PairsPersistence: React.FC = () => {
-  const { members, weeklyHistory } = useData();
+  const { members: allMembers, weeklyHistory: allWeeklyHistory } = useData();
+  const { currentCommunityId } = useAuth();
+  const activeCommunity = currentCommunityId || 'herzliya';
+
+  const members = useMemo(() => {
+    return allMembers.filter(m => {
+      const comms = m.communities || [];
+      return comms.includes(activeCommunity);
+    });
+  }, [allMembers, activeCommunity]);
+
+  const weeklyHistory = useMemo(() => {
+    return (allWeeklyHistory || []).filter(s => {
+      const sComm = s.communityId || 'herzliya';
+      return sComm === activeCommunity;
+    });
+  }, [allWeeklyHistory, activeCommunity]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTier, setFilterTier] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [sortBy, setSortBy] = useState<'joint' | 'rate' | 'streak' | 'recent'>('joint');

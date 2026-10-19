@@ -52,6 +52,9 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // HTTP Compression (gzip/deflate) to dramatically reduce transfer sizes over network
+  app.use(compression());
+
   // Global tracking for stats
   let totalRequests = 0;
   let errorRequests = 0;

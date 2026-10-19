@@ -23,6 +23,7 @@ import {
   Users
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import { isAppShaperUser } from '../constants';
 import { getCoordinates } from '../utils/geocoding';
 import { calculateDistance } from '../utils/distanceCalculator';
@@ -40,7 +41,16 @@ interface BinData {
 type ViewMode = 'split' | 'map' | 'chart';
 
 const CommunityHeatMap: React.FC = () => {
-  const { members, siteConfig } = useData();
+  const { members: allMembers, siteConfig } = useData();
+  const { currentCommunityId } = useAuth();
+  const activeCommunity = currentCommunityId || 'herzliya';
+
+  const members = useMemo(() => {
+    return allMembers.filter(m => {
+      const comms = m.communities || [];
+      return comms.includes(activeCommunity);
+    });
+  }, [allMembers, activeCommunity]);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const heatmapTimeoutRef = useRef<NodeJS.Timeout | null>(null);

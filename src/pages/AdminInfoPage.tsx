@@ -33,7 +33,7 @@ const AdminInfoPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('snapshot');
 
   const tabs = [
-    { id: 'snapshot', label: 'תמונת מצב (Snapshot)', icon: <Sparkles size={20} /> },
+    { id: 'snapshot', label: 'דופק הקהילה וסיכום מנהלים', icon: <Sparkles size={20} /> },
     { id: 'community', label: 'דופק הקהילה', icon: <TrendingUp size={20} /> },
     { id: 'trends', label: 'התמדה קבוצתית', icon: <Activity size={20} /> },
     { id: 'pairs', label: 'התמדה זוגית', icon: <HeartHandshake size={20} /> },

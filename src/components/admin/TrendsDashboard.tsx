@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   Activity, 
   Heart,
@@ -363,7 +364,23 @@ const ChurnMetricCard: React.FC<ChurnMetricCardProps> = ({
 };
 
 const TrendsDashboard: React.FC = () => {
-  const { members, weeklyHistory, yearConfig } = useData();
+  const { members: allMembers, weeklyHistory: allWeeklyHistory, yearConfig } = useData();
+  const { currentCommunityId } = useAuth();
+  const activeCommunity = currentCommunityId || 'herzliya';
+
+  const members = useMemo(() => {
+    return allMembers.filter(m => {
+      const comms = m.communities || [];
+      return comms.includes(activeCommunity);
+    });
+  }, [allMembers, activeCommunity]);
+
+  const weeklyHistory = useMemo(() => {
+    return (allWeeklyHistory || []).filter(s => {
+      const sComm = s.communityId || 'herzliya';
+      return sComm === activeCommunity;
+    });
+  }, [allWeeklyHistory, activeCommunity]);
 
   const RETENTION_THRESHOLDS = {
     TOURIST: 50,

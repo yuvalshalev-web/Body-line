@@ -71,7 +71,7 @@ const DirectoryPage: React.FC = () => {
         const isAlumniOnly = memberships.some(m => 
           m.personId === member.id && 
           (m.groupId === 'group_alumni' || m.groupId === 'cohort_vav') && 
-          m.status === 'graduated'
+          (m.status === 'graduated' || m.status === 'completed')
         ) && !memberships.some(m => 
           m.personId === member.id && 
           m.groupId === 'cohort_active' && 
@@ -88,7 +88,7 @@ const DirectoryPage: React.FC = () => {
           m.status === 'active'
         ) && !memberships.some(m => 
           m.personId === member.id && 
-          m.groupId === 'group_alumni'
+          (m.groupId === 'group_alumni' || m.groupId === 'cohort_vav')
         );
 
         if (isActiveCohortOnly && !isStaffOrSupport) {
@@ -149,6 +149,8 @@ const DirectoryPage: React.FC = () => {
               alt={`${member.firstName} ${member.lastName}`}
               className="w-full h-full object-cover feathered-edges"
               referrerPolicy="no-referrer"
+              loading="lazy"
+              decoding="async"
             />
           ) : (
             <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300">
@@ -201,7 +203,7 @@ const DirectoryPage: React.FC = () => {
                 </div>
                 <div className="w-6 h-6 rounded-full overflow-hidden bg-white border border-orange-500/20 shrink-0 shadow-xs relative">
                   {partner.avatar ? (
-                    <img src={partner.avatar} alt="" className="w-full h-full object-cover" />
+                    <img src={partner.avatar} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   ) : (
                     <User size={13} className="m-auto text-orange-700 mt-0.5" />
                   )}
@@ -257,6 +259,8 @@ const DirectoryPage: React.FC = () => {
                 alt="" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300">

@@ -8,9 +8,19 @@ export const formatDate = (date: any): string => {
   
   let d: Date;
   
-  // Handle Firebase Timestamp
-  if (date && typeof date === 'object' && typeof date.toDate === 'function') {
-    d = date.toDate();
+  // Handle Firebase Timestamp or serialized object
+  if (date && typeof date === 'object') {
+    if (typeof date.toDate === 'function') {
+      d = date.toDate();
+    } else if ('seconds' in date && typeof date.seconds === 'number') {
+      d = new Date(date.seconds * 1000 + (date.nanoseconds ? date.nanoseconds / 1000000 : 0));
+    } else if ('_seconds' in date && typeof date._seconds === 'number') {
+      d = new Date(date._seconds * 1000);
+    } else if (date instanceof Date) {
+      d = date;
+    } else {
+      d = new Date(date);
+    }
   } 
   // Handle Date object
   else if (date instanceof Date) {
@@ -35,9 +45,19 @@ export const formatDateTime = (date: any): string => {
   
   let d: Date;
   
-  // Handle Firebase Timestamp
-  if (date && typeof date === 'object' && typeof date.toDate === 'function') {
-    d = date.toDate();
+  // Handle Firebase Timestamp or serialized object
+  if (date && typeof date === 'object') {
+    if (typeof date.toDate === 'function') {
+      d = date.toDate();
+    } else if ('seconds' in date && typeof date.seconds === 'number') {
+      d = new Date(date.seconds * 1000 + (date.nanoseconds ? date.nanoseconds / 1000000 : 0));
+    } else if ('_seconds' in date && typeof date._seconds === 'number') {
+      d = new Date(date._seconds * 1000);
+    } else if (date instanceof Date) {
+      d = date;
+    } else {
+      d = new Date(date);
+    }
   } 
   // Handle Date object
   else if (date instanceof Date) {
@@ -69,9 +89,19 @@ export const parseDate = (dateInput: any): Date | null => {
     return isNaN(dateInput.getTime()) ? null : new Date(dateInput);
   }
   
-  if (typeof dateInput === 'object' && typeof dateInput.toDate === 'function') {
-    const d = dateInput.toDate();
-    return isNaN(d.getTime()) ? null : d;
+  if (typeof dateInput === 'object') {
+    if (typeof dateInput.toDate === 'function') {
+      const d = dateInput.toDate();
+      return isNaN(d.getTime()) ? null : d;
+    }
+    if ('seconds' in dateInput && typeof dateInput.seconds === 'number') {
+      const d = new Date(dateInput.seconds * 1000 + (dateInput.nanoseconds ? dateInput.nanoseconds / 1000000 : 0));
+      return isNaN(d.getTime()) ? null : d;
+    }
+    if ('_seconds' in dateInput && typeof dateInput._seconds === 'number') {
+      const d = new Date(dateInput._seconds * 1000);
+      return isNaN(d.getTime()) ? null : d;
+    }
   }
 
   if (typeof dateInput === 'number') {

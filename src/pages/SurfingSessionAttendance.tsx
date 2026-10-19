@@ -206,14 +206,22 @@ const SurfingSessionAttendance: React.FC = () => {
     }
   };
   const sortedHistory = useMemo(() => {
+    const activeComm = currentCommunityId || 'herzliya';
     return [...weeklyHistory]
-      .filter(session => !session.isEvent)
+      .filter(session => {
+        if (session.isEvent) return false;
+        // Strict Community Isolation:
+        // A session belongs to a community if session.communityId matches,
+        // or for legacy unassigned sessions, they are attributed to 'herzliya'.
+        const sessionComm = session.communityId || 'herzliya';
+        return sessionComm === activeComm;
+      })
       .sort((a, b) => {
         const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
         const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
         return dateB.getTime() - dateA.getTime();
       });
-  }, [weeklyHistory]);
+  }, [weeklyHistory, currentCommunityId]);
 
   const activeMembers = useMemo(() => {
     const activeCommunity = currentCommunityId || 'herzliya';
@@ -921,8 +929,10 @@ const SurfingSessionAttendance: React.FC = () => {
                         if (dateError) return;
                         const db = getDb();
                         const status = selectedSession.participantIds.length > 0 ? 'בוצע' : 'לא בוצע';
+                        const activeComm = currentCommunityId || 'herzliya';
                         await addDoc(collection(db, 'weekly_history'), {
                           date: new Date(selectedSession.date),
+                          communityId: activeComm,
                           participantIds: selectedSession.participantIds,
                           participantsCount: selectedSession.participantIds.length,
                           status: status,

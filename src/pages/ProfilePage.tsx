@@ -983,6 +983,11 @@ const ProfilePage: React.FC = () => {
                           <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200/50">
                             אין שיוך קבוצתי פעיל
                           </span>
+                        ) : (formData?.role === 'Staff' || formData?.role === 'Support' || formData?.role === 'Admin' || formData?.role === 'Instructor' || (formData.communities && formData.communities.length >= 6)) ? (
+                          <span className="px-3.5 py-1.5 rounded-full text-xs font-black bg-gradient-to-r from-indigo-50 to-sky-50 text-indigo-800 border border-indigo-200 shadow-xs inline-flex items-center gap-1.5">
+                            <span>🌐</span>
+                            <span>מולטי־קבוצתי (גישה והשתייכות לכלל הסניפים)</span>
+                          </span>
                         ) : (
                           availableCommunities
                             .filter(c => formData.communities?.includes(c.id))

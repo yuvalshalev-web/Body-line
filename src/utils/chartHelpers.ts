@@ -1,11 +1,4 @@
 
-import { Chart, registerables } from 'chart.js';
-
-// Register Chart.js components if needed
-if (typeof window !== 'undefined') {
-  Chart.register(...registerables);
-}
-
 import { parseDate } from './dateUtils';
 
 /**
@@ -71,10 +64,4 @@ export const getOperationalXAxisProps = (dataLength?: number, yearConfig?: { sta
   };
 };
 
-/**
- * 2. ApexCharts Global Defaults
- */
-if (typeof window !== 'undefined') {
-  // @ts-ignore
-  window.Apex = {};
-}
+

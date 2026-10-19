@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import { parseDate } from '../utils/dateUtils';
 import { isAppShaperUser } from '../constants';
 import { EliteStatCard } from './UserAnalytics';
@@ -23,7 +24,24 @@ import { ResponsiveContainer, Cell, PieChart, Pie, Tooltip } from 'recharts';
 import { calculateAge } from '../utils/dateUtils';
 
 const CommunityAnalytics: React.FC = () => {
-  const { members, weeklyHistory, siteConfig, yearConfig, isLoading, updateMember } = useData();
+  const { members: allMembers, weeklyHistory: allWeeklyHistory, siteConfig, yearConfig, isLoading, updateMember } = useData();
+  const { currentCommunityId } = useAuth();
+  const activeCommunity = currentCommunityId || 'herzliya';
+
+  const members = useMemo(() => {
+    return allMembers.filter(m => {
+      const comms = m.communities || [];
+      return comms.includes(activeCommunity);
+    });
+  }, [allMembers, activeCommunity]);
+
+  const weeklyHistory = useMemo(() => {
+    return (allWeeklyHistory || []).filter(s => {
+      const sComm = s.communityId || 'herzliya';
+      return sComm === activeCommunity;
+    });
+  }, [allWeeklyHistory, activeCommunity]);
+
   const [compositionTab, setCompositionTab] = useState<'status' | 'age' | 'gender'>('status');
   const [selectedGroup, setSelectedGroup] = useState<{ type: 'status' | 'age' | 'gender'; name: string } | null>(null);
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useDeferredValue, lazy, Suspense } from 'react';
 import GlassNavigationBar from '../components/GlassNavigationBar';
 import { 
   Users, Archive, Mic, Image as ImageIcon, Calendar, Settings, UserCheck, ShieldAlert, Search, 
@@ -26,13 +26,13 @@ import { TimePicker } from '../components/TimePicker';
 import { DayPicker } from '../components/DayPicker';
 import { EventEditor } from '../components/admin/EventEditor';
 import EditMemberForm from '../components/admin/EditMemberForm';
-import AddMemberModal from '../components/admin/AddMemberModal';
-import { QuickResetPasswordModal } from '../components/admin/QuickResetPasswordModal';
-import ImportMembersModal from '../components/admin/ImportMembersModal';
 import { PostEditor } from '../components/admin/PostEditor';
 import { MarkdownViewer } from '../components/admin/MarkdownViewer';
 
 // Lazy loaded heavy subpages and modals to optimize bundle size and page responsiveness
+const AddMemberModal = lazy(() => import('../components/admin/AddMemberModal'));
+const ImportMembersModal = lazy(() => import('../components/admin/ImportMembersModal'));
+const QuickResetPasswordModal = lazy(() => import('../components/admin/QuickResetPasswordModal').then(m => ({ default: m.QuickResetPasswordModal })));
 const PairsManagerModal = lazy(() => import("../components/admin/PairsManagerModal").then(m => ({ default: m.PairsManagerModal })));
 const DietaryReportModal = lazy(() => import('../components/admin/DietaryReportModal').then(m => ({ default: m.DietaryReportModal })));
 const CohortsManagement = lazy(() => import('../components/admin/CohortsManagement').then(m => ({ default: m.CohortsManagement })));
@@ -259,6 +259,8 @@ const AdminPage: React.FC = () => {
   };
   const [searchTerm, setSearchTerm] = useState('');
   const [userSearchTerm, setUserSearchTerm] = useState('');
+  const deferredUserSearchTerm = useDeferredValue(userSearchTerm);
+  const deferredSearchTerm = useDeferredValue(searchTerm);
   const [userRoleFilter, setUserRoleFilter] = useState<'ALL' | 'Admin' | 'Support' | 'Instructor' | 'Volunteer' | 'Member'>('ALL');
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [approvedUser, setApprovedUser] = useState<{ firstName: string; lastName: string; email: string; mobile: string; tempPassword: string } | null>(null);
@@ -578,14 +580,14 @@ const AdminPage: React.FC = () => {
 
 
   const filteredRequests = useMemo(() => {
-    const s = searchTerm.toLowerCase().trim();
+    const s = deferredSearchTerm.toLowerCase().trim();
     if (!s) return joinRequests;
     return joinRequests.filter(req => 
       (req.firstName || '').toLowerCase().includes(s) || 
       (req.lastName || '').toLowerCase().includes(s) || 
       (req.email || '').toLowerCase().includes(s)
     );
-  }, [joinRequests, searchTerm]);
+  }, [joinRequests, deferredSearchTerm]);
 
   const memberSummaryStats = useMemo(() => {
     const isAppShaper = (m: any) => m.role === 'Support' || (m.email || '').toLowerCase() === 'yuval.shalev@gmail.com';
@@ -647,7 +649,7 @@ const AdminPage: React.FC = () => {
   }, [members]);
 
   const filteredAndSortedAdminMembers = useMemo(() => {
-    const search = userSearchTerm.toLowerCase().trim();
+    const search = deferredUserSearchTerm.toLowerCase().trim();
     const activeCohortId = groups.find(g => g.isCurrentCohort || g.id === 'cohort_active')?.id || 'cohort_active';
     const alumniGroupId = groups.find(g => g.type === 'alumni' || g.id === 'group_alumni')?.id || 'group_alumni';
 
@@ -699,7 +701,7 @@ const AdminPage: React.FC = () => {
       }
       return aFirst.localeCompare(bFirst, 'he');
     });
-  }, [members, userSearchTerm, userRoleFilter, userGroupFilter, userCommunityFilter, groups, memberships]);
+  }, [members, deferredUserSearchTerm, userRoleFilter, userGroupFilter, userCommunityFilter, groups, memberships]);
 
   const handleApprove = async (id: string) => {
     setIsProcessing(id);
@@ -1249,7 +1251,7 @@ const AdminPage: React.FC = () => {
                                 title="צפייה בפרופיל משתמש"
                               >
                                 {member.avatar ? (
-                                  <img src={member.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm border border-white/30 group-hover/avatar:ring-2 group-hover/avatar:ring-[#00AFC2] transition-all" alt="" />
+                                  <img src={member.avatar} className="w-12 h-12 rounded-xl object-cover shadow-sm border border-white/30 group-hover/avatar:ring-2 group-hover/avatar:ring-[#00AFC2] transition-all" alt="" loading="lazy" decoding="async" />
                                 ) : (
                                   <div className="w-12 h-12 rounded-xl bg-[var(--surfer-aqua-mist)]/20 flex items-center justify-center text-[var(--surfer-vibrant-cyan)]/40 border border-white/30 group-hover/avatar:ring-2 group-hover/avatar:ring-[#00AFC2] transition-all">
                                     <UserCircle size={24} />
@@ -1274,6 +1276,28 @@ const AdminPage: React.FC = () => {
                                 </h4>
                                 <p className="text-[12px] text-[#000000]/70 font-black truncate max-w-[150px]">{member.email}</p>
                                 {(() => {
+                                  const isMultiGroupUser = 
+                                    isAppShaper || 
+                                    member.role === 'Staff' || 
+                                    member.role === 'Instructor' || 
+                                    member.role === 'Admin' || 
+                                    (member.communities || []).length >= (availableCommunities.length || 10) ||
+                                    (member.communities || []).length >= 6;
+
+                                  if (isMultiGroupUser) {
+                                    return (
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        <span 
+                                          className="text-[9px] font-black px-2 py-0.5 rounded-md bg-gradient-to-r from-indigo-50 to-sky-50 text-indigo-700 border border-indigo-200/90 shadow-2xs inline-flex items-center gap-1 select-none"
+                                          title="חבר ובעל הרשאת גישה לכלל הקבוצות והסניפים"
+                                        >
+                                          <span>🌐</span>
+                                          <span>מולטי־קבוצתי</span>
+                                        </span>
+                                      </div>
+                                    );
+                                  }
+
                                   const badges: { key: string; label: string; isAlumni: boolean }[] = [];
                                   const seen = new Set<string>();
 
@@ -1296,6 +1320,20 @@ const AdminPage: React.FC = () => {
                                       badges.push({ key: `mem_${um.id}`, label, isAlumni: !!isAlumni });
                                     }
                                   });
+
+                                  if (badges.length >= 6) {
+                                    return (
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        <span 
+                                          className="text-[9px] font-black px-2 py-0.5 rounded-md bg-gradient-to-r from-indigo-50 to-sky-50 text-indigo-700 border border-indigo-200/90 shadow-2xs inline-flex items-center gap-1 select-none"
+                                          title="חבר ובעל הרשאת גישה לכלל הקבוצות והסניפים"
+                                        >
+                                          <span>🌐</span>
+                                          <span>מולטי־קבוצתי</span>
+                                        </span>
+                                      </div>
+                                    );
+                                  }
 
                                   if (badges.length === 0) return null;
 
@@ -1391,19 +1429,27 @@ const AdminPage: React.FC = () => {
                 </div>
               </div>
             )}
-            <AddMemberModal 
-              isOpen={isAddMemberModalOpen}
-              onClose={() => setIsAddMemberModalOpen(false)}
-              newMemberData={newMemberData}
-              setNewMemberData={setNewMemberData}
-              isSaving={isSaving}
-              setIsSaving={setIsSaving}
-              addMember={addMember}
-            />
-            <ImportMembersModal
-              isOpen={isImportModalOpen}
-              onClose={() => setIsImportModalOpen(false)}
-            />
+            {isAddMemberModalOpen && (
+              <Suspense fallback={null}>
+                <AddMemberModal 
+                  isOpen={isAddMemberModalOpen}
+                  onClose={() => setIsAddMemberModalOpen(false)}
+                  newMemberData={newMemberData}
+                  setNewMemberData={setNewMemberData}
+                  isSaving={isSaving}
+                  setIsSaving={setIsSaving}
+                  addMember={addMember}
+                />
+              </Suspense>
+            )}
+            {isImportModalOpen && (
+              <Suspense fallback={null}>
+                <ImportMembersModal
+                  isOpen={isImportModalOpen}
+                  onClose={() => setIsImportModalOpen(false)}
+                />
+              </Suspense>
+            )}
             {isDietaryModalOpen && (
               <Suspense fallback={null}>
                 <DietaryReportModal
@@ -1917,14 +1963,18 @@ const AdminPage: React.FC = () => {
         onClose={() => setShowReadOnlyNotice(false)}
       />
 
-      <QuickResetPasswordModal 
-        isOpen={!!passwordResetMember}
-        member={passwordResetMember}
-        onClose={() => setPasswordResetMember(null)}
-        onSuccess={(updatedMember) => {
-          showSuccess(`הסיסמה הזמנית עודכנה ונשלחה בוואטסאפ בהצלחה!`);
-        }}
-      />
+      {passwordResetMember && (
+        <Suspense fallback={null}>
+          <QuickResetPasswordModal 
+            isOpen={!!passwordResetMember}
+            member={passwordResetMember}
+            onClose={() => setPasswordResetMember(null)}
+            onSuccess={(updatedMember) => {
+              showSuccess(`הסיסמה הזמנית עודכנה ונשלחה בוואטסאפ בהצלחה!`);
+            }}
+          />
+        </Suspense>
+      )}
     </div>
     </div>
     </div>

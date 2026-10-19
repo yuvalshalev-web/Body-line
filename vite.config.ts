@@ -101,7 +101,6 @@ export default defineConfig({
       'recharts',
       'papaparse',
       'xlsx',
-      'flatpickr',
       'leaflet',
       'leaflet.heat'
     ]

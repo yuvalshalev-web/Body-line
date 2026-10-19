@@ -3,11 +3,28 @@ import { Waves, Snowflake, Sun, Zap, Info, Trophy } from 'lucide-react';
 import { OceanPulse } from '../OceanPulse';
 import SeasonalPersistenceRow from './SeasonalPersistenceRow';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { parseDate } from '../../utils/dateUtils';
 import { motion } from 'motion/react';
 
 const SeasonalPersistence: React.FC = () => {
-  const { members, weeklyHistory } = useData();
+  const { members: allMembers, weeklyHistory: allWeeklyHistory } = useData();
+  const { currentCommunityId } = useAuth();
+  const activeCommunity = currentCommunityId || 'herzliya';
+
+  const members = useMemo(() => {
+    return allMembers.filter(m => {
+      const comms = m.communities || [];
+      return comms.includes(activeCommunity);
+    });
+  }, [allMembers, activeCommunity]);
+
+  const weeklyHistory = useMemo(() => {
+    return (allWeeklyHistory || []).filter(s => {
+      const sComm = s.communityId || 'herzliya';
+      return sComm === activeCommunity;
+    });
+  }, [allWeeklyHistory, activeCommunity]);
 
   const leaderboards = useMemo(() => {
     if (!members || !weeklyHistory) return { penguins: [], jellyfish: [], sharks: [], orcas: [] };

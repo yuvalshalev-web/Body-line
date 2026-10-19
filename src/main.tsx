@@ -46,7 +46,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 import App from './App';
 import './index.css';
 import './utils/systemLogs';
-import './utils/chartHelpers';
 
 const rootElement = document.getElementById('root');
 console.log("main.tsx: Got rootElement", rootElement);

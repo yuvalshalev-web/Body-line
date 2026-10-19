@@ -12,12 +12,14 @@ import {
   Sparkles, 
   MessageCircle, 
   Target,
-  Clock
+  Clock,
+  Globe
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { Member } from '../../types';
 import { calculateAge, parseDate, formatDate } from '../../utils/dateUtils';
-import { isAppShaperUser } from '../../constants';
+import { isAppShaperUser, isAdminUser, AVAILABLE_COMMUNITIES, SUPER_ADMIN_EMAIL } from '../../constants';
 import { getCoordinates, calculateDistance } from '../../utils/geocoding';
 
 interface CommunityExecutiveSnapshotProps {
@@ -54,10 +56,33 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
 }) => {
   const { 
     members: allMembers, 
-    weeklyHistory = [], 
+    weeklyHistory: allWeeklyHistory = [], 
     siteConfig, 
-    yearConfig
+    yearConfig,
+    availableCommunities: ctxCommunities,
+    memberships = []
   } = useData();
+  const { currentUser, currentCommunityId } = useAuth();
+
+  const availableCommunities = ctxCommunities || AVAILABLE_COMMUNITIES;
+  const activeCommunity = currentCommunityId || 'herzliya';
+  const activeCommunityObj = availableCommunities.find(c => c.id === activeCommunity) || availableCommunities[0];
+
+  // Specific privileged roles: Coordinator (רכז), Instructor (מדריך), Up-Shaper (אפ-שייפר)
+  // Regular members and volunteers CANNOT toggle global scope and only see their current group!
+  const isCoordinator = 
+    currentUser?.role === 'Admin' || 
+    currentUser?.role === 'Staff' || 
+    (currentUser as any)?.role === 'Coordinator' || 
+    (currentUser as any)?.role === 'רכז' || 
+    isAdminUser(currentUser) || 
+    currentUser?.email === SUPER_ADMIN_EMAIL;
+  const isInstructor = currentUser?.role === 'Instructor' || (currentUser as any)?.role === 'מדריך';
+  const isAppShaper = isAppShaperUser(currentUser) || currentUser?.role === 'Support' || (currentUser as any)?.role === 'אפ-שייפר';
+  const canToggleGlobal = Boolean(isCoordinator || isInstructor || isAppShaper);
+
+  const [isGlobalScope, setIsGlobalScope] = useState(false);
+  const [planTimeframe, setPlanTimeframe] = useState<'cohort' | 'annual'>('cohort');
 
   const [copiedToast, setCopiedToast] = useState(false);
 
@@ -66,15 +91,89 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
     return `${m.firstName || ''} ${m.lastName || ''}`.trim() || 'חבר קהילה';
   };
 
+  // Filter scoped members based on selected scope (current community vs global)
+  const scopedAllMembers = useMemo(() => {
+    if (isGlobalScope) return allMembers;
+    const isAlumniCommunity = activeCommunity.endsWith('_adults');
+    return allMembers.filter(m => {
+      const comms = m.communities || [];
+      const belongsToCommunity = comms.includes(activeCommunity);
+      const isStaffOrSupport = m.role === 'Staff' || isAppShaperUser(m);
+
+      // In group scope, regular members and volunteers must be in activeCommunity
+      if (!belongsToCommunity && !isStaffOrSupport) return false;
+      // If staff has specific communities, check if they belong to activeCommunity
+      if (isStaffOrSupport && comms.length > 0 && !comms.includes(activeCommunity)) {
+        return false;
+      }
+
+      if (!isAlumniCommunity) {
+        const isAlumniOnly = memberships.some(mem => 
+          mem.personId === m.id && 
+          (mem.groupId === 'group_alumni' || mem.groupId === 'cohort_vav') && 
+          (mem.status === 'graduated' || mem.status === 'completed')
+        ) && !memberships.some(mem => 
+          mem.personId === m.id && 
+          mem.groupId === 'cohort_active' && 
+          mem.status === 'active'
+        );
+        if (isAlumniOnly && !isStaffOrSupport) return false;
+      } else {
+        const isActiveCohortOnly = memberships.some(mem => 
+          mem.personId === m.id && 
+          mem.groupId === 'cohort_active' && 
+          mem.status === 'active'
+        ) && !memberships.some(mem => 
+          mem.personId === m.id && 
+          (mem.groupId === 'group_alumni' || mem.groupId === 'cohort_vav')
+        );
+        if (isActiveCohortOnly && !isStaffOrSupport) return false;
+      }
+      return true;
+    });
+  }, [allMembers, isGlobalScope, activeCommunity, memberships]);
+
+  // Set of member IDs in the current scope
+  const scopedMemberIdSet = useMemo(() => {
+    return new Set(scopedAllMembers.map(m => m.id));
+  }, [scopedAllMembers]);
+
+  // Filter scoped weekly history based on selected scope
+  const weeklyHistory = useMemo(() => {
+    if (isGlobalScope) {
+      return (allWeeklyHistory || []).map(s => ({
+        ...s,
+        participantIds: s.participantIds || [],
+        participantsCount: (s.participantIds || []).length
+      }));
+    }
+    return (allWeeklyHistory || [])
+      .filter(session => {
+        // Session belongs to active community
+        const sessionComm = session.communityId || 'herzliya';
+        return sessionComm === activeCommunity;
+      })
+      .map(session => {
+        const rawIds = session.participantIds || [];
+        // Filter participant IDs strictly to members belonging to this group
+        const groupParticipantIds = rawIds.filter((id: string) => scopedMemberIdSet.has(id));
+        return {
+          ...session,
+          participantIds: groupParticipantIds,
+          participantsCount: groupParticipantIds.length
+        };
+      });
+  }, [allWeeklyHistory, isGlobalScope, activeCommunity, scopedMemberIdSet]);
+
   // Filter regular active community members (exclude staff, appshaper, and inactive/deactivated)
   const members = useMemo(() => {
-    return allMembers.filter(m => m.role !== 'Staff' && !isAppShaperUser(m) && m.isActive !== false && !m.deactivatedAt);
-  }, [allMembers]);
+    return scopedAllMembers.filter(m => m.role !== 'Staff' && !isAppShaperUser(m) && m.isActive !== false && !m.deactivatedAt);
+  }, [scopedAllMembers]);
 
   // Staff and operational management members
   const staffMembers = useMemo(() => {
-    return allMembers.filter(m => m.role === 'Staff' || isAppShaperUser(m));
-  }, [allMembers]);
+    return scopedAllMembers.filter(m => m.role === 'Staff' || isAppShaperUser(m));
+  }, [scopedAllMembers]);
 
   const defaultDuration = siteConfig?.sessionDurationMinutes || 90;
 
@@ -87,8 +186,16 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
     });
   }, [weeklyHistory]);
 
-  const last8Sessions = useMemo(() => sortedSessions.slice(0, 8), [sortedSessions]);
-  const lastSession = sortedSessions[0] || null;
+  // Only sessions that actually took place with participants (filtering out cancelled sessions)
+  const activeSessions = useMemo(() => {
+    return sortedSessions.filter(s => (s.participantIds?.length || 0) > 0 || (s.participantsCount || 0) > 0);
+  }, [sortedSessions]);
+
+  const last8Sessions = useMemo(() => {
+    return activeSessions.length > 0 ? activeSessions.slice(0, 8) : sortedSessions.slice(0, 8);
+  }, [activeSessions, sortedSessions]);
+
+  const lastSession = activeSessions[0] || sortedSessions[0] || null;
 
   // Cumulative community sea hours (using each session's actual duration or default)
   const totalSeaHours = useMemo(() => {
@@ -210,28 +317,35 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
     });
   }, [members, last8Sessions, lastSession, weeklyHistory, defaultDuration]);
 
-  // 4. Planned vs Actual Sessions for Current Shnat Hevel Zug (שנת חבל זוג הנוכחית)
+  // 4. Planned vs Actual Sessions for Shnat Hevel Zug (ביצוע מול תכנון)
   const yearlyPlanStats = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonthIndex = now.getMonth();
     // Default academic/community year starts Sept 1st
     const defaultStartYear = currentMonthIndex < 8 ? currentYear - 1 : currentYear;
-    const defaultStartDate = new Date(defaultStartYear, 8, 1).toISOString();
-    const defaultEndDate = new Date(defaultStartYear + 1, 7, 31).toISOString();
+    const defaultCohortStartDate = new Date(defaultStartYear, 8, 17).toISOString(); // 17 Sept default
+    const defaultCohortEndDate = new Date(defaultStartYear + 1, 6, 31).toISOString(); // 31 July default
 
-    const startDate = yearConfig?.startDate || defaultStartDate;
-    const endDate = yearConfig?.endDate || defaultEndDate;
+    const isAnnualMode = planTimeframe === 'annual';
+    
+    // Choose start/end dates based on selected timeframe
+    const startDate = isAnnualMode 
+      ? new Date(currentYear, 0, 1).toISOString()
+      : (yearConfig?.startDate || defaultCohortStartDate);
+    const endDate = isAnnualMode 
+      ? new Date(currentYear, 11, 31).toISOString()
+      : (yearConfig?.endDate || defaultCohortEndDate);
 
-    const startDateObj = parseDate(startDate) || new Date(defaultStartDate);
-    const endDateObj = parseDate(endDate) || new Date(defaultEndDate);
+    const startDateObj = parseDate(startDate) || new Date(isAnnualMode ? `${currentYear}-01-01` : defaultCohortStartDate);
+    const endDateObj = parseDate(endDate) || new Date(isAnnualMode ? `${currentYear}-12-31` : defaultCohortEndDate);
 
-    // Total planned sessions in the entire Hevel Zug year (counting regular session days, e.g. Thursdays)
-    const totalYearPlanned = countThursdays(startDate, endDate) || 52;
-    // Planned to date (from start of year until today or end of year)
-    const plannedToDate = countThursdays(startDate, now < endDateObj ? now : endDate) || 1;
+    // Total planned sessions in this period (counting weekly regular session days - Thursdays)
+    const baseTotalPlanned = countThursdays(startDate, endDate) || 52;
+    // Planned to date (from start until today or end of period)
+    const basePlannedToDate = countThursdays(startDate, now < endDateObj ? now : endDate) || 1;
 
-    // Actual executed surf sessions within this Hevel Zug year
+    // Filter weeklyHistory for this scope and period
     const executedSessions = weeklyHistory.filter(s => {
       if (s.isEvent) return false;
       const sDate = parseDate(s.date);
@@ -241,23 +355,39 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
     });
 
     const executedCount = executedSessions.length;
-    // Execution rate against planned to date (pace of plan)
+    const plannedToDate = basePlannedToDate;
+    const totalYearPlanned = baseTotalPlanned;
+
+    // Sessions that were planned but cancelled (e.g. Tishrei holidays, bad sea conditions)
+    const cancelledCount = Math.max(0, plannedToDate - executedCount);
+
+    // Pace of execution against target to date (עמידה ביעד עד כה)
     const pacePercent = plannedToDate > 0 ? Math.round((executedCount / plannedToDate) * 100) : 0;
-    // Total annual target completion rate
+    // Annual completion percentage towards full target
     const annualCompletionPercent = totalYearPlanned > 0 ? Math.round((executedCount / totalYearPlanned) * 100) : 0;
+    // Target benchmark pace for today on the annual curve (for progress marker)
+    const targetPacePercent = totalYearPlanned > 0 ? Math.min(100, Math.round((plannedToDate / totalYearPlanned) * 100)) : 0;
     const remainingToPlan = Math.max(0, totalYearPlanned - executedCount);
+
+    const timeframeName = isAnnualMode 
+      ? `שנת ${currentYear}` 
+      : (yearConfig?.name || 'מחזור פעיל');
 
     return {
       startDate: startDateObj,
       endDate: endDateObj,
+      timeframeName,
+      isAnnualMode,
       totalYearPlanned,
       plannedToDate,
       executedCount,
+      cancelledCount,
       pacePercent,
       annualCompletionPercent,
+      targetPacePercent,
       remainingToPlan
     };
-  }, [yearConfig, weeklyHistory]);
+  }, [planTimeframe, yearConfig, weeklyHistory]);
 
   // 5. Geographic Distance Persistence Breakdown (פילוח התמדה לפי מרחק גיאוגרפי מהמועדון)
   const distanceCohortData = useMemo(() => {
@@ -412,17 +542,20 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
     const todayStr = formatDate(new Date());
 
     let text = `🏄‍♂️ *תמונת מצב קהילתית - דופק חבל זוג* (${todayStr})\n`;
-    text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    text += `🌐 *היקף נתונים:* ${isGlobalScope ? 'כלל הקהילה (גלובלי - כל הסניפים והקבוצות)' : `קבוצת ${activeCommunityObj.name} בלבד`}\n\n`;
     
     text += `📊 *מדדי מפתח וביצועים:*\n`;
-    text += `• גולשי קהילה פעילים: ${members.length} (+ ${staffMembers.length} אנשי סגל וצוות | ${allMembers.length} סה״כ רשומים)\n`;
+    text += `• גולשי קהילה פעילים: ${members.length} (+ ${staffMembers.length} אנשי סגל וצוות | ${scopedAllMembers.length} סה״כ רשומים בהיקף זה)\n`;
     text += `• שעות ים מצטברות העונה: ${Math.round(totalSeaHours)} שעות\n`;
     text += `• ממוצע שעות ים לחבר פעיל: ${avgHoursPerMember} שעות (עומק אימפקט)\n`;
     text += `• ממוצע נוכחות לסשן: ${avgAttendees} גולשים\n\n`;
 
-    text += `🎯 *תכנון מול ביצוע (שנת חבל זוג${yearConfig?.name ? ` - ${yearConfig.name}` : ''}):*\n`;
-    text += `• סשנים שבוצעו: ${yearlyPlanStats.executedCount} מתוך ${yearlyPlanStats.plannedToDate} מתוכננים עד כה (${yearlyPlanStats.pacePercent}% קצב ביצוע)\n`;
-    text += `• יעד שנתי כולל: ${yearlyPlanStats.totalYearPlanned} סשנים (${yearlyPlanStats.annualCompletionPercent}% השלמה שנתית)\n\n`;
+    text += `🎯 *תכנון מול ביצוע (שנת חבל זוג - ${yearlyPlanStats.timeframeName}):*\n`;
+    text += `• סשנים שבוצעו בפועל: ${yearlyPlanStats.executedCount} מתוך ${yearlyPlanStats.plannedToDate} שתוכננו עד כה (${yearlyPlanStats.pacePercent}% עמידה ביעד)\n`;
+    text += `• סשנים שבוטלו / חגים: ${yearlyPlanStats.cancelledCount} סשנים\n`;
+    text += `• יעד שנתי כולל: ${yearlyPlanStats.totalYearPlanned} סשנים (${yearlyPlanStats.annualCompletionPercent}% השלמה מהיעד השנתי)\n`;
+    text += `• נותרו להשלמת היעד: ${yearlyPlanStats.remainingToPlan} סשנים\n\n`;
 
     text += `🎯 *הגעה והתמדה לפי קבוצות גיל:*\n`;
     ageCohortData.forEach(c => {
@@ -463,47 +596,48 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
   const content = (
     <div className="space-y-4 text-slate-800" dir="rtl">
       {/* Top Header Card - Crisp & Compact One-Pager Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 rounded-2xl px-5 py-4 sm:px-6 sm:py-5 text-white shadow-md">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 text-[11px] font-bold tracking-wide">
-                <Sparkles className="w-3 h-3" />
+      <div className="bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 rounded-2xl px-4 py-4 sm:px-6 sm:py-5 text-white shadow-md">
+        {/* Top Row: Title & Action Buttons */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 text-[10px] sm:text-[11px] font-bold tracking-wide">
+                <Sparkles className="w-3 h-3 flex-shrink-0" />
                 ONE-PAGER SNAPSHOT
               </span>
               <span className="text-slate-400 text-xs hidden sm:inline">•</span>
               <span className="text-slate-300 text-xs hidden sm:inline">{formatDate(new Date())}</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+            <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white flex items-center gap-2 truncate">
               דופק הקהילה וסיכום מנהלים
             </h2>
-            <p className="text-cyan-100/75 text-xs sm:text-sm mt-0.5 max-w-xl">
+            <p className="text-cyan-100/75 text-xs sm:text-sm mt-0.5 line-clamp-2">
               תקציר מנהלים ממוקד של עמידה ביעדים, ביצועים, ואחוזי התמדה והתנהגות חברי הקהילה.
             </p>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 self-start md:self-auto flex-wrap">
+          {/* Action Buttons: WhatsApp, Print, Close */}
+          <div className="flex items-center gap-1.5 sm:gap-2 self-start sm:self-center flex-shrink-0">
             <button
               onClick={handleCopyWhatsApp}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm transition-all active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm transition-all active:scale-95 cursor-pointer"
             >
               <Share2 className="w-3.5 h-3.5" />
-              {copiedToast ? 'הועתק ללוח!' : 'העתק לוואטסאפ'}
+              <span>{copiedToast ? 'הועתק!' : 'העתק לוואטסאפ'}</span>
             </button>
 
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 backdrop-blur-md transition-all active:scale-95"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 backdrop-blur-md transition-all active:scale-95 cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              הדפסה
+              <span className="hidden xs:inline">הדפסה</span>
             </button>
 
             {isModal && onClose && (
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all ml-1"
+                className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
                 title="סגור"
               >
                 <X className="w-4 h-4" />
@@ -511,6 +645,73 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
             )}
           </div>
         </div>
+
+        {/* Dedicated Responsive Scope Bar with Compact Toggle Switch */}
+        {canToggleGlobal ? (
+          <div className="mt-3.5 pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            {/* Sleek Compact Toggle Switch */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-slate-300">היקף תצוגה:</span>
+              <div 
+                className="inline-flex p-0.5 rounded-xl bg-slate-950/80 border border-white/15 backdrop-blur-md shadow-inner"
+                role="radiogroup"
+                aria-label="בחירת היקף תצוגת נתונים"
+              >
+                <button
+                  type="button"
+                  onClick={() => setIsGlobalScope(false)}
+                  className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                    !isGlobalScope 
+                      ? 'bg-cyan-500 text-white shadow-sm ring-1 ring-cyan-300/40' 
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                  aria-checked={!isGlobalScope}
+                  title={`הצגת נתוני קבוצת ${activeCommunityObj.name} בלבד`}
+                >
+                  <span>{activeCommunityObj.isAdults ? '🎓' : '🌊'}</span>
+                  <span>קבוצה נוכחית</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsGlobalScope(true)}
+                  className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isGlobalScope 
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm ring-1 ring-amber-300/40' 
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                  aria-checked={isGlobalScope}
+                  title="הצגת תמונת מצב גלובלית - כלל הקבוצות והסניפים"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>כלל הקהילה</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Live Scope Indicator Badge */}
+            <div className="flex items-center gap-2">
+              {isGlobalScope ? (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400/30 text-amber-200 text-xs font-bold shadow-inner">
+                  <Globe className="w-3.5 h-3.5 text-amber-300 flex-shrink-0" />
+                  <span>נתונים גלובליים: כלל הסניפים ({scopedAllMembers.length} רשומים | {weeklyHistory.length} סשנים)</span>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/20 border border-cyan-400/30 text-cyan-200 text-xs font-bold shadow-inner">
+                  <span className="flex-shrink-0">{activeCommunityObj.isAdults ? '🎓' : '🌊'}</span>
+                  <span>קבוצת {activeCommunityObj.name} בלבד ({scopedAllMembers.length} רשומים | {weeklyHistory.length} סשנים)</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3.5 pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-bold text-cyan-200">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/20 border border-cyan-400/30">
+              <span>{activeCommunityObj.isAdults ? '🎓' : '🌊'}</span>
+              <span>נתוני קבוצת {activeCommunityObj.name} בלבד</span>
+            </div>
+            <span className="text-slate-400 text-[11px] font-normal">משתתפים ומתנדבים רואים את ביצועי הקבוצה הנוכחית</span>
+          </div>
+        )}
 
         {/* Success toast notification */}
         {copiedToast && (
@@ -536,7 +737,9 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
             <div className="text-xs text-slate-500 mt-1 flex items-center gap-1 flex-wrap">
               <span>+ {staffMembers.length} סגל</span>
               <span className="text-slate-300">•</span>
-              <span>{allMembers.length} רשומים</span>
+              <span>
+                {isGlobalScope ? `${allMembers.length} רשומים בכלל הקהילה` : `${scopedAllMembers.length} רשומים בקבוצה`}
+              </span>
             </div>
           </div>
         </div>
@@ -552,7 +755,7 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
           <div className="mt-3">
             <div className="text-2xl sm:text-3xl font-black text-cyan-700">{Math.round(totalSeaHours)}</div>
             <div className="text-xs text-slate-500 mt-1">
-              שעות מים מצטברות העונה
+              {isGlobalScope ? 'שעות מים מצטברות בכלל הקהילה' : `שעות מים מצטברות בקבוצת ${activeCommunityObj.name}`}
             </div>
           </div>
         </div>
@@ -571,7 +774,7 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
               <span className="text-xs sm:text-sm font-bold text-teal-600">שעות</span>
             </div>
             <div className="text-xs text-slate-500 mt-1">
-              מדד עומק אימפקט והשתתפות
+              {isGlobalScope ? 'עומק אימפקט ממוצע בכלל הקהילה' : `עומק אימפקט בקבוצת ${activeCommunityObj.name}`}
             </div>
           </div>
         </div>
@@ -585,68 +788,148 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl sm:text-3xl font-black text-emerald-700">{avgAttendees}</div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl sm:text-3xl font-black text-emerald-700">{avgAttendees}</span>
+              <span className="text-xs sm:text-sm font-bold text-emerald-600">גולשים</span>
+            </div>
             <div className="text-xs text-slate-500 mt-1">
-              ב-8 הסשנים האחרונים
+              {isGlobalScope ? 'ממוצע גולשים לסשן פעיל בכלל הקהילה' : `ממוצע גולשי ${activeCommunityObj.name} לסשן פעיל`}
+            </div>
+            <div className="text-[10px] text-slate-400 mt-1 font-medium">
+              * מבוסס על {last8Sessions.length} הסשנים הפעילים האחרונים (ללא ימים שבוטלו)
             </div>
           </div>
         </div>
 
         {/* Shnat Hevel Zug: Plan vs Actual Execution */}
-        <div className="bg-white/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-md transition-all relative overflow-hidden group col-span-2 sm:col-span-1">
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-sm flex flex-col justify-between hover:shadow-md transition-all relative overflow-hidden group col-span-2 sm:col-span-1">
           {/* Subtle decorative glass backdrop gradient */}
           <div className="absolute -top-12 -left-12 w-28 h-28 bg-gradient-to-br from-indigo-400/10 via-purple-300/10 to-transparent rounded-full blur-xl pointer-events-none" />
 
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm font-bold text-slate-600">שנת חבל זוג - ביצוע מול תכנון</span>
-              {yearConfig?.name && (
-                <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-indigo-100/80 text-indigo-700 border border-indigo-200/60 shadow-xs">
-                  {yearConfig.name}
-                </span>
-              )}
+          {/* Header: Title, Timeframe Toggle Switch, and Target Icon */}
+          <div className="flex items-center justify-between relative z-10 gap-2 mb-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs sm:text-sm font-black text-slate-700">שנת חבל זוג - ביצוע מול תכנון</span>
+              {/* Clean Timeframe Toggle: Active Cohort vs Annual 2026 */}
+              <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 border border-slate-200 text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setPlanTimeframe('cohort')}
+                  className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                    planTimeframe === 'cohort'
+                      ? 'bg-white text-indigo-700 shadow-xs font-black'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title="הצגת נתוני המחזור הפעיל הנוכחי"
+                >
+                  {yearConfig?.name || 'מחזור ז׳'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlanTimeframe('annual')}
+                  className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                    planTimeframe === 'annual'
+                      ? 'bg-white text-indigo-700 shadow-xs font-black'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title="הצגת נתוני שנת פעילות מלאה (2026)"
+                >
+                  שנת 2026
+                </button>
+              </div>
             </div>
-            <div className="w-9 h-9 rounded-xl bg-indigo-50/80 text-indigo-600 flex items-center justify-center border border-indigo-100/60 shadow-xs backdrop-blur-xs">
-              <Target className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-xl bg-indigo-50/80 text-indigo-600 flex items-center justify-center border border-indigo-100/60 shadow-xs shrink-0">
+              <Target className="w-4 h-4" />
             </div>
           </div>
 
-          <div className="mt-3 relative z-10">
-            <div className="flex items-baseline justify-between gap-1 mb-2">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl sm:text-3xl font-black text-indigo-700 tracking-tight">{yearlyPlanStats.executedCount}</span>
-                <span className="text-xs sm:text-sm font-bold text-slate-400">/ {yearlyPlanStats.plannedToDate} יעד</span>
+          <div className="mt-2 relative z-10">
+            {/* Primary Numbers Row */}
+            <div className="flex items-baseline justify-between gap-2 mb-2.5">
+              <div className="flex flex-col">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl sm:text-3xl font-black text-indigo-700 tracking-tight">
+                    {yearlyPlanStats.executedCount}
+                  </span>
+                  <span className="text-xs sm:text-sm font-bold text-slate-500">
+                    סשנים בוצעו
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-400 font-medium">
+                  מתוך {yearlyPlanStats.plannedToDate} שתוכננו עד כה {isGlobalScope ? '(בכלל הקהילה)' : `(${activeCommunityObj.name})`}
+                </span>
               </div>
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50/90 text-indigo-700 border border-indigo-200/80 shadow-xs backdrop-blur-md">
-                <span className="text-xs font-black tracking-tight">{yearlyPlanStats.pacePercent}%</span>
+
+              {/* Pace Badge */}
+              <div className="flex flex-col items-end">
+                <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full border shadow-xs ${
+                  yearlyPlanStats.pacePercent >= 80 
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                    : yearlyPlanStats.pacePercent >= 50 
+                    ? 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                }`}>
+                  <span className="text-xs font-black tracking-tight">{yearlyPlanStats.pacePercent}%</span>
+                  <span className="text-[10px] font-bold">עמידה ביעד</span>
+                </div>
               </div>
             </div>
 
-            {/* Glassmorphic Progress Bar - Progresses Right-to-Left (dir="rtl") */}
-            <div 
-              dir="rtl" 
-              className="relative w-full h-3 rounded-full bg-slate-100/80 backdrop-blur-md p-0.5 border border-slate-200/60 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.06)] overflow-hidden"
-              title={`קצב ביצוע: ${yearlyPlanStats.pacePercent}% (${yearlyPlanStats.executedCount} מתוך ${yearlyPlanStats.plannedToDate} עד כה)`}
-            >
-              {/* Subtle glass reflection highlight on the track */}
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-b from-white/70 to-transparent pointer-events-none rounded-full" />
+            {/* Quick Summary Chips: Executed vs Cancelled vs Planned vs Year Goal */}
+            <div className="grid grid-cols-4 gap-1.5 mb-3 text-center">
+              <div className="bg-slate-50/80 rounded-lg p-1.5 border border-slate-100">
+                <div className="text-[10px] text-slate-400 font-bold">בוצעו</div>
+                <div className="text-sm font-black text-indigo-700">{yearlyPlanStats.executedCount}</div>
+              </div>
+              <div className="bg-slate-50/80 rounded-lg p-1.5 border border-slate-100">
+                <div className="text-[10px] text-slate-400 font-bold" title="בוטלו עקב תנאי ים או חגים (חגי תשרי)">בוטלו/חג</div>
+                <div className="text-sm font-black text-rose-600">{yearlyPlanStats.cancelledCount}</div>
+              </div>
+              <div className="bg-slate-50/80 rounded-lg p-1.5 border border-slate-100">
+                <div className="text-[10px] text-slate-400 font-bold">עד כה</div>
+                <div className="text-sm font-black text-slate-700">{yearlyPlanStats.plannedToDate}</div>
+              </div>
+              <div className="bg-indigo-50/50 rounded-lg p-1.5 border border-indigo-100">
+                <div className="text-[10px] text-indigo-500 font-bold">יעד שנתי</div>
+                <div className="text-sm font-black text-indigo-900">{yearlyPlanStats.totalYearPlanned}</div>
+              </div>
+            </div>
 
-              {/* Progress Fill: Anchored to right, expands to left */}
-              <div
-                className="h-full rounded-full bg-gradient-to-l from-indigo-600 via-indigo-500 to-sky-400 shadow-[0_1px_4px_rgba(99,102,241,0.35)] relative overflow-hidden transition-all duration-700 ease-out"
-                style={{ width: `${Math.min(100, Math.max(0, yearlyPlanStats.pacePercent))}%` }}
+            {/* Dual Benchmark Progress Bar (Annual Goal Progress + Target Marker for Today) */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold px-0.5">
+                <span>התקדמות ביעד השנתי: {yearlyPlanStats.annualCompletionPercent}%</span>
+                <span>יעד להיום: {yearlyPlanStats.targetPacePercent}%</span>
+              </div>
+              <div 
+                dir="rtl" 
+                className="relative w-full h-3 rounded-full bg-slate-100/90 backdrop-blur-md p-0.5 border border-slate-200/60 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.06)] overflow-visible"
+                title={`התקדמות מהיעד השנתי: ${yearlyPlanStats.annualCompletionPercent}% (${yearlyPlanStats.executedCount}/${yearlyPlanStats.totalYearPlanned})`}
               >
-                {/* Frosted glass gloss line */}
-                <div className="absolute inset-x-0 top-0 h-0.5 bg-white/60 rounded-full" />
-                {/* Light shimmer gradient */}
-                <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-black/10" />
+                {/* Target marker (where we should be today on annual curve) */}
+                <div 
+                  className="absolute top-0 bottom-0 w-0.5 bg-amber-500 z-20 shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+                  style={{ right: `${Math.min(99, Math.max(1, yearlyPlanStats.targetPacePercent))}%` }}
+                >
+                  <div className="absolute -top-4 right-1/2 translate-x-1/2 text-[8px] font-black text-amber-700 bg-amber-50 px-1 rounded shadow-xs border border-amber-200 whitespace-nowrap">
+                    יעד עד כה
+                  </div>
+                </div>
+
+                {/* Progress Fill: Anchored right (RTL), expands left */}
+                <div
+                  className="h-full rounded-full bg-gradient-to-l from-indigo-600 via-indigo-500 to-sky-400 shadow-[0_1px_4px_rgba(99,102,241,0.35)] relative overflow-hidden transition-all duration-700 ease-out"
+                  style={{ width: `${Math.min(100, Math.max(0, yearlyPlanStats.annualCompletionPercent))}%` }}
+                >
+                  <div className="absolute inset-x-0 top-0 h-0.5 bg-white/60 rounded-full" />
+                </div>
               </div>
             </div>
 
             <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2 font-medium">
-              <span>עד כה: {yearlyPlanStats.plannedToDate}</span>
+              <span>{yearlyPlanStats.timeframeName} ({isGlobalScope ? 'כלל הקהילה' : activeCommunityObj.name})</span>
               <span className="text-slate-400">•</span>
-              <span>שנתי: {yearlyPlanStats.totalYearPlanned}</span>
+              <span className="font-bold text-indigo-700">נותרו עוד {yearlyPlanStats.remainingToPlan} סשנים ליעד</span>
             </div>
           </div>
         </div>

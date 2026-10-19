@@ -19,14 +19,17 @@ import {
   Activity,
   ArrowUpDown,
   Info,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useData } from '../contexts/DataContext';
-import { isAppShaperUser } from '../constants';
+import { useAuth } from '../contexts/AuthContext';
+import { isAppShaperUser, AVAILABLE_COMMUNITIES } from '../constants';
 import { getBodyLineStats } from '../utils/bodyLineStats';
 import { calculateAge, parseDate, formatDate } from '../utils/dateUtils';
 import CommunityExecutiveSnapshot from '../components/admin/CommunityExecutiveSnapshot';
+import PlayerCard from '../components/PlayerCard';
 import { 
   BarChart, 
   Bar, 
@@ -46,14 +49,63 @@ import {
 } from 'recharts';
 
 const SessionStatsPage: React.FC = () => {
-  const { members: allMembers, weeklyHistory, yearConfig, siteConfig, isLoading } = useData();
-  const members = useMemo(() => allMembers.filter(m => m.role !== 'Staff' && !isAppShaperUser(m)), [allMembers]);
+  const { members: allMembers, weeklyHistory: allWeeklyHistory, yearConfig, siteConfig, isLoading, availableCommunities: ctxCommunities, memberships = [] } = useData();
+  const { currentCommunityId } = useAuth();
+  
+  const activeCommunity = currentCommunityId || 'herzliya';
+  const availableCommunities = ctxCommunities || AVAILABLE_COMMUNITIES;
+  const activeCommunityObj = availableCommunities.find(c => c.id === activeCommunity) || availableCommunities[0];
+  const isAlumniCommunity = activeCommunity.endsWith('_adults');
+
+  // Scoped active members belonging to the current group/community
+  const members = useMemo(() => {
+    return allMembers.filter(m => {
+      if (m.role === 'Staff' || isAppShaperUser(m) || m.isActive === false) return false;
+      const comms = m.communities || [];
+      if (!comms.includes(activeCommunity)) return false;
+
+      if (!isAlumniCommunity) {
+        const isAlumniOnly = memberships.some(mem => 
+          mem.personId === m.id && 
+          (mem.groupId === 'group_alumni' || mem.groupId === 'cohort_vav') && 
+          mem.status === 'graduated'
+        ) && !memberships.some(mem => 
+          mem.personId === m.id && 
+          mem.groupId === 'cohort_active' && 
+          mem.status === 'active'
+        );
+        if (isAlumniOnly) return false;
+      } else {
+        const isActiveCohortOnly = memberships.some(mem => 
+          mem.personId === m.id && 
+          mem.groupId === 'cohort_active' && 
+          mem.status === 'active'
+        ) && !memberships.some(mem => 
+          mem.personId === m.id && 
+          mem.groupId === 'group_alumni'
+        );
+        if (isActiveCohortOnly) return false;
+      }
+      return true;
+    });
+  }, [allMembers, activeCommunity, isAlumniCommunity, memberships]);
+
+  // Scoped weekly history strictly for the current group/community
+  const weeklyHistory = useMemo(() => {
+    return (allWeeklyHistory || []).filter(s => {
+      if (s.isEvent) return false;
+      const sComm = s.communityId || 'herzliya';
+      return sComm === activeCommunity;
+    });
+  }, [allWeeklyHistory, activeCommunity]);
+
   const sessionDurationMinutes = siteConfig?.sessionDurationMinutes || 90;
   const [searchTerm, setSearchTerm] = useState('');
   const [gritSearchTerm, setGritSearchTerm] = useState('');
   const [ageView, setAgeView] = useState<'annual' | 'monthly' | 'lastSession'>('annual');
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [isSnapshotOpen, setIsSnapshotOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
 
   // Helper to count Thursdays between two dates
   const countThursdays = (start: string | Date, end: string | Date) => {
@@ -601,15 +653,23 @@ const SessionStatsPage: React.FC = () => {
       {/* Top Coordinator Snapshot Action Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 px-8">
         <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-sky-500/10 border border-sky-400/30 text-sky-700 text-xs font-black shadow-xs">
+              <span>{activeCommunityObj.isAdults ? '🎓' : '🌊'}</span>
+              <span>סטטיסטיקות קבוצה: {activeCommunityObj.name}</span>
+              <span className="text-slate-300">•</span>
+              <span>{members.length} חברים</span>
+            </span>
+          </div>
           <h2 className="text-xl font-black text-slate-800">סטטיסטיקות סשנים ושעות ים</h2>
-          <p className="text-xs text-slate-500 font-bold">ניתוח מעמיק, מגמות עונתיות והתמדה רב-שנתית</p>
+          <p className="text-xs text-slate-500 font-bold">ניתוח מעמיק, מגמות עונתיות והתמדה קבוצתית בסניף</p>
         </div>
         <button
           onClick={() => setIsSnapshotOpen(true)}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-black text-sm shadow-lg shadow-sky-500/20 transition-all active:scale-95 cursor-pointer"
         >
           <Sparkles className="w-4 h-4 text-cyan-200" />
-          <span>תמונת מצב קהילתית (Snapshot)</span>
+          <span>דופק הקהילה וסיכום מנהלים</span>
         </button>
       </div>
 
@@ -1331,7 +1391,12 @@ const SessionStatsPage: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {(stats?.gritLeaderboard || []).map((member: any) => (
-                        <tr key={member.id} className="group hover:bg-sky-50/50 transition-colors">
+                        <tr 
+                          key={member.id} 
+                          onClick={() => setSelectedMemberId(member.id)}
+                          className="group hover:bg-sky-50/70 transition-colors cursor-pointer"
+                          title="לחץ לצפייה בכרטיס הגולש והישגיו האישיים"
+                        >
                           <td className="py-5 pr-4">
                             <div className="flex items-center gap-4">
                               <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white shadow-sm bg-slate-100 flex items-center justify-center flex-shrink-0">
@@ -1388,6 +1453,28 @@ const SessionStatsPage: React.FC = () => {
           <p className="text-slate-300 font-bold max-w-md mx-auto">
             מערכת האנליטיקה זקוקה ליותר נתוני סשנים כדי להפיק דוחות מעמיקים.
           </p>
+        </div>
+      )}
+
+      {/* Member Global Achievements Profile Modal */}
+      {selectedMemberId && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setSelectedMemberId(null)}
+        >
+          <div 
+            className="relative max-w-lg w-full max-h-[90vh] overflow-y-auto rounded-3xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setSelectedMemberId(null)}
+              className="absolute top-4 left-4 z-30 p-2 rounded-full bg-slate-900/60 text-white hover:bg-slate-900 transition-colors cursor-pointer"
+              title="סגור"
+            >
+              <X size={20} />
+            </button>
+            <PlayerCard userId={selectedMemberId} />
+          </div>
         </div>
       )}
     </div>
