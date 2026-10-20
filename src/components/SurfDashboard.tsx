@@ -1,5 +1,6 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import Markdown from 'react-markdown';
 import { 
   Waves, 
   Thermometer, 
@@ -15,10 +16,15 @@ import {
   MapPin,
   Clock,
   Video,
-  ExternalLink
+  ExternalLink,
+  Sparkles,
+  X,
+  RefreshCw
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import { safeLocalStorage } from '../utils/storage';
+import { getForecastAnalysis } from '../services/geminiService';
 
 export const surfSpots = [
   { id: 'haifa-bat-galim', name: 'חיפה - בת גלים', lat: 32.83, lon: 34.98, imsId: "26", cameraUrl: "https://beachcam.co.il/batgalim.html" },
@@ -47,11 +53,13 @@ export const surfSpots = [
 interface SurfDashboardProps {
   selectedSpotId?: string;
   setSelectedSpotId?: (id: string) => void;
+  children?: React.ReactNode;
 }
 
 export const SurfDashboard: React.FC<SurfDashboardProps> = ({
   selectedSpotId: controlledSpotId,
-  setSelectedSpotId: controlledSetSpotId
+  setSelectedSpotId: controlledSetSpotId,
+  children,
 }) => {
   const { coastalWeather, setSelectedStationId, isLoading: contextLoading } = useData();
   const [localSpotId, setLocalSpotId] = useState('herzliya-marina');
@@ -489,340 +497,552 @@ export const SurfDashboard: React.FC<SurfDashboardProps> = ({
     };
   };
 
+  // 🏄‍♂️ Intelligent Recommendation Engine (Single Unified Text)
+  const generateDeterministicAdvice = useCallback((hCm: number, wKts: number, wDir: number, wTemp: number, spotName: string) => {
+    const isOffshore = wDir >= 45 && wDir <= 135;
+    const isOnshore = wDir >= 225 && wDir <= 315;
+    const windImpact = isOffshore ? 'רוח מזרחית (Offshore) • ים נקי ומסודר 🪞' : (isOnshore ? 'רוח מערבית (Onshore) • ים צ׳ופי 🌊' : 'רוח צדדית (Cross-shore)');
+
+    let suitAdvice = 'בגד ים / לייקרה';
+    if (wTemp < 19) suitAdvice = 'חליפת חורף מלאה 3/2 מ״מ';
+    else if (wTemp < 22) suitAdvice = 'חליפת מעבר / שורטי 2 מ״מ';
+    else if (wTemp < 25) suitAdvice = 'לייקרה / חולצת ניאופרן';
+
+    let suitabilityLevel = 'מתאים לגלישה';
+    let verdictEmoji = '🏄';
+    let verdictColor = 'bg-cyan-500/10 text-cyan-800 border-cyan-500/30';
+    let text = '';
+
+    if (hCm >= 180 || wKts > 22) {
+      suitabilityLevel = 'סוער - למנוסים ומקצועיים בלבד';
+      verdictEmoji = '⚠️';
+      verdictColor = 'bg-rose-500/10 text-rose-800 border-rose-500/30';
+      text = `הים ב${spotName} גבוה וסוער עם גלים של כ-${hCm} ס״מ ורוח של ${Math.round(wKts)} קשר. הזרמים חזקים במיוחד והכניסה מומלצת לגולשים מנוסים ומקצועיים בלבד. חובה להישמע להנחיות הבטיחות.`;
+    } else if (hCm >= 50 && wKts <= 14) {
+      suitabilityLevel = 'מומלץ מאוד לגלישה';
+      verdictEmoji = '🔥';
+      verdictColor = 'bg-emerald-500/10 text-emerald-800 border-emerald-500/30';
+      text = `תנאי גלישה מעולים ב${spotName}! גל עובד יפה בגובה כ-${hCm} ס״מ עם פנים נקיות ורוח נוחה של כ-${Math.round(wKts)} קשר. הגלים זורמים ומזמינים לכל סוגי הגלשנים — שורט, פאן או לונגבורד. זמן מצוין להיכנס למים!`;
+    } else if (hCm >= 30) {
+      suitabilityLevel = 'מתאים לסופט ולונגבורד';
+      verdictEmoji = '🏄';
+      verdictColor = 'bg-cyan-500/10 text-cyan-800 border-cyan-500/30';
+      text = `תנאי ים רגועים וגליים ב${spotName} בגובה של כ-${hCm} ס״מ. גלים אידיאליים לאימון טכניקה, תפיסת גלים וגלישה זורמת על גלשני סופטבורד, פאן בורד או לונגבורד קלאסי.`;
+    } else {
+      suitabilityLevel = 'ים שקט - מתאים לסאפ ושחייה';
+      verdictEmoji = '🧘';
+      verdictColor = 'bg-amber-500/10 text-amber-800 border-amber-500/30';
+      text = `הים ב${spotName} שקט עד פלטה (${hCm} ס״מ). תנאים מצוינים לחתירת סאפ (SUP), שחייה במים פתוחים או אימון כושר וחתירה.`;
+    }
+
+    return {
+      text,
+      suitabilityLevel,
+      verdictEmoji,
+      verdictColor,
+      windImpact,
+      suitAdvice
+    };
+  }, []);
+
+  const [recommendation, setRecommendation] = useState<{
+    text: string;
+    timeStr: string;
+    timestamp: number;
+    suitabilityLevel: string;
+    verdictEmoji: string;
+    verdictColor: string;
+    windImpact: string;
+    suitAdvice: string;
+  } | null>(() => {
+    try {
+      const cached = safeLocalStorage.getItem(`surf_recommendation_${selectedSpotId}`);
+      if (cached) return JSON.parse(cached);
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+
+  const [isUpdatingRec, setIsUpdatingRec] = useState(false);
+
+  const updateRecommendation = useCallback(async (force = false) => {
+    const spotName = activeSpot.name;
+    const hCm = currentWaveCm;
+    const wKts = coastalWeather ? coastalWeather.windSpeed : 8;
+    const wDir = coastalWeather ? coastalWeather.windDirection : 90;
+    const wTemp = coastalWeather ? coastalWeather.waterTemp : 24;
+
+    const baseAdvice = generateDeterministicAdvice(hCm, wKts, wDir, wTemp, spotName);
+    const now = Date.now();
+    const timeStr = new Date(now).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+
+    // If cached within 15 minutes and not forced, use cache
+    if (!force) {
+      try {
+        const cachedStr = safeLocalStorage.getItem(`surf_recommendation_${selectedSpotId}`);
+        if (cachedStr) {
+          const parsed = JSON.parse(cachedStr);
+          if (now - parsed.timestamp < 15 * 60 * 1000) {
+            setRecommendation(parsed);
+            return;
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    // Set immediate base recommendation so user sees zero delay
+    const initialRec = {
+      ...baseAdvice,
+      timeStr,
+      timestamp: now
+    };
+    setRecommendation(initialRec);
+    safeLocalStorage.setItem(`surf_recommendation_${selectedSpotId}`, JSON.stringify(initialRec));
+
+    // Refine in background with AI surf guru advice
+    setIsUpdatingRec(true);
+    try {
+      const aiText = await getForecastAnalysis({
+        waveHeight: hCm / 100,
+        waterTemp: wTemp,
+        windSpeed: wKts,
+        windDir: getWindDirText(wDir),
+        beachName: spotName
+      });
+
+      if (aiText && aiText.trim().length > 15) {
+        const cleanAiText = aiText.replace(/\*\*/g, '').trim();
+        const updated = {
+          ...baseAdvice,
+          text: cleanAiText,
+          timeStr,
+          timestamp: now
+        };
+        setRecommendation(updated);
+        safeLocalStorage.setItem(`surf_recommendation_${selectedSpotId}`, JSON.stringify(updated));
+      }
+    } catch (e) {
+      console.warn("Auto-update surf recommendation fallback active", e);
+    } finally {
+      setIsUpdatingRec(false);
+    }
+  }, [activeSpot.name, currentWaveCm, coastalWeather, generateDeterministicAdvice, selectedSpotId]);
+
+  // Auto-update every time spot changes or coastalWeather is refreshed
+  useEffect(() => {
+    updateRecommendation(false);
+  }, [selectedSpotId, coastalWeather?.timestamp]);
+
+  // Periodic 15-minute auto update
+  useEffect(() => {
+    const timer = setInterval(() => {
+      updateRecommendation(true);
+    }, 15 * 60 * 1000);
+    return () => clearInterval(timer);
+  }, [updateRecommendation]);
+
   return (
     <div className="relative space-y-6 pb-12 p-2 sm:p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto text-slate-800" dir="rtl">
       
-      {/* 🔮 Background Decoration (Already managed by luxury-bg) */}
-      
-      {/* 1. Global Spot Selector */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6 luxury-card p-6 relative overflow-hidden transition-all">
+      {/* 🌊 UNIFIED MASTER OBJECT: מצב הים עכשיו והתאמה לגלישה */}
+      <div className="luxury-card p-6 sm:p-8 md:p-12 shadow-2xl relative overflow-hidden transition-all border-2 border-[#007085]/20">
         <div className="grain-overlay" />
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 relative z-10 w-full md:w-auto">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[#007085]/10 text-[#007085] rounded-2xl flex items-center justify-center border border-[#007085]/20 shadow-sm shrink-0">
-              <MapPin size={22} />
+        <Waves className="absolute -bottom-10 -left-10 w-[450px] h-[450px] text-sky-500/[0.04] -rotate-12 pointer-events-none" />
+        <div className="premium-sweep-fx opacity-20" />
+
+        {/* 1. Master Header: Unified Title + Embedded Spot Selector */}
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-200/60 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-[#007085]/20 to-sky-400/20 text-[#007085] rounded-2xl flex items-center justify-center border border-[#007085]/30 shadow-sm shrink-0">
+              <Waves size={32} className="text-[#007085]" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest leading-none mb-1">בחירת ספוט גלישה מועדף</p>
-              <h4 className="text-sm font-black text-[#002b44]">הצג נתונים בזמן אמת</h4>
+              <div className="flex flex-wrap items-center gap-3">
+                <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#002b44] tracking-tight font-yehuda">
+                  מצב הים עכשיו והתאמה לגלישה
+                </h3>
+                <span className="px-3.5 py-1 rounded-full text-xs sm:text-sm font-black bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center gap-1.5 shadow-2xs">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  LIVE
+                </span>
+              </div>
+              <p className="text-sm sm:text-base font-bold text-[#007085] mt-1">
+                כל הנתונים החיוניים לקבלת החלטה על כניסה למים: גלים, רוח, טמפרטורה והתאמה לגלישה
+              </p>
             </div>
           </div>
-          
-          <div className="relative shrink-0">
-            <select
-              value={selectedSpotId}
-              onChange={(e) => setSelectedSpotId(e.target.value)}
-              className="w-full sm:w-auto bg-white/75 backdrop-blur-md border border-[#007085]/20 text-[#002b44] rounded-2xl px-6 py-4 text-base font-black outline-none focus:ring-2 focus:ring-[#007085] hover:border-[#007085]/40 transition-all shadow-sm appearance-none cursor-pointer pr-12 pl-6"
-            >
-              {surfSpots.map(spot => (
-                <option key={spot.id} value={spot.id} className="text-slate-900">
-                  🌊 {spot.name}
-                </option>
-              ))}
-            </select>
-            <div className="absolute top-1/2 left-4 -translate-y-1/2 pointer-events-none text-[#007085]">
-              <ChevronRight size={18} className="rotate-90" />
+
+          {/* Controls: Spot Selector Dropdown */}
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2.5 bg-slate-50/90 backdrop-blur-md border border-[#007085]/25 rounded-2xl p-2 pl-3 shadow-inner">
+              <div className="flex items-center gap-2 pr-3 text-[#007085] shrink-0">
+                <MapPin size={18} className="text-[#007085]" />
+                <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#007085] whitespace-nowrap">בחירת ספוט:</span>
+              </div>
+              <div className="relative">
+                <select
+                  value={selectedSpotId}
+                  onChange={(e) => setSelectedSpotId(e.target.value)}
+                  className="bg-white border border-slate-200/90 text-[#002b44] rounded-xl px-5 py-3 text-sm sm:text-base font-black outline-none focus:ring-2 focus:ring-[#007085] hover:border-[#007085]/50 transition-all shadow-sm appearance-none cursor-pointer pr-10 pl-6"
+                >
+                  {surfSpots.map(spot => (
+                    <option key={spot.id} value={spot.id} className="text-[#002b44] font-bold text-base">
+                      🌊 {spot.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute top-1/2 left-3 -translate-y-1/2 pointer-events-none text-[#007085]">
+                  <ChevronRight size={18} className="rotate-90" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        
-        {coastalWeather && (
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-bold bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 shadow-inner relative z-10 shrink-0 self-end md:self-center">
-            <Clock size={14} />
-            עודכן: {new Date(coastalWeather.timestamp).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+
+        {/* 2. 🌟 Unified Single Recommendation Card (מתעדכן בכל שינוי חוף או כל 15 דקות) */}
+        {recommendation && (
+          <div className="relative z-10 mb-8 bg-gradient-to-r from-slate-50 via-sky-50/40 to-slate-50 rounded-[2rem] p-6 sm:p-8 border border-sky-100 shadow-inner">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-200/60">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl sm:text-4xl p-2.5 bg-white rounded-2xl shadow-2xs border border-slate-100 shrink-0">
+                  {recommendation.verdictEmoji}
+                </span>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-black border ${recommendation.verdictColor}`}>
+                    {recommendation.suitabilityLevel}
+                  </span>
+                  <h4 className="text-base sm:text-xl font-black text-[#002b44] tracking-tight font-yehuda">
+                    המלצת גלישה ל{activeSpot.name}
+                  </h4>
+                </div>
+              </div>
+
+              {/* "עדכון אחרון: שעה" in small text as requested */}
+              <div className="flex items-center gap-2.5 self-end sm:self-center">
+                {isUpdatingRec && (
+                  <Loader2 size={15} className="animate-spin text-[#007085]" />
+                )}
+                <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-500 bg-white/90 px-3 py-1.5 rounded-xl border border-slate-200/70 shadow-2xs">
+                  <Clock size={14} className="text-[#007085]" />
+                  <span>עדכון אחרון: {recommendation.timeStr}</span>
+                </div>
+                <button
+                  onClick={() => updateRecommendation(true)}
+                  disabled={isUpdatingRec}
+                  title="רענן ניתוח עכשיו"
+                  className="p-2 text-slate-500 hover:text-[#007085] hover:bg-white rounded-xl transition-all cursor-pointer disabled:opacity-40"
+                >
+                  <RefreshCw size={14} className={isUpdatingRec ? 'animate-spin' : ''} />
+                </button>
+              </div>
+            </div>
+
+            {/* The Unified Expert Surf Recommendation Text - Large, readable and styled like DailySurfRecommendation */}
+            <div className="text-base sm:text-lg md:text-xl font-bold text-[#002b44]/95 leading-relaxed font-yehuda py-2">
+              <p className="whitespace-pre-line">
+                {recommendation.text}
+              </p>
+            </div>
+
+            {/* Quick Decision Factors - Increased font size and badges */}
+            <div className="flex flex-wrap items-center gap-2.5 pt-4 mt-3 border-t border-slate-200/50">
+              <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-xs text-xs sm:text-sm font-black text-[#002b44] flex items-center gap-2">
+                <span className="text-[#007085] font-black">רוח:</span>
+                <span>{recommendation.windImpact}</span>
+              </div>
+              <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-xs text-xs sm:text-sm font-black text-[#002b44] flex items-center gap-2">
+                <span className="text-[#007085] font-black">ביגוד:</span>
+                <span>{recommendation.suitAdvice}</span>
+              </div>
+              {coastalWeather && (
+                <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-xs text-xs sm:text-sm font-black text-[#002b44] flex items-center gap-2">
+                  <span className="text-[#007085] font-black">טמפ׳ מים:</span>
+                  <span>{coastalWeather.waterTemp.toFixed(1)}°C</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 4. Main Metrics Grid (All inside this unified card) */}
+        {contextLoading ? (
+          <div className="h-64 flex flex-col items-center justify-center relative">
+            <Loader2 className="animate-spin text-sky-500 mb-4" size={32} />
+            <p className="text-base font-bold text-slate-500">חוקר את הים ומעדכן נתונים בזמן אמת...</p>
+          </div>
+        ) : coastalWeather ? (
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={selectedSpotId}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8"
+            >
+              {/* Left Column: מצב הגלים והמדדים (8 cols) */}
+              <div className="lg:col-span-8 flex flex-col justify-between gap-6">
+                <div>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 w-full">
+                    {/* Swell Height Box */}
+                    <div className="flex flex-col justify-center items-center xl:items-start p-6 sm:p-8 bg-slate-50/70 rounded-[2rem] border border-slate-200/80 shadow-inner w-full relative overflow-hidden group hover:bg-white hover:shadow-md transition-all">
+                      <p className="text-[#007085] text-xs sm:text-sm font-black uppercase tracking-[0.2em] mb-2 relative z-10">גובה הגלים (Swell)</p>
+                      <div className="flex items-baseline gap-2 relative z-10">
+                        <span className="text-7xl sm:text-8xl md:text-9xl font-black tracking-tighter leading-none text-[#002b44] font-yehuda">{currentWaveCm}</span>
+                        <span className="text-3xl sm:text-4xl text-[#007085] font-black -translate-y-2">ס״מ</span>
+                      </div>
+                    </div>
+                    
+                    {/* Formula Score Box */}
+                    <div className={`flex flex-col justify-center items-center xl:items-start p-6 sm:p-8 rounded-[2rem] border-2 shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl w-full relative overflow-hidden group flex-1 ${currentCondition.bg} ${currentCondition.border.replace('/40','').replace('/50','')}`}>
+                      <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/30 rounded-full blur-3xl pointer-events-none group-hover:scale-150 transition-transform duration-700" />
+                      
+                      <p className={`text-xs sm:text-sm font-black uppercase tracking-wider opacity-90 mb-2 relative z-10 ${currentCondition.color}`}>דירוג התאמה לגלישה (Douglas / AI)</p>
+                      
+                      <div className="flex items-center gap-4 md:gap-6 relative z-10 w-full">
+                        {/* Score Value Component */}
+                        <div className="flex items-baseline gap-1" dir="ltr">
+                          <span className={`text-6xl sm:text-7xl md:text-8xl font-black tracking-tighter leading-none drop-shadow-sm font-yehuda ${currentCondition.color}`}>{currentCondition.score}</span>
+                          <span className="text-2xl md:text-3xl font-black text-slate-400">/10</span>
+                        </div>
+                        
+                        <div className="w-px h-16 bg-black/10 mx-1"></div>
+                        
+                        {/* Name and Icon */}
+                        <div className="flex flex-col items-center xl:items-start flex-1 w-full relative z-10 overflow-hidden">
+                          <span className="text-3xl sm:text-4xl md:text-5xl drop-shadow-sm mb-1">{currentCondition.hand}</span>
+                          <span className={`font-black text-xl sm:text-2xl md:text-3xl leading-tight text-center xl:text-right font-yehuda ${currentCondition.color}`}>{currentCondition.name}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Visual Scale Indicator (UV Style) */}
+                      <div className="w-full rounded-2xl overflow-hidden shadow-inner border border-slate-200/50 flex mt-6 relative z-10">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(s => {
+                          const isActive = s === currentCondition.score;
+                          const isPast = s < currentCondition.score;
+                          
+                          let bgClass = 'bg-white/40 text-slate-400';
+                          if (isActive || isPast) {
+                            if (s <= 2) bgClass = 'bg-blue-300 text-blue-900';
+                            else if (s <= 4) bgClass = 'bg-cyan-400 text-cyan-950';
+                            else if (s <= 6) bgClass = 'bg-emerald-400 text-emerald-950';
+                            else if (s <= 7) bgClass = 'bg-yellow-400 text-yellow-950';
+                            else if (s <= 8) bgClass = 'bg-orange-500 text-white';
+                            else if (s <= 9) bgClass = 'bg-red-500 text-white';
+                            else bgClass = 'bg-purple-600 text-white';
+                          }
+                          
+                          return (
+                            <div 
+                              key={s} 
+                              className={`flex-1 flex items-center justify-center py-2.5 text-xs sm:text-sm font-black transition-all duration-500 ${bgClass} ${isActive ? 'scale-110 shadow-lg z-20 rounded-lg transform' : 'opacity-80'}`} 
+                            >
+                              {s}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Beach Cameras Section (if available) */}
+                {((activeSpot as any).cameraUrl || (activeSpot as any).cameraUrlAlt) && (
+                  <div className="flex gap-3 w-full">
+                    {(activeSpot as any).cameraUrl && (
+                      <a
+                        href={(activeSpot as any).cameraUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 bg-white/70 backdrop-blur-md rounded-[1.5rem] border border-slate-200/70 shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:bg-white transition-all duration-300 p-4 flex items-center justify-center gap-3.5 group relative overflow-hidden"
+                      >
+                        <div className="w-12 h-12 rounded-[1rem] bg-sky-50 text-sky-500 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-sky-500 group-hover:text-white transition-all duration-300 shadow-2xs border border-sky-100">
+                          <Video strokeWidth={1.5} className="w-6 h-6" />
+                        </div>
+                        <div className="flex flex-col text-right">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                            </span>
+                            <p className="text-sm sm:text-base font-black text-[#002b44] tracking-tight">{(activeSpot as any).cameraUrlAlt ? 'מצלמה 1' : 'מצלמת חוף'}</p>
+                          </div>
+                          <p className="text-xs sm:text-sm text-[#007085] font-bold tracking-wider">{(activeSpot as any).cameraUrlAlt ? 'החוף המרכזי' : 'שידור חי'}</p>
+                        </div>
+                      </a>
+                    )}
+
+                    {(activeSpot as any).cameraUrlAlt && (
+                      <a
+                        href={(activeSpot as any).cameraUrlAlt}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 bg-white/70 backdrop-blur-md rounded-[1.5rem] border border-slate-200/70 shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:bg-white transition-all duration-300 p-4 flex items-center justify-center gap-3.5 group relative overflow-hidden"
+                      >
+                        <div className="w-12 h-12 rounded-[1rem] bg-emerald-50 text-emerald-500 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 shadow-2xs border border-emerald-100">
+                          <Video strokeWidth={1.5} className="w-6 h-6" />
+                        </div>
+                        <div className="flex flex-col text-right">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            <p className="text-sm sm:text-base font-black text-[#002b44] tracking-tight">מצלמה 2 (Surfline)</p>
+                          </div>
+                          <p className="text-xs sm:text-sm text-[#007085] font-bold tracking-wider">החוף הימני</p>
+                        </div>
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* The 3 Sub-Parameters in Glass UI */}
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-auto">
+                  {/* Period */}
+                  <div className="bg-slate-50/80 shadow-inner border border-slate-200/70 rounded-[1.25rem] sm:rounded-[1.5rem] p-3.5 sm:p-5 flex flex-col justify-center hover:bg-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group">
+                    <Activity className="absolute -left-2 -bottom-2 w-12 h-12 text-sky-500/10 group-hover:scale-110 transition-transform duration-500" />
+                    <p className="text-[#007085] text-xs sm:text-sm font-black uppercase tracking-wider mb-2 leading-tight">זמן מחזור<br/><span className="hidden sm:inline">(Period)</span></p>
+                    <div className="flex items-baseline gap-1 relative z-10">
+                      <span className="text-3xl sm:text-4xl md:text-5xl font-black text-[#002b44] font-yehuda">{coastalWeather.wavePeriod.toFixed(1)}</span>
+                      <span className="text-sm sm:text-base font-black text-[#007085]">שניות</span>
+                    </div>
+                  </div>
+
+                  {/* Wind */}
+                  <div className={`shadow-inner border border-slate-200/70 rounded-[1.25rem] sm:rounded-[1.5rem] p-3.5 sm:p-5 flex flex-col justify-center hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group 
+                    ${windStats?.bg.includes('emerald') ? 'bg-emerald-50/70' : ''}
+                    ${windStats?.bg.includes('rose') ? 'bg-rose-50/70' : ''}
+                    ${windStats?.bg.includes('amber') ? 'bg-amber-50/70' : ''}
+                    ${!windStats ? 'bg-slate-50/80' : ''}
+                  `}>
+                    <Wind className={`absolute -left-2 -bottom-2 w-12 h-12 opacity-10 group-hover:scale-110 transition-transform duration-500 ${windStats?.bg.includes('emerald') ? 'text-emerald-400' : windStats?.bg.includes('rose') ? 'text-rose-400' : 'text-amber-400'}`} />
+                    <p className="text-[#007085] text-xs sm:text-sm font-black uppercase tracking-wider mb-2 leading-tight">רוח <span className="hidden sm:inline">(Wind)</span></p>
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-baseline gap-1.5 xl:gap-2.5 relative z-10">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl sm:text-4xl md:text-5xl font-black text-[#002b44] font-yehuda">{Math.round(coastalWeather.windSpeed)}</span>
+                        <span className="text-sm sm:text-base font-black text-[#007085]">קשר</span>
+                      </div>
+                      
+                      <div className={`inline-flex max-w-max items-center gap-1.5 px-2.5 py-1 rounded-lg mt-1 sm:mt-0 shadow-inner ${windStats?.bg.replace('100/40','500/20').replace('100/50','500/20')}`}>
+                        <Navigation size={12} style={{ transform: `rotate(${coastalWeather.windDirection}deg)` }} className={`fill-current shrink-0 ${windStats?.color}`} />
+                        <span className={`text-xs sm:text-sm font-black ${windStats?.color}`}>{getWindDirText(coastalWeather.windDirection)}</span>
+                      </div>
+                    </div>
+                    <p className={`text-xs sm:text-sm font-bold mt-2 max-w-full truncate ${windStats?.color}`}>
+                      {windStats?.label}
+                    </p>
+                  </div>
+
+                  {/* Swell Direction */}
+                  <div className="bg-slate-50/80 shadow-inner border border-slate-200/70 rounded-[1.25rem] sm:rounded-[1.5rem] p-3.5 sm:p-5 flex flex-col justify-center hover:bg-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group">
+                    <Navigation className="absolute -left-2 -bottom-2 w-12 h-12 text-sky-500/10 group-hover:scale-110 transition-transform duration-500" />
+                    <p className="text-[#007085] text-xs sm:text-sm font-black uppercase tracking-wider mb-2 leading-tight">כיוון סוואל</p>
+                    
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2.5 relative z-10 mt-1">
+                      <div 
+                        className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 shrink-0 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center transform transition-transform shadow-inner"
+                        style={{ transform: `rotate(${coastalWeather.waveDirection || 0}deg)` }}
+                      >
+                        <Navigation className="w-4 h-4 md:w-5 md:h-5 text-sky-600 fill-current" />
+                      </div>
+                      <span className="text-sm sm:text-base md:text-xl font-black text-[#002b44] uppercase leading-none mt-1 sm:mt-0 font-yehuda">
+                        {getWindDirText(coastalWeather.waveDirection || 0)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: טמפ׳ המים & מדד קרינה (4 cols) */}
+              <div className="lg:col-span-4 flex flex-col gap-5">
+                {/* Water & Air Temp Sub-Card */}
+                <div className="p-6 sm:p-8 bg-slate-50/70 rounded-[2rem] border border-slate-200/80 shadow-inner relative overflow-hidden flex flex-col justify-center hover:bg-white hover:shadow-md transition-all">
+                  <div className="absolute -left-8 -bottom-8 opacity-5 blur-xs pointer-events-none">
+                    <Thermometer size={160} className="text-sky-400" />
+                  </div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 text-[#007085] mb-4 font-yehuda">
+                      <div className="p-2.5 bg-[#007085]/10 rounded-xl">
+                        <Thermometer size={22} />
+                      </div>
+                      <span className="text-sm sm:text-base font-black uppercase tracking-wider leading-none">טמפ׳ מים (Sea)</span>
+                    </div>
+                    
+                    <div className="flex items-baseline gap-2 mb-4">
+                      <span className="text-6xl sm:text-7xl font-black text-[#002b44] font-yehuda tracking-tighter">{coastalWeather.waterTemp.toFixed(1)}</span>
+                      <span className="text-3xl sm:text-4xl font-black text-[#007085]">°C</span>
+                    </div>
+                    
+                    <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-xl text-sm sm:text-base font-black text-[#002b44] border border-slate-200/80 shadow-2xs">
+                      <Thermometer size={16} className="text-amber-500" />
+                      <span>טמפ׳ אוויר: {Math.round(coastalWeather.airTemp)}°C</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* UV Index Sub-Card */}
+                <div className="p-6 sm:p-8 bg-slate-50/70 rounded-[2rem] border border-slate-200/80 shadow-inner relative overflow-hidden flex flex-col justify-between hover:bg-white hover:shadow-md transition-all">
+                  <div className="absolute -left-8 -bottom-8 opacity-5 blur-xs pointer-events-none">
+                    <Sun size={160} className="text-amber-400" />
+                  </div>
+
+                  <div className="relative z-10 flex flex-col items-start gap-3.5 mb-4">
+                    <div className="flex items-center gap-2 text-amber-700 font-yehuda">
+                      <div className="p-2.5 bg-amber-500/10 rounded-xl">
+                        <Sun size={22} />
+                      </div>
+                      <h4 className="text-base sm:text-lg font-black text-[#002b44] tracking-tight leading-none">מדד קרינה (UV)</h4>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-sm sm:text-base text-slate-700 leading-none">
+                      <span className="font-bold text-sm">עכשיו:</span>
+                      <div className={`w-9 h-9 flex items-center justify-center font-black text-base rounded-xl shadow-2xs border border-white/50 ${getUvColor(Math.round(coastalWeather.uvIndex))}`}>
+                        {Math.round(coastalWeather.uvIndex)}
+                      </div>
+                      <span className="font-black text-[#002b44] text-sm sm:text-base">{getUvText(Math.round(coastalWeather.uvIndex))}</span>
+                    </div>
+                  </div>
+
+                  {effectiveHourlyUv && effectiveHourlyUv.length > 0 && (
+                    <div className="relative z-10 mb-4 w-full rounded-2xl overflow-hidden shadow-inner border border-slate-200/70">
+                      <div className="flex w-full">
+                        {effectiveHourlyUv.map((hr: any) => (
+                          <div key={`uv-${hr.hour}`} className={`flex-1 flex items-center justify-center py-2 text-xs sm:text-sm font-black ${getUvColor(hr.uv)}`}>
+                            {hr.uv}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex w-full bg-slate-100/90 backdrop-blur-xs">
+                        {effectiveHourlyUv.map((hr: any) => (
+                          <div key={`hr-${hr.hour}`} className="flex-1 flex items-center justify-center py-1.5 text-slate-600 text-xs font-black tracking-tight">
+                            {hr.hour}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="relative z-10 text-center text-slate-500 text-xs sm:text-sm font-bold pt-3 border-t border-slate-200/60 uppercase tracking-wider leading-tight">
+                    0-2: בטוח &bull; 3-7: הגנה מומלצת &bull; 8+: הגנה חובה
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        ) : (
+          <div className="p-8 text-center text-rose-500 font-bold bg-rose-50/50 rounded-2xl border border-rose-100">
+            שגיאה בטעינת נתוני הלייב מהתחנות הימיות.
           </div>
         )}
       </div>
 
-      {contextLoading ? (
-        <div className="h-64 flex flex-col items-center justify-center luxury-card relative">
-          <div className="grain-overlay" />
-          <Loader2 className="animate-spin text-sky-500 mb-4" size={32} />
-          <p className="text-sm font-bold text-slate-400">חוקר את הים...</p>
-        </div>
-      ) : coastalWeather ? (
-      <AnimatePresence mode="wait">
-        <motion.div 
-          key={selectedSpotId}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-6"
-        >
-          {/* 🍱 BENTO 1: The Hero (Wave Stats & Surf Console) */}
-          <div className="lg:col-span-8 luxury-card p-6 md:p-10 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[360px] md:min-h-[400px]">
-            <div className="grain-overlay" />
-            {/* Background Art */}
-            <Waves className="absolute -bottom-10 -left-10 w-[400px] h-[400px] text-sky-500/[0.05] -rotate-12 pointer-events-none" />
-            <div className="premium-sweep-fx opacity-20" />
-
-            <div className="relative z-10 flex flex-col h-full justify-between gap-8">
-              {/* Top Section: Main Wave Height */}
-              <div>
-                <div className="flex justify-between items-start mb-6">
-                  <div className="flex items-center gap-2">
-                    <div className="px-3 py-1 bg-sky-500/10 rounded-full border border-sky-500/20 text-xs font-black tracking-widest text-sky-600 shadow-sm">LIVE</div>
-                    <span className="text-slate-500 text-sm font-bold uppercase tracking-wider font-yehuda">מצב הגלים</span>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    {/* Cameras moved to the main dashboard area below for better visibility */}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 w-full">
-                  
-                  {/* Swell Height Box */}
-                  <div className="flex flex-col justify-center items-center xl:items-start p-6 bg-slate-50/50 rounded-[2rem] border border-slate-100 shadow-inner w-full relative overflow-hidden group hover:bg-white hover:shadow-md transition-all">
-                    <p className="text-slate-400 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] mb-2 relative z-10">גובה הגלים (Swell)</p>
-                    <div className="flex items-baseline gap-2 relative z-10">
-                      <span className="text-7xl md:text-8xl font-black tracking-tighter leading-none text-slate-800">{currentWaveCm}</span>
-                      <span className="text-3xl md:text-4xl text-slate-400 font-bold -translate-y-2">ס״מ</span>
-                    </div>
-                  </div>
-                  
-                  {/* Formula Score Box */}
-                  <div className={`flex flex-col justify-center items-center xl:items-start p-6 rounded-[2rem] border-2 shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl w-full relative overflow-hidden group flex-1 ${currentCondition.bg} ${currentCondition.border.replace('/40','').replace('/50','')}`}>
-                    <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/30 rounded-full blur-3xl pointer-events-none group-hover:scale-150 transition-transform duration-700" />
-                    
-                    <p className={`text-[10px] md:text-xs font-black uppercase tracking-wider opacity-80 mb-2 relative z-10 ${currentCondition.color}`}>דירוג מצב הים (Douglas / AI)</p>
-                    
-                    <div className="flex items-center gap-4 md:gap-6 relative z-10 w-full">
-                      {/* Score Value Component */}
-                      <div className="flex items-baseline gap-1" dir="ltr">
-                        <span className={`text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-none drop-shadow-sm ${currentCondition.color}`}>{currentCondition.score}</span>
-                        <span className="text-xl md:text-2xl font-bold text-slate-400/80">/10</span>
-                      </div>
-                      
-                      <div className="w-px h-16 bg-black/10 mx-1"></div>
-                      
-                      {/* Name and Icon */}
-                      <div className="flex flex-col items-center xl:items-start flex-1 w-full relative z-10 overflow-hidden">
-                        <span className="text-3xl md:text-4xl drop-shadow-sm mb-1">{currentCondition.hand}</span>
-                        <span className={`font-black text-lg md:text-xl leading-tight text-center xl:text-right ${currentCondition.color}`}>{currentCondition.name}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Visual Scale Indicator (UV Style) */}
-                    <div className="w-full rounded-2xl overflow-hidden shadow-inner border border-slate-200/50 flex mt-6 relative z-10">
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(s => {
-                        const isActive = s === currentCondition.score;
-                        const isPast = s < currentCondition.score;
-                        
-                        let bgClass = 'bg-white/40 text-slate-400';
-                        if (isActive || isPast) {
-                          if (s <= 2) bgClass = 'bg-blue-300 text-blue-900';
-                          else if (s <= 4) bgClass = 'bg-cyan-400 text-cyan-950';
-                          else if (s <= 6) bgClass = 'bg-emerald-400 text-emerald-950';
-                          else if (s <= 7) bgClass = 'bg-yellow-400 text-yellow-950';
-                          else if (s <= 8) bgClass = 'bg-orange-500 text-white';
-                          else if (s <= 9) bgClass = 'bg-red-500 text-white';
-                          else bgClass = 'bg-purple-600 text-white';
-                        }
-                        
-                        return (
-                          <div 
-                            key={s} 
-                            className={`flex-1 flex items-center justify-center py-2 text-xs md:text-sm font-black transition-all duration-500 ${bgClass} ${isActive ? 'scale-110 shadow-lg z-20 rounded-lg transform' : 'opacity-80'}`} 
-                          >
-                            {s}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* LIVE Beach Cameras Section */}
-              {((activeSpot as any).cameraUrl || (activeSpot as any).cameraUrlAlt) && (
-                <div className="flex gap-3 w-full mb-4">
-                  {(activeSpot as any).cameraUrl && (
-                    <a
-                      href={(activeSpot as any).cameraUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 bg-white/60 backdrop-blur-md rounded-[1.5rem] border border-white shadow-sm hover:shadow-md hover:-translate-y-1 hover:bg-white transition-all duration-300 p-4 flex flex-col items-center justify-center gap-3 group relative overflow-hidden"
-                    >
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full blur-2xl -translate-y-16 translate-x-16 group-hover:scale-110 transition-transform duration-500" />
-                      
-                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] bg-sky-50 text-sky-500 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-sky-500 group-hover:text-white transition-all duration-300 shadow-sm border border-sky-100 relative z-10">
-                        <Video strokeWidth={1.5} className="w-6 h-6 md:w-8 md:h-8" />
-                      </div>
-                      
-                      <div className="flex flex-col items-center relative z-10 text-center">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500"></span>
-                          </span>
-                          <p className="text-xs md:text-sm font-black text-slate-700 tracking-tight">{(activeSpot as any).cameraUrlAlt ? 'מצלמה 1' : 'מצלמת חוף'}</p>
-                        </div>
-                        <p className="text-[9px] md:text-[10px] text-slate-500 font-bold tracking-widest uppercase">{(activeSpot as any).cameraUrlAlt ? 'החוף המרכזי' : 'שידור חי'}</p>
-                      </div>
-                    </a>
-                  )}
-
-                  {(activeSpot as any).cameraUrlAlt && (
-                    <a
-                      href={(activeSpot as any).cameraUrlAlt}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 bg-white/60 backdrop-blur-md rounded-[1.5rem] border border-white shadow-sm hover:shadow-md hover:-translate-y-1 hover:bg-white transition-all duration-300 p-4 flex flex-col items-center justify-center gap-3 group relative overflow-hidden"
-                    >
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -translate-y-16 translate-x-16 group-hover:scale-110 transition-transform duration-500" />
-                      
-                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] bg-emerald-50 text-emerald-500 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 shadow-sm border border-emerald-100 relative z-10">
-                        <Video strokeWidth={1.5} className="w-6 h-6 md:w-8 md:h-8" />
-                      </div>
-                      
-                      <div className="flex flex-col items-center relative z-10 text-center">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                          </span>
-                          <p className="text-xs md:text-sm font-black text-slate-700 tracking-tight">מצלמה 2 (Surfline)</p>
-                        </div>
-                        <p className="text-[9px] md:text-[10px] text-slate-500 font-bold tracking-widest uppercase">החוף הימני</p>
-                      </div>
-                    </a>
-                  )}
-                </div>
-              )}
-
-              {/* Bottom Section: The 3 Sub-Parameters in Glass UI */}
-              <div className="grid grid-cols-3 gap-2 md:gap-4 mt-auto">
-                {/* Period */}
-                <div className="bg-slate-50/50 shadow-inner border border-slate-100 rounded-[1.25rem] md:rounded-[1.5rem] p-3 md:p-4 flex flex-col justify-center hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
-                  <Activity className="absolute -left-2 -bottom-2 w-12 h-12 text-sky-500/10 group-hover:scale-110 transition-transform duration-500" />
-                  <p className="text-slate-400 text-[9px] md:text-xs font-black uppercase tracking-wider mb-2 leading-tight">זמן מחזור<br/><span className="hidden sm:inline">(Period)</span></p>
-                  <div className="flex items-baseline gap-1 relative z-10">
-                    <span className="text-2xl sm:text-3xl md:text-4xl font-black text-sky-600">{coastalWeather.wavePeriod.toFixed(1)}</span>
-                    <span className="text-xs sm:text-sm font-bold text-slate-400">ש׳</span>
-                  </div>
-                </div>
-
-                {/* Wind */}
-                <div className={`shadow-inner border border-slate-100 rounded-[1.25rem] md:rounded-[1.5rem] p-3 md:p-4 flex flex-col justify-center hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group 
-                  ${windStats?.bg.includes('emerald') ? 'bg-emerald-50/50' : ''}
-                  ${windStats?.bg.includes('rose') ? 'bg-rose-50/50' : ''}
-                  ${windStats?.bg.includes('amber') ? 'bg-amber-50/50' : ''}
-                  ${!windStats ? 'bg-slate-50/50' : ''}
-                `}>
-                  <Wind className={`absolute -left-2 -bottom-2 w-12 h-12 opacity-10 group-hover:scale-110 transition-transform duration-500 ${windStats?.bg.includes('emerald') ? 'text-emerald-400' : windStats?.bg.includes('rose') ? 'text-rose-400' : 'text-amber-400'}`} />
-                  <p className="text-slate-400 text-[9px] md:text-xs font-black uppercase tracking-wider mb-2 leading-tight">רוח <span className="hidden sm:inline">(Wind)</span></p>
-                  
-                  <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 xl:gap-2 relative z-10">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-800">{Math.round(coastalWeather.windSpeed)}</span>
-                      <span className="text-xs sm:text-sm font-bold text-slate-400">קשר</span>
-                    </div>
-                    
-                    <div className={`inline-flex max-w-max items-center gap-1 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md mt-1 sm:mt-0 shadow-inner ${windStats?.bg.replace('100/40','500/20').replace('100/50','500/20')}`}>
-                      <Navigation size={10} style={{ transform: `rotate(${coastalWeather.windDirection}deg)` }} className={`fill-current shrink-0 ${windStats?.color}`} />
-                      <span className={`text-[9px] leading-none mb-[1px] md:text-[10px] font-bold ${windStats?.color}`}>{getWindDirText(coastalWeather.windDirection)}</span>
-                    </div>
-                  </div>
-                  <p className={`text-[9px] md:text-xs font-bold mt-1.5 md:mt-1 max-w-full truncate ${windStats?.color}`}>
-                    {windStats?.label}
-                  </p>
-                </div>
-
-                {/* Swell Direction */}
-                <div className="bg-slate-50/50 shadow-inner border border-slate-100 rounded-[1.25rem] md:rounded-[1.5rem] p-3 md:p-4 flex flex-col justify-center hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
-                  <Navigation className="absolute -left-2 -bottom-2 w-12 h-12 text-sky-500/10 group-hover:scale-110 transition-transform duration-500" />
-                  <p className="text-slate-400 text-[9px] md:text-xs font-black uppercase tracking-wider mb-2 leading-tight">כיוון סוואל</p>
-                  
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 relative z-10 mt-1">
-                    <div 
-                      className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 shrink-0 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center transform transition-transform shadow-inner"
-                      style={{ transform: `rotate(${coastalWeather.waveDirection || 0}deg)` }}
-                    >
-                      <Navigation className="w-3 h-3 md:w-4 md:h-4 lg:w-5 lg:h-5 text-sky-600 fill-current" />
-                    </div>
-                    <span className="text-[10px] sm:text-xs md:text-lg font-black text-slate-700 uppercase leading-none mt-1 sm:mt-0 italic font-yehuda">
-                      {getWindDirText(coastalWeather.waveDirection || 0)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 🍱 BENTO 2 & 3: Atmosphere & Environment */}
-          <div className="lg:col-span-4 flex flex-col gap-6">
-            <div className="flex-1 luxury-card p-6 relative overflow-hidden flex flex-col justify-center hover:scale-[1.02] transition-all">
-              <div className="grain-overlay" />
-              <div className="absolute -left-10 -bottom-10 opacity-5 blur-sm pointer-events-none">
-                <Thermometer size={200} className="text-sky-400" />
-              </div>
-              
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 text-sky-500/70 mb-6 font-yehuda">
-                  <Thermometer size={18} />
-                  <span className="text-xs font-black uppercase tracking-widest leading-none">טמפ׳ מים (Sea)</span>
-                </div>
-                
-                <div className="flex items-baseline gap-2 mb-4">
-                  <span className="text-6xl font-black text-slate-800 tracking-tighter">{coastalWeather.waterTemp.toFixed(1)}</span>
-                  <span className="text-3xl font-bold text-slate-300">°C</span>
-                </div>
-                
-                <div className="inline-flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold text-slate-500 border border-slate-100 shadow-inner">
-                  <Thermometer size={14} className="opacity-70" />
-                  <span>אוויר: {Math.round(coastalWeather.airTemp)}°</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="luxury-card p-6 lg:p-8 flex flex-col justify-between relative overflow-hidden min-h-[140px] hover:scale-[1.02] transition-all">
-              <div className="grain-overlay" />
-              <div className="absolute -left-10 -bottom-10 opacity-5 blur-sm pointer-events-none">
-                <Sun size={200} className="text-amber-400" />
-              </div>
-
-              <div className="relative z-10 flex flex-col items-start gap-4 mb-6">
-                <h3 className="text-3xl font-black text-slate-800 tracking-tighter leading-none font-yehuda">מדד קרינה</h3>
-                <div className="flex items-center gap-3 text-lg text-slate-500 leading-none">
-                  <span className="font-bold">עכשיו:</span>
-                  <div className={`w-10 h-10 flex items-center justify-center font-black text-lg rounded-xl shadow-md border border-white/50 ${getUvColor(Math.round(coastalWeather.uvIndex))}`}>
-                    {Math.round(coastalWeather.uvIndex)}
-                  </div>
-                  <span className="font-black text-slate-700">{getUvText(Math.round(coastalWeather.uvIndex))}</span>
-                </div>
-              </div>
-
-              {effectiveHourlyUv && effectiveHourlyUv.length > 0 && (
-                <div className="relative z-10 mb-6 w-full rounded-2xl overflow-hidden shadow-inner border border-slate-100">
-                  <div className="flex w-full">
-                    {effectiveHourlyUv.map((hr: any) => (
-                      <div key={`uv-${hr.hour}`} className={`flex-1 flex items-center justify-center py-2 text-sm font-black ${getUvColor(hr.uv)}`}>
-                        {hr.uv}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex w-full bg-slate-50/80 backdrop-blur-md">
-                    {effectiveHourlyUv.map((hr: any) => (
-                       <div key={`hr-${hr.hour}`} className="flex-1 flex items-center justify-center py-2 text-slate-400 text-[10px] font-black tracking-tighter">
-                         {hr.hour}
-                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="relative z-10 text-center text-slate-300 text-[10px] font-bold pt-4 border-t border-slate-100/50 uppercase tracking-[0.15em] leading-tight">
-                0-2: אין סכנה &bull; 3-7: הגנה מלאה מומלץ &bull; 8+: הגנה מלאה חובה
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
-      ) : (
-        <div className="luxury-card p-12 text-center text-rose-500 font-bold border-rose-100">שגיאה בטעינת נתוני הלייב.</div>
-      )}
+      {/* 🏄‍♂️ Personalized Gear & Wetsuit Slot (e.g. DailySurfRecommendation) */}
+      {children}
 
       {/* 🍱 BENTO 4: The Horizon Timeline (Forecast) */}
       <div className="luxury-card p-6 md:p-8 relative overflow-hidden transition-all">
