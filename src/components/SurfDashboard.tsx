@@ -8,6 +8,10 @@ import {
   Loader2,
   Wind,
   Sun,
+  Cloud,
+  CloudSun,
+  CloudRain,
+  Droplets,
   Activity,
   Gauge,
   ChevronRight,
@@ -452,6 +456,70 @@ export const SurfDashboard: React.FC<SurfDashboardProps> = ({
     return hours;
   }, [coastalWeather?.hourlyUv, coastalWeather?.uvIndex]);
 
+  // Weather condition & season indicator for Air Temp
+  const airWeatherState = useMemo(() => {
+    const temp = coastalWeather?.airTemp ?? 24;
+    const rain = coastalWeather?.rain ?? 0;
+    const uv = coastalWeather?.uvIndex ?? 5;
+
+    if (rain > 0.1) {
+      return {
+        icon: CloudRain,
+        title: 'גשם מקומי',
+        seasonHint: 'גשום',
+        color: 'text-blue-600',
+        badgeBg: 'bg-blue-500/10 text-blue-700 border-blue-500/20',
+        watermarkColor: 'text-blue-400/[0.12]',
+        cardBorder: 'border-blue-200/80',
+        cardBg: 'from-blue-50/80 via-slate-50/70 to-indigo-50/40'
+      };
+    }
+    if (temp < 16) {
+      return {
+        icon: Cloud,
+        title: 'מעונן וקריר',
+        seasonHint: 'עונת חורף',
+        color: 'text-slate-600',
+        badgeBg: 'bg-slate-500/10 text-slate-700 border-slate-500/20',
+        watermarkColor: 'text-slate-400/[0.12]',
+        cardBorder: 'border-slate-200/80',
+        cardBg: 'from-slate-100/80 via-slate-50/70 to-sky-50/40'
+      };
+    }
+    if (uv >= 6 || temp >= 28) {
+      return {
+        icon: Sun,
+        title: 'שמשי וחם',
+        seasonHint: 'עונת קיץ',
+        color: 'text-amber-600',
+        badgeBg: 'bg-amber-500/10 text-amber-700 border-amber-500/20',
+        watermarkColor: 'text-amber-400/[0.14]',
+        cardBorder: 'border-amber-200/80',
+        cardBg: 'from-amber-50/80 via-slate-50/70 to-orange-50/40'
+      };
+    }
+    // Transitional / Fair (Spring / Autumn)
+    return {
+      icon: CloudSun,
+      title: 'בהיר ונעים',
+      seasonHint: 'עונת מעבר',
+      color: 'text-amber-600',
+      badgeBg: 'bg-amber-500/10 text-amber-700 border-amber-500/20',
+      watermarkColor: 'text-amber-400/[0.14]',
+      cardBorder: 'border-amber-200/80',
+      cardBg: 'from-amber-50/70 via-slate-50/70 to-sky-50/40'
+    };
+  }, [coastalWeather?.airTemp, coastalWeather?.rain, coastalWeather?.uvIndex]);
+
+  const waterFeelText = useMemo(() => {
+    const temp = coastalWeather?.waterTemp ?? 24;
+    if (temp >= 28) return 'חמים מאוד';
+    if (temp >= 25) return 'נעים לרחצה';
+    if (temp >= 22) return 'מרענן';
+    if (temp >= 19) return 'קריר (שורטי)';
+    return 'קר (חליפה)';
+  }, [coastalWeather?.waterTemp]);
+
   const getAquariumPalette = (heightCm: number) => {
     // 1. יום שקט (Calm Sea) < 60cm
     if (heightCm < 60) {
@@ -746,24 +814,6 @@ export const SurfDashboard: React.FC<SurfDashboardProps> = ({
                 {recommendation.text}
               </p>
             </div>
-
-            {/* Quick Decision Factors - Increased font size and badges */}
-            <div className="flex flex-wrap items-center gap-2.5 pt-4 mt-3 border-t border-slate-200/50">
-              <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-xs text-xs sm:text-sm font-black text-[#002b44] flex items-center gap-2">
-                <span className="text-[#007085] font-black">רוח:</span>
-                <span>{recommendation.windImpact}</span>
-              </div>
-              <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-xs text-xs sm:text-sm font-black text-[#002b44] flex items-center gap-2">
-                <span className="text-[#007085] font-black">ביגוד:</span>
-                <span>{recommendation.suitAdvice}</span>
-              </div>
-              {coastalWeather && (
-                <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-xs text-xs sm:text-sm font-black text-[#002b44] flex items-center gap-2">
-                  <span className="text-[#007085] font-black">טמפ׳ מים:</span>
-                  <span>{coastalWeather.waterTemp.toFixed(1)}°C</span>
-                </div>
-              )}
-            </div>
           </div>
         )}
 
@@ -785,17 +835,8 @@ export const SurfDashboard: React.FC<SurfDashboardProps> = ({
               {/* Left Column: מצב הגלים והמדדים (8 cols) */}
               <div className="lg:col-span-8 flex flex-col justify-between gap-6">
                 <div>
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 w-full">
-                    {/* Swell Height Box */}
-                    <div className="flex flex-col justify-center items-center xl:items-start p-6 sm:p-8 bg-slate-50/70 rounded-[2rem] border border-slate-200/80 shadow-inner w-full relative overflow-hidden group hover:bg-white hover:shadow-md transition-all">
-                      <p className="text-[#007085] text-xs sm:text-sm font-black uppercase tracking-[0.2em] mb-2 relative z-10">גובה הגלים (Swell)</p>
-                      <div className="flex items-baseline gap-2 relative z-10">
-                        <span className="text-7xl sm:text-8xl md:text-9xl font-black tracking-tighter leading-none text-[#002b44] font-yehuda">{currentWaveCm}</span>
-                        <span className="text-3xl sm:text-4xl text-[#007085] font-black -translate-y-2">ס״מ</span>
-                      </div>
-                    </div>
-                    
-                    {/* Formula Score Box */}
+                  <div className="flex flex-col gap-4 w-full">
+                    {/* 1. Formula Score Box (כרטיס דירוג התאמה לגלישה) - מעל כרטיס גובה הגלים */}
                     <div className={`flex flex-col justify-center items-center xl:items-start p-6 sm:p-8 rounded-[2rem] border-2 shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl w-full relative overflow-hidden group flex-1 ${currentCondition.bg} ${currentCondition.border.replace('/40','').replace('/50','')}`}>
                       <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/30 rounded-full blur-3xl pointer-events-none group-hover:scale-150 transition-transform duration-700" />
                       
@@ -843,6 +884,25 @@ export const SurfDashboard: React.FC<SurfDashboardProps> = ({
                             </div>
                           );
                         })}
+                      </div>
+                    </div>
+
+                    {/* 2. Swell Height Box (כרטיס גובה הגלים) - מתחת לכרטיס הדירוג */}
+                    <div className="flex flex-col sm:flex-row justify-between items-center p-6 sm:p-8 bg-slate-50/70 rounded-[2rem] border border-slate-200/80 shadow-inner w-full relative overflow-hidden group hover:bg-white hover:shadow-md transition-all">
+                      <div className="flex flex-col items-center sm:items-start">
+                        <p className="text-[#007085] text-xs sm:text-sm font-black uppercase tracking-[0.2em] mb-2 relative z-10">גובה הגלים (Swell)</p>
+                        <div className="flex items-baseline gap-2 relative z-10">
+                          <span className="text-7xl sm:text-8xl md:text-9xl font-black tracking-tighter leading-none text-[#002b44] font-yehuda">{currentWaveCm}</span>
+                          <span className="text-3xl sm:text-4xl text-[#007085] font-black -translate-y-2">ס״מ</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 sm:mt-0 flex items-center gap-3 bg-white/80 backdrop-blur-xs px-5 py-3 rounded-2xl border border-slate-200/80 shadow-2xs">
+                        <Waves size={24} className="text-[#007085]" />
+                        <div className="text-right">
+                          <p className="text-xs font-black text-[#007085] uppercase tracking-wider">מצב הים</p>
+                          <p className="text-sm sm:text-base font-black text-[#002b44] font-yehuda">{currentCondition.name}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -959,28 +1019,73 @@ export const SurfDashboard: React.FC<SurfDashboardProps> = ({
 
               {/* Right Column: טמפ׳ המים & מדד קרינה (4 cols) */}
               <div className="lg:col-span-4 flex flex-col gap-5">
-                {/* Water & Air Temp Sub-Card */}
-                <div className="p-6 sm:p-8 bg-slate-50/70 rounded-[2rem] border border-slate-200/80 shadow-inner relative overflow-hidden flex flex-col justify-center hover:bg-white hover:shadow-md transition-all">
-                  <div className="absolute -left-8 -bottom-8 opacity-5 blur-xs pointer-events-none">
-                    <Thermometer size={160} className="text-sky-400" />
-                  </div>
-                  
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-2 text-[#007085] mb-4 font-yehuda">
-                      <div className="p-2.5 bg-[#007085]/10 rounded-xl">
-                        <Thermometer size={22} />
+                {/* 🌊 & ☀️ Symmetrical Dual Temperature Cards: Water Temp & Air Temp */}
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full">
+                  {/* 🌊 Card 1: טמפ׳ מים (Sea Temperature) */}
+                  <div className="p-4 sm:p-6 bg-gradient-to-br from-sky-50/80 via-slate-50/70 to-cyan-50/50 rounded-[2rem] border border-sky-200/80 shadow-inner relative overflow-hidden flex flex-col justify-between hover:bg-white hover:shadow-md transition-all group min-h-[185px]">
+                    {/* Watermark: Waves / Water icon behind the numbers */}
+                    <div className="absolute -left-4 -bottom-4 text-sky-400/[0.12] pointer-events-none group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+                      <Waves size={130} />
+                    </div>
+
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 text-[#007085] mb-3 font-yehuda">
+                        <div className="p-2 bg-[#007085]/10 rounded-xl border border-[#007085]/20 shrink-0">
+                          <Droplets size={18} className="text-[#007085]" />
+                        </div>
+                        <div className="overflow-hidden">
+                          <span className="text-xs sm:text-sm font-black uppercase tracking-wider leading-none block text-[#007085]">טמפ׳ מים</span>
+                          <span className="text-[10px] text-slate-400 font-bold tracking-tight">ים תיכון (Sea)</span>
+                        </div>
                       </div>
-                      <span className="text-sm sm:text-base font-black uppercase tracking-wider leading-none">טמפ׳ מים (Sea)</span>
+
+                      <div className="flex items-baseline gap-1 my-1 sm:my-2">
+                        <span className="text-3xl sm:text-5xl md:text-6xl font-black text-[#002b44] font-yehuda tracking-tighter leading-none">
+                          {coastalWeather.waterTemp.toFixed(1)}
+                        </span>
+                        <span className="text-base sm:text-2xl font-black text-[#007085] -translate-y-1">°C</span>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-baseline gap-2 mb-4">
-                      <span className="text-6xl sm:text-7xl font-black text-[#002b44] font-yehuda tracking-tighter">{coastalWeather.waterTemp.toFixed(1)}</span>
-                      <span className="text-3xl sm:text-4xl font-black text-[#007085]">°C</span>
+
+                    <div className="relative z-10 mt-2 sm:mt-3 pt-2 sm:pt-2.5 border-t border-sky-100 flex items-center justify-between text-right">
+                      <span className="text-[11px] sm:text-xs font-black text-[#007085]">
+                        {waterFeelText}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-bold">חיישן ימי</span>
                     </div>
-                    
-                    <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-xl text-sm sm:text-base font-black text-[#002b44] border border-slate-200/80 shadow-2xs">
-                      <Thermometer size={16} className="text-amber-500" />
-                      <span>טמפ׳ אוויר: {Math.round(coastalWeather.airTemp)}°C</span>
+                  </div>
+
+                  {/* ☀️/☁️/🌧️ Card 2: טמפ׳ אוויר (Air Temperature with dynamic weather icon) */}
+                  <div className={`p-4 sm:p-6 bg-gradient-to-br ${airWeatherState.cardBg} rounded-[2rem] border ${airWeatherState.cardBorder} shadow-inner relative overflow-hidden flex flex-col justify-between hover:bg-white hover:shadow-md transition-all group min-h-[185px]`}>
+                    {/* Watermark: Dynamic seasonal / weather icon behind the numbers */}
+                    <div className={`absolute -left-4 -bottom-4 ${airWeatherState.watermarkColor} pointer-events-none group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500`}>
+                      <airWeatherState.icon size={130} />
+                    </div>
+
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-3 font-yehuda">
+                        <div className={`p-2 rounded-xl border shrink-0 ${airWeatherState.badgeBg}`}>
+                          <airWeatherState.icon size={18} />
+                        </div>
+                        <div className="overflow-hidden">
+                          <span className="text-xs sm:text-sm font-black uppercase tracking-wider leading-none block text-slate-800">טמפ׳ אוויר</span>
+                          <span className="text-[10px] text-slate-400 font-bold tracking-tight">חוף הים (Air)</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-baseline gap-1 my-1 sm:my-2">
+                        <span className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-800 font-yehuda tracking-tighter leading-none">
+                          {Math.round(coastalWeather.airTemp)}
+                        </span>
+                        <span className={`text-base sm:text-2xl font-black ${airWeatherState.color} -translate-y-1`}>°C</span>
+                      </div>
+                    </div>
+
+                    <div className="relative z-10 mt-2 sm:mt-3 pt-2 sm:pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-right">
+                      <span className={`text-[11px] sm:text-xs font-black ${airWeatherState.color}`}>
+                        {airWeatherState.title}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-bold">{airWeatherState.seasonHint}</span>
                     </div>
                   </div>
                 </div>
