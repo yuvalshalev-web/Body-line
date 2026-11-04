@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Member } from '../types';
 import { isSystemOrTestMember, AVAILABLE_COMMUNITIES, isAdminUser, getBranchCohortName } from '../constants';
 import PlayerCard from '../components/PlayerCard';
+import { getAvailabilityBadgeInfo } from '../constants/availability';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 
 const DirectoryPage: React.FC = () => {
@@ -181,6 +182,20 @@ const DirectoryPage: React.FC = () => {
                 return null;
               })()}
             </div>
+
+            {/* Availability Badge */}
+            {(() => {
+              const avail = getAvailabilityBadgeInfo(member.availabilitySchedule);
+              return (
+                <div 
+                  className={`mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-black shadow-2xs ${avail.bgClass} ${avail.borderClass} ${avail.textClass}`}
+                  title={`${avail.fullLabel} (${avail.shortDesc})`}
+                >
+                  <MessageCircle size={11} className="shrink-0" />
+                  <span>{avail.badgeLabel}</span>
+                </div>
+              );
+            })()}
           </div>
 
           <div className="w-full flex flex-col gap-2 mt-2.5">
@@ -272,9 +287,23 @@ const DirectoryPage: React.FC = () => {
             <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
               {member.firstName} {member.lastName}
             </h3>
-            <p className="text-xs sm:text-sm font-bold text-slate-500 mt-0.5">
-              <span className="text-sky-700 font-black">{getRoleLabel(member)}</span> • {member.email}
-            </p>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <p className="text-xs sm:text-sm font-bold text-slate-500">
+                <span className="text-sky-700 font-black">{getRoleLabel(member)}</span> • {member.email}
+              </p>
+              {(() => {
+                const avail = getAvailabilityBadgeInfo(member.availabilitySchedule);
+                return (
+                  <span 
+                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-black ${avail.bgClass} ${avail.borderClass} ${avail.textClass}`}
+                    title={`${avail.fullLabel} (${avail.shortDesc})`}
+                  >
+                    <MessageCircle size={10} className="shrink-0" />
+                    <span>{avail.badgeLabel}</span>
+                  </span>
+                );
+              })()}
+            </div>
           </div>
         </div>
 

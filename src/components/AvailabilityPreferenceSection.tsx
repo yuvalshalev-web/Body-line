@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, CalendarCheck, Sun, CalendarX } from 'lucide-react';
+import { MessageCircle, CalendarCheck, Sun, CalendarX, Info } from 'lucide-react';
 import { AvailabilitySchedule, AVAILABILITY_SCHEDULE_OPTIONS } from '../constants/availability';
 
 interface AvailabilityPreferenceSectionProps {
@@ -22,7 +22,7 @@ export const AvailabilityPreferenceSection: React.FC<AvailabilityPreferenceSecti
   const getIcon = (id: AvailabilitySchedule) => {
     switch (id) {
       case 'always':
-        return <Clock className="w-5 h-5 text-emerald-600" />;
+        return <MessageCircle className="w-5 h-5 text-emerald-600" />;
       case 'no_shabbat_holidays':
         return <CalendarX className="w-5 h-5 text-amber-600" />;
       case 'weekdays_only':
@@ -99,6 +99,11 @@ export const AvailabilityPreferenceSection: React.FC<AvailabilityPreferenceSecti
             </button>
           );
         })}
+      </div>
+
+      <div className="flex items-center gap-2 px-3 py-2 bg-slate-50/70 border border-slate-200/50 rounded-xl text-xs text-slate-500">
+        <Info size={14} className="text-slate-400 shrink-0" />
+        <span>הגדרה זו מסייעת לחברי הקהילה לדעת מתי מתאים לתקשר וליצור קשר (למשל הימנעות משיחות והודעות בשבתות ובמועדים).</span>
       </div>
     </div>
   );

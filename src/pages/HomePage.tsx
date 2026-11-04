@@ -48,6 +48,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { getForecastAnalysis } from '../services/geminiService';
 import Markdown from 'react-markdown';
 import { BiometricFingerprint } from '../components/BiometricFingerprint';
+import { ContactAvailabilityReminderModal, PendingContactAction } from '../components/ContactAvailabilityReminderModal';
+import { checkContactTimingSensitivity } from '../utils/availabilityTiming';
+import { getAvailabilityBadgeInfo } from '../constants/availability';
 
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -122,6 +125,48 @@ const HomePage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAttendees, setShowAttendees] = useState(false);
   const [selectedMemberProfile, setSelectedMemberProfile] = useState<any | null>(null);
+  const [pendingContact, setPendingContact] = useState<PendingContactAction | null>(null);
+
+  const directOpenWhatsApp = (mobile: string) => {
+    const formatted = mobile.replace(/[^0-9]/g, '').replace(/^0/, '972');
+    window.open(`https://wa.me/${formatted}`, '_blank');
+  };
+
+  const directCallMobile = (mobile: string) => {
+    window.location.href = `tel:${mobile}`;
+  };
+
+  const handleContactClick = (
+    type: 'whatsapp' | 'phone',
+    targetMember: any,
+    mobile: string
+  ) => {
+    const sensitivity = checkContactTimingSensitivity(targetMember.availabilitySchedule);
+
+    if (sensitivity.isSensitive) {
+      setPendingContact({
+        type,
+        memberName: `${targetMember.firstName || ''} ${targetMember.lastName || ''}`.trim() || 'חבר קהילה',
+        memberAvatar: targetMember.avatar,
+        mobile,
+        sensitivity,
+        onProceed: () => {
+          if (type === 'whatsapp') {
+            directOpenWhatsApp(mobile);
+          } else {
+            directCallMobile(mobile);
+          }
+        }
+      });
+      return;
+    }
+
+    if (type === 'whatsapp') {
+      directOpenWhatsApp(mobile);
+    } else {
+      directCallMobile(mobile);
+    }
+  };
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [randomGlossary, setRandomGlossary] = useState<any[]>([]);
   const [randomQuotes, setRandomQuotes] = useState<any[]>([]);
@@ -1187,19 +1232,33 @@ const HomePage: React.FC = () => {
                    'לא צוינה כתובת מגורים'}
                 </span>
               </div>
+              {/* Availability Badge */}
+              {(() => {
+                const avail = getAvailabilityBadgeInfo(selectedMemberProfile.availabilitySchedule);
+                return (
+                  <div 
+                    className={`mt-1 mb-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-black shadow-2xs ${avail.bgClass} ${avail.borderClass} ${avail.textClass}`}
+                    title={`${avail.fullLabel} (${avail.shortDesc})`}
+                  >
+                    <MessageCircle size={13} className="shrink-0" />
+                    <span>{avail.fullLabel}</span>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Contact Action Buttons */}
             <div className="flex flex-col gap-2.5 w-full mt-2">
               {/* Phone Call */}
               {selectedMemberProfile.mobile ? (
-                <a 
-                  href={`tel:${selectedMemberProfile.mobile}`}
-                  className="flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-2xl bg-[#007085] hover:bg-[#005a6b] active:scale-98 text-white font-black text-sm shadow-md transition-all font-yehuda tracking-wide"
+                <button 
+                  type="button"
+                  onClick={() => handleContactClick('phone', selectedMemberProfile, selectedMemberProfile.mobile)}
+                  className="flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-2xl bg-[#007085] hover:bg-[#005a6b] active:scale-98 text-white font-black text-sm shadow-md transition-all font-yehuda tracking-wide cursor-pointer"
                 >
                   <Phone size={16} />
                   <span>שיחת טלפון ({selectedMemberProfile.mobile})</span>
-                </a>
+                </button>
               ) : (
                 <div className="py-2.5 text-xs text-slate-400 bg-slate-50 rounded-xl">
                   לא הוזן מספר טלפון
@@ -1208,15 +1267,14 @@ const HomePage: React.FC = () => {
 
               {/* WhatsApp */}
               {selectedMemberProfile.mobile && (
-                <a 
-                  href={`https://wa.me/${selectedMemberProfile.mobile.replace(/[^0-9]/g, '').replace(/^0/, '972')}`}
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] active:scale-98 text-white font-black text-sm shadow-md transition-all font-yehuda tracking-wide"
+                <button 
+                  type="button"
+                  onClick={() => handleContactClick('whatsapp', selectedMemberProfile, selectedMemberProfile.mobile)}
+                  className="flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] active:scale-98 text-white font-black text-sm shadow-md transition-all font-yehuda tracking-wide cursor-pointer"
                 >
                   <MessageCircle size={16} />
                   <span>שליחת הודעת WhatsApp</span>
-                </a>
+                </button>
               )}
 
               {/* Email */}
@@ -1238,13 +1296,19 @@ const HomePage: React.FC = () => {
             {/* Back Button */}
             <button
               onClick={() => setSelectedMemberProfile(null)}
-              className="w-full mt-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors"
+              className="w-full mt-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
             >
               חזרה לרשימת הנבחרת
             </button>
           </div>
         </div>
       )}
+
+      {/* Discretion Reminder Modal */}
+      <ContactAvailabilityReminderModal 
+        pendingAction={pendingContact} 
+        onClose={() => setPendingContact(null)} 
+      />
     </div>
   );
 };

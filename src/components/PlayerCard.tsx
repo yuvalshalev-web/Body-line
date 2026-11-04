@@ -6,7 +6,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { calculateUserStats } from '../utils/analytics';
 import UserCategories from './UserCategories';
 import { getDietaryOptionLabel } from '../constants/dietary';
-import { getAvailabilityLabel } from '../constants/availability';
+import { getAvailabilityLabel, getAvailabilityBadgeInfo } from '../constants/availability';
+import { ContactAvailabilityReminderModal, PendingContactAction } from './ContactAvailabilityReminderModal';
+import { checkContactTimingSensitivity } from '../utils/availabilityTiming';
+import { Member } from '../types';
 
 interface PlayerCardProps {
   userId: string;
@@ -39,13 +42,48 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
     return calculateUserStats(userId, members, weeklyHistory, yearConfig, events);
   }, [userId, members, weeklyHistory, yearConfig, events, isLoading]);
 
-  const openWhatsApp = (mobile: string) => {
+  const [pendingContact, setPendingContact] = useState<PendingContactAction | null>(null);
+
+  const directOpenWhatsApp = (mobile: string) => {
     const formattedMobile = mobile.replace(/\D/g, '');
-    window.open(`https://wa.me/${formattedMobile}`, '_blank');
+    const cleanNumber = formattedMobile.startsWith('0') ? '972' + formattedMobile.substring(1) : formattedMobile;
+    window.open(`https://wa.me/${cleanNumber}`, '_blank');
   };
 
-  const callMobile = (mobile: string) => {
+  const directCallMobile = (mobile: string) => {
     window.location.href = `tel:${mobile}`;
+  };
+
+  const handleContactClick = (
+    type: 'whatsapp' | 'phone',
+    targetMember: Member,
+    mobile: string
+  ) => {
+    const sensitivity = checkContactTimingSensitivity(targetMember.availabilitySchedule);
+
+    if (sensitivity.isSensitive) {
+      setPendingContact({
+        type,
+        memberName: `${targetMember.firstName || ''} ${targetMember.lastName || ''}`.trim() || 'חבר קהילה',
+        memberAvatar: targetMember.avatar,
+        mobile,
+        sensitivity,
+        onProceed: () => {
+          if (type === 'whatsapp') {
+            directOpenWhatsApp(mobile);
+          } else {
+            directCallMobile(mobile);
+          }
+        }
+      });
+      return;
+    }
+
+    if (type === 'whatsapp') {
+      directOpenWhatsApp(mobile);
+    } else {
+      directCallMobile(mobile);
+    }
   };
 
   const ensureAbsoluteUrl = (url: string) => {
@@ -182,16 +220,16 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
           {currentUser?.id !== userId && (
             <div className="flex flex-wrap gap-4 justify-center mt-6">
               <button 
-                onClick={() => member.mobile && openWhatsApp(member.mobile)}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-b from-[#25D366] to-[#1DA851] rounded-2xl hover:brightness-110 active:translate-y-1 transition-all text-white shadow-[0_6px_0_#14833b,0_10px_20px_rgba(37,211,102,0.4)] font-black" 
+                onClick={() => member.mobile && handleContactClick('whatsapp', member, member.mobile)}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-b from-[#25D366] to-[#1DA851] rounded-2xl hover:brightness-110 active:translate-y-1 transition-all text-white shadow-[0_6px_0_#14833b,0_10px_20px_rgba(37,211,102,0.4)] font-black cursor-pointer" 
                 title="WhatsApp"
               >
                 <MessageCircle size={24} />
                 <span>וואטסאפ</span>
               </button>
               <button 
-                onClick={() => member.mobile && callMobile(member.mobile)}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-b from-[#00A8E8] to-[#007EA7] rounded-2xl hover:brightness-110 active:translate-y-1 transition-all text-white shadow-[0_6px_0_#005A7A,0_10px_20px_rgba(0,168,232,0.4)] font-black" 
+                onClick={() => member.mobile && handleContactClick('phone', member, member.mobile)}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-b from-[#00A8E8] to-[#007EA7] rounded-2xl hover:brightness-110 active:translate-y-1 transition-all text-white shadow-[0_6px_0_#005A7A,0_10px_20px_rgba(0,168,232,0.4)] font-black cursor-pointer" 
                 title="התקשר"
               >
                 <Phone size={24} />
@@ -235,8 +273,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
                   <div className="flex items-center gap-2">
                     {partner.mobile && (
                       <button
-                        onClick={() => openWhatsApp(partner.mobile!)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-xl shadow-xs transition-all text-xs font-black"
+                        onClick={() => handleContactClick('whatsapp', partner, partner.mobile!)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-xl shadow-xs transition-all text-xs font-black cursor-pointer"
                         title="שליחת וואטסאפ לבן/בת הזוג"
                       >
                         <MessageCircle size={15} />
@@ -249,19 +287,25 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
             );
           })()}
 
-          {/* Availability Schedule Section */}
-          {member.availabilitySchedule && member.availabilitySchedule !== 'always' && (
-            <div className="w-full p-3.5 bg-amber-50/40 backdrop-blur-[20px] border border-amber-200/60 rounded-2xl mt-4" dir="rtl">
-              <div className="text-amber-800 text-xs font-black mb-1.5 flex items-center gap-2 justify-center">
-                <Clock size={14} className="text-amber-600" /> זמינות לפעילויות
+          {/* Availability Schedule Section - Always visible for every member */}
+          {(() => {
+            const info = getAvailabilityBadgeInfo(member.availabilitySchedule);
+            return (
+              <div className={`w-full p-3.5 backdrop-blur-[20px] border rounded-2xl mt-4 ${info.bgClass} ${info.borderClass}`} dir="rtl">
+                <div className={`text-xs font-black mb-1.5 flex items-center gap-2 justify-center ${info.textClass}`}>
+                  <MessageCircle size={14} /> זמינות ליצירת קשר
+                </div>
+                <div className="flex flex-col items-center gap-1 justify-center text-center">
+                  <span className={`px-3 py-1 bg-white/95 border ${info.borderClass} ${info.textClass} text-[11px] font-bold rounded-lg shadow-2xs`}>
+                    {info.fullLabel}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium">
+                    {info.shortDesc}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-center">
-                <span className="px-3 py-1 bg-white/95 border border-amber-200 text-amber-900 text-[11px] font-bold rounded-lg shadow-xs">
-                  {getAvailabilityLabel(member.availabilitySchedule)}
-                </span>
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Certifications Section */}
           {member.certifications && member.certifications.length > 0 && (
@@ -303,6 +347,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
           )}
         </div>
       </div>
+
+      {/* Discretion Reminder Modal */}
+      <ContactAvailabilityReminderModal 
+        pendingAction={pendingContact} 
+        onClose={() => setPendingContact(null)} 
+      />
     </div>
   );
 };

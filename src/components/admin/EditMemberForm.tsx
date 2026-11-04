@@ -955,11 +955,11 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
         <section className="space-y-10">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
-              <Clock size={24} />
+              <MessageCircle size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-black text-[#1e293b]">זמינות לפעילויות</h2>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Availability & Activity Schedule</p>
+              <h2 className="text-xl font-black text-[#1e293b]">זמינות ליצירת קשר ותקשורת</h2>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Contact & Communication Availability</p>
             </div>
           </div>
 

@@ -1046,7 +1046,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({
                         <div className="space-y-6 pt-2">
                           <div className="space-y-3">
                             <h4 className="text-[11px] font-black text-[#00426a] uppercase tracking-[0.2em] flex items-center gap-2">
-                              <Clock size={14} /> זמינות לפעילויות
+                              <MessageCircle size={14} /> זמינות ליצירת קשר ותקשורת
                             </h4>
                             <AvailabilityPreferenceSection
                               value={newMemberData.availabilitySchedule || 'always'}

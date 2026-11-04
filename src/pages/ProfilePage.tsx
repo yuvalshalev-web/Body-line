@@ -41,7 +41,8 @@ import {
   Maximize2,
   UtensilsCrossed,
   Fingerprint,
-  Clock
+  Clock,
+  MessageCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
@@ -1140,9 +1141,9 @@ const ProfilePage: React.FC = () => {
               {/* Section: Availability & Schedule */}
               <section className="space-y-6 md:space-y-8">
                 <SectionHeader 
-                  icon={Clock} 
-                  title="זמינות לפעילויות" 
-                  subtitle="Availability & Activity Schedule"
+                  icon={MessageCircle} 
+                  title="זמינות ליצירת קשר ותקשורת" 
+                  subtitle="Contact & Communication Availability"
                   colorClass="text-amber-600" 
                   bgColorClass="bg-amber-100" 
                 />

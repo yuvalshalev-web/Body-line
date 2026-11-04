@@ -16,7 +16,8 @@ import {
   Filter,
   Clock,
   CalendarX,
-  Sun
+  Sun,
+  MessageCircle
 } from 'lucide-react';
 import { Member } from '../../types';
 import { getAvailabilityLabel, AvailabilitySchedule } from '../../constants/availability';
@@ -206,7 +207,7 @@ export const DietaryReportModal: React.FC<DietaryReportModalProps> = ({
         'טלפון': m.mobile || memberAny.phone || '',
         'אימייל': m.email || '',
         'תפקיד': m.role === 'Admin' ? 'רכז' : m.role === 'Staff' ? 'צוות עמותה' : m.role === 'Instructor' ? 'מדריך' : m.role === 'Volunteer' ? 'מתנדב' : 'משתתף',
-        'זמינות לפעילויות': d.availabilityLabel,
+        'זמינות ליצירת קשר': d.availabilityLabel,
         'סגנון תזונה': d.isVegan ? 'טבעוני' : d.isVegetarian ? 'צמחוני' : 'אוכל הכל',
         'כשרות': d.isMehadrin ? 'כשר למהדרין (בד״ץ)' : d.isKosher ? 'כשר' : 'לא שומר',
         'צמחוני': d.isVegetarian ? 'כן' : 'לא',
@@ -297,9 +298,9 @@ export const DietaryReportModal: React.FC<DietaryReportModalProps> = ({
           {/* Section: Availability Overview */}
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Clock size={16} className="text-amber-600" />
+              <MessageCircle size={16} className="text-amber-600" />
               <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
-                זמינות לפעילויות ואירועים
+                זמינות ליצירת קשר ותקשורת בין חברים
               </span>
             </div>
             
@@ -315,11 +316,11 @@ export const DietaryReportModal: React.FC<DietaryReportModalProps> = ({
               >
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center">
-                    <Clock size={16} />
+                    <MessageCircle size={16} />
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800">זמינים תמיד</p>
-                    <p className="text-[11px] text-slate-500">כל ימות השבוע וסופ"ש</p>
+                    <p className="text-[11px] text-slate-500">יצירת קשר בכל עת</p>
                   </div>
                 </div>
                 <div className="text-left">
@@ -344,8 +345,8 @@ export const DietaryReportModal: React.FC<DietaryReportModalProps> = ({
                     <CalendarX size={16} />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-amber-900">ללא שבתות וחגים</p>
-                    <p className="text-[11px] text-slate-500">שומרי שבת ומועדים</p>
+                    <p className="text-xs font-bold text-amber-900">שומרי שבת וחג</p>
+                    <p className="text-[11px] text-slate-500">ללא יצירת קשר בשבתות/מועדים</p>
                   </div>
                 </div>
                 <div className="text-left">
@@ -371,7 +372,7 @@ export const DietaryReportModal: React.FC<DietaryReportModalProps> = ({
                   </div>
                   <div>
                     <p className="text-xs font-bold text-sky-900">ימי חול בלבד</p>
-                    <p className="text-[11px] text-slate-500">ימים א' עד ה' בלבד</p>
+                    <p className="text-[11px] text-slate-500">יצירת קשר בימים א' עד ה'</p>
                   </div>
                 </div>
                 <div className="text-left">
