@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { analyzeIsraelSurfConditions } from '../utils/surfAnalysis';
-import { parseDate } from '../utils/dateUtils';
+import { parseDate, calculateEventDuration, formatEventDateRange } from '../utils/dateUtils';
 import { Waves, Wind, Clock, Info, Cake, Thermometer, Sun, Activity, Calendar } from 'lucide-react';
 
 const getWindDirCode = (deg: number): string => {
@@ -65,7 +65,7 @@ export const SurfNewsTracker: React.FC = () => {
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     return events
-      .filter(e => !e.isArchived && e.date >= todayStr)
+      .filter(e => !e.isArchived && (e.endDate || e.date) >= todayStr)
       .sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')))
       .slice(0, 3);
   }, [events]);
@@ -130,14 +130,12 @@ export const SurfNewsTracker: React.FC = () => {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
 
-        let dateLabel = nextEv.date;
-        if (nextEv.date === todayStr) {
+        const durationInfo = calculateEventDuration(nextEv.date, nextEv.endDate);
+        let dateLabel = formatEventDateRange(nextEv.date, nextEv.endDate);
+        if (nextEv.date === todayStr && !nextEv.endDate) {
           dateLabel = 'היום';
-        } else if (nextEv.date === tomorrowStr) {
+        } else if (nextEv.date === tomorrowStr && !nextEv.endDate) {
           dateLabel = 'מחר';
-        } else {
-          const parts = nextEv.date.split('-');
-          if (parts.length === 3) dateLabel = `${parts[2]}/${parts[1]}`;
         }
 
         return (
@@ -145,6 +143,11 @@ export const SurfNewsTracker: React.FC = () => {
             <Calendar className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
             <span className="text-[10px] font-mono uppercase font-black text-indigo-700 tracking-wider">אירוע קהילה קרוב:</span>
             <span className="font-bold text-indigo-950">{nextEv.title}</span>
+            {durationInfo.isMultiDay && (
+              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded-full">
+                {durationInfo.label}
+              </span>
+            )}
             <span className="text-[11px] font-mono font-bold text-indigo-700 bg-white/90 border border-indigo-200/60 px-1.5 py-0.5 rounded">
               {dateLabel}{nextEv.time ? ` • ${nextEv.time}` : ''}
             </span>

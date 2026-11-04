@@ -1281,6 +1281,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         handleFirestoreError(error, OperationType.DELETE, `events/${id}`);
       }
     }
+    setEvents(prev => prev.filter(e => e.id !== id));
   }, [handleFirestoreError]);
 
   const archiveEvent = useCallback(async (id: string) => {
@@ -1303,6 +1304,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         handleFirestoreError(error, OperationType.UPDATE, `events/${id}`);
       }
     }
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, isArchived: true } : e));
   }, [handleFirestoreError]);
 
   const updateEvent = useCallback(async (event: Event) => {

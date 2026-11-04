@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../services/firebase';
-import { Calendar, MapPin, Clock, User, Users, X, Navigation, Plus, Edit2, Trash2, Upload, UserCircle } from 'lucide-react';
+import { Calendar, MapPin, Clock, User, Users, X, Navigation, Plus, Edit2, Trash2, Upload, UserCircle, Sparkles } from 'lucide-react';
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { Event } from '../types';
 import { EventEditor } from '../components/admin/EventEditor';
 import { EventDietarySummary } from '../components/EventDietarySummary';
 import { isAdminUser, isAppShaperUser } from '../constants';
+import { calculateEventDuration, formatEventDateRange, getEventStatus } from '../utils/dateUtils';
 
 const EventsPage: React.FC = () => {
   const headerImage = useRandomHeader();
@@ -30,8 +31,8 @@ const EventsPage: React.FC = () => {
   });
   const activeEvents = roleFilteredEvents.filter(e => !e.isArchived);
 
-  const upcomingEvents = activeEvents.filter(e => new Date(e.date) >= new Date(new Date().setHours(0,0,0,0)));
-  const pastEvents = sortedEvents.filter(e => new Date(e.date) < new Date(new Date().setHours(0,0,0,0))).reverse();
+  const upcomingEvents = activeEvents.filter(e => !getEventStatus(e.date, e.endDate).isPast);
+  const pastEvents = sortedEvents.filter(e => getEventStatus(e.date, e.endDate).isPast).reverse();
 
   const handleRSVP = async (e: React.MouseEvent, eventId: string) => {
     e.stopPropagation();
@@ -65,9 +66,12 @@ const EventsPage: React.FC = () => {
   };
 
   const handleDeleteEvent = async (eventId: string) => {
-    if (window.confirm('האם אתה בטוח שברצונך לבטל ולמחוק את האירוע?')) {
+    if (window.confirm('האם אתה בטוח שברצונך למחוק את האירוע?')) {
       await deleteEvent(eventId);
       setIsModalOpen(false);
+      setSelectedEvent(null);
+      setIsEditing(false);
+      setEditingEvent(null);
     }
   };
 
@@ -86,13 +90,8 @@ const EventsPage: React.FC = () => {
   };
 
   const openModal = (event: Event) => {
-    if (canManageEvent(event)) {
-      setEditingEvent(event);
-      setIsEditing(true);
-    } else {
-      setSelectedEvent(event);
-      setIsModalOpen(true);
-    }
+    setSelectedEvent(event);
+    setIsModalOpen(true);
   };
 
   const closeModal = () => {
@@ -159,6 +158,9 @@ const EventsPage: React.FC = () => {
             <div className="grid gap-6">
               {upcomingEvents.map(event => {
                 const eventAttendees = members.filter(m => (event.attendees || []).includes(m.id));
+                const durationInfo = calculateEventDuration(event.date, event.endDate);
+                const statusInfo = getEventStatus(event.date, event.endDate);
+
                 return (
                   <div key={event.id} className="luxury-card p-6 flex flex-col md:flex-row gap-6 hover:shadow-xl transition-all cursor-pointer relative overflow-hidden group" onClick={() => openModal(event)}>
                     <div className="grain-overlay" />
@@ -174,9 +176,17 @@ const EventsPage: React.FC = () => {
                       )}
                     </div>
                     <div className="flex-1 flex flex-col relative z-10">
-                      <div className="flex justify-between items-start mb-2">
+                      <div className="flex justify-between items-start gap-3 mb-2">
                         <div className="flex flex-col">
-                          <h3 className="text-xl font-bold text-slate-800 group-hover:text-slate-900 transition-colors">{event.title}</h3>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-xl font-bold text-slate-800 group-hover:text-slate-900 transition-colors">{event.title}</h3>
+                            {statusInfo.isOngoing && (
+                              <span className="px-2.5 py-0.5 bg-emerald-500 text-white rounded-full text-xs font-black animate-pulse flex items-center gap-1.5 shadow-sm">
+                                <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                                מתרחש עכשיו {durationInfo.isMultiDay ? `(יום ${statusInfo.dayNumber}/${statusInfo.totalDays})` : ''}
+                              </span>
+                            )}
+                          </div>
                           {getCreatorName(event) && (
                             <span className="text-sm text-slate-800 font-medium flex items-center gap-1 mt-0.5">
                               <User size={14} />
@@ -184,9 +194,17 @@ const EventsPage: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        <span className="px-3 py-1 bg-slate-100 text-slate-800 border border-slate-200 rounded-full text-sm font-bold whitespace-nowrap shadow-sm">
-                          {new Date(event.date).toLocaleDateString('he-IL')}
-                        </span>
+                        
+                        <div className="flex items-center gap-2 shrink-0">
+                          {durationInfo.isMultiDay && (
+                            <span className="px-2.5 py-1 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-full text-xs font-black shadow-sm">
+                              {durationInfo.label}
+                            </span>
+                          )}
+                          <span className="px-3 py-1 bg-slate-100 text-slate-800 border border-slate-200 rounded-full text-sm font-bold whitespace-nowrap shadow-sm">
+                            {formatEventDateRange(event.date, event.endDate)}
+                          </span>
+                        </div>
                       </div>
                       <p className="text-slate-800 mb-4 flex-1 text-sm leading-relaxed">{event.description}</p>
                       
@@ -245,7 +263,7 @@ const EventsPage: React.FC = () => {
                           {event.time && (
                             <div className="flex items-center gap-1">
                               <Clock size={16} className="text-slate-800" />
-                              {event.time}
+                              {event.time}{event.endTime ? ` - ${event.endTime}` : ''}
                             </div>
                           )}
                           {event.location && (
@@ -327,12 +345,25 @@ const EventsPage: React.FC = () => {
               <div className="flex flex-wrap gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
                 <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
                   <Calendar size={18} className="text-sky-600" />
-                  {new Date(selectedEvent.date).toLocaleDateString('he-IL')} {selectedEvent.time}
+                  <span>{formatEventDateRange(selectedEvent.date, selectedEvent.endDate)}</span>
+                  {calculateEventDuration(selectedEvent.date, selectedEvent.endDate).isMultiDay && (
+                    <span className="px-2.5 py-0.5 bg-indigo-100 text-indigo-900 rounded-full text-xs font-black">
+                      {calculateEventDuration(selectedEvent.date, selectedEvent.endDate).label}
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
-                  <MapPin size={18} className="text-rose-600" />
-                  {selectedEvent.location}
-                </div>
+                {selectedEvent.time && (
+                  <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                    <Clock size={18} className="text-indigo-600" />
+                    <span>{selectedEvent.time}{selectedEvent.endTime ? ` - ${selectedEvent.endTime}` : ''}</span>
+                  </div>
+                )}
+                {selectedEvent.location && (
+                  <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                    <MapPin size={18} className="text-rose-600" />
+                    <span>{selectedEvent.location}</span>
+                  </div>
+                )}
               </div>
               
               <div className="space-y-3">
@@ -489,7 +520,10 @@ const EventsPage: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-bold text-slate-800 truncate">{event.title}</h3>
                   <div className="flex items-center gap-2">
-                    <p className="text-sm text-slate-800 truncate">{event.date ? new Date(event.date).toLocaleDateString('he-IL') : ''}</p>
+                    <p className="text-sm text-slate-800 truncate">
+                      {formatEventDateRange(event.date, event.endDate)}
+                      {calculateEventDuration(event.date, event.endDate).isMultiDay ? ` (${calculateEventDuration(event.date, event.endDate).label})` : ''}
+                    </p>
                     {getCreatorName(event) && (
                       <span className="text-xs text-slate-800 font-medium flex items-center gap-1">
                         • מארגן האירוע: {getCreatorName(event)}

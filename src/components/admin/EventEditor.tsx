@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Event } from '../../types';
-import { X, Calendar, Clock, MapPin, Image as ImageIcon, Save, Upload, Loader2, AlertCircle, Users } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, Image as ImageIcon, Save, Upload, Loader2, AlertCircle, Users, Sparkles, Trash2 } from 'lucide-react';
 import { processImage } from '../../utils/imageProcessor';
 import { loadGoogleMaps } from '../../utils/googlePlaces';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { auth } from '../../services/firebase';
 import { EventDietarySummary } from '../EventDietarySummary';
+import { calculateEventDuration, formatEventDateRange } from '../../utils/dateUtils';
 
 interface EventEditorProps {
   event: Partial<Event> | null;
@@ -21,11 +22,16 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
   const { currentUser, firebaseUser } = useAuth();
   const authUid = auth.currentUser?.uid || firebaseUser?.uid || '0lBzsihTFBNNE0NqbFGekqTUoBQ2';
 
+  const initialIsMultiDay = Boolean(event?.endDate && event.endDate > (event.date || ''));
+  const [isMultiDay, setIsMultiDay] = useState<boolean>(initialIsMultiDay);
+
   const [formData, setFormData] = useState({
     title: event?.title || '',
     description: event?.description || '',
     date: event?.date || new Date().toISOString().split('T')[0],
+    endDate: event?.endDate || '',
     time: event?.time || '18:00',
+    endTime: event?.endTime || '',
     location: event?.location || '',
     imageUrl: event?.imageUrl || '',
     type: event?.type || 'MEMBER',
@@ -101,15 +107,32 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
     e.preventDefault();
     if (isSaving || isUploading) return;
 
+    if (isMultiDay) {
+      if (!formData.endDate) {
+        setError('יש לבחור תאריך סיום לאירוע רב-יומי');
+        return;
+      }
+      if (formData.endDate < formData.date) {
+        setError('תאריך הסיום אינו יכול להיות מוקדם מתאריך ההתחלה');
+        return;
+      }
+    }
+
     try {
       setIsSaving(true);
       setError(null);
       const effectiveCreatorId = event?.id ? (formData.creatorId || authUid) : authUid;
       const effectiveMemberId = formData.creatorMemberId || event?.creatorMemberId || currentUser?.id || '';
       const effectiveCreatorName = formData.creatorName || event?.creatorName || (currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : '');
+
+      const finalEndDate = isMultiDay && formData.endDate && formData.endDate >= formData.date ? formData.endDate : undefined;
+      const finalEndTime = formData.endTime?.trim() || undefined;
+
       await onSave({
         ...event,
         ...formData,
+        endDate: finalEndDate,
+        endTime: finalEndTime,
         creatorId: effectiveCreatorId,
         creatorMemberId: effectiveMemberId,
         creatorName: effectiveCreatorName
@@ -146,7 +169,7 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all !text-slate-800 !placeholder-slate-500"
-              placeholder="למשל: ערב גיבוש בחוף"
+              placeholder="למשל: טיול יומיים בכנרת / סדנת גלישה"
             />
           </div>
 
@@ -157,11 +180,10 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
               className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all min-h-[100px] !text-slate-800 !placeholder-slate-500"
-              placeholder="ספרו לנו קצת על האירוע..."
+              placeholder="ספרו לנו קצת על האירוע, לוח זמנים, ציוד נדרש..."
             />
           </div>
 
-          
           <div className="space-y-2">
             <label className="text-sm font-bold text-slate-700 block mr-1">קהל יעד / סוג אירוע</label>
             <select
@@ -174,36 +196,147 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
               <option value="MEMBER">מפגש משתתפים</option>
             </select>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+          {/* Multi-day toggle card */}
+          <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-sm shrink-0">
+                <Calendar size={20} />
+              </div>
+              <div>
+                <span className="font-bold text-slate-800 text-sm block">אירוע מתמשך / רב-יומי</span>
+                <span className="text-xs text-slate-500 font-medium">סמנו עבור טיול יומיים או יותר, מחנה גלישה, סופ"ש וכד'</span>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                checked={isMultiDay}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setIsMultiDay(checked);
+                  if (!checked) {
+                    setFormData(prev => ({ ...prev, endDate: '' }));
+                  } else if (!formData.endDate || formData.endDate < formData.date) {
+                    const d = new Date(formData.date || Date.now());
+                    d.setDate(d.getDate() + 1);
+                    setFormData(prev => ({ ...prev, endDate: d.toISOString().split('T')[0] }));
+                  }
+                }}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+            </label>
+          </div>
+
+          {/* Date controls */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 block mr-1">תאריך</label>
+              <label className="text-sm font-bold text-slate-700 block mr-1">
+                {isMultiDay ? 'תאריך התחלה' : 'תאריך'}
+              </label>
               <div className="relative">
                 <Calendar size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="date"
                   required
                   value={formData.date}
-                  onChange={e => setFormData({ ...formData, date: e.target.value })}
+                  onChange={e => {
+                    const newStart = e.target.value;
+                    setFormData(prev => {
+                      const next = { ...prev, date: newStart };
+                      if (isMultiDay && (!prev.endDate || prev.endDate < newStart)) {
+                        next.endDate = newStart;
+                      }
+                      return next;
+                    });
+                  }}
                   className="w-full pr-11 pl-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all !text-slate-800 text-right"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 block mr-1">שעה</label>
-              <div className="relative">
-                <Clock size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="time"
-                  required
-                  value={formData.time}
-                  onChange={e => setFormData({ ...formData, time: e.target.value })}
-                  className="w-full pr-11 pl-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all !text-slate-800 text-right"
-                />
+            {isMultiDay ? (
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-indigo-900 block mr-1">
+                  תאריך סיום
+                </label>
+                <div className="relative">
+                  <Calendar size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-indigo-500" />
+                  <input
+                    type="date"
+                    required={isMultiDay}
+                    min={formData.date}
+                    value={formData.endDate}
+                    onChange={e => setFormData({ ...formData, endDate: e.target.value })}
+                    className="w-full pr-11 pl-4 py-3 rounded-xl border-2 border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all !text-indigo-950 font-bold text-right bg-indigo-50/30"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 block mr-1">שעה</label>
+                <div className="relative">
+                  <Clock size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="time"
+                    required
+                    value={formData.time}
+                    onChange={e => setFormData({ ...formData, time: e.target.value })}
+                    className="w-full pr-11 pl-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all !text-slate-800 text-right"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Time controls for multi-day */}
+          {isMultiDay && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 block mr-1">שעת התחלה (יום 1)</label>
+                <div className="relative">
+                  <Clock size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="time"
+                    required
+                    value={formData.time}
+                    onChange={e => setFormData({ ...formData, time: e.target.value })}
+                    className="w-full pr-11 pl-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all !text-slate-800 text-right"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 block mr-1">שעת סיום (יום אחרון - אופציונלי)</label>
+                <div className="relative">
+                  <Clock size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="time"
+                    value={formData.endTime}
+                    onChange={e => setFormData({ ...formData, endTime: e.target.value })}
+                    className="w-full pr-11 pl-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all !text-slate-800 text-right"
+                    placeholder="לדוגמה: 17:00"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Multi-day summary pill */}
+          {isMultiDay && formData.date && formData.endDate && formData.endDate >= formData.date && (
+            <div className="p-3.5 bg-gradient-to-r from-indigo-500/10 to-sky-500/10 border border-indigo-200 rounded-xl flex items-center justify-between gap-3 text-indigo-950 text-sm font-bold animate-in fade-in">
+              <div className="flex items-center gap-2">
+                <Sparkles size={18} className="text-indigo-600 shrink-0" />
+                <span>
+                  אירוע של {calculateEventDuration(formData.date, formData.endDate).label} ({formatEventDateRange(formData.date, formData.endDate)})
+                </span>
+              </div>
+              <span className="text-xs bg-indigo-600 text-white px-2.5 py-1 rounded-full font-black">
+                {calculateEventDuration(formData.date, formData.endDate).days} ימים
+              </span>
+            </div>
+          )}
 
           <div className="space-y-2">
             <label className="text-sm font-bold text-slate-700 block mr-1">מיקום</label>
@@ -338,9 +471,10 @@ export const EventEditor: React.FC<EventEditorProps> = ({ event, onSave, onClose
               <button 
                 type="button"
                 onClick={() => onArchive(event.id!)}
-                className="flex-1 px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-bold hover:bg-red-100 transition-colors border border-red-100"
+                className="flex-1 px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-bold hover:bg-red-100 transition-colors border border-red-100 flex items-center justify-center gap-2"
               >
-                ביטול אירוע (ארכיון)
+                <Trash2 size={18} />
+                מחיקת אירוע
               </button>
             )}
             <button 

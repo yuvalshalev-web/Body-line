@@ -125,8 +125,10 @@ export interface Event {
   id: string;
   title: string;
   description: string;
-  date: string;
-  time: string;
+  date: string; // Start date e.g. "2026-11-10"
+  endDate?: string; // Optional end date for multi-day events e.g. "2026-11-12"
+  time: string; // Start time e.g. "08:00"
+  endTime?: string; // Optional end time e.g. "17:00"
   location: string;
   imageUrl: string;
   type: 'COMMUNITY' | 'MEMBER' | 'INSTRUCTOR' | 'VOLUNTEER';

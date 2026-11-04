@@ -153,3 +153,97 @@ export const calculateAge = (birthday?: any): number | null => {
   }
   return age;
 };
+
+/**
+ * Calculates event duration in days from start and optional end date.
+ */
+export const calculateEventDuration = (startDateStr: string, endDateStr?: string): { days: number; label: string; isMultiDay: boolean } => {
+  if (!startDateStr) return { days: 1, label: 'יום אחד', isMultiDay: false };
+  if (!endDateStr || endDateStr === startDateStr) return { days: 1, label: 'יום אחד', isMultiDay: false };
+
+  const start = parseDate(startDateStr);
+  const end = parseDate(endDateStr);
+
+  if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return { days: 1, label: 'יום אחד', isMultiDay: false };
+  }
+
+  // Zero out time components
+  const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const e = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+  const diffMs = e.getTime() - s.getTime();
+  if (diffMs <= 0) {
+    return { days: 1, label: 'יום אחד', isMultiDay: false };
+  }
+
+  const days = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1;
+
+  if (days === 2) {
+    return { days: 2, label: 'יומיים', isMultiDay: true };
+  }
+  return { days, label: `${days} ימים`, isMultiDay: true };
+};
+
+/**
+ * Formats event date range string, e.g. "10/11/2026 – 12/11/2026" or "10/11/2026"
+ */
+export const formatEventDateRange = (startDateStr: string, endDateStr?: string): string => {
+  const startFmt = formatDate(startDateStr);
+  if (!startFmt) return '';
+
+  if (!endDateStr || endDateStr === startDateStr) {
+    return startFmt;
+  }
+
+  const endFmt = formatDate(endDateStr);
+  if (!endFmt || endFmt === startFmt) {
+    return startFmt;
+  }
+
+  return `${startFmt} – ${endFmt}`;
+};
+
+/**
+ * Determines whether an event is upcoming, ongoing right now, or in the past.
+ */
+export const getEventStatus = (startDateStr: string, endDateStr?: string): {
+  isOngoing: boolean;
+  isPast: boolean;
+  isUpcoming: boolean;
+  dayNumber?: number;
+  totalDays: number;
+} => {
+  const start = parseDate(startDateStr);
+  const end = parseDate(endDateStr || startDateStr);
+
+  const durationInfo = calculateEventDuration(startDateStr, endDateStr);
+
+  if (!start || !end) {
+    return { isOngoing: false, isPast: false, isUpcoming: true, totalDays: 1 };
+  }
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const sTime = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+  const eTime = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59).getTime();
+
+  if (todayStart > eTime) {
+    return { isOngoing: false, isPast: true, isUpcoming: false, totalDays: durationInfo.days };
+  }
+
+  if (todayStart < sTime) {
+    return { isOngoing: false, isPast: false, isUpcoming: true, totalDays: durationInfo.days };
+  }
+
+  // Ongoing event!
+  const currentDayNum = Math.floor((todayStart - sTime) / (1000 * 60 * 60 * 24)) + 1;
+  return {
+    isOngoing: true,
+    isPast: false,
+    isUpcoming: false,
+    dayNumber: Math.min(Math.max(1, currentDayNum), durationInfo.days),
+    totalDays: durationInfo.days,
+  };
+};
+

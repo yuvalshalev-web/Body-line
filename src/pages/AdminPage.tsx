@@ -42,7 +42,7 @@ const SystemSettingsPage = lazy(() => import('./SystemSettingsPage'));
 const EngineRoomPage = lazy(() => import('./EngineRoomPage'));
 import { useRandomHeader } from '../hooks/useRandomHeader';
 import { calculateUserStats } from '../utils/analytics';
-import { calculateAge, parseDate } from '../utils/dateUtils';
+import { calculateAge, parseDate, formatEventDateRange } from '../utils/dateUtils';
 import { formatBirthdayWhatsAppMessage, openWhatsAppWithMessage } from '../utils/whatsapp';
 import { SurfCallsAnalytics } from '../components/admin/SurfCallsAnalytics';
 
@@ -1747,94 +1747,106 @@ const AdminPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {events.map(event => {
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+              {events.filter(e => !e.isArchived).map(event => {
                 const eventDate = new Date(`${event.date}T${event.time || '00:00'}`);
                 const isPastEvent = eventDate < new Date();
 
                 return (
-                  <div key={event.id} className={`admin-info-card p-6 flex flex-col sm:flex-row sm:items-center justify-between group relative overflow-hidden ${isPastEvent ? 'grayscale opacity-60' : ''}`}>
+                  <div key={event.id} className={`admin-info-card p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:gap-5 items-stretch sm:items-center justify-between group relative overflow-hidden rounded-3xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition-all h-full ${isPastEvent ? 'grayscale opacity-70' : ''}`}>
                     
+                    {/* Top-Left Action Buttons Pill - Never overflows or shifts */}
+                    <div className="absolute top-3 left-3 z-30 flex items-center gap-1.5 p-1 bg-white/95 backdrop-blur-md rounded-2xl shadow-sm border border-slate-200/80 group-hover:shadow-md transition-all">
+                      {!isPastEvent && (
+                        <button 
+                          onClick={() => handleEditEvent(event)}
+                          className="w-9 h-9 flex items-center justify-center text-sky-600 hover:text-white hover:bg-sky-600 rounded-xl transition-all border border-sky-100/80 shadow-xs active:scale-95"
+                          title="עריכת אירוע"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => {
+                          showConfirm({
+                            title: 'מחיקת אירוע',
+                            message: 'האם אתה בטוח שברצונך למחוק אירוע זה?',
+                            confirmText: 'מחיקה',
+                            cancelText: 'ביטול',
+                            onConfirm: async () => {
+                              try {
+                                await deleteEvent(event.id);
+                                showSuccess('האירוע נמחק בהצלחה');
+                              } catch (err) {
+                                showError('שגיאה במחיקת האירוע');
+                              }
+                            }
+                          });
+                        }}
+                        className="w-9 h-9 flex items-center justify-center text-rose-500 hover:text-white hover:bg-rose-500 rounded-xl transition-all border border-rose-100/80 shadow-xs active:scale-95"
+                        title="מחיקת אירוע"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+
                     {isPastEvent && (
-                      <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                        <span className="text-6xl md:text-8xl font-black text-slate-500/20 transform -rotate-12 select-none tracking-widest">
-                          התקיים
+                      <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none bg-slate-900/5 backdrop-blur-[1px]">
+                        <span className="px-4 py-1.5 bg-slate-800/90 text-white font-black text-xs rounded-full shadow-md transform -rotate-6 tracking-widest uppercase">
+                          האירוע התקיים
                         </span>
                       </div>
                     )}
 
-                    <div className="flex items-center gap-6 flex-1">
-                      {/* Event Image - Smart Display */}
+                    {/* Image Container - Fixed proportion on right (RTL) */}
+                    <div className="w-full sm:w-44 h-36 sm:h-32 rounded-2xl overflow-hidden flex-shrink-0 shadow-xs border border-slate-100 relative bg-slate-100">
                       {event.imageUrl || siteAssets?.defaultEventImage ? (
-                        <div className="relative w-32 sm:w-48 aspect-video rounded-2xl overflow-hidden flex-shrink-0 shadow-md border border-white/20">
-                          <img 
-                            src={event.imageUrl || siteAssets?.defaultEventImage} 
-                            alt={event.title} 
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
+                        <img 
+                          src={event.imageUrl || siteAssets?.defaultEventImage} 
+                          alt={event.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          referrerPolicy="no-referrer"
+                        />
                       ) : (
-                        <div className={`w-32 sm:w-48 aspect-video rounded-2xl flex items-center justify-center font-black flex-shrink-0 border border-white/30 ${isPastEvent ? 'bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/40' : 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)]'}`}>
-                          <span className="text-sm whitespace-nowrap tabular-nums">{formatDate(event.date)}</span>
+                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-2">
+                          <Calendar size={28} className="mb-1 text-slate-400" />
+                          <span className="text-xs font-bold text-slate-500 tabular-nums">{formatDate(event.date)}</span>
                         </div>
                       )}
+                    </div>
 
-                      <div className="flex flex-col min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          {(event.imageUrl || siteAssets?.defaultEventImage) && (
-                             <span className={`px-2 py-0.5 rounded-md text-[10px] font-black whitespace-nowrap ${isPastEvent ? 'bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/40' : 'bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)]'}`}>
-                              {formatDate(event.date)}
-                            </span>
-                          )}
-                          <h4 className={`text-xl font-black truncate ${isPastEvent ? 'text-[var(--deep-teal-sea)]/40 line-through decoration-[var(--deep-teal-sea)]/20' : 'text-[var(--surfer-electric-pink)]'}`}>{event.title}</h4>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-bold text-[var(--deep-teal-sea)]/60 truncate">{event.location}</p>
-                          <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider whitespace-nowrap ${
-                            event.type === 'COMMUNITY' ? 'bg-[var(--surfer-vibrant-cyan)] text-white' : 
-                            event.type === 'VOLUNTEER' ? 'bg-[var(--surfer-sunshine-yellow)] text-[var(--deep-teal-sea)]' : 
-                            'bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/60'
+                    {/* Main Information Stack */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-between py-1 pl-20 sm:pl-24">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-2xs">
+                            {formatEventDateRange(event.date, event.endDate)} {event.time ? `• ${event.time}` : ''}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            event.type === 'COMMUNITY' ? 'bg-sky-50 text-sky-700 border border-sky-100' : 
+                            event.type === 'VOLUNTEER' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 
+                            'bg-slate-100 text-slate-700 border border-slate-200'
                           }`}>
                             {event.type === 'COMMUNITY' ? 'כולם מוזמנים' : event.type === 'VOLUNTEER' ? 'מתנדבים' : 'משתתפים'}
                           </span>
                         </div>
+
+                        <h4 
+                          className="text-base font-bold text-slate-800 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors" 
+                          title={event.title}
+                        >
+                          {event.title}
+                        </h4>
                       </div>
-                    </div>
-                    <div className="flex gap-2 mt-4 sm:mt-0">
-                      {!isPastEvent && (
-                        <button 
-                          onClick={() => handleEditEvent(event)}
-                          className="p-4 bg-[var(--surfer-aqua-mist)]/10 text-[var(--surfer-vibrant-cyan)] rounded-2xl hover:bg-[var(--surfer-vibrant-cyan)] hover:text-white transition-all border border-white/20"
-                          title="עריכת אירוע"
-                        >
-                          <Pencil size={20} />
-                        </button>
-                      )}
-                      {!isPastEvent && (
-                        <button 
-                          onClick={() => {
-                            showConfirm({
-                              message: 'האם לבטל אירוע זה ולהעבירו לארכיון?',
-                              onConfirm: () => archiveEvent(event.id)
-                            });
-                          }}
-                          className="p-4 bg-rose-50 text-rose-400 rounded-2xl hover:bg-rose-500 hover:text-white transition-all border border-rose-100"
-                          title="ביטול והעברה לארכיון"
-                        >
-                          <Trash2 size={20} />
-                        </button>
-                      )}
-                      {isPastEvent && (
-                         <button 
-                          className="p-4 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)]/20 rounded-2xl cursor-not-allowed border border-white/10"
-                          title="לא ניתן לערוך אירוע שהסתיים"
-                        >
-                          <Archive size={20} />
-                        </button>
+
+                      {event.location && (
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-2 font-medium">
+                          <MapPin size={14} className="text-slate-400 shrink-0" />
+                          <span className="truncate">{event.location}</span>
+                        </div>
                       )}
                     </div>
+
                   </div>
                 );
               })}
