@@ -887,73 +887,78 @@ const LoginPage: React.FC = () => {
         }`} />
       </div>
 
-      <div className="relative z-10 w-full max-w-sm sm:max-w-md my-auto flex flex-col justify-between p-3.5 sm:p-6 md:p-8 max-h-[98vh] sm:max-h-none overflow-hidden gap-2 sm:gap-4.5">
+      <div className="relative z-10 w-full max-w-md sm:max-w-lg my-auto flex flex-col items-center justify-between p-3 sm:p-6 max-h-[98vh] sm:max-h-none overflow-y-auto no-scrollbar gap-2 sm:gap-3.5">
 
-          {/* Header / Logo */}
-          <div className="text-center mb-2 sm:mb-3 flex items-center justify-center relative z-10 gap-4">
+          {/* Header / Logo - Prominent & Elegantly Proportioned */}
+          <div className="text-center mb-1 sm:mb-2 flex items-center justify-center relative z-10 w-full">
             {isDataLoading ? (
-              <div className="h-14 sm:h-20 flex items-center justify-center">
-                <Loader2 className="animate-spin text-slate-500" size={24} />
+              <div className="h-16 sm:h-24 flex items-center justify-center">
+                <Loader2 className="animate-spin text-slate-500" size={26} />
               </div>
             ) : (
               <motion.div 
                 initial={{ y: 5, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4 }}
-                className="flex flex-col gap-0.5 sm:gap-1.5 items-center w-full relative"
+                className="flex flex-col gap-1 sm:gap-2 items-center w-full relative"
               >
                 {logoUrl && !logoError ? (
                   <img 
                     src={logoUrl} 
                     onError={() => setLogoError(true)}
-                    className="h-20 sm:h-52 w-auto object-contain transition-transform duration-500 hover:scale-103" 
+                    className="h-26 sm:h-34 md:h-40 w-auto object-contain transition-transform duration-500 hover:scale-103 drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]" 
                     alt="Habal Zug Logo" 
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className={`w-10 h-10 sm:h-18 sm:w-18 border flex items-center justify-center rounded-lg shrink-0 mb-0.5 ${
+                  <div className={`w-14 h-14 sm:w-20 sm:h-20 border flex items-center justify-center rounded-2xl shrink-0 mb-1 shadow-sm ${
                     isDarkTheme ? 'border-white/20 bg-slate-800 text-white' : 'border-slate-300 bg-slate-50 text-slate-700'
                   }`}>
-                    <Waves size={24} strokeWidth={1.5} />
+                    <Waves size={28} strokeWidth={1.8} />
                   </div>
                 )}
 
-                <div className="space-y-1 sm:space-y-3 mt-1.5 w-full text-center">
-                  <h1 className={`text-2xl sm:text-[3.3rem] md:text-[4.125rem] font-black tracking-tight leading-tight font-sans drop-shadow-[0_4px_8px_rgba(0,0,0,0.55)] transition-colors duration-500 ${
+                <div className="space-y-1 sm:space-y-1.5 mt-0.5 sm:mt-1 w-full text-center">
+                  <h1 className={`text-[2.15rem] sm:text-5xl md:text-[3.5rem] font-black tracking-tight leading-[1.1] font-sans drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-colors duration-500 ${
                     isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'
                   }`}>
                     קהילת חבל זוג
                   </h1>
-                  <p className={`font-sans font-bold text-base sm:text-[2.06rem] md:text-[2.475rem] leading-snug transition-colors duration-500 ${
-                    isDarkTheme ? 'text-[#fbf5df]/90' : 'text-[#002b44]/90'
+                  <p className={`font-sans font-extrabold text-xl sm:text-2xl md:text-3xl leading-snug transition-colors duration-500 ${
+                    isDarkTheme ? 'text-[#fbf5df]/95' : 'text-[#002b44]/95'
                   }`}>
                     מחוברים תמיד, מכל מקום
                   </p>
-                  <p className={`font-sans font-bold text-xs sm:text-[1.65rem] flex items-center justify-center gap-1.5 mt-0.5 transition-colors duration-500 ${
-                    isDarkTheme ? 'text-[#fbf5df]/75' : 'text-[#002b44]/75'
+                  <p className={`font-sans font-bold text-base sm:text-lg flex items-center justify-center gap-2 mt-0.5 transition-colors duration-500 ${
+                    isDarkTheme ? 'text-[#fbf5df]/85' : 'text-[#002b44]/85'
                   }`}>
                     <span>איזה כיף שחזרת!</span>
-                    <span className="text-xl sm:text-3xl select-none animate-bounce">🌊</span>
+                    <span className="text-xl sm:text-2xl select-none animate-bounce">🌊</span>
                   </p>
                 </div>
               </motion.div>
             )}
           </div>
 
-
-
           {mode === 'LOGIN' ? (
-            <form id="login-form" onSubmit={handleLoginSubmit} className="space-y-2 sm:space-y-3 relative z-10">
+            <form id="login-form" onSubmit={handleLoginSubmit} className="w-full max-w-[325px] sm:max-w-[360px] mx-auto space-y-2 sm:space-y-2.5 relative z-10">
               <div className="space-y-1.5">
                 <div className="relative group">
                   <input 
                     type="email" required value={email} onChange={e => setEmail(e.target.value)} 
-                    className="w-full h-11 rounded-lg font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all vintage-glass-input"
+                    className={`w-full h-11 rounded-xl font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all backdrop-blur-md ${
+                      isDarkTheme 
+                        ? 'bg-slate-900/60 border border-white/25 text-[#fbf5df] placeholder-[#fbf5df]/40 focus:bg-slate-900/80 focus:border-white/50 focus:ring-2 focus:ring-white/20 shadow-lg'
+                        : 'bg-white/90 border border-[#002b44]/25 text-[#002b44] placeholder-[#002b44]/45 focus:bg-white focus:border-[#0071a1] focus:ring-2 focus:ring-[#0071a1]/20 shadow-[0_3px_10px_rgba(0,43,68,0.08)] font-medium'
+                    }`}
                     placeholder="דוא״ל"
-                    style={{ color: '#fbf5df' }}
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <Mail size={14} className="text-[#fbf5df]/60 group-focus-within:text-[#fbf5df] transition-colors" />
+                    <Mail size={14} className={`transition-colors ${
+                      isDarkTheme 
+                        ? 'text-[#fbf5df]/60 group-focus-within:text-[#fbf5df]' 
+                        : 'text-[#002b44]/60 group-focus-within:text-[#002b44]'
+                    }`} />
                   </div>
                 </div>
 
@@ -961,14 +966,19 @@ const LoginPage: React.FC = () => {
                   <input 
                     type={showPassword ? "text" : "password"} 
                     required value={password} onChange={e => setPassword(e.target.value)} 
-                    className="w-full h-11 rounded-lg font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all vintage-glass-input"
+                    className={`w-full h-11 rounded-xl font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all backdrop-blur-md ${
+                      isDarkTheme 
+                        ? 'bg-slate-900/60 border border-white/25 text-[#fbf5df] placeholder-[#fbf5df]/40 focus:bg-slate-900/80 focus:border-white/50 focus:ring-2 focus:ring-white/20 shadow-lg'
+                        : 'bg-white/90 border border-[#002b44]/25 text-[#002b44] placeholder-[#002b44]/45 focus:bg-white focus:border-[#0071a1] focus:ring-2 focus:ring-[#0071a1]/20 shadow-[0_3px_10px_rgba(0,43,68,0.08)] font-medium'
+                    }`}
                     placeholder="סיסמה"
-                    style={{ color: '#fbf5df' }}
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#fbf5df]/60 hover:text-[#fbf5df] transition-colors p-1"
+                    className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors p-1 ${
+                      isDarkTheme ? 'text-[#fbf5df]/60 hover:text-[#fbf5df]' : 'text-[#002b44]/60 hover:text-[#002b44]'
+                    }`}
                   >
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -976,25 +986,33 @@ const LoginPage: React.FC = () => {
 
                 {/* Group Selection Dropdown */}
                 <div className="relative w-full">
-                  <label className="text-[10px] font-sans font-bold uppercase tracking-widest block pr-1 mb-0.5 text-right text-[#fbf5df]/70">
+                  <label className={`text-[10px] font-sans font-bold uppercase tracking-widest block pr-1 mb-0.5 text-right transition-colors ${
+                    isDarkTheme ? 'text-[#fbf5df]/70' : 'text-[#002b44]/80'
+                  }`}>
                     קבוצת פעילות (מחזור פעיל / בוגרים)
                   </label>
                   <button 
                     type="button"
                     onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
-                    className="w-full h-11 rounded-lg text-sm font-semibold outline-none text-right flex items-center justify-between px-3.5 transition-all vintage-glass-input cursor-pointer"
+                    className={`w-full h-11 rounded-xl text-sm font-semibold outline-none text-right flex items-center justify-between px-3.5 transition-all backdrop-blur-md cursor-pointer ${
+                      isDarkTheme 
+                        ? 'bg-slate-900/60 border border-white/25 text-[#fbf5df] focus:bg-slate-900/80 focus:border-white/50 focus:ring-2 focus:ring-white/20 shadow-lg'
+                        : 'bg-white/90 border border-[#002b44]/25 text-[#002b44] focus:bg-white focus:border-[#0071a1] focus:ring-2 focus:ring-[#0071a1]/20 shadow-[0_3px_10px_rgba(0,43,68,0.08)]'
+                    }`}
                   >
                     <span className="flex-1 text-right flex items-center gap-1.5 truncate">
-                      <MapPin size={14} className="shrink-0 text-cyan-400" />
-                      <span className="text-[#fbf5df] font-bold">
+                      <MapPin size={14} className={`shrink-0 ${isDarkTheme ? 'text-cyan-400' : 'text-[#0071a1]'}`} />
+                      <span className={`font-bold ${isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'}`}>
                         {availableCommunities.find(c => c.id === selectedCommunityId)?.baseName || "הרצליה"}
                       </span>
-                      <span className="text-[#fbf5df] font-bold">-</span>
-                      <span className="text-[#fbf5df] font-bold">
+                      <span className={`font-bold ${isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'}`}>-</span>
+                      <span className={`font-bold ${isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'}`}>
                         {selectedCommunityCohort}
                       </span>
                     </span>
-                    <ChevronDown size={14} className={`text-[#fbf5df]/70 transition-transform duration-300 ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`transition-transform duration-300 ${
+                      isDarkTheme ? 'text-[#fbf5df]/70' : 'text-[#002b44]/70'
+                    } ${isCommunityMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   <AnimatePresence>
@@ -1009,7 +1027,11 @@ const LoginPage: React.FC = () => {
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.98, y: 3 }}
                           transition={{ duration: 0.12 }}
-                          className="absolute top-[calc(100%+0.25rem)] left-0 right-0 bg-[#0d1520]/95 backdrop-blur-xl border border-white/10 text-white rounded-lg shadow-2xl z-50 overflow-y-auto max-h-56 py-1.5 custom-scrollbar divide-y divide-white/5"
+                          className={`absolute top-[calc(100%+0.25rem)] left-0 right-0 backdrop-blur-xl rounded-xl shadow-2xl z-50 overflow-y-auto max-h-56 py-1.5 custom-scrollbar ${
+                            isDarkTheme 
+                              ? 'bg-[#0d1520]/95 border border-white/10 text-white divide-y divide-white/5' 
+                              : 'bg-white/98 border border-[#002b44]/15 text-[#002b44] divide-y divide-slate-100 shadow-[0_12px_32px_rgba(0,43,68,0.15)]'
+                          }`}
                         >
                           {availableCommunities.map((c) => {
                             const isAdults = c.id.endsWith('_adults');
@@ -1025,19 +1047,21 @@ const LoginPage: React.FC = () => {
                                   setIsCommunityMenuOpen(false);
                                   setError('');
                                 }}
-                                className={`w-full px-3.5 py-2.5 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between hover:bg-white/10 cursor-pointer ${
-                                  isSelected ? 'text-[#fbf5df] bg-white/10 font-black' : 'text-slate-300'
+                                className={`w-full px-3.5 py-2.5 text-right font-medium text-xs sm:text-sm transition-all flex items-center justify-between cursor-pointer ${
+                                  isDarkTheme 
+                                    ? (isSelected ? 'text-[#fbf5df] bg-white/10 font-black' : 'text-slate-300 hover:bg-white/10')
+                                    : (isSelected ? 'text-[#002b44] bg-sky-100/80 font-black' : 'text-slate-700 hover:bg-sky-50')
                                 }`}
                               >
                                 <span className="flex items-center gap-1.5">
                                   <span className="text-sm">{isAdults ? '🎓' : '🌊'}</span>
-                                  <span className="text-[#fbf5df] font-bold">{cityName}</span>
-                                  <span className="text-[#fbf5df] font-bold">-</span>
-                                  <span className="text-[#fbf5df] font-bold">
+                                  <span className={`font-bold ${isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'}`}>{cityName}</span>
+                                  <span className={`font-bold ${isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'}`}>-</span>
+                                  <span className={`font-bold ${isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'}`}>
                                     {itemCohort}
                                   </span>
                                 </span>
-                                {isSelected && <CheckCircle2 size={15} className="text-cyan-400" />}
+                                {isSelected && <CheckCircle2 size={15} className={isDarkTheme ? 'text-cyan-400' : 'text-[#0071a1]'} />}
                               </button>
                             );
                           })}
@@ -1087,10 +1111,10 @@ const LoginPage: React.FC = () => {
                         handleDragStart(e.touches[0].clientX);
                       }
                     }}
-                    className={`relative w-64 h-12 rounded-full p-1 transition-all duration-500 shadow-[inset_0_3px_6px_rgba(0,0,0,0.3)] flex items-center justify-between overflow-hidden select-none cursor-grab active:cursor-grabbing ${
+                    className={`relative w-64 h-12 rounded-full p-1 transition-all duration-500 flex items-center justify-between overflow-hidden select-none cursor-grab active:cursor-grabbing ${
                       isDarkTheme 
-                        ? 'bg-black/55 border border-white/10' 
-                        : 'bg-[#faf8f5]/55 border border-[#002b44]/20'
+                        ? 'bg-black/60 border border-white/20 shadow-[inset_0_3px_6px_rgba(0,0,0,0.5)]' 
+                        : 'bg-white/95 border-2 border-[#002b44]/25 shadow-[0_4px_14px_rgba(0,43,68,0.1),inset_0_2px_4px_rgba(0,0,0,0.04)]'
                     }`}
                   >
                     {isLoading || isBiometricLoading ? (
@@ -1105,7 +1129,7 @@ const LoginPage: React.FC = () => {
                         {/* Glowing progress trail bar (reactive to custom drag) */}
                         <div 
                           className={`absolute left-1 top-1 bottom-1 rounded-full pointer-events-none ${
-                            isDarkTheme ? 'bg-[#fbf5df]/20 blur-xs' : 'bg-[#3dbbd3]/20 blur-xs'
+                            isDarkTheme ? 'bg-[#fbf5df]/20 blur-xs' : 'bg-[#0071a1]/15 blur-xs'
                           }`}
                           style={{ 
                             width: `${40 + (sliderValue / 100) * 208}px`,
@@ -1116,7 +1140,7 @@ const LoginPage: React.FC = () => {
                         {/* Slide action text (opacity reactive to custom drag) */}
                         <span 
                           className={`absolute inset-0 flex items-center justify-center text-[10px] font-black uppercase tracking-widest pointer-events-none select-none transition-opacity duration-200 ${
-                            isDarkTheme ? 'text-[#fbf5df]/60' : 'text-[#002b44]/60'
+                            isDarkTheme ? 'text-[#fbf5df]/80' : 'text-[#002b44] font-black'
                           }`}
                           style={{ opacity: Math.max(0, 1 - (sliderValue / 60)) }}
                         >
@@ -1132,12 +1156,12 @@ const LoginPage: React.FC = () => {
                           className={`absolute w-10 h-10 rounded-full flex items-center justify-center pointer-events-none z-10 hover:scale-105 active:scale-95 ${
                             isDarkTheme
                               ? 'bg-gradient-to-br from-[#fffde8] via-[#ebd6ac] to-[#8d714d] border border-[#fbf5df]/40 shadow-[2px_3px_8px_rgba(0,0,0,0.5),inset_1px_2px_1.5px_rgba(255,255,255,0.75)]'
-                              : 'bg-gradient-to-br from-[#e0f2fe] via-[#3dbbd3] to-[#0071a1] border border-white/40 shadow-[2px_3px_8px_rgba(0,113,161,0.35),inset_1px_2px_1.5px_rgba(255,255,255,0.85)]'
+                              : 'bg-gradient-to-br from-[#00426a] via-[#0071a1] to-[#3dbbd3] border border-white/60 shadow-[0_4px_12px_rgba(0,66,106,0.35),inset_0_1px_2px_rgba(255,255,255,0.8)]'
                           }`}
                         >
                           {/* Inner premium 3D ring highlight */}
                           <span className="absolute inset-0.5 rounded-full border border-white/20 pointer-events-none" />
-                          <ArrowRight size={14} className="text-[#030c14] drop-shadow-sm font-black" />
+                          <ArrowRight size={14} className={`${isDarkTheme ? 'text-[#030c14]' : 'text-white'} drop-shadow-sm font-black`} />
                         </div>
                       </>
                     )}
@@ -1147,9 +1171,9 @@ const LoginPage: React.FC = () => {
                 {hasBiometrics && (
                   <div className="w-full flex flex-col items-center pt-0.5">
                     <div className="w-full flex items-center gap-2.5 my-1">
-                      <div className={`flex-1 h-px ${isDarkTheme ? 'bg-[#fbf5df]/15' : 'bg-[#002b44]/15'}`} />
-                      <span className={`text-xs font-mono uppercase tracking-widest font-semibold transition-colors duration-500 ${isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'}`}>SEC_BIOMETRIC_AUTH // אימות ביומטרי</span>
-                      <div className={`flex-1 h-px ${isDarkTheme ? 'bg-[#fbf5df]/15' : 'bg-[#002b44]/15'}`} />
+                      <div className={`flex-1 h-px ${isDarkTheme ? 'bg-[#fbf5df]/20' : 'bg-[#002b44]/25'}`} />
+                      <span className={`text-xs font-mono uppercase tracking-widest font-bold transition-colors duration-500 ${isDarkTheme ? 'text-[#fbf5df]/90' : 'text-[#002b44]'}`}>SEC_BIOMETRIC_AUTH // אימות ביומטרי</span>
+                      <div className={`flex-1 h-px ${isDarkTheme ? 'bg-[#fbf5df]/20' : 'bg-[#002b44]/25'}`} />
                     </div>
                     <BiometricCircularButton
                       onClick={handleBiometricLogin}
@@ -1169,7 +1193,7 @@ const LoginPage: React.FC = () => {
                     className={`text-xs sm:text-sm font-bold hover:underline transition-all focus:outline-none cursor-pointer tracking-wide ${
                       isDarkTheme 
                         ? 'text-[#fbf5df]/85 hover:text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.3)]' 
-                        : 'text-[#002b44]/85 hover:text-[#001220]'
+                        : 'text-[#002b44] font-black hover:text-[#0071a1]'
                     }`}
                   >
                     חדש בקהילה? שלח בקשת הצטרפות 🌊
@@ -1183,7 +1207,7 @@ const LoginPage: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               onSubmit={handleResetPasswordSubmit} 
-              className="space-y-3 relative z-10"
+              className="w-full max-w-[325px] sm:max-w-[360px] mx-auto space-y-3 relative z-10"
             >
               <div className="text-center mb-3.5 flex flex-col items-center">
                 <div className="w-12 h-12 bg-slate-50 text-slate-700 rounded-lg flex items-center justify-center mb-2 border border-slate-200 shadow-sm">
@@ -1200,9 +1224,12 @@ const LoginPage: React.FC = () => {
                     required 
                     value={newPassword} 
                     onChange={e => setNewPassword(e.target.value)} 
-                    className="w-full h-11 rounded-lg font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all vintage-glass-input"
+                    className={`w-full h-11 rounded-xl font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all backdrop-blur-md ${
+                      isDarkTheme 
+                        ? 'bg-slate-900/60 border border-white/25 text-[#fbf5df] placeholder-[#fbf5df]/40 focus:bg-slate-900/80 focus:border-white/50 focus:ring-2 focus:ring-white/20 shadow-lg'
+                        : 'bg-white/90 border border-[#002b44]/25 text-[#002b44] placeholder-[#002b44]/45 focus:bg-white focus:border-[#0071a1] focus:ring-2 focus:ring-[#0071a1]/20 shadow-[0_3px_10px_rgba(0,43,68,0.08)] font-medium'
+                    }`}
                     placeholder="סיסמה חדשה"
-                    style={{ color: '#fbf5df' }}
                   />
                 </div>
                 <div className="relative group">
@@ -1211,14 +1238,19 @@ const LoginPage: React.FC = () => {
                     required 
                     value={confirmPassword} 
                     onChange={e => setConfirmPassword(e.target.value)} 
-                    className="w-full h-11 rounded-lg font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all vintage-glass-input"
+                    className={`w-full h-11 rounded-xl font-sans text-sm outline-none pr-3.5 pl-9 text-right transition-all backdrop-blur-md ${
+                      isDarkTheme 
+                        ? 'bg-slate-900/60 border border-white/25 text-[#fbf5df] placeholder-[#fbf5df]/40 focus:bg-slate-900/80 focus:border-white/50 focus:ring-2 focus:ring-white/20 shadow-lg'
+                        : 'bg-white/90 border border-[#002b44]/25 text-[#002b44] placeholder-[#002b44]/45 focus:bg-white focus:border-[#0071a1] focus:ring-2 focus:ring-[#0071a1]/20 shadow-[0_3px_10px_rgba(0,43,68,0.08)] font-medium'
+                    }`}
                     placeholder="אימות סיסמה"
-                    style={{ color: '#fbf5df' }}
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#fbf5df]/60 hover:text-[#fbf5df] transition-colors p-1"
+                    className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors p-1 ${
+                      isDarkTheme ? 'text-[#fbf5df]/60 hover:text-[#fbf5df]' : 'text-[#002b44]/60 hover:text-[#002b44]'
+                    }`}
                   >
                     {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -1278,7 +1310,7 @@ const LoginPage: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               onSubmit={handleJoinSubmit} 
-              className="space-y-2.5 relative z-10"
+              className="w-full max-w-[325px] sm:max-w-[360px] mx-auto space-y-2.5 relative z-10"
             >
               {success ? (
                 <div className="py-6 text-center space-y-3">
@@ -1297,24 +1329,32 @@ const LoginPage: React.FC = () => {
                 <>
                   <div className="flex items-center justify-between gap-3 mb-1">
                     <div className="text-right">
-                      <h3 className="text-white text-base font-bold tracking-tight">הצטרפות לקהילה</h3>
-                      <p className="text-cyan-400 font-mono text-[9px] uppercase tracking-wider">HZ-JOIN_FORM // קהילת חבל זוג</p>
+                      <h3 className={`text-base font-bold tracking-tight ${isDarkTheme ? 'text-white' : 'text-[#002b44]'}`}>הצטרפות לקהילה</h3>
+                      <p className={`${isDarkTheme ? 'text-cyan-400' : 'text-[#0071a1]'} font-mono text-[9px] uppercase tracking-wider`}>HZ-JOIN_FORM // קהילת חבל זוג</p>
                     </div>
-                    <button type="button" onClick={resetToLogin} className="w-8 h-8 border border-slate-700 hover:border-slate-500 rounded-lg flex items-center justify-center text-slate-400 hover:bg-[#121c26] hover:text-white transition-all shrink-0">
+                    <button type="button" onClick={resetToLogin} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0 border ${
+                      isDarkTheme 
+                        ? 'border-slate-700 hover:border-slate-500 text-slate-400 hover:bg-[#121c26] hover:text-white' 
+                        : 'border-[#002b44]/20 hover:border-[#002b44]/40 text-[#002b44] hover:bg-white/80'
+                    }`}>
                       <ArrowRight size={14} />
                     </button>
                   </div>
                   
                   <div className="flex flex-col items-center gap-1 mb-1">
                     <div className="relative group/avatar cursor-pointer">
-                      <div className="w-14 h-14 overflow-hidden border border-slate-700 bg-[#121c26] rounded-full flex items-center justify-center group-hover/avatar:border-slate-500 transition-all duration-300">
+                      <div className={`w-14 h-14 overflow-hidden rounded-full flex items-center justify-center transition-all duration-300 border ${
+                        isDarkTheme 
+                          ? 'border-slate-700 bg-[#121c26] group-hover/avatar:border-slate-500' 
+                          : 'border-[#002b44]/20 bg-white/80 group-hover/avatar:border-[#0071a1]'
+                      }`}>
                         <div className="w-full h-full flex items-center justify-center">
                           {isProcessingImage ? (
                             <Loader2 className="animate-spin text-slate-500" size={16} />
                           ) : joinAvatar ? (
                             <img src={joinAvatar} className="w-full h-full object-cover" alt="" loading="lazy" />
                           ) : (
-                            <User size={22} className="text-slate-500 group-hover/avatar:text-cyan-400 transition-colors" />
+                            <User size={22} className={`${isDarkTheme ? 'text-slate-500 group-hover/avatar:text-cyan-400' : 'text-slate-400 group-hover/avatar:text-[#0071a1]'} transition-colors`} />
                           )}
                         </div>
                       </div>
@@ -1326,12 +1366,41 @@ const LoginPage: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <input type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" className="w-full h-10 rounded-lg text-xs font-medium outline-none px-3 text-right transition-all vintage-glass-input" style={{ color: '#fbf5df' }} />
-                    <input type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" className="w-full h-10 rounded-lg text-xs font-medium outline-none px-3 text-right transition-all vintage-glass-input" style={{ color: '#fbf5df' }} />
+                    <input 
+                      type="text" required value={joinFirstName} onChange={e => setJoinFirstName(e.target.value)} placeholder="שם פרטי" 
+                      className={`w-full h-10 rounded-xl text-xs font-medium outline-none px-3 text-right transition-all backdrop-blur-md ${
+                        isDarkTheme 
+                          ? 'bg-slate-900/60 border border-white/25 text-[#fbf5df] placeholder-[#fbf5df]/40 focus:bg-slate-900/80' 
+                          : 'bg-white/90 border border-[#002b44]/25 text-[#002b44] placeholder-[#002b44]/45 focus:bg-white shadow-xs'
+                      }`} 
+                    />
+                    <input 
+                      type="text" required value={joinLastName} onChange={e => setJoinLastName(e.target.value)} placeholder="שם משפחה" 
+                      className={`w-full h-10 rounded-xl text-xs font-medium outline-none px-3 text-right transition-all backdrop-blur-md ${
+                        isDarkTheme 
+                          ? 'bg-slate-900/60 border border-white/25 text-[#fbf5df] placeholder-[#fbf5df]/40 focus:bg-slate-900/80' 
+                          : 'bg-white/90 border border-[#002b44]/25 text-[#002b44] placeholder-[#002b44]/45 focus:bg-white shadow-xs'
+                      }`} 
+                    />
                   </div>
                   
-                  <input type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="דוא״ל" className="w-full h-10 rounded-lg text-xs font-medium outline-none px-3 text-right transition-all vintage-glass-input" style={{ color: '#fbf5df' }} />
-                  <input type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" className="w-full h-10 rounded-lg text-xs font-medium outline-none px-3 text-right transition-all vintage-glass-input focus:text-left direction-ltr text-left" dir="ltr" style={{ color: '#fbf5df' }} />
+                  <input 
+                    type="email" required value={joinEmail} onChange={e => setJoinEmail(e.target.value)} placeholder="דוא״ל" 
+                    className={`w-full h-10 rounded-xl text-xs font-medium outline-none px-3 text-right transition-all backdrop-blur-md ${
+                      isDarkTheme 
+                        ? 'bg-slate-900/60 border border-white/25 text-[#fbf5df] placeholder-[#fbf5df]/40 focus:bg-slate-900/80' 
+                        : 'bg-white/90 border border-[#002b44]/25 text-[#002b44] placeholder-[#002b44]/45 focus:bg-white shadow-xs'
+                    }`} 
+                  />
+                  <input 
+                    type="tel" required value={joinMobile} onChange={handleMobileChange} placeholder="טלפון נייד" 
+                    className={`w-full h-10 rounded-xl text-xs font-medium outline-none px-3 text-right transition-all backdrop-blur-md focus:text-left direction-ltr text-left ${
+                      isDarkTheme 
+                        ? 'bg-slate-900/60 border border-white/25 text-[#fbf5df] placeholder-[#fbf5df]/40 focus:bg-slate-900/80' 
+                        : 'bg-white/90 border border-[#002b44]/25 text-[#002b44] placeholder-[#002b44]/45 focus:bg-white shadow-xs'
+                    }`} 
+                    dir="ltr" 
+                  />
                   
                   <div className="relative group">
                     <input 
@@ -1341,10 +1410,15 @@ const LoginPage: React.FC = () => {
                       value={joinAddress} 
                       onChange={e => setJoinAddress(e.target.value)} 
                       placeholder="כתובת מגורים (עיר ורחוב)" 
-                      className="w-full h-10 rounded-lg text-xs font-medium outline-none px-3 text-right transition-all vintage-glass-input" 
-                      style={{ color: '#fbf5df' }}
+                      className={`w-full h-10 rounded-xl text-xs font-medium outline-none pr-3 pl-8 text-right transition-all backdrop-blur-md ${
+                        isDarkTheme 
+                          ? 'bg-slate-900/60 border border-white/25 text-[#fbf5df] placeholder-[#fbf5df]/40 focus:bg-slate-900/80' 
+                          : 'bg-white/90 border border-[#002b44]/25 text-[#002b44] placeholder-[#002b44]/45 focus:bg-white shadow-xs'
+                      }`} 
                     />
-                    <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#fbf5df]/60 transition-colors" />
+                    <MapPin size={13} className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${
+                      isDarkTheme ? 'text-[#fbf5df]/60' : 'text-[#002b44]/60'
+                    }`} />
                   </div>
 
                   {/* Group Choice for New Applicant */}
@@ -1352,13 +1426,19 @@ const LoginPage: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => setIsGroupMenuOpen(!isGroupMenuOpen)}
-                      className="w-full h-10 rounded-lg text-xs font-medium outline-none text-right flex items-center justify-between px-3 transition-all vintage-glass-input cursor-pointer"
+                      className={`w-full h-10 rounded-xl text-xs font-medium outline-none text-right flex items-center justify-between px-3 transition-all backdrop-blur-md cursor-pointer ${
+                        isDarkTheme 
+                          ? 'bg-slate-900/60 border border-white/25 text-[#fbf5df]' 
+                          : 'bg-white/90 border border-[#002b44]/25 text-[#002b44] shadow-xs'
+                      }`}
                     >
                       <span className="flex-1 text-right flex items-center gap-1.5">
-                        <span className="text-[#fbf5df]/60 text-[10px] font-mono uppercase">קבוצה מבוקשת:</span>
-                        <span className="text-[#fbf5df] font-bold">{selectedGroup}</span>
+                        <span className={`text-[10px] font-mono uppercase ${isDarkTheme ? 'text-[#fbf5df]/60' : 'text-[#002b44]/60'}`}>קבוצה מבוקשת:</span>
+                        <span className={`font-bold ${isDarkTheme ? 'text-[#fbf5df]' : 'text-[#002b44]'}`}>{selectedGroup}</span>
                       </span>
-                      <ChevronDown size={14} className={`text-[#fbf5df]/60 transition-transform duration-300 ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown size={14} className={`transition-transform duration-300 ${
+                        isDarkTheme ? 'text-[#fbf5df]/60' : 'text-[#002b44]/60'
+                      } ${isGroupMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     <AnimatePresence>
@@ -1370,7 +1450,11 @@ const LoginPage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.98, y: 3 }}
                             transition={{ duration: 0.12 }}
-                            className="absolute top-[calc(100%+0.25rem)] left-0 right-0 bg-[#0d1520]/95 backdrop-blur-xl border border-[#faf8f5]/20 rounded-lg shadow-2xl z-[70] overflow-y-auto max-h-44 py-1 custom-scrollbar"
+                            className={`absolute top-[calc(100%+0.25rem)] left-0 right-0 rounded-xl shadow-2xl z-[70] overflow-y-auto max-h-44 py-1 custom-scrollbar ${
+                              isDarkTheme 
+                                ? 'bg-[#0d1520]/95 backdrop-blur-xl border border-[#faf8f5]/20 text-white' 
+                                : 'bg-white/98 backdrop-blur-xl border border-[#002b44]/15 text-[#002b44] shadow-[0_12px_32px_rgba(0,43,68,0.15)]'
+                            }`}
                           >
                             {groups.map((g) => (
                               <button
@@ -1380,12 +1464,14 @@ const LoginPage: React.FC = () => {
                                   setSelectedGroup(g);
                                   setIsGroupMenuOpen(false);
                                 }}
-                                className={`w-full px-3 py-1.5 text-right font-medium text-xs transition-all flex items-center justify-between hover:bg-[#faf8f5]/10 ${
-                                  selectedGroup === g ? 'text-[#faf8f5] bg-[#faf8f5]/5 font-bold' : 'text-[#faf8f5]/70'
+                                className={`w-full px-3 py-1.5 text-right font-medium text-xs transition-all flex items-center justify-between ${
+                                  isDarkTheme 
+                                    ? (selectedGroup === g ? 'text-[#faf8f5] bg-[#faf8f5]/5 font-bold' : 'text-[#faf8f5]/70 hover:bg-[#faf8f5]/10')
+                                    : (selectedGroup === g ? 'text-[#002b44] bg-sky-100/80 font-bold' : 'text-slate-700 hover:bg-sky-50')
                                 }`}
                               >
                                 <span>{g}</span>
-                                {selectedGroup === g && <CheckCircle2 size={13} className="text-[#faf8f5]" />}
+                                {selectedGroup === g && <CheckCircle2 size={13} className={isDarkTheme ? 'text-[#faf8f5]' : 'text-[#0071a1]'} />}
                               </button>
                             ))}
                           </motion.div>
@@ -1398,10 +1484,20 @@ const LoginPage: React.FC = () => {
                     <button 
                       type="button"
                       onClick={() => setIsGenderMenuOpen(!isGenderMenuOpen)}
-                      className="w-full h-10 rounded-lg text-xs font-medium outline-none text-right flex items-center justify-between px-3 transition-all vintage-glass-input cursor-pointer"
+                      className={`w-full h-10 rounded-xl text-xs font-medium outline-none text-right flex items-center justify-between px-3 transition-all backdrop-blur-md cursor-pointer ${
+                        isDarkTheme 
+                          ? 'bg-slate-900/60 border border-white/25 text-[#fbf5df]' 
+                          : 'bg-white/90 border border-[#002b44]/25 text-[#002b44] shadow-xs'
+                      }`}
                     >
-                      <span className={`flex-1 text-right ${joinGender ? 'text-[#fbf5df] font-medium' : 'text-[#fbf5df]/50'}`}>{joinGender || 'מגדר (בחירה)'}</span>
-                      <ChevronDown size={14} className={`text-[#fbf5df]/60 transition-transform duration-300 ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
+                      <span className={`flex-1 text-right ${
+                        joinGender 
+                          ? (isDarkTheme ? 'text-[#fbf5df] font-medium' : 'text-[#002b44] font-medium')
+                          : (isDarkTheme ? 'text-[#fbf5df]/50' : 'text-[#002b44]/50')
+                      }`}>{joinGender || 'מגדר (בחירה)'}</span>
+                      <ChevronDown size={14} className={`transition-transform duration-300 ${
+                        isDarkTheme ? 'text-[#fbf5df]/60' : 'text-[#002b44]/60'
+                      } ${isGenderMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     <AnimatePresence>
@@ -1413,7 +1509,11 @@ const LoginPage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.98, y: 3 }}
                             transition={{ duration: 0.12 }}
-                            className="absolute top-[calc(100%+0.25rem)] left-0 right-0 bg-[#121c26]/95 backdrop-blur-xl border border-slate-700 rounded-lg shadow-2xl z-[70] overflow-hidden py-1"
+                            className={`absolute top-[calc(100%+0.25rem)] left-0 right-0 rounded-xl shadow-2xl z-[70] overflow-hidden py-1 ${
+                              isDarkTheme 
+                                ? 'bg-[#121c26]/95 backdrop-blur-xl border border-slate-700 text-white' 
+                                : 'bg-white/98 backdrop-blur-xl border border-[#002b44]/15 text-[#002b44] shadow-[0_12px_32px_rgba(0,43,68,0.15)]'
+                            }`}
                           >
                             {(['זכר', 'נקבה', 'לא בינארי', 'מעדיפ/ה לא לציין'] as const).map((g) => (
                               <button
@@ -1423,12 +1523,14 @@ const LoginPage: React.FC = () => {
                                   setJoinGender(g);
                                   setIsGenderMenuOpen(false);
                                 }}
-                                className={`w-full px-3 py-1.5 text-right font-medium text-xs transition-all flex items-center justify-between hover:bg-[#1a2735] ${
-                                  joinGender === g ? 'text-[#fbf5df] bg-[#162332] font-bold' : 'text-slate-300'
+                                className={`w-full px-3 py-1.5 text-right font-medium text-xs transition-all flex items-center justify-between ${
+                                  isDarkTheme 
+                                    ? (joinGender === g ? 'text-[#fbf5df] bg-[#162332] font-bold' : 'text-slate-300 hover:bg-[#1a2735]')
+                                    : (joinGender === g ? 'text-[#002b44] bg-sky-100/80 font-bold' : 'text-slate-700 hover:bg-sky-50')
                                 }`}
                               >
                                 <span>{g}</span>
-                                {joinGender === g && <CheckCircle2 size={13} className="text-[#fbf5df]" />}
+                                {joinGender === g && <CheckCircle2 size={13} className={isDarkTheme ? 'text-[#fbf5df]' : 'text-[#0071a1]'} />}
                               </button>
                             ))}
                           </motion.div>
