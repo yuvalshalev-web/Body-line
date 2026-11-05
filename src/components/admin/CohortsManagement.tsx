@@ -18,7 +18,12 @@ import {
   Compass, 
   Layers,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  MessageCircle,
+  Phone,
+  History,
+  Link2,
+  ExternalLink
 } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -57,6 +62,8 @@ export const CohortsManagement: React.FC = () => {
   const { showSuccess, showError, showConfirm } = useModal();
 
   // Selected view filter
+  const [activeManagementTab, setActiveManagementTab] = useState<'pairing_matrix' | 'memberships'>('pairing_matrix');
+  const [matrixCohortFilter, setMatrixCohortFilter] = useState<string>('all');
   const [selectedGroupId, setSelectedGroupId] = useState<string>('all');
   const [selectedCommunityFilter, setSelectedCommunityFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -103,6 +110,128 @@ export const CohortsManagement: React.FC = () => {
   const pastCohorts = useMemo(() => {
     return groups.filter(g => g.type === 'cohort' && !g.isActive && !g.isCurrentCohort);
   }, [groups]);
+
+  // Comprehensive list of buddy pairings across all cohorts and years
+  const allCohortPairs = useMemo(() => {
+    const pairs: Array<{
+      id: string;
+      volunteer: Member;
+      participant: Member;
+      cohortName: string;
+      cohortId: string;
+      communityId?: string;
+      status: 'active' | 'graduated' | 'completed';
+      period: string;
+    }> = [];
+
+    const seenPairKeys = new Set<string>();
+    const activeCohortName = activeCohort?.name || yearConfig?.name || 'מחזור ז׳ (תשפ״ו 2025-2026)';
+
+    // 1. Current active pairs
+    members.forEach(m => {
+      if (m.role === 'Volunteer' && m.partnerId) {
+        const participant = members.find(p => p.id === m.partnerId);
+        if (participant) {
+          const key = `active-${m.id}-${participant.id}`;
+          if (!seenPairKeys.has(key)) {
+            seenPairKeys.add(key);
+            pairs.push({
+              id: key,
+              volunteer: m,
+              participant,
+              cohortName: activeCohortName,
+              cohortId: activeCohort?.id || 'cohort_active',
+              communityId: m.communities?.[0] || 'herzliya',
+              status: 'active',
+              period: 'ספטמבר 2025 - יולי 2026'
+            });
+          }
+        }
+      }
+    });
+
+    // 2. Explicit past pairs from partnerHistory on members
+    members.forEach(m => {
+      if (m.partnerHistory && Array.isArray(m.partnerHistory)) {
+        m.partnerHistory.forEach(item => {
+          const partner = members.find(p => p.id === item.partnerId);
+          if (partner) {
+            const vol = m.role === 'Volunteer' ? m : partner;
+            const part = m.role === 'Volunteer' ? partner : m;
+            const key = `history-${item.cohortName}-${vol.id}-${part.id}`;
+            if (!seenPairKeys.has(key)) {
+              seenPairKeys.add(key);
+              pairs.push({
+                id: key,
+                volunteer: vol,
+                participant: part,
+                cohortName: item.cohortName,
+                cohortId: item.cohortId || 'cohort_past',
+                communityId: item.communityId || vol.communities?.[0] || 'herzliya',
+                status: item.status || 'completed',
+                period: item.period || 'ספטמבר - יולי'
+              });
+            }
+          }
+        });
+      }
+    });
+
+    // 3. Fallback for cohort_vav graduates with past partnerships
+    members.forEach(m => {
+      const mems = memberships.filter(mem => mem.personId === m.id);
+      const isVavGrad = mems.some(mem => mem.groupId === 'cohort_vav' && (mem.status === 'completed' || mem.status === 'graduated'));
+      if (isVavGrad && m.role === 'Volunteer' && m.partnerId) {
+        const part = members.find(p => p.id === m.partnerId);
+        if (part) {
+          const key = `vav-${m.id}-${part.id}`;
+          if (!seenPairKeys.has(key)) {
+            seenPairKeys.add(key);
+            pairs.push({
+              id: key,
+              volunteer: m,
+              participant: part,
+              cohortName: 'מחזור ו׳ (תשפ״ה 2024-2025)',
+              cohortId: 'cohort_vav',
+              communityId: 'herzliya',
+              status: 'completed',
+              period: 'ספטמבר 2024 - יולי 2025'
+            });
+          }
+        }
+      }
+    });
+
+    return pairs;
+  }, [members, activeCohort, yearConfig, memberships]);
+
+  // Filtered Cohort Pairs for Matrix View
+  const filteredCohortPairs = useMemo(() => {
+    return allCohortPairs.filter(pair => {
+      // Cohort Filter
+      if (matrixCohortFilter === 'active' && pair.status !== 'active') return false;
+      if (matrixCohortFilter === 'past' && pair.status === 'active') return false;
+      if (matrixCohortFilter !== 'all' && matrixCohortFilter !== 'active' && matrixCohortFilter !== 'past') {
+        if (pair.cohortId !== matrixCohortFilter && !pair.cohortName.includes(matrixCohortFilter)) return false;
+      }
+
+      // Community Filter
+      if (selectedCommunityFilter !== 'all' && pair.communityId && pair.communityId !== selectedCommunityFilter) {
+        return false;
+      }
+
+      // Search Term
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const volName = `${pair.volunteer.firstName} ${pair.volunteer.lastName}`.toLowerCase();
+        const partName = `${pair.participant.firstName} ${pair.participant.lastName}`.toLowerCase();
+        const cohortName = pair.cohortName.toLowerCase();
+        return volName.includes(term) || partName.includes(term) || cohortName.includes(term);
+      }
+
+      return true;
+    });
+  }, [allCohortPairs, matrixCohortFilter, selectedCommunityFilter, searchTerm]);
 
   // Enriched memberships list for table (includes explicit memberships and assigned communities)
   const enrichedMemberships = useMemo(() => {
@@ -509,22 +638,251 @@ export const CohortsManagement: React.FC = () => {
       </div>
 
       {/* Rules Explanatory Bar */}
-      <div className="p-5 bg-indigo-50/60 rounded-2xl border border-indigo-100/80 text-indigo-950 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="p-5 bg-gradient-to-r from-amber-500/10 via-sky-500/10 to-indigo-500/10 rounded-2xl border border-amber-300/50 text-slate-900 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
-          <Sparkles className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+          <Sparkles className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-bold">חוקי הארגון והטרמינולוגיה המובנים במערכת:</p>
-            <ul className="text-slate-600 list-disc list-inside space-y-0.5 text-[11px]">
-              <li><strong>קבוצת בוגרים:</strong> פתוחה אך ורק למשתתפים ומתנדבים שסיימו בהצלחה מחזור פעילות קודם.</li>
-              <li><strong>התנדבות במחזור הבא:</strong> משתתף שסיים מחזור רשאי להפוך למתנדב במחזור החדש.</li>
-              <li><strong>מדריכים, רכזים וצוות עמותה:</strong> משוייכים לכל קבוצה ללא הגבלה ובמקביל.</li>
+            <p className="font-black text-sm text-slate-800">ארכיטקטורת שנת חבל זוג וקבוצת הבוגרים:</p>
+            <ul className="text-slate-700 list-disc list-inside space-y-1 text-xs">
+              <li><strong>שנת חבל זוג (מחזור פעילות):</strong> ספטמבר עד יולי. כל מתנדב מצוות אישית 1-על-1 למשתתף ומלווה אותו לאורך כל השנה.</li>
+              <li><strong>סיום שנת חבל זוג ומעבר לבוגרים:</strong> בסוף יולי כל המחזור עובר לקבוצת הבוגרים, חבל הזוג מנותק, וקבוצת הבוגרים מתנהלת כקהילה הומוגנית ללא זוגות (נמשכת ברצף מדי שנה עם פגרה ביולי-אוגוסט וחזרה בספטמבר).</li>
+              <li><strong>מטריצת היסטוריה וסטטיסטיקה:</strong> מתנדב צובר מספר משתתפים לאורך השנים (משתתף שונה בכל מחזור שנתי); למשתתף יש בדרך כלל מתנדב יחיד שליווה אותו (אלא אם הפך בעצמו למתנדב).</li>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* Filter and Memberships List */}
-      <div className="luxury-card p-6 space-y-6">
+      {/* View Switcher: Pairing Matrix vs Memberships Table */}
+      <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 pb-3">
+        <button
+          onClick={() => setActiveManagementTab('pairing_matrix')}
+          className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+            activeManagementTab === 'pairing_matrix'
+              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-orange-500/20'
+              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-2xs'
+          }`}
+        >
+          <span className="text-base">🪢</span>
+          <span>מטריצת חבלי זוג לאורך השנים ({allCohortPairs.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveManagementTab('memberships')}
+          className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+            activeManagementTab === 'memberships'
+              ? 'bg-slate-800 text-white shadow-md shadow-slate-800/20'
+              : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-2xs'
+          }`}
+        >
+          <Users size={16} />
+          <span>טבלת שיוכי מחזורים ובוגרים ({enrichedMemberships.length})</span>
+        </button>
+      </div>
+
+      {activeManagementTab === 'pairing_matrix' ? (
+        /* 1. Dedicated Pairing Matrix View */
+        <div className="luxury-card p-6 space-y-6">
+          {/* Quick Metrics Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl text-center">
+              <span className="text-xl">🪢</span>
+              <p className="text-[10px] font-bold text-amber-800 mt-1">סה״כ ציוותי חבל זוג</p>
+              <p className="text-2xl font-black text-amber-950 tabular-nums">{allCohortPairs.length}</p>
+            </div>
+            <div className="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl text-center">
+              <span className="text-xl">🌊</span>
+              <p className="text-[10px] font-bold text-emerald-800 mt-1">ציוותים פעילים (מחזור ז׳)</p>
+              <p className="text-2xl font-black text-emerald-950 tabular-nums">
+                {allCohortPairs.filter(p => p.status === 'active').length}
+              </p>
+            </div>
+            <div className="p-4 bg-indigo-50/70 border border-indigo-200/80 rounded-2xl text-center">
+              <span className="text-xl">🎓</span>
+              <p className="text-[10px] font-bold text-indigo-800 mt-1">ציוותי עבר שמורים (בוגרים)</p>
+              <p className="text-2xl font-black text-indigo-950 tabular-nums">
+                {allCohortPairs.filter(p => p.status !== 'active').length}
+              </p>
+            </div>
+            <div className="p-4 bg-sky-50/70 border border-sky-200/80 rounded-2xl text-center">
+              <span className="text-xl">🎖️</span>
+              <p className="text-[10px] font-bold text-sky-800 mt-1">מתנדבים מרובי מחזורים</p>
+              <p className="text-2xl font-black text-sky-950 tabular-nums">
+                {new Set(allCohortPairs.filter(p => allCohortPairs.filter(x => x.volunteer.id === p.volunteer.id).length > 1).map(p => p.volunteer.id)).size}
+              </p>
+            </div>
+          </div>
+
+          {/* Filters Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => setMatrixCohortFilter('all')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                  matrixCohortFilter === 'all'
+                    ? 'bg-slate-800 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                כל המחזורים ({allCohortPairs.length})
+              </button>
+              <button
+                onClick={() => setMatrixCohortFilter('active')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                  matrixCohortFilter === 'active'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-100'
+                }`}
+              >
+                <span>🌊</span>
+                <span>פעילים כעת (מחזור ז׳)</span>
+              </button>
+              <button
+                onClick={() => setMatrixCohortFilter('past')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                  matrixCohortFilter === 'past'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100'
+                }`}
+              >
+                <span>🎓</span>
+                <span>ארכיון בוגרים (מחזור ו׳)</span>
+              </button>
+
+              {/* Branch Selector */}
+              <select
+                value={selectedCommunityFilter}
+                onChange={(e) => setSelectedCommunityFilter(e.target.value)}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-white border border-slate-200 text-slate-700 outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/20 shadow-xs hover:bg-slate-50 transition-all"
+              >
+                <option value="all">כל הסניפים</option>
+                {availableCommunities.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.isAdults ? '🎓 ' : '🌊 '}{c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Search */}
+            <div className="relative w-full sm:w-72">
+              <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="חיפוש מתנדב, משתתף או מחזור..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full pr-10 pl-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 ring-indigo-500/20 focus:bg-white text-slate-700 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Pairing Matrix Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredCohortPairs.length === 0 ? (
+              <div className="col-span-full py-16 text-center text-slate-400 font-bold bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                לא נמצאו ציוותי חבל זוג בסינון הנוכחי
+              </div>
+            ) : (
+              filteredCohortPairs.map(pair => {
+                const volMultiCount = allCohortPairs.filter(p => p.volunteer.id === pair.volunteer.id).length;
+                const isActive = pair.status === 'active';
+
+                return (
+                  <div
+                    key={pair.id}
+                    className={`p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 shadow-xs relative overflow-hidden ${
+                      isActive 
+                        ? 'bg-gradient-to-br from-amber-50/60 via-white to-orange-50/40 border-amber-200/90' 
+                        : 'bg-gradient-to-br from-indigo-50/40 via-white to-slate-50 border-slate-200/80'
+                    }`}
+                  >
+                    {/* Card Top: Cohort & Status */}
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-base">{isActive ? '🌊' : '📜'}</span>
+                        <span className="text-xs font-black text-slate-800">{pair.cohortName}</span>
+                      </div>
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
+                        isActive 
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
+                          : 'bg-indigo-100 text-indigo-700 border-indigo-200'
+                      }`}>
+                        {isActive ? 'פעיל כעת' : 'בוגר שהושלם 🎓'}
+                      </span>
+                    </div>
+
+                    {/* Card Middle: Volunteer <-> Rope <-> Participant */}
+                    <div className="flex items-center justify-between gap-2 my-1">
+                      {/* Volunteer (Right side in RTL) */}
+                      <div className="flex flex-col items-center text-center flex-1 min-w-0">
+                        <div className="w-14 h-14 rounded-full overflow-hidden bg-indigo-100 border-2 border-indigo-300 shrink-0 shadow-2xs relative">
+                          {pair.volunteer.avatar ? (
+                            <img src={pair.volunteer.avatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-indigo-700 font-black text-base">
+                              {pair.volunteer.firstName?.charAt(0) || '👤'}
+                            </div>
+                          )}
+                        </div>
+                        <h5 className="font-black text-xs text-slate-900 mt-1.5 truncate max-w-full">
+                          {pair.volunteer.firstName} {pair.volunteer.lastName}
+                        </h5>
+                        <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200/60 mt-0.5">
+                          מתנדב מלווה
+                        </span>
+                      </div>
+
+                      {/* Rope Connector Graphic */}
+                      <div className="flex flex-col items-center justify-center px-1 shrink-0">
+                        <span className="text-2xl animate-pulse">🪢</span>
+                        <span className="text-[9px] font-black text-amber-800 bg-amber-100/80 px-1.5 py-0.2 rounded mt-0.5 whitespace-nowrap">
+                          חבל זוג
+                        </span>
+                      </div>
+
+                      {/* Participant (Left side in RTL) */}
+                      <div className="flex flex-col items-center text-center flex-1 min-w-0">
+                        <div className="w-14 h-14 rounded-full overflow-hidden bg-orange-100 border-2 border-orange-300 shrink-0 shadow-2xs relative">
+                          {pair.participant.avatar ? (
+                            <img src={pair.participant.avatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-orange-700 font-black text-base">
+                              {pair.participant.firstName?.charAt(0) || '👤'}
+                            </div>
+                          )}
+                        </div>
+                        <h5 className="font-black text-xs text-slate-900 mt-1.5 truncate max-w-full">
+                          {pair.participant.firstName} {pair.participant.lastName}
+                        </h5>
+                        <span className="text-[10px] font-bold text-orange-800 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200/60 mt-0.5">
+                          משתתף
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Card Bottom: Period & Multi-cohort info */}
+                    <div className="border-t border-slate-100 pt-2 text-[11px] text-slate-500 flex flex-col gap-1">
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="font-bold text-slate-700">תקופת פעילות:</span>
+                        <span>{pair.period || 'ספטמבר - יולי'}</span>
+                      </div>
+
+                      {volMultiCount > 1 && (
+                        <div className="p-1.5 bg-sky-50 text-sky-800 rounded-lg text-[10px] font-bold border border-sky-100 flex items-center gap-1">
+                          <span>🎖️</span>
+                          <span>מתנדב ותיק: ליווה {volMultiCount} משתתפים לאורך השנים</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      ) : (
+        /* 2. Memberships Table View */
+        <div className="luxury-card p-6 space-y-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 border-b border-slate-100">
           {/* Group Filter Chips */}
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -715,6 +1073,7 @@ export const CohortsManagement: React.FC = () => {
           </table>
         </div>
       </div>
+    )}
 
       {/* Rollover / Graduate Cohort Modal */}
       {isRolloverModalOpen && (

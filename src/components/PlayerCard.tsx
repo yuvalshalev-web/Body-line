@@ -9,6 +9,8 @@ import { getDietaryOptionLabel } from '../constants/dietary';
 import { getAvailabilityLabel, getAvailabilityBadgeInfo } from '../constants/availability';
 import { ContactAvailabilityReminderModal, PendingContactAction } from './ContactAvailabilityReminderModal';
 import { checkContactTimingSensitivity } from '../utils/availabilityTiming';
+import { getMemberCohortCount, formatJoinDate } from '../utils/cohortRules';
+import { PartnerHistoryMatrix } from './PartnerHistoryMatrix';
 import { Member } from '../types';
 
 interface PlayerCardProps {
@@ -24,23 +26,29 @@ const SurferSilhouette = () => (
 );
 
 const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
-  const { members, weeklyHistory, yearConfig, siteConfig, isLoading, events } = useData();
+  const { members, weeklyHistory, yearConfig, siteConfig, isLoading, events, groups, memberships } = useData();
   const { currentUser } = useAuth();
+
+  const [activeUserId, setActiveUserId] = useState(userId);
+
+  useEffect(() => {
+    setActiveUserId(userId);
+  }, [userId]);
 
   const [imageError, setImageError] = useState(false);
 
   const member = useMemo(() => {
-    return members.find(m => m.id === userId);
-  }, [userId, members]);
+    return members.find(m => m.id === activeUserId);
+  }, [activeUserId, members]);
 
   useEffect(() => {
     setImageError(false);
   }, [member?.avatar]);
 
   const stats = useMemo(() => {
-    if (!userId || members.length === 0 || isLoading) return null;
-    return calculateUserStats(userId, members, weeklyHistory, yearConfig, events);
-  }, [userId, members, weeklyHistory, yearConfig, events, isLoading]);
+    if (!activeUserId || members.length === 0 || isLoading) return null;
+    return calculateUserStats(activeUserId, members, weeklyHistory, yearConfig, events);
+  }, [activeUserId, members, weeklyHistory, yearConfig, events, isLoading]);
 
   const [pendingContact, setPendingContact] = useState<PendingContactAction | null>(null);
 
@@ -97,12 +105,25 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
   if (isLoading) return <div className="p-4 glass-panel rounded-2xl border border-white/20 animate-pulse">טוען...</div>;
   if (!member || !stats) return null;
 
+  const joinDate = formatJoinDate(member.joinedAt);
+  const cohortCount = getMemberCohortCount(member, memberships, groups);
+
   return (
     <div className="flex flex-col items-center gap-[var(--spacing-lg)] luxury-card w-full p-6 md:p-8" dir="rtl">
       {/* Grit Overlay */}
       <div className="grain-overlay" />
       {/* Background Accent */}
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-ocean/10 rounded-full blur-3xl -z-10" />
+      
+      {activeUserId !== userId && (
+        <button
+          onClick={() => setActiveUserId(userId)}
+          className="self-start px-3.5 py-1.5 bg-white/90 hover:bg-white text-sky-700 rounded-xl border border-sky-200 text-xs font-black shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+        >
+          <span>→</span>
+          <span>חזרה לכרטיס החבר המקורי</span>
+        </button>
+      )}
       
       <div className="relative flex justify-center w-full">
         <div className="w-64 h-64 md:w-80 md:h-80 rounded-full relative group">
@@ -145,6 +166,25 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
                 {member.full_address || [member.street_name, member.house_number, member.city].filter(Boolean).join(', ')}
               </span>
             )}
+          </div>
+
+          {/* Joined Community & Cohort Count */}
+          <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 mt-2 p-2.5 bg-white/75 backdrop-blur-md rounded-2xl border border-[#00426a]/15 shadow-2xs max-w-md mx-auto">
+            <div className="flex items-center gap-1.5 text-xs text-slate-700">
+              <Calendar size={14} className="text-sky-600 shrink-0" />
+              <span className="font-bold text-slate-800">הצטרף לקהילה:</span>
+              <span className="font-extrabold text-slate-900 bg-slate-100/90 px-2.5 py-0.5 rounded-lg border border-slate-200/80">
+                {joinDate || '---'}
+              </span>
+            </div>
+            <span className="text-slate-300 hidden sm:inline">•</span>
+            <div className="flex items-center gap-1.5 text-xs text-slate-700">
+              <span className="text-sm">🔄</span>
+              <span className="font-bold text-slate-800">מחזורי פעילות:</span>
+              <span className="font-black text-sky-700 bg-sky-100/80 px-2.5 py-0.5 rounded-lg border border-sky-300/60 shadow-2xs">
+                {cohortCount}
+              </span>
+            </div>
           </div>
 
           {/* Social Media Links */}
@@ -240,52 +280,15 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ userId }) => {
 
           <UserCategories userId={userId} />
 
-          {/* Rope Partner / בן/בת זוג לחבל */}
-          {member.partnerId && (() => {
-            const partner = members.find(m => m.id === member.partnerId);
-            if (!partner) return null;
-            return (
-              <div className="w-full p-4 bg-gradient-to-br from-amber-50/90 via-orange-50/60 to-amber-100/70 border-2 border-amber-300/80 rounded-2xl mt-4 shadow-sm" dir="rtl">
-                <div className="text-amber-900 text-sm font-black mb-2.5 flex items-center gap-2 justify-center">
-                  <span className="text-2xl">🪢</span>
-                  <span>בן / בת זוג לחבל (שותף פעילות קבוע)</span>
-                </div>
-                <div className="flex items-center justify-between gap-3 bg-white/95 p-3 rounded-xl border border-amber-200 shadow-xs">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-amber-100 border-2 border-amber-300 shrink-0 shadow-xs">
-                      {partner.avatar ? (
-                        <img src={partner.avatar} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-amber-700 font-black text-sm">
-                          {partner.firstName?.charAt(0) || '👤'}
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <h4 className="font-black text-slate-800 text-sm">
-                        {partner.firstName} {partner.lastName}
-                      </h4>
-                      <p className="text-[11px] font-bold text-amber-800">
-                        {partner.role === 'Volunteer' ? 'מתנדב' : partner.role === 'Admin' ? 'רכז' : partner.role === 'Instructor' ? 'מדריך' : 'משתתף'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {partner.mobile && (
-                      <button
-                        onClick={() => handleContactClick('whatsapp', partner, partner.mobile!)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-xl shadow-xs transition-all text-xs font-black cursor-pointer"
-                        title="שליחת וואטסאפ לבן/בת הזוג"
-                      >
-                        <MessageCircle size={15} />
-                        <span>וואטסאפ</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
+          {/* Partner & Rope History Matrix */}
+          <PartnerHistoryMatrix
+            member={member}
+            allMembers={members}
+            groups={groups}
+            memberships={memberships}
+            onSelectMember={(newId) => setActiveUserId(newId)}
+            onContactClick={(type, target, mobile) => handleContactClick(type, target, mobile)}
+          />
 
           {/* Availability Schedule Section - Always visible for every member */}
           {(() => {

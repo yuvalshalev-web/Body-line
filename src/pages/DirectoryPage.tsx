@@ -8,6 +8,7 @@ import { isSystemOrTestMember, AVAILABLE_COMMUNITIES, isAdminUser, getBranchCoho
 import PlayerCard from '../components/PlayerCard';
 import { getAvailabilityBadgeInfo } from '../constants/availability';
 import { useRandomHeader } from '../hooks/useRandomHeader';
+import { getMemberCohortCount, formatJoinDate } from '../utils/cohortRules';
 
 const DirectoryPage: React.FC = () => {
   const { members, isLoading, groups, memberships, yearConfig, availableCommunities: ctxCommunities } = useData();
@@ -69,7 +70,8 @@ const DirectoryPage: React.FC = () => {
 
       // 2. Strict Cohort Isolation (Separation of Active Cohort מחזור ז׳ from Alumni בוגרים)
       if (!isAlumniCommunity) {
-        const isAlumniOnly = memberships.some(m => 
+        const isExplicitActiveMember = memberCommunities.includes(activeComm);
+        const isAlumniOnly = !isExplicitActiveMember && memberships.some(m => 
           m.personId === member.id && 
           (m.groupId === 'group_alumni' || m.groupId === 'cohort_vav') && 
           (m.status === 'graduated' || m.status === 'completed')
@@ -83,7 +85,8 @@ const DirectoryPage: React.FC = () => {
           return false;
         }
       } else {
-        const isActiveCohortOnly = memberships.some(m => 
+        const isExplicitAlumniMember = memberCommunities.includes(activeComm);
+        const isActiveCohortOnly = !isExplicitAlumniMember && memberships.some(m => 
           m.personId === member.id && 
           m.groupId === 'cohort_active' && 
           m.status === 'active'
@@ -129,6 +132,8 @@ const DirectoryPage: React.FC = () => {
   const renderMember = (member: Member, index: number, isGrid: boolean) => {
     const isAppShaper = isAppShaperMember(member);
     const partner = member.partnerId ? members.find(m => m.id === member.partnerId) : null;
+    const joinDate = formatJoinDate(member.joinedAt);
+    const cohortCount = getMemberCohortCount(member, memberships, groups);
 
     return isGrid ? (
       <motion.div
@@ -139,7 +144,7 @@ const DirectoryPage: React.FC = () => {
         exit={{ opacity: 0, scale: 0.9 }}
         transition={{ delay: index * 0.02 }}
         onClick={() => setSelectedMemberId(member.id)}
-        className="group luxury-card flex flex-col items-center text-center relative overflow-hidden cursor-pointer min-h-[17.5rem] h-auto !scale-100 hover:!scale-105 transition-transform duration-500"
+        className="group luxury-card flex flex-col items-center text-center relative overflow-hidden cursor-pointer min-h-[18.5rem] h-auto !scale-100 hover:!scale-105 transition-transform duration-500"
       >
         <div className="grain-overlay opacity-[0.05]" />
         {/* Avatar - Top Section */}
@@ -196,11 +201,25 @@ const DirectoryPage: React.FC = () => {
                 </div>
               );
             })()}
+
+            {/* Joined Community & Cohort Count */}
+            <div className="w-full mt-2.5 pt-2 border-t border-slate-100 flex flex-col items-center gap-1 text-[11px] select-none">
+              <div className="flex items-center justify-center gap-1 text-slate-600 flex-wrap">
+                <span className="font-bold text-slate-700">הצטרף לקהילה:</span>
+                <span className="font-extrabold text-slate-800">{joinDate || '---'}</span>
+              </div>
+              <div className="flex items-center justify-center gap-1.5 text-slate-600 flex-wrap">
+                <span className="font-bold text-slate-700">מחזורי פעילות:</span>
+                <span className="font-black text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200/60 shadow-2xs">
+                  {cohortCount}
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="w-full flex flex-col gap-2 mt-2.5">
             {/* Show Actionable/Connected Badge */}
-            {partner ? (
+            {!isAlumniCommunity && partner ? (
               <div 
                 className="w-full px-3 py-2 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-600/10 text-orange-900 rounded-xl text-xs font-black shadow-xs hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-between gap-2 group/partner cursor-pointer border border-orange-500/20"
                 title={`בן/בת זוג לחבל (שותף פעילות קבוע): ${partner.firstName} ${partner.lastName}`}
@@ -223,6 +242,11 @@ const DirectoryPage: React.FC = () => {
                     <User size={13} className="m-auto text-orange-700 mt-0.5" />
                   )}
                 </div>
+              </div>
+            ) : isAlumniCommunity && (member.role === 'Member' || member.role === 'Volunteer') ? (
+              <div className="w-full px-3 py-1.5 bg-indigo-50/80 text-indigo-800 rounded-xl text-[11px] font-black border border-indigo-200/60 shadow-2xs flex items-center justify-center gap-1.5 select-none">
+                <span>🎓</span>
+                <span>קבוצת בוגרים • קהילה הומוגנית</span>
               </div>
             ) : isAppShaper ? (
               <button
@@ -304,12 +328,27 @@ const DirectoryPage: React.FC = () => {
                 );
               })()}
             </div>
+
+            {/* Joined Community & Cohort Count */}
+            <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-600 flex-wrap">
+              <div className="flex items-center gap-1">
+                <span className="font-bold text-slate-700">הצטרף לקהילה:</span>
+                <span className="font-extrabold text-slate-800">{joinDate || '---'}</span>
+              </div>
+              <span className="text-slate-300">•</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-slate-700">מחזורי פעילות:</span>
+                <span className="font-black text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200/60 shadow-2xs">
+                  {cohortCount}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="flex gap-2.5 items-center flex-wrap">
           {/* Show Actionable/Connected Badge */}
-          {partner ? (
+          {!isAlumniCommunity && partner ? (
             <div 
               className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-600/10 text-orange-900 border border-orange-500/20 rounded-xl transition-all cursor-pointer shadow-xs hover:scale-[1.02] active:scale-95"
               title={`בן/בת זוג לחבל (שותף פעילות קבוע): ${partner.firstName} ${partner.lastName}`}
@@ -326,6 +365,11 @@ const DirectoryPage: React.FC = () => {
               <div className="w-7 h-7 rounded-full overflow-hidden bg-white border border-orange-500/20 shrink-0 shadow-xs relative">
                 {partner.avatar ? <img src={partner.avatar} className="w-full h-full object-cover" alt="" /> : <User size={15} className="m-auto text-orange-700 mt-1" />}
               </div>
+            </div>
+          ) : isAlumniCommunity && (member.role === 'Member' || member.role === 'Volunteer') ? (
+            <div className="flex items-center gap-2 px-3.5 py-2 bg-indigo-50/80 text-indigo-800 rounded-xl text-xs font-black border border-indigo-200/60 select-none">
+              <span>🎓</span>
+              <span>קבוצת בוגרים • ללא חלוקה לזוגות</span>
             </div>
           ) : isAppShaper ? (
             <button

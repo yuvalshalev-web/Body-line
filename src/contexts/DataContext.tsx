@@ -19,7 +19,7 @@ import {
   FirestoreErrorInfo
 } from '../services/firebase';
 import { formatDate, getCurrentDateFormatted } from '../utils/dateUtils';
-import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore, SurfCall, YearConfig, CommunityGroup, GroupMembership, GroupMemberRole } from '../types';
+import { Member, JoinRequest, Event, NewsItem, GalleryItem, GlossaryTerm, QuoteItem, Exercise, Podcast, PerformanceScore, SurfCall, YearConfig, CommunityGroup, GroupMembership, GroupMemberRole, PartnerHistoryItem } from '../types';
 import { SUPER_ADMIN_EMAIL, isAdminUser, isAppShaperUser, isSystemOrTestMember, AVAILABLE_COMMUNITIES, Community, getAvailableCommunities } from '../constants';
 import { hashPassword } from '../utils/crypto';
 import { initializeStorageStats, syncStorageOnDelete } from '../utils/storageStats';
@@ -866,7 +866,54 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         handleFirestoreError(error, OperationType.UPDATE, `members/${id}`);
       }
     }
-  }, [members, handleFirestoreError]);
+
+    // Auto-sync group_memberships if communities are specified
+    if (data.communities && Array.isArray(data.communities) && data.communities.length > 0) {
+      try {
+        const activeCohortId = groups.find(g => g.isCurrentCohort || g.id === 'cohort_active')?.id || 'cohort_active';
+        const alumniGroupId = groups.find(g => g.type === 'alumni' || g.id === 'group_alumni')?.id || 'group_alumni';
+        const targetRole = (data.role || existing?.role || 'Member') === 'Volunteer' ? 'volunteer' :
+          (data.role || existing?.role) === 'Instructor' ? 'instructor' :
+          (data.role || existing?.role) === 'Staff' ? 'coordinator' : 'participant';
+
+        const membershipsRef = collection(db, 'group_memberships');
+        const newMembershipsList: GroupMembership[] = [];
+
+        for (const commId of data.communities) {
+          const isAdults = commId.endsWith('_adults');
+          const targetGroupId = isAdults ? alumniGroupId : activeCohortId;
+          const targetStatus = isAdults ? 'graduated' : 'active';
+
+          const hasExisting = memberships.some(m => 
+            m.personId === id && 
+            m.communityId === commId && 
+            m.groupId === targetGroupId && 
+            m.status === targetStatus
+          );
+
+          if (!hasExisting) {
+            const membershipData: Omit<GroupMembership, 'id'> = {
+              personId: id,
+              groupId: targetGroupId,
+              communityId: commId,
+              role: targetRole as any,
+              status: targetStatus,
+              joinedAt: new Date().toISOString(),
+              notes: `סנכרון שיוך קהילה - ${commId}`
+            };
+            const memRef = await addDoc(membershipsRef, membershipData);
+            newMembershipsList.push({ id: memRef.id, ...membershipData });
+          }
+        }
+
+        if (newMembershipsList.length > 0) {
+          setMemberships(prev => [...prev, ...newMembershipsList]);
+        }
+      } catch (memSyncErr) {
+        console.warn("DataContext: Could not auto-sync group_memberships in updateMember:", memSyncErr);
+      }
+    }
+  }, [members, memberships, groups, handleFirestoreError]);
 
   const linkPair = useCallback(async (memberAId: string, memberBId: string, group?: string) => {
     const db = getDb();
@@ -2000,6 +2047,36 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             status: 'graduated',
             joinedAt: new Date().toISOString()
           });
+        }
+
+        // Archive active partner to partnerHistory and unlink partnerId for alumni transition
+        const memberObj = members.find(m => m.id === mem.personId);
+        if (memberObj?.partnerId) {
+          const partnerObj = members.find(m => m.id === memberObj.partnerId);
+          if (partnerObj) {
+            const closingName = params.closingCohortName || 'מחזור פעילות';
+            const historyItem: PartnerHistoryItem = {
+              id: `pair-${params.currentCohortId}-${mem.personId}-${partnerObj.id}`,
+              partnerId: partnerObj.id,
+              partnerName: `${partnerObj.firstName} ${partnerObj.lastName}`.trim(),
+              partnerAvatar: partnerObj.avatar || '',
+              partnerRole: partnerObj.role === 'Volunteer' ? 'Volunteer' : 'Member',
+              cohortId: params.currentCohortId,
+              cohortName: closingName,
+              period: 'ספטמבר - יולי',
+              status: 'completed',
+              notes: memberObj.role === 'Volunteer' 
+                ? `מתנדב שליווה את ${partnerObj.firstName}` 
+                : `משתתף שלווה על ידי ${partnerObj.firstName}`
+            };
+
+            batch.update(doc(db, 'members', mem.personId), {
+              partnerHistory: arrayUnion(historyItem),
+              partnerId: deleteField(),
+              assignedGroup: deleteField(),
+              group: deleteField()
+            });
+          }
         }
       }
     }

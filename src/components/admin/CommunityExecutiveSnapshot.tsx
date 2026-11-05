@@ -108,7 +108,8 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
       }
 
       if (!isAlumniCommunity) {
-        const isAlumniOnly = memberships.some(mem => 
+        const isExplicitActiveMember = comms.includes(activeCommunity);
+        const isAlumniOnly = !isExplicitActiveMember && memberships.some(mem => 
           mem.personId === m.id && 
           (mem.groupId === 'group_alumni' || mem.groupId === 'cohort_vav') && 
           (mem.status === 'graduated' || mem.status === 'completed')
@@ -119,7 +120,8 @@ export const CommunityExecutiveSnapshot: React.FC<CommunityExecutiveSnapshotProp
         );
         if (isAlumniOnly && !isStaffOrSupport) return false;
       } else {
-        const isActiveCohortOnly = memberships.some(mem => 
+        const isExplicitAlumniMember = comms.includes(activeCommunity);
+        const isActiveCohortOnly = !isExplicitAlumniMember && memberships.some(mem => 
           mem.personId === m.id && 
           mem.groupId === 'cohort_active' && 
           mem.status === 'active'

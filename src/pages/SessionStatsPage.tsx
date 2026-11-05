@@ -65,10 +65,11 @@ const SessionStatsPage: React.FC = () => {
       if (!comms.includes(activeCommunity)) return false;
 
       if (!isAlumniCommunity) {
-        const isAlumniOnly = memberships.some(mem => 
+        const isExplicitActiveMember = comms.includes(activeCommunity);
+        const isAlumniOnly = !isExplicitActiveMember && memberships.some(mem => 
           mem.personId === m.id && 
           (mem.groupId === 'group_alumni' || mem.groupId === 'cohort_vav') && 
-          mem.status === 'graduated'
+          (mem.status === 'graduated' || mem.status === 'completed')
         ) && !memberships.some(mem => 
           mem.personId === m.id && 
           mem.groupId === 'cohort_active' && 
@@ -76,13 +77,14 @@ const SessionStatsPage: React.FC = () => {
         );
         if (isAlumniOnly) return false;
       } else {
-        const isActiveCohortOnly = memberships.some(mem => 
+        const isExplicitAlumniMember = comms.includes(activeCommunity);
+        const isActiveCohortOnly = !isExplicitAlumniMember && memberships.some(mem => 
           mem.personId === m.id && 
           mem.groupId === 'cohort_active' && 
           mem.status === 'active'
         ) && !memberships.some(mem => 
           mem.personId === m.id && 
-          mem.groupId === 'group_alumni'
+          (mem.groupId === 'group_alumni' || mem.groupId === 'cohort_vav')
         );
         if (isActiveCohortOnly) return false;
       }

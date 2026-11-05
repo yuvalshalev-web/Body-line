@@ -115,3 +115,71 @@ export function getMemberGroupAffiliations(
     };
   });
 }
+
+/**
+ * Calculates the number of distinct cohorts a member participated in.
+ */
+export function getMemberCohortCount(
+  member: Member | undefined,
+  memberships: GroupMembership[],
+  groups: CommunityGroup[]
+): number {
+  if (!member) return 0;
+  
+  const memberMems = memberships.filter(m => m.personId === member.id);
+  const cohortIds = new Set<string>();
+
+  for (const m of memberMems) {
+    const grp = groups.find(g => g.id === m.groupId);
+    if (m.groupId.startsWith('cohort_') || grp?.type === 'cohort') {
+      cohortIds.add(m.groupId);
+    }
+  }
+
+  // If member belongs to active communities (e.g. herzliya, ashdod, etc.), they belong to the current active cohort
+  const hasActiveCohortComm = (member.communities || []).some(c => !c.endsWith('_adults'));
+  if (hasActiveCohortComm) {
+    cohortIds.add('cohort_active');
+  }
+
+  // If member has alumni membership or is in an adults community, ensure at least one past cohort is counted
+  const hasAlumni = memberMems.some(m => {
+    const grp = groups.find(g => g.id === m.groupId);
+    return m.groupId === 'group_alumni' || grp?.type === 'alumni';
+  }) || (member.communities || []).some(c => c.endsWith('_adults'));
+
+  if (hasAlumni && cohortIds.size === 0) {
+    cohortIds.add('past_cohort_alumni');
+  }
+
+  return Math.max(1, cohortIds.size);
+}
+
+/**
+ * Formats a join date to DD/MM/YYYY nicely.
+ */
+export function formatJoinDate(rawDate?: string | any): string {
+  if (!rawDate) return '';
+  if (typeof rawDate === 'string') {
+    const clean = rawDate.trim();
+    // Matches DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY
+    const dottedMatch = clean.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+    if (dottedMatch) {
+      const day = dottedMatch[1].padStart(2, '0');
+      const month = dottedMatch[2].padStart(2, '0');
+      const year = dottedMatch[3];
+      return `${day}/${month}/${year}`;
+    }
+    // If it's ISO like 2026-03-30T...
+    if (clean.includes('T') || clean.includes('-')) {
+      const d = new Date(clean);
+      if (!isNaN(d.getTime())) {
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+    }
+  }
+  return '';
+}

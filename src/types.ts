@@ -70,6 +70,22 @@ export interface Member {
   lastLoginAt?: string;
   updatedAt?: string;
   communities?: string[]; // list of community group IDs, e.g., ['herzliya']
+  partnerHistory?: PartnerHistoryItem[]; // היסטוריית חבלי זוג וציוותים לאורך השנים והמחזורים
+}
+
+export interface PartnerHistoryItem {
+  id: string;
+  partnerId: string;
+  partnerName: string;
+  partnerAvatar?: string;
+  partnerRole: 'Volunteer' | 'Member';
+  cohortId?: string;
+  cohortName: string;
+  communityId?: string;
+  communityName?: string;
+  period?: string; // e.g., "ספטמבר - יולי"
+  status: 'active' | 'graduated' | 'completed';
+  notes?: string;
 }
 
 export interface PerformanceScore {

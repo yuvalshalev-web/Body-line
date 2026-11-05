@@ -51,6 +51,7 @@ import { BiometricFingerprint } from '../components/BiometricFingerprint';
 import { ContactAvailabilityReminderModal, PendingContactAction } from '../components/ContactAvailabilityReminderModal';
 import { checkContactTimingSensitivity } from '../utils/availabilityTiming';
 import { getAvailabilityBadgeInfo } from '../constants/availability';
+import { getMemberCohortCount, formatJoinDate } from '../utils/cohortRules';
 
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -86,7 +87,7 @@ const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, currentCommunityId } = useAuth();
   const { 
-    members: rawMembers, memberships, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats,
+    members: rawMembers, memberships, groups, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats,
     connectionError, retryConnection, isLoading: isDataLoading, selectedStationId, setSelectedStationId, yearConfig
   } = useData();
 
@@ -101,10 +102,11 @@ const HomePage: React.FC = () => {
       if (!belongs) return false;
 
       if (!isAlumniCommunity) {
-        const isAlumniOnly = memberships.some(m => 
+        const isExplicitActiveMember = memberCommunities.includes(activeCommunity);
+        const isAlumniOnly = !isExplicitActiveMember && memberships.some(m => 
           m.personId === member.id && 
           (m.groupId === 'group_alumni' || m.groupId === 'cohort_vav') && 
-          m.status === 'graduated'
+          (m.status === 'graduated' || m.status === 'completed')
         ) && !memberships.some(m => 
           m.personId === member.id && 
           m.groupId === 'cohort_active' && 
@@ -112,6 +114,20 @@ const HomePage: React.FC = () => {
         );
 
         if (isAlumniOnly && !isStaffOrSupport) {
+          return false;
+        }
+      } else {
+        const isExplicitAlumniMember = memberCommunities.includes(activeCommunity);
+        const isActiveCohortOnly = !isExplicitAlumniMember && memberships.some(m => 
+          m.personId === member.id && 
+          m.groupId === 'cohort_active' && 
+          m.status === 'active'
+        ) && !memberships.some(m => 
+          m.personId === member.id && 
+          (m.groupId === 'group_alumni' || m.groupId === 'cohort_vav')
+        );
+
+        if (isActiveCohortOnly && !isStaffOrSupport) {
           return false;
         }
       }
@@ -1242,6 +1258,27 @@ const HomePage: React.FC = () => {
                   >
                     <MessageCircle size={13} className="shrink-0" />
                     <span>{avail.fullLabel}</span>
+                  </div>
+                );
+              })()}
+
+              {/* Joined Community & Cohort Count */}
+              {(() => {
+                const joinDate = formatJoinDate(selectedMemberProfile.joinedAt);
+                const cohortCount = getMemberCohortCount(selectedMemberProfile, memberships, groups);
+                return (
+                  <div className="flex flex-wrap items-center justify-center gap-2.5 mt-1 mb-2 p-2 bg-slate-50/90 rounded-xl border border-slate-200/70 text-xs text-slate-700 select-none">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-slate-800">הצטרף לקהילה:</span>
+                      <span className="font-extrabold text-slate-800">{joinDate || '---'}</span>
+                    </div>
+                    <span className="text-slate-300">•</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-slate-800">מחזורי פעילות:</span>
+                      <span className="font-black text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200/60 shadow-2xs">
+                        {cohortCount}
+                      </span>
+                    </div>
                   </div>
                 );
               })()}
