@@ -226,12 +226,33 @@ export interface AuthState {
   loading: boolean;
 }
 
+export interface BranchGroupConfig {
+  id: string;
+  name: string; // e.g. "מחזור ז׳" or "קבוצת בוגרים"
+  type: 'cohort' | 'alumni';
+  startDate: string;
+  endDate: string;
+  dayOfWeek: number; // 0-6 (Sunday-Saturday)
+  startTime: string; // e.g. "07:00"
+  sessionDurationMinutes: number; // e.g. 90
+}
+
+export interface BranchCohortConfig {
+  name: string;
+  startDate: string;
+  endDate: string;
+  dayOfWeek?: number;
+  startTime?: string;
+  sessionDurationMinutes?: number;
+  groups?: BranchGroupConfig[];
+}
+
 export interface YearConfig {
   name?: string; // כינוי / שם המחזור הגלובלי (למשל: "מחזור ז'")
   startDate: string;
   endDate: string;
   activityMode?: 'סבבים' | 'מאוחד' | 'קבוצתית' | 'משותפת' | string;
-  branchCohorts?: Record<string, string>; // מיפוי מחזור פעיל לפי סניף, למשל: { herzliya: "מחזור ז׳", ashkelon: "מחזור ג׳", ... }
+  branchCohorts?: Record<string, BranchCohortConfig>; // מיפוי מורחב למחזור פעיל לפי סניף
 }
 
 export type GroupType = 'cohort' | 'alumni' | 'special';

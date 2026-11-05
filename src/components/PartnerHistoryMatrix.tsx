@@ -57,7 +57,7 @@ export const PartnerHistoryMatrix: React.FC<PartnerHistoryMatrixProps> = ({
                   חבל זוג פעיל • {matrix.currentCohortName}
                 </h4>
                 <p className="text-[11px] font-bold text-amber-800">
-                  שנת פעילות אישית (ספטמבר - יולי) • ציוות 1-על-1
+                  שנת פעילות אישית • ציוות 1-על-1
                 </p>
               </div>
             </div>
@@ -123,26 +123,6 @@ export const PartnerHistoryMatrix: React.FC<PartnerHistoryMatrixProps> = ({
             </div>
           </div>
         </div>
-      ) : matrix.isAlumni ? (
-        /* Alumni Group Card - Homogeneous, unlinked rope partner */
-        <div className="w-full p-4 bg-gradient-to-br from-indigo-50/90 via-sky-50/60 to-indigo-100/70 border border-indigo-200/80 rounded-2xl shadow-2xs">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl shrink-0">🎓</span>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="text-indigo-950 text-sm font-black">
-                  קבוצת הבוגרים — פעילות הומוגנית מתמשכת
-                </h4>
-                <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-black border border-indigo-200">
-                  ללא חלוקה לזוגות
-                </span>
-              </div>
-              <p className="text-xs text-indigo-900/80 mt-1 leading-relaxed">
-                עם סיום שנת חבל זוג, החברים עוברים לקבוצת הבוגרים כקהילה אחת מגובשת. הפעילות אינה מסתיימת בסוף שנה אלא ממשיכה ברצף מדי ספטמבר (לאחר פגרת הקיץ). חבלי הזוג מהמחזור נשמרים בהיסטוריה לצמיתות.
-              </p>
-            </div>
-          </div>
-        </div>
       ) : null}
 
       {/* 2. Rope Partner Matrix & History Section (מטריצת חבלי זוג לאורך השנים) */}
@@ -193,7 +173,7 @@ export const PartnerHistoryMatrix: React.FC<PartnerHistoryMatrixProps> = ({
                 </div>
                 <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-600 pr-1">
                   <li>
-                    <strong>שנת חבל זוג (מחזור פעילות):</strong> פעילות שנתית (ספטמבר עד יולי). כל מתנדב מצוות אישית 1-על-1 למשתתף ומלווה אותו לאורך כל השנה.
+                    <strong>שנת חבל זוג (מחזור פעילות):</strong> פעילות שנתית (לפי הגדרות המערכת). כל מתנדב מצוות אישית 1-על-1 למשתתף ומלווה אותו לאורך כל השנה.
                   </li>
                   <li>
                     <strong>סיום שנת הפעילות ומעבר לבוגרים:</strong> בסוף יולי כל המחזור עובר לקבוצת הבוגרים. חבל הזוג בין המתנדב למשתתף מנותק, וקבוצת הבוגרים פועלת כקבוצה הומוגנית ללא זוגות.

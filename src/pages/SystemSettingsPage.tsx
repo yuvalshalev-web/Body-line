@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { BranchCohortConfig, BranchGroupConfig } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Settings, Terminal, Calendar, MapPin, Globe, Timer, Hourglass, 
@@ -21,6 +22,16 @@ interface SystemSettingsPageProps {
   embedded?: boolean;
 }
 
+const DAYS_OF_WEEK = [
+  { id: 0, he: 'ראשון' },
+  { id: 1, he: 'שני' },
+  { id: 2, he: 'שלישי' },
+  { id: 3, he: 'רביעי' },
+  { id: 4, he: 'חמישי' },
+  { id: 5, he: 'שישי' },
+  { id: 6, he: 'שבת' },
+];
+
 export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded = false }) => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -31,271 +42,151 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
     conflictingAdmins, updateMember, deleteMember, members 
   } = useData();
 
-  // רכז או אפ-שייפר מורשים לשנות את כל הפרמטרים של "שנת חבל זוג" והגדרות המערכת
   const isCoordinator = currentUser?.role === 'Admin' || currentUser?.role === 'Staff';
   const isAppShaper = isAppShaperUser(currentUser) || currentUser?.role === 'Support' || currentUser?.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
-  const isAdmin = isCoordinator || isAppShaper || isAdminUser(currentUser) || currentUser?.email?.toLowerCase() === 'yuval.shalev@gmail.com';
-  const canManageSystem = true; // רכז ואפ-שייפר מורשים לנהל את כל פרמטרי המערכת ושנת חבל זוג
+  const canManageSystem = true;
   const [showReadOnlyNotice, setShowReadOnlyNotice] = useState(false);
 
-  const checkAppShaper = () => {
-    if (canManageSystem) {
-      return true;
+  // Selected branch for managing its groups
+  const [selectedBranchId, setSelectedBranchId] = useState<string>(BASE_COMMUNITY_BRANCHES[0].id);
+
+  // Year & Branch Cohorts Configuration State
+  const [branchCohortsState, setBranchCohortsState] = useState<Record<string, BranchCohortConfig>>({
+    ...DEFAULT_BRANCH_COHORTS
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Group editing modal state
+  const [editingGroup, setEditingGroup] = useState<{ branchId: string; group: BranchGroupConfig | null; isNew: boolean } | null>(null);
+  const [groupForm, setGroupForm] = useState<BranchGroupConfig>({
+    id: '',
+    name: '',
+    type: 'cohort',
+    startDate: '2026-09-01',
+    endDate: '2027-07-31',
+    dayOfWeek: 4,
+    startTime: '07:00',
+    sessionDurationMinutes: 90
+  });
+
+  useEffect(() => {
+    if (yearConfig?.branchCohorts) {
+      // Merge with defaults
+      const merged: Record<string, BranchCohortConfig> = { ...DEFAULT_BRANCH_COHORTS };
+      for (const [k, v] of Object.entries(yearConfig.branchCohorts)) {
+        if (typeof v === 'object' && v !== null) {
+          merged[k] = {
+            ...(merged[k] || {}),
+            ...v,
+            groups: v.groups && v.groups.length > 0 ? v.groups : (merged[k]?.groups || [])
+          };
+        }
+      }
+      setBranchCohortsState(merged);
     }
-    setShowReadOnlyNotice(true);
-    return false;
+  }, [yearConfig]);
+
+  const handleSaveAllBranchSettings = async () => {
+    setIsSaving(true);
+    try {
+      await updateYearConfig({
+        name: yearConfig?.name || 'מחזור ז׳',
+        startDate: yearConfig?.startDate || '2026-09-01',
+        endDate: yearConfig?.endDate || '2027-07-31',
+        activityMode: yearConfig?.activityMode || 'משותפת',
+        branchCohorts: branchCohortsState
+      });
+      showSuccess('הגדרות המיקומים והקבוצות עודכנו בהצלחה!');
+    } catch (err) {
+      console.error(err);
+      showError('שגיאה בשמירת ההגדרות');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // Conflict email editing
-  const [editingConflictId, setEditingConflictId] = useState<string | null>(null);
-  const [conflictNewEmail, setConflictNewEmail] = useState('');
+  const handleOpenAddGroup = (branchId: string) => {
+    setGroupForm({
+      id: 'g_' + Date.now(),
+      name: 'קבוצה חדשה',
+      type: 'cohort',
+      startDate: '2026-09-01',
+      endDate: '2027-07-31',
+      dayOfWeek: 4,
+      startTime: '07:00',
+      sessionDurationMinutes: 90
+    });
+    setEditingGroup({ branchId, group: null, isNew: true });
+  };
 
-  // Duplicate users cleanup
-  const [isCleaningDuplicates, setIsCleaningDuplicates] = useState(false);
+  const handleOpenEditGroup = (branchId: string, group: BranchGroupConfig) => {
+    setGroupForm({ ...group });
+    setEditingGroup({ branchId, group, isNew: false });
+  };
 
-  const handleCleanupDuplicates = () => {
+  const handleSaveGroupModal = () => {
+    if (!editingGroup) return;
+    const { branchId, isNew } = editingGroup;
+    const currentBranch = branchCohortsState[branchId] || { name: 'מחזור', startDate: '2026-09-01', endDate: '2027-07-31', groups: [] };
+    const existingGroups = currentBranch.groups || [];
+
+    let updatedGroups: BranchGroupConfig[];
+    if (isNew) {
+      updatedGroups = [...existingGroups, groupForm];
+    } else {
+      updatedGroups = existingGroups.map(g => g.id === groupForm.id ? groupForm : g);
+    }
+
+    const updatedBranchCohorts = {
+      ...branchCohortsState,
+      [branchId]: {
+        ...currentBranch,
+        groups: updatedGroups
+      }
+    };
+
+    setBranchCohortsState(updatedBranchCohorts);
+    setEditingGroup(null);
+    showSuccess('פרטי הקבוצה עודכנו בהצלחה (לחץ על שמור שינויים למטה כדי לעדכן במערכת)');
+  };
+
+  const handleDeleteGroup = (branchId: string, groupId: string) => {
     showConfirm({
-      title: "מחיקת כפילויות",
-      message: "האם אתה בטוח שברצונך למחוק את כל המשתמשים הכפולים? פעולה זו תשאיר רק משתמש אחד לכל כתובת אימייל (המשתמש עם הכי הרבה נתונים) ותמחק את השאר לצמיתות.",
-      confirmText: "כן, נקה כפילויות",
+      title: "מחיקת קבוצה",
+      message: "האם אתה בטוח שברצונך למחוק קבוצה זו מהמיקום הגיאוגרפי?",
+      confirmText: "כן, מחק",
       cancelText: "ביטול",
-      onConfirm: async () => {
-        setIsCleaningDuplicates(true);
-        try {
-          const emailGroups: Record<string, any[]> = {};
-          members.forEach(m => {
-            if (!m.email) return;
-            const email = m.email.toLowerCase().trim();
-            if (!emailGroups[email]) emailGroups[email] = [];
-            emailGroups[email].push(m);
-          });
-
-          let deletedCount = 0;
-
-          for (const [email, group] of Object.entries(emailGroups)) {
-            if (group.length > 1) {
-              group.sort((a, b) => {
-                if (a.id === currentUser?.id) return -1;
-                if (b.id === currentUser?.id) return 1;
-                
-                const aIsAuthId = a.id.length === 28;
-                const bIsAuthId = b.id.length === 28;
-                if (aIsAuthId && !bIsAuthId) return -1;
-                if (!aIsAuthId && bIsAuthId) return 1;
-
-                const aLogins = a.loginCount || 0;
-                const bLogins = b.loginCount || 0;
-                if (aLogins !== bLogins) return bLogins - aLogins;
-
-                const aAtt = a.totalAttendance || 0;
-                const bAtt = b.totalAttendance || 0;
-                if (aAtt !== bAtt) return bAtt - aAtt;
-
-                if (a.isActive && !b.isActive) return -1;
-                if (!a.isActive && b.isActive) return 1;
-
-                return 0;
-              });
-
-              const [primary, ...duplicates] = group;
-              for (const dup of duplicates) {
-                await deleteMember(dup.id);
-                deletedCount++;
-              }
-            }
+      onConfirm: () => {
+        const currentBranch = branchCohortsState[branchId];
+        if (!currentBranch || !currentBranch.groups) return;
+        const updatedGroups = currentBranch.groups.filter(g => g.id !== groupId);
+        setBranchCohortsState({
+          ...branchCohortsState,
+          [branchId]: {
+            ...currentBranch,
+            groups: updatedGroups
           }
-
-          if (deletedCount > 0) {
-            showSuccess(`נמחקו ${deletedCount} משתמשים כפולים בהצלחה.`);
-          } else {
-            showSuccess("לא נמצאו משתמשים כפולים במערכת.");
-          }
-        } catch (error) {
-          console.error("Error cleaning up duplicates:", error);
-          showError("שגיאה במחיקת כפילויות. אנא נסה שוב.");
-        } finally {
-          setIsCleaningDuplicates(false);
-        }
+        });
+        showSuccess('הקבוצה הוסרה בהצלחה');
       }
     });
   };
 
-  // Markdown viewer state
+  // Duplicate users cleanup & Markdown viewer state
   const [markdownConfig, setMarkdownConfig] = useState<{ isOpen: boolean; path: string; title: string }>({
     isOpen: false,
     path: '',
     title: ''
   });
+  const [isCleaningDuplicates, setIsCleaningDuplicates] = useState(false);
+  const [editingConflictId, setEditingConflictId] = useState<string | null>(null);
+  const [conflictNewEmail, setConflictNewEmail] = useState('');
 
-  // Home Break State
-  const [isPlaceSelected, setIsPlaceSelected] = useState(!!siteConfig.home_break?.formatted);
-  const [hasConfirmedHomeBreakEdit, setHasConfirmedHomeBreakEdit] = useState(false);
-  const addressInputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<any>(null);
-  const selectedPlaceRef = useRef<any>(null);
-
-  // Session Duration State
-  const [sessionDurationInput, setSessionDurationInput] = useState<number>(siteConfig.sessionDurationMinutes || 90);
-  const [isSavingSessionDuration, setIsSavingSessionDuration] = useState(false);
-
-  useEffect(() => {
-    if (siteConfig.sessionDurationMinutes !== undefined) {
-      setSessionDurationInput(siteConfig.sessionDurationMinutes);
-    }
-  }, [siteConfig.sessionDurationMinutes]);
-
-  // Google Maps Autocomplete for Home Break
-  useEffect(() => {
-    const initAutocomplete = () => {
-      if (
-        addressInputRef.current && 
-        window.google?.maps?.places?.Autocomplete && 
-        !autocompleteRef.current
-      ) {
-        try {
-          autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
-            componentRestrictions: { country: "il" },
-            fields: ["address_components", "geometry", "formatted_address"]
-          });
-
-          autocompleteRef.current.addListener("place_changed", () => {
-            const place = autocompleteRef.current.getPlace();
-            
-            if (!place.geometry) {
-              if (place.name && window.google?.maps?.Geocoder) {
-                const geocoder = new window.google.maps.Geocoder();
-                geocoder.geocode({ address: place.name + ', Israel' }, (results: any, status: any) => {
-                  if (status === 'OK' && results && results[0]) {
-                    setIsPlaceSelected(true);
-                    selectedPlaceRef.current = results[0];
-                    if (addressInputRef.current) {
-                      addressInputRef.current.value = results[0].formatted_address || results[0].name || '';
-                    }
-                  } else {
-                    setIsPlaceSelected(false);
-                    selectedPlaceRef.current = null;
-                  }
-                });
-              } else {
-                setIsPlaceSelected(false);
-                selectedPlaceRef.current = null;
-              }
-              return;
-            }
-
-            setIsPlaceSelected(true);
-            selectedPlaceRef.current = place;
-            if (addressInputRef.current) {
-              addressInputRef.current.value = place.formatted_address || place.name || '';
-            }
-          });
-        } catch (e) {
-          console.error("Failed to initialize Autocomplete:", e);
-        }
-      }
-    };
-
-    loadGoogleMaps()
-      .then(initAutocomplete)
-      .catch(err => {
-        console.warn("Google Maps loading failed:", err.message);
-      });
-
-    return () => {
-      if (autocompleteRef.current && window.google) {
-        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
-      }
-    };
-  }, []);
-
-  // Year Config State
-  const [isEditingYear, setIsEditingYear] = useState(false);
-  const [yearForm, setYearForm] = useState<{ 
-    name: string; 
-    startDate: string; 
-    endDate: string; 
-    activityMode: 'קבוצתית' | 'משותפת' | 'סבבים' | 'מאוחד';
-    branchCohorts: Record<string, string>;
-  }>({
-    name: '',
-    startDate: '',
-    endDate: '',
-    activityMode: 'משותפת',
-    branchCohorts: { ...DEFAULT_BRANCH_COHORTS }
-  });
-  const [isSavingYear, setIsSavingYear] = useState(false);
-  const [isDirtyYear, setIsDirtyYear] = useState(false);
-
-  useEffect(() => {
-    if (yearConfig) {
-      setYearForm({ 
-        name: yearConfig.name || '',
-        startDate: yearConfig.startDate || '', 
-        endDate: yearConfig.endDate || '',
-        activityMode: (yearConfig.activityMode as any) || 'משותפת',
-        branchCohorts: yearConfig.branchCohorts 
-          ? { ...DEFAULT_BRANCH_COHORTS, ...yearConfig.branchCohorts } 
-          : { ...DEFAULT_BRANCH_COHORTS }
-      });
-      setIsDirtyYear(false);
-    }
-  }, [yearConfig]);
-
-  const handleSaveYearConfig = async () => {
-    setIsSavingYear(true);
-    try {
-      await updateYearConfig({
-        name: yearForm.name.trim() || 'מחזור ז׳',
-        startDate: yearForm.startDate,
-        endDate: yearForm.endDate,
-        activityMode: yearForm.activityMode,
-        branchCohorts: yearForm.branchCohorts
-      });
-      setIsDirtyYear(false);
-      setIsEditingYear(false);
-      showSuccess('כל הפרמטרים של שנת חבל זוג עודכנו בהצלחה!');
-    } catch (err) {
-      console.error(err);
-      showError('שגיאה בעדכון הגדרות שנת חבל זוג');
-    } finally {
-      setIsSavingYear(false);
-    }
-  };
-
-  // Weekly Sessions State
-  const [weeklySessions, setWeeklySessions] = useState<{ dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[]>(
-    siteConfig.weeklySessions || [{ dayOfWeek: 4, time: '07:00', isActive: false, isRecurring: true }]
-  );
-  const [newSessionDay, setNewSessionDay] = useState(0);
-  const [newSessionTime, setNewSessionTime] = useState('07:00');
-  const [isSavingSessions, setIsSavingSessions] = useState(false);
-
-  useEffect(() => {
-    if (siteConfig.weeklySessions) {
-      setWeeklySessions(siteConfig.weeklySessions);
-    }
-  }, [siteConfig.weeklySessions]);
-
-  const calculateWeeks = (startDateStr: string) => {
-    if (!startDateStr) return 0;
-    const start = new Date(startDateStr);
-    const now = new Date();
-    if (now < start) return 0;
-    const diff = now.getTime() - start.getTime();
-    return Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1;
-  };
-
-  const formatDate = (dateValue: string) => {
-    const d = new Date(dateValue);
-    if (isNaN(d.getTime())) return dateValue;
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
+  const currentSelectedBranch = BASE_COMMUNITY_BRANCHES.find(b => b.id === selectedBranchId) || BASE_COMMUNITY_BRANCHES[0];
+  const currentBranchConfig = branchCohortsState[selectedBranchId] || { name: 'מחזור פעיל', startDate: '', endDate: '', groups: [] };
 
   return (
-    <div className={embedded ? "space-y-12" : "max-w-7xl mx-auto px-4 py-8 space-y-12"}>
+    <div className={embedded ? "space-y-10" : "max-w-7xl mx-auto px-4 py-8 space-y-10"}>
       {/* Standalone Back Link if not embedded */}
       {!embedded && (
         <div className="flex items-center justify-between pb-4 border-b border-slate-200">
@@ -306,1309 +197,408 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
             <ArrowRight size={18} />
             <span>חזרה לפאנל הניהול</span>
           </button>
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+          <div className="flex items-center gap-2 text-slate-500 font-bold text-sm">
             <span>פאנל ניהול</span>
             <span>/</span>
-            <span className="text-slate-700">הגדרות מערכת</span>
+            <span className="text-slate-900">הגדרות מערכת ומיקומים</span>
           </div>
         </div>
       )}
 
       {/* Header Section */}
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center font-black">
-            <Settings size={24} />
-          </div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">הגדרות מערכת</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+            <div className="p-2.5 bg-sky-100 text-sky-600 rounded-2xl">
+              <MapPin size={26} />
+            </div>
+            הגדרת מיקומים גיאוגרפים וקבוצות פעילות
+          </h2>
+          <p className="text-sm text-slate-500 font-medium mt-1">
+            ניהול סניפים, קבוצות המחזורים וקבוצות הבוגרים — לכל קבוצה סט פרמטרים עצמאי (ימי פעילות, שעות, תאריכים ומשך)
+          </p>
         </div>
-        <p className="text-slate-500 font-medium">ניהול פרמטרים טכניים, תשתיות, מועדי פעילות וקונפיגורציית ליבה של האתר</p>
+        <button
+          onClick={handleSaveAllBranchSettings}
+          disabled={isSaving}
+          className="px-6 py-3.5 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-black text-sm rounded-2xl shadow-lg shadow-sky-500/25 hover:from-sky-600 hover:to-indigo-700 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+        >
+          {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+          <span>שמור את כל השינויים במערכת</span>
+        </button>
       </div>
 
-      {/* Read-Only Notice for Non-AppShapers */}
-      {!isAppShaper && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-5 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-500/10 border border-amber-300/40 rounded-2xl flex items-center justify-between gap-4 text-amber-900 shadow-sm backdrop-blur-sm"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-sm">
-              <Eye size={22} />
-            </div>
-            <div>
-              <p className="font-black text-sm">מצב צפייה בלבד (Read-Only) 👀</p>
-              <p className="text-xs text-amber-800/80 font-medium">
-                רק משתמשים בעלי הרשאת אפ-שייפר מורשים לבצע שינויים בפרמטרים והגדרות מערכת.
-              </p>
-            </div>
-          </div>
-          <button 
-            onClick={() => setShowReadOnlyNotice(true)}
-            className="px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-xl shadow hover:bg-amber-600 transition-colors whitespace-nowrap active:scale-95 cursor-pointer"
-          >
-            לפרטים
-          </button>
-        </motion.div>
-      )}
-
-      {/* Warning Banner */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden group"
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-rose-500/20 via-rose-50/50 to-rose-500/20 blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
-        <div className="relative p-6 bg-white/40 backdrop-blur-2xl border border-rose-200/50 rounded-[2rem] flex items-center gap-6 shadow-xl shadow-rose-500/5 group-hover:shadow-rose-500/10 transition-all duration-500">
-          <div className="relative shrink-0">
-            <motion.div 
-              animate={{ 
-                scale: [1, 1.2, 1],
-                opacity: [0.2, 0.5, 0.2],
-              }}
-              transition={{ 
-                duration: 0.8,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="absolute inset-0 bg-rose-500 blur-xl rounded-full"
-            />
-            <motion.div 
-              animate={{ 
-                backgroundColor: ["#f43f5e", "#3b82f6", "#f43f5e"],
-                boxShadow: [
-                  "0 0 20px rgba(244, 63, 94, 0.4)",
-                  "0 0 50px rgba(59, 130, 246, 0.9)",
-                  "0 0 20px rgba(244, 63, 94, 0.4)"
-                ]
-              }}
-              transition={{ 
-                duration: 0.3,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-              className="w-14 h-14 text-white rounded-2xl flex items-center justify-center relative z-10"
-            >
-              <AlertTriangle size={28} strokeWidth={3} className="animate-siren" />
-            </motion.div>
-          </div>
-          
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-sm">
-                אזהרת מערכת
-              </span>
-              <div className="h-px flex-1 bg-rose-100 min-w-[20px]" />
-            </div>
-            <p className="text-slate-800 font-black text-lg leading-tight tracking-tight mt-1">
-              אזהרה: אבן שזרק טיפש אחד לבאר, גם אלף חכמים לא יוציאו.
-            </p>
-            <p className="text-slate-700 font-bold text-sm leading-tight tracking-tight mt-1">
-              אל תהיה הגיבור שבגללו כולם נשארים שבת. התעסקות עם ההגדרות האלו היא הזמנה רשמית לתקלות בלתי מוסברות, באגים על-טבעיים והתפטרות של צוות הפיתוח. נגיעה בזהירות מופלגת, או לא לגעת בכלל.
-            </p>
-          </div>
-
-          <div className="hidden md:flex ml-auto items-center gap-2 text-rose-300">
-            <div className="w-1 h-1 rounded-full bg-current" />
-            <div className="w-1 h-1 rounded-full bg-current opacity-60" />
-            <div className="w-1 h-1 rounded-full bg-current opacity-30" />
-          </div>
+      {/* Geographic Location (Branch) Tabs / Selector */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+            <Globe size={16} className="text-sky-500" />
+            <span>בחר מיקום גיאוגרפי (סניף) לצפייה וניהול קבוצות:</span>
+          </h3>
+          <span className="text-xs text-slate-400 font-bold">5 מיקומים פעילים בקהילה</span>
         </div>
-      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Year Config Widget */}
-        <div className="luxury-card p-6 sm:p-8 space-y-6 sm:space-y-8 border-sky-100 shadow-md relative overflow-hidden">
-          {/* Subtle decorative glow */}
-          <div className="absolute -top-24 -left-24 w-48 h-48 bg-sky-200/20 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-5 gap-3">
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center shadow-xs border border-sky-100 shrink-0">
-                <Calendar size={24} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-black text-slate-800 tracking-tight">שנת חבל זוג</h3>
-                  <span className="text-xs font-black px-2.5 py-0.5 rounded-lg bg-sky-100 text-sky-700 border border-sky-200">
-                    {yearForm.name || yearConfig?.name || 'מחזור ז׳'}
-                  </span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {BASE_COMMUNITY_BRANCHES.map(branch => {
+            const isSelected = branch.id === selectedBranchId;
+            const groupsCount = (branchCohortsState[branch.id]?.groups || []).length;
+            return (
+              <button
+                key={branch.id}
+                type="button"
+                onClick={() => setSelectedBranchId(branch.id)}
+                className={`p-4 rounded-2xl border transition-all text-right flex flex-col justify-between gap-3 cursor-pointer ${
+                  isSelected 
+                    ? 'bg-gradient-to-br from-sky-500 to-indigo-600 text-white border-transparent shadow-lg shadow-sky-500/20 scale-102' 
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-sky-300 hover:bg-slate-50/50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-black text-base">{branch.baseName}</span>
+                  <MapPin size={18} className={isSelected ? 'text-white/90' : 'text-sky-500'} />
                 </div>
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                  COHORT & CYCLE CONFIG • פתוח לעריכת רכז ואפ-שייפר
-                </p>
-              </div>
+                <div className="flex items-center justify-between text-xs font-bold opacity-90">
+                  <span>{groupsCount} קבוצות מוגדרות</span>
+                  <ChevronLeft size={16} />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Selected Geographic Location & Its Independent Groups */}
+      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 bg-sky-100 text-sky-800 text-xs font-black rounded-full">מיקום גיאוגרפי פעיל</span>
+              <h3 className="text-xl font-black text-slate-900">{currentSelectedBranch.baseName}</h3>
             </div>
-            
-            <div className="flex items-center gap-2 self-start sm:self-center">
-              <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 flex items-center gap-1.5 shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>רכז / אפ-שייפר מורשה עריכה</span>
-              </span>
-            </div>
+            <p className="text-xs text-slate-500 font-medium">
+              כל הקבוצות להלן שייכות אך ורק למיקום הגיאוגרפי {currentSelectedBranch.baseName}. לכל קבוצה יש סט פרמטרים עצמאי לחלוטין.
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={() => handleOpenAddGroup(selectedBranchId)}
+            className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-600/20"
+          >
+            <Plus size={16} />
+            <span>הוסף קבוצה חדשה ל{currentSelectedBranch.baseName}</span>
+          </button>
+        </div>
 
-          <div className="space-y-6">
-            {/* Top 3 Primary Parameters - Directly Editable */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-              {/* Parameter 1: General Cohort Name */}
-              <div className="p-4 bg-slate-50 hover:bg-slate-50/90 rounded-2xl border border-slate-200/80 transition-all focus-within:ring-2 focus-within:ring-sky-500/20 focus-within:border-sky-400 focus-within:bg-white shadow-2xs">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                    <Edit2 size={11} className="text-sky-500" />
-                    <span>שם המחזור הראשי</span>
-                  </label>
-                  <span className="text-[9px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">עריכה ישירה</span>
-                </div>
-                <input 
-                  type="text"
-                  value={yearForm.name}
-                  placeholder="לדוגמה: מחזור ז׳"
-                  onChange={e => {
-                    setYearForm(prev => ({ ...prev, name: e.target.value }));
-                    setIsDirtyYear(true);
-                  }}
-                  className="w-full bg-white px-3 py-2 border border-slate-200 rounded-xl font-black text-slate-800 text-sm outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all shadow-2xs"
-                />
-                <p className="text-[10px] text-slate-400 font-medium mt-1 truncate">כינוי שנת הפעילות הראשית</p>
-              </div>
-
-              {/* Parameter 2: Start Date */}
-              <div className="p-4 bg-slate-50 hover:bg-slate-50/90 rounded-2xl border border-slate-200/80 transition-all focus-within:ring-2 focus-within:ring-sky-500/20 focus-within:border-sky-400 focus-within:bg-white shadow-2xs">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                    <Calendar size={11} className="text-sky-500" />
-                    <span>תחילת שנת חבל זוג</span>
-                  </label>
-                  <span className="text-[9px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">תאריך פתיחה</span>
-                </div>
-                <input 
-                  type="date"
-                  value={yearForm.startDate}
-                  onChange={e => {
-                    setYearForm(prev => ({ ...prev, startDate: e.target.value }));
-                    setIsDirtyYear(true);
-                  }}
-                  onClick={e => {
-                    try {
-                      (e.currentTarget as any).showPicker?.();
-                    } catch(err) {}
-                  }}
-                  className="w-full bg-white px-3 py-2 border border-slate-200 rounded-xl font-black text-slate-800 text-sm outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all cursor-pointer shadow-2xs"
-                />
-                <p className="text-[10px] text-slate-400 font-medium mt-1">
-                  {formatDate(yearForm.startDate || yearConfig?.startDate || '---')}
-                </p>
-              </div>
-
-              {/* Parameter 3: End Date */}
-              <div className="p-4 bg-slate-50 hover:bg-slate-50/90 rounded-2xl border border-slate-200/80 transition-all focus-within:ring-2 focus-within:ring-sky-500/20 focus-within:border-sky-400 focus-within:bg-white shadow-2xs">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                    <Calendar size={11} className="text-sky-500" />
-                    <span>סיום שנת חבל זוג</span>
-                  </label>
-                  <span className="text-[9px] font-bold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">תאריך סיום</span>
-                </div>
-                <input 
-                  type="date"
-                  value={yearForm.endDate}
-                  onChange={e => {
-                    setYearForm(prev => ({ ...prev, endDate: e.target.value }));
-                    setIsDirtyYear(true);
-                  }}
-                  onClick={e => {
-                    try {
-                      (e.currentTarget as any).showPicker?.();
-                    } catch(err) {}
-                  }}
-                  className="w-full bg-white px-3 py-2 border border-slate-200 rounded-xl font-black text-slate-800 text-sm outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all cursor-pointer shadow-2xs"
-                />
-                <p className="text-[10px] text-slate-400 font-medium mt-1">
-                  {formatDate(yearForm.endDate || yearConfig?.endDate || '---')}
-                </p>
-              </div>
+        {/* Groups List for this Location */}
+        <div className="space-y-4">
+          {(!currentBranchConfig.groups || currentBranchConfig.groups.length === 0) ? (
+            <div className="p-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-3">
+              <Users size={32} className="mx-auto text-slate-400" />
+              <p className="text-sm font-black text-slate-700">אין קבוצות מוגדרות עדיין למיקום זה</p>
+              <button
+                type="button"
+                onClick={() => handleOpenAddGroup(selectedBranchId)}
+                className="px-4 py-2 bg-sky-500 text-white text-xs font-black rounded-xl"
+              >
+                הקם קבוצה ראשונה
+              </button>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {currentBranchConfig.groups.map(group => {
+                const dayName = DAYS_OF_WEEK.find(d => d.id === group.dayOfWeek)?.he || 'חמישי';
+                const isAlumni = group.type === 'alumni';
+                return (
+                  <div 
+                    key={group.id} 
+                    className={`p-6 rounded-2xl border transition-all space-y-4 relative overflow-hidden ${
+                      isAlumni 
+                        ? 'bg-gradient-to-br from-indigo-50/50 via-white to-white border-indigo-200 shadow-sm' 
+                        : 'bg-gradient-to-br from-sky-50/50 via-white to-white border-sky-200 shadow-sm'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${isAlumni ? 'bg-indigo-100 text-indigo-700' : 'bg-sky-100 text-sky-700'}`}>
+                          {isAlumni ? '🎓 קבוצת בוגרים' : '🌊 מחזור פעיל'}
+                        </span>
+                        <h4 className="text-base font-black text-slate-900">{group.name}</h4>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditGroup(selectedBranchId, group)}
+                          className="p-2 bg-white border border-slate-200 text-slate-700 hover:text-sky-600 rounded-xl transition-all cursor-pointer shadow-2xs"
+                          title="ערוך פרטי קבוצה"
+                        >
+                          <Edit2 size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteGroup(selectedBranchId, group.id)}
+                          className="p-2 bg-white border border-slate-200 text-slate-700 hover:text-rose-600 rounded-xl transition-all cursor-pointer shadow-2xs"
+                          title="מחק קבוצה"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
 
-            {/* Current Week & Annual Progress Banner */}
-            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-              <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-xs font-black text-slate-500 uppercase tracking-widest">שבוע נוכחי</span>
-                </div>
-                <span className="text-2xl sm:text-3xl font-black text-slate-800 tabular-nums">
-                  {calculateWeeks(yearForm.startDate || yearConfig?.startDate || '')}
-                </span>
+                    {/* Independent Parameters Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100 text-xs">
+                      <div className="bg-white/80 p-2.5 rounded-xl border border-slate-100 space-y-0.5">
+                        <span className="text-[10px] text-slate-400 font-bold block">יום פעילות בשבוע</span>
+                        <span className="font-black text-slate-800">יום {dayName}</span>
+                      </div>
+                      <div className="bg-white/80 p-2.5 rounded-xl border border-slate-100 space-y-0.5">
+                        <span className="text-[10px] text-slate-400 font-bold block">שעת תחילת פעילות</span>
+                        <span className="font-black text-slate-800 flex items-center gap-1">
+                          <Clock size={12} className="text-sky-500" />
+                          {group.startTime || '07:00'}
+                        </span>
+                      </div>
+                      <div className="bg-white/80 p-2.5 rounded-xl border border-slate-100 space-y-0.5">
+                        <span className="text-[10px] text-slate-400 font-bold block">משך פעילות</span>
+                        <span className="font-black text-slate-800 flex items-center gap-1">
+                          <Timer size={12} className="text-emerald-500" />
+                          {group.sessionDurationMinutes || 90} דקות
+                        </span>
+                      </div>
+                      <div className="col-span-2 sm:col-span-3 bg-white/80 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between">
+                        <span className="text-[10px] text-slate-400 font-bold">טווח תאריכים פעיל:</span>
+                        <span className="font-black text-slate-800 text-[11px]" dir="ltr">
+                          {group.startDate || '2026-09-01'} ➔ {group.endDate || '2027-07-31'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Group Edit / Add Modal */}
+      <AnimatePresence>
+        {editingGroup && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 overflow-hidden relative"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="bg-gradient-to-r from-sky-600 via-indigo-600 to-indigo-700 p-6 text-white text-center relative">
+                <Calendar size={36} className="mx-auto mb-2 text-white/90" />
+                <h3 className="text-xl font-black mb-1">
+                  {editingGroup.isNew ? 'הקמת קבוצה חדשה במיקום' : 'עריכת פרטי קבוצה'}
+                </h3>
+                <p className="text-sky-100 text-xs font-semibold">הגדרת סט הפרמטרים העצמאי לקבוצה זו</p>
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">התקדמות שנתית</span>
-                  <span className="text-[10px] font-black text-sky-600 uppercase tracking-widest">
-                    {Math.round((calculateWeeks(yearForm.startDate || yearConfig?.startDate || '') / 52) * 100)}%
-                  </span>
-                </div>
-                <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(100, (calculateWeeks(yearForm.startDate || yearConfig?.startDate || '') / 52) * 100)}%` }}
-                    transition={{ duration: 1.2, ease: "easeOut" }}
-                    className="h-full bg-sky-500 rounded-full"
+
+              <div className="p-6 space-y-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-black text-slate-700">שם הקבוצה / המחזור</label>
+                  <input 
+                    type="text"
+                    value={groupForm.name}
+                    onChange={e => setGroupForm({ ...groupForm, name: e.target.value })}
+                    placeholder="למשל: מחזור ז׳ או קבוצת בוגרים"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-black text-sm text-slate-800 outline-none focus:ring-2 ring-sky-500/20"
                   />
                 </div>
-              </div>
-            </div>
 
-            {/* Activity Mode Toggle Switch */}
-            <div className="p-5 bg-gradient-to-br from-slate-50 to-indigo-50/40 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100/80 flex items-center justify-center font-black">
-                    <Layers size={18} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">מצב פעילות שנתי</p>
-                    <p className="text-sm font-black text-slate-800">
-                      {yearForm.activityMode === 'קבוצתית' || yearForm.activityMode === 'סבבים' ? 'חלוקה לסבבים (סבב א׳ ו-סבב ב׳ לסירוגין)' : 'איחוד קבוצתי (סשן מאוחד לכלל חברי הקבוצה)'}
-                    </p>
-                  </div>
-                </div>
-                <span className={`text-[11px] font-black px-3 py-1 rounded-full border shadow-2xs transition-colors ${
-                  yearForm.activityMode === 'קבוצתית' || yearForm.activityMode === 'סבבים'
-                    ? 'bg-blue-500 text-white border-blue-600'
-                    : 'bg-emerald-500 text-white border-emerald-600'
-                }`}>
-                  {yearForm.activityMode === 'קבוצתית' || yearForm.activityMode === 'סבבים' ? 'סבבים (א׳/ב׳)' : 'איחוד קבוצתי'}
-                </span>
-              </div>
-
-              {/* Toggle Switch Component */}
-              <div className="relative bg-slate-200/90 p-1.5 rounded-2xl flex items-center border border-slate-300/60 select-none">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setYearForm(prev => ({ ...prev, activityMode: 'קבוצתית' }));
-                    setIsDirtyYear(true);
-                  }}
-                  className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all duration-200 flex items-center justify-center gap-2 relative z-10 cursor-pointer ${
-                    yearForm.activityMode === 'קבוצתית' || yearForm.activityMode === 'סבבים'
-                      ? 'bg-white text-blue-700 shadow-md ring-1 ring-black/5 font-black scale-[1.01]'
-                      : 'text-slate-600 hover:text-slate-900 font-bold hover:bg-white/40'
-                  }`}
-                >
-                  <Users size={16} className={yearForm.activityMode === 'קבוצתית' || yearForm.activityMode === 'סבבים' ? 'text-blue-600' : 'text-slate-400'} />
-                  <span>סבבים (א׳/ב׳)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setYearForm(prev => ({ ...prev, activityMode: 'משותפת' }));
-                    setIsDirtyYear(true);
-                  }}
-                  className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all duration-200 flex items-center justify-center gap-2 relative z-10 cursor-pointer ${
-                    yearForm.activityMode !== 'קבוצתית' && yearForm.activityMode !== 'סבבים'
-                      ? 'bg-white text-emerald-700 shadow-md ring-1 ring-black/5 font-black scale-[1.01]'
-                      : 'text-slate-600 hover:text-slate-900 font-bold hover:bg-white/40'
-                  }`}
-                >
-                  <Activity size={16} className={yearForm.activityMode !== 'קבוצתית' && yearForm.activityMode !== 'סבבים' ? 'text-emerald-600' : 'text-slate-400'} />
-                  <span>איחוד קבוצתי</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Geographic Branch Cohorts - Editable per Branch */}
-            <div className="p-5 bg-gradient-to-br from-slate-50 to-sky-50/40 rounded-2xl border border-slate-200/90 space-y-3.5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <MapPin size={15} className="text-sky-600" />
-                    <span className="text-xs font-black text-slate-800">מחזור פעיל לפי סניף / מיקום גיאוגרפי:</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                    בכל מיקום גיאוגרפי המחזור הנוכחי מותאם עצמאית (למשל: בהרצליה <strong>מחזור ז׳</strong>, באשקלון <strong>מחזור ג׳</strong>)
-                  </p>
-                </div>
-                <span className="text-[10px] font-bold text-sky-700 bg-sky-100/80 border border-sky-200 px-2 py-0.5 rounded-lg w-fit">
-                  5 סניפים מקומיים
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                {BASE_COMMUNITY_BRANCHES.map(branch => {
-                  const currentValue = yearForm.branchCohorts[branch.id] !== undefined
-                    ? yearForm.branchCohorts[branch.id]
-                    : (DEFAULT_BRANCH_COHORTS[branch.id] || 'מחזור פעיל');
-                  return (
-                    <div 
-                      key={branch.id} 
-                      className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs text-right space-y-1.5 focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all"
+                <div className="space-y-1">
+                  <label className="text-xs font-black text-slate-700">סוג הקבוצה</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setGroupForm({ ...groupForm, type: 'cohort' })}
+                      className={`p-3 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                        groupForm.type === 'cohort' ? 'bg-sky-500 text-white border-sky-500 shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-200'
+                      }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <p className="text-[11px] font-black text-slate-800">{branch.baseName}</p>
-                        <span className="text-[9px] font-bold text-slate-400">סניף</span>
-                      </div>
-                      <input 
-                        type="text"
-                        value={currentValue}
-                        onChange={e => {
-                          const val = e.target.value;
-                          setYearForm(prev => ({
-                            ...prev,
-                            branchCohorts: {
-                              ...prev.branchCohorts,
-                              [branch.id]: val
-                            }
-                          }));
-                          setIsDirtyYear(true);
-                        }}
-                        placeholder={DEFAULT_BRANCH_COHORTS[branch.id] || 'מחזור פעיל'}
-                        className="w-full p-2 bg-slate-50 focus:bg-white border border-slate-200 rounded-lg text-[11px] font-black text-slate-800 text-center outline-none focus:border-slate-400 transition-all shadow-2xs placeholder:text-slate-400 placeholder:font-normal"
-                      />
-                      <p className="text-[9px] text-slate-400 font-medium text-center truncate">
-                        {branch.baseName} - {currentValue.trim() || 'מחזור פעיל'}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+                      🌊 מחזור פעיל (שנת חבל זוג)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGroupForm({ ...groupForm, type: 'alumni' })}
+                      className={`p-3 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+                        groupForm.type === 'alumni' ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-200'
+                      }`}
+                    >
+                      🎓 קבוצת בוגרים
+                    </button>
+                  </div>
+                </div>
 
-            {/* Action Bar for Shnat Hevel Zug */}
-            <div className="space-y-2.5 pt-2">
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={handleSaveYearConfig}
-                  disabled={isSavingYear}
-                  className="flex-1 py-4 bg-gradient-to-r from-sky-500 via-sky-600 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white rounded-2xl font-black text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 border border-white/20 active:scale-98 cursor-pointer disabled:opacity-50"
-                >
-                  {isSavingYear ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-                  <span>שמור שינויים בשנת חבל זוג</span>
-                  {isDirtyYear && (
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-300 animate-ping mr-1" />
-                  )}
-                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-black text-slate-700">תאריך התחלה</label>
+                    <input 
+                      type="date"
+                      value={groupForm.startDate}
+                      onChange={e => setGroupForm({ ...groupForm, startDate: e.target.value })}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs text-slate-700 cursor-pointer"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-black text-slate-700">תאריך סיום</label>
+                    <input 
+                      type="date"
+                      value={groupForm.endDate}
+                      onChange={e => setGroupForm({ ...groupForm, endDate: e.target.value })}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs text-slate-700 cursor-pointer"
+                    />
+                  </div>
+                </div>
 
-                {isDirtyYear && (
-                  <button
-                    onClick={() => {
-                      if (yearConfig) {
-                        setYearForm({
-                          name: yearConfig.name || '',
-                          startDate: yearConfig.startDate || '',
-                          endDate: yearConfig.endDate || '',
-                          activityMode: (yearConfig.activityMode as any) || 'משותפת',
-                          branchCohorts: yearConfig.branchCohorts 
-                            ? { ...DEFAULT_BRANCH_COHORTS, ...yearConfig.branchCohorts } 
-                            : { ...DEFAULT_BRANCH_COHORTS }
-                        });
-                        setIsDirtyYear(false);
-                      }
-                    }}
-                    className="py-4 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black text-xs transition-all cursor-pointer"
-                    title="בטל שינויים ושחזר ערכים שמורים"
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-black text-slate-700">יום בשבוע</label>
+                    <select
+                      value={groupForm.dayOfWeek}
+                      onChange={e => setGroupForm({ ...groupForm, dayOfWeek: Number(e.target.value) })}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-black text-xs text-slate-800 outline-none"
+                    >
+                      {DAYS_OF_WEEK.map(d => (
+                        <option key={d.id} value={d.id}>יום {d.he}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-black text-slate-700">שעת התחלה</label>
+                    <input 
+                      type="time"
+                      value={groupForm.startTime || '07:00'}
+                      onChange={e => setGroupForm({ ...groupForm, startTime: e.target.value })}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs text-slate-800"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-black text-slate-700">משך (דקות)</label>
+                    <input 
+                      type="number"
+                      value={groupForm.sessionDurationMinutes || 90}
+                      onChange={e => setGroupForm({ ...groupForm, sessionDurationMinutes: Number(e.target.value) })}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs text-slate-800"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button 
+                    type="button"
+                    onClick={handleSaveGroupModal}
+                    className="flex-1 py-3.5 bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-2xl font-black text-sm shadow-md hover:from-sky-600 hover:to-indigo-700 transition-all cursor-pointer"
                   >
-                    ביטול שינויים
+                    אישור ושמירה בקבוצה
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setEditingGroup(null)}
+                    className="px-5 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all cursor-pointer"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Conflicting Admins Alert */}
+      {conflictingAdmins.length > 0 && (
+        <div className="p-6 bg-rose-50 border border-rose-200 rounded-2xl space-y-4">
+          <div className="flex items-center gap-3 text-rose-800">
+            <ShieldAlert size={24} />
+            <h3 className="text-base font-black">קיימים {conflictingAdmins.length} מנהלים עם אימייל כפול</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {conflictingAdmins.map((admin: any) => (
+              <div key={admin.id} className="p-4 bg-white rounded-xl border border-rose-200 flex items-center justify-between shadow-2xs">
+                <div>
+                  <p className="text-xs font-black text-slate-800">{admin.firstName} {admin.lastName}</p>
+                  <p className="text-[11px] text-slate-500 font-mono">{admin.email}</p>
+                </div>
+                {editingConflictId === admin.id ? (
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="email" 
+                      value={conflictNewEmail}
+                      onChange={e => setConflictNewEmail(e.target.value)}
+                      className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold w-40"
+                    />
+                    <button 
+                      onClick={async () => {
+                        if (!conflictNewEmail.trim()) return;
+                        try {
+                          await updateMember({ ...admin, email: conflictNewEmail.trim() });
+                          setEditingConflictId(null);
+                          showSuccess('אימייל עודכן בהצלחה');
+                        } catch (err) {
+                          showError('שגיאה בעדכון אימייל');
+                        }
+                      }}
+                      className="p-1.5 bg-emerald-500 text-white rounded-lg"
+                    >
+                      <Check size={16} />
+                    </button>
+                    <button 
+                      onClick={() => setEditingConflictId(null)}
+                      className="p-1.5 bg-rose-100 text-rose-600 rounded-lg"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      setEditingConflictId(admin.id);
+                      setConflictNewEmail(admin.email === SUPER_ADMIN_EMAIL ? 'gal@gmail.com' : admin.email);
+                    }}
+                    className="px-3 py-1.5 bg-rose-100 text-rose-700 rounded-lg text-xs font-black hover:bg-rose-200 transition-all cursor-pointer"
+                  >
+                    תיקון אימייל
                   </button>
                 )}
               </div>
-
-              <div className="flex items-center justify-between px-1">
-                <span className="text-[11px] font-bold text-slate-500">
-                  {isDirtyYear ? '⚠️ ישנם שינויים שלא נשמרו — לחץ על "שמור שינויים" להחלה' : '✓ כל הפרמטרים מסונכרנים'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingYear(true)}
-                  className="text-xs font-bold text-sky-600 hover:text-sky-800 flex items-center gap-1 transition-colors cursor-pointer"
-                >
-                  <span>אשף הגדרות מורחב / גלגול מחזור (Rollover)</span>
-                  <ChevronLeft size={14} />
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
-
-        {/* Home Break Config Widget */}
-        <div className="luxury-card p-8 space-y-8">
-          <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
-            <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center shadow-sm border border-indigo-100">
-              <MapPin size={24} />
-            </div>
-            <div>
-              <h3 className="text-xl font-black text-slate-800 tracking-tight">חוף הבית</h3>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">HOME BREAK LOCATION</p>
-            </div>
-          </div>
-
-          <div className="space-y-8">
-            <p className="text-sm text-slate-500 font-medium leading-relaxed">
-              נקודת העוגן של המערכת המשמשת לחישובי מרחקים, זמני הגעה ותצוגת מפות עבור המשתמשים.
-            </p>
-
-            <div className="relative">
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-                <Globe size={20} />
-              </div>
-              <input 
-                type="text" 
-                ref={addressInputRef}
-                defaultValue={siteConfig.home_break?.formatted || ''} 
-                readOnly={!hasConfirmedHomeBreakEdit}
-                onClick={() => {
-                  if (!checkAppShaper()) return;
-                  if (!hasConfirmedHomeBreakEdit) {
-                    showConfirm({
-                      title: 'שינוי חוף הבית',
-                      message: 'האם אתה בטוח שברצונך לשנות את נקודת העוגן של המערכת?',
-                      confirmText: 'כן, שנה מיקום',
-                      cancelText: 'ביטול',
-                      onConfirm: () => {
-                        setHasConfirmedHomeBreakEdit(true);
-                        setTimeout(() => addressInputRef.current?.focus(), 100);
-                      }
-                    });
-                  }
-                }}
-                placeholder="הזן כתובת מדויקת..."
-                className={`w-full pr-12 pl-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 outline-none focus:ring-2 ring-indigo-500/20 focus:bg-white transition-all font-bold ${
-                  !hasConfirmedHomeBreakEdit ? 'cursor-pointer' : ''
-                }`}
-                autoComplete="off"
-              />
-            </div>
-
-            {hasConfirmedHomeBreakEdit ? (
-              <div className="flex gap-3 animate-in slide-in-from-top-2">
-                <button 
-                  onClick={() => setHasConfirmedHomeBreakEdit(false)}
-                  className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs hover:bg-slate-200 transition-all cursor-pointer"
-                >
-                  ביטול
-                </button>
-                <button 
-                  onClick={async () => {
-                    if (!checkAppShaper()) return;
-                    const currentValue = addressInputRef.current?.value || '';
-                    if (currentValue.trim() === '') {
-                      try {
-                        await updateSiteConfig({ home_break: null });
-                        showSuccess('כתובת חוף הבית נמחקה');
-                        setHasConfirmedHomeBreakEdit(false);
-                      } catch (err) {
-                        showError('שגיאה בעדכון הכתובת');
-                      }
-                    } else if (isPlaceSelected && selectedPlaceRef.current) {
-                      try {
-                        const addressData = extractAddressData(selectedPlaceRef.current);
-                        await updateSiteConfig({ home_break: addressData });
-                        showSuccess('חוף הבית עודכן בהצלחה');
-                        setHasConfirmedHomeBreakEdit(false);
-                      } catch (err) {
-                        showError('שגיאה בעדכון הכתובת');
-                      }
-                    } else {
-                      if (window.google?.maps?.Geocoder) {
-                        const geocoder = new window.google.maps.Geocoder();
-                        geocoder.geocode({ address: currentValue + ', Israel' }, async (results: any, status: any) => {
-                          if (status === 'OK' && results && results[0]) {
-                            try {
-                              const addressData = extractAddressData(results[0]);
-                              await updateSiteConfig({ home_break: addressData });
-                              showSuccess('חוף הבית עודכן בהצלחה');
-                              setHasConfirmedHomeBreakEdit(false);
-                              if (addressInputRef.current) addressInputRef.current.value = results[0].formatted_address;
-                            } catch (err) {
-                              showError('שגיאה בעדכון הכתובת');
-                            }
-                          } else {
-                            showError('כתובת לא נמצאה, אנא בחר מהרשימה');
-                          }
-                        });
-                      }
-                    }
-                  }}
-                  className="flex-[2] py-4 bg-indigo-500 text-white rounded-2xl font-black text-xs shadow-sm hover:bg-indigo-600 transition-all cursor-pointer"
-                >
-                  שמור מיקום חדש
-                </button>
-              </div>
-            ) : (
-              <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-4">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-emerald-100 shrink-0">
-                  <CheckCircle2 size={20} className="text-emerald-500" />
-                </div>
-                <p className="text-sm font-bold text-emerald-700">המיקום מוגדר ומסונכרן עם שירותי המפות</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Session Duration Config Widget */}
-      <div className="luxury-card p-8 space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-sky-50 text-sky-500 rounded-2xl flex items-center justify-center shadow-sm border border-sky-100">
-              <Timer size={24} />
-            </div>
-            <div>
-              <h3 className="text-xl font-black text-slate-800 tracking-tight">אורך הסשן (זמן מים)</h3>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">SESSION DURATION & SEA TIME MULTIPLIER</p>
-            </div>
-          </div>
-
-          <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-6 md:p-8 border-2 border-[#00a3c4]/50 shadow-xl max-w-md w-full shrink-0 flex items-center justify-between gap-6 group">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#002b44]/50 via-slate-950 to-[#007085]/30 opacity-90" />
-            <div className="absolute -top-12 -left-12 w-24 h-24 bg-[#00a3c4]/20 rounded-full blur-2xl group-hover:scale-150 transition-all duration-700" />
-            
-            <div className="relative z-10 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="flex h-3 w-3 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </span>
-                <span className="text-xs font-black tracking-widest uppercase text-emerald-400">נתון פעיל ומסונכרן</span>
-              </div>
-              <h4 className="text-sm font-bold text-slate-300">אורך סשן בשימוש מערכת</h4>
-              <p className="text-xs text-slate-400 font-medium leading-tight">כל חישובי השעות, המדדים וההתקדמות מבוססים על ערך זה</p>
-            </div>
-
-            <div className="relative z-10 text-right shrink-0 flex flex-col items-end">
-              <span className="text-4xl md:text-5xl font-black text-[#00a3c4] tracking-tight tabular-nums drop-shadow-[0_2px_10px_rgba(0,112,133,0.3)]">
-                {siteConfig.sessionDurationMinutes || 90}
-              </span>
-              <span className="text-xs font-black text-[#00a3c4] uppercase mt-1">דקות מים</span>
-              <span className="text-[10px] text-emerald-400 font-bold mt-1 bg-emerald-950/60 border border-emerald-500/20 px-2 py-0.5 rounded-md">
-                {(Number(siteConfig.sessionDurationMinutes || 90) / 60).toFixed(1)} שעות גלישה
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <p className="text-sm text-slate-500 font-medium leading-relaxed">
-            קביעת משך סשן גלישה בודד בדקות. נתון זה משמש כמקדם לחישוב צבירת שעות הגלישה האישיות של כל גולש, סך שעות המים של הקבוצה כולה, וכלל הסטטיסטיקות ומדדי ההתקדמות מול יעדי הקהילה.
-          </p>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-slate-50/70 rounded-3xl p-6 border border-slate-100">
-            
-            {/* Left Controls */}
-            <div className="lg:col-span-6 space-y-5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">משך סשן רצוי</span>
-                <span className="text-xs font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-100">
-                  = {(sessionDurationInput / 60).toFixed(2).replace(/\.00$/, '')} שעות לסשן
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!isAppShaper && !isAdmin && currentUser?.role !== 'Instructor') {
-                      setShowReadOnlyNotice(true);
-                      return;
-                    }
-                    setSessionDurationInput(prev => Math.max(15, prev - 15));
-                  }}
-                  className="px-4 py-3 bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 text-slate-700 font-black text-xs rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer"
-                  title="הפחת 15 דקות"
-                >
-                  -15
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!isAppShaper && !isAdmin && currentUser?.role !== 'Instructor') {
-                      setShowReadOnlyNotice(true);
-                      return;
-                    }
-                    setSessionDurationInput(prev => Math.max(15, prev - 5));
-                  }}
-                  className="px-3.5 py-3 bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 text-slate-700 font-black text-xs rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer"
-                  title="הפחת 5 דקות"
-                >
-                  -5
-                </button>
-
-                <div className="relative flex-1">
-                  <input
-                    type="number"
-                    min="15"
-                    max="300"
-                    step="5"
-                    value={sessionDurationInput}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10);
-                      if (!isNaN(val)) {
-                        setSessionDurationInput(Math.min(360, Math.max(15, val)));
-                      }
-                    }}
-                    className="w-full text-center py-3.5 px-4 bg-white border-2 border-slate-200 focus:border-sky-500 rounded-2xl text-2xl font-black text-slate-800 outline-none transition-all shadow-inner tabular-nums"
-                  />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400 uppercase">
-                    דקות
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!isAppShaper && !isAdmin && currentUser?.role !== 'Instructor') {
-                      setShowReadOnlyNotice(true);
-                      return;
-                    }
-                    setSessionDurationInput(prev => Math.min(300, prev + 5));
-                  }}
-                  className="px-3.5 py-3 bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 text-slate-700 font-black text-xs rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer"
-                  title="הוסף 5 דקות"
-                >
-                  +5
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!isAppShaper && !isAdmin && currentUser?.role !== 'Instructor') {
-                      setShowReadOnlyNotice(true);
-                      return;
-                    }
-                    setSessionDurationInput(prev => Math.min(300, prev + 15));
-                  }}
-                  className="px-4 py-3 bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 text-slate-700 font-black text-xs rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer"
-                  title="הוסף 15 דקות"
-                >
-                  +15
-                </button>
-              </div>
-
-              {/* Quick Presets */}
-              <div className="space-y-2">
-                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">בחירה מהירה:</span>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {[
-                    { min: 45, label: "45 דק'", hrs: "0.75 ש'" },
-                    { min: 60, label: "60 דק'", hrs: "שעה" },
-                    { min: 75, label: "75 דק'", hrs: "1.25 ש'" },
-                    { min: 90, label: "90 דק'", hrs: "1.5 ש'", isDefault: true },
-                    { min: 105, label: "105 דק'", hrs: "1.75 ש'" },
-                    { min: 120, label: "120 דק'", hrs: "שעתיים" }
-                  ].map((preset) => {
-                    const isSelected = sessionDurationInput === preset.min;
-                    return (
-                      <button
-                        key={preset.min}
-                        type="button"
-                        onClick={() => {
-                          if (!isAppShaper && !isAdmin && currentUser?.role !== 'Instructor') {
-                            setShowReadOnlyNotice(true);
-                            return;
-                          }
-                          setSessionDurationInput(preset.min);
-                        }}
-                        className={`py-2 px-2 rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center gap-0.5 border cursor-pointer ${
-                          isSelected
-                            ? 'bg-sky-500 text-white border-sky-500 shadow-md shadow-sky-500/30 scale-[1.03]'
-                            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <span>{preset.label}</span>
-                        <span className={`text-[9px] font-medium opacity-80 ${isSelected ? 'text-sky-100' : 'text-slate-400'}`}>
-                          {preset.hrs}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Right Impact Cards */}
-            <div className="lg:col-span-6 grid grid-cols-2 gap-3">
-              <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-1">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">סשן בודד</span>
-                <p className="text-xl font-black text-slate-800 tabular-nums">
-                  {(sessionDurationInput / 60).toFixed(1)} <span className="text-xs font-bold text-slate-400">שעות</span>
-                </p>
-                <p className="text-[10px] text-slate-500 font-medium">זמן מים מצטבר לגולש</p>
-              </div>
-
-              <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-1">
-                <span className="text-[10px] font-black text-sky-500 uppercase tracking-widest">שלב 1 (12 סשנים)</span>
-                <p className="text-xl font-black text-sky-600 tabular-nums">
-                  {((12 * sessionDurationInput) / 60).toFixed(1)} <span className="text-xs font-bold text-sky-400">שעות</span>
-                </p>
-                <p className="text-[10px] text-slate-500 font-medium">מעבר מקצף לגלים</p>
-              </div>
-
-              <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-1">
-                <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">שלב 3 (50 סשנים)</span>
-                <p className="text-xl font-black text-indigo-600 tabular-nums">
-                  {((50 * sessionDurationInput) / 60).toFixed(1)} <span className="text-xs font-bold text-indigo-400">שעות</span>
-                </p>
-                <p className="text-[10px] text-slate-500 font-medium">רמת ניווט ושליטה</p>
-              </div>
-
-              <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm space-y-1">
-                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">100 סשנים קבוצתיים</span>
-                <p className="text-xl font-black text-emerald-600 tabular-nums">
-                  {Math.round((100 * sessionDurationInput) / 60)} <span className="text-xs font-bold text-emerald-400">שעות</span>
-                </p>
-                <p className="text-[10px] text-slate-500 font-medium">צבירת ים קהילתית</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Save Button */}
-          <div className="flex items-center justify-between gap-4 pt-2">
-            <div className="text-xs text-slate-400 font-medium">
-              {sessionDurationInput !== (siteConfig.sessionDurationMinutes || 90) ? (
-                <span className="text-amber-600 font-bold flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                  ישנם שינויים שלא נשמרו (מ-{siteConfig.sessionDurationMinutes || 90} ל-{sessionDurationInput} דק')
-                </span>
-              ) : (
-                <span className="text-emerald-600 font-bold flex items-center gap-1.5">
-                  <CheckCircle2 size={14} />
-                  ההגדרה שמורה ומסונכרנת
-                </span>
-              )}
-            </div>
-
-            <button
-              type="button"
-              disabled={isSavingSessionDuration || sessionDurationInput === (siteConfig.sessionDurationMinutes || 90)}
-              onClick={async () => {
-                if (!isAppShaper && !isAdmin && currentUser?.role !== 'Instructor') {
-                  setShowReadOnlyNotice(true);
-                  return;
-                }
-
-                setIsSavingSessionDuration(true);
-                try {
-                  await updateSiteConfig({ sessionDurationMinutes: sessionDurationInput });
-                  showSuccess(`אורך הסשן עודכן בהצלחה ל-${sessionDurationInput} דקות (${(sessionDurationInput / 60).toFixed(1)} שעות)`);
-                } catch (err) {
-                  console.error('Failed to update session duration:', err);
-                  showError('שגיאה בעדכון אורך הסשן');
-                } finally {
-                  setIsSavingSessionDuration(false);
-                }
-              }}
-              className={`py-3.5 px-8 rounded-2xl font-black text-xs transition-all flex items-center gap-2 shadow-lg ${
-                sessionDurationInput !== (siteConfig.sessionDurationMinutes || 90)
-                  ? 'bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white shadow-sky-500/25 active:scale-95 cursor-pointer'
-                  : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
-              }`}
-            >
-              {isSavingSessionDuration ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  שומר...
-                </>
-              ) : (
-                <>
-                  <Save size={16} />
-                  שמור אורך סשן
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Weekly Sessions Config Widget */}
-      <div className="luxury-card p-8 space-y-10">
-        <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
-          <div className="w-12 h-12 bg-sky-50 text-sky-500 rounded-2xl flex items-center justify-center shadow-sm border border-sky-100">
-            <Clock size={24} />
-          </div>
-          <div>
-            <h3 className="text-xl font-black text-slate-800 tracking-tight">ניהול מועדי סשנים</h3>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">WEEKLY SCHEDULE MANAGEMENT</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-12" dir="rtl">
-          {/* Left Column: Sessions List */}
-          <div className="xl:col-span-7 space-y-6">
-            <div className="flex items-center justify-between mb-2 px-2">
-              <h4 className="text-lg font-black text-slate-700 tracking-tight">רשימת מועדים פעילים</h4>
-              <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">{weeklySessions.length} סשנים מוגדרים</span>
-            </div>
-            
-            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-              <AnimatePresence mode="popLayout">
-                {weeklySessions.map((session, index) => (
-                  <motion.div 
-                    key={`${session.dayOfWeek}-${session.time}`} 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.3, delay: index * 0.03 }}
-                    className="bg-white rounded-2xl p-5 border border-slate-100 hover:border-sky-200 hover:shadow-md transition-all duration-300 group/item flex items-center justify-between shadow-sm"
-                  >
-                    <div className="flex items-center gap-6">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 font-black text-xl group-hover:bg-sky-500 group-hover:text-white group-hover:border-sky-500 transition-all duration-500 shadow-inner">
-                        {['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'][session.dayOfWeek]}
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-black text-slate-800 tracking-tight">
-                          יום {['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][session.dayOfWeek]}
-                        </h4>
-                        <div className="flex items-center gap-4 mt-1">
-                          <span className="text-sm font-black text-sky-600 flex items-center gap-2 bg-sky-50 px-3 py-1 rounded-lg border border-sky-100/50">
-                            <Clock size={14} strokeWidth={3} />
-                            {session.time}
-                          </span>
-                          <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${session.isRecurring !== false ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
-                            {session.isRecurring !== false ? 'סדרתי' : 'חד-פעמי'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-6">
-                      <div className="flex flex-col items-center gap-2">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">סטטוס</span>
-                        <div 
-                          onClick={() => {
-                            if (!checkAppShaper()) return;
-                            const newSessions = [...weeklySessions];
-                            newSessions[index] = { ...newSessions[index], isActive: !session.isActive };
-                            setWeeklySessions(newSessions);
-                          }}
-                          className={`w-12 h-6 p-1 rounded-full cursor-pointer transition-all duration-500 relative ${session.isActive !== false ? 'bg-sky-500' : 'bg-slate-200'}`}
-                        >
-                          <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-500 ${session.isActive !== false ? '-translate-x-6' : 'translate-x-0'}`} />
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          if (!checkAppShaper()) return;
-                          const newSessions = weeklySessions.filter((_, i) => i !== index);
-                          setWeeklySessions(newSessions);
-                        }}
-                        className="w-11 h-11 rounded-xl bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white transition-all duration-300 flex items-center justify-center shadow-sm border border-rose-100 group-hover/item:scale-105 cursor-pointer"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* Right Column: Add Form */}
-          <div className="xl:col-span-5">
-            <div className="bg-slate-50 rounded-3xl p-8 border border-slate-100 shadow-inner sticky top-8">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-white text-sky-500 rounded-2xl flex items-center justify-center shadow-sm border border-slate-100">
-                  <Plus size={24} />
-                </div>
-                <div>
-                  <h4 className="text-xl font-black text-slate-800 tracking-tight">הוספת סשן חדש</h4>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">ADD NEW TIME SLOT</p>
-                </div>
-              </div>
-              
-              <div className="space-y-6 mb-10">
-                <div className="space-y-2">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">יום בשבוע</label>
-                  <DayPicker 
-                    value={newSessionDay} 
-                    onChange={setNewSessionDay} 
-                    className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-slate-700 outline-none focus:ring-4 ring-sky-500/10 transition-all font-bold"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">שעת התחלה</label>
-                  <div className="relative">
-                    <TimePicker 
-                      value={newSessionTime} 
-                      onChangeValue={setNewSessionTime} 
-                      className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-slate-700 outline-none focus:ring-4 ring-sky-500/10 text-center tracking-widest transition-all font-black text-lg"
-                    />
-                    <Clock size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" />
-                  </div>
-                </div>
-              </div>
-              
-              <button
-                onClick={() => {
-                  if (!checkAppShaper()) return;
-                  const newSession = {
-                    dayOfWeek: newSessionDay,
-                    time: newSessionTime,
-                    isActive: true,
-                    isRecurring: true
-                  };
-                  if (!weeklySessions.some(s => s.dayOfWeek === newSession.dayOfWeek && s.time === newSession.time)) {
-                    setWeeklySessions([...weeklySessions, newSession]);
-                    showSuccess('הסשן נוסף לרשימה');
-                  } else {
-                    showError('סשן זה כבר קיים ברשימה');
-                  }
-                }}
-                className="w-full py-5 bg-sky-500 text-white rounded-2xl font-black text-base shadow-lg shadow-sky-500/20 hover:bg-sky-600 transition-all duration-300 active:scale-95 flex items-center justify-center gap-3 cursor-pointer"
-              >
-                <Plus size={20} strokeWidth={3} />
-                הוסף לרשימה
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Global Save Action */}
-        <div className="pt-10 flex flex-col items-center gap-4 border-t border-slate-100">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">יש לשמור את השינויים כדי לעדכן את המערכת</p>
-          <button
-            onClick={async () => {
-              if (!checkAppShaper()) return;
-              setIsSavingSessions(true);
-              try {
-                await updateSiteConfig({ weeklySessions });
-                showSuccess('מועדי הסשנים נשמרו בהצלחה');
-              } catch (err) {
-                console.error(err);
-                showError('שגיאה בשמירת מועדי הסשנים');
-              } finally {
-                setIsSavingSessions(false);
-              }
-            }}
-            disabled={isSavingSessions}
-            className="px-16 py-5 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white rounded-2xl font-black text-lg shadow-xl shadow-sky-500/30 hover:shadow-sky-500/50 backdrop-blur-sm border border-white/20 transition-all duration-300 disabled:opacity-50 flex items-center gap-4 active:scale-95 cursor-pointer"
-          >
-            {isSavingSessions ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
-            שמור את כל השינויים
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Documentation Guides */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <button 
           onClick={() => navigate('/about')}
-          className="w-full luxury-card p-8 group hover:scale-[1.01] transition-all text-right flex items-center gap-6 relative overflow-hidden cursor-pointer"
+          className="w-full bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-sky-300 transition-all text-right flex items-center gap-4 cursor-pointer group"
         >
-          <div className="absolute -right-8 -top-8 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
-            <FileText size={160} className="text-slate-900" />
+          <div className="p-4 bg-sky-50 text-sky-600 rounded-xl group-hover:bg-sky-500 group-hover:text-white transition-all shrink-0">
+            <FileText size={24} />
           </div>
-          <div className="p-5 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-sky-500 group-hover:text-white transition-all shadow-sm relative z-10 shrink-0 border border-slate-100">
-            <FileText size={32} />
-          </div>
-          <div className="relative z-10">
-            <h4 className="text-xl font-black text-slate-800 mb-1 flex items-center gap-2">
-              <span>מדריך למשתמש ואודות</span>
-              <span className="text-[10px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full font-black">חדש</span>
-            </h4>
-            <p className="text-xs text-slate-500 font-bold leading-relaxed opacity-80">מעבר לדף "אודות" המסחרי – מדריך משתמש אינטראקטיבי, רשת הקהילות ואמנת פרטיות</p>
+          <div>
+            <h4 className="text-base font-black text-slate-900">מדריך למשתמש ואודות</h4>
+            <p className="text-xs text-slate-500 font-medium">מעבר לדף הקהילה, אמנת הפעילות והסברים מלאים על המחזורים</p>
           </div>
         </button>
 
         <button 
           onClick={() => setMarkdownConfig({ isOpen: true, path: '/PROJECT_MAP.md', title: 'מפת הפרויקט (Project Map)' })}
-          className="w-full luxury-card p-8 group hover:scale-[1.01] transition-all text-right flex items-center gap-6 relative overflow-hidden cursor-pointer"
+          className="w-full bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-sky-300 transition-all text-right flex items-center gap-4 cursor-pointer group"
         >
-          <div className="absolute -right-8 -top-8 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
-            <MapIcon size={160} className="text-slate-900" />
+          <div className="p-4 bg-indigo-50 text-indigo-600 rounded-xl group-hover:bg-indigo-500 group-hover:text-white transition-all shrink-0">
+            <MapIcon size={24} />
           </div>
-          <div className="p-5 bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-sky-500 group-hover:text-white transition-all shadow-sm relative z-10 shrink-0 border border-slate-100">
-            <MapIcon size={32} />
-          </div>
-          <div className="relative z-10">
-            <h4 className="text-xl font-black text-slate-800 mb-1">מפת הפרויקט</h4>
-            <p className="text-xs text-slate-500 font-bold leading-relaxed opacity-80">צפייה בקובץ PROJECT_MAP.md להבנת מבנה הרכיבים והקשרים ביניהם</p>
+          <div>
+            <h4 className="text-base font-black text-slate-900">מפת הפרויקט (Project Map)</h4>
+            <p className="text-xs text-slate-500 font-medium">צפייה במבנה הקוד, הרכיבים והארכיטקטורה של המערכת</p>
           </div>
         </button>
       </section>
-
-      {/* Data Maintenance */}
-      <section>
-        <h3 className="text-xl font-black text-slate-800 mb-4">תחזוקת נתונים (Data Maintenance)</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="luxury-card p-8 flex flex-col justify-between border-l-4 border-rose-500">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-rose-100 text-rose-600 rounded-xl">
-                  <Users size={24} />
-                </div>
-                <h4 className="text-lg font-black text-slate-800">ניקוי משתמשים כפולים</h4>
-              </div>
-              <p className="text-sm text-slate-500 font-medium leading-relaxed mb-6">
-                סריקת כל המשתמשים במערכת ומחיקת כפילויות לפי כתובת אימייל. המערכת תשמור את המשתמש עם כמות ההתחברויות והנוכחות הגבוהה ביותר, ותמחק את השאר.
-              </p>
-            </div>
-            <button
-              onClick={handleCleanupDuplicates}
-              disabled={isCleaningDuplicates}
-              className="w-full py-4 bg-rose-500 text-white rounded-xl font-black text-sm shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition-all duration-300 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {isCleaningDuplicates ? <Loader2 className="animate-spin" size={20} /> : <ShieldAlert size={20} />}
-              {isCleaningDuplicates ? 'מנקה כפילויות...' : 'הפעל ניקוי כפילויות'}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Conflicting Admins Alert */}
-      {conflictingAdmins.length > 1 && (
-        <div className="p-8 bg-rose-50 border border-rose-200 rounded-2xl shadow-sm">
-          <div className="flex flex-col gap-8">
-            <div className="flex items-center gap-8">
-              <div className="p-5 bg-rose-100 text-rose-600 rounded-2xl shadow-sm border border-rose-200">
-                <ShieldAlert size={40} className="animate-siren" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="px-2 py-0.5 bg-rose-200 text-rose-700 text-[10px] font-black rounded uppercase tracking-tighter">Critical</span>
-                  <h4 className="text-2xl font-black text-rose-800">התנגשויות אימייל (Super Admin)</h4>
-                </div>
-                <p className="text-base text-rose-700 font-bold opacity-80">נמצאו כפילויות של אימייל רכז המערכת. יש להשאיר רק חשבון אחד עם האימייל הראשי.</p>
-              </div>
-            </div>
-                
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {conflictingAdmins.map(admin => (
-                <div key={admin.id} className="flex items-center justify-between p-5 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/80 shadow-sm group hover:shadow-md transition-all">
-                  <div className="flex items-center gap-4">
-                    <div className="relative flex-shrink-0">
-                      <img src={admin.avatar} className="w-12 h-12 rounded-2xl object-cover border-2 border-white shadow-sm" alt="" />
-                      {admin.email === SUPER_ADMIN_EMAIL && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
-                          <Check size={8} className="text-white" />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-black text-[var(--deep-teal-sea)] text-lg leading-none mb-1">{admin.firstName} {admin.lastName}</p>
-                      <p className="text-xs text-[var(--surfer-turquoise-teal)] font-bold tracking-tight">{admin.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {editingConflictId === admin.id ? (
-                      <div className="flex items-center gap-2 animate-in slide-in-from-left-2">
-                        <input 
-                          type="email"
-                          value={conflictNewEmail}
-                          onChange={(e) => setConflictNewEmail(e.target.value)}
-                          placeholder="אימייל חדש..."
-                          className="px-4 py-2.5 bg-white/80 border-2 border-[var(--surfer-vibrant-cyan)]/30 rounded-xl text-sm font-bold outline-none focus:border-[var(--surfer-vibrant-cyan)] transition-all w-56 text-[var(--deep-teal-sea)]"
-                          autoFocus
-                        />
-                        <button 
-                          onClick={async () => {
-                            if (conflictNewEmail && conflictNewEmail.includes('@')) {
-                              await updateMember({ ...admin, email: conflictNewEmail.trim().toLowerCase() });
-                              setEditingConflictId(null);
-                              setConflictNewEmail('');
-                              showSuccess('האימייל עודכן בהצלחה');
-                            } else {
-                              showError('נא להזין אימייל תקין');
-                            }
-                          }}
-                          className="p-2.5 bg-[var(--surfer-vibrant-cyan)] text-white rounded-xl hover:shadow-lg transition-all cursor-pointer"
-                          title="שמור"
-                        >
-                          <Check size={20} />
-                        </button>
-                        <button 
-                          onClick={() => setEditingConflictId(null)}
-                          className="p-2.5 bg-rose-100 text-rose-500 rounded-xl hover:bg-rose-200 transition-all cursor-pointer"
-                          title="ביטול"
-                        >
-                          <X size={20} />
-                        </button>
-                      </div>
-                    ) : (
-                      <button 
-                        onClick={() => {
-                          setEditingConflictId(admin.id);
-                          setConflictNewEmail(admin.email === SUPER_ADMIN_EMAIL ? 'gal@gmail.com' : admin.email);
-                        }}
-                        className="px-5 py-2.5 bg-[var(--surfer-vibrant-cyan)]/10 text-[var(--surfer-vibrant-cyan)] border border-[var(--surfer-vibrant-cyan)]/20 rounded-xl text-sm font-black hover:bg-[var(--surfer-vibrant-cyan)] hover:text-white transition-all shadow-sm cursor-pointer"
-                      >
-                        תיקון
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Year Config Warning Modal */}
-      {isEditingYear && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden relative"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="bg-gradient-to-r from-sky-600 via-indigo-600 to-indigo-700 p-6 sm:p-7 text-white text-center relative">
-              <Calendar size={42} className="mx-auto mb-2 text-white/90" />
-              <h3 className="text-xl sm:text-2xl font-black mb-1">הגדרת שנת חבל זוג ומחזור פעילות</h3>
-              <p className="text-sky-100 text-xs sm:text-sm font-semibold">קביעת שם המחזור, טווח תאריכי הפעילות ומצב הסבבים</p>
-            </div>
-
-            <div className="p-6 sm:p-8 space-y-6">
-              <div className="bg-sky-50/80 p-4 rounded-xl border border-sky-100 text-sky-950 text-right leading-relaxed text-xs space-y-1">
-                <p className="font-bold text-sky-900 flex items-center gap-1.5">
-                  <span>🌊</span>
-                  <span>שנת חבל זוג היא תקופת פעילות מוגדרת בין תאריכים עבור המחזור הפעיל (ולא שנה קלנדרית מלאה).</span>
-                </p>
-                <p className="text-slate-600">
-                  הרכז או האפ-שייפר יכולים לעדכן את שם המחזור הנוכחי (למשל: <strong>"מחזור ז׳"</strong>) או לפתוח מחזור חדש ע״י קביעת שם וטווח תאריכים עדכני.
-                </p>
-              </div>
-
-              {/* Cohort Name and Dates Input Group */}
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center justify-between pr-1">
-                    <span>שם המחזור / כינוי שנת חבל זוג</span>
-                    <span className="text-[11px] text-slate-400 font-normal">לדוגמה: מחזור ז׳</span>
-                  </label>
-                  <input 
-                    type="text" 
-                    placeholder="הזן שם למחזור הנוכחי (למשל: מחזור ז׳)"
-                    value={yearForm.name}
-                    onChange={e => setYearForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-black outline-none focus:ring-2 ring-sky-500/20 focus:border-sky-400 focus:bg-white transition-all text-slate-800 text-sm shadow-xs"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-black text-slate-700 uppercase tracking-wider pr-1">תאריך תחילת תקופה</label>
-                    <input 
-                      type="date" 
-                      value={yearForm.startDate}
-                      onChange={e => setYearForm(prev => ({ ...prev, startDate: e.target.value }))}
-                      onClick={(e) => {
-                        try {
-                          (e.currentTarget as any).showPicker?.();
-                        } catch(err) {}
-                      }}
-                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 ring-sky-500/20 focus:border-sky-400 focus:bg-white transition-all cursor-pointer text-slate-700 text-sm shadow-xs"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-black text-slate-700 uppercase tracking-wider pr-1">תאריך סיום תקופה</label>
-                    <input 
-                      type="date" 
-                      value={yearForm.endDate}
-                      onChange={e => setYearForm(prev => ({ ...prev, endDate: e.target.value }))}
-                      onClick={(e) => {
-                        try {
-                          (e.currentTarget as any).showPicker?.();
-                        } catch(err) {}
-                      }}
-                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:ring-2 ring-sky-500/20 focus:border-sky-400 focus:bg-white transition-all cursor-pointer text-slate-700 text-sm shadow-xs"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Activity Mode in Modal */}
-              <div className="space-y-2">
-                <label className="text-xs font-black text-slate-700 uppercase tracking-wider pr-1">מצב פעילות שנתי</label>
-                <div className="bg-slate-100 p-1.5 rounded-xl flex items-center border border-slate-200">
-                  <button
-                    type="button"
-                    onClick={() => setYearForm(prev => ({ ...prev, activityMode: 'קבוצתית' }))}
-                    className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      yearForm.activityMode === 'קבוצתית' || yearForm.activityMode === 'סבבים'
-                        ? 'bg-white text-blue-700 shadow-sm font-black'
-                        : 'text-slate-600 hover:text-slate-900 font-bold'
-                    }`}
-                  >
-                    <Users size={15} />
-                    <span>רוטציית סבבים (א׳/ב׳)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setYearForm(prev => ({ ...prev, activityMode: 'משותפת' }))}
-                    className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      yearForm.activityMode !== 'קבוצתית' && yearForm.activityMode !== 'סבבים'
-                        ? 'bg-white text-emerald-700 shadow-sm font-black'
-                        : 'text-slate-600 hover:text-slate-900 font-bold'
-                    }`}
-                  >
-                    <Activity size={15} />
-                    <span>איחוד קבוצתי (סשן מאוחד)</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Geographic Branch Cohorts Customization */}
-              <div className="space-y-3 pt-3 border-t border-slate-200">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                  <label className="text-xs font-black text-slate-700 uppercase tracking-wider pr-1 flex items-center gap-1.5">
-                    <MapPin size={14} className="text-sky-500" />
-                    <span>מחזור פעיל לפי סניף / מיקום גיאוגרפי</span>
-                  </label>
-                  <span className="text-[11px] text-slate-400 font-medium">הגדרת מחזור ייחודי עבור כל סניף</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {BASE_COMMUNITY_BRANCHES.map(branch => (
-                    <div key={branch.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                      <div className="flex items-center justify-between pr-1">
-                        <span className="text-xs font-black text-slate-700">{branch.baseName}</span>
-                        <span className="text-[10px] text-slate-400 font-bold">סניף פעיל</span>
-                      </div>
-                      <input 
-                        type="text"
-                        value={yearForm.branchCohorts[branch.id] || ''}
-                        placeholder={`ברירת מחדל: ${DEFAULT_BRANCH_COHORTS[branch.id] || 'מחזור פעיל'}`}
-                        onChange={e => {
-                          const val = e.target.value;
-                          setYearForm(prev => ({
-                            ...prev,
-                            branchCohorts: {
-                              ...prev.branchCohorts,
-                              [branch.id]: val
-                            }
-                          }));
-                        }}
-                        className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-xs font-black outline-none focus:ring-2 ring-sky-500/20 focus:border-sky-400 text-slate-800 shadow-2xs"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3 pt-2">
-                <button 
-                  onClick={handleSaveYearConfig}
-                  disabled={isSavingYear}
-                  className="w-full py-4 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white rounded-xl font-black text-base shadow-lg shadow-sky-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer active:scale-98"
-                >
-                  {isSavingYear ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                  שמור הגדרות שנת חבל זוג
-                </button>
-                <button 
-                  onClick={() => setIsEditingYear(false)}
-                  className="w-full py-4 bg-slate-100 text-slate-600 rounded-xl font-bold text-base hover:bg-slate-200 transition-all cursor-pointer"
-                >
-                  ביטול וחזרה
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
 
       {/* Markdown Guide Modal */}
       <MarkdownViewer 

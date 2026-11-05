@@ -1,3 +1,4 @@
+import { BranchCohortConfig } from './types';
 
 export const SUPER_ADMIN_EMAIL = 'yuval.shalev@gmail.com';
 
@@ -105,29 +106,91 @@ export const BASE_COMMUNITY_BRANCHES = [
 ];
 
 // ברירות מחדל למחזור פעיל לפי סניף גיאוגרפי (למשל: בהרצליה מחזור ז׳, באשקלון מחזור ג׳)
-export const DEFAULT_BRANCH_COHORTS: Record<string, string> = {
-  herzliya: "מחזור ז׳",
-  tel_baruch: "מחזור ז׳",
-  ashdod: "מחזור ד׳",
-  ashkelon: "מחזור ג׳",
-  kiryat_yam: "מחזור ב׳"
+export const DEFAULT_BRANCH_COHORTS: Record<string, BranchCohortConfig> = {
+  herzliya: { 
+    name: "מחזור ז׳", 
+    startDate: "2026-09-01", 
+    endDate: "2027-07-31",
+    dayOfWeek: 4,
+    startTime: "07:00",
+    sessionDurationMinutes: 90,
+    groups: [
+      { id: 'h_1', name: "מחזור ז׳", type: 'cohort', startDate: "2026-09-01", endDate: "2027-07-31", dayOfWeek: 4, startTime: "07:00", sessionDurationMinutes: 90 },
+      { id: 'h_2', name: "קבוצת בוגרים הרצליה", type: 'alumni', startDate: "2026-09-01", endDate: "2027-07-31", dayOfWeek: 4, startTime: "08:30", sessionDurationMinutes: 90 }
+    ]
+  },
+  tel_baruch: { 
+    name: "מחזור ז׳", 
+    startDate: "2026-09-01", 
+    endDate: "2027-07-31",
+    dayOfWeek: 4,
+    startTime: "07:00",
+    sessionDurationMinutes: 90,
+    groups: [
+      { id: 'tb_1', name: "מחזור ז׳", type: 'cohort', startDate: "2026-09-01", endDate: "2027-07-31", dayOfWeek: 4, startTime: "07:00", sessionDurationMinutes: 90 },
+      { id: 'tb_2', name: "קבוצת בוגרים תל ברוך", type: 'alumni', startDate: "2026-09-01", endDate: "2027-07-31", dayOfWeek: 4, startTime: "08:30", sessionDurationMinutes: 90 }
+    ]
+  },
+  ashdod: { 
+    name: "מחזור ד׳", 
+    startDate: "2026-09-01", 
+    endDate: "2027-07-31",
+    dayOfWeek: 4,
+    startTime: "07:00",
+    sessionDurationMinutes: 90,
+    groups: [
+      { id: 'as_1', name: "מחזור ד׳", type: 'cohort', startDate: "2026-09-01", endDate: "2027-07-31", dayOfWeek: 4, startTime: "07:00", sessionDurationMinutes: 90 },
+      { id: 'as_2', name: "קבוצת בוגרים אשדוד", type: 'alumni', startDate: "2026-09-01", endDate: "2027-07-31", dayOfWeek: 4, startTime: "08:30", sessionDurationMinutes: 90 }
+    ]
+  },
+  ashkelon: { 
+    name: "מחזור ג׳", 
+    startDate: "2026-09-01", 
+    endDate: "2027-07-31",
+    dayOfWeek: 4,
+    startTime: "07:00",
+    sessionDurationMinutes: 90,
+    groups: [
+      { id: 'ask_1', name: "מחזור ג׳", type: 'cohort', startDate: "2026-09-01", endDate: "2027-07-31", dayOfWeek: 4, startTime: "07:00", sessionDurationMinutes: 90 },
+      { id: 'ask_2', name: "קבוצת בוגרים אשקלון", type: 'alumni', startDate: "2026-09-01", endDate: "2027-07-31", dayOfWeek: 4, startTime: "08:30", sessionDurationMinutes: 90 }
+    ]
+  },
+  kiryat_yam: { 
+    name: "מחזור ב׳", 
+    startDate: "2026-09-01", 
+    endDate: "2027-07-31",
+    dayOfWeek: 4,
+    startTime: "07:00",
+    sessionDurationMinutes: 90,
+    groups: [
+      { id: 'ky_1', name: "מחזור ב׳", type: 'cohort', startDate: "2026-09-01", endDate: "2027-07-31", dayOfWeek: 4, startTime: "07:00", sessionDurationMinutes: 90 },
+      { id: 'ky_2', name: "קבוצת בוגרים קריית ים", type: 'alumni', startDate: "2026-09-01", endDate: "2027-07-31", dayOfWeek: 4, startTime: "08:30", sessionDurationMinutes: 90 }
+    ]
+  }
 };
 
 /**
  * מחזיר את שם המחזור הפעיל עבור סניף ספציפי
  */
 export function getBranchCohortName(
-  branchId: string,
-  branchCohorts?: Record<string, string> | null,
+  branchId?: string,
+  branchCohorts?: Record<string, BranchCohortConfig> | null,
   globalFallback?: string
 ): string {
+  if (!branchId) return (globalFallback && globalFallback.trim()) ? globalFallback.trim() : "מחזור פעיל";
+  
   const cleanBranchId = branchId.replace('_adults', '');
-  if (branchCohorts && branchCohorts[cleanBranchId] && branchCohorts[cleanBranchId].trim()) {
-    return branchCohorts[cleanBranchId].trim();
+  
+  const cohort = branchCohorts?.[cleanBranchId];
+  if (cohort?.name) {
+    return cohort.name.trim();
   }
-  if (DEFAULT_BRANCH_COHORTS[cleanBranchId]) {
-    return DEFAULT_BRANCH_COHORTS[cleanBranchId];
+  
+  const defaultCohort = DEFAULT_BRANCH_COHORTS[cleanBranchId];
+  if (defaultCohort?.name) {
+    return defaultCohort.name.trim();
   }
+  
   return (globalFallback && globalFallback.trim()) ? globalFallback.trim() : "מחזור פעיל";
 }
 
@@ -136,11 +199,11 @@ export function getBranchCohortName(
  * לכל מיקום גיאוגרפי (סניף). לדוגמה: הרצליה - מחזור ז', אשקלון - מחזור ג'.
  */
 export function getAvailableCommunities(
-  branchCohortsOrGlobalName?: string | Record<string, string> | null,
+  branchCohortsOrGlobalName?: string | Record<string, BranchCohortConfig> | null,
   globalFallbackName?: string
 ): Community[] {
   const isMap = typeof branchCohortsOrGlobalName === 'object' && branchCohortsOrGlobalName !== null;
-  const branchMap: Record<string, string> = isMap ? (branchCohortsOrGlobalName as Record<string, string>) : {};
+  const branchMap: Record<string, BranchCohortConfig> = isMap ? (branchCohortsOrGlobalName as Record<string, BranchCohortConfig>) : {};
   const globalFallback = (typeof branchCohortsOrGlobalName === 'string' && branchCohortsOrGlobalName.trim()) 
     ? branchCohortsOrGlobalName.trim() 
     : (globalFallbackName?.trim() || "מחזור ז׳");

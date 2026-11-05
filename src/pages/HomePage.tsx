@@ -40,7 +40,7 @@ import { OnlineUsersCounter } from '../components/OnlineUsersCounter';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { getNextSessionDate } from '../services/rolloverService';
-import { isAdminUser, isAppShaperUser } from '../constants';
+import { isAdminUser, isAppShaperUser, BASE_COMMUNITY_BRANCHES } from '../constants';
 import { getBodyLineStats } from '../utils/bodyLineStats';
 import { SURF_QUOTES } from '../data/surfQuotes';
 import { SURF_DICTIONARY } from '../data/surfDictionary';
@@ -497,14 +497,53 @@ const HomePage: React.FC = () => {
     return () => clearInterval(interval);
   }, [refreshPost]);
 
+  const selectedGroupDetails = useMemo(() => {
+    const activeCommunity = currentCommunityId || 'herzliya';
+    const isAlumni = activeCommunity.endsWith('_adults');
+    const cleanBranch = activeCommunity.replace('_adults', '');
+    const branchName = BASE_COMMUNITY_BRANCHES.find(b => b.id === cleanBranch)?.baseName || 'הרצליה';
+    
+    const branchCfg = yearConfig?.branchCohorts?.[cleanBranch];
+    if (branchCfg) {
+      if (isAlumni) {
+        const alumniGroup = branchCfg.groups?.find(g => g.type === 'alumni');
+        return {
+          groupName: alumniGroup?.name || `בוגרים ${branchName}`,
+          branchName,
+          dayOfWeek: alumniGroup?.dayOfWeek ?? branchCfg.dayOfWeek ?? 4,
+          startTime: alumniGroup?.startTime ?? branchCfg.startTime ?? '08:30',
+          type: 'alumni'
+        };
+      } else {
+        const cohortGroup = branchCfg.groups?.find(g => g.type === 'cohort') || branchCfg.groups?.[0];
+        return {
+          groupName: cohortGroup?.name || branchCfg.name || 'מחזור פעיל',
+          branchName,
+          dayOfWeek: cohortGroup?.dayOfWeek ?? branchCfg.dayOfWeek ?? 4,
+          startTime: cohortGroup?.startTime ?? branchCfg.startTime ?? '07:00',
+          type: 'cohort'
+        };
+      }
+    }
+    
+    return {
+      groupName: isAlumni ? 'קבוצת בוגרים' : 'מחזור פעיל',
+      branchName,
+      dayOfWeek: 4,
+      startTime: '07:00',
+      type: isAlumni ? 'alumni' : 'cohort'
+    };
+  }, [currentCommunityId, yearConfig]);
+
   useEffect(() => {
     const updateCountdown = () => {
       const now = new Date();
       let targetDateStr = activeSessionDate;
       
       if (!targetDateStr) {
-        // Fallback to dynamic next session date based on siteConfig
-        targetDateStr = getNextSessionDate(siteConfig?.weeklySessions);
+        // Dynamic next session date based on the selected group's dayOfWeek and startTime
+        const groupWeekly = [{ dayOfWeek: selectedGroupDetails.dayOfWeek, time: selectedGroupDetails.startTime, isActive: true }];
+        targetDateStr = getNextSessionDate(groupWeekly);
       }
       
       const target = new Date(targetDateStr);
@@ -525,7 +564,7 @@ const HomePage: React.FC = () => {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [activeSessionDate, siteConfig?.weeklySessions]);
+  }, [activeSessionDate, selectedGroupDetails, siteConfig?.weeklySessions]);
 
   const handleToggle = async () => {
     if (!currentUser) {
@@ -674,7 +713,13 @@ const HomePage: React.FC = () => {
                <p className="text-white/95 font-semibold italic text-sm md:text-2xl max-w-2xl mx-auto tracking-[0.08em] leading-relaxed mb-4 md:mb-6 drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
                  "A day will come that is like no other... and nothing that happens after will ever be the same."
                </p>
-               <h1 className="text-[var(--surfer-yellow)] big-thursday-title" data-text="יום חמישי הגדול">יום חמישי הגדול</h1>
+               {(() => {
+                 const dayTitles = ['יום ראשון הגדול', 'יום שני הגדול', 'יום שלישי הגדול', 'יום רביעי הגדול', 'יום חמישי הגדול', 'יום שישי הגדול', 'יום שבת הגדול'];
+                 const titleText = dayTitles[selectedGroupDetails.dayOfWeek] || 'יום חמישי הגדול';
+                 return (
+                   <h1 className="text-[var(--surfer-yellow)] big-thursday-title" data-text={titleText}>{titleText}</h1>
+                 );
+               })()}
              </div>
              
              {/* Lower Third Section: Countdown & Group Rotation */}

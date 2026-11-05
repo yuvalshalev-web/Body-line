@@ -243,11 +243,6 @@ const DirectoryPage: React.FC = () => {
                   )}
                 </div>
               </div>
-            ) : isAlumniCommunity && (member.role === 'Member' || member.role === 'Volunteer') ? (
-              <div className="w-full px-3 py-1.5 bg-indigo-50/80 text-indigo-800 rounded-xl text-[11px] font-black border border-indigo-200/60 shadow-2xs flex items-center justify-center gap-1.5 select-none">
-                <span>🎓</span>
-                <span>קבוצת בוגרים • קהילה הומוגנית</span>
-              </div>
             ) : isAppShaper ? (
               <button
                 onClick={(e) => {
@@ -365,11 +360,6 @@ const DirectoryPage: React.FC = () => {
               <div className="w-7 h-7 rounded-full overflow-hidden bg-white border border-orange-500/20 shrink-0 shadow-xs relative">
                 {partner.avatar ? <img src={partner.avatar} className="w-full h-full object-cover" alt="" /> : <User size={15} className="m-auto text-orange-700 mt-1" />}
               </div>
-            </div>
-          ) : isAlumniCommunity && (member.role === 'Member' || member.role === 'Volunteer') ? (
-            <div className="flex items-center gap-2 px-3.5 py-2 bg-indigo-50/80 text-indigo-800 rounded-xl text-xs font-black border border-indigo-200/60 select-none">
-              <span>🎓</span>
-              <span>קבוצת בוגרים • ללא חלוקה לזוגות</span>
             </div>
           ) : isAppShaper ? (
             <button
