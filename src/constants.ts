@@ -12,7 +12,20 @@ export const isAdminUser = (user: { role?: string; email?: string } | null | und
 
 export const isAppShaperUser = (user: { role?: string; email?: string } | null | undefined): boolean => {
   if (!user) return false;
-  return user.role === 'Support';
+  return user.role === 'Support' || (user.email ? user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() : false);
+};
+
+export const canSwitchAllCommunities = (user: { role?: string; email?: string } | null | undefined): boolean => {
+  if (!user) return false;
+  const emailLower = (user.email || '').toLowerCase();
+  const isSuper = emailLower === SUPER_ADMIN_EMAIL.toLowerCase();
+  return (
+    user.role === 'Admin' ||        // רכז
+    user.role === 'Instructor' ||   // מדריך
+    user.role === 'Staff' ||        // צוות עמותה
+    user.role === 'Support' ||      // אפ-שייפר
+    isSuper
+  );
 };
 
 export const isPrivilegedGalleryManager = (user: { role?: string; email?: string } | null | undefined): boolean => {

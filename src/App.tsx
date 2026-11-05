@@ -14,6 +14,7 @@ import { SurfNewsTracker } from './components/SurfNewsTracker';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { PWAUpdateNotification } from './components/PWAUpdateNotification';
 import { DatabaseStatus } from './components/DatabaseStatus';
+import { QuickGroupSwitcherModal } from './components/QuickGroupSwitcherModal';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 
@@ -427,6 +428,9 @@ const App: React.FC = () => {
         activeRoute={location.pathname}
       />
       <SurfCallsWidget />
+
+      {/* Quick Group Switcher (Touch Long-Press & Desktop Right-Click) */}
+      <QuickGroupSwitcherModal />
     </div>
   );
 };
