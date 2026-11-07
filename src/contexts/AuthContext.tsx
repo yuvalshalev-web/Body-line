@@ -260,8 +260,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               safeSessionStorage.removeItem('habal_zug_user');
             } else {
               if (isLoggingOutRef.current || safeLocalStorage.getItem('habal_zug_logged_out') === 'true') return;
-              console.log("AuthContext: Member doc found:", memberData.email);
-              syncBiometricFromMemberDoc(memberData);
+              // Auto-align community to user's assigned primary community if needed
+              if (Array.isArray(memberData.communities) && memberData.communities.length > 0) {
+                const isPrivileged = memberData.role === 'Staff' || memberData.role === 'Support' || memberData.role === 'Admin' || memberData.role === 'Instructor';
+                const activeComm = currentCommunityId || safeSessionStorage.getItem('habal_zug_community');
+                if (!activeComm || (!isPrivileged && !memberData.communities.includes(activeComm))) {
+                  const autoComm = memberData.communities[0];
+                  setCurrentCommunityId(autoComm);
+                  safeSessionStorage.setItem('habal_zug_community', autoComm);
+                }
+              }
+
               setCurrentUser(memberData);
               safeSessionStorage.setItem('habal_zug_user', JSON.stringify(memberData));
             }

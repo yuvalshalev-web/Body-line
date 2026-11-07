@@ -72,6 +72,42 @@ function getIsraelSunriseSunset(date: Date = new Date()) {
   };
 }
 
+export const resolveUserPrimaryCommunity = (
+  memberData: { role?: string; communities?: string[]; assignedGroup?: string; group?: string },
+  preferredCommunityId?: string
+): string => {
+  const isPrivileged = 
+    memberData.role === 'Staff' || 
+    memberData.role === 'Support' || 
+    memberData.role === 'Admin' || 
+    memberData.role === 'Instructor';
+
+  // 1. If user has assigned communities in Firestore
+  if (Array.isArray(memberData.communities) && memberData.communities.length > 0) {
+    if (preferredCommunityId && (isPrivileged || memberData.communities.includes(preferredCommunityId))) {
+      return preferredCommunityId;
+    }
+    return memberData.communities[0];
+  }
+
+  // 2. Privileged roles can select any preferred community
+  if (isPrivileged && preferredCommunityId) {
+    return preferredCommunityId;
+  }
+
+  // 3. Fallback matching from group string fields
+  const rawGroup = memberData.assignedGroup || memberData.group;
+  if (rawGroup && typeof rawGroup === 'string') {
+    const cleanRaw = rawGroup.toLowerCase().trim();
+    const matched = AVAILABLE_COMMUNITIES.find(c => 
+      c.id === cleanRaw || c.name.toLowerCase().includes(cleanRaw)
+    );
+    if (matched) return matched.id;
+  }
+
+  return preferredCommunityId || 'herzliya';
+};
+
 const checkCommunityAccess = (memberData: { role?: string; communities?: string[] }, communityId: string): boolean => {
   const isPrivileged = 
     memberData.role === 'Staff' || 
@@ -396,14 +432,9 @@ const LoginPage: React.FC = () => {
             return;
           }
           
-          if (!checkCommunityAccess(mData, selectedCommunityId)) {
-            setError('אינך שייך לקבוצה שבחרת, אנא בחר את הקבוצה המתאימה (לדוגמה: הרצליה - בוגרים)');
-            setIsBiometricLoading(false);
-            return;
-          }
-
+          const targetCommunity = resolveUserPrimaryCommunity(mData, selectedCommunityId);
           const nowIso = new Date().toISOString();
-          login({ ...mData, loginCount: (mData.loginCount || 0) + 1, lastLoginAt: nowIso }, selectedCommunityId);
+          login({ ...mData, loginCount: (mData.loginCount || 0) + 1, lastLoginAt: nowIso }, targetCommunity);
           navigate('/');
           return;
         }
@@ -421,15 +452,9 @@ const LoginPage: React.FC = () => {
           return;
         }
 
-        if (!checkCommunityAccess(memberData, selectedCommunityId)) {
-          setError('אינך שייך לקבוצה שבחרת, אנא בחר את הקבוצה המתאימה (לדוגמה: הרצליה - בוגרים)');
-          await auth.signOut();
-          setIsBiometricLoading(false);
-          return;
-        }
-
+        const targetCommunity = resolveUserPrimaryCommunity(memberData, selectedCommunityId);
         const nowIso = new Date().toISOString();
-        login({ ...memberData, loginCount: (memberData.loginCount || 0) + 1, lastLoginAt: nowIso }, selectedCommunityId);
+        login({ ...memberData, loginCount: (memberData.loginCount || 0) + 1, lastLoginAt: nowIso }, targetCommunity);
         navigate('/');
       } else {
         // Find by email fallback
@@ -439,14 +464,9 @@ const LoginPage: React.FC = () => {
           const mDoc = emailSnapshot.docs[0];
           const mData = { ...mDoc.data(), id: mDoc.id } as Member;
           
-          if (!checkCommunityAccess(mData, selectedCommunityId)) {
-            setError('אינך שייך לקבוצה שבחרת, אנא בחר את הקבוצה המתאימה (לדוגמה: הרצליה - בוגרים)');
-            setIsBiometricLoading(false);
-            return;
-          }
-
+          const targetCommunity = resolveUserPrimaryCommunity(mData, selectedCommunityId);
           const nowIso = new Date().toISOString();
-          login({ ...mData, loginCount: (mData.loginCount || 0) + 1, lastLoginAt: nowIso }, selectedCommunityId);
+          login({ ...mData, loginCount: (mData.loginCount || 0) + 1, lastLoginAt: nowIso }, targetCommunity);
           navigate('/');
         } else {
           setError('פרטי החבר לא נמצאו במערכת');
@@ -562,13 +582,6 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      // Community check
-      if (!checkCommunityAccess(memberData, selectedCommunityId)) {
-        setError('אינך שייך לקבוצה שבחרת, אנא בחר את הקבוצה המתאימה (לדוגמה: הרצליה - בוגרים)');
-        setIsLoading(false);
-        return;
-      }
-
       // Step 4: Handle temporary password reset (strict check for true)
       if (Boolean(memberData.isTemporary) === true) {
         setTempUser({ id: memberDocId, data: memberData });
@@ -577,7 +590,8 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      // Step 5: Complete login session
+      // Step 5: Complete login session with dynamic primary community resolution
+      const targetCommunity = resolveUserPrimaryCommunity(memberData, selectedCommunityId);
       const nowIso = new Date().toISOString();
       const finalUser: Member = {
         ...memberData,
@@ -587,7 +601,7 @@ const LoginPage: React.FC = () => {
         lastLoginAt: nowIso
       };
 
-      login(finalUser, selectedCommunityId);
+      login(finalUser, targetCommunity);
       navigate('/');
     } catch (err: any) {
       console.error('LoginPage: Login error:', err);
@@ -746,7 +760,8 @@ const LoginPage: React.FC = () => {
         lastLoginAt: new Date().toISOString()
       } as Member;
 
-      login(finalUser, selectedCommunityId);
+      const targetCommunity = resolveUserPrimaryCommunity(finalUser, selectedCommunityId);
+      login(finalUser, targetCommunity);
       navigate('/');
     } catch (err: any) {
       console.error('Password reset submit error:', err);

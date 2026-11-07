@@ -16,11 +16,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
-import { AVAILABLE_COMMUNITIES, Community, canSwitchAllCommunities } from '../constants';
+import { AVAILABLE_COMMUNITIES, Community, canSwitchAllCommunities, DEFAULT_BRANCH_COHORTS } from '../constants';
 
 export const QuickGroupSwitcherModal: React.FC = () => {
   const { currentUser, currentCommunityId, switchCommunity, isAuthenticated } = useAuth();
-  const { availableCommunities: ctxCommunities, memberships } = useData();
+  const { availableCommunities: ctxCommunities, memberships, yearConfig } = useData();
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -142,7 +142,13 @@ export const QuickGroupSwitcherModal: React.FC = () => {
       }
     };
 
+    const handleOpenCustom = () => {
+      setIsOpen(true);
+      setSearchTerm('');
+    };
+
     window.addEventListener('contextmenu', handleContextMenu);
+    window.addEventListener('openGroupSwitcher', handleOpenCustom);
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -150,6 +156,7 @@ export const QuickGroupSwitcherModal: React.FC = () => {
 
     return () => {
       window.removeEventListener('contextmenu', handleContextMenu);
+      window.removeEventListener('openGroupSwitcher', handleOpenCustom);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
@@ -370,6 +377,14 @@ export const QuickGroupSwitcherModal: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {filteredCommunities.map((comm) => {
                   const isActive = comm.id === activeCommId;
+                  const cleanBranch = comm.id.replace('_adults', '');
+                  const branchCfg = yearConfig?.branchCohorts?.[cleanBranch] || DEFAULT_BRANCH_COHORTS[cleanBranch];
+                  const group = comm.isAdults 
+                    ? branchCfg?.groups?.find(g => g.type === 'alumni')
+                    : (branchCfg?.groups?.find(g => g.type === 'cohort') || branchCfg?.groups?.[0]);
+                  const dayName = group?.dayOfWeek !== undefined ? ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][group.dayOfWeek] : null;
+                  const time = group?.startTime || branchCfg?.startTime;
+                  const frequency = group?.frequency || branchCfg?.frequency || (comm.isAdults ? 'biweekly' : 'weekly');
 
                   return (
                     <button
@@ -405,7 +420,7 @@ export const QuickGroupSwitcherModal: React.FC = () => {
                           }`}>
                             {comm.name}
                           </h4>
-                          <div className="flex items-center gap-2 mt-0.5">
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                             {comm.baseName && (
                               <>
                                 <span className="text-[11px] font-bold text-slate-400">
@@ -420,6 +435,21 @@ export const QuickGroupSwitcherModal: React.FC = () => {
                                 : 'bg-sky-100/70 text-sky-800'
                             }`}>
                               {comm.isAdults ? 'בוגרים' : 'מחזור פעיל'}
+                            </span>
+                            {dayName && time && (
+                              <>
+                                <span className="text-slate-300">•</span>
+                                <span className="text-[10px] font-bold text-slate-500 font-mono">
+                                  יום {dayName} {time}
+                                </span>
+                              </>
+                            )}
+                            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                              frequency === 'biweekly' 
+                                ? 'bg-purple-100/80 text-purple-700' 
+                                : 'bg-emerald-100/80 text-emerald-700'
+                            }`}>
+                              {frequency === 'biweekly' ? 'דו-שבועי' : 'שבועי'}
                             </span>
                           </div>
                         </div>

@@ -32,7 +32,8 @@ import {
   User,
   ShieldCheck,
   GraduationCap,
-  Building2
+  Building2,
+  Info
 } from 'lucide-react';
 import { SurfDashboard, surfSpots } from '../components/SurfDashboard';
 import { DailySurfRecommendation } from '../components/DailySurfRecommendation';
@@ -40,7 +41,13 @@ import { OnlineUsersCounter } from '../components/OnlineUsersCounter';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { getNextSessionDate } from '../services/rolloverService';
-import { isAdminUser, isAppShaperUser, BASE_COMMUNITY_BRANCHES } from '../constants';
+import { 
+  isAdminUser, 
+  isAppShaperUser, 
+  BASE_COMMUNITY_BRANCHES, 
+  DEFAULT_BRANCH_COHORTS, 
+  canSwitchAllCommunities 
+} from '../constants';
 import { getBodyLineStats } from '../utils/bodyLineStats';
 import { SURF_QUOTES } from '../data/surfQuotes';
 import { SURF_DICTIONARY } from '../data/surfDictionary';
@@ -52,6 +59,26 @@ import { ContactAvailabilityReminderModal, PendingContactAction } from '../compo
 import { checkContactTimingSensitivity } from '../utils/availabilityTiming';
 import { getAvailabilityBadgeInfo } from '../constants/availability';
 import { getMemberCohortCount, formatJoinDate } from '../utils/cohortRules';
+
+export const DAY_TITLES = [
+  'יום ראשון הגדול',
+  'יום שני הגדול',
+  'יום שלישי הגדול',
+  'יום רביעי הגדול',
+  'יום חמישי הגדול',
+  'יום שישי הגדול',
+  'יום שבת הגדול'
+];
+
+export const DAY_HEBREW_NAMES = [
+  'ראשון',
+  'שני',
+  'שלישי',
+  'רביעי',
+  'חמישי',
+  'שישי',
+  'שבת'
+];
 
 const SurfboardIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -83,9 +110,65 @@ export const getScheduledGroupForSession = (sessionDateStr: string, startDateStr
   return diffWeeks % 2 === 0 ? 'סבב א\'' : 'סבב ב\'';
 };
 
+const GroupTooltipBadge: React.FC<{ groupName: string; branchName: string }> = ({ groupName, branchName }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const fullDisplayName = groupName.includes(branchName) ? groupName : `${groupName} ${branchName}`;
+
+  const handleOpenSwitcher = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.dispatchEvent(new CustomEvent('openGroupSwitcher'));
+  };
+
+  return (
+    <div className="relative inline-flex flex-col items-center">
+      <div 
+        onClick={() => setShowTooltip(prev => !prev)}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        className="inline-flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-slate-50/95 border border-slate-200/90 shadow-xs text-xs sm:text-sm font-bold text-[#002b44] cursor-pointer hover:bg-slate-100 transition-all select-none"
+      >
+        <Building2 size={16} className="text-[#007085] shrink-0" />
+        <span className="font-black">{fullDisplayName}</span>
+        
+        <button
+          type="button"
+          onClick={handleOpenSwitcher}
+          className="p-1 -mr-1 rounded-full text-slate-400 hover:text-[#007085] hover:bg-slate-200/60 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+          title="לחץ להחלפת קבוצה (או לחיצה ארוכה על המסך)"
+          aria-label="החלף קבוצה"
+        >
+          <Info size={16} className="text-[#007085]" />
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {showTooltip && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full mt-2.5 z-50 px-3.5 py-2 bg-[#002b44] text-white text-xs font-black rounded-2xl shadow-xl border border-white/20 whitespace-nowrap flex items-center gap-2 pointer-events-auto"
+          >
+            <span>לחיצה ארוכה להחלפת תצוגת הקבוצה</span>
+            <button
+              type="button"
+              onClick={handleOpenSwitcher}
+              className="px-2 py-0.5 bg-[var(--surfer-yellow)] text-[#002b44] rounded-lg font-black text-[11px] hover:bg-amber-300 transition-colors cursor-pointer"
+            >
+              החלף
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser, currentCommunityId } = useAuth();
+  const { currentUser, currentCommunityId, switchCommunity } = useAuth();
   const { 
     members: rawMembers, memberships, groups, galleryItems, events, attendeeIds, toggleSessionAttendance, siteAssets, glossary, quotes, news, activeSessionDate, siteConfig, updateMember, coastalWeather, seaStats,
     connectionError, retryConnection, isLoading: isDataLoading, selectedStationId, setSelectedStationId, yearConfig
@@ -204,6 +287,7 @@ const HomePage: React.FC = () => {
 
   const activeMembers = useMemo(() => getBodyLineStats(members).activeMembers, [members]);
   const isCurrentUserAppShaper = isAppShaperUser(currentUser);
+  const isPrivilegedUser = canSwitchAllCommunities(currentUser);
   const attendees = useMemo(() => activeMembers.filter(m => attendeeIds.includes(m.id) && !isAppShaperUser(m)).sort((a, b) => {
     const aLast = a.lastName || '';
     const bLast = b.lastName || '';
@@ -374,10 +458,158 @@ const HomePage: React.FC = () => {
     return attendees;
   }, [attendees, attendeesFilter, pairStats.duoMemberIds]);
 
+  const selectedGroupDetails = useMemo(() => {
+    const activeCommunity = currentCommunityId || 'herzliya';
+    const isAlumni = activeCommunity.endsWith('_adults');
+    const cleanBranch = activeCommunity.replace('_adults', '');
+    const branchName = BASE_COMMUNITY_BRANCHES.find(b => b.id === cleanBranch)?.baseName || 'הרצליה';
+    
+    const branchCfg = yearConfig?.branchCohorts?.[cleanBranch] || DEFAULT_BRANCH_COHORTS[cleanBranch];
+    if (branchCfg) {
+      if (isAlumni) {
+        const alumniGroup = branchCfg.groups?.find(g => g.type === 'alumni');
+        let gName = alumniGroup?.name || `קבוצת בוגרים ${branchName}`;
+        if (!gName.includes(branchName)) gName = `${gName} ${branchName}`;
+        return {
+          groupName: gName,
+          branchName,
+          dayOfWeek: alumniGroup?.dayOfWeek ?? branchCfg.dayOfWeek ?? 4,
+          startTime: alumniGroup?.startTime ?? branchCfg.startTime ?? '08:30',
+          sessionDurationMinutes: alumniGroup?.sessionDurationMinutes ?? branchCfg.sessionDurationMinutes ?? 90,
+          frequency: alumniGroup?.frequency ?? branchCfg.frequency ?? 'biweekly',
+          startDate: alumniGroup?.startDate ?? branchCfg.startDate ?? '2026-09-01',
+          type: 'alumni' as const,
+          cleanBranch,
+          activeCommunity
+        };
+      } else {
+        const cohortGroup = branchCfg.groups?.find(g => g.type === 'cohort') || branchCfg.groups?.[0];
+        let gName = cohortGroup?.name || branchCfg.name || `מחזור פעיל ${branchName}`;
+        if (!gName.includes(branchName)) gName = `${gName} ${branchName}`;
+        return {
+          groupName: gName,
+          branchName,
+          dayOfWeek: cohortGroup?.dayOfWeek ?? branchCfg.dayOfWeek ?? 4,
+          startTime: cohortGroup?.startTime ?? branchCfg.startTime ?? '07:00',
+          sessionDurationMinutes: cohortGroup?.sessionDurationMinutes ?? branchCfg.sessionDurationMinutes ?? 90,
+          frequency: cohortGroup?.frequency ?? branchCfg.frequency ?? 'weekly',
+          startDate: cohortGroup?.startDate ?? branchCfg.startDate ?? '2026-09-01',
+          type: 'cohort' as const,
+          cleanBranch,
+          activeCommunity
+        };
+      }
+    }
+    
+    let fallbackName = isAlumni ? `קבוצת בוגרים ${branchName}` : `מחזור פעיל ${branchName}`;
+    return {
+      groupName: fallbackName,
+      branchName,
+      dayOfWeek: 4,
+      startTime: isAlumni ? '08:30' : '07:00',
+      sessionDurationMinutes: 90,
+      frequency: isAlumni ? ('biweekly' as const) : ('weekly' as const),
+      startDate: '2026-09-01',
+      type: isAlumni ? ('alumni' as const) : ('cohort' as const),
+      cleanBranch,
+      activeCommunity
+    };
+  }, [currentCommunityId, yearConfig]);
+
+  const userCommunitiesList = useMemo(() => {
+    if (!currentUser) return [];
+
+    const validCommIds = new Set<string>();
+
+    const isValidCommunity = (id: string) => {
+      if (!id || typeof id !== 'string' || id === 'all') return false;
+      const cleanBranch = id.replace('_adults', '');
+      return BASE_COMMUNITY_BRANCHES.some(b => b.id === cleanBranch);
+    };
+
+    // 1. Check user.communities array on member doc
+    if (Array.isArray(currentUser.communities) && currentUser.communities.length > 0) {
+      currentUser.communities.forEach(id => {
+        if (isValidCommunity(id)) {
+          validCommIds.add(id);
+        }
+      });
+    }
+
+    // 2. Check group_memberships in DataContext for valid community IDs only
+    if (Array.isArray(memberships) && currentUser.id) {
+      memberships.forEach(m => {
+        if (m.personId === currentUser.id && m.groupId && isValidCommunity(m.groupId)) {
+          validCommIds.add(m.groupId);
+        }
+      });
+    }
+
+    // 3. Check assignedGroup / group if valid
+    if (currentUser.assignedGroup && isValidCommunity(currentUser.assignedGroup)) {
+      validCommIds.add(currentUser.assignedGroup);
+    }
+    if (currentUser.group && isValidCommunity(currentUser.group)) {
+      validCommIds.add(currentUser.group);
+    }
+
+    // Fallback: if no specific valid community recorded, include current active community (if valid) or default 'herzliya'
+    if (validCommIds.size === 0) {
+      const fallbackComm = (currentCommunityId && isValidCommunity(currentCommunityId)) ? currentCommunityId : 'herzliya';
+      validCommIds.add(fallbackComm);
+    }
+
+    return Array.from(validCommIds).map(commId => {
+      const isAlumni = commId.endsWith('_adults');
+      const cleanBranch = commId.replace('_adults', '');
+      const branchObj = BASE_COMMUNITY_BRANCHES.find(b => b.id === cleanBranch);
+      const branchName = branchObj?.baseName || cleanBranch;
+      
+      const branchCfg = yearConfig?.branchCohorts?.[cleanBranch] || DEFAULT_BRANCH_COHORTS[cleanBranch];
+      let groupName = isAlumni ? `בוגרים ${branchName}` : `מחזור ${branchName}`;
+      
+      if (branchCfg) {
+        if (isAlumni) {
+          const alumniGroup = branchCfg.groups?.find(g => g.type === 'alumni');
+          if (alumniGroup?.name) groupName = alumniGroup.name;
+        } else {
+          const cohortGroup = branchCfg.groups?.find(g => g.type === 'cohort') || branchCfg.groups?.[0];
+          if (cohortGroup?.name) groupName = cohortGroup.name;
+          else if (branchCfg.name) groupName = branchCfg.name;
+        }
+      }
+
+      if (branchName && !groupName.includes(branchName)) {
+        groupName = `${groupName} ${branchName}`;
+      }
+
+      return {
+        id: commId,
+        name: groupName,
+        branchName,
+        isAlumni,
+        isActive: (currentCommunityId || 'herzliya') === commId
+      };
+    });
+  }, [currentUser, memberships, currentCommunityId, yearConfig]);
+
+  const nextTargetDateStr = useMemo(() => {
+    // Dynamic next session date based on the selected group's dayOfWeek, startTime, frequency, and startDate
+    const groupWeekly = [{ 
+      dayOfWeek: selectedGroupDetails.dayOfWeek, 
+      time: selectedGroupDetails.startTime, 
+      frequency: selectedGroupDetails.frequency,
+      startDate: selectedGroupDetails.startDate,
+      isActive: true 
+    }];
+    return getNextSessionDate(groupWeekly);
+  }, [selectedGroupDetails.dayOfWeek, selectedGroupDetails.startTime, selectedGroupDetails.frequency, selectedGroupDetails.startDate]);
+
   const scheduledGroup = useMemo(() => {
+    if (selectedGroupDetails.type === 'alumni') return null;
     if (yearConfig?.activityMode !== 'קבוצתית' && yearConfig?.activityMode !== 'סבבים') return null;
-    return getScheduledGroupForSession(activeSessionDate, yearConfig?.startDate);
-  }, [activeSessionDate, yearConfig]);
+    return getScheduledGroupForSession(nextTargetDateStr, yearConfig?.startDate);
+  }, [nextTargetDateStr, yearConfig, selectedGroupDetails.type]);
 
   const userGroup = currentUser?.assignedGroup || currentUser?.group;
 
@@ -497,54 +729,10 @@ const HomePage: React.FC = () => {
     return () => clearInterval(interval);
   }, [refreshPost]);
 
-  const selectedGroupDetails = useMemo(() => {
-    const activeCommunity = currentCommunityId || 'herzliya';
-    const isAlumni = activeCommunity.endsWith('_adults');
-    const cleanBranch = activeCommunity.replace('_adults', '');
-    const branchName = BASE_COMMUNITY_BRANCHES.find(b => b.id === cleanBranch)?.baseName || 'הרצליה';
-    
-    const branchCfg = yearConfig?.branchCohorts?.[cleanBranch];
-    if (branchCfg) {
-      if (isAlumni) {
-        const alumniGroup = branchCfg.groups?.find(g => g.type === 'alumni');
-        return {
-          groupName: alumniGroup?.name || `בוגרים ${branchName}`,
-          branchName,
-          dayOfWeek: alumniGroup?.dayOfWeek ?? branchCfg.dayOfWeek ?? 4,
-          startTime: alumniGroup?.startTime ?? branchCfg.startTime ?? '08:30',
-          type: 'alumni'
-        };
-      } else {
-        const cohortGroup = branchCfg.groups?.find(g => g.type === 'cohort') || branchCfg.groups?.[0];
-        return {
-          groupName: cohortGroup?.name || branchCfg.name || 'מחזור פעיל',
-          branchName,
-          dayOfWeek: cohortGroup?.dayOfWeek ?? branchCfg.dayOfWeek ?? 4,
-          startTime: cohortGroup?.startTime ?? branchCfg.startTime ?? '07:00',
-          type: 'cohort'
-        };
-      }
-    }
-    
-    return {
-      groupName: isAlumni ? 'קבוצת בוגרים' : 'מחזור פעיל',
-      branchName,
-      dayOfWeek: 4,
-      startTime: '07:00',
-      type: isAlumni ? 'alumni' : 'cohort'
-    };
-  }, [currentCommunityId, yearConfig]);
-
   useEffect(() => {
     const updateCountdown = () => {
       const now = new Date();
-      let targetDateStr = activeSessionDate;
-      
-      if (!targetDateStr) {
-        // Dynamic next session date based on the selected group's dayOfWeek and startTime
-        const groupWeekly = [{ dayOfWeek: selectedGroupDetails.dayOfWeek, time: selectedGroupDetails.startTime, isActive: true }];
-        targetDateStr = getNextSessionDate(groupWeekly);
-      }
+      const targetDateStr = nextTargetDateStr;
       
       const target = new Date(targetDateStr);
       const diff = target.getTime() - now.getTime();
@@ -564,7 +752,7 @@ const HomePage: React.FC = () => {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [activeSessionDate, selectedGroupDetails, siteConfig?.weeklySessions]);
+  }, [nextTargetDateStr]);
 
   const handleToggle = async () => {
     if (!currentUser) {
@@ -713,9 +901,9 @@ const HomePage: React.FC = () => {
                <p className="text-white/95 font-semibold italic text-sm md:text-2xl max-w-2xl mx-auto tracking-[0.08em] leading-relaxed mb-4 md:mb-6 drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
                  "A day will come that is like no other... and nothing that happens after will ever be the same."
                </p>
+
                {(() => {
-                 const dayTitles = ['יום ראשון הגדול', 'יום שני הגדול', 'יום שלישי הגדול', 'יום רביעי הגדול', 'יום חמישי הגדול', 'יום שישי הגדול', 'יום שבת הגדול'];
-                 const titleText = dayTitles[selectedGroupDetails.dayOfWeek] || 'יום חמישי הגדול';
+                 const titleText = DAY_TITLES[selectedGroupDetails.dayOfWeek] || 'יום חמישי הגדול';
                  return (
                    <h1 className="text-[var(--surfer-yellow)] big-thursday-title" data-text={titleText}>{titleText}</h1>
                  );
@@ -726,7 +914,9 @@ const HomePage: React.FC = () => {
              <div className="w-full flex flex-col items-center pb-12 md:pb-20 relative z-20 mt-auto pointer-events-auto">
                {/* Countdown */}
                <div className="space-y-4 md:space-y-6 flex flex-col items-center">
-                 <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-white drop-shadow-[0_3px_10px_rgba(0,0,0,0.85)] tracking-wide">נכנסים שוב למים בעוד...</p>
+                 <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-white drop-shadow-[0_3px_10px_rgba(0,0,0,0.85)] tracking-wide">
+                   נכנסים שוב למים ביום {DAY_HEBREW_NAMES[selectedGroupDetails.dayOfWeek]} בשעה {selectedGroupDetails.startTime} בעוד...
+                 </p>
                  <div className="flex gap-2.5 sm:gap-3 md:gap-5 font-black" dir="ltr">
                    {[
                      { label: 'ימים', value: countdown.days },
@@ -742,40 +932,42 @@ const HomePage: React.FC = () => {
                  </div>
                </div>
 
-                {/* Group Rotation / Round Notice - Positioned cleanly under the timer */}
-                {scheduledGroup ? (
-                  <div className="mt-5 sm:mt-6 flex flex-col items-center">
-                    <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-900/75 backdrop-blur-md border border-white/20 rounded-full text-white/95 text-xs sm:text-sm font-heebo shadow-lg">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#00a3c4] animate-pulse shrink-0" />
-                      <span>
-                        {userGroup ? (
-                          isUserInScheduledGroup ? (
-                            <>
-                              שים לב: הסשן הקרוב מיועד לסבב שלך <strong className="font-bold text-[#00a3c4]">({scheduledGroup})</strong>
-                            </>
+                {/* Group Rotation / Round Notice - Positioned cleanly under the timer (Only for active cohort groups) */}
+                {selectedGroupDetails.type !== 'alumni' && (
+                  scheduledGroup ? (
+                    <div className="mt-5 sm:mt-6 flex flex-col items-center">
+                      <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-900/75 backdrop-blur-md border border-white/20 rounded-full text-white/95 text-xs sm:text-sm font-heebo shadow-lg">
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#00a3c4] animate-pulse shrink-0" />
+                        <span>
+                          {userGroup ? (
+                            isUserInScheduledGroup ? (
+                              <>
+                                שים לב: הסשן הקרוב מיועד לסבב שלך <strong className="font-bold text-[#00a3c4]">({scheduledGroup})</strong>
+                              </>
+                            ) : (
+                              <>
+                                שים לב: הסשן הקרוב מיועד לסבב השני <strong className="font-bold text-[#00a3c4]">({scheduledGroup})</strong>
+                              </>
+                            )
                           ) : (
                             <>
-                              שים לב: הסשן הקרוב מיועד לסבב השני <strong className="font-bold text-[#00a3c4]">({scheduledGroup})</strong>
+                              שים לב: הסשן הקרוב מיועד ל-<strong className="font-bold text-[#00a3c4]">{scheduledGroup}</strong>
                             </>
-                          )
-                        ) : (
-                          <>
-                            שים לב: הסשן הקרוב מיועד ל-<strong className="font-bold text-[#00a3c4]">{scheduledGroup}</strong>
-                          </>
-                        )}
-                      </span>
+                          )}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ) : (yearConfig?.activityMode === 'משותפת' || yearConfig?.activityMode === 'מאוחד') ? (
-                  <div className="mt-5 sm:mt-6 flex flex-col items-center">
-                    <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-900/75 backdrop-blur-md border border-emerald-500/30 rounded-full text-white/95 text-xs sm:text-sm font-heebo shadow-lg">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                      <span>
-                        השבוע: <strong className="font-bold text-emerald-300">איחוד קבוצתי!</strong> (סבב מאוחד – כל חברי הקבוצה יחד במים)
-                      </span>
+                  ) : (yearConfig?.activityMode === 'משותפת' || yearConfig?.activityMode === 'מאוחד') ? (
+                    <div className="mt-5 sm:mt-6 flex flex-col items-center">
+                      <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-900/75 backdrop-blur-md border border-emerald-500/30 rounded-full text-white/95 text-xs sm:text-sm font-heebo shadow-lg">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                        <span>
+                          השבוע: <strong className="font-bold text-emerald-300">איחוד קבוצתי!</strong> (סבב מאוחד – כל חברי הקבוצה יחד במים)
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ) : null}
+                  ) : null
+                )}
              </div>
           </div>
         </section>
@@ -790,8 +982,24 @@ const HomePage: React.FC = () => {
             <div className="premium-sweep-fx" />
 
             <div className="flex flex-col items-center gap-8 relative z-10 w-full">
-              {/* Centered Avatars */}
-              <div className="flex justify-center -space-x-4 md:-space-x-6 space-x-reverse">
+              {/* Active Group Designation with Switcher Tooltip Icon */}
+              <GroupTooltipBadge 
+                groupName={selectedGroupDetails.groupName} 
+                branchName={selectedGroupDetails.branchName} 
+              />
+
+              {/* Title & Subtitle */}
+              <div className="text-center space-y-3 flex flex-col items-center">
+                <h4 className="text-3xl md:text-5xl font-black text-[#002b44] tracking-tighter font-yehuda">
+                  הכוכבים שאישרו הגעה
+                </h4>
+                <p className="text-sm md:text-lg font-black text-[#007085] uppercase tracking-[0.3em] font-yehuda opacity-80">
+                  {attendees.length === 1 ? 'גולש 1 כבר בפנים. מה איתך?' : `${attendees.length} גולשים כבר בפנים. מה איתך?`}
+                </p>
+              </div>
+
+              {/* Centered Avatars moved directly below subtitle */}
+              <div className="flex justify-center -space-x-4 md:-space-x-6 space-x-reverse pt-1">
                 {attendees.slice(0, 12).map(a => (
                   <div key={a.id} className="relative group flex-shrink-0 cursor-default">
                     {a.avatar ? (
@@ -817,15 +1025,6 @@ const HomePage: React.FC = () => {
                     +{attendees.length - 12}
                   </div>
                 )}
-              </div>
-              
-              <div className="text-center space-y-3">
-                <h4 className="text-3xl md:text-5xl font-black text-[#002b44] tracking-tighter font-yehuda">
-                  הכוכבים שאישרו הגעה
-                </h4>
-                <p className="text-sm md:text-lg font-black text-[#007085] uppercase tracking-[0.3em] font-yehuda opacity-80">
-                  {attendees.length === 1 ? 'גולש 1 כבר בפנים. מה איתך?' : `${attendees.length} גולשים כבר בפנים. מה איתך?`}
-                </p>
               </div>
 
               {/* Compact Single Horizontal Row for Attendance Breakdown */}

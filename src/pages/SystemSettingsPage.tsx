@@ -66,7 +66,8 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
     endDate: '2027-07-31',
     dayOfWeek: 4,
     startTime: '07:00',
-    sessionDurationMinutes: 90
+    sessionDurationMinutes: 90,
+    frequency: 'weekly'
   });
 
   useEffect(() => {
@@ -114,13 +115,17 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
       endDate: '2027-07-31',
       dayOfWeek: 4,
       startTime: '07:00',
-      sessionDurationMinutes: 90
+      sessionDurationMinutes: 90,
+      frequency: 'weekly'
     });
     setEditingGroup({ branchId, group: null, isNew: true });
   };
 
   const handleOpenEditGroup = (branchId: string, group: BranchGroupConfig) => {
-    setGroupForm({ ...group });
+    setGroupForm({ 
+      ...group,
+      frequency: group.frequency || 'weekly'
+    });
     setEditingGroup({ branchId, group, isNew: false });
   };
 
@@ -345,26 +350,40 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
                     </div>
 
                     {/* Independent Parameters Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100 text-xs">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-slate-100 text-xs">
                       <div className="bg-white/80 p-2.5 rounded-xl border border-slate-100 space-y-0.5">
-                        <span className="text-[10px] text-slate-400 font-bold block">יום פעילות בשבוע</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">תדירות סשן</span>
+                        <span className="font-black text-slate-800">
+                          {group.frequency === 'biweekly' ? (
+                            <span className="text-purple-600 font-bold flex items-center gap-1">
+                              <span>🔁</span> דו-שבועי
+                            </span>
+                          ) : (
+                            <span className="text-emerald-600 font-bold flex items-center gap-1">
+                              <span>🗓️</span> שבועי
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      <div className="bg-white/80 p-2.5 rounded-xl border border-slate-100 space-y-0.5">
+                        <span className="text-[10px] text-slate-400 font-bold block">יום בשבוע</span>
                         <span className="font-black text-slate-800">יום {dayName}</span>
                       </div>
                       <div className="bg-white/80 p-2.5 rounded-xl border border-slate-100 space-y-0.5">
-                        <span className="text-[10px] text-slate-400 font-bold block">שעת תחילת פעילות</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">שעת התחלה</span>
                         <span className="font-black text-slate-800 flex items-center gap-1">
                           <Clock size={12} className="text-sky-500" />
                           {group.startTime || '07:00'}
                         </span>
                       </div>
                       <div className="bg-white/80 p-2.5 rounded-xl border border-slate-100 space-y-0.5">
-                        <span className="text-[10px] text-slate-400 font-bold block">משך פעילות</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">משך סשן</span>
                         <span className="font-black text-slate-800 flex items-center gap-1">
                           <Timer size={12} className="text-emerald-500" />
-                          {group.sessionDurationMinutes || 90} דקות
+                          {group.sessionDurationMinutes || 90} דק׳
                         </span>
                       </div>
-                      <div className="col-span-2 sm:col-span-3 bg-white/80 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between">
+                      <div className="col-span-2 sm:col-span-4 bg-white/80 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between">
                         <span className="text-[10px] text-slate-400 font-bold">טווח תאריכים פעיל:</span>
                         <span className="font-black text-slate-800 text-[11px]" dir="ltr">
                           {group.startDate || '2026-09-01'} ➔ {group.endDate || '2027-07-31'}
@@ -430,6 +449,44 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({ embedded
                       }`}
                     >
                       🎓 קבוצת בוגרים
+                    </button>
+                  </div>
+                </div>
+
+                {/* Session Frequency: Weekly vs Bi-weekly */}
+                <div className="space-y-1">
+                  <label className="text-xs font-black text-slate-700 flex items-center justify-between">
+                    <span>תדירות המפגשים (סשנים)</span>
+                    <span className="text-[10px] text-slate-500 font-semibold">משפיע על שעון הספירה לאחור בדף הבית</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setGroupForm({ ...groupForm, frequency: 'weekly' })}
+                      className={`p-3 rounded-xl text-xs font-black border transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                        (groupForm.frequency || 'weekly') === 'weekly'
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5 font-bold">
+                        <span>🗓️</span> סשן שבועי
+                      </span>
+                      <span className="text-[10px] opacity-90 font-medium">נפגשים בכל שבוע</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGroupForm({ ...groupForm, frequency: 'biweekly' })}
+                      className={`p-3 rounded-xl text-xs font-black border transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                        groupForm.frequency === 'biweekly'
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5 font-bold">
+                        <span>🔁</span> סשן דו-שבועי
+                      </span>
+                      <span className="text-[10px] opacity-90 font-medium">נפגשים פעם בשבועיים</span>
                     </button>
                   </div>
                 </div>

@@ -226,6 +226,8 @@ export interface AuthState {
   loading: boolean;
 }
 
+export type SessionFrequency = 'weekly' | 'biweekly';
+
 export interface BranchGroupConfig {
   id: string;
   name: string; // e.g. "מחזור ז׳" or "קבוצת בוגרים"
@@ -235,6 +237,7 @@ export interface BranchGroupConfig {
   dayOfWeek: number; // 0-6 (Sunday-Saturday)
   startTime: string; // e.g. "07:00"
   sessionDurationMinutes: number; // e.g. 90
+  frequency?: SessionFrequency; // 'weekly' (סשן שבועי) | 'biweekly' (סשן דו-שבועי)
 }
 
 export interface BranchCohortConfig {
@@ -244,6 +247,7 @@ export interface BranchCohortConfig {
   dayOfWeek?: number;
   startTime?: string;
   sessionDurationMinutes?: number;
+  frequency?: SessionFrequency;
   groups?: BranchGroupConfig[];
 }
 

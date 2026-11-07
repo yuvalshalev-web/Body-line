@@ -1,4 +1,13 @@
-export const getNextSessionDate = (weeklySessions?: { dayOfWeek: number, time: string, isActive?: boolean, isRecurring?: boolean }[]) => {
+export interface SessionScheduleItem {
+  dayOfWeek: number;
+  time: string;
+  isActive?: boolean;
+  isRecurring?: boolean;
+  frequency?: 'weekly' | 'biweekly';
+  startDate?: string;
+}
+
+export const getNextSessionDate = (weeklySessions?: SessionScheduleItem[]) => {
   const now = new Date();
   
   if (weeklySessions && weeklySessions.length > 0) {
@@ -6,7 +15,6 @@ export const getNextSessionDate = (weeklySessions?: { dayOfWeek: number, time: s
     if (activeSessions.length > 0) {
       const possibleDates = activeSessions.map(session => {
         const [hours, minutes] = session.time.split(':').map(Number);
-        const date = new Date(now);
         
         let daysToAdd = session.dayOfWeek - now.getDay();
         
@@ -21,9 +29,27 @@ export const getNextSessionDate = (weeklySessions?: { dayOfWeek: number, time: s
           daysToAdd += 7;
         }
         
-        date.setDate(now.getDate() + daysToAdd);
-        date.setHours(hours, minutes, 0, 0);
-        return { date, session };
+        const candidateDate = new Date(now);
+        candidateDate.setDate(now.getDate() + daysToAdd);
+        candidateDate.setHours(hours, minutes, 0, 0);
+
+        // If frequency is bi-weekly, ensure we only hit alternating weeks from group's startDate
+        if (session.frequency === 'biweekly') {
+          const anchorStr = session.startDate || `${now.getFullYear()}-09-01`;
+          const anchor = new Date(anchorStr);
+          anchor.setHours(hours, minutes, 0, 0);
+          
+          const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+          const diffMs = candidateDate.getTime() - anchor.getTime();
+          const diffWeeks = Math.round(diffMs / msPerWeek);
+          
+          // If odd number of weeks from anchor, this upcoming week is off: advance by 7 days
+          if (Math.abs(diffWeeks) % 2 !== 0) {
+            candidateDate.setDate(candidateDate.getDate() + 7);
+          }
+        }
+
+        return { date: candidateDate, session };
       });
 
       // Sort by date and pick the earliest
@@ -37,3 +63,4 @@ export const getNextSessionDate = (weeklySessions?: { dayOfWeek: number, time: s
   nextSession.setDate(now.getDate() + 1);
   return nextSession.toISOString();
 };
+
