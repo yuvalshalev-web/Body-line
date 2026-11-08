@@ -15,7 +15,7 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
 import { JoinRequest, Member } from '../types';
-import { SUPER_ADMIN_EMAIL, isAppShaperUser, AVAILABLE_COMMUNITIES } from '../constants';
+import { SUPER_ADMIN_EMAIL, isAppShaperUser, isSuperAdminEmail, AVAILABLE_COMMUNITIES, normalizeCommunityGroupName } from '../constants';
 import { ReadOnlyNoticeModal } from '../components/admin/ReadOnlyNoticeModal';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getStorageInstance } from '../services/firebase';
@@ -514,7 +514,7 @@ const AdminPage: React.FC = () => {
   // Gallery Selection State
   const [selectedGalleryItems, setSelectedGalleryItems] = useState<string[]>([]);
 
-  const isSuperAdmin = currentUser?.email === SUPER_ADMIN_EMAIL || currentUser?.email === 'yuval@shalev.io';
+  const isSuperAdmin = isSuperAdminEmail(currentUser?.email);
 
   const formatDate = (dateValue: string) => {
     const d = new Date(dateValue);
@@ -1306,20 +1306,24 @@ const AdminPage: React.FC = () => {
                                   (member.communities || []).forEach(commId => {
                                     const commObj = availableCommunities.find(c => c.id === commId);
                                     const isAlumni = commId.endsWith('_adults');
-                                    const label = commObj?.name || commId;
-                                    if (!seen.has(label)) {
-                                       seen.add(label);
-                                       badges.push({ key: `comm_${commId}`, label, isAlumni });
+                                    const rawLabel = commObj?.name || commId;
+                                    const label = normalizeCommunityGroupName(rawLabel, commId);
+                                    const normKey = label.trim().toLowerCase();
+                                    if (!seen.has(normKey)) {
+                                      seen.add(normKey);
+                                      badges.push({ key: `comm_${commId}`, label, isAlumni });
                                     }
                                   });
 
                                   memberships.filter(m => m.personId === member.id && m.status === 'active').forEach(um => {
                                     const g = groups.find(grp => grp.id === um.groupId);
                                     const isAlumni = g?.type === 'alumni';
-                                    const label = g?.name || 'קבוצה';
-                                    if (!seen.has(label)) {
-                                       seen.add(label);
-                                       badges.push({ key: `mem_${um.id}`, label, isAlumni: !!isAlumni });
+                                    const rawLabel = g?.name || 'קבוצה';
+                                    const label = normalizeCommunityGroupName(rawLabel, um.communityId || 'herzliya');
+                                    const normKey = label.trim().toLowerCase();
+                                    if (!seen.has(normKey)) {
+                                      seen.add(normKey);
+                                      badges.push({ key: `mem_${um.id}`, label, isAlumni: !!isAlumni });
                                     }
                                   });
 

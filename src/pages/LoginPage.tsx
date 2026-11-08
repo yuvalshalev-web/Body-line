@@ -7,7 +7,7 @@ import { Member, JoinRequest } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import { hashPassword, verifyPassword, calculateFbPassword } from '../utils/crypto';
-import { SUPER_ADMIN_EMAIL, isAdminUser, AVAILABLE_COMMUNITIES, getAvailableCommunities, getBranchCohortName } from '../constants';
+import { SUPER_ADMIN_EMAIL, isAdminUser, canSwitchAllCommunities, isSuperAdminEmail, AVAILABLE_COMMUNITIES, getAvailableCommunities, getBranchCohortName } from '../constants';
 import { validateMobileNumber, formatMobileNumber } from '../utils/validation';
 import { GlassButtonV2 as GlassButton } from '../components/GlassButton';
 import { useAuth } from '../contexts/AuthContext';
@@ -73,14 +73,10 @@ function getIsraelSunriseSunset(date: Date = new Date()) {
 }
 
 export const resolveUserPrimaryCommunity = (
-  memberData: { role?: string; communities?: string[]; assignedGroup?: string; group?: string },
+  memberData: { role?: string; email?: string; communities?: string[]; assignedGroup?: string; group?: string },
   preferredCommunityId?: string
 ): string => {
-  const isPrivileged = 
-    memberData.role === 'Staff' || 
-    memberData.role === 'Support' || 
-    memberData.role === 'Admin' || 
-    memberData.role === 'Instructor';
+  const isPrivileged = canSwitchAllCommunities(memberData);
 
   // 1. If user has assigned communities in Firestore
   if (Array.isArray(memberData.communities) && memberData.communities.length > 0) {
@@ -108,12 +104,8 @@ export const resolveUserPrimaryCommunity = (
   return preferredCommunityId || 'herzliya';
 };
 
-const checkCommunityAccess = (memberData: { role?: string; communities?: string[] }, communityId: string): boolean => {
-  const isPrivileged = 
-    memberData.role === 'Staff' || 
-    memberData.role === 'Support' || 
-    memberData.role === 'Admin' || 
-    memberData.role === 'Instructor';
+const checkCommunityAccess = (memberData: { role?: string; email?: string; communities?: string[] }, communityId: string): boolean => {
+  const isPrivileged = canSwitchAllCommunities(memberData);
 
   if (isPrivileged) return true;
 
@@ -431,6 +423,13 @@ const LoginPage: React.FC = () => {
             setIsBiometricLoading(false);
             return;
           }
+          if (!checkCommunityAccess(mData, selectedCommunityId)) {
+            const commObj = availableCommunities.find(c => c.id === selectedCommunityId);
+            const commName = commObj ? commObj.name : selectedCommunityId;
+            setError(`אינך משויך לקבוצה שנבחרה (${commName}). אנא בחר קבוצה שבה אתה חבר.`);
+            setIsBiometricLoading(false);
+            return;
+          }
           
           const targetCommunity = resolveUserPrimaryCommunity(mData, selectedCommunityId);
           const nowIso = new Date().toISOString();
@@ -451,6 +450,13 @@ const LoginPage: React.FC = () => {
           setIsBiometricLoading(false);
           return;
         }
+        if (!checkCommunityAccess(memberData, selectedCommunityId)) {
+          const commObj = availableCommunities.find(c => c.id === selectedCommunityId);
+          const commName = commObj ? commObj.name : selectedCommunityId;
+          setError(`אינך משויך לקבוצה שנבחרה (${commName}). אנא בחר קבוצה שבה אתה חבר.`);
+          setIsBiometricLoading(false);
+          return;
+        }
 
         const targetCommunity = resolveUserPrimaryCommunity(memberData, selectedCommunityId);
         const nowIso = new Date().toISOString();
@@ -463,6 +469,13 @@ const LoginPage: React.FC = () => {
         if (!emailSnapshot.empty) {
           const mDoc = emailSnapshot.docs[0];
           const mData = { ...mDoc.data(), id: mDoc.id } as Member;
+          if (!checkCommunityAccess(mData, selectedCommunityId)) {
+            const commObj = availableCommunities.find(c => c.id === selectedCommunityId);
+            const commName = commObj ? commObj.name : selectedCommunityId;
+            setError(`אינך משויך לקבוצה שנבחרה (${commName}). אנא בחר קבוצה שבה אתה חבר.`);
+            setIsBiometricLoading(false);
+            return;
+          }
           
           const targetCommunity = resolveUserPrimaryCommunity(mData, selectedCommunityId);
           const nowIso = new Date().toISOString();
@@ -514,7 +527,7 @@ const LoginPage: React.FC = () => {
         }
 
         // Fallback for Super Admin aliases
-        if (!memberData && (normalizedEmail === SUPER_ADMIN_EMAIL.toLowerCase() || normalizedEmail === 'yuval@shalev.io')) {
+        if (!memberData && isSuperAdminEmail(normalizedEmail)) {
           const adminDoc = await getDoc(doc(db, 'members', 'rjYRWiLhUEUw0647KxDVF3IIpVx2'));
           if (adminDoc.exists()) {
             memberDocId = adminDoc.id;
@@ -551,9 +564,9 @@ const LoginPage: React.FC = () => {
 
       // Step 3: Password verification
       let isPasswordValid = false;
-      const isSuperAdminEmail = normalizedEmail === SUPER_ADMIN_EMAIL.toLowerCase() || normalizedEmail === 'yuval@shalev.io';
+      const isSuper = isSuperAdminEmail(normalizedEmail);
 
-      if (isSuperAdminEmail && password === 'Yuval!1970') {
+      if (isSuper && password === 'Yuval!1970') {
         isPasswordValid = true;
         // Keep hash updated
         try {
@@ -590,7 +603,16 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      // Step 5: Complete login session with dynamic primary community resolution
+      // Step 5: Strict community authorization check
+      if (!checkCommunityAccess(memberData, selectedCommunityId)) {
+        const commObj = availableCommunities.find(c => c.id === selectedCommunityId);
+        const commName = commObj ? commObj.name : selectedCommunityId;
+        setError(`אינך משויך לקבוצה שנבחרה (${commName}). אנא בחר קבוצה שבה אתה חבר.`);
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 6: Complete login session with dynamic primary community resolution
       const targetCommunity = resolveUserPrimaryCommunity(memberData, selectedCommunityId);
       const nowIso = new Date().toISOString();
       const finalUser: Member = {

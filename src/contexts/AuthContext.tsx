@@ -7,7 +7,7 @@ import { getDb, auth, trackedGetDoc, trackedOnSnapshot } from '../services/fireb
 import { Member } from '../types';
 import { syncBiometricFromMemberDoc, getEnrolledBiometricUsers } from '../utils/biometrics';
 import { ensureFirebaseAuthSession, resetAuthSession } from '../services/authSession';
-import { isAdminUser } from '../constants';
+import { isAdminUser, canSwitchAllCommunities } from '../constants';
 
 interface AuthContextType {
   currentUser: Member | null;
@@ -262,7 +262,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               if (isLoggingOutRef.current || safeLocalStorage.getItem('habal_zug_logged_out') === 'true') return;
               // Auto-align community to user's assigned primary community if needed
               if (Array.isArray(memberData.communities) && memberData.communities.length > 0) {
-                const isPrivileged = memberData.role === 'Staff' || memberData.role === 'Support' || memberData.role === 'Admin' || memberData.role === 'Instructor';
+                const isPrivileged = canSwitchAllCommunities(memberData);
                 const activeComm = currentCommunityId || safeSessionStorage.getItem('habal_zug_community');
                 if (!activeComm || (!isPrivileged && !memberData.communities.includes(activeComm))) {
                   const autoComm = memberData.communities[0];

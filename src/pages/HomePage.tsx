@@ -123,42 +123,51 @@ const GroupTooltipBadge: React.FC<{ groupName: string; branchName: string }> = (
   return (
     <div className="relative inline-flex flex-col items-center">
       <div 
-        onClick={() => setShowTooltip(prev => !prev)}
+        onClick={handleOpenSwitcher}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
-        className="inline-flex items-center gap-2 sm:gap-2.5 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-slate-50/95 border border-slate-200/90 shadow-xs text-xs sm:text-sm font-bold text-[#002b44] cursor-pointer hover:bg-slate-100 transition-all select-none"
+        className="group relative inline-flex items-center justify-between gap-3 sm:gap-4 px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl bg-[#002b44]/90 hover:bg-[#002b44] backdrop-blur-xl border border-cyan-400/30 hover:border-cyan-400/60 shadow-[0_8px_25px_rgba(0,43,68,0.22)] hover:shadow-[0_12px_32px_rgba(0,180,216,0.3)] transition-all duration-300 cursor-pointer select-none active:scale-[0.98] text-right"
+        title="לחץ להחלפת תצוגת הקבוצה"
       >
-        <Building2 size={16} className="text-[#007085] shrink-0" />
-        <span className="font-black">{fullDisplayName}</span>
-        
+        {/* Left Side: Icon & Group Designation */}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-cyan-500/25 to-[#007085]/40 border border-cyan-400/40 text-cyan-300 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-300">
+            <MapPin size={17} className="text-cyan-300 group-hover:rotate-6 transition-transform duration-300" />
+          </div>
+
+          <div className="flex flex-col text-right">
+            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-cyan-300/90 flex items-center gap-1.5">
+              <span>תצוגת קבוצה פעילה</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            </span>
+            <span className="text-sm sm:text-base font-black text-white tracking-tight leading-tight">
+              {fullDisplayName}
+            </span>
+          </div>
+        </div>
+
+        {/* Right Side: Explicit Action Button to Switch Group */}
         <button
           type="button"
           onClick={handleOpenSwitcher}
-          className="p-1 -mr-1 rounded-full text-slate-400 hover:text-[#007085] hover:bg-slate-200/60 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
-          title="לחץ להחלפת קבוצה (או לחיצה ארוכה על המסך)"
-          aria-label="החלף קבוצה"
+          className="mr-1 sm:mr-2 flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-400 text-cyan-200 hover:text-[#002b44] font-black text-xs border border-cyan-400/40 hover:border-cyan-300 shadow-sm transition-all duration-300 group/btn shrink-0 cursor-pointer"
         >
-          <Info size={16} className="text-[#007085]" />
+          <RefreshCw size={13} className="shrink-0 transition-transform duration-500 group-hover/btn:rotate-180" />
+          <span className="font-sans whitespace-nowrap">החלף קבוצה</span>
         </button>
       </div>
 
       <AnimatePresence>
         {showTooltip && (
           <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+            initial={{ opacity: 0, y: -6, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="absolute top-full mt-2.5 z-50 px-3.5 py-2 bg-[#002b44] text-white text-xs font-black rounded-2xl shadow-xl border border-white/20 whitespace-nowrap flex items-center gap-2 pointer-events-auto"
+            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="absolute top-full mt-3 z-50 px-4 py-2 bg-[#002b44]/95 backdrop-blur-2xl text-white text-xs font-bold rounded-2xl shadow-2xl border border-cyan-400/30 whitespace-nowrap flex items-center gap-2 pointer-events-auto"
           >
-            <span>לחיצה ארוכה להחלפת תצוגת הקבוצה</span>
-            <button
-              type="button"
-              onClick={handleOpenSwitcher}
-              className="px-2 py-0.5 bg-[var(--surfer-yellow)] text-[#002b44] rounded-lg font-black text-[11px] hover:bg-amber-300 transition-colors cursor-pointer"
-            >
-              החלף
-            </button>
+            <Sparkles size={14} className="text-amber-300 shrink-0" />
+            <span className="text-cyan-100 font-extrabold">לחץ כאן או לחיצה ארוכה על המסך להחלפת תצוגת הקבוצה</span>
           </motion.div>
         )}
       </AnimatePresence>

@@ -41,7 +41,7 @@ import {
   canBecomeVolunteerInNextCohort,
   getMemberGroupAffiliations 
 } from '../../utils/cohortRules';
-import { isAppShaperUser, AVAILABLE_COMMUNITIES } from '../../constants';
+import { isAppShaperUser, AVAILABLE_COMMUNITIES, normalizeCommunityGroupName } from '../../constants';
 
 export const CohortsManagement: React.FC = () => {
   const { 
@@ -321,8 +321,12 @@ export const CohortsManagement: React.FC = () => {
 
         if (!alreadyExists) {
           const commObj = availableCommunities.find(c => c.id === commId);
-          const communityName = commObj?.name || commId;
+          const rawCommName = commObj?.name || commId;
+          const communityName = normalizeCommunityGroupName(rawCommName, commId);
           const memRole = member.role === 'Volunteer' ? 'volunteer' : member.role === 'Instructor' ? 'instructor' : member.role === 'Staff' ? 'coordinator' : 'participant';
+          const rawGroupName = targetGroupObj?.name || (isAdults ? 'קבוצת בוגרים' : 'מחזור פעיל');
+          const groupName = normalizeCommunityGroupName(rawGroupName, commId);
+
           list.push({
             id: `synth_${targetGroupId}_${commId}_${member.id}`,
             personId: member.id,
@@ -336,7 +340,7 @@ export const CohortsManagement: React.FC = () => {
             personName: `${member.firstName || ''} ${member.lastName || ''}`.trim() || 'משתמש',
             personEmail: member.email || '',
             personAvatar: member.avatar,
-            groupName: targetGroupObj?.name || (isAdults ? 'קבוצת בוגרים' : 'מחזור פעיל'),
+            groupName,
             groupType: (isAdults ? 'alumni' : 'cohort') as any,
             isGroupActive: true
           });
@@ -1028,7 +1032,7 @@ export const CohortsManagement: React.FC = () => {
                     <td className="py-3.5 px-4 font-bold text-slate-700">
                       <span className="flex items-center gap-1.5">
                         {mem.groupType === 'alumni' ? '🎓' : '🌊'}
-                        <span>{mem.groupName}</span>
+                        <span>{normalizeCommunityGroupName(mem.groupName, mem.communityId)}</span>
                       </span>
                     </td>
                     <td className="py-3.5 px-4">

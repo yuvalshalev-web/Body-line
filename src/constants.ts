@@ -1,5 +1,15 @@
 import { BranchCohortConfig } from './types';
 
+export const SUPER_ADMIN_EMAILS = [
+  'yuval.shalev@gmail.com'
+];
+
+export const isSuperAdminEmail = (email?: string | null): boolean => {
+  if (!email) return false;
+  const lower = email.toLowerCase().trim();
+  return SUPER_ADMIN_EMAILS.includes(lower);
+};
+
 export const SUPER_ADMIN_EMAIL = 'yuval.shalev@gmail.com';
 
 export const isAdminUser = (user: { role?: string; email?: string } | null | undefined): boolean => {
@@ -7,25 +17,24 @@ export const isAdminUser = (user: { role?: string; email?: string } | null | und
   return (
     user.role === 'Admin' ||
     user.role === 'Staff' ||
-    user.role === 'Support'
+    user.role === 'Support' ||
+    isSuperAdminEmail(user.email)
   );
 };
 
 export const isAppShaperUser = (user: { role?: string; email?: string } | null | undefined): boolean => {
   if (!user) return false;
-  return user.role === 'Support' || (user.email ? user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() : false);
+  return user.role === 'Support' || isSuperAdminEmail(user.email);
 };
 
 export const canSwitchAllCommunities = (user: { role?: string; email?: string } | null | undefined): boolean => {
   if (!user) return false;
-  const emailLower = (user.email || '').toLowerCase();
-  const isSuper = emailLower === SUPER_ADMIN_EMAIL.toLowerCase();
+  if (isSuperAdminEmail(user.email)) return true;
   return (
     user.role === 'Admin' ||        // רכז
     user.role === 'Instructor' ||   // מדריך
     user.role === 'Staff' ||        // צוות עמותה
-    user.role === 'Support' ||      // אפ-שייפר
-    isSuper
+    user.role === 'Support'         // אפ-שייפר
   );
 };
 
@@ -250,4 +259,39 @@ export function getAvailableCommunities(
 
 // רשימת ברירת מחדל (הרצליה - מחזור ז׳, אשקלון - מחזור ג׳ וכו׳) לתאימות מלאה
 export const AVAILABLE_COMMUNITIES: Community[] = getAvailableCommunities(DEFAULT_BRANCH_COHORTS);
+
+/**
+ * הנורמליזציה מבטיחה שכל שם קבוצה/מחזור יכיל תמיד את המיקום הגיאוגרפי
+ * ומציגה שם קבוצה + מיקום גיאוגרפי (למשל "מחזור ז׳ הרצליה"), תוך מניעת כפילויות של "מחזור ז׳" ו-"מחזור ז׳ הרצליה".
+ */
+export function normalizeCommunityGroupName(
+  nameOrId?: string,
+  branchId: string = 'herzliya'
+): string {
+  if (!nameOrId || typeof nameOrId !== 'string') return 'מחזור ז׳ הרצליה';
+  
+  const cleanStr = nameOrId.trim();
+  const cleanBranch = (branchId || 'herzliya').replace('_adults', '');
+  const branchObj = BASE_COMMUNITY_BRANCHES.find(b => b.id === cleanBranch);
+  const branchName = branchObj?.baseName || 'הרצליה';
+
+  // 1. Check if nameOrId is a known community ID like 'herzliya' or 'herzliya_adults'
+  const matchedComm = AVAILABLE_COMMUNITIES.find(c => c.id === cleanStr);
+  if (matchedComm) {
+    return matchedComm.name;
+  }
+
+  // 2. If it's a generic alumni group string like "קבוצת בוגרים" or "בוגרים"
+  if (cleanStr === 'קבוצת בוגרים' || cleanStr === 'בוגרים' || cleanStr.endsWith('_adults')) {
+    return `קבוצת בוגרים ${branchName}`;
+  }
+
+  // 3. If name is already formatted with location (e.g., "מחזור ז׳ הרצליה")
+  if (branchName && cleanStr.includes(branchName)) {
+    return cleanStr;
+  }
+
+  // 4. Append geographic branch location to raw cohort name (e.g. "מחזור ז׳" -> "מחזור ז׳ הרצליה")
+  return `${cleanStr} ${branchName}`;
+}
 
