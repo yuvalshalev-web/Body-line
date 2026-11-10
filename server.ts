@@ -1323,6 +1323,380 @@ async function startServer() {
     }
   });
 
+  // =========================================================================
+  // Module: World Surf News Engine (Strict Surfing Relevance & AI Summaries)
+  // =========================================================================
+  interface WorldSurfArticle {
+    id: string;
+    title: string;
+    link: string;
+    pubDate: string;
+    thumbnail: string;
+    source: string;
+    summary: string;
+    category: 'wsl' | 'big_wave' | 'gear' | 'culture' | 'video';
+    categoryLabel: string;
+    relevanceScore: number;
+  }
+
+  const SURF_RSS_FEEDS = [
+    { id: 'surfer', name: 'Surfer Magazine', url: 'https://www.surfer.com/feed' },
+    { id: 'stab', name: 'Stab Magazine', url: 'https://stabmag.com/feed/' },
+    { id: 'theinertia_surf', name: 'The Inertia Surf', url: 'https://www.theinertia.com/category/surf/feed/' },
+    { id: 'beachgrit', name: 'BeachGrit', url: 'https://beachgrit.com/feed/' },
+    { id: 'carve', name: 'Carve Surfing Mag', url: 'https://www.carvemag.com/feed/' },
+    { id: 'wsl', name: 'World Surf League', url: 'https://www.worldsurfleague.com/rss' }
+  ];
+
+  const CORE_SURF_KEYWORDS = [
+    'surf', 'surfing', 'surfer', 'surfboard', 'swell', 'wave', 'wsl', 'world surf league',
+    'barrel', 'pipeline', 'teahupo\'o', 'teahupoo', 'nazare', 'nazaré', 'big wave', 'lineup',
+    'wetsuit', 'fins', 'shaper', 'kelly slater', 'john john', 'florence', 'carissa moore',
+    'gabriel medina', 'filipe toledo', 'italo ferreira', 'ethan ewing', 'griffin colapinto',
+    'ocean swell', 'shorebreak', 'wipeout', 'foil surf', 'tow-in', 'pointbreak', 'beachbreak',
+    'reefbreak', 'paddle out', 'shortboard', 'longboard', 'foamie', 'single fin', 'twin fin',
+    'thruster', 'surf trip', 'surf ranch', 'wavepool', 'wave pool'
+  ];
+
+  const DISQUALIFYING_KEYWORDS = [
+    'snowboard', 'ski resort', 'skatepark', 'crypto', 'bitcoin', 'nft',
+    'presidential election', 'car review', 'real estate market', 'stock market'
+  ];
+
+  const CATEGORY_MATCHERS: { id: 'wsl' | 'big_wave' | 'gear' | 'culture' | 'video'; label: string; keywords: string[] }[] = [
+    {
+      id: 'wsl',
+      label: 'WSL ותחרויות',
+      keywords: ['wsl', 'world surf league', 'championship tour', 'ct', 'challenger series', 'heat', 'judges', 'score', 'finalist', 'event', 'rip curl', 'billabong pro', 'hurley pro', 'tahiti pro', 'pipe masters']
+    },
+    {
+      id: 'big_wave',
+      label: 'גלים גדולים & סוואל',
+      keywords: ['big wave', 'nazare', 'nazaré', 'teahupo\'o', 'jaws', 'peahi', 'mavericks', 'giant swell', 'heavy wave', 'tow-in', 'paddle in', '20-foot', '30-foot', '50-foot', 'monster swell']
+    },
+    {
+      id: 'gear',
+      label: 'ציוד & שייפינג',
+      keywords: ['surfboard', 'board', 'shaper', 'fin', 'fins', 'wetsuit', 'leash', 'foam', 'epoxy', 'glassing', 'tail', 'rocker', 'outline', 'quad', 'thruster', 'twinny', 'single fin', 'channels']
+    },
+    {
+      id: 'video',
+      label: 'סרטונים & מדיה',
+      keywords: ['video', 'edit', 'clip', 'film', 'movie', 'vlog', 'footage', 'watch', 'full movie', 'raw clips', 'highlights']
+    },
+    {
+      id: 'culture',
+      label: 'תרבות & סטייל',
+      keywords: ['culture', 'history', 'story', 'interview', 'travel', 'trip', 'lifestyle', 'podcast', 'legend', 'pioneer']
+    }
+  ];
+
+  function computeArticleSurfRelevance(title: string, summary: string, content: string) {
+    const combinedText = `${title} ${summary} ${content}`.toLowerCase();
+
+    for (const negKey of DISQUALIFYING_KEYWORDS) {
+      if (combinedText.includes(negKey)) {
+        const surfHits = CORE_SURF_KEYWORDS.filter(k => combinedText.includes(k)).length;
+        if (surfHits < 2) {
+          return { isSurfingRelated: false, score: 0, category: 'culture' as const, categoryLabel: 'תרבות & סטייל' };
+        }
+      }
+    }
+
+    let score = 0;
+    let hitCount = 0;
+
+    for (const key of CORE_SURF_KEYWORDS) {
+      if (combinedText.includes(key)) {
+        hitCount++;
+        if (title.toLowerCase().includes(key)) {
+          score += 25;
+        } else {
+          score += 10;
+        }
+      }
+    }
+
+    if (hitCount === 0 || score < 20) {
+      return { isSurfingRelated: false, score, category: 'culture' as const, categoryLabel: 'תרבות & סטייל' };
+    }
+
+    score = Math.min(100, score);
+
+    let bestCategory: 'wsl' | 'big_wave' | 'gear' | 'culture' | 'video' = 'culture';
+    let bestCategoryLabel = 'תרבות & סטייל';
+    let maxCatHits = -1;
+
+    for (const cat of CATEGORY_MATCHERS) {
+      let catHits = 0;
+      for (const ck of cat.keywords) {
+        if (combinedText.includes(ck)) catHits++;
+      }
+      if (catHits > maxCatHits) {
+        maxCatHits = catHits;
+        bestCategory = cat.id;
+        bestCategoryLabel = cat.label;
+      }
+    }
+
+    return {
+      isSurfingRelated: true,
+      score,
+      category: bestCategory,
+      categoryLabel: bestCategoryLabel
+    };
+  }
+
+  let cachedWorldSurfNews: { timestamp: number; articles: WorldSurfArticle[] } | null = null;
+
+  const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
+    wsl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+    big_wave: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=800&q=80',
+    gear: 'https://images.unsplash.com/photo-1537519646099-335112f03225?auto=format&fit=crop&w=800&q=80',
+    video: 'https://images.unsplash.com/photo-1455729552865-3ef5885ab656?auto=format&fit=crop&w=800&q=80',
+    culture: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=800&q=80'
+  };
+
+  const isTrackingPixel = (url: string) => {
+    if (!url || typeof url !== 'string') return true;
+    return /1x1|pixel|gravatar|feedburner|analytics|statcounter|icon|logo|avatar|badge|svg/i.test(url);
+  };
+
+  const extractMediaUrl = (media: any): string => {
+    if (!media) return '';
+    if (Array.isArray(media)) {
+      for (const m of media) {
+        const u = extractMediaUrl(m);
+        if (u && !isTrackingPixel(u)) return u;
+      }
+    } else if (typeof media === 'object') {
+      if (media.url && typeof media.url === 'string') return media.url;
+      if (media.$?.url && typeof media.$.url === 'string') return media.$.url;
+      if (media.href && typeof media.href === 'string') return media.href;
+    } else if (typeof media === 'string' && media.startsWith('http')) {
+      return media;
+    }
+    return '';
+  };
+
+  app.get("/api/news/world-surf", async (req, res) => {
+    const now = Date.now();
+    if (cachedWorldSurfNews && (now - cachedWorldSurfNews.timestamp < 15 * 60 * 1000) && req.query.refresh !== 'true') {
+      return res.json({ success: true, cached: true, articles: cachedWorldSurfNews.articles });
+    }
+
+    try {
+      const Parser = (await import('rss-parser')).default;
+      const parser = new Parser({
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) SurfNewsAgent/1.0' },
+        timeout: 6000
+      });
+
+      const allArticles: WorldSurfArticle[] = [];
+
+      for (const feed of SURF_RSS_FEEDS) {
+        try {
+          const feedData = await parser.parseURL(feed.url);
+          if (feedData && feedData.items) {
+            for (const item of feedData.items.slice(0, 15)) {
+              const rawTitle = item.title || '';
+              const rawContent = item.content || item.contentSnippet || (item as any)['content:encoded'] || '';
+              const rawSnippet = item.snippet || item.summary || item.description || '';
+
+              const cleanSnippet = rawSnippet.replace(/<[^>]*>?/gm, '').trim().slice(0, 280);
+
+              const rel = computeArticleSurfRelevance(rawTitle, cleanSnippet, rawContent);
+              if (!rel.isSurfingRelated) continue;
+
+              let thumbnail = '';
+
+              // 1. Enclosure
+              if (item.enclosure?.url && typeof item.enclosure.url === 'string') {
+                const encUrl = item.enclosure.url;
+                if (!isTrackingPixel(encUrl) && (/\.(jpe?g|png|webp|gif|avif)/i.test(encUrl) || item.enclosure.type?.includes('image') || !item.enclosure.type)) {
+                  thumbnail = encUrl;
+                }
+              }
+
+              // 2. Media Tags
+              if (!thumbnail) thumbnail = extractMediaUrl((item as any)['media:content']);
+              if (!thumbnail) thumbnail = extractMediaUrl((item as any)['media:thumbnail']);
+              if (!thumbnail) thumbnail = extractMediaUrl((item as any)['media:group']);
+              if (!thumbnail) thumbnail = extractMediaUrl((item as any)['itunes:image']);
+
+              // 3. HTML Content parsing
+              if (!thumbnail) {
+                const htmlBlob = [
+                  (item as any)['content:encoded'],
+                  item.content,
+                  item.summary,
+                  item.description,
+                  item.snippet
+                ].filter(Boolean).join(' ');
+
+                const matches = htmlBlob.matchAll(/<img[^>]+(?:src|data-src|data-lazy-src|data-orig-file)=["']([^"']+)["']/gi);
+                for (const m of matches) {
+                  const candidate = m[1];
+                  if (candidate && candidate.startsWith('http') && !isTrackingPixel(candidate)) {
+                    thumbnail = candidate;
+                    break;
+                  }
+                }
+              }
+
+              // 4. Guaranteed high-res surf photo fallback
+              if (!thumbnail || isTrackingPixel(thumbnail)) {
+                thumbnail = CATEGORY_FALLBACK_IMAGES[rel.category] || CATEGORY_FALLBACK_IMAGES.culture;
+              }
+
+              allArticles.push({
+                id: `${feed.id}_${Buffer.from(item.link || rawTitle).toString('base64').slice(0, 16)}`,
+                title: rawTitle,
+                link: item.link || feed.url,
+                pubDate: item.pubDate || item.isoDate || new Date().toISOString(),
+                thumbnail,
+                source: feed.name,
+                summary: cleanSnippet,
+                category: rel.category,
+                categoryLabel: rel.categoryLabel,
+                relevanceScore: rel.score
+              });
+            }
+          }
+        } catch (feedErr: any) {
+          console.warn(`World Surf News feed warning [${feed.name}]:`, feedErr?.message || feedErr);
+        }
+      }
+
+      allArticles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+
+      const uniqueArticles: WorldSurfArticle[] = [];
+      const seenTitles = new Set<string>();
+
+      for (const art of allArticles) {
+        const normTitle = art.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+        if (!seenTitles.has(normTitle)) {
+          seenTitles.add(normTitle);
+          uniqueArticles.push(art);
+        }
+      }
+
+      cachedWorldSurfNews = {
+        timestamp: now,
+        articles: uniqueArticles
+      };
+
+      return res.json({ success: true, cached: false, articles: uniqueArticles });
+    } catch (err: any) {
+      console.error("Failed to fetch world surf news:", err);
+      if (cachedWorldSurfNews) {
+        return res.json({ success: true, cached: true, fallback: true, articles: cachedWorldSurfNews.articles });
+      }
+      return res.status(500).json({ error: "Failed to fetch world surf news", message: err.message });
+    }
+  });
+
+  app.post("/api/news/translate-summary", async (req, res) => {
+    const { title, summary } = req.body || {};
+    if (!title) return res.status(400).json({ error: "Title is required" });
+
+    // Quick Heuristic Surf Translation Fallback
+    const buildSurfHebrewFallback = (engTitle: string, engSummary?: string) => {
+      let hTitle = engTitle;
+      let hSummary = engSummary || engTitle;
+
+      const replacements: [RegExp, string][] = [
+        [/\bWorld Surf League\b/gi, 'סבב הגלישה העולמי (WSL)'],
+        [/\bWSL\b/gi, 'WSL'],
+        [/\bSurfer Magazine\b/gi, 'מגזין Surfer'],
+        [/\bStab Magazine\b/gi, 'מגזין Stab'],
+        [/\bThe Inertia\b/gi, 'אינרשיה'],
+        [/\bBig Wave\b/gi, 'גל ענק'],
+        [/\bBig Waves\b/gi, 'גלים ענקיים'],
+        [/\bChampionship Tour\b/gi, 'אליפות העולם בגלישה'],
+        [/\bSurfboard\b/gi, 'גלשן'],
+        [/\bSurfboards\b/gi, 'גלשנים'],
+        [/\bSurfers\b/gi, 'גולשים'],
+        [/\bSurfer\b/gi, 'גולש'],
+        [/\bSurfing\b/gi, 'גלישת גלים'],
+        [/\bSurf\b/gi, 'גלישה'],
+        [/\bSwell\b/gi, 'סוואל'],
+        [/\bBarrels?\b/gi, 'צינורות'],
+        [/\bPipeline\b/gi, 'פייפליין'],
+        [/\bTeahupo'?o\b/gi, 'טהופו'],
+        [/\bKelly Slater\b/gi, 'קלי סלייטר'],
+        [/\bJohn John Florence\b/gi, 'ג\'ון ג\'ון פלורנס'],
+        [/\bGabriel Medina\b/gi, 'גבריאל מדינה'],
+        [/\bItalo Ferreira\b/gi, 'איטאלו פריירה'],
+        [/\bFilipe Toledo\b/gi, 'פיליפה טולדו'],
+        [/\bTahiti\b/gi, 'טהיטי'],
+        [/\bHawaii\b/gi, 'הוואי'],
+        [/\bNorth Shore\b/gi, 'נורת\' שור'],
+        [/\bJeffreys Bay\b/gi, 'ג\'פריז ביי'],
+        [/\bJ-Bay\b/gi, 'ג\'יי ביי'],
+        [/\bGold Coast\b/gi, 'גולד קוסט'],
+        [/\bBells Beach\b/gi, 'בלס ביץ\''],
+        [/\bWetsuit\b/gi, 'חליפת גלישה'],
+        [/\bWave\b/gi, 'גל'],
+        [/\bWaves\b/gi, 'גלים']
+      ];
+
+      for (const [regex, replacement] of replacements) {
+        hTitle = hTitle.replace(regex, replacement);
+        hSummary = hSummary.replace(regex, replacement);
+      }
+
+      return {
+        hebrewTitle: hTitle !== engTitle ? hTitle : `[חדשות גלישה] ${engTitle}`,
+        hebrewSummary: hSummary !== engSummary ? hSummary : (engSummary || `ידיעה חדשה בעולם הגלישה: ${engTitle}`)
+      };
+    };
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    
+    // Check if API key exists and is non-empty string
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length < 10) {
+      return res.json(buildSurfHebrewFallback(title, summary));
+    }
+
+    try {
+      const { GoogleGenAI } = await import('@google/genai');
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `אתה כתב חדשות גלישת גלים מקצועי של קהילת חבל זוג. 
+אנא תרגם וסכם בקצרה (עד 2 משפטים קולעים בעברית, בסגנון מקצועי ומלהיב של גולשים) את כותרת ותקציר הידיעה העולמית הבאה בנושא גלישת גלים:
+
+כותרת באנגלית: ${title}
+תקציר באנגלית: ${summary || ''}
+
+החזר תשובה במבנה JSON תקין בלבד:
+{
+  "hebrewTitle": "כותרת קולעת בעברית",
+  "hebrewSummary": "תקציר של 2 משפטים בעברית"
+}`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json'
+        }
+      });
+
+      const text = response.text || '';
+      const parsed = JSON.parse(text);
+      if (parsed?.hebrewTitle && parsed?.hebrewSummary) {
+        return res.json({
+          hebrewTitle: parsed.hebrewTitle,
+          hebrewSummary: parsed.hebrewSummary
+        });
+      }
+      return res.json(buildSurfHebrewFallback(title, summary));
+    } catch (err: any) {
+      // Quietly fall back to Hebrew surf dictionary heuristic if Gemini key is invalid/expired
+      return res.json(buildSurfHebrewFallback(title, summary));
+    }
+  });
+
   // Module C: System & Infrastructure
   app.get("/api/stats/system", (req, res) => {
     // Calculate real error rate from history (last 1 hour or last 1000 requests)
