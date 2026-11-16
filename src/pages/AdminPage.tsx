@@ -222,7 +222,6 @@ const AdminPage: React.FC = () => {
 
   const availableCommunities = ctxCommunities || AVAILABLE_COMMUNITIES;
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'REQUESTS' | 'USERS' | 'COHORTS' | 'POSTS' | 'GALLERY' | 'EVENTS' | 'ROLLOVER' | 'SETTINGS' | 'ENGINE_ROOM' | 'ASSETS' | 'SURF_CALLS'>('USERS');
-  const [userGroupFilter, setUserGroupFilter] = useState<'ALL' | 'ACTIVE_COHORT' | 'ALUMNI'>('ALL');
   const [userCommunityFilter, setUserCommunityFilter] = useState<string>('ALL');
   const [newSessionDay, setNewSessionDay] = useState(0);
   const [newSessionTime, setNewSessionTime] = useState('07:00');
@@ -650,8 +649,6 @@ const AdminPage: React.FC = () => {
 
   const filteredAndSortedAdminMembers = useMemo(() => {
     const search = deferredUserSearchTerm.toLowerCase().trim();
-    const activeCohortId = groups.find(g => g.isCurrentCohort || g.id === 'cohort_active')?.id || 'cohort_active';
-    const alumniGroupId = groups.find(g => g.type === 'alumni' || g.id === 'group_alumni')?.id || 'group_alumni';
 
     return members.filter(member => {
       const name = `${member.firstName || ''} ${member.lastName || ''}`.toLowerCase();
@@ -669,18 +666,6 @@ const AdminPage: React.FC = () => {
       else if (userRoleFilter === 'Volunteer') matchesRole = member.role === 'Volunteer';
       else if (userRoleFilter === 'Member') matchesRole = member.role === 'Member' && !isAppShaper;
       if (!matchesRole) return false;
-
-      let matchesGroup = true;
-      if (userGroupFilter === 'ACTIVE_COHORT') {
-        const hasMembership = memberships.some(m => m.personId === member.id && m.groupId === activeCohortId && m.status === 'active');
-        const hasActiveCohortComm = (member.communities || []).some(c => !c.endsWith('_adults'));
-        matchesGroup = hasMembership || hasActiveCohortComm;
-      } else if (userGroupFilter === 'ALUMNI') {
-        const hasMembership = memberships.some(m => m.personId === member.id && m.groupId === alumniGroupId && m.status !== 'paused');
-        const hasAlumniComm = (member.communities || []).some(c => c.endsWith('_adults'));
-        matchesGroup = hasMembership || hasAlumniComm;
-      }
-      if (!matchesGroup) return false;
 
       let matchesCommunity = true;
       if (userCommunityFilter !== 'ALL') {
@@ -701,7 +686,7 @@ const AdminPage: React.FC = () => {
       }
       return aFirst.localeCompare(bFirst, 'he');
     });
-  }, [members, deferredUserSearchTerm, userRoleFilter, userGroupFilter, userCommunityFilter, groups, memberships]);
+  }, [members, deferredUserSearchTerm, userRoleFilter, userCommunityFilter, memberships]);
 
   const handleApprove = async (id: string) => {
     setIsProcessing(id);
@@ -949,55 +934,143 @@ const AdminPage: React.FC = () => {
         )}
 
         {activeTab === 'USERS' && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-            {/* Members Summary Card */}
+          <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4">
+            {/* Unified Header, Primary/Secondary Actions & Tabular KPI Summary */}
             {(() => {
               const stats = memberSummaryStats;
+              const kpiItems: {
+                key: string;
+                label: string;
+                value: number;
+                subtext?: string;
+                subtextAlert?: boolean;
+                roleFilter?: 'ALL' | 'Admin' | 'Support' | 'Instructor' | 'Volunteer' | 'Member';
+              }[] = [
+                {
+                  key: 'total',
+                  label: 'חברי קהילה',
+                  value: stats.communityTotal,
+                  subtext: stats.communitySuspended > 0 ? `${stats.communityActive} פעילים · ${stats.communitySuspended} מושעים` : `${stats.communityActive} פעילים`,
+                  subtextAlert: stats.communitySuspended > 0,
+                  roleFilter: 'ALL'
+                },
+                { key: 'coordinators', label: 'רכזים', value: stats.coordinators, roleFilter: 'Admin' },
+                { key: 'instructors', label: 'מדריכים', value: stats.instructors, roleFilter: 'Instructor' },
+                { key: 'volunteers', label: 'מתנדבים', value: stats.volunteers, roleFilter: 'Volunteer' },
+                { key: 'staff', label: 'עמותה', value: stats.staffTotal },
+                { key: 'shapers', label: 'אפ-שייפרים', value: stats.appShapersTotal, roleFilter: 'Support' }
+              ];
+
               return (
-                <div className="admin-info-card p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden group">
-                  <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--surfer-vibrant-cyan)]/5 rounded-full blur-3xl group-hover:bg-[var(--surfer-vibrant-cyan)]/10 transition-colors" />
-                  
-                  <div className="flex items-center gap-6 relative z-10">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[var(--surfer-vibrant-cyan)] to-[var(--surfer-sunshine-yellow)] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[var(--surfer-vibrant-cyan)]/20 group-hover:rotate-6 transition-transform">
-                      <Users size={32} />
+                <div className="admin-info-card p-5 sm:p-7">
+                  {/* Top Row: Title + Action Hierarchy */}
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-200/80 flex items-center justify-center text-[#00426a] shrink-0">
+                        <Users size={22} />
+                      </div>
+                      <div>
+                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">חברי הקהילה</h3>
+                        <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">ניהול חברים, הרשאות וצוות המערכת</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-[var(--surfer-electric-pink)] tracking-tight">חברי הקהילה</h3>
-                      <p className="text-[12px] font-black text-[var(--deep-teal-sea)] uppercase tracking-widest mt-1">ניהול חברי הקהילה וצוות האפליקציה</p>
+
+                    {/* Action Bar: 1 Primary CTA + 3 Balanced Secondary Tools */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setIsAddMemberModalOpen(true)}
+                        className="min-h-[44px] px-5 rounded-xl bg-[#00426a] hover:bg-[#003352] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                      >
+                        <Plus size={18} />
+                        <span>הוספת משתמש</span>
+                      </button>
+
+                      <div className="grid grid-cols-3 sm:flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsImportModalOpen(true)}
+                          title="ייבוא משתמשים מקובץ"
+                          className="min-h-[44px] px-2.5 sm:px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
+                        >
+                          <Upload size={15} className="text-sky-600 shrink-0" />
+                          <span className="truncate">ייבוא</span>
+                          <span className="hidden sm:inline">משתמשים</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsDietaryModalOpen(true)}
+                          title='דו"ח תזונה, זמינות והעדפות'
+                          className="min-h-[44px] px-2.5 sm:px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
+                        >
+                          <Utensils size={15} className="text-amber-600 shrink-0" />
+                          <span className="truncate">דו״ח תזונה</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsPairsModalOpen(true)}
+                          title="חבל זוג (ניהול זוגות)"
+                          className="min-h-[44px] px-2.5 sm:px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer"
+                        >
+                          <Link2 size={15} className="text-rose-500 shrink-0" />
+                          <span className="truncate">ניהול זוגות</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 relative z-10">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-[var(--surfer-aqua-mist)]/10 text-[var(--deep-teal-sea)] rounded-xl border border-[var(--surfer-aqua-mist)]/20 text-xs font-bold shadow-sm">
-                      <span className="w-2 h-2 rounded-full bg-slate-400" />
-                      חברי קהילה {stats.communityTotal}
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-[#2D6A4F]/10 text-[#2D6A4F] rounded-xl border border-[#2D6A4F]/20 text-xs font-bold shadow-sm">
-                      <span className="w-2 h-2 rounded-full bg-[#2D6A4F] animate-pulse" />
-                      פעילים {stats.communityActive}
-                    </div>
-                    {stats.communitySuspended > 0 && (
-                      <div className="flex items-center gap-2 px-4 py-2 bg-[#BC4749]/10 text-[#BC4749] rounded-xl border border-[#BC4749]/20 text-xs font-bold shadow-sm">
-                        <span className="w-2 h-2 rounded-full bg-[#BC4749]" />
-                        מושעים {stats.communitySuspended}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-800 rounded-xl border border-rose-200 text-xs font-bold shadow-sm" title="צוות העמותה">
-                      <span className="w-2 h-2 rounded-full bg-rose-500" />
-                      עמותה {stats.staffTotal}
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-800 rounded-xl border border-amber-200 text-xs font-bold shadow-sm" title="צוות פיתוח, תחזוקה ושירות">
-                      <span className="w-2 h-2 rounded-full bg-amber-500" />
-                      אפ-שייפרים {stats.appShapersTotal}
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-xs font-bold shadow-sm">
-                      <span className="w-2 h-2 rounded-full bg-indigo-500" />
-                      מדריכים {stats.instructors}
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-xl border border-purple-100 text-xs font-bold shadow-sm">
-                      <span className="w-2 h-2 rounded-full bg-purple-500" />
-                      רכזים {stats.coordinators}
-                    </div>
+                  {/* Clean Tabular KPI Strip (Zero Pills, Zero Decorative Dots) */}
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 pt-5 mt-5 border-t border-slate-200/70">
+                    {kpiItems.map((item) => {
+                      const isActive = item.roleFilter !== undefined && userRoleFilter === item.roleFilter && item.roleFilter !== 'ALL';
+                      const isInteractive = item.roleFilter !== undefined;
+
+                      const content = (
+                        <>
+                          <span className="text-[11px] font-bold text-slate-500 truncate">{item.label}</span>
+                          <span className="text-xl sm:text-2xl font-black text-slate-900 tabular-nums leading-tight mt-0.5">
+                            {item.value}
+                          </span>
+                          {item.subtext && (
+                            <span className={`text-[10px] font-semibold mt-0.5 truncate ${item.subtextAlert ? 'text-rose-600' : 'text-emerald-700'}`}>
+                              {item.subtext}
+                            </span>
+                          )}
+                        </>
+                      );
+
+                      if (isInteractive) {
+                        return (
+                          <button
+                            key={item.key}
+                            type="button"
+                            onClick={() => {
+                              if (item.roleFilter === 'ALL') {
+                                setUserRoleFilter('ALL');
+                              } else {
+                                setUserRoleFilter(prev => (prev === item.roleFilter ? 'ALL' : item.roleFilter!));
+                              }
+                            }}
+                            className={`flex flex-col items-start text-right p-3 rounded-xl border transition-all cursor-pointer ${
+                              isActive
+                                ? 'bg-sky-50/90 border-[#00426a]/30 ring-1 ring-[#00426a]/20'
+                                : 'bg-slate-50/70 hover:bg-slate-100/80 border-slate-200/50'
+                            }`}
+                          >
+                            {content}
+                          </button>
+                        );
+                      }
+
+                      return (
+                        <div
+                          key={item.key}
+                          className="flex flex-col items-start text-right p-3 rounded-xl bg-slate-50/70 border border-slate-200/50"
+                        >
+                          {content}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -1072,32 +1145,7 @@ const AdminPage: React.FC = () => {
                 </motion.div>
               )}
 
-            <div className="flex flex-wrap justify-center mt-6 gap-4">
-              <button 
-                onClick={() => setIsAddMemberModalOpen(true)}
-                className="flex items-center gap-2 px-8 py-4 bg-[#FF9F1C] text-white rounded-2xl font-black text-sm hover:bg-[#FF9F1C]/90 transition-all shadow-lg shadow-[#FF9F1C]/20"
-              >
-                <Plus size={18} /> הוספת משתמש
-              </button>
-              <button 
-                onClick={() => setIsImportModalOpen(true)}
-                className="flex items-center gap-2 px-8 py-4 bg-blue-500 text-white rounded-2xl font-black text-sm hover:bg-blue-600 transition-all shadow-lg shadow-blue-500/20"
-              >
-                <Upload size={18} /> ייבוא משתמשים
-              </button>
-              <button 
-                onClick={() => setIsDietaryModalOpen(true)}
-                className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-amber-500/20"
-              >
-                <Utensils size={18} /> דו"ח תזונה, זמינות והעדפות
-              </button>
-              <button 
-                onClick={() => setIsPairsModalOpen(true)}
-                className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[var(--surfer-electric-pink)] to-purple-500 hover:from-[var(--surfer-electric-pink)]/90 hover:to-purple-600 text-white rounded-2xl font-black text-sm transition-all shadow-lg shadow-[var(--surfer-electric-pink)]/20"
-              >
-                <Link2 size={18} /> חבל זוג (ניהול זוגות)
-              </button>
-            </div>
+
 
             {editingMember ? (
               <EditMemberForm
@@ -1132,95 +1180,94 @@ const AdminPage: React.FC = () => {
               />
             ) : (
             <div className="admin-info-card overflow-hidden">
-                {/* Search & Filter Bar */}
-                <div className="p-6 bg-white/40 border-b border-[var(--surfer-vibrant-cyan)]/10 flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div className="relative w-full md:w-80">
-                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input 
-                      type="text" 
-                      placeholder="חיפוש לפי שם, אימייל או טלפון..." 
-                      value={userSearchTerm} 
-                      onChange={(e) => setUserSearchTerm(e.target.value)} 
-                      className="w-full pr-11 pl-4 py-2.5 bg-white/80 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--surfer-vibrant-cyan)] transition-all"
-                    />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                    {/* Cohort & Alumni Filter Group */}
-                    <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-200">
-                      <button
-                        type="button"
-                        onClick={() => setUserGroupFilter('ALL')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                          userGroupFilter === 'ALL'
-                            ? 'bg-slate-800 text-white shadow-xs'
-                            : 'bg-white/60 text-slate-600 hover:bg-white border border-slate-200/50'
-                        }`}
-                      >
-                        כל המחזורים
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setUserGroupFilter('ACTIVE_COHORT')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
-                          userGroupFilter === 'ACTIVE_COHORT'
-                            ? 'bg-sky-600 text-white shadow-xs'
-                            : 'bg-white/60 text-sky-700 hover:bg-white border border-slate-200/50'
-                        }`}
-                      >
-                        <span>🌊</span>
-                        <span>מחזור פעיל ({yearConfig?.name || 'ז׳'})</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setUserGroupFilter('ALUMNI')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
-                          userGroupFilter === 'ALUMNI'
-                            ? 'bg-indigo-600 text-white shadow-xs'
-                            : 'bg-white/60 text-indigo-700 hover:bg-white border border-slate-200/50'
-                        }`}
-                      >
-                        <span>🎓</span>
-                        <span>קבוצת בוגרים</span>
-                      </button>
+                {/* Organized Search & Filter Toolbar */}
+                <div className="p-4 sm:p-6 bg-slate-50/70 border-b border-slate-200/70 space-y-3.5">
+                  {/* Row 1: Search & Branch Selector */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <div className="relative md:col-span-7">
+                      <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={17} />
+                      <input
+                        type="text"
+                        placeholder="חיפוש לפי שם, אימייל או טלפון..."
+                        value={userSearchTerm}
+                        onChange={(e) => setUserSearchTerm(e.target.value)}
+                        className="w-full h-11 pr-10 pl-9 bg-white border border-slate-200/90 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/25 focus:border-sky-500 transition-all"
+                      />
+                      {userSearchTerm && (
+                        <button
+                          type="button"
+                          onClick={() => setUserSearchTerm('')}
+                          aria-label="נקה חיפוש"
+                          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer"
+                        >
+                          <X size={13} />
+                        </button>
+                      )}
                     </div>
 
-                    {/* Community / Branch Filter Dropdown */}
-                    <div className="relative">
+                    <div className="relative md:col-span-5">
+                      <MapPin className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                       <select
                         value={userCommunityFilter}
                         onChange={(e) => setUserCommunityFilter(e.target.value)}
-                        className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-white/90 border border-slate-200 text-slate-700 outline-none cursor-pointer focus:ring-2 focus:ring-sky-500/20 shadow-2xs hover:bg-white transition-all"
+                        aria-label="סינון לפי קבוצה או סניף"
+                        className="w-full h-11 pr-10 pl-9 bg-white border border-slate-200/90 rounded-xl text-xs sm:text-sm font-bold text-slate-700 outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-sky-500/25 focus:border-sky-500 transition-all"
                       >
-                        <option value="ALL">כל הקבוצות / הסניפים</option>
+                        <option value="ALL">כל הקבוצות והסניפים</option>
                         {availableCommunities.map(c => (
                           <option key={c.id} value={c.id}>
                             {c.isAdults ? '🎓 ' : '🌊 '}{c.name}
                           </option>
                         ))}
                       </select>
+                      <ChevronDown className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                     </div>
+                  </div>
 
+                  {/* Row 2: Role Filter Tabs */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                     {[
                       { id: 'ALL', label: 'הכל' },
-                      { id: 'Admin', label: 'רכזים' },
-                      { id: 'Support', label: 'אפ-שייפרים' },
-                      { id: 'Instructor', label: 'מדריכים' },
-                      { id: 'Volunteer', label: 'מתנדבים' },
                       { id: 'Member', label: 'משתתפים' },
+                      { id: 'Volunteer', label: 'מתנדבים' },
+                      { id: 'Instructor', label: 'מדריכים' },
+                      { id: 'Admin', label: 'רכזים' },
+                      { id: 'Support', label: 'אפ-שייפרים' }
                     ].map(f => (
                       <button
                         key={f.id}
                         type="button"
                         onClick={() => setUserRoleFilter(f.id as any)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                          userRoleFilter === f.id 
-                            ? 'bg-[#00426a] text-white shadow-md' 
-                            : 'bg-white/60 text-slate-600 hover:bg-white border border-slate-200/50'
+                        className={`min-h-[38px] px-3.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+                          userRoleFilter === f.id
+                            ? 'bg-[#00426a] text-white shadow-xs'
+                            : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
                         }`}
                       >
                         {f.label}
                       </button>
                     ))}
+                  </div>
+
+                  {/* Row 3: Live Results Count & Reset */}
+                  <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                    <span className="font-medium tabular-nums">
+                      מציג {filteredAndSortedAdminMembers.length} מתוך {members.length} חברים
+                    </span>
+                    {(userSearchTerm || userCommunityFilter !== 'ALL' || userRoleFilter !== 'ALL') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserSearchTerm('');
+                          setUserCommunityFilter('ALL');
+                          setUserRoleFilter('ALL');
+                        }}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-sky-700 hover:text-sky-900 transition-colors cursor-pointer"
+                      >
+                        <RotateCcw size={13} />
+                        <span>איפוס סינון</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 

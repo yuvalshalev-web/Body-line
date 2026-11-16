@@ -1,18 +1,20 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, Search, Link2, Unlink, User, UserPlus, Users, ChevronDown, 
-  Check, AlertCircle, CheckCircle2, ShieldCheck, UserCheck, Layers, Info, UserMinus, Phone, MessageCircle
+  Check, AlertCircle, CheckCircle2, ShieldCheck, UserCheck, Layers, Info, UserMinus, MapPin
 } from 'lucide-react';
 import { Member } from '../../types';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { AVAILABLE_COMMUNITIES } from '../../constants';
 
 interface PairsManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
   members?: Member[];
   onUpdateMember?: (member: Member) => Promise<void>;
-  onLinkPair?: (memberAId: string, memberBId: string, group?: string) => Promise<void>;
+  onLinkPair?: (memberAId: string, memberBId: string, group?: string, communityId?: string) => Promise<void>;
   onUnlinkPair?: (memberAId: string, memberBId?: string) => Promise<void>;
 }
 
@@ -142,25 +144,75 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
   onUnlinkPair
 }) => {
   const dataContext = useData();
+  const { currentCommunityId } = useAuth();
   const members = propMembers || dataContext.members;
+  const memberships = dataContext.memberships || [];
   const contextLinkPair = onLinkPair || dataContext.linkPair;
   const contextUnlinkPair = onUnlinkPair || dataContext.unlinkPair;
   const contextUpdateMember = onUpdateMember || dataContext.updateMember;
 
+  // Active cohort communities (excluding alumni _adults groups which don't have pairs)
+  const activeCohortCommunities = useMemo(() => {
+    const allComms = (dataContext.availableCommunities && dataContext.availableCommunities.length > 0)
+      ? dataContext.availableCommunities
+      : AVAILABLE_COMMUNITIES;
+    return allComms.filter(c => !c.isAdults && c.id !== 'all');
+  }, [dataContext.availableCommunities]);
+
+  const getCohortLabel = useCallback((communityId?: string) => {
+    if (!communityId) return '';
+    return activeCohortCommunities.find(c => c.id === communityId)?.name || communityId;
+  }, [activeCohortCommunities]);
+
+  const getMemberCohortIds = useCallback((member: Member): string[] => {
+    const set = new Set<string>();
+    (member.communities || []).forEach(cId => {
+      if (cId && cId !== 'all' && !cId.endsWith('_adults')) {
+        set.add(cId);
+      }
+    });
+    memberships
+      .filter(ms => ms.personId === member.id && ms.status === 'active' && ms.communityId && ms.communityId !== 'all' && !ms.communityId.endsWith('_adults'))
+      .forEach(ms => {
+        if (ms.communityId) set.add(ms.communityId);
+      });
+    return Array.from(set);
+  }, [memberships]);
+
+  const defaultCohortId = useMemo(() => {
+    const cleaned = (currentCommunityId || '').replace('_adults', '');
+    if (cleaned && activeCohortCommunities.some(c => c.id === cleaned)) {
+      return cleaned;
+    }
+    return activeCohortCommunities[0]?.id || 'herzliya';
+  }, [currentCommunityId, activeCohortCommunities]);
+
   const [activeTab, setActiveTab] = useState<'PAIRS' | 'COORDINATORS' | 'INDIVIDUALS' | 'STAFF_INFO'>('PAIRS');
   const [searchTerm, setSearchTerm] = useState('');
   const [groupFilter, setGroupFilter] = useState<'ALL' | 'GROUP_A' | 'GROUP_B' | 'NONE'>('ALL');
+  const [pairsCommunityFilter, setPairsCommunityFilter] = useState<string>('ALL');
   
   // Singles tab filters
   const [singlesRoleFilter, setSinglesRoleFilter] = useState<'ALL' | 'VOLUNTEER' | 'MEMBER'>('ALL');
   const [singlesGroupFilter, setSinglesGroupFilter] = useState<'ALL' | 'GROUP_A' | 'GROUP_B' | 'NONE'>('ALL');
+  const [singlesCommunityFilter, setSinglesCommunityFilter] = useState<string>('ALL');
   const [singlesSearch, setSinglesSearch] = useState('');
 
   // Pair creation form state
+  const [selectedCommunityId, setSelectedCommunityId] = useState<string>(defaultCohortId);
   const [selectedMemberA, setSelectedMemberIdA] = useState<string>('');
   const [selectedMemberB, setSelectedMemberIdB] = useState<string>('');
   const [selectedGroup, setSelectedGroup] = useState<'סבב א\'' | 'סבב ב\''>('סבב א\'');
   const [isLinking, setIsLinking] = useState(false);
+
+  // Sync default selected cohort when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedCommunityId(defaultCohortId);
+      setSelectedMemberIdA('');
+      setSelectedMemberIdB('');
+    }
+  }, [isOpen, defaultCohortId]);
   
   // Pair unlinking state
   const [pairToUnlink, setPairToUnlink] = useState<{ a: Member; b: Member } | null>(null);
@@ -194,9 +246,9 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
   // Active members only
   const activeMembers = useMemo(() => members.filter(m => m.isActive !== false), [members]);
 
-  // Derived pairs list
+  // Derived pairs list with shared cohort metadata
   const pairs = useMemo(() => {
-    const pairsMap = new Map<string, { a: Member, b: Member, group?: string }>();
+    const pairsMap = new Map<string, { a: Member; b: Member; group?: string; sharedCohortIds: string[]; cohortIdsA: string[]; cohortIdsB: string[] }>();
     const seenIds = new Set<string>();
 
     activeMembers.forEach(m => {
@@ -206,12 +258,22 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
           seenIds.add(m.id);
           seenIds.add(partner.id);
           const effectiveGroup = m.assignedGroup || m.group || partner.assignedGroup || partner.group || '';
-          pairsMap.set(`${m.id}-${partner.id}`, { a: m, b: partner, group: effectiveGroup });
+          const cohortIdsA = getMemberCohortIds(m);
+          const cohortIdsB = getMemberCohortIds(partner);
+          const sharedCohortIds = cohortIdsA.filter(id => cohortIdsB.includes(id));
+          pairsMap.set(`${m.id}-${partner.id}`, {
+            a: m,
+            b: partner,
+            group: effectiveGroup,
+            sharedCohortIds,
+            cohortIdsA,
+            cohortIdsB
+          });
         }
       }
     });
     return Array.from(pairsMap.values());
-  }, [activeMembers]);
+  }, [activeMembers, getMemberCohortIds]);
 
   // Coordinators list (role === 'Admin')
   const coordinators = useMemo(() => {
@@ -228,10 +290,16 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
     return activeMembers.filter(m => m.role === 'Instructor' || m.role === 'Staff');
   }, [activeMembers]);
 
-  // Available for pairing (unpaired active members)
+  // Available for pairing (unpaired active members strictly scoped to selected cohort community)
   const unpairedMembers = useMemo(() => activeMembers.filter(m => !m.partnerId), [activeMembers]);
-  const unpairedVolunteers = useMemo(() => unpairedMembers.filter(m => m.role === 'Volunteer'), [unpairedMembers]);
-  const unpairedParticipants = useMemo(() => unpairedMembers.filter(m => m.role === 'Member'), [unpairedMembers]);
+  const unpairedVolunteers = useMemo(
+    () => unpairedMembers.filter(m => m.role === 'Volunteer' && getMemberCohortIds(m).includes(selectedCommunityId)),
+    [unpairedMembers, getMemberCohortIds, selectedCommunityId]
+  );
+  const unpairedParticipants = useMemo(
+    () => unpairedMembers.filter(m => m.role === 'Member' && getMemberCohortIds(m).includes(selectedCommunityId)),
+    [unpairedMembers, getMemberCohortIds, selectedCommunityId]
+  );
 
   // Filtered pairs list
   const filteredPairs = useMemo(() => {
@@ -243,13 +311,22 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
 
       if (!matchesSearch) return false;
 
+      if (pairsCommunityFilter === 'MISMATCH') {
+        if (pair.sharedCohortIds.length > 0) return false;
+      } else if (pairsCommunityFilter !== 'ALL') {
+        const belongsToFilter = pair.sharedCohortIds.includes(pairsCommunityFilter) ||
+          pair.cohortIdsA.includes(pairsCommunityFilter) ||
+          pair.cohortIdsB.includes(pairsCommunityFilter);
+        if (!belongsToFilter) return false;
+      }
+
       const gType = getMemberGroupType(pair.group);
       if (groupFilter === 'GROUP_A') return gType === 'GROUP_A';
       if (groupFilter === 'GROUP_B') return gType === 'GROUP_B';
       if (groupFilter === 'NONE') return gType === 'NONE';
       return true;
     });
-  }, [pairs, searchTerm, groupFilter]);
+  }, [pairs, searchTerm, groupFilter, pairsCommunityFilter]);
 
   // Filtered singles list
   const filteredSingles = useMemo(() => {
@@ -259,6 +336,10 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
       const matchesSearch = !singlesSearch || fullName.includes(searchLower) || (single.mobile || '').includes(searchLower);
 
       if (!matchesSearch) return false;
+
+      if (singlesCommunityFilter !== 'ALL') {
+        if (!getMemberCohortIds(single).includes(singlesCommunityFilter)) return false;
+      }
 
       if (singlesRoleFilter === 'VOLUNTEER' && single.role !== 'Volunteer') return false;
       if (singlesRoleFilter === 'MEMBER' && single.role !== 'Member') return false;
@@ -274,11 +355,11 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
 
       return true;
     });
-  }, [unpairedSingles, singlesSearch, singlesRoleFilter, singlesGroupFilter, individualGroupOverrides]);
+  }, [unpairedSingles, singlesSearch, singlesRoleFilter, singlesGroupFilter, singlesCommunityFilter, individualGroupOverrides, getMemberCohortIds]);
 
-  // Handle Link Pair with Group Assignment (Overriding individual groups to pair's chosen group)
+  // Handle Link Pair with Group Assignment and strict same-cohort validation
   const handleLink = async () => {
-    if (!selectedMemberA || !selectedMemberB || selectedMemberA === selectedMemberB) return;
+    if (!selectedCommunityId || !selectedMemberA || !selectedMemberB || selectedMemberA === selectedMemberB) return;
     setIsLinking(true);
     try {
       const memberA = members.find(m => m.id === selectedMemberA);
@@ -295,6 +376,14 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
           return;
         }
 
+        const cohortA = getMemberCohortIds(memberA);
+        const cohortB = getMemberCohortIds(memberB);
+        if (!cohortA.includes(selectedCommunityId) || !cohortB.includes(selectedCommunityId)) {
+          showFeedback('error', `לא ניתן לחבר זוג מקבוצות שונות. שני חברי הזוג חייבים להיות חברים ב${getCohortLabel(selectedCommunityId)}.`);
+          setIsLinking(false);
+          return;
+        }
+
         // Clean any individual overrides
         setIndividualGroupOverrides(prev => {
           const next = { ...prev };
@@ -304,7 +393,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
         });
 
         if (contextLinkPair) {
-          await contextLinkPair(memberA.id, memberB.id, selectedGroup);
+          await contextLinkPair(memberA.id, memberB.id, selectedGroup, selectedCommunityId);
         } else if (contextUpdateMember) {
           await contextUpdateMember({ ...memberA, partnerId: memberB.id, assignedGroup: selectedGroup, group: selectedGroup });
           await contextUpdateMember({ ...memberB, partnerId: memberA.id, assignedGroup: selectedGroup, group: selectedGroup });
@@ -312,7 +401,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
 
         setSelectedMemberIdA('');
         setSelectedMemberIdB('');
-        showFeedback('success', `נוצר חבל זוג בין ${memberA.firstName} ל${memberB.firstName} ושויך ל-${selectedGroup} בהצלחה!`);
+        showFeedback('success', `נוצר חבל זוג ב${getCohortLabel(selectedCommunityId)} בין ${memberA.firstName} ל${memberB.firstName} (${selectedGroup}) בהצלחה!`);
       }
     } catch (e: any) {
       console.error(e);
@@ -606,22 +695,67 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
           <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-slate-50/50">
             {activeTab === 'PAIRS' && (
               <>
-                {/* Create Pair Section with Group Assignment */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                  <h3 className="text-lg font-black text-slate-700 mb-4 flex items-center gap-2">
-                    <UserPlus size={20} className="text-indigo-500" />
-                    יצירת זוג חדש ושיוך לקבוצה
-                  </h3>
+                {/* Create Pair Section with Mandatory Same-Cohort Selection */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h3 className="text-lg font-black text-slate-700 flex items-center gap-2">
+                        <UserPlus size={20} className="text-indigo-500" />
+                        יצירת זוג חדש ושיוך לקבוצה
+                      </h3>
+                      <p className="text-xs font-medium text-slate-500 mt-0.5">
+                        בחר קבוצת מחזור פעילה — ניתן לצוות רק מתנדב ומשתתף השייכים לאותה קבוצה.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Step 1: Select Active Cohort Community */}
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 mb-2 flex items-center gap-1.5">
+                      <MapPin size={14} className="text-indigo-500" />
+                      1. בחירת קבוצת מחזור (חובה)
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                      {activeCohortCommunities.map((comm) => {
+                        const isSelected = selectedCommunityId === comm.id;
+                        const volCount = unpairedMembers.filter(m => m.role === 'Volunteer' && getMemberCohortIds(m).includes(comm.id)).length;
+                        const memCount = unpairedMembers.filter(m => m.role === 'Member' && getMemberCohortIds(m).includes(comm.id)).length;
+                        return (
+                          <button
+                            key={comm.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCommunityId(comm.id);
+                              setSelectedMemberIdA('');
+                              setSelectedMemberIdB('');
+                            }}
+                            className={`text-right p-2.5 rounded-xl border transition-all min-h-[44px] flex flex-col justify-between ${
+                              isSelected
+                                ? 'bg-indigo-50 border-indigo-500 text-indigo-900 shadow-xs ring-1 ring-indigo-500/30'
+                                : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-slate-100/80'
+                            }`}
+                          >
+                            <span className="text-xs font-black leading-snug block truncate">{comm.name}</span>
+                            <span className={`text-[10px] font-bold mt-1 ${isSelected ? 'text-indigo-700' : 'text-slate-400'}`}>
+                              {volCount} מתנדבים • {memCount} משתתפים
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end pt-2 border-t border-slate-100">
                     {/* Volunteer */}
                     <div className="md:col-span-4 w-full">
-                      <label className="block text-xs font-bold text-slate-500 mb-2">מתנדב</label>
+                      <label className="block text-xs font-bold text-slate-500 mb-2">
+                        2. מתנדב ({getCohortLabel(selectedCommunityId)})
+                      </label>
                       <CustomMemberSelect
                         value={selectedMemberA}
                         onChange={(val) => setSelectedMemberIdA(val)}
                         options={unpairedVolunteers}
-                        placeholder="בחר מתנדב/ת..."
+                        placeholder={unpairedVolunteers.length > 0 ? 'בחר מתנדב/ת...' : 'אין מתנדבים פנויים בקבוצה זו'}
                       />
                     </div>
                     
@@ -631,23 +765,25 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                     
                     {/* Participant */}
                     <div className="md:col-span-4 w-full">
-                      <label className="block text-xs font-bold text-slate-500 mb-2">משתתף</label>
+                      <label className="block text-xs font-bold text-slate-500 mb-2">
+                        3. משתתף ({getCohortLabel(selectedCommunityId)})
+                      </label>
                       <CustomMemberSelect
                         value={selectedMemberB}
                         onChange={(val) => setSelectedMemberIdB(val)}
                         options={unpairedParticipants}
-                        placeholder="בחר משתתפ/ת..."
+                        placeholder={unpairedParticipants.length > 0 ? 'בחר משתתפ/ת...' : 'אין משתתפים פנויים בקבוצה זו'}
                       />
                     </div>
 
                     {/* Round Selector */}
                     <div className="md:col-span-3 w-full">
-                      <label className="block text-xs font-bold text-slate-500 mb-2">שיוך לסבב</label>
+                      <label className="block text-xs font-bold text-slate-500 mb-2">4. שיוך לסבב</label>
                       <div className="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-xl">
                         <button
                           type="button"
                           onClick={() => setSelectedGroup('סבב א\'')}
-                          className={`py-2 px-2 rounded-lg font-black text-xs transition-all flex items-center justify-center gap-1 ${
+                          className={`py-2 px-2 rounded-lg font-black text-xs transition-all flex items-center justify-center gap-1 min-h-[40px] ${
                             selectedGroup === 'סבב א\''
                               ? 'bg-blue-600 text-white shadow-xs'
                               : 'text-slate-600 hover:text-slate-900'
@@ -658,7 +794,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                         <button
                           type="button"
                           onClick={() => setSelectedGroup('סבב ב\'')}
-                          className={`py-2 px-2 rounded-lg font-black text-xs transition-all flex items-center justify-center gap-1 ${
+                          className={`py-2 px-2 rounded-lg font-black text-xs transition-all flex items-center justify-center gap-1 min-h-[40px] ${
                             selectedGroup === 'סבב ב\''
                               ? 'bg-purple-600 text-white shadow-xs'
                               : 'text-slate-600 hover:text-slate-900'
@@ -673,7 +809,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                     <div className="md:col-span-12 flex justify-end mt-2">
                       <button
                         onClick={handleLink}
-                        disabled={!selectedMemberA || !selectedMemberB || selectedMemberA === selectedMemberB || isLinking}
+                        disabled={!selectedCommunityId || !selectedMemberA || !selectedMemberB || selectedMemberA === selectedMemberB || isLinking}
                         className="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] flex items-center justify-center gap-2"
                       >
                         {isLinking ? (
@@ -684,7 +820,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                         ) : (
                           <>
                             <Link2 size={18} />
-                            <span>חבר זוג ושייך ל{selectedGroup}</span>
+                            <span>חבר זוג ב{getCohortLabel(selectedCommunityId)} ({selectedGroup})</span>
                           </>
                         )}
                       </button>
@@ -692,15 +828,31 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                   </div>
                 </div>
 
-                {/* Existing Pairs Section with Group Badges & Filter */}
+                {/* Existing Pairs Section with Cohort & Group Badges + Filter */}
                 <div>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
                     <h3 className="text-lg font-black text-slate-700 flex items-center gap-2">
                       <Users size={20} className="text-[var(--surfer-electric-pink)]" />
-                      זוגות קיימים ({pairs.length})
+                      זוגות קיימים ({filteredPairs.length} מתוך {pairs.length})
                     </h3>
                     
                     <div className="flex flex-wrap items-center gap-2">
+                      {/* Cohort Community Filter */}
+                      <select
+                        value={pairsCommunityFilter}
+                        onChange={(e) => setPairsCommunityFilter(e.target.value)}
+                        aria-label="סינון לפי קבוצת מחזור"
+                        className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-400 shadow-xs min-h-[38px]"
+                      >
+                        <option value="ALL">כל הקבוצות ({pairs.length})</option>
+                        {activeCohortCommunities.map(comm => (
+                          <option key={comm.id} value={comm.id}>{comm.name}</option>
+                        ))}
+                        {pairs.some(p => p.sharedCohortIds.length === 0) && (
+                          <option value="MISMATCH">⚠️ חריגים (קבוצות שונות)</option>
+                        )}
+                      </select>
+
                       {/* Group Filter Tabs */}
                       <div className="flex bg-white border border-slate-200 p-1 rounded-xl text-xs font-bold shadow-xs">
                         <button
@@ -736,7 +888,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                           placeholder="חיפוש בזוגות..."
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-4 pr-10 py-1.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-[var(--surfer-vibrant-cyan)] w-full sm:w-48 shadow-xs"
+                          className="pl-4 pr-10 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-[var(--surfer-vibrant-cyan)] w-full sm:w-44 shadow-xs"
                         />
                       </div>
                     </div>
@@ -747,15 +899,17 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                       const isPairCompliant = 
                         (pair.a.role === 'Volunteer' && pair.b.role === 'Member') ||
                         (pair.a.role === 'Member' && pair.b.role === 'Volunteer');
+                      const hasCrossGroupMismatch = pair.sharedCohortIds.length === 0;
                       const currentGroup = pair.group || '';
                       const pairKey = `${pair.a.id}-${pair.b.id}`;
                       const isUpdatingGroup = updatingPairKey === pairKey;
+                      const sharedCohortText = pair.sharedCohortIds.map(id => getCohortLabel(id)).join(', ');
 
                       return (
-                        <div key={idx} className={`bg-white rounded-2xl border ${isPairCompliant ? 'border-slate-200' : 'border-amber-300 bg-amber-50/20'} p-4 flex flex-col gap-3 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden`}>
+                        <div key={idx} className={`bg-white rounded-2xl border ${isPairCompliant && !hasCrossGroupMismatch ? 'border-slate-200' : 'border-amber-300 bg-amber-50/20'} p-4 flex flex-col gap-3 shadow-xs hover:shadow-md transition-shadow relative overflow-hidden`}>
                           {/* Group Header & Actions */}
-                          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                            <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-2 gap-2">
+                            <div className="flex flex-wrap items-center gap-1.5">
                               {getMemberGroupType(currentGroup) === 'GROUP_A' ? (
                                 <span className="px-2.5 py-1 bg-blue-100 text-blue-800 border border-blue-200 text-xs font-black rounded-lg flex items-center gap-1">
                                   <span className="w-2 h-2 rounded-full bg-blue-500" />
@@ -769,6 +923,17 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                               ) : (
                                 <span className="px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold rounded-lg">
                                   ללא סבב
+                                </span>
+                              )}
+
+                              {sharedCohortText ? (
+                                <span className="px-2 py-1 bg-cyan-50 text-cyan-800 border border-cyan-200/80 text-[11px] font-bold rounded-lg flex items-center gap-1">
+                                  <MapPin size={11} className="text-cyan-600 shrink-0" />
+                                  {sharedCohortText}
+                                </span>
+                              ) : (
+                                <span className="px-2 py-1 bg-amber-100 text-amber-800 border border-amber-200 text-[11px] font-black rounded-lg">
+                                  קבוצות שונות
                                 </span>
                               )}
 
@@ -806,7 +971,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                             {/* Unlink Action Button */}
                             <button 
                               onClick={() => setPairToUnlink(pair)}
-                              className="w-8 h-8 flex items-center justify-center text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 active:scale-90 border border-rose-200 rounded-lg transition-all shadow-xs"
+                              className="w-8 h-8 shrink-0 flex items-center justify-center text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 active:scale-90 border border-rose-200 rounded-lg transition-all shadow-xs"
                               title={`הפרד את ${pair.a.firstName} ו${pair.b.firstName}`}
                               aria-label={`הפרד את ${pair.a.firstName} ו${pair.b.firstName}`}
                             >
@@ -815,16 +980,22 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                           </div>
 
                           {!isPairCompliant && (
-                            <div className="bg-amber-100 text-amber-900 text-[11px] font-black px-3 py-1 rounded-lg flex items-center justify-between border border-amber-200">
+                            <div className="bg-amber-100 text-amber-900 text-[11px] font-black px-3 py-1.5 rounded-lg flex items-center justify-between border border-amber-200">
                               <span>⚠️ שיבוץ ישן לא תואם (רכז/צוות אינם יכולים להיות בני זוג)</span>
-                              <span className="text-[10px] text-amber-800">מומלץ לנתק</span>
+                              <span className="text-[10px] text-amber-800 shrink-0 mr-2">מומלץ לנתק</span>
+                            </div>
+                          )}
+
+                          {hasCrossGroupMismatch && (
+                            <div className="bg-amber-100 text-amber-900 text-[11px] font-bold px-3 py-1.5 rounded-lg border border-amber-200">
+                              ⚠️ ציוות מקבוצות שונות — שני חברי הזוג אינם חברים באותה קבוצת מחזור (מומלץ לנתק ולצוות בתוך אותה קבוצה בלבד)
                             </div>
                           )}
 
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3 sm:gap-4 flex-1">
                               {/* Person A */}
-                              <div className="flex flex-col items-center gap-1 w-24 shrink-0">
+                              <div className="flex flex-col items-center gap-1 w-28 shrink-0">
                                 <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 border-2 border-indigo-100 shadow-xs">
                                   {pair.a.avatar ? <img src={pair.a.avatar} className="w-full h-full object-cover" alt="" /> : <User className="w-full h-full p-2 text-slate-400" />}
                                 </div>
@@ -834,6 +1005,11 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${pair.a.role === 'Volunteer' ? 'text-indigo-500 bg-indigo-50' : pair.a.role === 'Member' ? 'text-emerald-600 bg-emerald-50' : 'text-amber-700 bg-amber-100'}`}>
                                   {translateRole(pair.a.role)}
                                 </span>
+                                {hasCrossGroupMismatch && (
+                                  <span className="text-[10px] font-semibold text-amber-800 text-center leading-tight">
+                                    {pair.cohortIdsA.length > 0 ? pair.cohortIdsA.map(getCohortLabel).join(', ') : 'ללא מחזור פעיל'}
+                                  </span>
+                                )}
                               </div>
                               
                               {/* Link Icon with Rope Emoji */}
@@ -843,7 +1019,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                               </div>
                               
                               {/* Person B */}
-                              <div className="flex flex-col items-center gap-1 w-24 shrink-0">
+                              <div className="flex flex-col items-center gap-1 w-28 shrink-0">
                                 <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 border-2 border-indigo-100 shadow-xs">
                                   {pair.b.avatar ? <img src={pair.b.avatar} className="w-full h-full object-cover" alt="" /> : <User className="w-full h-full p-2 text-slate-400" />}
                                 </div>
@@ -853,6 +1029,11 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${pair.b.role === 'Member' ? 'text-emerald-600 bg-emerald-50' : pair.b.role === 'Volunteer' ? 'text-indigo-500 bg-indigo-50' : 'text-amber-700 bg-amber-100'}`}>
                                   {translateRole(pair.b.role)}
                                 </span>
+                                {hasCrossGroupMismatch && (
+                                  <span className="text-[10px] font-semibold text-amber-800 text-center leading-tight">
+                                    {pair.cohortIdsB.length > 0 ? pair.cohortIdsB.map(getCohortLabel).join(', ') : 'ללא מחזור פעיל'}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -892,8 +1073,21 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                 </div>
 
                 {/* Filters Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                  <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Cohort Community Filter */}
+                    <select
+                      value={singlesCommunityFilter}
+                      onChange={(e) => setSinglesCommunityFilter(e.target.value)}
+                      aria-label="סינון בודדים לפי קבוצת מחזור"
+                      className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-400 min-h-[38px]"
+                    >
+                      <option value="ALL">כל הקבוצות</option>
+                      {activeCohortCommunities.map(comm => (
+                        <option key={comm.id} value={comm.id}>{comm.name}</option>
+                      ))}
+                    </select>
+
                     {/* Role Filter */}
                     <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
                       <button
@@ -960,7 +1154,7 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                       placeholder="חיפוש לפי שם או טלפון..."
                       value={singlesSearch}
                       onChange={(e) => setSinglesSearch(e.target.value)}
-                      className="pl-4 pr-10 py-1.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 w-full sm:w-48 shadow-xs"
+                      className="pl-4 pr-10 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 w-full sm:w-48 shadow-xs"
                     />
                   </div>
                 </div>
@@ -975,10 +1169,11 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                     const isGroupA = gType === 'GROUP_A';
                     const isGroupB = gType === 'GROUP_B';
                     const isUpdating = updatingIndividualId === single.id;
+                    const singleCohorts = getMemberCohortIds(single);
 
                     return (
                       <div key={single.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between gap-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-3">
                             <div className="w-13 h-13 rounded-2xl overflow-hidden bg-slate-100 border-2 border-indigo-100 shrink-0">
                               {single.avatar ? (
@@ -991,12 +1186,18 @@ export const PairsManagerModal: React.FC<PairsManagerModalProps> = ({
                               <h4 className="font-black text-slate-800 text-base">
                                 {single.firstName} {single.lastName}
                               </h4>
-                              <div className="flex items-center gap-2 mt-0.5">
+                              <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                                 <span className={`text-[11px] font-black px-2 py-0.5 rounded-lg ${
                                   single.role === 'Volunteer' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                                 }`}>
                                   {translateRole(single.role)} (ללא בן זוג)
                                 </span>
+                                {singleCohorts.length > 0 && (
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-cyan-50 text-cyan-800 border border-cyan-200/80 flex items-center gap-1">
+                                    <MapPin size={10} className="text-cyan-600 shrink-0" />
+                                    {singleCohorts.map(getCohortLabel).join(', ')}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>

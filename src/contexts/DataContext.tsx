@@ -125,7 +125,7 @@ interface DataContextType {
   toggleDbStatus: () => void;
   updateMember: (member: Member) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
-  linkPair: (memberAId: string, memberBId: string, group?: string) => Promise<void>;
+  linkPair: (memberAId: string, memberBId: string, group?: string, communityId?: string) => Promise<void>;
   unlinkPair: (memberAId: string, memberBId?: string) => Promise<void>;
   toggleStatus: (id: string) => Promise<void>;
   toggleRole: (id: string, requesterEmail?: string) => Promise<void>;
@@ -915,7 +915,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [members, memberships, groups, handleFirestoreError]);
 
-  const linkPair = useCallback(async (memberAId: string, memberBId: string, group?: string) => {
+  const linkPair = useCallback(async (memberAId: string, memberBId: string, group?: string, communityId?: string) => {
     const db = getDb();
     if (!db) return;
     try {
@@ -932,6 +932,31 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (!isValidPair) {
         throw new Error('חבל זוג מתאפשר אך ורק בין מתנדב למשתתף. רכזים, צוות עמותה ומדריכים אינם יכולים להיות בני זוג.');
+      }
+
+      const getCohortCommunities = (member: Member): string[] => {
+        const set = new Set<string>();
+        (member.communities || []).forEach(cId => {
+          if (cId && cId !== 'all' && !cId.endsWith('_adults')) set.add(cId);
+        });
+        memberships
+          .filter(ms => ms.personId === member.id && ms.status === 'active' && ms.communityId && !ms.communityId.endsWith('_adults'))
+          .forEach(ms => {
+            if (ms.communityId) set.add(ms.communityId);
+          });
+        return Array.from(set);
+      };
+
+      const cohortA = getCohortCommunities(memberA);
+      const cohortB = getCohortCommunities(memberB);
+      const sharedCohorts = cohortA.filter(cId => cohortB.includes(cId));
+
+      if (sharedCohorts.length === 0) {
+        throw new Error('לא ניתן לחבר זוג מקבוצות שונות. שני חברי הזוג חייבים להיות שייכים לאותה קבוצת מחזור פעילה (לדוגמה מחזור ז׳ הרצליה או מחזור ד׳ אשדוד).');
+      }
+
+      if (communityId && (!cohortA.includes(communityId) || !cohortB.includes(communityId))) {
+        throw new Error('שני חברי הזוג חייבים להשתייך לקבוצת המחזור שנבחרה.');
       }
 
       const batch = writeBatch(db);
@@ -961,7 +986,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       handleFirestoreError(error, OperationType.UPDATE, `members/${memberAId}-pair`);
       throw error;
     }
-  }, [members, handleFirestoreError]);
+  }, [members, memberships, handleFirestoreError]);
 
   const unlinkPair = useCallback(async (memberAId: string, memberBId?: string) => {
     const db = getDb();
